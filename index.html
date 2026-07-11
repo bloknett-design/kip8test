@@ -1049,6 +1049,32 @@
     .sidebar-item:hover { background: rgba(74, 143, 199, 0.05); border-left-color: rgba(74, 143, 199, 0.4); }
     .sidebar-item svg { flex-shrink: 0; }
 
+    /* Группа разделов с аккордеоном — по умолчанию только 3 первых пункта */
+    .sidebar-item-extra { display: none; }
+    .sidebar-group.expanded .sidebar-item-extra { display: flex; }
+    /* Кнопка «Показать все» / «Свернуть» */
+    .sidebar-show-more {
+        display: flex; align-items: center; justify-content: center; gap: 6px;
+        padding: 8px 20px 12px;
+        color: rgba(140, 170, 200, 0.55);
+        font-size: 12px; font-weight: 500;
+        cursor: pointer;
+        border: none; background: transparent;
+        -webkit-tap-highlight-color: transparent;
+        transition: color 0.2s;
+        font-family: 'Inter', sans-serif;
+    }
+    .sidebar-show-more:active { color: rgba(74, 143, 199, 0.9); }
+    .sidebar-show-more svg {
+        width: 14px; height: 14px;
+        stroke: currentColor; fill: none; stroke-width: 2;
+        stroke-linecap: round; stroke-linejoin: round;
+        transition: transform 0.25s;
+    }
+    .sidebar-group.expanded .sidebar-show-more svg { transform: rotate(180deg); }
+    [data-theme="light"] .sidebar-show-more { color: rgba(20, 20, 19, 0.5); }
+    [data-theme="light"] .sidebar-show-more:active { color: rgba(198, 97, 63, 0.9); }
+
     /* Заголовок группы разделов в шторке меню */
     .sidebar-group-title {
         font-size: 11px;
@@ -6053,6 +6079,32 @@
     overlay.classList.toggle('active');
 }
 
+// Аккордеон в боковом меню: при разворачивании группы — сворачиваем ранее раскрытую.
+// Тогглит состояние группы: 3 видимих по умолчанию, при клике «Показать все» — все.
+function toggleSidebarGroup(groupEl) {
+    if (!groupEl) return;
+    const isExpanded = groupEl.classList.contains('expanded');
+    // Аккордеон: сворачиваем все остальные раскрытые группы и обновляем их текст
+    document.querySelectorAll('.sidebar-group.expanded').forEach(el => {
+        if (el !== groupEl) {
+            el.classList.remove('expanded');
+            const span = el.querySelector('.sidebar-show-more span');
+            const cnt = el.querySelectorAll('.sidebar-item-extra').length;
+            if (span) span.textContent = 'Показать все (' + cnt + ')';
+        }
+    });
+    // Тогглим текущую группу
+    groupEl.classList.toggle('expanded', !isExpanded);
+    // Обновляем текст кнопки: «Показать все (N)» ↔ «Свернуть»
+    const showMoreSpan = groupEl.querySelector('.sidebar-show-more span');
+    const count = groupEl.querySelectorAll('.sidebar-item-extra').length;
+    if (showMoreSpan) {
+        showMoreSpan.textContent = !isExpanded ? 'Свернуть' : ('Показать все (' + count + ')');
+    }
+    // Вибрация для тактильного отклика
+    if (navigator.vibrate) navigator.vibrate(15);
+}
+
 // Close sidebar when clicking outside
 document.addEventListener('click', function(e) {
     let sidebar = document.getElementById('sidebar');
@@ -8734,7 +8786,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         </div>
     </div>
     <div class="sidebar-content">
-        <!-- ===== Группа: КИП и А ===== -->
+        <!-- ===== Группа: КИП и А (3 видимих + 3 скрытых) ===== -->
+        <div class="sidebar-group" data-group="kipa">
         <div class="sidebar-group-title">КИП и А</div>
         <div class="sidebar-item" onclick="navigateTo('converter'); toggleSidebar();">
             <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
@@ -8748,27 +8801,80 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             <span>Расчёт погрешности</span>
         </div>
-        <div class="sidebar-item" onclick="navigateTo('buoy-select'); toggleSidebar();">
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('buoy-select'); toggleSidebar();">
             <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M12 2v6"/><path d="M5 8h14l-1 12H6L5 8z"/></svg>
             <span>Буйковый уровнемер</span>
         </div>
-        <div class="sidebar-item" onclick="navigateTo('temp-sensors'); toggleSidebar();">
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('temp-sensors'); toggleSidebar();">
             <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
             <span>Датчики температуры</span>
         </div>
-        <div class="sidebar-item" onclick="navigateTo('orifice-select'); toggleSidebar();">
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('orifice-select'); toggleSidebar();">
             <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
             <span>Сужающее устройство</span>
         </div>
+        <div class="sidebar-show-more" onclick="toggleSidebarGroup(this.parentElement)">
+            <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            <span>Показать все (3)</span>
+        </div>
+        </div>
 
-        <!-- ===== Группа: Электротехника ===== -->
+        <!-- ===== Группа: Электротехника (3 видимих + 2 скрытых) ===== -->
+        <div class="sidebar-group" data-group="electro">
         <div class="sidebar-group-title">Электротехника</div>
         <div class="sidebar-item" onclick="navigateTo('circuit-breaker'); toggleSidebar();">
             <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
             <span>Автоматический выключатель</span>
         </div>
+        <div class="sidebar-item" onclick="navigateTo('cable-section'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><rect x="2" y="9" width="20" height="6" rx="1"/><line x1="6" y1="9" x2="6" y2="15"/><line x1="12" y1="9" x2="12" y2="15"/><line x1="18" y1="9" x2="18" y2="15"/></svg>
+            <span>Сечение кабеля по току</span>
+        </div>
+        <div class="sidebar-item" onclick="navigateTo('motor-current'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="9"/><path d="M9 8v8"/><path d="M9 12h6"/><path d="M15 8v8"/></svg>
+            <span>Ток электродвигателя</span>
+        </div>
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('power-factor'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M6 4v16"/><path d="M18 4v16"/><line x1="6" y1="12" x2="18" y2="12"/></svg>
+            <span>Компенсация реактивной мощности</span>
+        </div>
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('grounding'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><line x1="12" y1="2" x2="12" y2="13"/><line x1="5" y1="13" x2="19" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="10" y1="21" x2="14" y2="21"/></svg>
+            <span>Расчёт заземления</span>
+        </div>
+        <div class="sidebar-show-more" onclick="toggleSidebarGroup(this.parentElement)">
+            <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            <span>Показать все (2)</span>
+        </div>
+        </div>
 
-        <!-- ===== Группа: Документация ===== -->
+        <!-- ===== Группа: Геометрия (3 видимих + 1 скрытый) ===== -->
+        <div class="sidebar-group" data-group="geometry">
+        <div class="sidebar-group-title">Геометрия</div>
+        <div class="sidebar-item" onclick="navigateTo('pipe-area'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>
+            <span>Площадь сечения трубопровода</span>
+        </div>
+        <div class="sidebar-item" onclick="navigateTo('tank-volume'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><ellipse cx="12" cy="5" rx="8" ry="2.5"/><path d="M4 5v14c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5V5"/></svg>
+            <span>Объём ёмкости</span>
+        </div>
+        <div class="sidebar-item" onclick="navigateTo('horiz-tank'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><ellipse cx="5" cy="12" rx="2" ry="8"/><ellipse cx="19" cy="12" rx="2" ry="8"/><line x1="5" y1="4" x2="19" y2="4"/><line x1="5" y1="20" x2="19" y2="20"/></svg>
+            <span>Объём в горизонтальном цилиндре</span>
+        </div>
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('inclined-pipe'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><line x1="4" y1="20" x2="20" y2="4"/><line x1="4" y1="20" x2="9" y2="20"/><line x1="4" y1="20" x2="4" y2="15"/></svg>
+            <span>Длина наклонного трубопровода</span>
+        </div>
+        <div class="sidebar-show-more" onclick="toggleSidebarGroup(this.parentElement)">
+            <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            <span>Показать все (1)</span>
+        </div>
+        </div>
+
+        <!-- ===== Группа: Документация (2 пункта, без кнопки «Показать все») ===== -->
+        <div class="sidebar-group" data-group="docs">
         <div class="sidebar-group-title sidebar-group-title-docs">Документация</div>
         <div class="sidebar-item" onclick="navigateTo('exam-tickets'); toggleSidebar();">
             <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
@@ -8777,6 +8883,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         <div class="sidebar-item" onclick="navigateTo('library'); toggleSidebar();">
             <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
             <span style="color:rgba(199,150,74,0.9);">Библиотека КИП и А</span>
+        </div>
         </div>
 
         <!-- ===== Тонкий разделитель ===== -->
