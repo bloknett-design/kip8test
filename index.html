@@ -1220,11 +1220,22 @@
     }
 
     /* ============================================================
-       ДЕРЕВО ПУЭ — раскрывающиеся разделы → главы → пункты
+       ДЕРЕВО НОРМАТИВНОЙ ДОКУМЕНТАЦИИ — раскрывающиеся главы → пункты
+       (универсальный класс .doc-* для всех 4 документов: ПУЭ, ПТЭЭП, ПОТЭЭ, СО 153)
        ============================================================ */
-    .pue-tree { padding: 4px 8px 8px; position: relative; z-index: 2; }
-    /* Уровень раздела (1-й уровень) */
-    .pue-section {
+    .doc-tree { padding: 4px 8px 8px; position: relative; z-index: 2; }
+    /* Заголовок раздела документа (Раздел 1. ОБЩИЕ ПРАВИЛА) */
+    .doc-section-title {
+        margin: 14px 4px 6px;
+        font-size: 11px; font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: var(--accent-blue, #4a8fc7);
+        line-height: 1.3;
+    }
+    .doc-section-title:first-child { margin-top: 4px; }
+    /* Уровень главы (карточка-аккордеон) */
+    .doc-chapter {
         margin-bottom: 4px;
         background: var(--card-bg);
         backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
@@ -1232,15 +1243,15 @@
         border-radius: 12px;
         overflow: hidden;
     }
-    .pue-section-header {
+    .doc-chapter-header {
         display: flex; align-items: center; gap: 10px;
         padding: 14px 16px;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
         transition: background 0.2s;
     }
-    .pue-section-header:active { background: rgba(74, 143, 199, 0.06); }
-    .pue-section-num {
+    .doc-chapter-header:active { background: rgba(74, 143, 199, 0.06); }
+    .doc-chapter-num {
         flex-shrink: 0;
         font-size: 11px; font-weight: 700;
         color: var(--accent-blue, #4a8fc7);
@@ -1248,102 +1259,82 @@
         padding: 3px 8px; border-radius: 6px;
         letter-spacing: 0.3px;
     }
-    .pue-section-title {
+    .doc-chapter-title {
         flex: 1;
-        font-size: 14px; font-weight: 600;
+        font-size: 13px; font-weight: 600;
         color: var(--text-primary, #e0e0e0);
         line-height: 1.3;
     }
-    .pue-section-chevron {
+    .doc-chapter-count {
+        font-size: 10px; font-weight: 500;
+        color: var(--text-muted, rgba(255,255,255,0.4));
+        margin-left: 2px;
+    }
+    .doc-chapter-chevron {
         width: 16px; height: 16px;
         stroke: rgba(255,255,255,0.3); fill: none;
         stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
         transition: transform 0.25s;
         flex-shrink: 0;
     }
-    .pue-section.expanded .pue-section-chevron { transform: rotate(90deg); }
-    [data-theme="light"] .pue-section-chevron { stroke: rgba(20,20,19,0.3); }
-    /* Уровень главы (2-й уровень) — раскрывается внутри раздела */
-    .pue-chapters {
+    .doc-chapter.expanded .doc-chapter-chevron { transform: rotate(90deg); }
+    [data-theme="light"] .doc-chapter-chevron { stroke: rgba(20,20,19,0.3); }
+    /* Уровень пунктов — раскрывается внутри главы */
+    .doc-points {
         display: none;
-        padding: 0 8px 8px;
+        padding: 4px 8px 8px 14px;
         border-top: 1px solid var(--card-border);
     }
-    .pue-section.expanded .pue-chapters { display: block; }
-    .pue-chapter { margin-top: 4px; }
-    .pue-chapter-header {
-        display: flex; align-items: center; gap: 8px;
-        padding: 10px 12px;
-        cursor: pointer;
-        border-radius: 8px;
-        -webkit-tap-highlight-color: transparent;
-        transition: background 0.2s;
-    }
-    .pue-chapter-header:active { background: rgba(74, 143, 199, 0.06); }
-    .pue-chapter-num {
-        flex-shrink: 0;
-        font-size: 10px; font-weight: 700;
-        color: var(--text-secondary, rgba(255,255,255,0.6));
-        background: rgba(255,255,255,0.06);
-        padding: 2px 6px; border-radius: 4px;
-        letter-spacing: 0.2px;
-    }
-    .pue-chapter-title {
-        flex: 1;
-        font-size: 13px; font-weight: 500;
-        color: var(--text-secondary, rgba(255,255,255,0.75));
-        line-height: 1.3;
-    }
-    .pue-chapter-chevron {
-        width: 14px; height: 14px;
-        stroke: rgba(255,255,255,0.25); fill: none;
-        stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-        transition: transform 0.25s;
-        flex-shrink: 0;
-    }
-    .pue-chapter.expanded .pue-chapter-chevron { transform: rotate(90deg); }
-    [data-theme="light"] .pue-chapter-chevron { stroke: rgba(20,20,19,0.25); }
-    /* Уровень пунктов (3-й уровень) — раскрывается внутри главы */
-    .pue-points {
-        display: none;
-        padding: 4px 8px 8px 32px;
-    }
-    .pue-chapter.expanded .pue-points { display: block; }
-    .pue-point {
+    .doc-chapter.expanded .doc-points { display: block; }
+    .doc-point {
         padding: 8px 10px;
         margin-bottom: 3px;
         background: rgba(255,255,255,0.025);
         border-left: 2px solid rgba(74, 143, 199, 0.25);
         border-radius: 0 6px 6px 0;
     }
-    .pue-point-num {
+    .doc-point-header {
+        margin-bottom: 4px;
+    }
+    .doc-point-num {
         display: inline-block;
         font-size: 11px; font-weight: 700;
         color: var(--accent-blue, #4a8fc7);
         margin-right: 6px;
     }
-    .pue-point-title {
-        display: inline;
+    .doc-point-text {
         font-size: 12px;
-        color: var(--text-secondary, rgba(255,255,255,0.7));
-        line-height: 1.4;
-    }
-    .pue-point-text {
-        font-size: 12px;
-        color: var(--text-muted, rgba(255,255,255,0.5));
+        color: var(--text-muted, rgba(255,255,255,0.55));
         line-height: 1.5;
-        margin-top: 4px;
-        padding-left: 0;
+        white-space: pre-wrap;
+        word-wrap: break-word;
     }
-    [data-theme="light"] .pue-point { background: rgba(20,20,19,0.03); }
-    [data-theme="light"] .pue-point-text { color: rgba(20,20,19,0.6); }
+    [data-theme="light"] .doc-point { background: rgba(20,20,19,0.03); }
+    [data-theme="light"] .doc-point-text { color: rgba(20,20,19,0.65); }
+    /* Спиннер загрузки */
+    .doc-loading {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        padding: 20px;
+        color: var(--text-muted, rgba(255,255,255,0.4));
+        font-size: 13px;
+    }
+    .doc-loading svg {
+        width: 18px; height: 18px;
+        animation: doc-spin 0.8s linear infinite;
+        stroke: var(--accent-blue, #4a8fc7);
+        fill: none;
+        stroke-width: 2;
+    }
+    @keyframes doc-spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
     @media (max-width: 400px) {
-        .pue-section-header { padding: 12px 14px; }
-        .pue-section-title { font-size: 13px; }
-        .pue-chapter-header { padding: 9px 10px; }
-        .pue-chapter-title { font-size: 12px; }
-        .pue-point { padding: 7px 8px; }
-        .pue-point-title, .pue-point-text { font-size: 11px; }
+        .doc-section-title { font-size: 10px; }
+        .doc-chapter-header { padding: 12px 14px; }
+        .doc-chapter-title { font-size: 12px; }
+        .doc-point { padding: 7px 8px; }
+        .doc-point-text { font-size: 11px; }
     }
 
     @media (max-width: 400px) {
@@ -3430,27 +3421,27 @@
                     </div>
                     <svg class="menu-btn-arrow" viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: rgba(255,255,255,0.12); fill: none; stroke-width: 2; stroke-linecap: round;"><polyline points="9 18 15 12 9 6"/></svg>
                 </div>
-                <a href="https://drive.google.com/file/d/1xY7jxI5K-og2-UsNk5lhJy_qMogJB_oE/view" target="_blank" rel="noopener" class="menu-btn" style="text-decoration: none; color: inherit;">
+                <div class="menu-btn" onclick="navigateTo('pteep')" style="cursor: pointer;">
                     <div class="menu-btn-text">
                         <div class="menu-btn-label">ПТЭЭП 2003</div>
                         <div class="menu-btn-sublabel">Правила технической эксплуатации электроустановок потребителей</div>
                     </div>
                     <svg class="menu-btn-arrow" viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: rgba(255,255,255,0.12); fill: none; stroke-width: 2; stroke-linecap: round;"><polyline points="9 18 15 12 9 6"/></svg>
-                </a>
-                <a href="https://drive.google.com/file/d/1qMLjS89aAIQO6mSaCsU_Z2nOovyGGLTS/view" target="_blank" rel="noopener" class="menu-btn" style="text-decoration: none; color: inherit;">
+                </div>
+                <div class="menu-btn" onclick="navigateTo('pote')" style="cursor: pointer;">
                     <div class="menu-btn-text">
                         <div class="menu-btn-label">ПОТЭЭ 2022</div>
                         <div class="menu-btn-sublabel">Правила по охране труда в электроустановках</div>
                     </div>
                     <svg class="menu-btn-arrow" viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: rgba(255,255,255,0.12); fill: none; stroke-width: 2; stroke-linecap: round;"><polyline points="9 18 15 12 9 6"/></svg>
-                </a>
-                <a href="https://drive.google.com/file/d/1mFvdEmw0bYe_JP-W_H6Jiy57ZVfQedZn/view" target="_blank" rel="noopener" class="menu-btn" style="text-decoration: none; color: inherit;">
+                </div>
+                <div class="menu-btn" onclick="navigateTo('so153')" style="cursor: pointer;">
                     <div class="menu-btn-text">
                         <div class="menu-btn-label">Инструкция СО 153-34.03.603-2003</div>
                         <div class="menu-btn-sublabel">Применение и испытание средств защиты, используемых в электроустановках</div>
                     </div>
                     <svg class="menu-btn-arrow" viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: rgba(255,255,255,0.12); fill: none; stroke-width: 2; stroke-linecap: round;"><polyline points="9 18 15 12 9 6"/></svg>
-                </a>
+                </div>
             </div>
         </div>
 
@@ -3461,10 +3452,14 @@
 
             <div class="content-header" style="padding: 14px 20px 10px;">
                 <h2 style="color: #e0e0e0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">Правила устройства электроустановок</h2>
-                <p style="color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 5px;">6-е и 7-е издание. Тапните раздел, чтобы раскрыть главы</p>
+                <p style="color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 5px;">6-е и 7-е издание. Тапните главу, чтобы раскрыть пункты</p>
             </div>
 
-            <div id="pueTree" class="pue-tree"></div>
+            <div id="doc-tree-pue" class="doc-tree"></div>
+            <div class="doc-loading" id="doc-loading-pue" style="display:none;">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 9 9" /></svg>
+                Загрузка...
+            </div>
 
             <div style="margin:14px 8px 10px;padding:14px 16px;background:var(--card-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--card-border);border-radius:14px;position:relative;z-index:2;">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
@@ -3475,8 +3470,98 @@
                     <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">ПУЭ 6:</b> 6-е издание, действует с 1985 г. (с изменениями и дополнениями). Включает все 7 разделов.</div>
                     <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">ПУЭ 7:</b> 7-е издание, введено в действие с 1 января 2003 г. Дополняет и отменяет отдельные главы 6-го издания.</div>
                     <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Структура:</b> 7 разделов → ~50 глав → тысячи пунктов. Каждый пункт имеет номер вида «1.7.55» (раздел.глава.пункт).</div>
-                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Полный текст:</b> Полный текст всех пунктов ПУЭ занимает ~2000 страниц и не может быть включён в приложение. На этой странице представлена навигационная карта с заголовками пунктов ключевых глав. Для полного текста используйте <a href="https://drive.google.com/file/d/1Rmy2aUYEr8WG1R1Pzuucbb8QEwfBrj0y/view" target="_blank" rel="noopener" style="color:var(--accent-blue);text-decoration:underline;">оригинальный PDF на Google Drive</a>.</div>
+                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Оригинал:</b> <a href="https://drive.google.com/file/d/1Rmy2aUYEr8WG1R1Pzuucbb8QEwfBrj0y/view" target="_blank" rel="noopener" style="color:var(--accent-blue);text-decoration:underline;">PDF на Google Drive</a>.</div>
                     <div><b style="color:rgba(255,255,255,0.7);">Нормативный документ:</b> Приказ Минэнерго России от 08.07.2002 № 204 (ПУЭ 7-е издание, гл. 1.1, 1.2, 1.7, 1.8, 1.9, 2.1, 2.2, 3.1, 3.2, 4.1, 4.2, 5.1, 5.2, 6.1–6.6, 7.1–7.6, 7.10).</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== ПТЭЭП 2003 — НАВИГАЦИЯ ПО ДОКУМЕНТУ ======================== -->
+        <div id="page-pteep" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-title">ПТЭЭП 2003</div></div>
+            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+
+            <div class="content-header" style="padding: 14px 20px 10px;">
+                <h2 style="color: #e0e0e0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">Правила технической эксплуатации электроустановок потребителей</h2>
+                <p style="color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 5px;">Приказ Минэнерго РФ №6 от 13.01.2003. Тапните главу, чтобы раскрыть пункты</p>
+            </div>
+
+            <div id="doc-tree-pteep" class="doc-tree"></div>
+            <div class="doc-loading" id="doc-loading-pteep" style="display:none;">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 9 9" /></svg>
+                Загрузка...
+            </div>
+
+            <div style="margin:14px 8px 10px;padding:14px 16px;background:var(--card-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--card-border);border-radius:14px;position:relative;z-index:2;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                    <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    <span style="font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:-0.2px;">Справочная информация</span>
+                </div>
+                <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6;">
+                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Документ:</b> Правила технической эксплуатации электроустановок потребителей (ПТЭЭП).</div>
+                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Утверждены:</b> Приказом Минэнерго России от 13.01.2003 № 6.</div>
+                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Структура:</b> 5 разделов → 28 глав → ~700 пунктов. Номер пункта вида «1.1.1» (раздел.глава.пункт).</div>
+                    <div><b style="color:rgba(255,255,255,0.7);">Оригинал:</b> <a href="https://drive.google.com/file/d/1xY7jxI5K-og2-UsNk5lhJy_qMogJB_oE/view" target="_blank" rel="noopener" style="color:var(--accent-blue);text-decoration:underline;">PDF на Google Drive</a>.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== ПОТЭЭ 2022 — НАВИГАЦИЯ ПО ДОКУМЕНТУ ======================== -->
+        <div id="page-pote" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-title">ПОТЭЭ 2022</div></div>
+            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+
+            <div class="content-header" style="padding: 14px 20px 10px;">
+                <h2 style="color: #e0e0e0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">Правила по охране труда при эксплуатации электроустановок</h2>
+                <p style="color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 5px;">Приказ Минтруда №903н от 15.12.2020. Тапните главу, чтобы раскрыть пункты</p>
+            </div>
+
+            <div id="doc-tree-pote" class="doc-tree"></div>
+            <div class="doc-loading" id="doc-loading-pote" style="display:none;">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 9 9" /></svg>
+                Загрузка...
+            </div>
+
+            <div style="margin:14px 8px 10px;padding:14px 16px;background:var(--card-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--card-border);border-radius:14px;position:relative;z-index:2;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                    <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    <span style="font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:-0.2px;">Справочная информация</span>
+                </div>
+                <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6;">
+                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Документ:</b> Правила по охране труда при эксплуатации электроустановок (ПОТЭЭ).</div>
+                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Утверждены:</b> Приказом Минтруда России от 15.12.2020 № 903н (действуют с 01.07.2022).</div>
+                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Структура:</b> 47 глав → ~625 пунктов. Используется двухуровневая нумерация: «1.1» (глава.пункт).</div>
+                    <div><b style="color:rgba(255,255,255,0.7);">Оригинал:</b> <a href="https://drive.google.com/file/d/1qMLjS89aAIQO6mSaCsU_Z2nOovyGGLTS/view" target="_blank" rel="noopener" style="color:var(--accent-blue);text-decoration:underline;">PDF на Google Drive</a>.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== СО 153-34.03.603-2003 — НАВИГАЦИЯ ПО ДОКУМЕНТУ ======================== -->
+        <div id="page-so153" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-title">СО 153-34.03.603-2003</div></div>
+            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+
+            <div class="content-header" style="padding: 14px 20px 10px;">
+                <h2 style="color: #e0e0e0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">Инструкция по применению и испытанию средств защиты</h2>
+                <p style="color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 5px;">Приказ Минэнерго №261 от 30.06.2003. Тапните главу, чтобы раскрыть пункты</p>
+            </div>
+
+            <div id="doc-tree-so153" class="doc-tree"></div>
+            <div class="doc-loading" id="doc-loading-so153" style="display:none;">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 9 9" /></svg>
+                Загрузка...
+            </div>
+
+            <div style="margin:14px 8px 10px;padding:14px 16px;background:var(--card-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--card-border);border-radius:14px;position:relative;z-index:2;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                    <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    <span style="font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:-0.2px;">Справочная информация</span>
+                </div>
+                <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6;">
+                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Документ:</b> Инструкция по применению и испытанию средств защиты, используемых в электроустановках (СО 153-34.03.603-2003).</div>
+                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Утверждена:</b> Приказом Минэнерго России от 30.06.2003 № 261.</div>
+                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Структура:</b> 4 раздела → 35 глав → ~394 пункта. Номер пункта вида «1.1.6» (раздел.глава.пункт).</div>
+                    <div><b style="color:rgba(255,255,255,0.7);">Оригинал:</b> <a href="https://drive.google.com/file/d/1mFvdEmw0bYe_JP-W_H6Jiy57ZVfQedZn/view" target="_blank" rel="noopener" style="color:var(--accent-blue);text-decoration:underline;">PDF на Google Drive</a>.</div>
                 </div>
             </div>
         </div>
@@ -4695,8 +4780,14 @@
                 const ref = getField(q, 'literature_name', '\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u043b\u0438\u0442\u0435\u0440\u0430\u0442\u0443\u0440\u044b');
                 const fileUrl = getField(q, 'file_url', '\u0424\u0430\u0439\u043b').trim();
                 if (ref) {
-                    if (isWorkingUrl(fileUrl)) {
-                        // Литература кликабельна — ссылка на файл открывается в новой вкладке
+                    // Если ссылается на один из 4 наших документов (ПУЭ/ПТЭЭП/ПОТЭЭ/СО-153) —
+                    // делаем кликабельной для перехода к нужному пункту внутри приложения.
+                    const parsedRef = parseLiteratureRef(ref);
+                    if (parsedRef) {
+                        // Внутренний документ — кликабельная ссылка с прокруткой к пункту.
+                        html += '<div class="ticket-ref"><span class="ticket-ref-link" onclick="openDocRef(\'' + escapeQuotes(ref) + '\')" style="cursor:pointer;">' + escHtml(ref) + '</span></div>';
+                    } else if (isWorkingUrl(fileUrl)) {
+                        // Внешний документ — ссылка на файл открывается в новой вкладке.
                         html += '<div class="ticket-ref"><a class="ticket-ref-link" href="' + escHtml(fileUrl) + '" target="_blank" rel="noopener">' + escHtml(ref) + '</a></div>';
                     } else {
                         html += '<div class="ticket-ref">' + escHtml(ref) + '</div>';
@@ -5108,8 +5199,10 @@
         if (target) { target.classList.add('active'); requestAnimationFrame(() => { requestAnimationFrame(() => target.classList.add('visible')); }); }
         window.scrollTo({ top: 0, behavior: 'smooth' });
         if (page === 'buoy-calc') { updateBuoyCalcTitle(); setCalibMethodOnForm(); }
-        // Рендеринг дерева ПУЭ при переходе на страницу pue
-        if (page === 'pue') { renderPueTree(); }
+        // Ленивый рендеринг дерева документа при переходе на страницу нормативного документа
+        if (page === 'pue' || page === 'pteep' || page === 'pote' || page === 'so153') {
+            renderDocTree(page);
+        }
         // Обернуть карточки подразделов для swipe-to-add на страницах меню подразделов
         if (page === 'calc-kipa' || page === 'calc-electro' || page === 'calc-geometry' || page === 'docs') {
             wrapSubsectionItems('page-' + page);
@@ -5729,272 +5822,282 @@
     }
 
     // ============================================================
-    // ДЕРЕВО ПУЭ — навигация по структуре документа
+    // ДЕРЕВО НОРМАТИВНОЙ ДОКУМЕНТАЦИИ — универсальная навигация
     // ============================================================
-    // Структура: 7 разделов → ~50 глав → пункты (с заголовками, для ключевых глав — текст).
-    // Полный текст ПУЭ занимает ~2000 страниц и не может быть включён в приложение.
-    // Здесь — навигационная карта с заголовками пунктов; для наиболее актуальных глав
-    // КИПиА (1.7 Заземление, 1.8 Приёмо-сдаточные испытания, 3.1 Защита сетей, 7.3 Взрывоопасные зоны)
-    // приведены первые 5-10 пунктов с текстом.
-    const PUE_TREE = [
-        {
-            num: '1', title: 'Общие правила',
-            chapters: [
-                { num: '1.1', title: 'Общая часть', points: [
-                    { num: '1.1.1', title: 'Область применения', text: 'Правила устройства электроустановок (ПУЭ) распространяются на вновь сооружаемые и реконструируемые электроустановки до и выше 1 кВ переменного тока и до 1,5 кВ постоянного тока.' },
-                    { num: '1.1.2', title: 'Определения', text: 'В ПУЭ используются термины и определения в соответствии с ГОСТ и действующими стандартами.' },
-                    { num: '1.1.3', title: 'Напряжения', text: 'Электроустановки разделяются на установки до 1 кВ и выше 1 кВ. Номинальные напряжения: 220, 380, 660 В (до 1 кВ); 3, 6, 10, 20, 35, 110, 150, 220, 330, 500, 750, 1150 кВ.' }
-                ]},
-                { num: '1.2', title: 'Электроснабжение и электрические сети', points: [
-                    { num: '1.2.1', title: 'Область применения', text: 'Глава распространяется на электрические сети и электроприёмники потребителей.' },
-                    { num: '1.2.17', title: 'Категории электроприёмников', text: 'I категория — перерыв питания может повлечь опасность для жизни, ущерб народному хозяйству. II категория — перерыв приводит к массовым недоотпускам продукции. III категория — остальные.' },
-                    { num: '1.2.19', title: 'Электроснабжение I категории', text: 'Должно обеспечиваться от двух независимых источников питания. Перерыв допускается лишь на время АВР.' },
-                    { num: '1.2.20', title: 'Электроснабжение II категории', text: 'Рекомендуется от двух независимых источников. Перерыв на время восстановления питания действиями выездной бригады.' }
-                ]},
-                { num: '1.3', title: 'Выбор проводников по нагреву, экономической плотности тока и по условиям короны', points: [
-                    { num: '1.3.1', title: 'Область применения', text: 'Глава распространяется на выбор сечений проводов и кабелей по длительно допустимому току.' },
-                    { num: '1.3.2', title: 'Условия нагрева', text: 'Длительно допустимый ток проводника должен быть не менее расчётного тока нагрузки.' },
-                    { num: '1.3.4', title: 'Допустимые токи', text: 'Таблицы допустимых длительных токов для проводов и кабелей в зависимости от сечения, материала, способа прокладки.' },
-                    { num: '1.3.10', title: 'Поправочные коэффициенты', text: 'На температуру окружающей среды, число совместно проложенных проводов/кабелей, способ прокладки.' }
-                ]},
-                { num: '1.4', title: 'Выбор электрических аппаратов и проводников по условиям короткого замыкания', points: [
-                    { num: '1.4.1', title: 'Область применения', text: 'Выбор аппаратов и проводников по электродинамической и термической стойкости при КЗ.' },
-                    { num: '1.4.2', title: 'Расчётные условия КЗ', text: 'Токи КЗ определяются с учётом сопротивления энергосистемы, генераторов, трансформаторов, линий.' },
-                    { num: '1.4.5', title: 'Термическая стойкость', text: 'I_терм ≥ I_кз.в, t_терм ≥ t_откл.' }
-                ]},
-                { num: '1.5', title: 'Учёт электроэнергии', points: [
-                    { num: '1.5.1', title: 'Область применения', text: 'Учёт активной и реактивной энергии для расчётов с энергоснабжающей организацией и внутреннего контроля.' },
-                    { num: '1.5.5', title: 'Точка учёта', text: 'Счётчики устанавливаются на границе балансовой принадлежности.' },
-                    { num: '1.5.13', title: 'Классы точности', text: 'Расчётные счётчики активной энергии: класс 0,5S/0,5 для I категории; 1,0 для II; 2,0 для III.' }
-                ]},
-                { num: '1.6', title: 'Измерения электрических величин', points: [
-                    { num: '1.6.1', title: 'Область применения', text: 'Контрольные измерения в электроустановках: тока, напряжения, мощности, частоты, энергии.' },
-                    { num: '1.6.6', title: 'Измерение тока', text: 'Амперметры устанавливаются во всех фазах в цепях генераторов, трансформаторов, линий электропередачи.' },
-                    { num: '1.6.8', title: 'Измерение напряжения', text: 'Вольтметры на сборных шинах для контроля напряжения в каждой фазе/между фазами.' }
-                ]},
-                { num: '1.7', title: 'Заземление и защитные меры электробезопасности (ПУЭ 7)', points: [
-                    { num: '1.7.1', title: 'Область применения', text: 'Глава распространяется на все электроустановки напряжением до и выше 1 кВ.' },
-                    { num: '1.7.7', title: 'Нейтраль', text: 'Электроустановки до 1 кВ: с глухозаземлённой (TN, TT) или изолированной (IT) нейтралью. Выше 1 кВ: с эффективно заземлённой нейтралью (110 кВ и выше) или изолированной (3-35 кВ).' },
-                    { num: '1.7.21', title: 'Системы заземления', text: 'TN-C, TN-S, TN-C-S, TT, IT. Первая буква — состояние нейтрали источника (T-заземлена, I-изолирована), вторая — состояние открытых проводящих частей (N-соединены с нейтралью, T-заземлены).' },
-                    { num: '1.7.30', title: 'Заземлители', text: 'Естественные (металлоконструкции зданий, арматура ЖБ, трубопроводы) и искусственные (вертикальные электроды, горизонтальные полосы).' },
-                    { num: '1.7.45', title: 'Нормы сопротивления до 1 кВ', text: '≤ 4 Ом — для установок до 1000 В с изолированной нейтралью; ≤ 10 Ом при мощности источника ≤ 100 кВ·А.' },
-                    { num: '1.7.51', title: 'Нормы сопротивления выше 1 кВ', text: '≤ 0,5 Ом — выше 1 кВ с большими токами замыкания на землю (>500 А); ≤ 10/I Ом — выше 1 кВ с малыми токами (I — ток замыкания, А).' },
-                    { num: '1.7.55', title: 'УЗО', text: 'Устройства защитного отключения (УЗО) с током срабатывания ≤ 30 мА применяются для защиты людей в цепях штепсельных розеток до 1 кВ.' },
-                    { num: '1.7.76', title: 'Система уравнивания потенциалов', text: 'Основная и дополнительная системы уравнивания потенциалов в электроустановках до 1 кВ.' },
-                    { num: '1.7.78', title: 'Доступные проводящие части', text: 'Открытые проводящие части должны быть присоединены к глухозаземлённой нейтрали источника питания (в системе TN) или заземлены (TT, IT).' },
-                    { num: '1.7.101', title: 'Защитные проводники (PE)', text: 'Сечение PE-проводника: ≥ сечения фазного при S_ф ≤ 16 мм²; ≥ 16 мм² при 16 < S_ф ≤ 35; ≥ S_ф/2 при S_ф > 35.' }
-                ]},
-                { num: '1.8', title: 'Нормы приёмо-сдаточных испытаний (ПУЭ 7)', points: [
-                    { num: '1.8.1', title: 'Область применения', text: 'Нормы распространяются на приёмо-сдаточные испытания электроустановок до и выше 1 кВ.' },
-                    { num: '1.8.4', title: 'Проверка состояния элементов заземляющего устройства', text: 'Визуальный осмотр, измерение сопротивления растеканию тока заземляющих устройств, проверка цепи «фаза-нуль».' },
-                    { num: '1.8.7', title: 'Измерение сопротивления изоляции', text: 'Силовые кабели до 1 кВ — не менее 0,5 МОм; обмотки электродвигателей — не менее 1 МОм; аппараты — не менее 1 МОм.' },
-                    { num: '1.8.13', title: 'Испытание повышенным напряжением', text: 'Силовые кабели до 1 кВ испытываются напряжением 2,5 кВ постоянного тока в течение 5 минут.' },
-                    { num: '1.8.34', title: 'Силовые трансформаторы', text: 'Измерение сопротивления обмоток, коэффициента трансформации, сопротивления изоляции, тангенса угла диэлектрических потерь, испытание повышенным напряжением.' },
-                    { num: '1.8.37', title: 'Измерители и счётчики', text: 'Проверка правильности включения, погрешности по классу точности, отсутствия самохода.' }
-                ]},
-                { num: '1.9', title: 'Изоляция электроустановок (ПУЭ 7)', points: [
-                    { num: '1.9.1', title: 'Область применения', text: 'Требования к изоляции электроустановок переменного тока напряжением до 750 кВ.' },
-                    { num: '1.9.5', title: 'Уровни изоляции', text: 'Нормированные испытательные напряжения для электрооборудования различных классов напряжения.' },
-                    { num: '1.9.7', title: 'Загрязнение изоляции', text: 'Классификация по степени загрязнения (I-IV) для выбора изоляторов ВЛ и ОРУ.' }
-                ]}
-            ]
-        },
-        {
-            num: '2', title: 'Канализация электроэнергии',
-            chapters: [
-                { num: '2.1', title: 'Электропроводки', points: [
-                    { num: '2.1.1', title: 'Область применения', text: 'Электропроводки — совокупность проводов и кабелей с креплениями, поддерживающими и защитными конструкциями.' },
-                    { num: '2.1.7', title: 'Способы прокладки', text: 'Открытая (по поверхностям стен, потолков, на лотках, тросах) и скрытая (в трубах, коробах, внутри конструкций).' },
-                    { num: '2.1.14', title: 'Минимальные сечения', text: 'Алюминиевые провода: 2,5 мм² для линий освещения; 2,5 мм² для силовых. Медные: 1,5 мм² освещение; 2,5 мм² силовые.' },
-                    { num: '2.1.21', title: 'Соединения проводов', text: 'Пайка, сварка, опрессовка, болтовые соединения. Места соединений должны быть доступны для осмотра.' },
-                    { num: '2.1.49', title: 'Защита от механических повреждений', text: 'Кабели на высоте менее 1,75 м от пола должны быть защищены трубами, коробами или углублены в стену.' }
-                ]},
-                { num: '2.2', title: 'Токопроводы напряжением до 35 кВ', points: [
-                    { num: '2.2.1', title: 'Область применения', text: 'Токопроводы — устройства для передачи электрической энергии жёсткими или гибкими проводниками.' },
-                    { num: '2.2.4', title: 'Классификация', text: 'Жёсткие (осветительные, магистральные) и гибкие токопроводы.' }
-                ]},
-                { num: '2.3', title: 'Кабельные линии', points: [
-                    { num: '2.3.1', title: 'Область применения', text: 'Кабельные линии до 220 кВ включительно, прокладываемые в земле, трубах, тоннелях, по конструкциям.' },
-                    { num: '2.3.31', title: 'Маркировка', text: 'ААБ — алюминиевая жила, алюминиевая оболочка, броня. ВВГ — медная жила, ПВХ изоляция и оболочка, без брони.' },
-                    { num: '2.3.49', title: 'Глубина прокладки', text: 'Глубина траншеи 0,7 м для кабелей до 20 кВ, 1,0 м — 35 кВ. Над кабелем — сигнальная лента.' },
-                    { num: '2.3.83', title: 'Соединительные муфты', text: 'Свинцовые, эпоксидные, термоусаживаемые. Расположение муфт в смотровых колодцах.' }
-                ]},
-                { num: '2.4', title: 'Воздушные линии электропередачи до 1 кВ', points: [
-                    { num: '2.4.1', title: 'Область применения', text: 'ВЛ до 1 кВ переменного тока, выполняемые проводами на изоляторах.' },
-                    { num: '2.4.8', title: 'Провода', text: 'Неизолированные (А, АС) и изолированные (СИП). СИП-2A, СИП-4 для магистралей и ответвлений.' },
-                    { num: '2.4.12', title: 'Расстояния', text: 'От ВЛ до земли: 6 м — при пересечении дорог; 5 м — в ненаселённой местности.' }
-                ]},
-                { num: '2.5', title: 'Воздушные линии электропередачи выше 1 кВ', points: [
-                    { num: '2.5.1', title: 'Область применения', text: 'ВЛ напряжением выше 1 кВ до 750 кВ.' },
-                    { num: '2.5.5', title: 'Климатические условия', text: 'Расчёт по гололёдным, ветровым и температурным воздействиям. Районы по гололёду I-IV.' },
-                    { num: '2.5.6', title: 'Опоры', text: 'Деревянные, железобетонные, металлические. Промежуточные, анкерные, угловые.' }
-                ]}
-            ]
-        },
-        {
-            num: '3', title: 'Защита и автоматика',
-            chapters: [
-                { num: '3.1', title: 'Защита электрических сетей напряжением до 1 кВ (ПУЭ 7)', points: [
-                    { num: '3.1.1', title: 'Область применения', text: 'Выбор аппаратов защиты (плавких предохранителей, автоматических выключателей, УЗО) для сетей до 1 кВ.' },
-                    { num: '3.1.4', title: 'Защита от перегрузки', text: 'I_ср.тепл ≥ I_расч; I_расц ≥ I_длит.доп провода. Защита должна срабатывать до того, как ток перегрузки повредит провод.' },
-                    { num: '3.1.5', title: 'Защита от КЗ', text: 'I_ср.эл.магн ≥ I_кз.min в конце линии. Время срабатывания должно обеспечить термическую стойкость кабеля.' },
-                    { num: '3.1.8', title: 'Время отключения', text: 'В цепях штепсельных розеток — не более 0,4 с; в распределительных сетях — не более 5 с.' },
-                    { num: '3.1.10', title: 'Номиналы автоматов', text: 'Стандартный ряд: 6, 10, 16, 20, 25, 32, 40, 50, 63 А. Характеристики B, C, D по кратности пускового тока.' },
-                    { num: '3.1.11', title: 'Селективность', text: 'Защита должна отключать только повреждённый участок. Селективность по времени: Δt ≥ 0,3 с между ступенями.' },
-                    { num: '3.1.15', title: 'УЗО', text: 'УЗО с I_Δn ≤ 30 мА — для штепсельных розеток; ≤ 100 мА — для групповых линий; ≤ 300 мА — для вводных щитов (пожаробезопасность).' }
-                ]},
-                { num: '3.2', title: 'Релейная защита (ПУЭ 6)', points: [
-                    { num: '3.2.1', title: 'Область применения', text: 'Релейная защита элементов электрической части энергосистем и электроустановок потребителей.' },
-                    { num: '3.2.5', title: 'Требования к защите', text: 'Быстродействие, селективность, чувствительность, надёжность.' },
-                    { num: '3.2.26', title: 'Защита линий', text: 'Токовая отсечка, максимальная токовая защита, дистанционная защита, дифференциально-фазная защита.' }
-                ]}
-            ]
-        },
-        {
-            num: '4', title: 'Распределительные устройства и подстанции',
-            chapters: [
-                { num: '4.1', title: 'Распределительные устройства до 1 кВ (ПУЭ 7)', points: [
-                    { num: '4.1.1', title: 'Область применения', text: 'РУ до 1 кВ переменного и постоянного тока.' },
-                    { num: '4.1.3', title: 'Помещения', text: 'Электропомещения — закрытые, доступные только квалифицированному персоналу. Высота ≥ 2 м (до выступающих конструкций).' },
-                    { num: '4.1.7', title: 'Главный распределительный щит', text: 'ГРЩ устанавливается в отдельном помещении. Доступ с фасада и задней стороны — ширина прохода ≥ 1 м.' }
-                ]},
-                { num: '4.2', title: 'Распределительные устройства и подстанции выше 1 кВ', points: [
-                    { num: '4.2.1', title: 'Область применения', text: 'РУ и ПС напряжением 3-220 кВ.' },
-                    { num: '4.2.10', title: 'Закрытые ПС', text: 'Здание ПС должно быть отделено от других помещений противопожарными перегородками.' },
-                    { num: '4.2.68', title: 'Маслонаполненное оборудование', text: 'Масляные трансформаторы мощностью > 630 кВ·А — в отдельных камерах с маслоприёмником.' }
-                ]}
-            ]
-        },
-        {
-            num: '5', title: 'Электросиловые установки',
-            chapters: [
-                { num: '5.1', title: 'Электромашинные помещения', points: [
-                    { num: '5.1.1', title: 'Область применения', text: 'Помещения, в которых установлены электрические машины (генераторы, двигатели).' },
-                    { num: '5.1.4', title: 'Размещение машин', text: 'Расстояние между машинами, между машинами и стенами — по нормам обслуживания и ремонта.' }
-                ]},
-                { num: '5.2', title: 'Генераторы и синхронные компенсаторы', points: [
-                    { num: '5.2.1', title: 'Область применения', text: 'Турбогенераторы и гидрогенераторы мощностью 5 МВ·А и выше, синхронные компенсаторы мощностью 5 Мвар и выше.' },
-                    { num: '5.2.10', title: 'Системы возбуждения', text: 'Тиристорные, бесщёточные системы возбуждения. Резервирование рабочего и резервного возбудителей.' }
-                ]}
-            ]
-        },
-        {
-            num: '6', title: 'Электрическое освещение',
-            chapters: [
-                { num: '6.1', title: 'Осветительные приборы и светильники (ПУЭ 7)', points: [
-                    { num: '6.1.1', title: 'Область применения', text: 'Светильники и люстры, устанавливаемые в жилых, общественных и производственных помещениях.' },
-                    { num: '6.1.7', title: 'Классы защиты', text: 'Класс 0 — без заземления (только сухие помещения); класс I — с заземлением; класс II — двойная изоляция; класс III — безопасное сверхнизкое напряжение (до 50 В).' },
-                    { num: '6.1.14', title: 'Подвесные светильники', text: 'Масса ≤ 25 кг — на крюке в перекрытии; > 25 кг — на отдельных конструкциях.' }
-                ]},
-                { num: '6.2', title: 'Освещение площадок предприятий и мест производства работ вне зданий', points: [
-                    { num: '6.2.1', title: 'Область применения', text: 'Рабочее, аварийное, охранное и дежурное освещение открытых пространств.' }
-                ]},
-                { num: '6.3', title: 'Наружное освещение', points: [
-                    { num: '6.3.1', title: 'Область применения', text: 'Освещение улиц, дорог, площадей, парков, фасадов зданий.' }
-                ]}
-            ]
-        },
-        {
-            num: '7', title: 'Электрооборудование специальных установок (ПУЭ 7)',
-            chapters: [
-                { num: '7.1', title: 'Электроустановки жилых, общественных, административных и бытовых зданий', points: [
-                    { num: '7.1.1', title: 'Область применения', text: 'Электроустановки в зданиях с напряжением до 1 кВ.' },
-                    { num: '7.1.13', title: 'Ввод в здание', text: 'Вводы в здания выполняются кабелем или воздушной линией. Вводной кабель — в трубе через фундамент.' },
-                    { num: '7.1.22', title: 'Этажные щитки', text: 'Устанавливаются в нишах стен на лестничных клетках. Высота установки 1,5-1,7 м.' },
-                    { num: '7.1.32', title: 'Электропроводка в ванных', text: 'В зонах 0, 1, 2 ванных и душевых — только скрытая проводка. Розетки на расстоянии ≥ 0,6 м от края ванны, с УЗО ≤ 30 мА.' },
-                    { num: '7.1.37', title: 'Розетки', text: 'Розетки 220 В устанавливаются на высоте 0,3-1 м от пола. В школах, детских учреждениях — 1,8 м.' }
-                ]},
-                { num: '7.2', title: 'Электроустановки зрелищных предприятий, клубных учреждений и спортивных сооружений', points: [
-                    { num: '7.2.1', title: 'Область применения', text: 'Театры, кинотеатры, цирки, клубы, спортивные сооружения с количеством мест ≥ 800.' }
-                ]},
-                { num: '7.3', title: 'Электроустановки во взрывоопасных зонах (ПУЭ 7)', points: [
-                    { num: '7.3.1', title: 'Область применения', text: 'Электроустановки во взрывоопасных зонах, где могут образоваться взрывоопасные смеси горючих газов, паров или пыли с воздухом.' },
-                    { num: '7.3.3', title: 'Классы зон', text: 'Зона 0 — взрывоопасная среда постоянно; Зона 1 — при нормальной работе; Зона 2 — при аварии. Для пыли: 20, 21, 22.' },
-                    { num: '7.3.16', title: 'Взрывозащищённое оборудование', text: 'Виды взрывозащиты: d (взрывонепроницаемая оболочка), e (повышенная защита), i (искробезопасная цепь), p (заполнение продувкой), o (масляное), q (кварцевое), m (герметизация).' },
-                    { num: '7.3.21', title: 'Маркировка', text: 'Ex d IIB T4 — взрывонепроницаемая оболочка, группа IIB, температурный класс T4 (до +135 °C).' },
-                    { num: '7.3.40', title: 'Прокладка кабелей', text: 'Кабели во взрывоопасных зонах — в трубах или коробах. Соединения — во взрывозащищённых муфтах.' },
-                    { num: '7.3.43', title: 'Заземление', text: 'Все металлические части оборудования, нормально не находящиеся под напряжением, должны быть заземлены.' },
-                    { num: '7.3.60', title: 'Освещение', text: 'Светильники во взрывоопасных зонах — с маркировкой Ex, соответствующей классу зоны.' }
-                ]},
-                { num: '7.4', title: 'Электроустановки в пожароопасных зонах', points: [
-                    { num: '7.4.1', title: 'Область применения', text: 'Зоны, где могут образоваться горючие вещества (пыль, волокна), но не в количествах, достаточных для взрыва.' },
-                    { num: '7.4.3', title: 'Классы зон', text: 'Зона П-I — горючие жидкости; П-II — горючие пыли; П-IIа — твёрдые горючие вещества; П-III — вне помещений.' }
-                ]},
-                { num: '7.5', title: 'Электротермические установки', points: [
-                    { num: '7.5.1', title: 'Область применения', text: 'Электропечи, электронагреватели, плазменные установки.' }
-                ]},
-                { num: '7.6', title: 'Электрические подъёмники (краны)', points: [
-                    { num: '7.6.1', title: 'Область применения', text: 'Электрооборудование грузоподъёмных кранов, лифтов, талей.' }
-                ]}
-            ]
-        }
-    ];
+    // Поддерживаются 4 документа: ПУЭ, ПТЭЭП, ПОТЭЭ, СО 153-34.03.603-2003.
+    // Каждый документ разбит на главы; главы группируются по разделам.
+    // Содержимое глав (пункты) подгружается лениво (lazy-load) из data/{doc}/{chapter}.json
+    // при первом раскрытии главы и кэшируется в памяти.
 
-    // Рендеринг дерева ПУЭ в контейнер #pueTree.
-    // Вызывается из navigateTo при переходе на page-pue.
-    function renderPueTree() {
-        const container = document.getElementById('pueTree');
-        if (!container) return;
-        // Если дерево уже отрендерено — не делаем повторно
-        if (container.children.length > 0) return;
-        let html = '';
-        PUE_TREE.forEach(section => {
-            html += '<div class="pue-section" data-pue-section="' + section.num + '">';
-            html += '<div class="pue-section-header" onclick="togglePueSection(this.parentElement)">';
-            html += '<span class="pue-section-num">Раздел ' + section.num + '</span>';
-            html += '<span class="pue-section-title">' + pueEsc(section.title) + '</span>';
-            html += '<svg class="pue-section-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>';
-            html += '</div>';
-            html += '<div class="pue-chapters">';
-            section.chapters.forEach(chapter => {
-                html += '<div class="pue-chapter" data-pue-chapter="' + chapter.num + '">';
-                html += '<div class="pue-chapter-header" onclick="togglePueChapter(this.parentElement)">';
-                html += '<span class="pue-chapter-num">Гл. ' + chapter.num + '</span>';
-                html += '<span class="pue-chapter-title">' + pueEsc(chapter.title) + '</span>';
-                html += '<svg class="pue-chapter-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>';
-                html += '</div>';
-                html += '<div class="pue-points">';
-                chapter.points.forEach(point => {
-                    html += '<div class="pue-point">';
-                    html += '<span class="pue-point-num">' + point.num + '</span>';
-                    html += '<span class="pue-point-title">' + pueEsc(point.title) + '</span>';
-                    if (point.text) {
-                        html += '<div class="pue-point-text">' + pueEsc(point.text) + '</div>';
+    // Кэш загруженных метаданных документов (meta.json).
+    const docMetaCache = {};
+    // Кэш загруженных глав ({doc}/{chapter}.json).
+    const docChapterCache = {};
+
+    // Конфигурация документов: title (короткое), fullTitle (полное), desc (описание), pdfUrl (ссылка на оригинал).
+    const DOC_CONFIG = {
+        'pue':   { title: 'ПУЭ 6 и 7', fullTitle: 'Правила устройства электроустановок', desc: '6-е и 7-е издание', pdfUrl: 'https://drive.google.com/file/d/1Rmy2aUYEr8WG1R1Pzuucbb8QEwfBrj0y/view' },
+        'pteep': { title: 'ПТЭЭП 2003', fullTitle: 'Правила технической эксплуатации электроустановок потребителей', desc: 'Приказ Минэнерго РФ №6 от 13.01.2003', pdfUrl: 'https://drive.google.com/file/d/1xY7jxI5K-og2-UsNk5lhJy_qMogJB_oE/view' },
+        'pote':  { title: 'ПОТЭЭ 2022', fullTitle: 'Правила по охране труда при эксплуатации электроустановок', desc: 'Приказ Минтруда №903н от 15.12.2020', pdfUrl: 'https://drive.google.com/file/d/1qMLjS89aAIQO6mSaCsU_Z2nOovyGGLTS/view' },
+        'so153': { title: 'СО 153-34.03.603-2003', fullTitle: 'Инструкция по применению и испытанию средств защиты', desc: 'Приказ Минэнерго №261 от 30.06.2003', pdfUrl: 'https://drive.google.com/file/d/1mFvdEmw0bYe_JP-W_H6Jiy57ZVfQedZn/view' }
+    };
+
+    // Загрузка meta.json (оглавление документа). Кэшируется в docMetaCache.
+    async function loadDocMeta(doc) {
+        if (docMetaCache[doc]) return docMetaCache[doc];
+        const resp = await fetch('data/' + doc + '/meta.json');
+        if (!resp.ok) throw new Error('Не удалось загрузить оглавление');
+        const meta = await resp.json();
+        docMetaCache[doc] = meta;
+        return meta;
+    }
+
+    // Загрузка главы документа. Кэшируется в docChapterCache.
+    async function loadDocChapter(doc, chapter) {
+        const cacheKey = doc + '/' + chapter;
+        if (docChapterCache[cacheKey]) return docChapterCache[cacheKey];
+        const resp = await fetch('data/' + doc + '/' + chapter + '.json');
+        if (!resp.ok) throw new Error('Не удалось загрузить главу');
+        const data = await resp.json();
+        docChapterCache[cacheKey] = data;
+        return data;
+    }
+
+    // Рендеринг дерева документа: список разделов с главами внутри.
+    // Идемпотентный — если уже отрендерено, не повторяет.
+    // Вызывается из navigateTo при переходе на page-{doc}.
+    async function renderDocTree(doc) {
+        const container = document.getElementById('doc-tree-' + doc);
+        if (!container || container.children.length > 0) return;
+
+        const loading = document.getElementById('doc-loading-' + doc);
+        if (loading) loading.style.display = 'flex';
+
+        try {
+            const meta = await loadDocMeta(doc);
+            let html = '';
+            // Группируем главы по разделам.
+            // Показываем заголовок раздела только когда он меняется,
+            // и пропускаем его, если section_title совпадает с названием главы
+            // (так бывает у ПОТЭЭ, где у каждой главы свой раздел с тем же названием).
+            let currentSection = '';
+            meta.forEach(function(ch) {
+                if (ch.section !== currentSection) {
+                    currentSection = ch.section;
+                    const sameAsChapter = ch.section_title && ch.title && ch.section_title.trim() === ch.title.trim();
+                    if (!sameAsChapter) {
+                        const sectionTitle = ch.section_title ? ('. ' + ch.section_title) : '';
+                        html += '<div class="doc-section-title">Раздел ' + docEsc(ch.section) + sectionTitle + '</div>';
                     }
+                }
+                html += '<div class="doc-chapter" data-doc="' + doc + '" data-chapter="' + ch.chapter + '" id="doc-chapter-' + doc + '-' + ch.chapter + '">';
+                html += '<div class="doc-chapter-header" onclick="toggleDocChapter(\'' + doc + '\',\'' + ch.chapter + '\')">';
+                html += '<span class="doc-chapter-num">' + docEsc(ch.chapter) + '</span>';
+                html += '<span class="doc-chapter-title">' + docEsc(ch.title) + ' <span class="doc-chapter-count">(' + ch.points_count + ')</span></span>';
+                html += '<svg class="doc-chapter-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>';
+                html += '</div>';
+                html += '<div class="doc-points" id="doc-points-' + doc + '-' + ch.chapter + '"></div>';
+                html += '</div>';
+            });
+            container.innerHTML = html;
+        } catch (e) {
+            container.innerHTML = '<div style="padding:20px;text-align:center;color:#c74a4a;">Ошибка загрузки: ' + docEsc(e.message) + '</div>';
+        } finally {
+            if (loading) loading.style.display = 'none';
+        }
+    }
+
+    // Тоггл главы: ленивая подгрузка пунктов при первом раскрытии.
+    // Аккордеон — при раскрытии главы остальные главы того же документа сворачиваются.
+    async function toggleDocChapter(doc, chapter) {
+        const chapterEl = document.getElementById('doc-chapter-' + doc + '-' + chapter);
+        if (!chapterEl) return;
+        const pointsContainer = document.getElementById('doc-points-' + doc + '-' + chapter);
+        if (!pointsContainer) return;
+
+        const isExpanded = chapterEl.classList.contains('expanded');
+
+        // Аккордеон: свернуть остальные главы того же документа.
+        if (!isExpanded) {
+            chapterEl.parentElement.querySelectorAll('.doc-chapter.expanded').forEach(function(c) {
+                if (c !== chapterEl) c.classList.remove('expanded');
+            });
+        }
+
+        chapterEl.classList.toggle('expanded', !isExpanded);
+
+        // Ленивая загрузка содержимого главы при первом раскрытии.
+        if (!isExpanded && !pointsContainer.children.length) {
+            pointsContainer.innerHTML = '<div style="padding:10px;color:rgba(255,255,255,0.3);font-size:12px;">Загрузка...</div>';
+            try {
+                const data = await loadDocChapter(doc, chapter);
+                let html = '';
+                data.points.forEach(function(p) {
+                    html += '<div class="doc-point" id="doc-point-' + doc + '-' + p.num + '">';
+                    html += '<div class="doc-point-header"><span class="doc-point-num">' + docEsc(p.num) + '</span></div>';
+                    html += '<div class="doc-point-text">' + docEsc(p.text) + '</div>';
                     html += '</div>';
                 });
-                html += '</div>'; // .pue-points
-                html += '</div>'; // .pue-chapter
-            });
-            html += '</div>'; // .pue-chapters
-            html += '</div>'; // .pue-section
-        });
-        container.innerHTML = html;
-    }
-
-    // Экранирование HTML для защиты от ошибок в данных.
-    function pueEsc(s) {
-        return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    }
-
-    // Тоггл раздела (1-й уровень).
-    function togglePueSection(el) {
-        el.classList.toggle('expanded');
-        if (navigator.vibrate) navigator.vibrate(10);
-    }
-
-    // Тоггл главы (2-й уровень). При раскрытии главы — сворачиваем остальные главы того же раздела (аккордеон).
-    function togglePueChapter(el) {
-        const isExpanded = el.classList.contains('expanded');
-        // Аккордеон внутри раздела
-        const section = el.closest('.pue-section');
-        if (section) {
-            section.querySelectorAll('.pue-chapter.expanded').forEach(c => {
-                if (c !== el) c.classList.remove('expanded');
-            });
+                pointsContainer.innerHTML = html;
+            } catch (e) {
+                pointsContainer.innerHTML = '<div style="padding:10px;color:#c74a4a;">Ошибка: ' + docEsc(e.message) + '</div>';
+            }
         }
-        el.classList.toggle('expanded', !isExpanded);
+
         if (navigator.vibrate) navigator.vibrate(10);
+    }
+
+    // Экранирование HTML для защиты от ошибок/инъекций в данных.
+    function docEsc(s) {
+        return String(s).replace(/[&<>"']/g, function(c) {
+            return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]);
+        });
+    }
+
+    // ============================================================
+    // ПАРСЕР ССЫЛОК НА ЛИТЕРАТУРУ ИЗ ЭКЗАМЕНАЦИОННЫХ БИЛЕТОВ
+    // ============================================================
+    // Разбирает строки вида «Пункт 1.1.6 СО 153-34.03.603-2003 (...)»,
+    // «Главы 1.7, 6.1 ПУЭ», «Пункты 7.3.26…7.3.30 ПУЭ», «Пункт 1.1, 8.1 ПОТЭЭ».
+    // Возвращает { doc, type, items, original } или null для внешних документов.
+
+    function parseLiteratureRef(refStr) {
+        if (!refStr || !refStr.trim()) return null;
+        let doc = null;
+        let type = 'point';
+        let items = [];
+
+        // Определяем документ по ключевым словам.
+        if (/ПУЭ/.test(refStr)) doc = 'pue';
+        else if (/ПТЭЭП/.test(refStr)) doc = 'pteep';
+        else if (/ПОТЭЭ/.test(refStr)) doc = 'pote';
+        else if (/СО\s*153|Инструкция по применению/.test(refStr)) doc = 'so153';
+        else return null; // Внешний документ — не входит в нашу четвёрку
+
+        // Удаляем шифр документа из строки, чтобы он не распознавался как номер пункта.
+        // Например, «СО 153-34.03.603-2003» содержит «34.03.603», которое иначе
+        // попадёт в выборку номеров пунктов.
+        let cleaned = refStr
+            .replace(/СО\s*153-\d+\.\d+\.\d+-\d+/g, 'СО153')
+            .replace(/153-\d+\.\d+\.\d+-\d+/g, '153');
+
+        // Обработка диапазона «7.3.26…7.3.30» (или с двумя/тремя точками).
+        const rangeMatch = cleaned.match(/(\d+\.\d+\.\d+)\s*[…\.]{2,}\s*(\d+\.\d+\.\d+)/);
+        if (rangeMatch) {
+            type = 'range';
+            items = [rangeMatch[1], rangeMatch[2]];
+            return { doc: doc, type: type, items: items, original: refStr };
+        }
+
+        if (doc === 'pote') {
+            // У ПОТЭЭ двухуровневая нумерация пунктов: «1.1», «8.1» (глава.пункт).
+            // Главы ПОТЭЭ — одноразрядные: «1», «2», ...
+            // Поэтому любое «X.Y» в ссылке на ПОТЭЭ считаем пунктом.
+            const pointMatches = cleaned.match(/\b\d+\.\d+\b/g);
+            if (pointMatches) {
+                type = 'point';
+                items = pointMatches;
+            }
+        } else {
+            // У ПУЭ/ПТЭЭП/СО-153 трёхуровневая нумерация пунктов (X.Y.Z) и
+            // двухуровневая нумерация глав (X.Y).
+            const pointMatches = cleaned.match(/\d+\.\d+\.\d+/g);
+            if (pointMatches) {
+                type = 'point';
+                items = pointMatches;
+            } else {
+                const chapterMatches = cleaned.match(/\b\d+\.\d+\b/g);
+                if (chapterMatches) {
+                    type = 'chapter';
+                    items = chapterMatches;
+                }
+            }
+        }
+
+        if (items.length === 0) {
+            // Номер не найден — просто открываем страницу документа.
+            type = 'doc';
+        }
+
+        return { doc: doc, type: type, items: items, original: refStr };
+    }
+
+    // Открытие ссылки на литературу: переход на страницу документа,
+    // раскрытие нужной главы и прокрутка к пункту.
+    async function openDocRef(refStr) {
+        const parsed = parseLiteratureRef(refStr);
+        if (!parsed) return false; // Внешний документ — не обрабатываем
+
+        // Переход на страницу документа.
+        navigateTo(parsed.doc);
+
+        // Ждём, пока отрендерится дерево документа.
+        await new Promise(function(r) { setTimeout(r, 300); });
+
+        if (parsed.type === 'point' && parsed.items.length > 0) {
+            const pointNum = parsed.items[0];
+            let chapter;
+            if (parsed.doc === 'pote') {
+                // У ПОТЭЭ пункт «X.Y» → глава «X».
+                chapter = pointNum.split('.')[0];
+            } else {
+                // У ПУЭ/ПТЭЭП/СО-153 пункт «X.Y.Z» → глава «X.Y».
+                chapter = pointNum.split('.').slice(0, 2).join('.');
+            }
+
+            // Раскрытие главы (ленивая подгрузка пунктов).
+            await toggleDocChapter(parsed.doc, chapter);
+
+            // Ждём загрузки содержимого.
+            await new Promise(function(r) { setTimeout(r, 300); });
+
+            // Прокрутка к нужному пункту с подсветкой.
+            const pointEl = document.getElementById('doc-point-' + parsed.doc + '-' + pointNum);
+            if (pointEl) {
+                pointEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                pointEl.style.background = 'rgba(74, 143, 199, 0.15)';
+                setTimeout(function() { pointEl.style.background = ''; }, 2000);
+            } else {
+                // Пункт не найден (например, номер в билете не соответствует данным) —
+                // прокручиваем к главе.
+                const chapterEl = document.getElementById('doc-chapter-' + parsed.doc + '-' + chapter);
+                if (chapterEl) chapterEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        } else if (parsed.type === 'chapter' && parsed.items.length > 0) {
+            const chapter = parsed.items[0];
+            await toggleDocChapter(parsed.doc, chapter);
+            const chapterEl = document.getElementById('doc-chapter-' + parsed.doc + '-' + chapter);
+            if (chapterEl) chapterEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (parsed.type === 'range' && parsed.items.length > 0) {
+            // Диапазон «7.3.26…7.3.30» — раскрываем главу и прокручиваем к первому пункту.
+            const pointNum = parsed.items[0];
+            let chapter;
+            if (parsed.doc === 'pote') {
+                chapter = pointNum.split('.')[0];
+            } else {
+                chapter = pointNum.split('.').slice(0, 2).join('.');
+            }
+            await toggleDocChapter(parsed.doc, chapter);
+            await new Promise(function(r) { setTimeout(r, 300); });
+            const pointEl = document.getElementById('doc-point-' + parsed.doc + '-' + pointNum);
+            if (pointEl) {
+                pointEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                pointEl.style.background = 'rgba(74, 143, 199, 0.15)';
+                setTimeout(function() { pointEl.style.background = ''; }, 2000);
+            } else {
+                const chapterEl = document.getElementById('doc-chapter-' + parsed.doc + '-' + chapter);
+                if (chapterEl) chapterEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        // type === 'doc' — просто открываем страницу документа, без прокрутки.
+
+        return true;
+    }
+
+    // Экранирование одинарной кавычки и обратного слеша для безопасной
+    // вставки в onclick="openDocRef('...')".
+    function escapeQuotes(s) {
+        return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     }
 
     // ============================================================
@@ -9236,7 +9339,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
     // Haptic feedback on navigation and button presses
     document.addEventListener('click', function(e) {
-        const target = e.target.closest('.nav-btn, .menu-btn, .bottom-nav-item, .converter-convert-btn, .scale-calc-btn, .query-btn, .header-btn, .ticket-cat-card, .ticket-item-header, .ticket-nav-btn, .ticket-a-img, .ticket-a-imglink, .ticket-img-overlay-close, .ticket-ref-link, .connection-indicator, .dashboard-quick-btn, .menu-btn-overflow, .dashboard-bottom-btn, .pin-sheet-action, .pin-sheet-cancel');
+        const target = e.target.closest('.nav-btn, .menu-btn, .bottom-nav-item, .converter-convert-btn, .scale-calc-btn, .query-btn, .header-btn, .ticket-cat-card, .ticket-item-header, .ticket-nav-btn, .ticket-a-img, .ticket-a-imglink, .ticket-img-overlay-close, .ticket-ref-link, .connection-indicator, .dashboard-quick-btn, .menu-btn-overflow, .dashboard-bottom-btn, .pin-sheet-action, .pin-sheet-cancel, .doc-chapter-header');
         if (target && navigator.vibrate) {
             navigator.vibrate(15);
         }
