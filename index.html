@@ -808,6 +808,56 @@
     [data-theme="light"] .pinned-item-delete-bg {
         background: linear-gradient(135deg, #C6613F, #D97757);
     }
+
+    /* ============================================================
+       SWIPE-TO-ADD: обёртка карточки подраздела с зелёными подложками «Добавить»
+       ============================================================ */
+    .subsection-cell {
+        position: relative;
+        overflow: hidden;
+        border-radius: 14px;
+        margin-bottom: 4px;
+    }
+    .subsection-cell > .menu-btn {
+        position: relative;
+        z-index: 1;
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        margin: 0;
+    }
+    .subsection-cell > .menu-btn.swipe-active {
+        transition: none;
+    }
+    /* Зелёная подложка «Добавить» — абсолютная, под карточкой */
+    .subsection-add-bg {
+        position: absolute;
+        top: 0; bottom: 0;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #fff;
+        background: linear-gradient(135deg, #3a9d5a, #4ac771);
+        z-index: 0;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.15s;
+    }
+    .subsection-add-bg svg {
+        width: 18px; height: 18px;
+        stroke: #fff; fill: none; stroke-width: 2;
+        stroke-linecap: round; stroke-linejoin: round;
+        flex-shrink: 0;
+    }
+    .subsection-add-left  { left: 0;  padding-left: 20px;  justify-content: flex-start; }
+    .subsection-add-right { right: 0; padding-right: 20px; justify-content: flex-end; }
+    /* Подложка видна когда карточка сдвинута в противоположную сторону */
+    .subsection-cell.swiping-right .subsection-add-left  { opacity: 1; }
+    .subsection-cell.swiping-left  .subsection-add-right { opacity: 1; }
+    [data-theme="light"] .subsection-add-bg {
+        background: linear-gradient(135deg, #2d8a4a, #4ac771);
+    }
     /* Картока в состоянии перетаскивания (оригинал) — полупрозрачная */
     .pinned-item.pinned-item-dragging {
         opacity: 0.3;
@@ -4853,6 +4903,10 @@
         if (target) { target.classList.add('active'); requestAnimationFrame(() => { requestAnimationFrame(() => target.classList.add('visible')); }); }
         window.scrollTo({ top: 0, behavior: 'smooth' });
         if (page === 'buoy-calc') { updateBuoyCalcTitle(); setCalibMethodOnForm(); }
+        // Обернуть карточки подразделов для swipe-to-add на страницах меню подразделов
+        if (page === 'calc-kipa' || page === 'calc-electro' || page === 'calc-geometry' || page === 'docs') {
+            wrapSubsectionItems('page-' + page);
+        }
         updateBottomNavActive(page);
         // Toggle global app-header visibility
         let appHeader = document.querySelector('.app-header');
@@ -5271,6 +5325,197 @@
         window.removeEventListener('pointermove', onPinnedPointerMove);
         window.removeEventListener('pointerup', onPinnedPointerUp);
         window.removeEventListener('pointercancel', onPinnedPointerUp);
+    }
+
+    // ============================================================
+    // SWIPE-TO-ADD для подразделов на страницах меню
+    // ============================================================
+    // На страницах page-calc-kipa, page-calc-electro, page-calc-geometry, page-docs
+    // карточки подразделов можно свайпить влево/вправо для добавления на главную.
+    // Аналогично swipe-to-delete, но с зелёной подложкой «Добавить».
+    // Порог срабатывания: 30% ширины карточки.
+    const SUBSECTION_SWIPE_ADD_RATIO = 0.3;
+    const SUBSECTION_SWIPE_THRESHOLD = 10;
+    let subsectionSwipeState = null;
+
+    // Обёртка карточек подразделов в .subsection-cell с зелёными подложками «Добавить».
+    // Вызывается из navigateTo при переходе на страницы calc-kipa/calc-electro/calc-geometry/docs.
+    // Идемпотентна: повторный вызов не дублирует обёртки.
+    function wrapSubsectionItems(pageId) {
+        const page = document.getElementById(pageId);
+        if (!page) return;
+        // Найти все .menu-btn с onclick=navigateTo('...'), которые ещё не обёрнуты
+        const buttons = page.querySelectorAll('.menu-btn[onclick^="navigateTo("]');
+        buttons.forEach(btn => {
+            // Пропустить, если уже обёрнут
+            if (btn.closest('.subsection-cell')) return;
+            // Пропустить закреплённые пункты (у них data-pinned-key) — они на дашборде
+            if (btn.hasAttribute('data-pinned-key')) return;
+            // Пропустить плейсхолдеры (раздел в разработке)
+            if (btn.classList.contains('menu-btn-placeholder')) return;
+            // Пропустить секретную кнопку «Сапёр»
+            if (btn.id === 'minesweeperBtn') return;
+            // Извлечь ключ из onclick (например, navigateTo('converter') → 'converter')
+            const onclickAttr = btn.getAttribute('onclick') || '';
+            const match = onclickAttr.match(/navigateTo\(['"]([^'"]+)['"]\)/);
+            if (!match) return;
+            const key = match[1];
+            // Проверить, что ключ есть в реестре SUBSECTIONS
+            if (!SUBSECTIONS[key]) return;
+
+            // Создать обёртку .subsection-cell
+            const cell = document.createElement('div');
+            cell.className = 'subsection-cell';
+            cell.setAttribute('data-subsection-key', key);
+
+            // Создать две подложки «Добавить» (слева и справа) с иконкой «+»
+            const plusSvg = '<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+            const leftBg = document.createElement('div');
+            leftBg.className = 'subsection-add-bg subsection-add-left';
+            leftBg.innerHTML = plusSvg + '<span>Добавить</span>';
+            const rightBg = document.createElement('div');
+            rightBg.className = 'subsection-add-bg subsection-add-right';
+            rightBg.innerHTML = plusSvg + '<span>Добавить</span>';
+
+            // Вставить обёртку на место карточки, переместить карточку внутрь
+            btn.parentNode.insertBefore(cell, btn);
+            cell.appendChild(leftBg);
+            cell.appendChild(rightBg);
+            cell.appendChild(btn);
+
+            // Навесить pointer-обработчик для swipe
+            btn.addEventListener('pointerdown', onSubsectionPointerDown);
+        });
+    }
+
+    function onSubsectionPointerDown(e) {
+        // Игнорируем клики по кнопке «три точки»
+        if (e.target.closest('.menu-btn-overflow')) return;
+        if (e.button !== undefined && e.button !== 0) return;
+        const el = e.currentTarget;
+        const cell = el.closest('.subsection-cell');
+        if (!cell) return;
+        const key = cell.getAttribute('data-subsection-key');
+        if (!key) return;
+        // Если уже закреплён — swipe не нужен, пусть работает обычный тап
+        if (isPinned(key)) return;
+        e.preventDefault();
+        const rect = el.getBoundingClientRect();
+        subsectionSwipeState = {
+            el: el,
+            cell: cell,
+            key: key,
+            startX: e.clientX,
+            startY: e.clientY,
+            width: rect.width,
+            currentDx: 0,
+            active: false
+        };
+        window.addEventListener('pointermove', onSubsectionPointerMove);
+        window.addEventListener('pointerup', onSubsectionPointerUp);
+        window.addEventListener('pointercancel', onSubsectionPointerUp);
+    }
+
+    function onSubsectionPointerMove(e) {
+        if (!subsectionSwipeState) return;
+        const st = subsectionSwipeState;
+        const dx = e.clientX - st.startX;
+        const dy = e.clientY - st.startY;
+        // Пока swipe не активен — определяем намерение
+        if (!st.active) {
+            if (Math.abs(dx) > SUBSECTION_SWIPE_THRESHOLD || Math.abs(dy) > SUBSECTION_SWIPE_THRESHOLD) {
+                if (Math.abs(dx) > Math.abs(dy) * 1.5) {
+                    // Горизонтальное движение — старт swipe
+                    st.active = true;
+                    st.el.classList.add('swipe-active');
+                    st.el.style.pointerEvents = 'none';
+                    if (navigator.vibrate) navigator.vibrate(10);
+                } else {
+                    // Вертикальное движение — скролл страницы, отменяем
+                    cleanupSubsectionSwipe();
+                    return;
+                }
+            } else {
+                return;
+            }
+        }
+        e.preventDefault();
+        updateSubsectionSwipe(dx);
+    }
+
+    // Обновление позиции карточки при swipe.
+    // dx < 0 — свайп влево (показываем правую подложку «Добавить»).
+    // dx > 0 — свайп вправо (показываем левую подложку «Добавить»).
+    function updateSubsectionSwipe(dx) {
+        const st = subsectionSwipeState;
+        if (!st) return;
+        let effectiveDx = dx;
+        // Эффект «резины» при выходе за пределы карточки
+        if (Math.abs(dx) > st.width) {
+            const overshoot = Math.abs(dx) - st.width;
+            effectiveDx = Math.sign(dx) * (st.width + overshoot * 0.3);
+        }
+        st.currentDx = effectiveDx;
+        st.el.style.transform = 'translateX(' + effectiveDx + 'px)';
+        if (st.cell) {
+            st.cell.classList.toggle('swiping-left',  effectiveDx < 0);
+            st.cell.classList.toggle('swiping-right', effectiveDx > 0);
+        }
+    }
+
+    function onSubsectionPointerUp(e) {
+        if (!subsectionSwipeState) return;
+        endSubsectionSwipe();
+    }
+
+    // Завершение swipe: если сдвиг > 30% ширины — добавляем пункт на главную, иначе возвращаем на место.
+    function endSubsectionSwipe() {
+        const st = subsectionSwipeState;
+        if (!st) return;
+        const threshold = st.width * SUBSECTION_SWIPE_ADD_RATIO;
+        const shouldAdd = Math.abs(st.currentDx) > threshold;
+        if (shouldAdd && !isPinned(st.key)) {
+            // Добавляем пункт на главную
+            if (navigator.vibrate) navigator.vibrate(30);
+            const key = st.key;
+            togglePin(key);
+            if (typeof showToast === 'function') {
+                const label = SUBSECTIONS[key] ? SUBSECTIONS[key].label : '';
+                showToast('«' + label + '» добавлено на главную');
+            }
+            // Анимированно вернуть карточку на место (она остаётся на странице подраздела)
+            st.el.classList.remove('swipe-active');
+            st.el.style.transform = '';
+            if (st.cell) {
+                st.cell.classList.remove('swiping-left', 'swiping-right');
+            }
+            cleanupSubsectionSwipe();
+        } else {
+            // Возвращаем карточку на место
+            st.el.classList.remove('swipe-active');
+            st.el.style.transform = '';
+            if (st.cell) {
+                st.cell.classList.remove('swiping-left', 'swiping-right');
+            }
+            cleanupSubsectionSwipe();
+        }
+    }
+
+    function cleanupSubsectionSwipe() {
+        if (!subsectionSwipeState) return;
+        const st = subsectionSwipeState;
+        if (st.el) {
+            st.el.classList.remove('swipe-active');
+            st.el.style.pointerEvents = '';
+            st.el.style.transform = '';
+        }
+        if (st.cell) {
+            st.cell.classList.remove('swiping-left', 'swiping-right');
+        }
+        subsectionSwipeState = null;
+        window.removeEventListener('pointermove', onSubsectionPointerMove);
+        window.removeEventListener('pointerup', onSubsectionPointerUp);
+        window.removeEventListener('pointercancel', onSubsectionPointerUp);
     }
 
     // ============================================================
