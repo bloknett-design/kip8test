@@ -704,6 +704,33 @@
     }
     .pin-sheet-cancel:active { background: rgba(255,255,255,0.05); }
     [data-theme="light"] .pin-sheet-cancel:active { background: rgba(20,20,19,0.05); }
+
+    /* Дополнительные кнопки перемещения в bottom sheet (для закреплённых пунктов) */
+    .pin-sheet-extra-actions {
+        display: flex; flex-direction: column; gap: 8px;
+        margin-bottom: 8px;
+    }
+    /* Вторичная кнопка — контурная, легче основной */
+    .pin-sheet-action-secondary {
+        background: transparent !important;
+        border: 1px solid var(--card-border);
+        color: var(--text-secondary, rgba(255,255,255,0.7));
+        box-shadow: none !important;
+    }
+    .pin-sheet-action-secondary:active { background: rgba(255,255,255,0.05) !important; }
+    [data-theme="light"] .pin-sheet-action-secondary {
+        color: var(--text-secondary, rgba(20,20,19,0.7));
+        border-color: rgba(20,20,19,0.15);
+    }
+    [data-theme="light"] .pin-sheet-action-secondary:active { background: rgba(20,20,19,0.05) !important; }
+    /* Отключённое состояние (первый пункт — кнопка «вверх», последний — «вниз») */
+    .pin-sheet-action:disabled,
+    .pin-sheet-action-secondary:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+        pointer-events: none;
+        box-shadow: none !important;
+    }
     
     .converter-result-group { margin: 6px 0 10px; position: relative; z-index: 2; }
     .converter-result-label-title { color: rgba(255,255,255,0.3); font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; padding-left: 4px; font-weight: 500; }
@@ -3545,6 +3572,8 @@
     <div class="pin-sheet-handle"></div>
     <div id="pinSheetTitle" class="pin-sheet-title">Подраздел</div>
     <div id="pinSheetSublabel" class="pin-sheet-sublabel"></div>
+    <!-- Дополнительные кнопки перемещения (видны только для закреплённых пунктов) -->
+    <div id="pinSheetExtraActions" class="pin-sheet-extra-actions" style="display:none;"></div>
     <button type="button" id="pinSheetAction" class="pin-sheet-action" onclick="executePinToggle()">Добавить на главную</button>
     <button type="button" class="pin-sheet-cancel" onclick="closePinSheet()">Отмена</button>
 </div>
@@ -4586,8 +4615,7 @@
                 '</div>';
             return;
         }
-        let html = '<div class="pinned-items-title">Закреплённые разделы</div>';
-        html += '<div class="menu-btn-row">';
+        let html = '<div class="menu-btn-row">';
         items.forEach(key => {
             const s = SUBSECTIONS[key];
             if (!s) return;
@@ -4620,16 +4648,60 @@
         document.getElementById('pinSheetTitle').textContent = s.label;
         document.getElementById('pinSheetSublabel').textContent = s.sublabel;
         const actionBtn = document.getElementById('pinSheetAction');
+        const extraActions = document.getElementById('pinSheetExtraActions');
         if (pinned) {
-            actionBtn.textContent = '';
+            // Для закреплённого пункта: показываем кнопки перемещения + красную «Убрать»
+            extraActions.style.display = 'flex';
+            renderPinSheetExtraActions(key);
             actionBtn.classList.add('is-pinned');
             actionBtn.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Убрать с главной страницы';
         } else {
+            // Для незакреплённого пункта: только синяя «Добавить»
+            extraActions.style.display = 'none';
             actionBtn.classList.remove('is-pinned');
             actionBtn.innerHTML = '<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Добавить на главную страницу';
         }
         document.getElementById('pinSheetOverlay').classList.add('active');
         document.getElementById('pinSheet').classList.add('active');
+        if (navigator.vibrate) navigator.vibrate(15);
+    }
+
+    // Рендеринг кнопок перемещения в bottom sheet.
+    // Кнопка «вверх» отключена для первого пункта, «вниз» — для последнего.
+    // Вызывается при открытии sheet и после каждого перемещения (для обновления disabled-состояний).
+    function renderPinSheetExtraActions(key) {
+        const items = getPinnedItems();
+        const idx = items.indexOf(key);
+        const isFirst = idx <= 0;
+        const isLast = idx === -1 || idx >= items.length - 1;
+        const extraActions = document.getElementById('pinSheetExtraActions');
+        if (!extraActions) return;
+        extraActions.innerHTML =
+            '<button type="button" class="pin-sheet-action pin-sheet-action-secondary"' + (isFirst ? ' disabled' : '') + ' onclick="movePinnedItem(\'' + key + '\', -1)">' +
+                '<svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>Переместить вверх' +
+            '</button>' +
+            '<button type="button" class="pin-sheet-action pin-sheet-action-secondary"' + (isLast ? ' disabled' : '') + ' onclick="movePinnedItem(\'' + key + '\', 1)">' +
+                '<svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>Переместить вниз' +
+            '</button>';
+    }
+
+    // Перемещение закреплённого пункта вверх (-1) или вниз (+1).
+    // Сохраняет новый порядок в localStorage, ре-рендерит контейнер на дашборде
+    // и обновляет disabled-состояния кнопок в sheet (без закрытия sheet).
+    function movePinnedItem(key, direction) {
+        let items = getPinnedItems();
+        const idx = items.indexOf(key);
+        if (idx === -1) return;
+        const newIdx = idx + direction;
+        if (newIdx < 0 || newIdx >= items.length) return;
+        // Обмен элементов местами
+        const tmp = items[idx];
+        items[idx] = items[newIdx];
+        items[newIdx] = tmp;
+        setPinnedItems(items);
+        renderPinnedItems();
+        // Обновляем disabled-состояния кнопок в открытом sheet
+        renderPinSheetExtraActions(key);
         if (navigator.vibrate) navigator.vibrate(15);
     }
 
