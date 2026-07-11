@@ -1314,6 +1314,49 @@
     }
     [data-theme="light"] .doc-point { background: transparent; }
     [data-theme="light"] .doc-point-text { color: rgba(20,20,19,0.75); }
+    /* HTML-таблицы в пунктах документов */
+    .doc-point-text .doc-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+        font-size: calc(var(--doc-font-size, 14px) * 0.9);
+        line-height: 1.4;
+        overflow-x: auto;
+        display: block;
+    }
+    .doc-point-text .doc-table thead { display: table; width: 100%; table-layout: fixed; }
+    .doc-point-text .doc-table tbody { display: table; width: 100%; table-layout: fixed; }
+    .doc-point-text .doc-table th {
+        padding: 6px 8px;
+        background: rgba(74, 143, 199, 0.12);
+        color: var(--accent-blue, #4a8fc7);
+        font-weight: 600;
+        text-align: left;
+        border: 1px solid rgba(74, 143, 199, 0.2);
+        font-size: calc(var(--doc-font-size, 14px) * 0.85);
+    }
+    .doc-point-text .doc-table td {
+        padding: 5px 8px;
+        border: 1px solid rgba(74, 143, 199, 0.1);
+        color: var(--text-secondary, rgba(255,255,255,0.7));
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .doc-point-text .doc-table tbody tr:nth-child(even) {
+        background: rgba(74, 143, 199, 0.03);
+    }
+    [data-theme="light"] .doc-point-text .doc-table th {
+        background: rgba(74, 143, 199, 0.08);
+        color: #4a8fc7;
+    }
+    [data-theme="light"] .doc-point-text .doc-table td {
+        color: rgba(20,20,19,0.7);
+        border-color: rgba(20,20,19,0.1);
+    }
+    [data-theme="light"] .doc-point-text .doc-table tbody tr:nth-child(even) {
+        background: rgba(20,20,19,0.03);
+    }
     /* Контрол размера шрифта в заголовке страницы документа */
     .doc-font-controls {
         display: flex; align-items: center; gap: 4px;
@@ -3480,7 +3523,7 @@
 
             <div class="content-header" style="padding: 14px 20px 10px;">
                 <h2 style="color: #e0e0e0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">Правила устройства электроустановок</h2>
-                <p style="color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 5px;">6-е и 7-е издание. Тапните главу, чтобы раскрыть пункты</p>
+                <p style="color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 5px;">6-е и 7-е издание</p>
             </div>
 
             <div id="doc-tree-pue" class="doc-tree"></div>
@@ -3511,7 +3554,7 @@
 
             <div class="content-header" style="padding: 14px 20px 10px;">
                 <h2 style="color: #e0e0e0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">Правила технической эксплуатации электроустановок потребителей</h2>
-                <p style="color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 5px;">Приказ Минэнерго РФ №6 от 13.01.2003. Тапните главу, чтобы раскрыть пункты</p>
+                <p style="color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 5px;">Приказ Минэнерго РФ №6 от 13.01.2003</p>
             </div>
 
             <div id="doc-tree-pteep" class="doc-tree"></div>
@@ -3541,7 +3584,7 @@
 
             <div class="content-header" style="padding: 14px 20px 10px;">
                 <h2 style="color: #e0e0e0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">Правила по охране труда при эксплуатации электроустановок</h2>
-                <p style="color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 5px;">Приказ Минтруда №903н от 15.12.2020. Тапните главу, чтобы раскрыть пункты</p>
+                <p style="color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 5px;">Приказ Минтруда №903н от 15.12.2020</p>
             </div>
 
             <div id="doc-tree-pote" class="doc-tree"></div>
@@ -3571,7 +3614,7 @@
 
             <div class="content-header" style="padding: 14px 20px 10px;">
                 <h2 style="color: #e0e0e0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">Инструкция по применению и испытанию средств защиты</h2>
-                <p style="color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 5px;">Приказ Минэнерго №261 от 30.06.2003. Тапните главу, чтобы раскрыть пункты</p>
+                <p style="color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 5px;">Приказ Минэнерго №261 от 30.06.2003</p>
             </div>
 
             <div id="doc-tree-so153" class="doc-tree"></div>
@@ -5963,7 +6006,12 @@
                 data.points.forEach(function(p) {
                     html += '<div class="doc-point" id="doc-point-' + doc + '-' + p.num + '">';
                     html += '<div class="doc-point-header"><span class="doc-point-num">' + docEsc(p.num) + '</span></div>';
-                    html += '<div class="doc-point-text">' + docEsc(p.text) + '</div>';
+                    // Если есть HTML-таблицы — рендерим без экранирования
+                    if (p.has_html) {
+                        html += '<div class="doc-point-text">' + p.text + '</div>';
+                    } else {
+                        html += '<div class="doc-point-text">' + docEsc(p.text) + '</div>';
+                    }
                     html += '</div>';
                 });
                 pointsContainer.innerHTML = html;
