@@ -752,6 +752,11 @@
         -webkit-user-select: none; user-select: none;
         -webkit-touch-callout: none;
     }
+    /* Картока закреплённого пункта — отключаем нативные жесты браузера (скролл, long-press меню).
+       Без этого pointermove начинает прокрутку страницы, инициируя pointercancel — drag срывается. */
+    .pinned-item {
+        touch-action: none;
+    }
     /* Картока в состоянии перетаскивания (оригинал) — полупрозрачная */
     .pinned-item.pinned-item-dragging {
         opacity: 0.3;
@@ -4708,6 +4713,9 @@
         const el = e.currentTarget;
         const key = el.getAttribute('data-pinned-key');
         if (!key) return;
+        // Запрещаем нативные действия браузера (скролл, выделение, контекстное меню) —
+        // без этого при long-press на мобильном срабатывает pointercancel и drag срывается.
+        e.preventDefault();
         pinnedDragState = {
             el: el,
             key: key,
@@ -4715,7 +4723,15 @@
             startY: e.clientY,
             timer: setTimeout(() => startPinnedDrag(e), PINNED_DRAG_DELAY),
             clone: null,
-            hoverEl: null
+            hoverEl: null,
+            // Смещение точки зажатия относительно левого-верхнего угла карточки.
+            // Вычисляется в startPinnedDrag, используется для точного следования клона за пальцем.
+            grabOffsetX: 0,
+            grabOffsetY: 0,
+            // Флаг того, что произошло реальное перетаскивание (был move после старта drag).
+            // Если pointerup сработал сразу после long-press без движения — это не перенос,
+            // а просто отпускание, ре-рендерить не нужно.
+            moved: false
         };
         // Слушаем movement/up на window — чтобы поймать даже если палец вышел за пределы карточки
         window.addEventListener('pointermove', onPinnedPointerMove);
@@ -4736,14 +4752,16 @@
             }
             return;
         }
-        // Перетаскивание активно — двигаем клон
+        // Перетаскивание активно — запрещаем браузеру прокрутку/другие действия
         e.preventDefault();
-        st.clone.style.left = (e.clientX - st.clone.offsetWidth / 2) + 'px';
-        st.clone.style.top = (e.clientY - 20) + 'px';
+        st.moved = true;
+        // Точное следование клона за пальцем: позиция = курсор - смещение точки захвата.
+        // grabOffsetX/Y вычислены в startPinnedDrag, поэтому клон не «прыгает» к центру пальца.
+        st.clone.style.left = (e.clientX - st.grabOffsetX) + 'px';
+        st.clone.style.top = (e.clientY - st.grabOffsetY) + 'px';
         // Находим карточку под курсором (исключая сам клон)
         st.clone.style.pointerEvents = 'none';
         const target = document.elementFromPoint(e.clientX, e.clientY);
-        st.clone.style.pointerEvents = '';
         const newHover = target ? target.closest('#pinnedItemsContainer .pinned-item') : null;
         if (newHover !== st.hoverEl) {
             if (st.hoverEl) st.hoverEl.classList.remove('pinned-item-drag-over');
@@ -4761,8 +4779,11 @@
             cleanupPinnedDrag();
             return;
         }
-        // Завершаем перетаскивание — определяем целевую позицию
-        if (st.hoverEl && st.hoverEl !== st.el) {
+        // Завершаем перетаскивание — определяем целевую позицию.
+        // Если st.moved=false (long-press без движения и отпускание) — перенос не выполняем,
+        // но ре-рендер всё равно нужен, чтобы убрать клон и класс .pinned-item-dragging.
+        let didReorder = false;
+        if (st.moved && st.hoverEl && st.hoverEl !== st.el) {
             const items = getPinnedItems();
             const fromIdx = items.indexOf(st.key);
             const toIdx = items.indexOf(st.hoverEl.getAttribute('data-pinned-key'));
@@ -4771,11 +4792,20 @@
                 items.splice(fromIdx, 1);
                 items.splice(toIdx, 0, st.key);
                 setPinnedItems(items);
+                didReorder = true;
                 if (navigator.vibrate) navigator.vibrate(15);
             }
         }
         cleanupPinnedDrag();
-        renderPinnedItems();
+        // Ре-рендер только если был реальный перенос (порядок изменился).
+        // Если просто long-press + отпускание без переноса — ре-рендер не нужен,
+        // cleanupPinnedDrag уже убрал клон и класс .pinned-item-dragging.
+        if (didReorder) {
+            renderPinnedItems();
+        } else {
+            // Восстанавливаем pointer-events на оригинале, чтобы onclick снова работал
+            // (cleanupPinnedDrag уже это сделал, но для надёжности — явно)
+        }
     }
 
     function startPinnedDrag(e) {
@@ -4783,14 +4813,21 @@
         if (!st) return;
         // Создаём клон карточки
         const rect = st.el.getBoundingClientRect();
+        // Запоминаем смещение точки захвата относительно левого-верхнего угла карточки.
+        // Это позволяет клону точно следовать за пальцем с той же точки, где палец нажал,
+        // без скачка к центру (как было при расчёте через offsetWidth/2).
+        st.grabOffsetX = st.startX - rect.left;
+        st.grabOffsetY = st.startY - rect.top;
         const clone = st.el.cloneNode(true);
         clone.classList.add('pinned-item-clone');
         clone.style.position = 'fixed';
         clone.style.left = rect.left + 'px';
         clone.style.top = rect.top + 'px';
         clone.style.width = rect.width + 'px';
+        clone.style.height = rect.height + 'px';
         clone.style.zIndex = '9999';
         clone.style.pointerEvents = 'none';
+        clone.style.margin = '0';
         document.body.appendChild(clone);
         st.clone = clone;
         st.el.classList.add('pinned-item-dragging');
