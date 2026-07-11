@@ -9327,16 +9327,20 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         </div>
         </div>
 
-        <!-- ===== Группа: Документация (2 пункта, без кнопки «Показать все») ===== -->
+        <!-- ===== Группа: Документация (1 видимый + 1 скрытый) ===== -->
         <div class="sidebar-group" data-group="docs">
         <div class="sidebar-group-title sidebar-group-title-docs">Документация</div>
         <div class="sidebar-item" onclick="navigateTo('exam-tickets'); toggleSidebar();">
             <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
             <span style="color:rgba(199,150,74,0.9);">Экзаменационные билеты</span>
         </div>
-        <div class="sidebar-item" onclick="navigateTo('library'); toggleSidebar();">
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('library'); toggleSidebar();">
             <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
             <span style="color:rgba(199,150,74,0.9);">Библиотека КИП и А</span>
+        </div>
+        <div class="sidebar-show-more" onclick="toggleSidebarGroup(this.parentElement)">
+            <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            <span>Показать все (1)</span>
         </div>
         </div>
 
