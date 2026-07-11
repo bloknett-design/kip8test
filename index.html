@@ -5906,6 +5906,9 @@
     const docChapterCache = {};
 
     // Конфигурация документов: title (короткое), fullTitle (полное), desc (описание), pdfUrl (ссылка на оригинал).
+    // Версия приложения для cache-busting JSON-запросов.
+    // Должна совпадать с CACHE_VERSION в sw.js.
+    const APP_VERSION = 'v34';
     const DOC_CONFIG = {
         'pue':   { title: 'ПУЭ 6 и 7', fullTitle: 'Правила устройства электроустановок', desc: '6-е и 7-е издание', pdfUrl: 'https://drive.google.com/file/d/1Rmy2aUYEr8WG1R1Pzuucbb8QEwfBrj0y/view' },
         'pteep': { title: 'ПТЭЭП 2003', fullTitle: 'Правила технической эксплуатации электроустановок потребителей', desc: 'Приказ Минэнерго РФ №6 от 13.01.2003', pdfUrl: 'https://drive.google.com/file/d/1xY7jxI5K-og2-UsNk5lhJy_qMogJB_oE/view' },
@@ -5916,7 +5919,8 @@
     // Загрузка meta.json (оглавление документа). Кэшируется в docMetaCache.
     async function loadDocMeta(doc) {
         if (docMetaCache[doc]) return docMetaCache[doc];
-        const resp = await fetch('data/' + doc + '/meta.json');
+        // Cache-busting через ?v= для обхода HTTP-кэша браузера и SW
+        const resp = await fetch('data/' + doc + '/meta.json?v=' + APP_VERSION);
         if (!resp.ok) throw new Error('Не удалось загрузить оглавление');
         const meta = await resp.json();
         docMetaCache[doc] = meta;
@@ -5927,7 +5931,8 @@
     async function loadDocChapter(doc, chapter) {
         const cacheKey = doc + '/' + chapter;
         if (docChapterCache[cacheKey]) return docChapterCache[cacheKey];
-        const resp = await fetch('data/' + doc + '/' + chapter + '.json');
+        // Cache-busting через ?v= для обхода HTTP-кэша браузера и SW
+        const resp = await fetch('data/' + doc + '/' + chapter + '.json?v=' + APP_VERSION);
         if (!resp.ok) throw new Error('Не удалось загрузить главу');
         const data = await resp.json();
         docChapterCache[cacheKey] = data;
