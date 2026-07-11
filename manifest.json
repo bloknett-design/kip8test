@@ -1,0 +1,109 @@
+{
+  "id": "/kip8test/?source=pwa",
+  "name": "КИПиА — справочник инженера",
+  "short_name": "КИПиА",
+  "description": "Справочник и калькулятор контрольно-измерительных приборов и автоматики: переводы единиц, расчёт погрешностей, калибровка датчиков, экзаменационные билеты.",
+  "start_url": "/kip8test/?source=pwa",
+  "scope": "/kip8test/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#1a2233",
+  "theme_color": "#1a2233",
+  "lang": "ru",
+  "dir": "ltr",
+  "categories": ["productivity", "utilities", "education"],
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "icons": [
+    {
+      "src": "images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "images/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "images/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Экзаменационные билеты",
+      "short_name": "Билеты",
+      "description": "Билеты до 1000 В, 4/5/6 разряд",
+      "url": "/kip8test/?source=pwa#exam-tickets",
+      "icons": [
+        { "src": "images/icon-192.png", "sizes": "192x192", "type": "image/png" }
+      ]
+    },
+    {
+      "name": "Конвертер единиц",
+      "short_name": "Конвертер",
+      "description": "Перевод давления, температуры, расхода",
+      "url": "/kip8test/?source=pwa#converter",
+      "icons": [
+        { "src": "images/icon-192.png", "sizes": "192x192", "type": "image/png" }
+      ]
+    },
+    {
+      "name": "Расчёт погрешности",
+      "short_name": "Погрешность",
+      "description": "Расчёт погрешности по ГОСТ 8.401-80",
+      "url": "/kip8test/?source=pwa#error-select",
+      "icons": [
+        { "src": "images/icon-192.png", "sizes": "192x192", "type": "image/png" }
+      ]
+    },
+    {
+      "name": "Шкала-сигнал",
+      "short_name": "Шкала",
+      "description": "Расчёт диапазонов шкалы и сигнала",
+      "url": "/kip8test/?source=pwa#scale-signal",
+      "icons": [
+        { "src": "images/icon-192.png", "sizes": "192x192", "type": "image/png" }
+      ]
+    },
+    {
+      "name": "Буйковый уровнемер",
+      "short_name": "Буи",
+      "description": "Калибровка буйковых уровнемеров",
+      "url": "/kip8test/?source=pwa#buoy-select",
+      "icons": [
+        { "src": "images/icon-192.png", "sizes": "192x192", "type": "image/png" }
+      ]
+    },
+    {
+      "name": "Датчики температуры",
+      "short_name": "ТС и ТП",
+      "description": "Расчёт R и мВ по температуре",
+      "url": "/kip8test/?source=pwa#temp-sensors",
+      "icons": [
+        { "src": "images/icon-192.png", "sizes": "192x192", "type": "image/png" }
+      ]
+    },
+    {
+      "name": "Быстрый расчёт диафрагмы",
+      "short_name": "Диафрагма",
+      "description": "Прикидочный расчёт перепада на диафрагме",
+      "url": "/kip8test/?source=pwa#orifice-quick",
+      "icons": [
+        { "src": "images/icon-192.png", "sizes": "192x192", "type": "image/png" }
+      ]
+    }
+  ]
+}
