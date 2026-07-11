@@ -2141,6 +2141,10 @@
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
             <div class="menu-btn-row">
                 <div class="menu-btn" onclick="navigateTo('circuit-breaker')"><div class="menu-btn-text"><div class="menu-btn-label">Автоматический выключатель</div><div class="menu-btn-sublabel">Расчёт по мощности, току, сечению кабеля</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('circuit-breaker')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
+                <div class="menu-btn" onclick="navigateTo('cable-section')"><div class="menu-btn-text"><div class="menu-btn-label">Сечение кабеля по току</div><div class="menu-btn-sublabel">Выбор по ПУЭ: медь/алюминий, способ прокладки</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('cable-section')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
+                <div class="menu-btn" onclick="navigateTo('motor-current')"><div class="menu-btn-text"><div class="menu-btn-label">Ток электродвигателя</div><div class="menu-btn-sublabel">Расчёт по P, U, cos φ, КПД</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('motor-current')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
+                <div class="menu-btn" onclick="navigateTo('power-factor')"><div class="menu-btn-text"><div class="menu-btn-label">Компенсация реактивной мощности</div><div class="menu-btn-sublabel">Расчёт cos φ и мощности ККУ</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('power-factor')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
+                <div class="menu-btn" onclick="navigateTo('grounding')"><div class="menu-btn-text"><div class="menu-btn-label">Расчёт заземления</div><div class="menu-btn-sublabel">Одиночный вертикальный заземлитель, ПУЭ 1.7</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('grounding')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
             </div>
         </div>
 
@@ -2149,7 +2153,10 @@
             <div class="page-inline-header"><div class="page-inline-header-title">Геометрия</div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
             <div class="menu-btn-row">
-                <div class="menu-btn menu-btn-placeholder"><div class="menu-btn-text"><div class="menu-btn-label" style="color: rgba(255,255,255,0.4);">Раздел в разработке</div><div class="menu-btn-sublabel">Скоро появятся калькуляторы площадей, объёмов и сечений</div></div></div>
+                <div class="menu-btn" onclick="navigateTo('pipe-area')"><div class="menu-btn-text"><div class="menu-btn-label">Площадь сечения трубопровода</div><div class="menu-btn-sublabel">Круг, кольцо, эквивалентный диаметр</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('pipe-area')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
+                <div class="menu-btn" onclick="navigateTo('tank-volume')"><div class="menu-btn-text"><div class="menu-btn-label">Объём ёмкости</div><div class="menu-btn-sublabel">Вертикальный цилиндр, сфера, конус</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('tank-volume')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
+                <div class="menu-btn" onclick="navigateTo('horiz-tank')"><div class="menu-btn-text"><div class="menu-btn-label">Объём в горизонтальном цилиндре</div><div class="menu-btn-sublabel">Частичное заполнение — для калибровки уровнемеров</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('horiz-tank')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
+                <div class="menu-btn" onclick="navigateTo('inclined-pipe')"><div class="menu-btn-text"><div class="menu-btn-label">Длина наклонного трубопровода</div><div class="menu-btn-sublabel">Тригонометрия: перепад высот и проекция</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('inclined-pipe')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
             </div>
         </div>
 
@@ -2433,6 +2440,216 @@
                     <div><b style="color:rgba(255,255,255,0.7);">Нормативный документ:</b> ГОСТ Р 50345-2010 (IEC 60898-1) «Автоматические выключатели для защиты от сверхтоков электроустановок бытового и аналогичного назначения».</div>
                 </div>
             </div>
+        </div>
+
+        <!-- ======================== СЕЧЕНИЕ КАБЕЛЯ ПО ТОКУ ======================== -->
+        <div id="page-cable-section" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-title">Сечение кабеля по току</div></div>
+            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="scale-form">
+                <div class="scale-form-label">Материал жилы</div>
+                <select id="cs_material" class="scale-field" autocomplete="off">
+                    <option value="copper" selected>Медь (Cu)</option>
+                    <option value="aluminum">Алюминий (Al)</option>
+                </select>
+            </div>
+            <div class="scale-form">
+                <div class="scale-form-label">Способ прокладки</div>
+                <select id="cs_laying" class="scale-field" autocomplete="off">
+                    <option value="open" selected>Открыто (на лотке, в трубе)</option>
+                    <option value="closed">В трубе/коробе (многожильный)</option>
+                </select>
+            </div>
+            <div class="scale-form">
+                <div class="scale-form-label">Количество жил</div>
+                <select id="cs_cores" class="scale-field" autocomplete="off">
+                    <option value="2" selected>2 жилы (1 фаза)</option>
+                    <option value="3">3 жилы (3 фазы)</option>
+                    <option value="4">4 жилы (3 фазы + N)</option>
+                </select>
+            </div>
+            <div class="scale-form">
+                <div class="scale-form-label">Расчётный ток (I)</div>
+                <input type="text" inputmode="numeric" id="cs_current" class="scale-field" value="20" placeholder="А" autocomplete="off" enterkeyhint="next" oninput="validateNumericField(this)">
+                <div style="color:rgba(255,255,255,0.25); font-size:10px; margin-top:4px; padding-left:4px;">Длительно протекающий ток нагрузки</div>
+            </div>
+            <button type="button" class="converter-convert-btn scale-calc-btn" onclick="calcCableSection()"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Рассчитать</button>
+            <div class="converter-result-group" id="cs_results" style="display:none;"></div>
+        </div>
+
+        <!-- ======================== ТОК ЭЛЕКТРОДВИГАТЕЛЯ ======================== -->
+        <div id="page-motor-current" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-title">Ток электродвигателя</div></div>
+            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="scale-form">
+                <div class="scale-form-label">Номинальная мощность (P)</div>
+                <div style="display:flex; gap:8px; margin-bottom:12px; align-items:stretch;">
+                    <input type="text" inputmode="numeric" id="mc_power" class="scale-field" style="flex:2; margin-bottom:0;" value="5,5" placeholder="кВт" autocomplete="off" enterkeyhint="next" oninput="validateNumericField(this)">
+                    <select id="mc_power_unit" class="scale-field" style="flex:1; margin-bottom:0;" autocomplete="off">
+                        <option value="1" selected>Вт</option>
+                        <option value="1000">кВт</option>
+                    </select>
+                </div>
+            </div>
+            <div class="scale-form">
+                <div class="scale-form-label">Напряжение (U)</div>
+                <select id="mc_voltage" class="scale-field" autocomplete="off">
+                    <option value="220" selected>220 В (1 фаза)</option>
+                    <option value="380">380 В (3 фазы)</option>
+                    <option value="660">660 В (3 фазы)</option>
+                </select>
+            </div>
+            <div class="scale-form">
+                <div class="scale-form-label">cos φ (коэффициент мощности)</div>
+                <input type="text" inputmode="numeric" id="mc_cosphi" class="scale-field" value="0,85" placeholder="0,1 – 1,0" autocomplete="off" enterkeyhint="next" oninput="validateNumericField(this)">
+                <div style="color:rgba(255,255,255,0.25); font-size:10px; margin-top:4px; padding-left:4px;">Типично: 0,8 – 0,9 для АД</div>
+            </div>
+            <div class="scale-form">
+                <div class="scale-form-label">КПД (η)</div>
+                <input type="text" inputmode="numeric" id="mc_efficiency" class="scale-field" value="0,87" placeholder="0 – 1" autocomplete="off" enterkeyhint="done" oninput="validateNumericField(this)">
+                <div style="color:rgba(255,255,255,0.25); font-size:10px; margin-top:4px; padding-left:4px;">Доля (например, 0,87 = 87%)</div>
+            </div>
+            <button type="button" class="converter-convert-btn scale-calc-btn" onclick="calcMotorCurrent()"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Рассчитать</button>
+            <div class="converter-result-group" id="mc_results" style="display:none;"></div>
+        </div>
+
+        <!-- ======================== КОМПЕНСАЦИЯ РЕАКТИВНОЙ МОЩНОСТИ ======================== -->
+        <div id="page-power-factor" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-title">Компенсация реактивной мощности</div></div>
+            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="scale-form">
+                <div class="scale-form-label">Активная мощность (P)</div>
+                <div style="display:flex; gap:8px; margin-bottom:12px; align-items:stretch;">
+                    <input type="text" inputmode="numeric" id="pf_power" class="scale-field" style="flex:2; margin-bottom:0;" value="100" placeholder="кВт" autocomplete="off" enterkeyhint="next" oninput="validateNumericField(this)">
+                    <select id="pf_power_unit" class="scale-field" style="flex:1; margin-bottom:0;" autocomplete="off">
+                        <option value="1" selected>Вт</option>
+                        <option value="1000">кВт</option>
+                    </select>
+                </div>
+            </div>
+            <div class="scale-form">
+                <div class="scale-form-label">Текущий cos φ₁</div>
+                <input type="text" inputmode="numeric" id="pf_cosphi1" class="scale-field" value="0,7" placeholder="0,1 – 1,0" autocomplete="off" enterkeyhint="next" oninput="validateNumericField(this)">
+            </div>
+            <div class="scale-form">
+                <div class="scale-form-label">Целевой cos φ₂</div>
+                <input type="text" inputmode="numeric" id="pf_cosphi2" class="scale-field" value="0,95" placeholder="0,1 – 1,0" autocomplete="off" enterkeyhint="done" oninput="validateNumericField(this)">
+                <div style="color:rgba(255,255,255,0.25); font-size:10px; margin-top:4px; padding-left:4px;">Рекомендуемый: 0,92 – 0,95</div>
+            </div>
+            <button type="button" class="converter-convert-btn scale-calc-btn" onclick="calcPowerFactor()"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Рассчитать</button>
+            <div class="converter-result-group" id="pf_results" style="display:none;"></div>
+        </div>
+
+        <!-- ======================== РАСЧЁТ ЗАЗЕМЛЕНИЯ ======================== -->
+        <div id="page-grounding" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-title">Расчёт заземления</div></div>
+            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="scale-form">
+                <div class="scale-form-label">Удельное сопротивление грунта (ρ)</div>
+                <input type="text" inputmode="numeric" id="gr_rho" class="scale-field" value="100" placeholder="Ом·м" autocomplete="off" enterkeyhint="next" oninput="validateNumericField(this)">
+                <div style="color:rgba(255,255,255,0.25); font-size:10px; margin-top:4px; padding-left:4px;">Глина 40-60, суглинок 60-100, песок 200-1000 Ом·м</div>
+            </div>
+            <div class="scale-form">
+                <div class="scale-form-label">Длина заземлителя (L)</div>
+                <input type="text" inputmode="numeric" id="gr_length" class="scale-field" value="3" placeholder="м" autocomplete="off" enterkeyhint="next" oninput="validateNumericField(this)">
+            </div>
+            <div class="scale-form">
+                <div class="scale-form-label">Диаметр заземлителя (d)</div>
+                <input type="text" inputmode="numeric" id="gr_diameter" class="scale-field" value="0,016" placeholder="м" autocomplete="off" enterkeyhint="next" oninput="validateNumericField(this)">
+                <div style="color:rgba(255,255,255,0.25); font-size:10px; margin-top:4px; padding-left:4px;">Труба 16 мм = 0,016 м; уголок 50×50 = 0,025 м</div>
+            </div>
+            <div class="scale-form">
+                <div class="scale-form-label">Глубина заложения (t)</div>
+                <input type="text" inputmode="numeric" id="gr_depth" class="scale-field" value="0,7" placeholder="м" autocomplete="off" enterkeyhint="done" oninput="validateNumericField(this)">
+                <div style="color:rgba(255,255,255,0.25); font-size:10px; margin-top:4px; padding-left:4px;">Расстояние от поверхности до верха электрода</div>
+            </div>
+            <button type="button" class="converter-convert-btn scale-calc-btn" onclick="calcGrounding()"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Рассчитать</button>
+            <div class="converter-result-group" id="gr_results" style="display:none;"></div>
+        </div>
+
+        <!-- ======================== ПЛОЩАДЬ СЕЧЕНИЯ ТРУБОПРОВОДА ======================== -->
+        <div id="page-pipe-area" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-title">Площадь сечения трубопровода</div></div>
+            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="scale-form">
+                <div class="scale-form-label">Тип сечения</div>
+                <select id="pa_type" class="scale-field" onchange="pa_updateForm()" autocomplete="off">
+                    <option value="circle" selected>Круг (D)</option>
+                    <option value="ring">Кольцо (D × d)</option>
+                </select>
+            </div>
+            <div class="scale-form">
+                <div class="scale-form-label">Наружный диаметр (D)</div>
+                <input type="text" inputmode="numeric" id="pa_d_outer" class="scale-field" value="100" placeholder="мм" autocomplete="off" enterkeyhint="next" oninput="validateNumericField(this)">
+            </div>
+            <div class="scale-form" id="pa_inner_block" style="display:none;">
+                <div class="scale-form-label">Внутренний диаметр (d)</div>
+                <input type="text" inputmode="numeric" id="pa_d_inner" class="scale-field" value="90" placeholder="мм" autocomplete="off" enterkeyhint="done" oninput="validateNumericField(this)">
+            </div>
+            <button type="button" class="converter-convert-btn scale-calc-btn" onclick="calcPipeArea()"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Рассчитать</button>
+            <div class="converter-result-group" id="pa_results" style="display:none;"></div>
+        </div>
+
+        <!-- ======================== ОБЪЁМ ЁМКОСТИ ======================== -->
+        <div id="page-tank-volume" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-title">Объём ёмкости</div></div>
+            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="scale-form">
+                <div class="scale-form-label">Тип ёмкости</div>
+                <select id="tv_type" class="scale-field" onchange="tv_updateForm()" autocomplete="off">
+                    <option value="vcyl" selected>Вертикальный цилиндр</option>
+                    <option value="sphere">Сфера</option>
+                    <option value="cone">Конус</option>
+                </select>
+            </div>
+            <div class="scale-form">
+                <div class="scale-form-label">Диаметр (D)</div>
+                <input type="text" inputmode="numeric" id="tv_diameter" class="scale-field" value="2" placeholder="м" autocomplete="off" enterkeyhint="next" oninput="validateNumericField(this)">
+            </div>
+            <div class="scale-form" id="tv_height_block">
+                <div class="scale-form-label">Высота (H)</div>
+                <input type="text" inputmode="numeric" id="tv_height" class="scale-field" value="3" placeholder="м" autocomplete="off" enterkeyhint="done" oninput="validateNumericField(this)">
+            </div>
+            <button type="button" class="converter-convert-btn scale-calc-btn" onclick="calcTankVolume()"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Рассчитать</button>
+            <div class="converter-result-group" id="tv_results" style="display:none;"></div>
+        </div>
+
+        <!-- ======================== ОБЪЁМ В ГОРИЗОНТАЛЬНОМ ЦИЛИНДРЕ ======================== -->
+        <div id="page-horiz-tank" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-title">Объём в горизонтальном цилиндре</div></div>
+            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="scale-form">
+                <div class="scale-form-label">Длина цилиндра (L)</div>
+                <input type="text" inputmode="numeric" id="ht_length" class="scale-field" value="5" placeholder="м" autocomplete="off" enterkeyhint="next" oninput="validateNumericField(this)">
+            </div>
+            <div class="scale-form">
+                <div class="scale-form-label">Диаметр цилиндра (D)</div>
+                <input type="text" inputmode="numeric" id="ht_diameter" class="scale-field" value="2" placeholder="м" autocomplete="off" enterkeyhint="next" oninput="validateNumericField(this)">
+            </div>
+            <div class="scale-form">
+                <div class="scale-form-label">Уровень жидкости (h)</div>
+                <input type="text" inputmode="numeric" id="ht_level" class="scale-field" value="1,5" placeholder="м" autocomplete="off" enterkeyhint="done" oninput="validateNumericField(this)">
+                <div style="color:rgba(255,255,255,0.25); font-size:10px; margin-top:4px; padding-left:4px;">Высота от дна до зеркала жидкости (0 ≤ h ≤ D)</div>
+            </div>
+            <button type="button" class="converter-convert-btn scale-calc-btn" onclick="calcHorizTank()"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Рассчитать</button>
+            <div class="converter-result-group" id="ht_results" style="display:none;"></div>
+        </div>
+
+        <!-- ======================== ДЛИНА НАКЛОННОГО ТРУБОПРОВОДА ======================== -->
+        <div id="page-inclined-pipe" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-title">Длина наклонного трубопровода</div></div>
+            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="scale-form">
+                <div class="scale-form-label">Перепад высот (Δh)</div>
+                <input type="text" inputmode="numeric" id="ip_dh" class="scale-field" value="3" placeholder="м" autocomplete="off" enterkeyhint="next" oninput="validateNumericField(this)">
+                <div style="color:rgba(255,255,255,0.25); font-size:10px; margin-top:4px; padding-left:4px;">Разница высот между концами (по вертикали)</div>
+            </div>
+            <div class="scale-form">
+                <div class="scale-form-label">Горизонтальная проекция (L₀)</div>
+                <input type="text" inputmode="numeric" id="ip_l0" class="scale-field" value="10" placeholder="м" autocomplete="off" enterkeyhint="done" oninput="validateNumericField(this)">
+            </div>
+            <button type="button" class="converter-convert-btn scale-calc-btn" onclick="calcInclinedPipe()"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Рассчитать</button>
+            <div class="converter-result-group" id="ip_results" style="display:none;"></div>
         </div>
 
         <!-- ======================== ВЫБОР РАСЧЁТА СУЖАЮЩЕГО УСТРОЙСТВА ======================== -->
@@ -4598,6 +4815,15 @@
         'orifice-select': { label: 'Сужающее устройство',       sublabel: 'Расчёт диафрагмы по расходу и перепаду',        target: 'orifice-select', category: 'calculators' },
         // ===== Электротехника — подразделы (страница page-calc-electro) =====
         'circuit-breaker':{ label: 'Автоматический выключатель', sublabel: 'Расчёт по мощности, току, сечению кабеля',     target: 'circuit-breaker',category: 'calculators' },
+        'cable-section':  { label: 'Сечение кабеля по току',     sublabel: 'Выбор по ПУЭ: медь/алюминий, способ прокладки', target: 'cable-section',  category: 'calculators' },
+        'motor-current':  { label: 'Ток электродвигателя',        sublabel: 'Расчёт по P, U, cos φ, КПД',                    target: 'motor-current',  category: 'calculators' },
+        'power-factor':   { label: 'Компенсация реактивной мощности', sublabel: 'Расчёт cos φ и мощности ККУ',              target: 'power-factor',   category: 'calculators' },
+        'grounding':      { label: 'Расчёт заземления',           sublabel: 'Одиночный вертикальный заземлитель, ПУЭ 1.7',  target: 'grounding',      category: 'calculators' },
+        // ===== Геометрия — подразделы (страница page-calc-geometry) =====
+        'pipe-area':      { label: 'Площадь сечения трубопровода', sublabel: 'Круг, кольцо, эквивалентный диаметр',         target: 'pipe-area',      category: 'calculators' },
+        'tank-volume':    { label: 'Объём ёмкости',                sublabel: 'Вертикальный цилиндр, сфера, конус',          target: 'tank-volume',    category: 'calculators' },
+        'horiz-tank':     { label: 'Объём в горизонтальном цилиндре', sublabel: 'Частичное заполнение — для калибровки уровнемеров', target: 'horiz-tank', category: 'calculators' },
+        'inclined-pipe':  { label: 'Длина наклонного трубопровода', sublabel: 'Тригонометрия: перепад высот и проекция',     target: 'inclined-pipe',  category: 'calculators' },
         // ===== Документация — конечные страницы (страница page-docs) =====
         'exam-tickets':  { label: 'Экзаменационные билеты',  sublabel: '4, 5, 6 разряд, до 1000 В',                      target: 'exam-tickets',  category: 'docs' },
         'library':       { label: 'Библиотека КИП и А',      sublabel: 'Документация, схемы, инструкции',                target: 'library',       category: 'docs' }
@@ -4855,6 +5081,305 @@
         window.removeEventListener('pointermove', onPinnedPointerMove);
         window.removeEventListener('pointerup', onPinnedPointerUp);
         window.removeEventListener('pointercancel', onPinnedPointerUp);
+    }
+
+    // ============================================================
+    // КАЛЬКУЛЯТОРЫ ЭЛЕКТРОТЕХНИКИ
+    // ============================================================
+
+    // Сечение кабеля по току — упрощённая таблица ПУЭ 1.3.4-1.3.11.
+    // Для меди и алюминия, открытой и закрытой прокладки, многожильных кабелей.
+    function calcCableSection() {
+        const material = document.getElementById('cs_material').value;
+        const laying = document.getElementById('cs_laying').value;
+        const cores = parseInt(document.getElementById('cs_cores').value, 10);
+        let current = parseLocaleNumber(document.getElementById('cs_current').value);
+        if (isNaN(current) || current <= 0) { showToast('Введите ток'); return; }
+        // Упрощённые таблицы допустимого тока (А) по сечению (мм²).
+        // Медь, открыто: [17, 25, 33, 45, 58, 75, 95, 120, 145, 180, 220, 260]
+        // Медь, закрыто: [16, 21, 27, 38, 50, 65, 80, 105, 135, 175, 210, 245]
+        // Алюминий, открыто: [21, 28, 36, 46, 60, 75, 95, 120, 150, 185, 225, 270]
+        // Алюминий, закрыто: [18, 24, 30, 39, 50, 60, 75, 96, 120, 156, 190, 230]
+        // Для 2/3/4 жил коэффициент 0.92-0.94 (упрощённо 0.93 для закрытой, 1.0 для открытой)
+        const sections = [1.0, 1.5, 2.5, 4.0, 6.0, 10.0, 16.0, 25.0, 35.0, 50.0, 70.0, 95.0];
+        let ampTable;
+        if (material === 'copper' && laying === 'open') ampTable = [17, 25, 33, 45, 58, 75, 95, 120, 145, 180, 220, 260];
+        else if (material === 'copper' && laying === 'closed') ampTable = [16, 21, 27, 38, 50, 65, 80, 105, 135, 175, 210, 245];
+        else if (material === 'aluminum' && laying === 'open') ampTable = [21, 28, 36, 46, 60, 75, 95, 120, 150, 185, 225, 270];
+        else ampTable = [18, 24, 30, 39, 50, 60, 75, 96, 120, 156, 190, 230];
+        // Коэффициент для многожильных кабелей в трубе
+        const coreFactor = (laying === 'closed' && cores >= 3) ? 0.93 : 1.0;
+        // Найти минимальное сечение с I_доп >= current
+        let chosenIdx = -1;
+        for (let i = 0; i < ampTable.length; i++) {
+            if (ampTable[i] * coreFactor >= current) { chosenIdx = i; break; }
+        }
+        let html = '<div class="converter-result-label-title">Результат</div>';
+        if (chosenIdx === -1) {
+            html += '<div class="converter-result-item"><span class="converter-result-label">Результат</span><span class="converter-result-value" style="color:#c74a4a;">Превышен диапазон таблицы</span></div>';
+        } else {
+            const chosenSection = sections[chosenIdx];
+            const allowedCurrent = ampTable[chosenIdx] * coreFactor;
+            html += '<div class="converter-result-item"><span class="converter-result-label">Рекомендуемое сечение</span><span class="converter-result-value" style="color:#4ac771;">' + formatNumber(chosenSection) + ' мм²</span></div>';
+            html += '<div class="converter-result-item"><span class="converter-result-label">Допустимый ток</span><span class="converter-result-value">' + formatNumber(allowedCurrent) + ' А</span></div>';
+            html += '<div class="converter-result-item"><span class="converter-result-label">Запас по току</span><span class="converter-result-value">' + formatNumber(allowedCurrent - current) + ' А (' + formatNumber((allowedCurrent / current - 1) * 100) + '%)</span></div>';
+            // Рекомендация по автомату
+            const breakerRatings = [1, 2, 3, 4, 6, 10, 16, 20, 25, 32, 40, 50, 63, 80, 100, 125];
+            let breaker = breakerRatings[breakerRatings.length - 1];
+            for (let i = 0; i < breakerRatings.length; i++) {
+                if (breakerRatings[i] >= current) { breaker = breakerRatings[i]; break; }
+            }
+            html += '<div class="converter-result-item"><span class="converter-result-label">Ном. ток автомата</span><span class="converter-result-value">' + breaker + ' А</span></div>';
+        }
+        const res = document.getElementById('cs_results');
+        res.innerHTML = html;
+        res.style.display = 'block';
+        setTimeout(() => res.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+
+    // Ток электродвигателя.
+    // 1 фаза: I = P / (U · cos φ · η)
+    // 3 фазы: I = P / (√3 · U · cos φ · η)
+    function calcMotorCurrent() {
+        let power = parseLocaleNumber(document.getElementById('mc_power').value);
+        const powerUnit = parseFloat(document.getElementById('mc_power_unit').value);
+        const voltage = parseFloat(document.getElementById('mc_voltage').value);
+        let cosphi = parseLocaleNumber(document.getElementById('mc_cosphi').value);
+        let eta = parseLocaleNumber(document.getElementById('mc_efficiency').value);
+        if (isNaN(power) || power <= 0) { showToast('Введите мощность'); return; }
+        if (isNaN(cosphi) || cosphi <= 0 || cosphi > 1) { showToast('cos φ должен быть 0–1'); return; }
+        if (isNaN(eta) || eta <= 0 || eta > 1) { showToast('КПД должен быть 0–1'); return; }
+        power = power * powerUnit; // в Вт
+        const isThreePhase = voltage === 380 || voltage === 660;
+        const current = isThreePhase
+            ? power / (Math.sqrt(3) * voltage * cosphi * eta)
+            : power / (voltage * cosphi * eta);
+        const reactivePower = power * Math.tan(Math.acos(cosphi)) / eta;
+        const apparentPower = power / (cosphi * eta);
+        let html = '<div class="converter-result-label-title">Результат</div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Номинальный ток (I)</span><span class="converter-result-value" style="color:#4ac771;">' + formatNumber(current) + ' А</span></div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Полная мощность (S)</span><span class="converter-result-value">' + formatNumber(apparentPower / 1000) + ' кВ·А</span></div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Реактивная мощность (Q)</span><span class="converter-result-value">' + formatNumber(reactivePower / 1000) + ' квар</span></div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Тип сети</span><span class="converter-result-value">' + (isThreePhase ? '3 фазы (√3)' : '1 фаза') + '</span></div>';
+        const res = document.getElementById('mc_results');
+        res.innerHTML = html;
+        res.style.display = 'block';
+        setTimeout(() => res.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+
+    // Компенсация реактивной мощности.
+    // Q_кку = P · (tg φ1 − tg φ2), где tg φ = √(1/cos²φ − 1)
+    function calcPowerFactor() {
+        let power = parseLocaleNumber(document.getElementById('pf_power').value);
+        const powerUnit = parseFloat(document.getElementById('pf_power_unit').value);
+        let cosphi1 = parseLocaleNumber(document.getElementById('pf_cosphi1').value);
+        let cosphi2 = parseLocaleNumber(document.getElementById('pf_cosphi2').value);
+        if (isNaN(power) || power <= 0) { showToast('Введите мощность'); return; }
+        if (isNaN(cosphi1) || cosphi1 <= 0 || cosphi1 > 1) { showToast('cos φ₁ должен быть 0–1'); return; }
+        if (isNaN(cosphi2) || cosphi2 <= 0 || cosphi2 > 1) { showToast('cos φ₂ должен быть 0–1'); return; }
+        if (cosphi2 <= cosphi1) { showToast('cos φ₂ должен быть больше cos φ₁'); return; }
+        power = power * powerUnit; // в Вт
+        const tg1 = Math.sqrt(1 / (cosphi1 * cosphi1) - 1);
+        const tg2 = Math.sqrt(1 / (cosphi2 * cosphi2) - 1);
+        const qKku = power * (tg1 - tg2); // вар
+        const qBefore = power * tg1;
+        const qAfter = power * tg2;
+        const sBefore = power / cosphi1;
+        const sAfter = power / cosphi2;
+        let html = '<div class="converter-result-label-title">Результат</div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Мощность ККУ</span><span class="converter-result-value" style="color:#4ac771;">' + formatNumber(qKku / 1000) + ' квар</span></div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">tg φ₁ → tg φ₂</span><span class="converter-result-value">' + formatNumber(tg1) + ' → ' + formatNumber(tg2) + '</span></div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Q до/после</span><span class="converter-result-value">' + formatNumber(qBefore / 1000) + ' / ' + formatNumber(qAfter / 1000) + ' квар</span></div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">S до/после</span><span class="converter-result-value">' + formatNumber(sBefore / 1000) + ' / ' + formatNumber(sAfter / 1000) + ' кВ·А</span></div>';
+        const res = document.getElementById('pf_results');
+        res.innerHTML = html;
+        res.style.display = 'block';
+        setTimeout(() => res.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+
+    // Расчёт заземления — одиночный вертикальный заземлитель.
+    // R = ρ / (2π·L) · (ln(2·L/d) + 0.5·ln((4·t+L)/(4·t-L)))
+    // для L >> d и t > L/4 (ПУЭ 1.7, формула из «Справочника по расчёту заземляющих устройств»)
+    function calcGrounding() {
+        let rho = parseLocaleNumber(document.getElementById('gr_rho').value);
+        let L = parseLocaleNumber(document.getElementById('gr_length').value);
+        let d = parseLocaleNumber(document.getElementById('gr_diameter').value);
+        let t = parseLocaleNumber(document.getElementById('gr_depth').value);
+        if (isNaN(rho) || rho <= 0) { showToast('Введите ρ'); return; }
+        if (isNaN(L) || L <= 0) { showToast('Введите длину L'); return; }
+        if (isNaN(d) || d <= 0) { showToast('Введите диаметр d'); return; }
+        if (isNaN(t) || t < 0) { showToast('Введите глубину t'); return; }
+        if (t <= L / 4) { showToast('Глубина должна быть > L/4'); return; }
+        // t в формуле — расстояние от поверхности до середины электрода
+        const tCenter = t + L / 2;
+        const R = (rho / (2 * Math.PI * L)) * (Math.log(2 * L / d) + 0.5 * Math.log((4 * tCenter + L) / (4 * tCenter - L)));
+        // Норматив ПУЭ: R ≤ 4 Ом для установок до 1000 В (или ≤ 10 Ом при суммарной мощности ≤ 100 кВ·А)
+        const norm = 4;
+        let html = '<div class="converter-result-label-title">Результат</div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Сопротивление R</span><span class="converter-result-value" style="color:#4ac771;">' + formatNumber(R) + ' Ом</span></div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Норма ПУЭ (≤1000 В)</span><span class="converter-result-value">≤ ' + norm + ' Ом</span></div>';
+        const status = R <= norm ? 'Соответствует' : 'Не соответствует';
+        const statusColor = R <= norm ? '#4ac771' : '#c74a4a';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Статус</span><span class="converter-result-value" style="color:' + statusColor + ';">' + status + '</span></div>';
+        // Рекомендация по количеству электродов (приближённо)
+        if (R > norm) {
+            const n = Math.ceil(R / norm * 1.2); // коэффициент использования 0.8
+            html += '<div class="converter-result-item"><span class="converter-result-label">Рекомендация</span><span class="converter-result-value">≈ ' + n + ' параллельных электрода</span></div>';
+        }
+        const res = document.getElementById('gr_results');
+        res.innerHTML = html;
+        res.style.display = 'block';
+        setTimeout(() => res.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+
+    // ============================================================
+    // КАЛЬКУЛЯТОРЫ ГЕОМЕТРИИ
+    // ============================================================
+
+    // Переключение формы площади сечения (круг/кольцо)
+    function pa_updateForm() {
+        const type = document.getElementById('pa_type').value;
+        document.getElementById('pa_inner_block').style.display = (type === 'ring') ? 'block' : 'none';
+    }
+
+    // Площадь сечения трубопровода.
+    // Круг: S = π·D²/4, P = π·D
+    // Кольцо: S = π·(D²-d²)/4, P = π·(D+d)/2
+    // Эквивалентный диаметр (для некруглых): Dэкв = 4·S/P
+    function calcPipeArea() {
+        const type = document.getElementById('pa_type').value;
+        let dOuter = parseLocaleNumber(document.getElementById('pa_d_outer').value);
+        if (isNaN(dOuter) || dOuter <= 0) { showToast('Введите D'); return; }
+        // Перевод мм → м для площади в м²
+        const D = dOuter / 1000;
+        let area, perimeter, dEq, label;
+        if (type === 'circle') {
+            area = Math.PI * D * D / 4;
+            perimeter = Math.PI * D;
+            dEq = D;
+            label = 'Круг';
+        } else {
+            let dInner = parseLocaleNumber(document.getElementById('pa_d_inner').value);
+            if (isNaN(dInner) || dInner <= 0) { showToast('Введите d'); return; }
+            if (dInner >= dOuter) { showToast('d должен быть меньше D'); return; }
+            const d = dInner / 1000;
+            area = Math.PI * (D * D - d * d) / 4;
+            perimeter = Math.PI * (D + d) / 2;
+            dEq = 4 * area / perimeter;
+            label = 'Кольцо';
+        }
+        // Скорость при расходе 1 м³/ч: v = Q/S
+        const vAt1m3h = (1 / 3600) / area;
+        let html = '<div class="converter-result-label-title">Результат</div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Тип сечения</span><span class="converter-result-value">' + label + '</span></div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Площадь S</span><span class="converter-result-value" style="color:#4ac771;">' + formatNumber(area * 10000) + ' см² (' + formatNumber(area) + ' м²)</span></div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Периметр P</span><span class="converter-result-value">' + formatNumber(perimeter) + ' м</span></div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Экв. диаметр Dэкв</span><span class="converter-result-value">' + formatNumber(dEq * 1000) + ' мм</span></div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Скорость при Q=1 м³/ч</span><span class="converter-result-value">' + formatNumber(vAt1m3h) + ' м/с</span></div>';
+        const res = document.getElementById('pa_results');
+        res.innerHTML = html;
+        res.style.display = 'block';
+        setTimeout(() => res.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+
+    // Переключение формы объёма ёмкости
+    function tv_updateForm() {
+        const type = document.getElementById('tv_type').value;
+        document.getElementById('tv_height_block').style.display = (type === 'sphere') ? 'none' : 'block';
+    }
+
+    // Объём ёмкости.
+    // Цилиндр: V = π·R²·H = π·D²·H/4
+    // Сфера: V = (4/3)·π·R³ = π·D³/6
+    // Конус: V = (1/3)·π·R²·H = π·D²·H/12
+    function calcTankVolume() {
+        const type = document.getElementById('tv_type').value;
+        let D = parseLocaleNumber(document.getElementById('tv_diameter').value);
+        if (isNaN(D) || D <= 0) { showToast('Введите D'); return; }
+        const R = D / 2;
+        let volume, label;
+        if (type === 'sphere') {
+            volume = Math.PI * D * D * D / 6;
+            label = 'Сфера';
+        } else {
+            let H = parseLocaleNumber(document.getElementById('tv_height').value);
+            if (isNaN(H) || H <= 0) { showToast('Введите H'); return; }
+            if (type === 'vcyl') {
+                volume = Math.PI * R * R * H;
+                label = 'Вертикальный цилиндр';
+            } else { // cone
+                volume = Math.PI * R * R * H / 3;
+                label = 'Конус';
+            }
+        }
+        let html = '<div class="converter-result-label-title">Результат</div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Тип ёмкости</span><span class="converter-result-value">' + label + '</span></div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Объём V</span><span class="converter-result-value" style="color:#4ac771;">' + formatNumber(volume) + ' м³ (' + formatNumber(volume * 1000) + ' л)</span></div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Масса воды (ρ=1000)</span><span class="converter-result-value">' + formatNumber(volume * 1000) + ' кг (' + formatNumber(volume) + ' т)</span></div>';
+        const res = document.getElementById('tv_results');
+        res.innerHTML = html;
+        res.style.display = 'block';
+        setTimeout(() => res.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+
+    // Объём жидкости в горизонтальном цилиндре при частичном заполнении.
+    // Площадь сегмента круга: S = R²·arccos((R-h)/R) - (R-h)·√(2·R·h - h²)
+    // V = S · L
+    function calcHorizTank() {
+        let L = parseLocaleNumber(document.getElementById('ht_length').value);
+        let D = parseLocaleNumber(document.getElementById('ht_diameter').value);
+        let h = parseLocaleNumber(document.getElementById('ht_level').value);
+        if (isNaN(L) || L <= 0) { showToast('Введите L'); return; }
+        if (isNaN(D) || D <= 0) { showToast('Введите D'); return; }
+        if (isNaN(h) || h < 0) { showToast('Введите h'); return; }
+        if (h > D) { showToast('h не может быть больше D'); return; }
+        const R = D / 2;
+        let segmentArea, fillPercent, volume, totalVolume;
+        if (h === 0) {
+            segmentArea = 0;
+        } else if (h === D) {
+            segmentArea = Math.PI * R * R;
+        } else if (h === R) {
+            segmentArea = Math.PI * R * R / 2;
+        } else {
+            // Общая формула площади сегмента
+            segmentArea = R * R * Math.acos((R - h) / R) - (R - h) * Math.sqrt(2 * R * h - h * h);
+        }
+        volume = segmentArea * L;
+        totalVolume = Math.PI * R * R * L;
+        fillPercent = (volume / totalVolume) * 100;
+        let html = '<div class="converter-result-label-title">Результат</div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Объём жидкости V</span><span class="converter-result-value" style="color:#4ac771;">' + formatNumber(volume) + ' м³ (' + formatNumber(volume * 1000) + ' л)</span></div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Полный объём цилиндра</span><span class="converter-result-value">' + formatNumber(totalVolume) + ' м³ (' + formatNumber(totalVolume * 1000) + ' л)</span></div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Заполнение</span><span class="converter-result-value">' + formatNumber(fillPercent) + ' %</span></div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Площадь сегмента S</span><span class="converter-result-value">' + formatNumber(segmentArea) + ' м²</span></div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Масса воды (ρ=1000)</span><span class="converter-result-value">' + formatNumber(volume * 1000) + ' кг</span></div>';
+        const res = document.getElementById('ht_results');
+        res.innerHTML = html;
+        res.style.display = 'block';
+        setTimeout(() => res.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+
+    // Длина наклонного трубопровода.
+    // L = √(Δh² + L₀²), угол α = arctan(Δh / L₀)
+    function calcInclinedPipe() {
+        let dh = parseLocaleNumber(document.getElementById('ip_dh').value);
+        let l0 = parseLocaleNumber(document.getElementById('ip_l0').value);
+        if (isNaN(dh) || dh <= 0) { showToast('Введите Δh'); return; }
+        if (isNaN(l0) || l0 <= 0) { showToast('Введите L₀'); return; }
+        const L = Math.sqrt(dh * dh + l0 * l0);
+        const angleRad = Math.atan(dh / l0);
+        const angleDeg = angleRad * 180 / Math.PI;
+        const slope = dh / l0 * 1000; // промилле
+        let html = '<div class="converter-result-label-title">Результат</div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Длина трубопровода L</span><span class="converter-result-value" style="color:#4ac771;">' + formatNumber(L) + ' м</span></div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Угол наклона α</span><span class="converter-result-value">' + formatNumber(angleDeg) + '° (' + formatNumber(angleRad) + ' рад)</span></div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Уклон</span><span class="converter-result-value">' + formatNumber(slope) + ' ‰ (промилле)</span></div>';
+        html += '<div class="converter-result-item"><span class="converter-result-label">Разница от L₀</span><span class="converter-result-value">+' + formatNumber(L - l0) + ' м</span></div>';
+        const res = document.getElementById('ip_results');
+        res.innerHTML = html;
+        res.style.display = 'block';
+        setTimeout(() => res.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
     }
 
     // Открытие bottom sheet для pin/unpin указанного подраздела.
