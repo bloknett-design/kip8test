@@ -976,6 +976,41 @@
     .sidebar-item:active { background: rgba(74, 143, 199, 0.08); }
     .sidebar-item:hover { background: rgba(74, 143, 199, 0.05); border-left-color: rgba(74, 143, 199, 0.4); }
     .sidebar-item svg { flex-shrink: 0; }
+
+    /* Заголовок группы разделов в шторке меню */
+    .sidebar-group-title {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--accent-blue, #4a8fc7);
+        padding: 14px 20px 6px;
+        margin-top: 4px;
+    }
+    /* Группа «Документация» — золотистый акцент */
+    .sidebar-group-title-docs {
+        color: var(--accent-gold, #c7964a);
+    }
+    /* Первый заголовок группы — без верхнего отступа */
+    .sidebar-content .sidebar-group-title:first-child {
+        margin-top: 0;
+    }
+    /* Тонкий разделитель между разделами и сервисными кнопками */
+    .sidebar-divider {
+        height: 1px;
+        margin: 12px 20px;
+        background: var(--card-border, rgba(74, 143, 199, 0.18));
+        flex-shrink: 0;
+    }
+    [data-theme="light"] .sidebar-group-title {
+        color: #4a8fc7;
+    }
+    [data-theme="light"] .sidebar-group-title-docs {
+        color: #b8842e;
+    }
+    [data-theme="light"] .sidebar-divider {
+        background: rgba(20, 20, 19, 0.12);
+    }
     @media (max-width: 400px) {
         .sidebar { width: 260px; }
         .sidebar-item { padding: 12px 16px; font-size: 13px; }
@@ -7876,6 +7911,55 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         </div>
     </div>
     <div class="sidebar-content">
+        <!-- ===== Группа: КИП и А ===== -->
+        <div class="sidebar-group-title">КИП и А</div>
+        <div class="sidebar-item" onclick="navigateTo('converter'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+            <span>Конвертер единиц</span>
+        </div>
+        <div class="sidebar-item" onclick="navigateTo('scale-signal'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M2 12h6l3-9 4 18 3-9h4"/></svg>
+            <span>Шкала-сигнал</span>
+        </div>
+        <div class="sidebar-item" onclick="navigateTo('error-select'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Расчёт погрешности</span>
+        </div>
+        <div class="sidebar-item" onclick="navigateTo('buoy-select'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M12 2v6"/><path d="M5 8h14l-1 12H6L5 8z"/></svg>
+            <span>Буйковый уровнемер</span>
+        </div>
+        <div class="sidebar-item" onclick="navigateTo('temp-sensors'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+            <span>Датчики температуры</span>
+        </div>
+        <div class="sidebar-item" onclick="navigateTo('orifice-select'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
+            <span>Сужающее устройство</span>
+        </div>
+
+        <!-- ===== Группа: Электротехника ===== -->
+        <div class="sidebar-group-title">Электротехника</div>
+        <div class="sidebar-item" onclick="navigateTo('circuit-breaker'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            <span>Автоматический выключатель</span>
+        </div>
+
+        <!-- ===== Группа: Документация ===== -->
+        <div class="sidebar-group-title sidebar-group-title-docs">Документация</div>
+        <div class="sidebar-item" onclick="navigateTo('exam-tickets'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+            <span style="color:rgba(199,150,74,0.9);">Экзаменационные билеты</span>
+        </div>
+        <div class="sidebar-item" onclick="navigateTo('library'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <span style="color:rgba(199,150,74,0.9);">Библиотека КИП и А</span>
+        </div>
+
+        <!-- ===== Тонкий разделитель ===== -->
+        <div class="sidebar-divider"></div>
+
+        <!-- ===== Сервисные кнопки (внизу шторки) ===== -->
         <div class="sidebar-item" onclick="refreshAppData(); toggleSidebar();">
             <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
             <span>Обновить</span>
