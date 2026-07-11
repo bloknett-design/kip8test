@@ -823,6 +823,12 @@
         z-index: 1;
         transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         margin: 0;
+        /* touch-action: pan-y — разрешает вертикальный скролл страницы,
+           но отключает горизонтальные нативные жесты браузера.
+           Без этого на мобильных при горизонтальном свайпе браузер начинает
+           прокрутку страницы, что приводит к pointercancel и срыву swipe.
+           На ПК с мышью проблемы нет, т.к. мышь не генерирует touch-жесты. */
+        touch-action: pan-y;
     }
     .subsection-cell > .menu-btn.swipe-active {
         transition: none;
@@ -5399,7 +5405,9 @@
         if (!key) return;
         // Если уже закреплён — swipe не нужен, пусть работает обычный тап
         if (isPinned(key)) return;
-        e.preventDefault();
+        // НЕ вызываем e.preventDefault() здесь — с touch-action: pan-y он не нужен,
+        // а его наличие может мешать обычному тапу (click event) на некоторых мобильных браузерах.
+        // preventDefault вызывается в onSubsectionPointerMove, когда swipe уже активен.
         const rect = el.getBoundingClientRect();
         subsectionSwipeState = {
             el: el,
