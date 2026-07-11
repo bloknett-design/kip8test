@@ -507,6 +507,203 @@
         background: linear-gradient(135deg, #C6613F, #D97757) !important;
         box-shadow: 0 3px 12px rgba(198, 97, 63, 0.25) !important;
     }
+
+    /* ============================================================
+       НИЖНИЙ БАР ГЛАВНОЙ СТРАНИЦЫ (фиксированный, не прокручивается)
+       ============================================================ */
+    .dashboard-bottom-bar {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        z-index: 80;
+        display: none; /* по умолчанию скрыт, показывается только на дашборде */
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+        background: var(--bottom-nav-bg, rgba(23, 33, 43, 0.95));
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid var(--card-border);
+    }
+    /* Показываем нижний бар только когда активна главная страница */
+    body:has(#page-dashboard.active) .dashboard-bottom-bar { display: grid; }
+    /* На дашборде добавляем нижний отступ, чтобы контент не перекрывался баром */
+    body:has(#page-dashboard.active) #contentArea { padding-bottom: 88px; }
+
+    .dashboard-bottom-btn {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        padding: 13px 10px;
+        border: none; border-radius: 12px;
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        color: #fff; font-size: 14px; font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer; pointer-events: auto;
+        touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+        box-shadow: 0 3px 10px rgba(37, 99, 235, 0.25);
+        transition: all 0.2s;
+        min-height: 48px;
+    }
+    .dashboard-bottom-btn:active { transform: scale(0.97); opacity: 0.9; }
+    .dashboard-bottom-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+    .dashboard-bottom-btn span { line-height: 1.2; }
+    .dashboard-bottom-btn-docs {
+        background: linear-gradient(135deg, #b8842e, #c7964a);
+        box-shadow: 0 3px 10px rgba(199, 150, 74, 0.25);
+    }
+    [data-theme="light"] .dashboard-bottom-btn {
+        background: linear-gradient(135deg, #C6613F, #D97757);
+        box-shadow: 0 3px 10px rgba(198, 97, 63, 0.25);
+    }
+    [data-theme="light"] .dashboard-bottom-btn-docs {
+        background: linear-gradient(135deg, #C6613F, #D97757);
+        box-shadow: 0 3px 10px rgba(198, 97, 63, 0.25);
+    }
+    @media (max-width: 400px) {
+        .dashboard-bottom-btn { font-size: 12px; padding: 11px 8px; gap: 6px; }
+        .dashboard-bottom-btn svg { width: 16px; height: 16px; }
+    }
+
+    /* ============================================================
+       ЗАКРЕПЛЁННЫЕ ПОДРАЗДЕЛЫ НА ГЛАВНОЙ
+       ============================================================ */
+    .pinned-items-container {
+        padding: 8px 8px 4px;
+    }
+    .pinned-items-title {
+        font-size: 11px; font-weight: 600; letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--text-muted, rgba(255,255,255,0.35));
+        padding: 4px 8px 8px;
+    }
+    .pinned-empty-hint {
+        margin: 8px 8px 14px;
+        padding: 14px 16px;
+        background: var(--card-bg);
+        backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+        border: 1px dashed var(--card-border);
+        border-radius: 14px;
+        color: var(--text-muted, rgba(255,255,255,0.35));
+        font-size: 13px; line-height: 1.5;
+    }
+    .pinned-empty-hint b { color: var(--text-secondary, rgba(255,255,255,0.55)); }
+    .pinned-empty-hint .pin-empty-icon {
+        display: inline-flex; vertical-align: middle;
+        width: 18px; height: 18px; margin: 0 2px;
+        stroke: var(--accent-blue); fill: none; stroke-width: 2; stroke-linecap: round;
+    }
+
+    /* ============================================================
+       КНОПКА «ТРИ ТОЧКИ» НА ПУНКТАХ МЕНЮ
+       ============================================================ */
+    .menu-btn-overflow {
+        flex-shrink: 0;
+        width: 32px; height: 32px;
+        display: flex; align-items: center; justify-content: center;
+        background: transparent;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        color: rgba(255,255,255,0.3);
+        -webkit-tap-highlight-color: transparent;
+        transition: all 0.2s;
+        margin-right: 4px;
+        pointer-events: auto;
+    }
+    .menu-btn-overflow:active { background: rgba(255,255,255,0.08); transform: scale(0.9); }
+    .menu-btn-overflow svg { width: 18px; height: 18px; fill: currentColor; }
+    [data-theme="light"] .menu-btn-overflow { color: rgba(20,20,19,0.35); }
+    [data-theme="light"] .menu-btn-overflow:active { background: rgba(20,20,19,0.08); }
+
+    /* ============================================================
+       BOTTOM SHEET ДЛЯ PIN/UNPIN
+       ============================================================ */
+    .pin-sheet-overlay {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 200;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+    }
+    .pin-sheet-overlay.active { opacity: 1; pointer-events: auto; }
+
+    .pin-sheet {
+        position: fixed;
+        left: 0; right: 0; bottom: 0;
+        z-index: 201;
+        background: var(--bg-primary, #1a1f26);
+        border-top-left-radius: 18px;
+        border-top-right-radius: 18px;
+        padding: 8px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 -8px 30px rgba(0,0,0,0.4);
+        max-width: 520px;
+        margin: 0 auto;
+    }
+    .pin-sheet.active { transform: translateY(0); }
+    .pin-sheet-handle {
+        width: 36px; height: 4px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 2px;
+        margin: 4px auto 14px;
+    }
+    [data-theme="light"] .pin-sheet-handle { background: rgba(20,20,19,0.2); }
+    .pin-sheet-title {
+        font-size: 17px; font-weight: 700;
+        color: var(--text-primary, #e0e0e0);
+        text-align: center;
+        margin-bottom: 4px;
+    }
+    .pin-sheet-sublabel {
+        font-size: 13px;
+        color: var(--text-muted, rgba(255,255,255,0.4));
+        text-align: center;
+        margin-bottom: 18px;
+        line-height: 1.4;
+    }
+    .pin-sheet-action {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        width: 100%;
+        padding: 14px;
+        border: none; border-radius: 12px;
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        color: #fff; font-size: 15px; font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        box-shadow: 0 3px 12px rgba(37, 99, 235, 0.25);
+        -webkit-tap-highlight-color: transparent;
+        transition: all 0.2s;
+    }
+    .pin-sheet-action:active { transform: scale(0.97); opacity: 0.9; }
+    .pin-sheet-action svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .pin-sheet-action.is-pinned {
+        background: linear-gradient(135deg, #c74a4a, #d9634a);
+        box-shadow: 0 3px 12px rgba(199, 74, 74, 0.25);
+    }
+    [data-theme="light"] .pin-sheet-action {
+        background: linear-gradient(135deg, #C6613F, #D97757);
+        box-shadow: 0 3px 12px rgba(198, 97, 63, 0.25);
+    }
+    [data-theme="light"] .pin-sheet-action.is-pinned {
+        background: linear-gradient(135deg, #C6613F, #D97757);
+        box-shadow: 0 3px 12px rgba(198, 97, 63, 0.25);
+    }
+    .pin-sheet-cancel {
+        display: block;
+        width: 100%;
+        padding: 13px;
+        margin-top: 8px;
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        background: transparent;
+        color: var(--text-secondary, rgba(255,255,255,0.6));
+        font-size: 14px; font-weight: 500;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: all 0.2s;
+    }
+    .pin-sheet-cancel:active { background: rgba(255,255,255,0.05); }
+    [data-theme="light"] .pin-sheet-cancel:active { background: rgba(20,20,19,0.05); }
     
     .converter-result-group { margin: 6px 0 10px; position: relative; z-index: 2; }
     .converter-result-label-title { color: rgba(255,255,255,0.3); font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; padding-left: 4px; font-weight: 500; }
@@ -1786,16 +1983,13 @@
         <!-- DASHBOARD -->
         <div id="page-dashboard" class="page-content active">
 
+            <!-- ===== Закреплённые пользователем подразделы ===== -->
+            <div id="pinnedItemsContainer" class="pinned-items-container"></div>
+
             <!-- Секретная кнопка «Сапёр» — скрыта по умолчанию.
                  Открывается 2 тапами по заголовку приложения. -->
             <div class="menu-btn-row">
                 <div class="menu-btn menu-btn-secret" id="minesweeperBtn" onclick="navigateTo('minesweeper')" style="border-color:rgba(199,150,74,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#c7964a;">Сапёр</div></div></div>
-            </div>
-
-            <!-- ===== Быстрый доступ к разделам (только на главной) ===== -->
-            <div class="dashboard-quick-nav">
-                <button type="button" class="converter-convert-btn dashboard-quick-btn" onclick="navigateTo('calculators')"><svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/></svg>Инженерные калькуляторы</button>
-                <button type="button" class="converter-convert-btn dashboard-quick-btn dashboard-quick-btn-docs" onclick="navigateTo('docs')"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Документация</button>
             </div>
         </div>
 
@@ -1804,9 +1998,9 @@
             <div class="page-inline-header"><div class="page-inline-header-title">Инженерные калькуляторы</div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
             <div class="menu-btn-row">
-                <div class="menu-btn" onclick="navigateTo('calc-kipa')"><div class="menu-btn-text"><div class="menu-btn-label">КИП и А</div><div class="menu-btn-sublabel">Конвертеры, погрешности, датчики, диафрагмы</div></div><i class="menu-btn-arrow">›</i></div>
-                <div class="menu-btn" onclick="navigateTo('calc-electro')"><div class="menu-btn-text"><div class="menu-btn-label">Электротехника</div><div class="menu-btn-sublabel">Автоматические выключатели, сечения кабеля</div></div><i class="menu-btn-arrow">›</i></div>
-                <div class="menu-btn" onclick="navigateTo('calc-geometry')"><div class="menu-btn-text"><div class="menu-btn-label">Геометрия</div><div class="menu-btn-sublabel">Площади, объёмы, сечения</div></div><i class="menu-btn-arrow">›</i></div>
+                <div class="menu-btn" onclick="navigateTo('calc-kipa')"><div class="menu-btn-text"><div class="menu-btn-label">КИП и А</div><div class="menu-btn-sublabel">Конвертеры, погрешности, датчики, диафрагмы</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('calc-kipa')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
+                <div class="menu-btn" onclick="navigateTo('calc-electro')"><div class="menu-btn-text"><div class="menu-btn-label">Электротехника</div><div class="menu-btn-sublabel">Автоматические выключатели, сечения кабеля</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('calc-electro')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
+                <div class="menu-btn" onclick="navigateTo('calc-geometry')"><div class="menu-btn-text"><div class="menu-btn-label">Геометрия</div><div class="menu-btn-sublabel">Площади, объёмы, сечения</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('calc-geometry')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
             </div>
         </div>
 
@@ -1815,8 +2009,8 @@
             <div class="page-inline-header"><div class="page-inline-header-title">Документация</div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
             <div class="menu-btn-row">
-                <div class="menu-btn" onclick="navigateTo('exam-tickets')" style="border-color:rgba(199,150,74,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#c7964a;">Экзаменационные билеты</div><div class="menu-btn-sublabel">4, 5, 6 разряд, до 1000 В</div></div><i class="menu-btn-arrow" style="color:rgba(199,150,74,0.4);">›</i></div>
-                <div class="menu-btn" onclick="navigateTo('library')" style="border-color:rgba(199,150,74,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#c7964a;">Библиотека КИП и А</div><div class="menu-btn-sublabel">Документация, схемы, инструкции</div></div><i class="menu-btn-arrow" style="color:rgba(199,150,74,0.4);">›</i></div>
+                <div class="menu-btn" onclick="navigateTo('exam-tickets')" style="border-color:rgba(199,150,74,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#c7964a;">Экзаменационные билеты</div><div class="menu-btn-sublabel">4, 5, 6 разряд, до 1000 В</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('exam-tickets')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(199,150,74,0.4);">›</i></div>
+                <div class="menu-btn" onclick="navigateTo('library')" style="border-color:rgba(199,150,74,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#c7964a;">Библиотека КИП и А</div><div class="menu-btn-sublabel">Документация, схемы, инструкции</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('library')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(199,150,74,0.4);">›</i></div>
             </div>
         </div>
 
@@ -3298,6 +3492,28 @@
 
 <div id="toast" class="toast"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg><span id="toastMessage"></span></div>
 
+<!-- ===== Нижний бар быстрого доступа (только на главной) ===== -->
+<div id="dashboardBottomBar" class="dashboard-bottom-bar">
+    <button type="button" class="dashboard-bottom-btn" onclick="navigateTo('calculators')">
+        <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/></svg>
+        <span>Инженерные калькуляторы</span>
+    </button>
+    <button type="button" class="dashboard-bottom-btn dashboard-bottom-btn-docs" onclick="navigateTo('docs')">
+        <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span>Документация</span>
+    </button>
+</div>
+
+<!-- ===== Bottom sheet для pin/unpin подраздела ===== -->
+<div id="pinSheetOverlay" class="pin-sheet-overlay" onclick="closePinSheet()"></div>
+<div id="pinSheet" class="pin-sheet">
+    <div class="pin-sheet-handle"></div>
+    <div id="pinSheetTitle" class="pin-sheet-title">Подраздел</div>
+    <div id="pinSheetSublabel" class="pin-sheet-sublabel"></div>
+    <button type="button" id="pinSheetAction" class="pin-sheet-action" onclick="executePinToggle()">Добавить на главную</button>
+    <button type="button" class="pin-sheet-cancel" onclick="closePinSheet()">Отмена</button>
+</div>
+
 <script>
     // ======================== ИГРА САПЁР ========================
     let msCols = 9, msRows = 9, msMines = 10;
@@ -4257,8 +4473,155 @@
         history.back();
     }
 
+    // ============================================================
+    // ЗАКРЕПЛЁННЫЕ ПОДРАЗДЕЛЫ НА ГЛАВНОЙ СТРАНИЦЕ
+    // ============================================================
+    // Реестр всех подразделов, доступных для закрепления.
+    // key — уникальный идентификатор (совпадает с target страницы навигации).
+    // category: 'calculators' (синий) | 'docs' (золотистый) — для стилизации.
+    const SUBSECTIONS = {
+        'calc-kipa':     { label: 'КИП и А',                sublabel: 'Конвертеры, погрешности, датчики, диафрагмы',     target: 'calc-kipa',     category: 'calculators' },
+        'calc-electro':  { label: 'Электротехника',          sublabel: 'Автоматические выключатели, сечения кабеля',     target: 'calc-electro',  category: 'calculators' },
+        'calc-geometry': { label: 'Геометрия',               sublabel: 'Площади, объёмы, сечения',                       target: 'calc-geometry', category: 'calculators' },
+        'exam-tickets':  { label: 'Экзаменационные билеты',  sublabel: '4, 5, 6 разряд, до 1000 В',                      target: 'exam-tickets',  category: 'docs' },
+        'library':       { label: 'Библиотека КИП и А',      sublabel: 'Документация, схемы, инструкции',                target: 'library',       category: 'docs' }
+    };
+    const PINNED_STORAGE_KEY = 'pinnedSubsections';
+    let currentPinKey = null; // ключ подраздела, для которого открыт sheet
+
+    // Чтение списка закреплённых подразделов из localStorage.
+    // Возвращает массив ключей (например, ['calc-kipa', 'library']).
+    function getPinnedItems() {
+        try {
+            const raw = localStorage.getItem(PINNED_STORAGE_KEY);
+            if (!raw) return [];
+            const arr = JSON.parse(raw);
+            return Array.isArray(arr) ? arr.filter(k => SUBSECTIONS[k]) : [];
+        } catch (e) { return []; }
+    }
+
+    // Запись списка закреплённых подразделов в localStorage.
+    function setPinnedItems(arr) {
+        localStorage.setItem(PINNED_STORAGE_KEY, JSON.stringify(arr));
+    }
+
+    // Проверка, закреплён ли указанный подраздел.
+    function isPinned(key) {
+        return getPinnedItems().indexOf(key) !== -1;
+    }
+
+    // Переключение состояния закрепления подраздела.
+    function togglePin(key) {
+        let items = getPinnedItems();
+        if (items.indexOf(key) === -1) {
+            items.push(key);
+        } else {
+            items = items.filter(k => k !== key);
+        }
+        setPinnedItems(items);
+        renderPinnedItems();
+    }
+
+    // Экранирование HTML (защита от XSS при рендере пользовательских данных).
+    // Использует существующую функцию escHtml, если она есть.
+    function pinEscHtml(s) {
+        if (typeof escHtml === 'function') return escHtml(String(s));
+        return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    // Рендеринг контейнера закреплённых подразделов на дашборде.
+    // Вызывается при загрузке и после каждого pin/unpin.
+    function renderPinnedItems() {
+        const container = document.getElementById('pinnedItemsContainer');
+        if (!container) return;
+        const items = getPinnedItems();
+        if (items.length === 0) {
+            container.innerHTML =
+                '<div class="pinned-empty-hint">' +
+                'Закрепите часто используемые разделы — они появятся здесь. ' +
+                'Откройте «Инженерные калькуляторы» или «Документацию» в нижнем баре, ' +
+                'нажмите <svg class="pin-empty-icon" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg> на нужном пункте и выберите <b>«Добавить на главную»</b>.' +
+                '</div>';
+            return;
+        }
+        let html = '<div class="pinned-items-title">Закреплённые разделы</div>';
+        html += '<div class="menu-btn-row">';
+        items.forEach(key => {
+            const s = SUBSECTIONS[key];
+            if (!s) return;
+            const isDocs = s.category === 'docs';
+            const borderColor = isDocs ? 'border-color:rgba(199,150,74,0.35);' : '';
+            const labelColor  = isDocs ? 'color:#c7964a;' : '';
+            const arrowColor  = isDocs ? 'color:rgba(199,150,74,0.4);' : '';
+            html +=
+                '<div class="menu-btn" onclick="navigateTo(\'' + s.target + '\')" style="' + borderColor + '">' +
+                    '<div class="menu-btn-text">' +
+                        '<div class="menu-btn-label" style="' + labelColor + '">' + pinEscHtml(s.label) + '</div>' +
+                        '<div class="menu-btn-sublabel">' + pinEscHtml(s.sublabel) + '</div>' +
+                    '</div>' +
+                    '<button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet(\'' + key + '\')">' +
+                        '<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>' +
+                    '</button>' +
+                    '<i class="menu-btn-arrow" style="' + arrowColor + '">›</i>' +
+                '</div>';
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    // Открытие bottom sheet для pin/unpin указанного подраздела.
+    function openPinSheet(key) {
+        const s = SUBSECTIONS[key];
+        if (!s) return;
+        currentPinKey = key;
+        const pinned = isPinned(key);
+        document.getElementById('pinSheetTitle').textContent = s.label;
+        document.getElementById('pinSheetSublabel').textContent = s.sublabel;
+        const actionBtn = document.getElementById('pinSheetAction');
+        if (pinned) {
+            actionBtn.textContent = '';
+            actionBtn.classList.add('is-pinned');
+            actionBtn.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Убрать с главной страницы';
+        } else {
+            actionBtn.classList.remove('is-pinned');
+            actionBtn.innerHTML = '<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Добавить на главную страницу';
+        }
+        document.getElementById('pinSheetOverlay').classList.add('active');
+        document.getElementById('pinSheet').classList.add('active');
+        if (navigator.vibrate) navigator.vibrate(15);
+    }
+
+    // Закрытие bottom sheet.
+    function closePinSheet() {
+        document.getElementById('pinSheetOverlay').classList.remove('active');
+        document.getElementById('pinSheet').classList.remove('active');
+        currentPinKey = null;
+    }
+
+    // Выполнение действия pin/unpin из sheet.
+    function executePinToggle() {
+        if (!currentPinKey) return;
+        const wasPinned = isPinned(currentPinKey);
+        togglePin(currentPinKey);
+        const label = SUBSECTIONS[currentPinKey] ? SUBSECTIONS[currentPinKey].label : '';
+        if (typeof showToast === 'function') {
+            showToast(wasPinned ? ('«' + label + '» убрано с главной') : ('«' + label + '» добавлено на главную'));
+        }
+        closePinSheet();
+    }
+
+    // Инициализация при загрузке — рендерим закреплённые пункты.
+    // Запускаем после готовности DOM.
+    document.addEventListener('DOMContentLoaded', renderPinnedItems);
+
     // Обработчик системной кнопки «Назад»
     window.addEventListener('popstate', function(e) {
+        // Если открыт pin-sheet — сначала закрыть его
+        if (document.getElementById('pinSheet').classList.contains('active')) {
+            closePinSheet();
+            history.pushState({ page: e.state ? e.state.page : 'dashboard' }, '', location.hash || '#dashboard');
+            return;
+        }
         // Если открыт билет — сначала закрыть его, а не уходить со страницы
         if (document.body.classList.contains('ticket-open')) {
             const openTicket = document.querySelector('.ticket-item.open');
@@ -7076,7 +7439,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
     // Haptic feedback on navigation and button presses
     document.addEventListener('click', function(e) {
-        const target = e.target.closest('.nav-btn, .menu-btn, .bottom-nav-item, .converter-convert-btn, .scale-calc-btn, .query-btn, .header-btn, .ticket-cat-card, .ticket-item-header, .ticket-nav-btn, .ticket-a-img, .ticket-a-imglink, .ticket-img-overlay-close, .ticket-ref-link, .connection-indicator, .dashboard-quick-btn');
+        const target = e.target.closest('.nav-btn, .menu-btn, .bottom-nav-item, .converter-convert-btn, .scale-calc-btn, .query-btn, .header-btn, .ticket-cat-card, .ticket-item-header, .ticket-nav-btn, .ticket-a-img, .ticket-a-imglink, .ticket-img-overlay-close, .ticket-ref-link, .connection-indicator, .dashboard-quick-btn, .menu-btn-overflow, .dashboard-bottom-btn, .pin-sheet-action, .pin-sheet-cancel');
         if (target && navigator.vibrate) {
             navigator.vibrate(15);
         }
