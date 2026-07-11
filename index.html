@@ -1286,31 +1286,59 @@
         border-top: 1px solid var(--card-border);
     }
     .doc-chapter.expanded .doc-points { display: block; }
+    /* Пункты документа — без рамок, на всю ширину, с управляемым размером шрифта */
     .doc-point {
-        padding: 8px 10px;
-        margin-bottom: 3px;
-        background: rgba(255,255,255,0.025);
-        border-left: 2px solid rgba(74, 143, 199, 0.25);
-        border-radius: 0 6px 6px 0;
+        padding: 10px 0;
+        margin-bottom: 0;
+        border-bottom: 1px solid rgba(74, 143, 199, 0.08);
+        background: transparent;
+        border-left: none;
+        border-radius: 0;
     }
+    .doc-point:last-child { border-bottom: none; }
     .doc-point-header {
         margin-bottom: 4px;
     }
     .doc-point-num {
         display: inline-block;
-        font-size: 11px; font-weight: 700;
+        font-size: calc(var(--doc-font-size, 14px) * 0.85); font-weight: 700;
         color: var(--accent-blue, #4a8fc7);
         margin-right: 6px;
     }
     .doc-point-text {
-        font-size: 12px;
-        color: var(--text-muted, rgba(255,255,255,0.55));
-        line-height: 1.5;
+        font-size: var(--doc-font-size, 14px);
+        color: var(--text-secondary, rgba(255,255,255,0.7));
+        line-height: 1.6;
         white-space: pre-wrap;
         word-wrap: break-word;
     }
-    [data-theme="light"] .doc-point { background: rgba(20,20,19,0.03); }
-    [data-theme="light"] .doc-point-text { color: rgba(20,20,19,0.65); }
+    [data-theme="light"] .doc-point { background: transparent; }
+    [data-theme="light"] .doc-point-text { color: rgba(20,20,19,0.75); }
+    /* Контрол размера шрифта в заголовке страницы документа */
+    .doc-font-controls {
+        display: flex; align-items: center; gap: 4px;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .doc-font-btn {
+        width: 32px; height: 32px;
+        display: flex; align-items: center; justify-content: center;
+        background: transparent;
+        border: 1px solid var(--card-border, rgba(74,143,199,0.2));
+        border-radius: 8px;
+        color: var(--text-secondary, rgba(255,255,255,0.6));
+        font-size: 15px; font-weight: 700;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        transition: all 0.15s;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .doc-font-btn:active { background: rgba(74,143,199,0.12); transform: scale(0.92); }
+    .doc-font-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .doc-font-label {
+        font-size: 12px; font-weight: 600;
+        color: var(--text-muted, rgba(255,255,255,0.4));
+        min-width: 32px; text-align: center;
+    }
     /* Спиннер загрузки */
     .doc-loading {
         display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -1333,8 +1361,8 @@
         .doc-section-title { font-size: 10px; }
         .doc-chapter-header { padding: 12px 14px; }
         .doc-chapter-title { font-size: 12px; }
-        .doc-point { padding: 7px 8px; }
-        .doc-point-text { font-size: 11px; }
+        .doc-point { padding: 8px 0; }
+        /* Размер шрифта пунктов управляется CSS-переменной --doc-font-size, не медиазапросом */
     }
 
     @media (max-width: 400px) {
@@ -3447,7 +3475,7 @@
 
         <!-- ======================== ПУЭ 6 и 7 — НАВИГАЦИЯ ПО ДОКУМЕНТУ ======================== -->
         <div id="page-pue" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">ПУЭ 6 и 7</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-title">ПУЭ 6 и 7</div><div class="doc-font-controls"><button class="doc-font-btn" onclick="docFontChange(-1)" aria-label="Уменьшить шрифт">A−</button><span class="doc-font-label" id="doc-font-label">14</span><button class="doc-font-btn" onclick="docFontChange(1)" aria-label="Увеличить шрифт">A+</button></div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
 
             <div class="content-header" style="padding: 14px 20px 10px;">
@@ -3478,7 +3506,7 @@
 
         <!-- ======================== ПТЭЭП 2003 — НАВИГАЦИЯ ПО ДОКУМЕНТУ ======================== -->
         <div id="page-pteep" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">ПТЭЭП 2003</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-title">ПТЭЭП 2003</div><div class="doc-font-controls"><button class="doc-font-btn" onclick="docFontChange(-1)" aria-label="Уменьшить шрифт">A−</button><span class="doc-font-label" id="doc-font-label">14</span><button class="doc-font-btn" onclick="docFontChange(1)" aria-label="Увеличить шрифт">A+</button></div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
 
             <div class="content-header" style="padding: 14px 20px 10px;">
@@ -3508,7 +3536,7 @@
 
         <!-- ======================== ПОТЭЭ 2022 — НАВИГАЦИЯ ПО ДОКУМЕНТУ ======================== -->
         <div id="page-pote" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">ПОТЭЭ 2022</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-title">ПОТЭЭ 2022</div><div class="doc-font-controls"><button class="doc-font-btn" onclick="docFontChange(-1)" aria-label="Уменьшить шрифт">A−</button><span class="doc-font-label" id="doc-font-label">14</span><button class="doc-font-btn" onclick="docFontChange(1)" aria-label="Увеличить шрифт">A+</button></div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
 
             <div class="content-header" style="padding: 14px 20px 10px;">
@@ -3538,7 +3566,7 @@
 
         <!-- ======================== СО 153-34.03.603-2003 — НАВИГАЦИЯ ПО ДОКУМЕНТУ ======================== -->
         <div id="page-so153" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">СО 153-34.03.603-2003</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-title">СО 153-34.03.603-2003</div><div class="doc-font-controls"><button class="doc-font-btn" onclick="docFontChange(-1)" aria-label="Уменьшить шрифт">A−</button><span class="doc-font-label" id="doc-font-label">14</span><button class="doc-font-btn" onclick="docFontChange(1)" aria-label="Увеличить шрифт">A+</button></div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
 
             <div class="content-header" style="padding: 14px 20px 10px;">
@@ -5955,6 +5983,48 @@
     }
 
     // ============================================================
+    // УПРАВЛЕНИЕ РАЗМЕРОМ ШРИФТА В ДОКУМЕНТАХ
+    // ============================================================
+    // Размер шрифта сохраняется в localStorage, применяется ко всем 4 документам.
+    // CSS-переменная --doc-font-size используется в .doc-point-text и .doc-point-num.
+    const DOC_FONT_KEY = 'docFontSize';
+    const DOC_FONT_MIN = 12;
+    const DOC_FONT_MAX = 24;
+    const DOC_FONT_DEFAULT = 14;
+    let docFontSize = DOC_FONT_DEFAULT;
+
+    // Применяет текущий размер шрифта ко всем элементам через CSS-переменную на :root.
+    function applyDocFontSize() {
+        document.documentElement.style.setProperty('--doc-font-size', docFontSize + 'px');
+        // Обновляем все подписи (их может быть несколько — по одной на страницу документа)
+        document.querySelectorAll('.doc-font-label').forEach(el => {
+            el.textContent = docFontSize;
+        });
+    }
+
+    // Изменение размера шрифта: direction = -1 (уменьшить) или +1 (увеличить).
+    function docFontChange(direction) {
+        const newSize = docFontSize + direction;
+        if (newSize < DOC_FONT_MIN || newSize > DOC_FONT_MAX) return;
+        docFontSize = newSize;
+        localStorage.setItem(DOC_FONT_KEY, String(docFontSize));
+        applyDocFontSize();
+        if (navigator.vibrate) navigator.vibrate(10);
+    }
+
+    // Загрузка сохранённого размера шрифта при старте приложения.
+    function initDocFontSize() {
+        const saved = localStorage.getItem(DOC_FONT_KEY);
+        if (saved) {
+            const size = parseInt(saved, 10);
+            if (!isNaN(size) && size >= DOC_FONT_MIN && size <= DOC_FONT_MAX) {
+                docFontSize = size;
+            }
+        }
+        applyDocFontSize();
+    }
+
+    // ============================================================
     // ПАРСЕР ССЫЛОК НА ЛИТЕРАТУРУ ИЗ ЭКЗАМЕНАЦИОННЫХ БИЛЕТОВ
     // ============================================================
     // Разбирает строки вида «Пункт 1.1.6 СО 153-34.03.603-2003 (...)»,
@@ -6487,6 +6557,7 @@
     // Инициализация при загрузке — рендерим закреплённые пункты.
     // Запускаем после готовности DOM.
     document.addEventListener('DOMContentLoaded', renderPinnedItems);
+    document.addEventListener('DOMContentLoaded', initDocFontSize);
 
     // Обработчик системной кнопки «Назад»
     window.addEventListener('popstate', function(e) {
