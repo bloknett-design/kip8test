@@ -489,6 +489,24 @@
     .converter-convert-btn:active, .scale-calc-btn:active { transform: scale(0.97); opacity: 0.9; }
     .converter-convert-btn svg, .scale-calc-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; pointer-events: none; }
     .converter-convert-btn, .scale-calc-btn { background: linear-gradient(135deg, #2563eb, #3b82f6); box-shadow: 0 3px 12px rgba(37, 99, 235, 0.25); }
+
+    /* ===== Быстрый доступ к разделам главной страницы ===== */
+    /* Контейнер с двумя кнопками внизу дашборда. Существует только внутри #page-dashboard. */
+    .dashboard-quick-nav {
+        display: grid; grid-template-columns: 1fr; gap: 10px;
+        padding: 8px 8px 16px; position: relative; z-index: 2;
+    }
+    /* Кнопка-дубликат существующего .converter-convert-btn (синий градиент), но без верхнего margin */
+    .dashboard-quick-nav .dashboard-quick-btn { margin: 0; }
+    /* Золотистая вариация для раздела «Документация» — в цвет группы .dashboard-group-title-group-docs */
+    .dashboard-quick-btn-docs {
+        background: linear-gradient(135deg, #b8842e, #c7964a) !important;
+        box-shadow: 0 3px 12px rgba(199, 150, 74, 0.25) !important;
+    }
+    [data-theme="light"] .dashboard-quick-btn-docs {
+        background: linear-gradient(135deg, #C6613F, #D97757) !important;
+        box-shadow: 0 3px 12px rgba(198, 97, 63, 0.25) !important;
+    }
     
     .converter-result-group { margin: 6px 0 10px; position: relative; z-index: 2; }
     .converter-result-label-title { color: rgba(255,255,255,0.3); font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; padding-left: 4px; font-weight: 500; }
@@ -1768,29 +1786,37 @@
         <!-- DASHBOARD -->
         <div id="page-dashboard" class="page-content active">
 
-            <!-- ===== Блок 1: Инженерные калькуляторы ===== -->
-            <div class="dashboard-group">
-                <div class="dashboard-group-title">Инженерные калькуляторы</div>
-                <div class="menu-btn-row">
-                    <div class="menu-btn" onclick="navigateTo('calc-kipa')"><div class="menu-btn-text"><div class="menu-btn-label">КИП и А</div><div class="menu-btn-sublabel">Конвертеры, погрешности, датчики, диафрагмы</div></div><i class="menu-btn-arrow">›</i></div>
-                    <div class="menu-btn" onclick="navigateTo('calc-electro')"><div class="menu-btn-text"><div class="menu-btn-label">Электротехника</div><div class="menu-btn-sublabel">Автоматические выключатели, сечения кабеля</div></div><i class="menu-btn-arrow">›</i></div>
-                    <div class="menu-btn" onclick="navigateTo('calc-geometry')"><div class="menu-btn-text"><div class="menu-btn-label">Геометрия</div><div class="menu-btn-sublabel">Площади, объёмы, сечения</div></div><i class="menu-btn-arrow">›</i></div>
-                </div>
-            </div>
-
-            <!-- ===== Блок 2: Документация ===== -->
-            <div class="dashboard-group">
-                <div class="dashboard-group-title dashboard-group-title-group-docs">Документация</div>
-                <div class="menu-btn-row">
-                    <div class="menu-btn" onclick="navigateTo('exam-tickets')" style="border-color:rgba(199,150,74,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#c7964a;">Экзаменационные билеты</div><div class="menu-btn-sublabel">4, 5, 6 разряд, до 1000 В</div></div><i class="menu-btn-arrow" style="color:rgba(199,150,74,0.4);">›</i></div>
-                    <div class="menu-btn" onclick="navigateTo('library')" style="border-color:rgba(199,150,74,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#c7964a;">Библиотека КИП и А</div><div class="menu-btn-sublabel">Документация, схемы, инструкции</div></div><i class="menu-btn-arrow" style="color:rgba(199,150,74,0.4);">›</i></div>
-                </div>
-            </div>
-
             <!-- Секретная кнопка «Сапёр» — скрыта по умолчанию.
                  Открывается 2 тапами по заголовку приложения. -->
             <div class="menu-btn-row">
                 <div class="menu-btn menu-btn-secret" id="minesweeperBtn" onclick="navigateTo('minesweeper')" style="border-color:rgba(199,150,74,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#c7964a;">Сапёр</div></div></div>
+            </div>
+
+            <!-- ===== Быстрый доступ к разделам (только на главной) ===== -->
+            <div class="dashboard-quick-nav">
+                <button type="button" class="converter-convert-btn dashboard-quick-btn" onclick="navigateTo('calculators')"><svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/></svg>Инженерные калькуляторы</button>
+                <button type="button" class="converter-convert-btn dashboard-quick-btn dashboard-quick-btn-docs" onclick="navigateTo('docs')"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Документация</button>
+            </div>
+        </div>
+
+        <!-- ======================== ИНЖЕНЕРНЫЕ КАЛЬКУЛЯТОРЫ (родительское меню) ======================== -->
+        <div id="page-calculators" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-title">Инженерные калькуляторы</div></div>
+            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="menu-btn-row">
+                <div class="menu-btn" onclick="navigateTo('calc-kipa')"><div class="menu-btn-text"><div class="menu-btn-label">КИП и А</div><div class="menu-btn-sublabel">Конвертеры, погрешности, датчики, диафрагмы</div></div><i class="menu-btn-arrow">›</i></div>
+                <div class="menu-btn" onclick="navigateTo('calc-electro')"><div class="menu-btn-text"><div class="menu-btn-label">Электротехника</div><div class="menu-btn-sublabel">Автоматические выключатели, сечения кабеля</div></div><i class="menu-btn-arrow">›</i></div>
+                <div class="menu-btn" onclick="navigateTo('calc-geometry')"><div class="menu-btn-text"><div class="menu-btn-label">Геометрия</div><div class="menu-btn-sublabel">Площади, объёмы, сечения</div></div><i class="menu-btn-arrow">›</i></div>
+            </div>
+        </div>
+
+        <!-- ======================== ДОКУМЕНТАЦИЯ (родительское меню) ======================== -->
+        <div id="page-docs" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-title">Документация</div></div>
+            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="menu-btn-row">
+                <div class="menu-btn" onclick="navigateTo('exam-tickets')" style="border-color:rgba(199,150,74,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#c7964a;">Экзаменационные билеты</div><div class="menu-btn-sublabel">4, 5, 6 разряд, до 1000 В</div></div><i class="menu-btn-arrow" style="color:rgba(199,150,74,0.4);">›</i></div>
+                <div class="menu-btn" onclick="navigateTo('library')" style="border-color:rgba(199,150,74,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#c7964a;">Библиотека КИП и А</div><div class="menu-btn-sublabel">Документация, схемы, инструкции</div></div><i class="menu-btn-arrow" style="color:rgba(199,150,74,0.4);">›</i></div>
             </div>
         </div>
 
@@ -4230,6 +4256,7 @@
         // Только history.back() — навигацию выполнит обработчик popstate
         history.back();
     }
+
     // Обработчик системной кнопки «Назад»
     window.addEventListener('popstate', function(e) {
         // Если открыт билет — сначала закрыть его, а не уходить со страницы
@@ -7049,7 +7076,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
     // Haptic feedback on navigation and button presses
     document.addEventListener('click', function(e) {
-        const target = e.target.closest('.nav-btn, .menu-btn, .bottom-nav-item, .converter-convert-btn, .scale-calc-btn, .query-btn, .header-btn, .ticket-cat-card, .ticket-item-header, .ticket-nav-btn, .ticket-a-img, .ticket-a-imglink, .ticket-img-overlay-close, .ticket-ref-link, .connection-indicator');
+        const target = e.target.closest('.nav-btn, .menu-btn, .bottom-nav-item, .converter-convert-btn, .scale-calc-btn, .query-btn, .header-btn, .ticket-cat-card, .ticket-item-header, .ticket-nav-btn, .ticket-a-img, .ticket-a-imglink, .ticket-img-overlay-close, .ticket-ref-link, .connection-indicator, .dashboard-quick-btn');
         if (target && navigator.vibrate) {
             navigator.vibrate(15);
         }
