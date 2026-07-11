@@ -517,11 +517,26 @@
         z-index: 80;
         display: none; /* по умолчанию скрыт, показывается только на дашборде */
         grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+        gap: 0;
+        padding: 0;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
         background: var(--bottom-nav-bg, rgba(23, 33, 43, 0.95));
         backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
         border-top: 1px solid var(--card-border);
+    }
+    /* Вертикальная линия-разделитель между двумя кнопками.
+       Не доходит до верхнего и нижнего краёв бара на 14px (с учётом safe-area). */
+    .dashboard-bottom-bar::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 14px;
+        bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+        width: 1px;
+        background: var(--card-border, rgba(74, 143, 199, 0.18));
+        transform: translateX(-50%);
+        pointer-events: none;
+        z-index: 1;
     }
     /* Показываем нижний бар только когда активна главная страница */
     body:has(#page-dashboard.active) .dashboard-bottom-bar { display: grid; }
@@ -530,35 +545,32 @@
 
     .dashboard-bottom-btn {
         display: flex; align-items: center; justify-content: center; gap: 8px;
-        padding: 13px 10px;
-        border: none; border-radius: 12px;
-        background: linear-gradient(135deg, #2563eb, #3b82f6);
-        color: #fff; font-size: 14px; font-weight: 600;
+        padding: 16px 10px calc(16px + env(safe-area-inset-bottom, 0px));
+        border: none; border-radius: 0;
+        background: transparent;
+        color: var(--accent-blue, #4a8fc7); font-size: 14px; font-weight: 600;
         font-family: 'Inter', sans-serif;
         cursor: pointer; pointer-events: auto;
         touch-action: manipulation; -webkit-tap-highlight-color: transparent;
-        box-shadow: 0 3px 10px rgba(37, 99, 235, 0.25);
-        transition: all 0.2s;
-        min-height: 48px;
+        box-shadow: none;
+        transition: background 0.2s, opacity 0.2s;
+        min-height: 56px;
+        position: relative;
+        z-index: 2;
     }
-    .dashboard-bottom-btn:active { transform: scale(0.97); opacity: 0.9; }
-    .dashboard-bottom-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+    .dashboard-bottom-btn:active { background: rgba(255,255,255,0.05); opacity: 0.75; }
+    .dashboard-bottom-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
     .dashboard-bottom-btn span { line-height: 1.2; }
+    /* Кнопка «Документация» — золотистый цвет текста и иконки */
     .dashboard-bottom-btn-docs {
-        background: linear-gradient(135deg, #b8842e, #c7964a);
-        box-shadow: 0 3px 10px rgba(199, 150, 74, 0.25);
+        color: var(--accent-gold, #c7964a);
     }
-    [data-theme="light"] .dashboard-bottom-btn {
-        background: linear-gradient(135deg, #C6613F, #D97757);
-        box-shadow: 0 3px 10px rgba(198, 97, 63, 0.25);
-    }
-    [data-theme="light"] .dashboard-bottom-btn-docs {
-        background: linear-gradient(135deg, #C6613F, #D97757);
-        box-shadow: 0 3px 10px rgba(198, 97, 63, 0.25);
-    }
+    [data-theme="light"] .dashboard-bottom-btn { color: #4a8fc7; }
+    [data-theme="light"] .dashboard-bottom-btn-docs { color: #b8842e; }
+    [data-theme="light"] .dashboard-bottom-btn:active { background: rgba(20,20,19,0.05); }
     @media (max-width: 400px) {
-        .dashboard-bottom-btn { font-size: 12px; padding: 11px 8px; gap: 6px; }
-        .dashboard-bottom-btn svg { width: 16px; height: 16px; }
+        .dashboard-bottom-btn { font-size: 12px; padding: 14px 8px calc(14px + env(safe-area-inset-bottom, 0px)); gap: 6px; }
+        .dashboard-bottom-btn svg { width: 18px; height: 18px; }
     }
 
     /* ============================================================
@@ -730,6 +742,34 @@
         cursor: not-allowed;
         pointer-events: none;
         box-shadow: none !important;
+    }
+
+    /* ============================================================
+       ПЕРЕТАСКИВАНИЕ ЗАКРЕПЛЁННЫХ ПУНКТОВ (long-press + drag)
+       ============================================================ */
+    /* Контейнер закреплённых — отключаем выделение текста при долгом зажатии */
+    .pinned-items-row {
+        -webkit-user-select: none; user-select: none;
+        -webkit-touch-callout: none;
+    }
+    /* Картока в состоянии перетаскивания (оригинал) — полупрозрачная */
+    .pinned-item.pinned-item-dragging {
+        opacity: 0.3;
+        transform: scale(0.97);
+    }
+    /* Картока-цель, над которой сейчас находится перетаскиваемый элемент */
+    .pinned-item.pinned-item-drag-over {
+        border-color: var(--accent-blue, #4a8fc7) !important;
+        box-shadow: 0 0 0 2px rgba(74, 143, 199, 0.35);
+        transform: scale(1.01);
+    }
+    /* Клон карточки, следующий за пальцем/курсором */
+    .pinned-item-clone {
+        pointer-events: none !important;
+        opacity: 0.92;
+        box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+        transform: scale(1.02);
+        transition: none !important;
     }
     
     .converter-result-group { margin: 6px 0 10px; position: relative; z-index: 2; }
@@ -4615,7 +4655,7 @@
                 '</div>';
             return;
         }
-        let html = '<div class="menu-btn-row">';
+        let html = '<div class="menu-btn-row pinned-items-row">';
         items.forEach(key => {
             const s = SUBSECTIONS[key];
             if (!s) return;
@@ -4624,7 +4664,7 @@
             const labelColor  = isDocs ? 'color:#c7964a;' : '';
             const arrowColor  = isDocs ? 'color:rgba(199,150,74,0.4);' : '';
             html +=
-                '<div class="menu-btn" onclick="navigateTo(\'' + s.target + '\')" style="' + borderColor + '">' +
+                '<div class="menu-btn pinned-item" data-pinned-key="' + key + '" onclick="navigateTo(\'' + s.target + '\')" style="' + borderColor + '">' +
                     '<div class="menu-btn-text">' +
                         '<div class="menu-btn-label" style="' + labelColor + '">' + pinEscHtml(s.label) + '</div>' +
                         '<div class="menu-btn-sublabel">' + pinEscHtml(s.sublabel) + '</div>' +
@@ -4637,6 +4677,147 @@
         });
         html += '</div>';
         container.innerHTML = html;
+        // После рендера вешаем обработчики long-press + drag-and-drop на каждую карточку.
+        attachPinnedDragHandlers();
+    }
+
+    // ============================================================
+    // ПЕРЕТАСКИВАНИЕ ЗАКРЕПЛЁННЫХ ПУНКТОВ (long-press + drag)
+    // ============================================================
+    // Использует Pointer Events — единый API для touch и мыши.
+    // Порог долгого зажатия: 500 мс без движения > 10px.
+    // Клон карточки следует за пальцем/курсором в position:fixed,
+    // оригинал получает класс .pinned-item-dragging (полупрозрачный).
+    // Карточка под курсором подсвечивается классом .pinned-item-drag-over.
+    const PINNED_DRAG_DELAY = 500;       // мс долгого зажатия до начала перетаскивания
+    const PINNED_DRAG_THRESHOLD = 10;    // px — если сдвинулись больше, long-press отменяется
+    let pinnedDragState = null;          // { el, key, startX, startY, timer, clone, hoverEl }
+
+    function attachPinnedDragHandlers() {
+        const items = document.querySelectorAll('#pinnedItemsContainer .pinned-item');
+        items.forEach(el => {
+            el.addEventListener('pointerdown', onPinnedPointerDown);
+        });
+    }
+
+    function onPinnedPointerDown(e) {
+        // Игнорируем клики по кнопке «три точки» — она имеет свой onclick
+        if (e.target.closest('.menu-btn-overflow')) return;
+        // Только основная кнопка/палец
+        if (e.button !== undefined && e.button !== 0) return;
+        const el = e.currentTarget;
+        const key = el.getAttribute('data-pinned-key');
+        if (!key) return;
+        pinnedDragState = {
+            el: el,
+            key: key,
+            startX: e.clientX,
+            startY: e.clientY,
+            timer: setTimeout(() => startPinnedDrag(e), PINNED_DRAG_DELAY),
+            clone: null,
+            hoverEl: null
+        };
+        // Слушаем movement/up на window — чтобы поймать даже если палец вышел за пределы карточки
+        window.addEventListener('pointermove', onPinnedPointerMove);
+        window.addEventListener('pointerup', onPinnedPointerUp);
+        window.addEventListener('pointercancel', onPinnedPointerUp);
+    }
+
+    function onPinnedPointerMove(e) {
+        if (!pinnedDragState) return;
+        const st = pinnedDragState;
+        // Если ещё не начали тащить — проверяем порог движения (отмена long-press)
+        if (!st.clone) {
+            const dx = e.clientX - st.startX;
+            const dy = e.clientY - st.startY;
+            if (Math.abs(dx) > PINNED_DRAG_THRESHOLD || Math.abs(dy) > PINNED_DRAG_THRESHOLD) {
+                clearTimeout(st.timer);
+                cleanupPinnedDrag();
+            }
+            return;
+        }
+        // Перетаскивание активно — двигаем клон
+        e.preventDefault();
+        st.clone.style.left = (e.clientX - st.clone.offsetWidth / 2) + 'px';
+        st.clone.style.top = (e.clientY - 20) + 'px';
+        // Находим карточку под курсором (исключая сам клон)
+        st.clone.style.pointerEvents = 'none';
+        const target = document.elementFromPoint(e.clientX, e.clientY);
+        st.clone.style.pointerEvents = '';
+        const newHover = target ? target.closest('#pinnedItemsContainer .pinned-item') : null;
+        if (newHover !== st.hoverEl) {
+            if (st.hoverEl) st.hoverEl.classList.remove('pinned-item-drag-over');
+            if (newHover && newHover !== st.el) newHover.classList.add('pinned-item-drag-over');
+            st.hoverEl = newHover;
+        }
+    }
+
+    function onPinnedPointerUp(e) {
+        if (!pinnedDragState) return;
+        const st = pinnedDragState;
+        clearTimeout(st.timer);
+        // Если перетаскивание не началось — это обычный тап, navigateTo сработает по onclick
+        if (!st.clone) {
+            cleanupPinnedDrag();
+            return;
+        }
+        // Завершаем перетаскивание — определяем целевую позицию
+        if (st.hoverEl && st.hoverEl !== st.el) {
+            const items = getPinnedItems();
+            const fromIdx = items.indexOf(st.key);
+            const toIdx = items.indexOf(st.hoverEl.getAttribute('data-pinned-key'));
+            if (fromIdx !== -1 && toIdx !== -1 && fromIdx !== toIdx) {
+                // Перенос элемента из fromIdx в toIdx
+                items.splice(fromIdx, 1);
+                items.splice(toIdx, 0, st.key);
+                setPinnedItems(items);
+                if (navigator.vibrate) navigator.vibrate(15);
+            }
+        }
+        cleanupPinnedDrag();
+        renderPinnedItems();
+    }
+
+    function startPinnedDrag(e) {
+        const st = pinnedDragState;
+        if (!st) return;
+        // Создаём клон карточки
+        const rect = st.el.getBoundingClientRect();
+        const clone = st.el.cloneNode(true);
+        clone.classList.add('pinned-item-clone');
+        clone.style.position = 'fixed';
+        clone.style.left = rect.left + 'px';
+        clone.style.top = rect.top + 'px';
+        clone.style.width = rect.width + 'px';
+        clone.style.zIndex = '9999';
+        clone.style.pointerEvents = 'none';
+        document.body.appendChild(clone);
+        st.clone = clone;
+        st.el.classList.add('pinned-item-dragging');
+        // Тактильный отклик — начало перетаскивания
+        if (navigator.vibrate) navigator.vibrate(30);
+        // Блокируем обычный onclick карточки (иначе после отпускания сработает переход)
+        st.el.style.pointerEvents = 'none';
+    }
+
+    function cleanupPinnedDrag() {
+        if (!pinnedDragState) return;
+        const st = pinnedDragState;
+        clearTimeout(st.timer);
+        if (st.clone) {
+            st.clone.remove();
+        }
+        if (st.el) {
+            st.el.classList.remove('pinned-item-dragging');
+            st.el.style.pointerEvents = '';
+        }
+        if (st.hoverEl) {
+            st.hoverEl.classList.remove('pinned-item-drag-over');
+        }
+        pinnedDragState = null;
+        window.removeEventListener('pointermove', onPinnedPointerMove);
+        window.removeEventListener('pointerup', onPinnedPointerUp);
+        window.removeEventListener('pointercancel', onPinnedPointerUp);
     }
 
     // Открытие bottom sheet для pin/unpin указанного подраздела.
