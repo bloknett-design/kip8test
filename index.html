@@ -757,6 +757,57 @@
     .pinned-item {
         touch-action: none;
     }
+    /* SWIPE-TO-DELETE: обёртка карточки с подложками «Убрать» */
+    .pinned-item-cell {
+        position: relative;
+        overflow: hidden;
+        border-radius: 14px;
+        margin-bottom: 4px;
+    }
+    .pinned-item-cell > .pinned-item {
+        position: relative;
+        z-index: 1;
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        margin: 0;
+    }
+    .pinned-item-cell > .pinned-item.swipe-active {
+        transition: none;
+    }
+    .pinned-item-cell > .pinned-item.swipe-removing {
+        transition: transform 0.25s ease-out, opacity 0.25s ease-out;
+        opacity: 0;
+    }
+    /* Подложка «Убрать» — абсолютная, под карточкой, красный градиент в стиле сайта */
+    .pinned-item-delete-bg {
+        position: absolute;
+        top: 0; bottom: 0;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #fff;
+        background: linear-gradient(135deg, #c74a4a, #d9634a);
+        z-index: 0;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.15s;
+    }
+    .pinned-item-delete-bg svg {
+        width: 18px; height: 18px;
+        stroke: #fff; fill: none; stroke-width: 2;
+        stroke-linecap: round; stroke-linejoin: round;
+        flex-shrink: 0;
+    }
+    .pinned-item-delete-left  { left: 0;  padding-left: 20px;  justify-content: flex-start; }
+    .pinned-item-delete-right { right: 0; padding-right: 20px; justify-content: flex-end; }
+    /* Подложка видна когда карточка сдвинута в противоположную сторону */
+    .pinned-item-cell.swiping-right .pinned-item-delete-left  { opacity: 1; }
+    .pinned-item-cell.swiping-left  .pinned-item-delete-right { opacity: 1; }
+    [data-theme="light"] .pinned-item-delete-bg {
+        background: linear-gradient(135deg, #C6613F, #D97757);
+    }
     /* Картока в состоянии перетаскивания (оригинал) — полупрозрачная */
     .pinned-item.pinned-item-dragging {
         opacity: 0.3;
@@ -4929,15 +4980,19 @@
             const labelColor  = isDocs ? 'color:#c7964a;' : '';
             const arrowColor  = isDocs ? 'color:rgba(199,150,74,0.4);' : '';
             html +=
-                '<div class="menu-btn pinned-item" data-pinned-key="' + key + '" onclick="navigateTo(\'' + s.target + '\')" style="' + borderColor + '">' +
-                    '<div class="menu-btn-text">' +
-                        '<div class="menu-btn-label" style="' + labelColor + '">' + pinEscHtml(s.label) + '</div>' +
-                        '<div class="menu-btn-sublabel">' + pinEscHtml(s.sublabel) + '</div>' +
+                '<div class="pinned-item-cell">' +
+                    '<div class="pinned-item-delete-bg pinned-item-delete-left"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Убрать</span></div>' +
+                    '<div class="pinned-item-delete-bg pinned-item-delete-right"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Убрать</span></div>' +
+                    '<div class="menu-btn pinned-item" data-pinned-key="' + key + '" onclick="navigateTo(\'' + s.target + '\')" style="' + borderColor + '">' +
+                        '<div class="menu-btn-text">' +
+                            '<div class="menu-btn-label" style="' + labelColor + '">' + pinEscHtml(s.label) + '</div>' +
+                            '<div class="menu-btn-sublabel">' + pinEscHtml(s.sublabel) + '</div>' +
+                        '</div>' +
+                        '<button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet(\'' + key + '\')">' +
+                            '<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>' +
+                        '</button>' +
+                        '<i class="menu-btn-arrow" style="' + arrowColor + '">›</i>' +
                     '</div>' +
-                    '<button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet(\'' + key + '\')">' +
-                        '<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>' +
-                    '</button>' +
-                    '<i class="menu-btn-arrow" style="' + arrowColor + '">›</i>' +
                 '</div>';
         });
         html += '</div>';
@@ -4956,7 +5011,8 @@
     // Карточка под курсором подсвечивается классом .pinned-item-drag-over.
     const PINNED_DRAG_DELAY = 500;       // мс долгого зажатия до начала перетаскивания
     const PINNED_DRAG_THRESHOLD = 10;    // px — если сдвинулись больше, long-press отменяется
-    let pinnedDragState = null;          // { el, key, startX, startY, timer, clone, hoverEl }
+    const PINNED_SWIPE_DELETE_RATIO = 0.3; // доля ширины карточки для удаления свайпом
+    let pinnedDragState = null;          // { el, key, startX, startY, timer, clone, hoverEl, mode, width, currentDx }
 
     function attachPinnedDragHandlers() {
         const items = document.querySelectorAll('#pinnedItemsContainer .pinned-item');
@@ -4976,8 +5032,10 @@
         // Запрещаем нативные действия браузера (скролл, выделение, контекстное меню) —
         // без этого при long-press на мобильном срабатывает pointercancel и drag срывается.
         e.preventDefault();
+        const rect = el.getBoundingClientRect();
         pinnedDragState = {
             el: el,
+            cell: el.closest('.pinned-item-cell'),
             key: key,
             startX: e.clientX,
             startY: e.clientY,
@@ -4991,7 +5049,13 @@
             // Флаг того, что произошло реальное перетаскивание (был move после старта drag).
             // Если pointerup сработал сразу после long-press без движения — это не перенос,
             // а просто отпускание, ре-рендерить не нужно.
-            moved: false
+            moved: false,
+            // Режим взаимодействия: 'idle' (ожидание), 'drag' (long-press + перенос), 'swipe' (быстрый свайп для удаления)
+            mode: 'idle',
+            // Ширина карточки — для расчёта порога удаления (30%)
+            width: rect.width,
+            // Текущее смещение по X в swipe-режиме
+            currentDx: 0
         };
         // Слушаем movement/up на window — чтобы поймать даже если палец вышел за пределы карточки
         window.addEventListener('pointermove', onPinnedPointerMove);
@@ -5002,14 +5066,27 @@
     function onPinnedPointerMove(e) {
         if (!pinnedDragState) return;
         const st = pinnedDragState;
-        // Если ещё не начали тащить — проверяем порог движения (отмена long-press)
-        if (!st.clone) {
-            const dx = e.clientX - st.startX;
-            const dy = e.clientY - st.startY;
+        const dx = e.clientX - st.startX;
+        const dy = e.clientY - st.startY;
+        // Если drag ещё не начался (нет клона) и swipe не начался — определяем намерение пользователя
+        if (!st.clone && st.mode !== 'swipe') {
             if (Math.abs(dx) > PINNED_DRAG_THRESHOLD || Math.abs(dy) > PINNED_DRAG_THRESHOLD) {
+                // Движение превысило порог — отменяем таймер long-press
                 clearTimeout(st.timer);
-                cleanupPinnedDrag();
+                // Если горизонтальное движение превалирует (в 1.5 раза больше вертикали) — это свайп
+                if (Math.abs(dx) > Math.abs(dy) * 1.5) {
+                    startPinnedSwipe();
+                } else {
+                    // Вертикальное движение — пользователь скроллит страницу, отменяем взаимодействие
+                    cleanupPinnedDrag();
+                }
             }
+            return;
+        }
+        // Swipe-режим — двигаем карточку и показываем подложку
+        if (st.mode === 'swipe') {
+            e.preventDefault();
+            updatePinnedSwipe(dx);
             return;
         }
         // Перетаскивание активно — запрещаем браузеру прокрутку/другие действия
@@ -5030,10 +5107,47 @@
         }
     }
 
+    // Старт swipe-режима: карточка начинает следовать за пальцем по горизонтали.
+    function startPinnedSwipe() {
+        const st = pinnedDragState;
+        if (!st) return;
+        st.mode = 'swipe';
+        st.el.classList.add('swipe-active');
+        // Блокируем onclick карточки — иначе после отпускания сработает переход
+        st.el.style.pointerEvents = 'none';
+        if (navigator.vibrate) navigator.vibrate(10);
+    }
+
+    // Обновление позиции карточки при swipe.
+    // dx < 0 — свайп влево (показываем правую подложку «Убрать»).
+    // dx > 0 — свайп вправо (показываем левую подложку «Убрать»).
+    function updatePinnedSwipe(dx) {
+        const st = pinnedDragState;
+        if (!st) return;
+        // Сопротивление при выходе за пределы карточки (эффект «резины»)
+        let effectiveDx = dx;
+        if (Math.abs(dx) > st.width) {
+            const overshoot = Math.abs(dx) - st.width;
+            effectiveDx = Math.sign(dx) * (st.width + overshoot * 0.3);
+        }
+        st.currentDx = effectiveDx;
+        st.el.style.transform = 'translateX(' + effectiveDx + 'px)';
+        // Переключаем классы подложки в зависимости от направления
+        if (st.cell) {
+            st.cell.classList.toggle('swiping-left',  effectiveDx < 0);
+            st.cell.classList.toggle('swiping-right', effectiveDx > 0);
+        }
+    }
+
     function onPinnedPointerUp(e) {
         if (!pinnedDragState) return;
         const st = pinnedDragState;
         clearTimeout(st.timer);
+        // Swipe-завершение: проверяем порог удаления (30% ширины карточки)
+        if (st.mode === 'swipe') {
+            endPinnedSwipe();
+            return;
+        }
         // Если перетаскивание не началось — это обычный тап, navigateTo сработает по onclick
         if (!st.clone) {
             cleanupPinnedDrag();
@@ -5065,6 +5179,48 @@
         } else {
             // Восстанавливаем pointer-events на оригинале, чтобы onclick снова работал
             // (cleanupPinnedDrag уже это сделал, но для надёжности — явно)
+        }
+    }
+
+    // Завершение swipe: если сдвиг > 30% ширины — удаляем пункт, иначе возвращаем на место.
+    function endPinnedSwipe() {
+        const st = pinnedDragState;
+        if (!st) return;
+        const threshold = st.width * PINNED_SWIPE_DELETE_RATIO;
+        const shouldDelete = Math.abs(st.currentDx) > threshold;
+        if (shouldDelete) {
+            // Анимация ухода карточки за пределы экрана
+            const direction = st.currentDx < 0 ? -1 : 1;
+            st.el.classList.remove('swipe-active');
+            st.el.classList.add('swipe-removing');
+            st.el.style.transform = 'translateX(' + (direction * st.width * 1.2) + 'px)';
+            if (navigator.vibrate) navigator.vibrate(30);
+            // После анимации (250мс) — удаляем пункт из localStorage и ре-рендерим
+            setTimeout(() => {
+                togglePin(st.key);
+                if (typeof showToast === 'function') {
+                    const label = SUBSECTIONS[st.key] ? SUBSECTIONS[st.key].label : '';
+                    showToast('«' + label + '» убрано с главной');
+                }
+            }, 250);
+            // Очищаем состояние, но не трогаем DOM — renderPinnedItems всё пересоздаст
+            const savedCell = st.cell;
+            pinnedDragState = null;
+            window.removeEventListener('pointermove', onPinnedPointerMove);
+            window.removeEventListener('pointerup', onPinnedPointerUp);
+            window.removeEventListener('pointercancel', onPinnedPointerUp);
+            // Если cell остался — снимаем классы подложки (на случай если ре-рендер задержится)
+            if (savedCell) {
+                savedCell.classList.remove('swiping-left', 'swiping-right');
+            }
+        } else {
+            // Возвращаем карточку на место
+            st.el.classList.remove('swipe-active');
+            st.el.style.transform = '';
+            if (st.cell) {
+                st.cell.classList.remove('swiping-left', 'swiping-right');
+            }
+            cleanupPinnedDrag();
         }
     }
 
