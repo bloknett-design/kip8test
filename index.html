@@ -1314,37 +1314,50 @@
     }
     [data-theme="light"] .doc-point { background: transparent; }
     [data-theme="light"] .doc-point-text { color: rgba(20,20,19,0.75); }
-    /* HTML-таблицы в пунктах документов */
+    /* HTML-таблицы в пунктах документов — оптимизировано для мобильных */
+    /* Обёртка для горизонтального скролла широких таблиц */
+    .doc-point-text .doc-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 10px -8px;
+        border-radius: 8px;
+        border: 1px solid rgba(74, 143, 199, 0.12);
+    }
     .doc-point-text .doc-table {
         width: 100%;
         border-collapse: collapse;
-        margin: 10px 0;
-        font-size: calc(var(--doc-font-size, 14px) * 0.9);
-        line-height: 1.4;
-        overflow-x: auto;
-        display: block;
+        font-size: calc(var(--doc-font-size, 14px) * 0.88);
+        line-height: 1.45;
+        min-width: 320px;
     }
-    .doc-point-text .doc-table thead { display: table; width: 100%; table-layout: fixed; }
-    .doc-point-text .doc-table tbody { display: table; width: 100%; table-layout: fixed; }
+    /* Для широких таблиц — позволяем расширяться */
+    .doc-point-text .doc-table thead th {
+        white-space: nowrap;
+    }
     .doc-point-text .doc-table th {
-        padding: 6px 8px;
-        background: rgba(74, 143, 199, 0.12);
+        padding: 8px 10px;
+        background: rgba(74, 143, 199, 0.1);
         color: var(--accent-blue, #4a8fc7);
         font-weight: 600;
         text-align: left;
-        border: 1px solid rgba(74, 143, 199, 0.2);
-        font-size: calc(var(--doc-font-size, 14px) * 0.85);
+        border: 1px solid rgba(74, 143, 199, 0.15);
+        font-size: calc(var(--doc-font-size, 14px) * 0.82);
+        position: sticky;
+        top: 0;
+        z-index: 1;
     }
     .doc-point-text .doc-table td {
-        padding: 5px 8px;
-        border: 1px solid rgba(74, 143, 199, 0.1);
+        padding: 7px 10px;
+        border: 1px solid rgba(74, 143, 199, 0.08);
         color: var(--text-secondary, rgba(255,255,255,0.7));
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        white-space: normal;
+        word-wrap: break-word;
     }
     .doc-point-text .doc-table tbody tr:nth-child(even) {
         background: rgba(74, 143, 199, 0.03);
+    }
+    .doc-point-text .doc-table tbody tr:active {
+        background: rgba(74, 143, 199, 0.08);
     }
     [data-theme="light"] .doc-point-text .doc-table th {
         background: rgba(74, 143, 199, 0.08);
@@ -1352,11 +1365,54 @@
     }
     [data-theme="light"] .doc-point-text .doc-table td {
         color: rgba(20,20,19,0.7);
-        border-color: rgba(20,20,19,0.1);
+        border-color: rgba(20,20,19,0.08);
     }
     [data-theme="light"] .doc-point-text .doc-table tbody tr:nth-child(even) {
         background: rgba(20,20,19,0.03);
     }
+    /* Изображения и схемы в пунктах документов — оптимизировано для мобильных */
+    .doc-point-text .doc-image {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        margin: 12px auto;
+        border-radius: 8px;
+        border: 1px solid var(--card-border, rgba(74,143,199,0.15));
+        background: rgba(255,255,255,0.02);
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+    .doc-point-text .doc-image:active { opacity: 0.7; }
+    [data-theme="light"] .doc-point-text .doc-image {
+        background: rgba(20,20,19,0.02);
+        border-color: rgba(20,20,19,0.1);
+    }
+    /* Полноэкранный просмотр изображения */
+    .doc-image-overlay {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.92);
+        z-index: 300;
+        display: none;
+        align-items: center; justify-content: center;
+        overflow: hidden;
+        touch-action: pinch-zoom;
+    }
+    .doc-image-overlay.active { display: flex; }
+    .doc-image-overlay img {
+        max-width: 95vw; max-height: 95vh;
+        object-fit: contain;
+        border-radius: 4px;
+    }
+    .doc-image-overlay-close {
+        position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: 12px;
+        width: 40px; height: 40px;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(255,255,255,0.15);
+        border: none; border-radius: 50%;
+        color: #fff; font-size: 24px; cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .doc-image-overlay-close:active { background: rgba(255,255,255,0.3); }
     /* Контрол размера шрифта в заголовке страницы документа */
     .doc-font-controls {
         display: flex; align-items: center; gap: 4px;
@@ -1406,6 +1462,13 @@
         .doc-chapter-title { font-size: 12px; }
         .doc-point { padding: 8px 0; }
         /* Размер шрифта пунктов управляется CSS-переменной --doc-font-size, не медиазапросом */
+        /* Увеличенные touch-площади для таблиц на мобильных */
+        .doc-point-text .doc-table th { padding: 7px 8px; }
+        .doc-point-text .doc-table td { padding: 6px 8px; }
+        /* Изображения на всю ширину без боковых отступов */
+        .doc-point-text .doc-image { margin: 10px -4px; border-radius: 4px; }
+        /* Обёртка таблиц: отрицательный margin для полного использования ширины */
+        .doc-point-text .doc-table-wrap { margin: 8px -12px; border-radius: 0; border-left: none; border-right: none; }
     }
 
     @media (max-width: 400px) {
@@ -4336,6 +4399,12 @@
     <button type="button" class="pin-sheet-cancel" onclick="closePinSheet()">Отмена</button>
 </div>
 
+<!-- ===== Полноэкранный просмотр изображений документов ===== -->
+<div id="docImageOverlay" class="doc-image-overlay" onclick="closeDocImageOverlay()">
+    <button type="button" class="doc-image-overlay-close" onclick="closeDocImageOverlay()">✕</button>
+    <img id="docImageOverlayImg" src="" alt="Просмотр">
+</div>
+
 <script>
     // ======================== ИГРА САПЁР ========================
     let msCols = 9, msRows = 9, msMines = 10;
@@ -5908,7 +5977,7 @@
     // Конфигурация документов: title (короткое), fullTitle (полное), desc (описание), pdfUrl (ссылка на оригинал).
     // Версия приложения для cache-busting JSON-запросов.
     // Должна совпадать с CACHE_VERSION в sw.js.
-    const APP_VERSION = 'v34';
+    const APP_VERSION = 'v38';
     const DOC_CONFIG = {
         'pue':   { title: 'ПУЭ 6 и 7', fullTitle: 'Правила устройства электроустановок', desc: '6-е и 7-е издание', pdfUrl: 'https://drive.google.com/file/d/1Rmy2aUYEr8WG1R1Pzuucbb8QEwfBrj0y/view' },
         'pteep': { title: 'ПТЭЭП 2003', fullTitle: 'Правила технической эксплуатации электроустановок потребителей', desc: 'Приказ Минэнерго РФ №6 от 13.01.2003', pdfUrl: 'https://drive.google.com/file/d/1xY7jxI5K-og2-UsNk5lhJy_qMogJB_oE/view' },
@@ -6020,6 +6089,10 @@
                     html += '</div>';
                 });
                 pointsContainer.innerHTML = html;
+                // Обёртка таблиц в scroll-контейнер для горизонтального скролла
+                wrapDocTables(pointsContainer);
+                // Назначение обработчиков клика на изображения (полноэкранный просмотр)
+                attachDocImageHandlers(pointsContainer);
             } catch (e) {
                 pointsContainer.innerHTML = '<div style="padding:10px;color:#c74a4a;">Ошибка: ' + docEsc(e.message) + '</div>';
             }
@@ -6076,6 +6149,73 @@
         }
         applyDocFontSize();
     }
+
+    // ============================================================
+    // ПОЛНОЭКРАННЫЙ ПРОСМОТР ИЗОБРАЖЕНИЙ ДОКУМЕНТОВ
+    // ============================================================
+    // Тап по изображению → открывается на весь экран с пинч-зумом.
+    // Тап по фону или кнопка ✕ → закрытие.
+    function openDocImageOverlay(src) {
+        const overlay = document.getElementById('docImageOverlay');
+        const img = document.getElementById('docImageOverlayImg');
+        if (!overlay || !img) return;
+        img.src = src;
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        if (navigator.vibrate) navigator.vibrate(10);
+    }
+
+    function closeDocImageOverlay() {
+        const overlay = document.getElementById('docImageOverlay');
+        if (!overlay) return;
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+        document.getElementById('docImageOverlayImg').src = '';
+    }
+
+    // Обёртка таблиц в scroll-контейнер после рендеринга пунктов.
+    // Вызывается после renderDocTree / toggleDocChapter.
+    function wrapDocTables(container) {
+        if (!container) return;
+        const tables = container.querySelectorAll('.doc-table:not(.doc-table-wrapped)');
+        tables.forEach(function(table) {
+            // Пропускаем таблицы, которые уже внутри обёртки или заголовочные (colspan)
+            if (table.parentElement.classList.contains('doc-table-wrap')) {
+                table.classList.add('doc-table-wrapped');
+                return;
+            }
+            // Проверяем, нужна ли обёртка (широкая таблица)
+            const wrapper = document.createElement('div');
+            wrapper.className = 'doc-table-wrap';
+            table.parentNode.insertBefore(wrapper, table);
+            wrapper.appendChild(table);
+            table.classList.add('doc-table-wrapped');
+        });
+    }
+
+    // Назначение обработчиков клика на изображения после рендеринга.
+    function attachDocImageHandlers(container) {
+        if (!container) return;
+        const images = container.querySelectorAll('.doc-image');
+        images.forEach(function(img) {
+            if (img.getAttribute('data-overlay-bound')) return;
+            img.setAttribute('data-overlay-bound', '1');
+            img.addEventListener('click', function(e) {
+                e.stopPropagation();
+                openDocImageOverlay(this.src);
+            });
+        });
+    }
+
+    // Обработчик системной кнопки «Назад» для закрытия overlay
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const overlay = document.getElementById('docImageOverlay');
+            if (overlay && overlay.classList.contains('active')) {
+                closeDocImageOverlay();
+            }
+        }
+    });
 
     // ============================================================
     // ПАРСЕР ССЫЛОК НА ЛИТЕРАТУРУ ИЗ ЭКЗАМЕНАЦИОННЫХ БИЛЕТОВ
