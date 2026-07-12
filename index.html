@@ -1286,7 +1286,7 @@
         border-top: 1px solid var(--card-border);
     }
     .doc-chapter.expanded .doc-points { display: block; }
-    /* Пункты документа — без рамок, на всю ширину, с управляемым размером шрифта */
+    /* Пункт документа — карточка-строка с номером, заголовком и ссылкой на PDF */
     .doc-point {
         padding: 10px 0;
         margin-bottom: 0;
@@ -1296,148 +1296,62 @@
         border-radius: 0;
     }
     .doc-point:last-child { border-bottom: none; }
+    /* Flex-строка: номер пункта — заголовок — ссылка на PDF */
     .doc-point-header {
-        margin-bottom: 4px;
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
     }
     .doc-point-num {
-        display: inline-block;
-        font-size: calc(var(--doc-font-size, 14px) * 0.85); font-weight: 700;
+        flex-shrink: 0;
+        font-size: 12px; font-weight: 700;
         color: var(--accent-blue, #4a8fc7);
-        margin-right: 6px;
+        line-height: 1.5;
     }
-    .doc-point-text {
-        font-size: var(--doc-font-size, 14px);
+    /* Заголовок пункта — занимает всё доступное место */
+    .doc-point-title {
+        flex: 1;
+        font-size: 13px;
         color: var(--text-secondary, rgba(255,255,255,0.7));
-        line-height: 1.6;
-        white-space: pre-wrap;
+        line-height: 1.5;
         word-wrap: break-word;
     }
-    [data-theme="light"] .doc-point { background: transparent; }
-    [data-theme="light"] .doc-point-text { color: rgba(20,20,19,0.75); }
-    /* HTML-таблицы в пунктах документов — оптимизировано для мобильных */
-    /* Обёртка для горизонтального скролла широких таблиц */
-    .doc-point-text .doc-table-wrap {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        margin: 10px -8px;
-        border-radius: 8px;
-        border: 1px solid rgba(74, 143, 199, 0.12);
-    }
-    .doc-point-text .doc-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: calc(var(--doc-font-size, 14px) * 0.88);
-        line-height: 1.45;
-        min-width: 320px;
-    }
-    /* Для широких таблиц — позволяем расширяться */
-    .doc-point-text .doc-table thead th {
-        white-space: nowrap;
-    }
-    .doc-point-text .doc-table th {
-        padding: 8px 10px;
+    /* Ссылка «PDF стр. N» — компактная кнопка-ссылка справа от пункта */
+    .doc-point-pdf-link {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        font-size: 11px; font-weight: 600;
+        color: var(--accent-blue, #4a8fc7);
         background: rgba(74, 143, 199, 0.1);
-        color: var(--accent-blue, #4a8fc7);
-        font-weight: 600;
-        text-align: left;
-        border: 1px solid rgba(74, 143, 199, 0.15);
-        font-size: calc(var(--doc-font-size, 14px) * 0.82);
-        position: sticky;
-        top: 0;
-        z-index: 1;
+        border: 1px solid rgba(74, 143, 199, 0.2);
+        padding: 4px 8px;
+        border-radius: 6px;
+        text-decoration: none;
+        white-space: nowrap;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.15s;
     }
-    .doc-point-text .doc-table td {
-        padding: 7px 10px;
-        border: 1px solid rgba(74, 143, 199, 0.08);
-        color: var(--text-secondary, rgba(255,255,255,0.7));
-        white-space: normal;
-        word-wrap: break-word;
-    }
-    .doc-point-text .doc-table tbody tr:nth-child(even) {
-        background: rgba(74, 143, 199, 0.03);
-    }
-    .doc-point-text .doc-table tbody tr:active {
+    .doc-point-pdf-link:active { background: rgba(74, 143, 199, 0.2); }
+    [data-theme="light"] .doc-point-title { color: rgba(20,20,19,0.75); }
+    [data-theme="light"] .doc-point-pdf-link {
         background: rgba(74, 143, 199, 0.08);
-    }
-    [data-theme="light"] .doc-point-text .doc-table th {
-        background: rgba(74, 143, 199, 0.08);
+        border-color: rgba(74, 143, 199, 0.18);
         color: #4a8fc7;
     }
-    [data-theme="light"] .doc-point-text .doc-table td {
-        color: rgba(20,20,19,0.7);
-        border-color: rgba(20,20,19,0.08);
-    }
-    [data-theme="light"] .doc-point-text .doc-table tbody tr:nth-child(even) {
-        background: rgba(20,20,19,0.03);
-    }
-    /* Изображения и схемы в пунктах документов — оптимизировано для мобильных */
-    .doc-point-text .doc-image {
-        display: block;
-        max-width: 100%;
-        height: auto;
-        margin: 12px auto;
-        border-radius: 8px;
-        border: 1px solid var(--card-border, rgba(74,143,199,0.15));
-        background: rgba(255,255,255,0.02);
-        cursor: pointer;
-        transition: opacity 0.2s;
-    }
-    .doc-point-text .doc-image:active { opacity: 0.7; }
-    [data-theme="light"] .doc-point-text .doc-image {
-        background: rgba(20,20,19,0.02);
-        border-color: rgba(20,20,19,0.1);
-    }
-    /* Полноэкранный просмотр изображения */
-    .doc-image-overlay {
-        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0,0,0,0.92);
-        z-index: 300;
-        display: none;
-        align-items: center; justify-content: center;
-        overflow: hidden;
-        touch-action: pinch-zoom;
-    }
-    .doc-image-overlay.active { display: flex; }
-    .doc-image-overlay img {
-        max-width: 95vw; max-height: 95vh;
-        object-fit: contain;
-        border-radius: 4px;
-    }
-    .doc-image-overlay-close {
-        position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: 12px;
-        width: 40px; height: 40px;
-        display: flex; align-items: center; justify-content: center;
-        background: rgba(255,255,255,0.15);
-        border: none; border-radius: 50%;
-        color: #fff; font-size: 24px; cursor: pointer;
+    /* Ссылка «Открыть PDF документ» в заголовке страницы документа */
+    .doc-pdf-link {
+        display: inline-flex; align-items: center; gap: 6px;
+        color: var(--accent-blue, #4a8fc7);
+        font-size: 13px; font-weight: 600;
+        text-decoration: none;
+        padding: 8px 14px;
+        background: rgba(74,143,199,0.08);
+        border: 1px solid rgba(74,143,199,0.2);
+        border-radius: 10px;
         -webkit-tap-highlight-color: transparent;
     }
-    .doc-image-overlay-close:active { background: rgba(255,255,255,0.3); }
-    /* Контрол размера шрифта в заголовке страницы документа */
-    .doc-font-controls {
-        display: flex; align-items: center; gap: 4px;
-        -webkit-tap-highlight-color: transparent;
-    }
-    .doc-font-btn {
-        width: 32px; height: 32px;
-        display: flex; align-items: center; justify-content: center;
-        background: transparent;
-        border: 1px solid var(--card-border, rgba(74,143,199,0.2));
-        border-radius: 8px;
-        color: var(--text-secondary, rgba(255,255,255,0.6));
-        font-size: 15px; font-weight: 700;
-        font-family: 'Inter', sans-serif;
-        cursor: pointer;
-        transition: all 0.15s;
-        -webkit-tap-highlight-color: transparent;
-    }
-    .doc-font-btn:active { background: rgba(74,143,199,0.12); transform: scale(0.92); }
-    .doc-font-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-    .doc-font-label {
-        font-size: 12px; font-weight: 600;
-        color: var(--text-muted, rgba(255,255,255,0.4));
-        min-width: 32px; text-align: center;
-    }
+    .doc-pdf-link:active { background: rgba(74,143,199,0.16); }
     /* Спиннер загрузки */
     .doc-loading {
         display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -1461,14 +1375,8 @@
         .doc-chapter-header { padding: 12px 14px; }
         .doc-chapter-title { font-size: 12px; }
         .doc-point { padding: 8px 0; }
-        /* Размер шрифта пунктов управляется CSS-переменной --doc-font-size, не медиазапросом */
-        /* Увеличенные touch-площади для таблиц на мобильных */
-        .doc-point-text .doc-table th { padding: 7px 8px; }
-        .doc-point-text .doc-table td { padding: 6px 8px; }
-        /* Изображения на всю ширину без боковых отступов */
-        .doc-point-text .doc-image { margin: 10px -4px; border-radius: 4px; }
-        /* Обёртка таблиц: отрицательный margin для полного использования ширины */
-        .doc-point-text .doc-table-wrap { margin: 8px -12px; border-radius: 0; border-left: none; border-right: none; }
+        .doc-point-title { font-size: 12px; }
+        .doc-point-pdf-link { font-size: 10px; padding: 3px 6px; }
     }
 
     @media (max-width: 400px) {
@@ -3579,15 +3487,15 @@
             </div>
         </div>
 
-        <!-- ======================== ПУЭ 6 и 7 — НАВИГАЦИЯ ПО ДОКУМЕНТУ ======================== -->
+        <!-- ======================== ПУЭ 6 и 7 — ИНТЕРАКТИВНОЕ ОГЛАВЛЕНИЕ + PDF ======================== -->
         <div id="page-pue" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">ПУЭ 6 и 7</div><div class="doc-font-controls"><button class="doc-font-btn" onclick="docFontChange(-1)" aria-label="Уменьшить шрифт">A−</button><span class="doc-font-label" id="doc-font-label">14</span><button class="doc-font-btn" onclick="docFontChange(1)" aria-label="Увеличить шрифт">A+</button></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-title">ПУЭ 6 и 7</div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
 
             <div class="content-header" style="padding: 14px 20px 10px;">
                 <h2 style="color: #e0e0e0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">Правила устройства электроустановок</h2>
                 <p style="color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 5px;">6-е и 7-е издание</p>
-                <div style="margin-top:10px;"><a href="https://drive.google.com/file/d/1Rmy2aUYEr8WG1R1Pzuucbb8QEwfBrj0y/view" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;color:var(--accent-blue,#4a8fc7);font-size:13px;font-weight:600;text-decoration:none;padding:8px 14px;background:rgba(74,143,199,0.08);border:1px solid rgba(74,143,199,0.2);border-radius:10px;-webkit-tap-highlight-color:transparent;"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Открыть оригинал PDF</a></div>
+                <div style="margin-top:10px;"><a href="data/pue.pdf" target="_blank" rel="noopener" class="doc-pdf-link"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Открыть PDF документ</a></div>
             </div>
 
             <div id="doc-tree-pue" class="doc-tree"></div>
@@ -3595,24 +3503,17 @@
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 9 9" /></svg>
                 Загрузка...
             </div>
-
-            
-                <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6;">
-                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">ПУЭ 6:</b> 6-е издание, действует с 1985 г. (с изменениями и дополнениями). Включает все 7 разделов.</div>
-                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">ПУЭ 7:</b> 7-е издание, введено в действие с 1 января 2003 г. Дополняет и отменяет отдельные главы 6-го издания.</div>
-                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Структура:</b> 7 разделов → ~50 глав → тысячи пунктов. Каждый пункт имеет номер вида «1.7.55» (раздел.глава.пункт).</div>
-            </div>
         </div>
 
-        <!-- ======================== ПТЭЭП 2003 — НАВИГАЦИЯ ПО ДОКУМЕНТУ ======================== -->
+        <!-- ======================== ПТЭЭП 2003 — ИНТЕРАКТИВНОЕ ОГЛАВЛЕНИЕ + PDF ======================== -->
         <div id="page-pteep" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">ПТЭЭП 2003</div><div class="doc-font-controls"><button class="doc-font-btn" onclick="docFontChange(-1)" aria-label="Уменьшить шрифт">A−</button><span class="doc-font-label" id="doc-font-label">14</span><button class="doc-font-btn" onclick="docFontChange(1)" aria-label="Увеличить шрифт">A+</button></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-title">ПТЭЭП 2003</div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
 
             <div class="content-header" style="padding: 14px 20px 10px;">
                 <h2 style="color: #e0e0e0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">Правила технической эксплуатации электроустановок потребителей</h2>
                 <p style="color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 5px;">Приказ Минэнерго РФ №6 от 13.01.2003</p>
-                <div style="margin-top:10px;"><a href="https://drive.google.com/file/d/1xY7jxI5K-og2-UsNk5lhJy_qMogJB_oE/view" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;color:var(--accent-blue,#4a8fc7);font-size:13px;font-weight:600;text-decoration:none;padding:8px 14px;background:rgba(74,143,199,0.08);border:1px solid rgba(74,143,199,0.2);border-radius:10px;-webkit-tap-highlight-color:transparent;"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Открыть оригинал PDF</a></div>
+                <div style="margin-top:10px;"><a href="data/pteep.pdf" target="_blank" rel="noopener" class="doc-pdf-link"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Открыть PDF документ</a></div>
             </div>
 
             <div id="doc-tree-pteep" class="doc-tree"></div>
@@ -3620,24 +3521,17 @@
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 9 9" /></svg>
                 Загрузка...
             </div>
-
-            
-                <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6;">
-                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Документ:</b> Правила технической эксплуатации электроустановок потребителей (ПТЭЭП).</div>
-                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Утверждены:</b> Приказом Минэнерго России от 13.01.2003 № 6.</div>
-                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Структура:</b> 5 разделов → 28 глав → ~700 пунктов. Номер пункта вида «1.1.1» (раздел.глава.пункт).</div>
-            </div>
         </div>
 
-        <!-- ======================== ПОТЭЭ 2022 — НАВИГАЦИЯ ПО ДОКУМЕНТУ ======================== -->
+        <!-- ======================== ПОТЭЭ 2022 — ИНТЕРАКТИВНОЕ ОГЛАВЛЕНИЕ + PDF ======================== -->
         <div id="page-pote" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">ПОТЭЭ 2022</div><div class="doc-font-controls"><button class="doc-font-btn" onclick="docFontChange(-1)" aria-label="Уменьшить шрифт">A−</button><span class="doc-font-label" id="doc-font-label">14</span><button class="doc-font-btn" onclick="docFontChange(1)" aria-label="Увеличить шрифт">A+</button></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-title">ПОТЭЭ 2022</div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
 
             <div class="content-header" style="padding: 14px 20px 10px;">
                 <h2 style="color: #e0e0e0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">Правила по охране труда при эксплуатации электроустановок</h2>
                 <p style="color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 5px;">Приказ Минтруда №903н от 15.12.2020</p>
-                <div style="margin-top:10px;"><a href="https://drive.google.com/file/d/1qMLjS89aAIQO6mSaCsU_Z2nOovyGGLTS/view" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;color:var(--accent-blue,#4a8fc7);font-size:13px;font-weight:600;text-decoration:none;padding:8px 14px;background:rgba(74,143,199,0.08);border:1px solid rgba(74,143,199,0.2);border-radius:10px;-webkit-tap-highlight-color:transparent;"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Открыть оригинал PDF</a></div>
+                <div style="margin-top:10px;"><a href="data/pote.pdf" target="_blank" rel="noopener" class="doc-pdf-link"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Открыть PDF документ</a></div>
             </div>
 
             <div id="doc-tree-pote" class="doc-tree"></div>
@@ -3645,37 +3539,23 @@
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 9 9" /></svg>
                 Загрузка...
             </div>
-
-            
-                <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6;">
-                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Документ:</b> Правила по охране труда при эксплуатации электроустановок (ПОТЭЭ).</div>
-                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Утверждены:</b> Приказом Минтруда России от 15.12.2020 № 903н (действуют с 01.07.2022).</div>
-                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Структура:</b> 47 глав → ~625 пунктов. Используется двухуровневая нумерация: «1.1» (глава.пункт).</div>
-            </div>
         </div>
 
-        <!-- ======================== СО 153-34.03.603-2003 — НАВИГАЦИЯ ПО ДОКУМЕНТУ ======================== -->
+        <!-- ======================== СО 153-34.03.603-2003 — ИНТЕРАКТИВНОЕ ОГЛАВЛЕНИЕ + PDF ======================== -->
         <div id="page-so153" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">СО 153-34.03.603-2003</div><div class="doc-font-controls"><button class="doc-font-btn" onclick="docFontChange(-1)" aria-label="Уменьшить шрифт">A−</button><span class="doc-font-label" id="doc-font-label">14</span><button class="doc-font-btn" onclick="docFontChange(1)" aria-label="Увеличить шрифт">A+</button></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-title">СО 153-34.03.603-2003</div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
 
             <div class="content-header" style="padding: 14px 20px 10px;">
                 <h2 style="color: #e0e0e0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">Инструкция по применению и испытанию средств защиты</h2>
                 <p style="color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 5px;">Приказ Минэнерго №261 от 30.06.2003</p>
-                <div style="margin-top:10px;"><a href="https://drive.google.com/file/d/1mFvdEmw0bYe_JP-W_H6Jiy57ZVfQedZn/view" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;color:var(--accent-blue,#4a8fc7);font-size:13px;font-weight:600;text-decoration:none;padding:8px 14px;background:rgba(74,143,199,0.08);border:1px solid rgba(74,143,199,0.2);border-radius:10px;-webkit-tap-highlight-color:transparent;"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Открыть оригинал PDF</a></div>
+                <div style="margin-top:10px;"><a href="data/so153.pdf" target="_blank" rel="noopener" class="doc-pdf-link"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Открыть PDF документ</a></div>
             </div>
 
             <div id="doc-tree-so153" class="doc-tree"></div>
             <div class="doc-loading" id="doc-loading-so153" style="display:none;">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 9 9" /></svg>
                 Загрузка...
-            </div>
-
-            
-                <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6;">
-                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Документ:</b> Инструкция по применению и испытанию средств защиты, используемых в электроустановках (СО 153-34.03.603-2003).</div>
-                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Утверждена:</b> Приказом Минэнерго России от 30.06.2003 № 261.</div>
-                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Структура:</b> 4 раздела → 35 глав → ~394 пункта. Номер пункта вида «1.1.6» (раздел.глава.пункт).</div>
             </div>
         </div>
 
@@ -4376,12 +4256,6 @@
     <div id="pinSheetExtraActions" class="pin-sheet-extra-actions" style="display:none;"></div>
     <button type="button" id="pinSheetAction" class="pin-sheet-action" onclick="executePinToggle()">Добавить на главную</button>
     <button type="button" class="pin-sheet-cancel" onclick="closePinSheet()">Отмена</button>
-</div>
-
-<!-- ===== Полноэкранный просмотр изображений документов ===== -->
-<div id="docImageOverlay" class="doc-image-overlay" onclick="closeDocImageOverlay()">
-    <button type="button" class="doc-image-overlay-close" onclick="closeDocImageOverlay()">✕</button>
-    <img id="docImageOverlayImg" src="" alt="Просмотр">
 </div>
 
 <script>
@@ -5941,30 +5815,31 @@
     }
 
     // ============================================================
-    // ДЕРЕВО НОРМАТИВНОЙ ДОКУМЕНТАЦИИ — универсальная навигация
+    // ДЕРЕВО НОРМАТИВНОЙ ДОКУМЕНТАЦИИ — интерактивное оглавление + PDF
     // ============================================================
     // Поддерживаются 4 документа: ПУЭ, ПТЭЭП, ПОТЭЭ, СО 153-34.03.603-2003.
-    // Каждый документ разбит на главы; главы группируются по разделам.
-    // Содержимое глав (пункты) подгружается лениво (lazy-load) из data/{doc}/{chapter}.json
-    // при первом раскрытии главы и кэшируется в памяти.
+    // Каждый документ представлен PDF-файлом (data/{doc}.pdf) и интерактивным
+    // оглавлением (data/{doc}/meta.json). При тапе по пункту открывается PDF
+    // на нужной странице (data/{doc}.pdf#page=N).
 
     // Кэш загруженных метаданных документов (meta.json).
     const docMetaCache = {};
-    // Кэш загруженных глав ({doc}/{chapter}.json).
-    const docChapterCache = {};
 
-    // Конфигурация документов: title (короткое), fullTitle (полное), desc (описание), pdfUrl (ссылка на оригинал).
+    // Конфигурация документов: title (короткое), fullTitle (полное),
+    // desc (описание), pdfFile (локальный путь к PDF-файлу).
     // Версия приложения для cache-busting JSON-запросов.
     // Должна совпадать с CACHE_VERSION в sw.js.
-    const APP_VERSION = 'v40';
+    const APP_VERSION = 'v41';
     const DOC_CONFIG = {
-        'pue':   { title: 'ПУЭ 6 и 7', fullTitle: 'Правила устройства электроустановок', desc: '6-е и 7-е издание', pdfUrl: 'https://drive.google.com/file/d/1Rmy2aUYEr8WG1R1Pzuucbb8QEwfBrj0y/view' },
-        'pteep': { title: 'ПТЭЭП 2003', fullTitle: 'Правила технической эксплуатации электроустановок потребителей', desc: 'Приказ Минэнерго РФ №6 от 13.01.2003', pdfUrl: 'https://drive.google.com/file/d/1xY7jxI5K-og2-UsNk5lhJy_qMogJB_oE/view' },
-        'pote':  { title: 'ПОТЭЭ 2022', fullTitle: 'Правила по охране труда при эксплуатации электроустановок', desc: 'Приказ Минтруда №903н от 15.12.2020', pdfUrl: 'https://drive.google.com/file/d/1qMLjS89aAIQO6mSaCsU_Z2nOovyGGLTS/view' },
-        'so153': { title: 'СО 153-34.03.603-2003', fullTitle: 'Инструкция по применению и испытанию средств защиты', desc: 'Приказ Минэнерго №261 от 30.06.2003', pdfUrl: 'https://drive.google.com/file/d/1mFvdEmw0bYe_JP-W_H6Jiy57ZVfQedZn/view' }
+        'pue':   { title: 'ПУЭ 6 и 7', fullTitle: 'Правила устройства электроустановок', desc: '6-е и 7-е издание', pdfFile: 'data/pue.pdf' },
+        'pteep': { title: 'ПТЭЭП 2003', fullTitle: 'Правила технической эксплуатации электроустановок потребителей', desc: 'Приказ Минэнерго РФ №6 от 13.01.2003', pdfFile: 'data/pteep.pdf' },
+        'pote':  { title: 'ПОТЭЭ 2022', fullTitle: 'Правила по охране труда при эксплуатации электроустановок', desc: 'Приказ Минтруда №903н от 15.12.2020', pdfFile: 'data/pote.pdf' },
+        'so153': { title: 'СО 153-34.03.603-2003', fullTitle: 'Инструкция по применению и испытанию средств защиты', desc: 'Приказ Минэнерго №261 от 30.06.2003', pdfFile: 'data/so153.pdf' }
     };
 
     // Загрузка meta.json (оглавление документа). Кэшируется в docMetaCache.
+    // Структура meta.json: { sections: [{num, title, chapters: [{chapter, title, points: [{num, title, page}]}]}],
+    //                        all_points: [{num, title, page}] }
     async function loadDocMeta(doc) {
         if (docMetaCache[doc]) return docMetaCache[doc];
         // Cache-busting через ?v= для обхода HTTP-кэша браузера и SW
@@ -5973,18 +5848,6 @@
         const meta = await resp.json();
         docMetaCache[doc] = meta;
         return meta;
-    }
-
-    // Загрузка главы документа. Кэшируется в docChapterCache.
-    async function loadDocChapter(doc, chapter) {
-        const cacheKey = doc + '/' + chapter;
-        if (docChapterCache[cacheKey]) return docChapterCache[cacheKey];
-        // Cache-busting через ?v= для обхода HTTP-кэша браузера и SW
-        const resp = await fetch('data/' + doc + '/' + chapter + '.json?v=' + APP_VERSION);
-        if (!resp.ok) throw new Error('Не удалось загрузить главу');
-        const data = await resp.json();
-        docChapterCache[cacheKey] = data;
-        return data;
     }
 
     // Рендеринг дерева документа: список разделов с главами внутри.
@@ -5999,29 +5862,21 @@
 
         try {
             const meta = await loadDocMeta(doc);
+            const config = DOC_CONFIG[doc];
             let html = '';
-            // Группируем главы по разделам.
-            // Показываем заголовок раздела только когда он меняется,
-            // и пропускаем его, если section_title совпадает с названием главы
-            // (так бывает у ПОТЭЭ, где у каждой главы свой раздел с тем же названием).
-            let currentSection = '';
-            meta.forEach(function(ch) {
-                if (ch.section !== currentSection) {
-                    currentSection = ch.section;
-                    const sameAsChapter = ch.section_title && ch.title && ch.section_title.trim() === ch.title.trim();
-                    if (!sameAsChapter) {
-                        const sectionTitle = ch.section_title ? ('. ' + ch.section_title) : '';
-                        html += '<div class="doc-section-title">Раздел ' + docEsc(ch.section) + sectionTitle + '</div>';
-                    }
-                }
-                html += '<div class="doc-chapter" data-doc="' + doc + '" data-chapter="' + ch.chapter + '" id="doc-chapter-' + doc + '-' + ch.chapter + '">';
-                html += '<div class="doc-chapter-header" onclick="toggleDocChapter(\'' + doc + '\',\'' + ch.chapter + '\')">';
-                html += '<span class="doc-chapter-num">' + docEsc(ch.chapter) + '</span>';
-                html += '<span class="doc-chapter-title">' + docEsc(ch.title) + ' <span class="doc-chapter-count">(' + ch.points_count + ')</span></span>';
-                html += '<svg class="doc-chapter-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>';
-                html += '</div>';
-                html += '<div class="doc-points" id="doc-points-' + doc + '-' + ch.chapter + '"></div>';
-                html += '</div>';
+            // Рендерим по разделам и главам из meta.sections
+            (meta.sections || []).forEach(function(section) {
+                html += '<div class="doc-section-title">Раздел ' + docEsc(section.num) + '. ' + docEsc(section.title) + '</div>';
+                (section.chapters || []).forEach(function(chapter) {
+                    html += '<div class="doc-chapter" data-doc="' + doc + '" data-chapter="' + chapter.chapter + '">';
+                    html += '<div class="doc-chapter-header" onclick="toggleDocChapter(\'' + doc + '\',\'' + chapter.chapter + '\')">';
+                    html += '<span class="doc-chapter-num">' + docEsc(chapter.chapter) + '</span>';
+                    html += '<span class="doc-chapter-title">' + docEsc(chapter.title) + ' <span class="doc-chapter-count">(' + chapter.points.length + ')</span></span>';
+                    html += '<svg class="doc-chapter-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>';
+                    html += '</div>';
+                    html += '<div class="doc-points" id="doc-points-' + doc + '-' + chapter.chapter + '"></div>';
+                    html += '</div>';
+                });
             });
             container.innerHTML = html;
         } catch (e) {
@@ -6031,10 +5886,11 @@
         }
     }
 
-    // Тоггл главы: ленивая подгрузка пунктов при первом раскрытии.
+    // Тоггл главы: ленивый рендеринг пунктов при первом раскрытии.
     // Аккордеон — при раскрытии главы остальные главы того же документа сворачиваются.
-    async function toggleDocChapter(doc, chapter) {
-        const chapterEl = document.getElementById('doc-chapter-' + doc + '-' + chapter);
+    // Каждый пункт рендерится как строка с номером, заголовком и ссылкой на PDF-страницу.
+    function toggleDocChapter(doc, chapter) {
+        const chapterEl = document.querySelector('[data-doc="' + doc + '"][data-chapter="' + chapter + '"]');
         if (!chapterEl) return;
         const pointsContainer = document.getElementById('doc-points-' + doc + '-' + chapter);
         if (!pointsContainer) return;
@@ -6050,34 +5906,55 @@
 
         chapterEl.classList.toggle('expanded', !isExpanded);
 
-        // Ленивая загрузка содержимого главы при первом раскрытии.
+        // Ленивый рендеринг пунктов при первом раскрытии.
         if (!isExpanded && !pointsContainer.children.length) {
-            pointsContainer.innerHTML = '<div style="padding:10px;color:rgba(255,255,255,0.3);font-size:12px;">Загрузка...</div>';
-            try {
-                const data = await loadDocChapter(doc, chapter);
-                let html = '';
-                data.points.forEach(function(p) {
-                    html += '<div class="doc-point" id="doc-point-' + doc + '-' + p.num + '">';
-                    html += '<div class="doc-point-header"><span class="doc-point-num">' + docEsc(p.num) + '</span></div>';
-                    // Если есть HTML-таблицы — рендерим без экранирования
-                    if (p.has_html) {
-                        html += '<div class="doc-point-text">' + p.text + '</div>';
-                    } else {
-                        html += '<div class="doc-point-text">' + docEsc(p.text) + '</div>';
-                    }
-                    html += '</div>';
-                });
-                pointsContainer.innerHTML = html;
-                // Обёртка таблиц в scroll-контейнер для горизонтального скролла
-                wrapDocTables(pointsContainer);
-                // Назначение обработчиков клика на изображения (полноэкранный просмотр)
-                attachDocImageHandlers(pointsContainer);
-            } catch (e) {
-                pointsContainer.innerHTML = '<div style="padding:10px;color:#c74a4a;">Ошибка: ' + docEsc(e.message) + '</div>';
+            const meta = docMetaCache[doc];
+            if (!meta) return;
+            const config = DOC_CONFIG[doc];
+            // Ищем главу в meta.sections
+            let chapterData = null;
+            for (var s of meta.sections) {
+                for (var c of s.chapters) {
+                    if (c.chapter === chapter) { chapterData = c; break; }
+                }
+                if (chapterData) break;
             }
+            if (!chapterData) return;
+            let html = '';
+            chapterData.points.forEach(function(p) {
+                var page = p.page || 1;
+                var pdfUrl = config.pdfFile + '#page=' + page;
+                html += '<div class="doc-point" id="doc-point-' + doc + '-' + p.num + '">';
+                html += '<div class="doc-point-header">';
+                html += '<span class="doc-point-num">' + docEsc(p.num) + '</span>';
+                html += '<span class="doc-point-title">' + docEsc(p.title) + '</span>';
+                html += '<a href="' + pdfUrl + '" target="_blank" rel="noopener" class="doc-point-pdf-link" onclick="event.stopPropagation();">PDF стр. ' + page + '</a>';
+                html += '</div>';
+                html += '</div>';
+            });
+            pointsContainer.innerHTML = html;
         }
 
         if (navigator.vibrate) navigator.vibrate(10);
+    }
+
+    // Открытие пункта документа в PDF (по номеру пункта).
+    // Используется для прямой навигации: находит пункт в meta.all_points,
+    // открывает PDF на соответствующей странице.
+    function openDocPoint(doc, pointNum) {
+        var meta = docMetaCache[doc];
+        if (!meta) return;
+        var config = DOC_CONFIG[doc];
+        // Ищем пункт в all_points
+        var point = null;
+        for (var p of meta.all_points) {
+            if (p.num === pointNum) { point = p; break; }
+        }
+        if (!point) return;
+        var page = point.page || 1;
+        var pdfUrl = config.pdfFile + '#page=' + page;
+        window.open(pdfUrl, '_blank');
+        if (navigator.vibrate) navigator.vibrate(15);
     }
 
     // Экранирование HTML для защиты от ошибок/инъекций в данных.
@@ -6086,115 +5963,6 @@
             return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]);
         });
     }
-
-    // ============================================================
-    // УПРАВЛЕНИЕ РАЗМЕРОМ ШРИФТА В ДОКУМЕНТАХ
-    // ============================================================
-    // Размер шрифта сохраняется в localStorage, применяется ко всем 4 документам.
-    // CSS-переменная --doc-font-size используется в .doc-point-text и .doc-point-num.
-    const DOC_FONT_KEY = 'docFontSize';
-    const DOC_FONT_MIN = 12;
-    const DOC_FONT_MAX = 24;
-    const DOC_FONT_DEFAULT = 14;
-    let docFontSize = DOC_FONT_DEFAULT;
-
-    // Применяет текущий размер шрифта ко всем элементам через CSS-переменную на :root.
-    function applyDocFontSize() {
-        document.documentElement.style.setProperty('--doc-font-size', docFontSize + 'px');
-        // Обновляем все подписи (их может быть несколько — по одной на страницу документа)
-        document.querySelectorAll('.doc-font-label').forEach(el => {
-            el.textContent = docFontSize;
-        });
-    }
-
-    // Изменение размера шрифта: direction = -1 (уменьшить) или +1 (увеличить).
-    function docFontChange(direction) {
-        const newSize = docFontSize + direction;
-        if (newSize < DOC_FONT_MIN || newSize > DOC_FONT_MAX) return;
-        docFontSize = newSize;
-        localStorage.setItem(DOC_FONT_KEY, String(docFontSize));
-        applyDocFontSize();
-        if (navigator.vibrate) navigator.vibrate(10);
-    }
-
-    // Загрузка сохранённого размера шрифта при старте приложения.
-    function initDocFontSize() {
-        const saved = localStorage.getItem(DOC_FONT_KEY);
-        if (saved) {
-            const size = parseInt(saved, 10);
-            if (!isNaN(size) && size >= DOC_FONT_MIN && size <= DOC_FONT_MAX) {
-                docFontSize = size;
-            }
-        }
-        applyDocFontSize();
-    }
-
-    // ============================================================
-    // ПОЛНОЭКРАННЫЙ ПРОСМОТР ИЗОБРАЖЕНИЙ ДОКУМЕНТОВ
-    // ============================================================
-    // Тап по изображению → открывается на весь экран с пинч-зумом.
-    // Тап по фону или кнопка ✕ → закрытие.
-    function openDocImageOverlay(src) {
-        const overlay = document.getElementById('docImageOverlay');
-        const img = document.getElementById('docImageOverlayImg');
-        if (!overlay || !img) return;
-        img.src = src;
-        overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        if (navigator.vibrate) navigator.vibrate(10);
-    }
-
-    function closeDocImageOverlay() {
-        const overlay = document.getElementById('docImageOverlay');
-        if (!overlay) return;
-        overlay.classList.remove('active');
-        document.body.style.overflow = '';
-        document.getElementById('docImageOverlayImg').src = '';
-    }
-
-    // Обёртка таблиц в scroll-контейнер после рендеринга пунктов.
-    // Вызывается после renderDocTree / toggleDocChapter.
-    function wrapDocTables(container) {
-        if (!container) return;
-        const tables = container.querySelectorAll('.doc-table:not(.doc-table-wrapped)');
-        tables.forEach(function(table) {
-            // Пропускаем таблицы, которые уже внутри обёртки или заголовочные (colspan)
-            if (table.parentElement.classList.contains('doc-table-wrap')) {
-                table.classList.add('doc-table-wrapped');
-                return;
-            }
-            // Проверяем, нужна ли обёртка (широкая таблица)
-            const wrapper = document.createElement('div');
-            wrapper.className = 'doc-table-wrap';
-            table.parentNode.insertBefore(wrapper, table);
-            wrapper.appendChild(table);
-            table.classList.add('doc-table-wrapped');
-        });
-    }
-
-    // Назначение обработчиков клика на изображения после рендеринга.
-    function attachDocImageHandlers(container) {
-        if (!container) return;
-        const images = container.querySelectorAll('.doc-image');
-        images.forEach(function(img) {
-            if (img.getAttribute('data-overlay-bound')) return;
-            img.setAttribute('data-overlay-bound', '1');
-            img.addEventListener('click', function(e) {
-                e.stopPropagation();
-                openDocImageOverlay(this.src);
-            });
-        });
-    }
-
-    // Обработчик системной кнопки «Назад» для закрытия overlay
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            const overlay = document.getElementById('docImageOverlay');
-            if (overlay && overlay.classList.contains('active')) {
-                closeDocImageOverlay();
-            }
-        }
-    });
 
     // ============================================================
     // ПАРСЕР ССЫЛОК НА ЛИТЕРАТУРУ ИЗ ЭКЗАМЕНАЦИОННЫХ БИЛЕТОВ
@@ -6266,8 +6034,10 @@
 
     // Открытие ссылки на литературу: переход на страницу документа,
     // раскрытие нужной главы и прокрутка к пункту.
+    // После прокрутки показывается всплывающее уведомление с подсказкой
+    // открыть пункт в PDF.
     async function openDocRef(refStr) {
-        const parsed = parseLiteratureRef(refStr);
+        var parsed = parseLiteratureRef(refStr);
         if (!parsed) return false; // Внешний документ — не обрабатываем
 
         // Переход на страницу документа.
@@ -6277,8 +6047,8 @@
         await new Promise(function(r) { setTimeout(r, 300); });
 
         if (parsed.type === 'point' && parsed.items.length > 0) {
-            const pointNum = parsed.items[0];
-            let chapter;
+            var pointNum = parsed.items[0];
+            var chapter;
             if (parsed.doc === 'pote') {
                 // У ПОТЭЭ пункт «X.Y» → глава «X».
                 chapter = pointNum.split('.')[0];
@@ -6287,48 +6057,55 @@
                 chapter = pointNum.split('.').slice(0, 2).join('.');
             }
 
-            // Раскрытие главы (ленивая подгрузка пунктов).
+            // Раскрытие главы (синхронный ленивый рендеринг пунктов).
             await toggleDocChapter(parsed.doc, chapter);
 
-            // Ждём загрузки содержимого.
-            await new Promise(function(r) { setTimeout(r, 300); });
+            // Ждём отрисовки пунктов.
+            await new Promise(function(r) { setTimeout(r, 200); });
 
             // Прокрутка к нужному пункту с подсветкой.
-            const pointEl = document.getElementById('doc-point-' + parsed.doc + '-' + pointNum);
+            var pointEl = document.getElementById('doc-point-' + parsed.doc + '-' + pointNum);
             if (pointEl) {
                 pointEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 pointEl.style.background = 'rgba(74, 143, 199, 0.15)';
                 setTimeout(function() { pointEl.style.background = ''; }, 2000);
             } else {
-                // Пункт не найден (например, номер в билете не соответствует данным) —
-                // прокручиваем к главе.
-                const chapterEl = document.getElementById('doc-chapter-' + parsed.doc + '-' + chapter);
-                if (chapterEl) chapterEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // Пункт не найден — прокручиваем к главе.
+                var chapterElFallback = document.querySelector('[data-doc="' + parsed.doc + '"][data-chapter="' + chapter + '"]');
+                if (chapterElFallback) chapterElFallback.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            // Подсказка пользователю: нажать «PDF стр. N» для открытия пункта в PDF.
+            if (typeof showToast === 'function') {
+                showToast('Нажмите "PDF стр. N" чтобы открыть пункт в PDF');
             }
         } else if (parsed.type === 'chapter' && parsed.items.length > 0) {
-            const chapter = parsed.items[0];
+            var chapter = parsed.items[0];
             await toggleDocChapter(parsed.doc, chapter);
-            const chapterEl = document.getElementById('doc-chapter-' + parsed.doc + '-' + chapter);
+            var chapterEl = document.querySelector('[data-doc="' + parsed.doc + '"][data-chapter="' + chapter + '"]');
             if (chapterEl) chapterEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } else if (parsed.type === 'range' && parsed.items.length > 0) {
             // Диапазон «7.3.26…7.3.30» — раскрываем главу и прокручиваем к первому пункту.
-            const pointNum = parsed.items[0];
-            let chapter;
+            var pointNum = parsed.items[0];
+            var chapter;
             if (parsed.doc === 'pote') {
                 chapter = pointNum.split('.')[0];
             } else {
                 chapter = pointNum.split('.').slice(0, 2).join('.');
             }
             await toggleDocChapter(parsed.doc, chapter);
-            await new Promise(function(r) { setTimeout(r, 300); });
-            const pointEl = document.getElementById('doc-point-' + parsed.doc + '-' + pointNum);
+            await new Promise(function(r) { setTimeout(r, 200); });
+            var pointEl = document.getElementById('doc-point-' + parsed.doc + '-' + pointNum);
             if (pointEl) {
                 pointEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 pointEl.style.background = 'rgba(74, 143, 199, 0.15)';
                 setTimeout(function() { pointEl.style.background = ''; }, 2000);
+                if (typeof showToast === 'function') {
+                    showToast('Нажмите "PDF стр. N" чтобы открыть пункт в PDF');
+                }
             } else {
-                const chapterEl = document.getElementById('doc-chapter-' + parsed.doc + '-' + chapter);
-                if (chapterEl) chapterEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                var chapterElFallback = document.querySelector('[data-doc="' + parsed.doc + '"][data-chapter="' + chapter + '"]');
+                if (chapterElFallback) chapterElFallback.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         }
         // type === 'doc' — просто открываем страницу документа, без прокрутки.
@@ -6729,7 +6506,6 @@
     // Инициализация при загрузке — рендерим закреплённые пункты.
     // Запускаем после готовности DOM.
     document.addEventListener('DOMContentLoaded', renderPinnedItems);
-    document.addEventListener('DOMContentLoaded', initDocFontSize);
 
     // Обработчик системной кнопки «Назад»
     window.addEventListener('popstate', function(e) {

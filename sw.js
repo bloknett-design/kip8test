@@ -11,7 +11,7 @@
 // свежие версии файлов из ASSETS.
 // ============================================================
 
-const CACHE_VERSION = 'kipia-test-v40';
+const CACHE_VERSION = 'kipia-test-v41';
 const CACHE_NAME = CACHE_VERSION;
 
 // Отдельный кэш для картинок Google Drive (превью + полные).
@@ -38,7 +38,11 @@ const ASSETS = [
   './images/4\u0440.png',
   './images/5\u0440.png',
   './images/6\u0440.png',
-  './data/exam-tickets.json'
+  './data/exam-tickets.json',
+  './data/pue.pdf',
+  './data/pteep.pdf',
+  './data/pote.pdf',
+  './data/so153.pdf'
 ];
 
 // App Shell — главный HTML-файл, который обслуживает все навигационные
