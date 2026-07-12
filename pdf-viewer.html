@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Просмотр PDF — КИПиА</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; background: #1a1f26; }
+        body { display: flex; flex-direction: column; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+        
+        /* Панель управления */
+        .pdf-toolbar {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 12px;
+            background: rgba(23, 33, 43, 0.98);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(74, 143, 199, 0.15);
+            flex-shrink: 0;
+            z-index: 10;
+        }
+        .pdf-toolbar-btn {
+            width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            background: transparent;
+            border: 1px solid rgba(74, 143, 199, 0.2);
+            border-radius: 8px;
+            color: rgba(180, 200, 220, 0.9);
+            font-size: 18px; font-weight: 700;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+        .pdf-toolbar-btn:active { background: rgba(74, 143, 199, 0.12); transform: scale(0.92); }
+        .pdf-toolbar-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .pdf-page-info {
+            flex: 1;
+            text-align: center;
+            font-size: 14px; font-weight: 600;
+            color: rgba(180, 200, 220, 0.7);
+            min-width: 60px;
+        }
+        .pdf-title {
+            flex: 1;
+            font-size: 13px; font-weight: 600;
+            color: rgba(180, 200, 220, 0.5);
+            text-align: center;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            padding: 0 8px;
+        }
+        
+        /* Контейнер для canvas */
+        .pdf-viewer-container {
+            flex: 1;
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 8px;
+        }
+        #pdfCanvas {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border-radius: 4px;
+        }
+        
+        /* Загрузка */
+        .pdf-loading {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            display: flex; flex-direction: column; align-items: center; gap: 12px;
+            color: rgba(180, 200, 220, 0.5);
+        }
+        .pdf-spinner {
+            width: 36px; height: 36px;
+            border: 3px solid rgba(74, 143, 199, 0.2);
+            border-top-color: rgba(74, 143, 199, 0.8);
+            border-radius: 50%;
+            animation: pdf-spin 0.8s linear infinite;
+        }
+        @keyframes pdf-spin { to { transform: rotate(360deg); } }
+        .pdf-loading-text { font-size: 13px; }
+        
+        /* Ошибка */
+        .pdf-error {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center; color: #c74a4a; font-size: 14px;
+            max-width: 300px;
+        }
+        .pdf-error a { color: #4a8fc7; display: block; margin-top: 12px; }
+        
+        /* Светлая тема */
+        @media (prefers-color-scheme: light) {
+            html, body { background: #f5f5f0; }
+            .pdf-toolbar { background: rgba(240, 238, 230, 0.98); border-bottom-color: rgba(20,20,19,0.1); }
+            .pdf-toolbar-btn { color: rgba(20,20,19,0.7); border-color: rgba(20,20,19,0.1); }
+            .pdf-page-info, .pdf-title { color: rgba(20,20,19,0.5); }
+        }
+    </style>
+</head>
+<body>
+    <div class="pdf-toolbar">
+        <button class="pdf-toolbar-btn" id="btnPrev" title="Предыдущая страница">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="pdf-page-info" id="pageInfo">— / —</div>
+        <button class="pdf-toolbar-btn" id="btnNext" title="Следующая страница">
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <div class="pdf-title" id="pdfTitle"></div>
+        <button class="pdf-toolbar-btn" id="btnZoomOut" title="Уменьшить">
+            <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <button class="pdf-toolbar-btn" id="btnZoomIn" title="Увеличить">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <button class="pdf-toolbar-btn" id="btnClose" title="Закрыть">
+            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+    </div>
+    <div class="pdf-viewer-container" id="viewerContainer">
+        <canvas id="pdfCanvas"></canvas>
+    </div>
+    <div class="pdf-loading" id="pdfLoading">
+        <div class="pdf-spinner"></div>
+        <div class="pdf-loading-text">Загрузка документа…</div>
+    </div>
+    <div class="pdf-error" id="pdfError" style="display:none;">
+        <div id="errorText">Не удалось загрузить PDF</div>
+        <a href="#" id="errorLink" target="_blank">Открыть PDF напрямую</a>
+    </div>
+
+    <!-- PDF.js -->
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <script>
+        // Конфигурация PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+
+        // Параметры URL
+        const params = new URLSearchParams(window.location.search);
+        const pdfFile = params.get('file') || '';
+        const targetPage = parseInt(params.get('page') || '1', 10);
+        const docTitle = params.get('title') || 'Документ';
+
+        // Состояние
+        let pdfDoc = null;
+        let currentPage = targetPage;
+        let scale = 1.2;
+        let isRendering = false;
+        let pendingPage = null;
+
+        // Элементы
+        const canvas = document.getElementById('pdfCanvas');
+        const ctx = canvas.getContext('2d');
+        const pageInfo = document.getElementById('pageInfo');
+        const pdfTitle = document.getElementById('pdfTitle');
+        const loading = document.getElementById('pdfLoading');
+        const errorDiv = document.getElementById('pdfError');
+        const errorText = document.getElementById('errorText');
+        const errorLink = document.getElementById('errorLink');
+        const container = document.getElementById('viewerContainer');
+
+        pdfTitle.textContent = docTitle;
+
+        // Адаптивный масштаб
+        function getInitialScale() {
+            const containerWidth = container.clientWidth - 16;
+            return Math.max(0.5, Math.min(2.0, containerWidth / 600));
+        }
+
+        // Рендеринг страницы
+        function renderPage(num) {
+            if (isRendering) {
+                pendingPage = num;
+                return;
+            }
+            isRendering = true;
+            
+            pdfDoc.getPage(num).then(function(page) {
+                const viewport = page.getViewport({ scale: scale });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                const renderContext = {
+                    canvasContext: ctx,
+                    viewport: viewport
+                };
+                page.render(renderContext).promise.then(function() {
+                    isRendering = false;
+                    pageInfo.textContent = num + ' / ' + pdfDoc.numPages;
+                    // Прокрутка к началу страницы
+                    container.scrollTop = 0;
+                    // Если есть ожидающая страница — рендерим
+                    if (pendingPage !== null) {
+                        const next = pendingPage;
+                        pendingPage = null;
+                        renderPage(next);
+                    }
+                });
+            }).catch(function(err) {
+                isRendering = false;
+                console.error('Ошибка рендеринга:', err);
+            });
+        }
+
+        // Переход на страницу
+        function goToPage(num) {
+            if (!pdfDoc) return;
+            if (num < 1) num = 1;
+            if (num > pdfDoc.numPages) num = pdfDoc.numPages;
+            currentPage = num;
+            renderPage(num);
+        }
+
+        // Загрузка PDF
+        function loadPDF() {
+            if (!pdfFile) {
+                showError('Не указан файл PDF');
+                return;
+            }
+
+            loading.style.display = 'flex';
+            
+            // Абсолютный URL для PDF
+            const baseUrl = window.location.href.replace('/pdf-viewer.html', '').replace(/\?.*$/, '');
+            const pdfUrl = baseUrl + '/' + pdfFile;
+
+            const loadingTask = pdfjsLib.getDocument(pdfUrl);
+            loadingTask.promise.then(function(doc) {
+                pdfDoc = doc;
+                loading.style.display = 'none';
+                scale = getInitialScale();
+                // Переход на нужную страницу
+                currentPage = Math.min(targetPage, pdfDoc.numPages);
+                renderPage(currentPage);
+            }).catch(function(err) {
+                loading.style.display = 'none';
+                showError('Не удалось загрузить PDF: ' + err.message);
+                errorLink.href = pdfUrl;
+            });
+        }
+
+        function showError(msg) {
+            errorText.textContent = msg;
+            errorDiv.style.display = 'block';
+        }
+
+        // Обработчики кнопок
+        document.getElementById('btnPrev').addEventListener('click', function() {
+            goToPage(currentPage - 1);
+        });
+        document.getElementById('btnNext').addEventListener('click', function() {
+            goToPage(currentPage + 1);
+        });
+        document.getElementById('btnZoomIn').addEventListener('click', function() {
+            scale = Math.min(3.0, scale + 0.25);
+            renderPage(currentPage);
+        });
+        document.getElementById('btnZoomOut').addEventListener('click', function() {
+            scale = Math.max(0.4, scale - 0.25);
+            renderPage(currentPage);
+        });
+        document.getElementById('btnClose').addEventListener('click', function() {
+            window.history.back();
+            // Если history.back() не сработает (прямое открытие)
+            setTimeout(function() { window.close(); }, 300);
+        });
+
+        // Свайпы влево/вправо для перелистывания
+        let touchStartX = 0;
+        let touchEndX = 0;
+        container.addEventListener('touchstart', function(e) {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+        container.addEventListener('touchend', function(e) {
+            touchEndX = e.changedTouches[0].screenX;
+            const diff = touchStartX - touchEndX;
+            // Только если свайп горизонтальный и страница не прокручена
+            if (Math.abs(diff) > 60 && container.scrollTop === 0) {
+                if (diff > 0) {
+                    goToPage(currentPage + 1); // Свайп влево — следующая
+                } else {
+                    goToPage(currentPage - 1); // Свайп вправо — предыдущая
+                }
+            }
+        });
+
+        // Загрузка
+        loadPDF();
+    </script>
+</body>
+</html>
