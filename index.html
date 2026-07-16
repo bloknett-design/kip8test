@@ -327,6 +327,11 @@
     .menu-btn-row { display: grid; grid-template-columns: 1fr; gap: 2px; padding: 8px 8px 10px; position: relative; z-index: 2; }
     #page-dashboard .menu-btn-row { display: grid; grid-template-columns: 1fr; gap: 2px; padding: 8px 8px 10px; }
 
+    /* Контейнер для SVG-схем в разделах Геометрии — точно по шаблону: */
+    /* светло-голубые линии, белые подписи, двусторонние стрелки, тёмный фон */
+    .geo-svg-container { text-align: center; padding: 10px 16px 4px; }
+    .geo-svg { max-width: 220px; width: 55%; height: auto; opacity: 0.98; }
+
     /* ===== Группы блоков на главной странице ===== */
     /* Контейнер группы с рамкой и заголовком цвета палитры */
     .dashboard-group {
@@ -1832,6 +1837,80 @@
         50% { box-shadow: 0 0 20px 4px rgba(199,150,74,0.3); }
         100% { box-shadow: none; }
     }
+
+    /* ===== Телефонный справочник ===== */
+    .pb-search-wrap {
+        padding: 8px 8px 6px;
+        position: sticky; top: 0;
+        background: var(--bg-deep, #0d1b2a);
+        z-index: 3;
+        backdrop-filter: blur(8px);
+    }
+    [data-theme="light"] .pb-search-wrap { background: #f3ecdc; }
+    .pb-search-input {
+        width: 100%; box-sizing: border-box;
+        padding: 10px 14px 10px 36px;
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 10px;
+        background: rgba(255,255,255,0.04) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a0b4c8' stroke-width='2'><circle cx='11' cy='11' r='7'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>") no-repeat 12px center / 14px;
+        color: #e0e0e0; font-size: 14px; font-family: 'Inter', sans-serif;
+        outline: none; transition: border-color 0.15s;
+    }
+    [data-theme="light"] .pb-search-input {
+        background-color: #fbf6ea;
+        border-color: rgba(20,20,19,0.18); color: #1a1a1a;
+    }
+    .pb-search-input:focus { border-color: rgba(199,150,74,0.55); }
+    .pb-search-input::placeholder { color: rgba(255,255,255,0.3); }
+    [data-theme="light"] .pb-search-input::placeholder { color: rgba(20,20,19,0.4); }
+    .pb-info { padding: 6px 16px 4px; font-size: 11px; color: rgba(255,255,255,0.35); text-align: center; }
+    [data-theme="light"] .pb-info { color: rgba(20,20,19,0.5); }
+    .pb-section {
+        margin: 6px 8px 10px;
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 12px;
+        background: rgba(255,255,255,0.015);
+        overflow: hidden;
+    }
+    [data-theme="light"] .pb-section {
+        border-color: rgba(20,20,19,0.1);
+        background: rgba(255,255,255,0.55);
+    }
+    .pb-section-title {
+        padding: 9px 14px;
+        font-size: 12px; font-weight: 600;
+        color: #c7964a;
+        background: rgba(199,150,74,0.06);
+        border-bottom: 1px solid rgba(199,150,74,0.12);
+        letter-spacing: 0.2px;
+    }
+    [data-theme="light"] .pb-section-title { background: rgba(199,150,74,0.1); }
+    .pb-card {
+        padding: 9px 14px;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        display: flex; flex-direction: column; gap: 3px;
+        cursor: default;
+    }
+    [data-theme="light"] .pb-card { border-bottom-color: rgba(20,20,19,0.06); }
+    .pb-card:last-child { border-bottom: none; }
+    .pb-card-name { font-size: 14px; font-weight: 500; color: #e0e0e0; line-height: 1.3; }
+    [data-theme="light"] .pb-card-name { color: #1a1a1a; }
+    .pb-card-pos { font-size: 12px; color: rgba(255,255,255,0.45); line-height: 1.3; }
+    [data-theme="light"] .pb-card-pos { color: rgba(20,20,19,0.55); }
+    .pb-card-phone {
+        font-size: 13px; color: #6aa6e0; font-weight: 500;
+        font-feature-settings: "tnum"; font-variant-numeric: tabular-nums;
+    }
+    [data-theme="light"] .pb-card-phone { color: #2a5d8f; }
+    .pb-card mark {
+        background: rgba(199,150,74,0.25);
+        color: inherit; padding: 0 1px; border-radius: 2px;
+    }
+    .pb-empty {
+        padding: 40px 20px; text-align: center;
+        color: rgba(255,255,255,0.4); font-size: 13px;
+    }
+    [data-theme="light"] .pb-empty { color: rgba(20,20,19,0.5); }
     .header-title {
         cursor: pointer; user-select: none; -webkit-user-select: none;
         -webkit-touch-callout: none; touch-action: manipulation;
@@ -2230,6 +2309,10 @@
             <div class="menu-btn-row">
                 <div class="menu-btn menu-btn-secret" id="minesweeperBtn" onclick="navigateTo('minesweeper')" style="border-color:rgba(199,150,74,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#c7964a;">Сапёр</div></div></div>
             </div>
+            <!-- Секретная кнопка «Телефонный справочник» — открывается тем же жестом. -->
+            <div class="menu-btn-row">
+                <div class="menu-btn menu-btn-secret" id="phonebookBtn" onclick="navigateTo('phonebook')" style="border-color:rgba(74,143,199,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#6aa6e0;">Телефонный справочник</div><div class="menu-btn-sublabel">ООО ПО «ТОКЕМ»</div></div><i class="menu-btn-arrow" style="color:rgba(74,143,199,0.4);">›</i></div>
+            </div>
         </div>
 
         <!-- ======================== ИНЖЕНЕРНЫЕ КАЛЬКУЛЯТОРЫ (родительское меню) ======================== -->
@@ -2320,6 +2403,17 @@
                 </div>
                 <div class="ms-hint">Нажмите — открыть клетку · Долгое нажатие — поставить флаг</div>
             </div>
+        </div>
+
+        <!-- ======================== ТЕЛЕФОННЫЙ СПРАВОЧНИК ======================== -->
+        <div id="page-phonebook" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-title">Телефонный справочник</div></div>
+            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="pb-search-wrap">
+                <input type="search" id="pbSearchInput" class="pb-search-input" placeholder="Поиск: имя, должность, телефон…" autocomplete="off" enterkeyhint="search" oninput="pbRender()">
+            </div>
+            <div class="pb-info" id="pbInfo">Загрузка…</div>
+            <div id="pbList"></div>
         </div>
 
         <!-- ======================== КОНВЕРТЕР ЕДИНИЦ ======================== -->
@@ -2576,8 +2670,18 @@
         <div id="page-geo-circle" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-title">Круг</div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
-            <div style="text-align:center; padding: 12px 16px 0;">
-            </div>
+            <div class="geo-svg-container"><svg viewBox="0 0 140 140" class="geo-svg" font-family="Inter, sans-serif">
+<defs>
+<marker id="gc-as" markerWidth="8" markerHeight="8" refX="3" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M7,1 L3,4 L7,7" fill="none" stroke="#5a9fd4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="gc-ae" markerWidth="8" markerHeight="8" refX="5" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L5,4 L1,7" fill="none" stroke="#5a9fd4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+<circle cx="70" cy="70" r="42" fill="none" stroke="#5a9fd4" stroke-width="2"/>
+<line x1="28" y1="70" x2="112" y2="70" stroke="#5a9fd4" stroke-width="1.2" marker-start="url(#gc-as)" marker-end="url(#gc-ae)"/>
+<text x="70" y="86" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="500">D</text>
+<line x1="70" y1="70" x2="99.7" y2="40.3" stroke="#5a9fd4" stroke-width="1.2" marker-end="url(#gc-ae)"/>
+<text x="92" y="50" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="500">R</text>
+<circle cx="70" cy="70" r="2.6" fill="#5a9fd4"/>
+</svg></div>
             <div class="scale-form">
                 <div class="scale-form-label">Диаметр D</div>
                 <input type="text" inputmode="numeric" id="gc_diameter" class="scale-field" value="100" placeholder="мм" autocomplete="off" enterkeyhint="done" oninput="validateNumericField(this)">
@@ -2590,8 +2694,19 @@
         <div id="page-geo-ring" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-title">Кольцо</div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
-            <div style="text-align:center; padding: 12px 16px 0;">
-            </div>
+            <div class="geo-svg-container"><svg viewBox="0 0 140 140" class="geo-svg" font-family="Inter, sans-serif">
+<defs>
+<marker id="gr-as" markerWidth="8" markerHeight="8" refX="3" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M7,1 L3,4 L7,7" fill="none" stroke="#5a9fd4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="gr-ae" markerWidth="8" markerHeight="8" refX="5" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L5,4 L1,7" fill="none" stroke="#5a9fd4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+<circle cx="70" cy="70" r="42" fill="none" stroke="#5a9fd4" stroke-width="2"/>
+<circle cx="70" cy="70" r="24" fill="none" stroke="#5a9fd4" stroke-width="2"/>
+<line x1="29" y1="64" x2="111" y2="64" stroke="#5a9fd4" stroke-width="1.2" marker-start="url(#gr-as)" marker-end="url(#gr-ae)"/>
+<text x="70" y="58" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="500">D</text>
+<line x1="48" y1="78" x2="92" y2="78" stroke="#5a9fd4" stroke-width="1.2" marker-start="url(#gr-as)" marker-end="url(#gr-ae)"/>
+<text x="70" y="90" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="500">d</text>
+<circle cx="70" cy="70" r="2.6" fill="#5a9fd4"/>
+</svg></div>
             <div class="scale-form">
                 <div class="scale-form-label">Наружный диаметр D</div>
                 <input type="text" inputmode="numeric" id="gr_d_outer" class="scale-field" value="100" placeholder="мм" autocomplete="off" enterkeyhint="next" oninput="validateNumericField(this)">
@@ -2608,8 +2723,21 @@
         <div id="page-geo-cylinder" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-title">Цилиндр вертикальный</div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
-            <div style="text-align:center; padding: 12px 16px 0;">
-            </div>
+            <div class="geo-svg-container"><svg viewBox="0 0 140 140" class="geo-svg" font-family="Inter, sans-serif">
+<defs>
+<marker id="gcy-as" markerWidth="8" markerHeight="8" refX="3" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M7,1 L3,4 L7,7" fill="none" stroke="#5a9fd4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="gcy-ae" markerWidth="8" markerHeight="8" refX="5" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L5,4 L1,7" fill="none" stroke="#5a9fd4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+<ellipse cx="70" cy="30" rx="38" ry="8" fill="none" stroke="#5a9fd4" stroke-width="2"/>
+<line x1="32" y1="30" x2="32" y2="108" stroke="#5a9fd4" stroke-width="2"/>
+<line x1="108" y1="30" x2="108" y2="108" stroke="#5a9fd4" stroke-width="2"/>
+<path d="M 32 108 A 38 8 0 0 0 108 108" fill="none" stroke="#5a9fd4" stroke-width="2"/>
+<path d="M 32 108 A 38 8 0 0 1 108 108" fill="none" stroke="#5a9fd4" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.55"/>
+<line x1="32" y1="18" x2="108" y2="18" stroke="#5a9fd4" stroke-width="1.2" marker-start="url(#gcy-as)" marker-end="url(#gcy-ae)"/>
+<text x="70" y="12" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="500">D</text>
+<line x1="18" y1="30" x2="18" y2="108" stroke="#5a9fd4" stroke-width="1.2" marker-start="url(#gcy-as)" marker-end="url(#gcy-ae)"/>
+<text x="11" y="69" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="500" transform="rotate(-90 11 69)">H</text>
+</svg></div>
             <div class="scale-form">
                 <div class="scale-form-label">Диаметр D</div>
                 <input type="text" inputmode="numeric" id="gcy_diameter" class="scale-field" value="2" placeholder="м" autocomplete="off" enterkeyhint="next" oninput="validateNumericField(this)">
@@ -2626,8 +2754,25 @@
         <div id="page-geo-horiz" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-title">Цилиндр горизонтальный</div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
-            <div style="text-align:center; padding: 12px 16px 0;">
-            </div>
+            <div class="geo-svg-container"><svg viewBox="0 0 160 100" class="geo-svg" font-family="Inter, sans-serif">
+<defs>
+<marker id="gh-as" markerWidth="8" markerHeight="8" refX="3" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M7,1 L3,4 L7,7" fill="none" stroke="#5a9fd4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="gh-ae" markerWidth="8" markerHeight="8" refX="5" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L5,4 L1,7" fill="none" stroke="#5a9fd4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+<path d="M 30 20 A 8 30 0 0 1 30 80" fill="none" stroke="#5a9fd4" stroke-width="2"/>
+<path d="M 30 20 A 8 30 0 0 0 30 80" fill="none" stroke="#5a9fd4" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.55"/>
+<ellipse cx="130" cy="50" rx="8" ry="30" fill="none" stroke="#5a9fd4" stroke-width="2"/>
+<line x1="30" y1="20" x2="130" y2="20" stroke="#5a9fd4" stroke-width="2"/>
+<line x1="30" y1="80" x2="130" y2="80" stroke="#5a9fd4" stroke-width="2"/>
+<path d="M 37 66 L 123 66 A 8 30 0 0 1 130 80 L 30 80 A 8 30 0 0 1 37 66 Z" fill="#3a7fbf" fill-opacity="0.5" stroke="none"/>
+<line x1="30" y1="66" x2="130" y2="66" stroke="#5a9fd4" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.55"/>
+<line x1="30" y1="10" x2="130" y2="10" stroke="#5a9fd4" stroke-width="1.2" marker-start="url(#gh-as)" marker-end="url(#gh-ae)"/>
+<text x="80" y="7" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="500">L</text>
+<line x1="14" y1="20" x2="14" y2="80" stroke="#5a9fd4" stroke-width="1.2" marker-start="url(#gh-as)" marker-end="url(#gh-ae)"/>
+<text x="7" y="50" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="500" transform="rotate(-90 7 50)">D</text>
+<line x1="80" y1="80" x2="80" y2="66" stroke="#5a9fd4" stroke-width="1.2" marker-start="url(#gh-as)" marker-end="url(#gh-ae)"/>
+<text x="86" y="73" fill="#ffffff" font-size="12" font-weight="500" dominant-baseline="middle">h</text>
+</svg></div>
             <div class="scale-form">
                 <div class="scale-form-label">Длина L</div>
                 <input type="text" inputmode="numeric" id="gh_length" class="scale-field" value="5" placeholder="м" autocomplete="off" enterkeyhint="next" oninput="validateNumericField(this)">
@@ -2649,8 +2794,18 @@
         <div id="page-geo-sphere" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-title">Сфера</div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
-            <div style="text-align:center; padding: 12px 16px 0;">
-            </div>
+            <div class="geo-svg-container"><svg viewBox="0 0 140 140" class="geo-svg" font-family="Inter, sans-serif">
+<defs>
+<marker id="gs-as" markerWidth="8" markerHeight="8" refX="3" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M7,1 L3,4 L7,7" fill="none" stroke="#5a9fd4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="gs-ae" markerWidth="8" markerHeight="8" refX="5" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L5,4 L1,7" fill="none" stroke="#5a9fd4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+<circle cx="70" cy="70" r="42" fill="none" stroke="#5a9fd4" stroke-width="2"/>
+<ellipse cx="70" cy="70" rx="42" ry="13" fill="none" stroke="#5a9fd4" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.55"/>
+<ellipse cx="70" cy="70" rx="13" ry="42" fill="none" stroke="#5a9fd4" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.55"/>
+<line x1="28" y1="70" x2="112" y2="70" stroke="#5a9fd4" stroke-width="1.2" marker-start="url(#gs-as)" marker-end="url(#gs-ae)"/>
+<text x="70" y="86" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="500">D</text>
+<circle cx="70" cy="70" r="2.6" fill="#5a9fd4"/>
+</svg></div>
             <div class="scale-form">
                 <div class="scale-form-label">Диаметр D</div>
                 <input type="text" inputmode="numeric" id="gs_diameter" class="scale-field" value="2" placeholder="м" autocomplete="off" enterkeyhint="done" oninput="validateNumericField(this)">
@@ -2663,8 +2818,22 @@
         <div id="page-geo-cone" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-title">Конус</div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
-            <div style="text-align:center; padding: 12px 16px 0;">
-            </div>
+            <div class="geo-svg-container"><svg viewBox="0 0 140 140" class="geo-svg" font-family="Inter, sans-serif">
+<defs>
+<marker id="gco-as" markerWidth="8" markerHeight="8" refX="3" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M7,1 L3,4 L7,7" fill="none" stroke="#5a9fd4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="gco-ae" markerWidth="8" markerHeight="8" refX="5" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L5,4 L1,7" fill="none" stroke="#5a9fd4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+<line x1="28" y1="110" x2="70" y2="18" stroke="#5a9fd4" stroke-width="2"/>
+<line x1="70" y1="18" x2="112" y2="110" stroke="#5a9fd4" stroke-width="2" marker-start="url(#gco-as)" marker-end="url(#gco-ae)"/>
+<path d="M 28 110 A 42 9 0 0 0 112 110" fill="none" stroke="#5a9fd4" stroke-width="2"/>
+<path d="M 28 110 A 42 9 0 0 1 112 110" fill="none" stroke="#5a9fd4" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.55"/>
+<line x1="70" y1="18" x2="70" y2="110" stroke="#5a9fd4" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.55"/>
+<line x1="124" y1="18" x2="124" y2="110" stroke="#5a9fd4" stroke-width="1.2" marker-start="url(#gco-as)" marker-end="url(#gco-ae)"/>
+<text x="131" y="64" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="500" transform="rotate(-90 131 64)">H</text>
+<line x1="28" y1="122" x2="112" y2="122" stroke="#5a9fd4" stroke-width="1.2" marker-start="url(#gco-as)" marker-end="url(#gco-ae)"/>
+<text x="70" y="134" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="500">D</text>
+<text x="96" y="60" fill="#ffffff" font-size="12" font-weight="500" dominant-baseline="middle">L</text>
+</svg></div>
             <div class="scale-form">
                 <div class="scale-form-label">Диаметр основания D</div>
                 <input type="text" inputmode="numeric" id="gco_diameter" class="scale-field" value="2" placeholder="м" autocomplete="off" enterkeyhint="next" oninput="validateNumericField(this)">
@@ -4158,11 +4327,12 @@
         overlay.style.display = 'flex';
     }
 
-    // ===== СЕКРЕТНАЯ КНОПКА САПЁР =====
+    // ===== СЕКРЕТНЫЕ КНОПКИ (САПЁР + ТЕЛЕФОННЫЙ СПРАВОЧНИК) =====
     let secretTapCount = 0;
     let secretTapTimer = null;
     const SECRET_TAP_THRESHOLD = 2;
     let secretTouchHandled = false;
+    const SECRET_BUTTON_IDS = ['minesweeperBtn', 'phonebookBtn'];
     function secretTapHandler() {
         secretTapCount++;
         document.querySelector('.header-title').classList.add('hint-pulse');
@@ -4172,14 +4342,23 @@
         if (secretTapCount >= SECRET_TAP_THRESHOLD) {
             secretTapCount = 0;
             clearTimeout(secretTapTimer);
-            let btn = document.getElementById('minesweeperBtn');
-            if (btn.classList.contains('revealed')) {
-                btn.classList.remove('revealed');
-                if (navigator.vibrate) navigator.vibrate([30,30,30]);
-            } else {
-                btn.classList.add('revealed');
-                if (navigator.vibrate) navigator.vibrate([50,50,100]);
-                btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Все секретные кнопки открываются одним жестом (toggle)
+            const firstBtn = document.getElementById(SECRET_BUTTON_IDS[0]);
+            const willReveal = !firstBtn.classList.contains('revealed');
+            SECRET_BUTTON_IDS.forEach(id => {
+                const btn = document.getElementById(id);
+                if (!btn) return;
+                if (willReveal) {
+                    btn.classList.add('revealed');
+                } else {
+                    btn.classList.remove('revealed');
+                }
+            });
+            if (navigator.vibrate) {
+                navigator.vibrate(willReveal ? [50,50,100] : [30,30,30]);
+            }
+            if (willReveal && firstBtn) {
+                firstBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
     }
@@ -4198,6 +4377,179 @@
             secretTapHandler();
         });
     })();
+
+    // ===== ТЕЛЕФОННЫЙ СПРАВОЧНИК (ООО ПО "ТОКЕМ") =====
+    let pbData = null;          // распарсенный JSON
+    let pbFlat = [];            // плоский массив: {section, position, name, phone}
+    let pbLoaded = false;
+
+    // Нормализация строки для сравнения (lowercase, без лишних пробелов)
+    function pbNorm(s) {
+        return (s || '').toString().toLowerCase().replace(/\s+/g, ' ').trim();
+    }
+    // Экранирование HTML
+    function pbEsc(s) {
+        return (s || '').toString()
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+    // Подсветка совпадения: обёртывает все вхождения query в <mark>
+    function pbMark(text, query) {
+        const safe = pbEsc(text);
+        if (!query) return safe;
+        const q = pbNorm(query);
+        if (!q) return safe;
+        // Экранируем query для RegExp
+        const qEsc = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        // Сравниваем по нормализованной строке, но сохраняем оригинальный регистр
+        const normText = (text || '').toString();
+        const regex = new RegExp(qEsc, 'gi');
+        let result = '';
+        let lastIdx = 0;
+        let m;
+        while ((m = regex.exec(normText)) !== null) {
+            const start = m.index;
+            const end = start + m[0].length;
+            // Экранируем кусок до совпадения
+            result += pbEsc(normText.slice(lastIdx, start));
+            // Совпадение — в <mark>
+            result += '<mark>' + pbEsc(normText.slice(start, end)) + '</mark>';
+            lastIdx = end;
+            // Защита от зацикливания при пустом match
+            if (m.index === regex.lastIndex) regex.lastIndex++;
+        }
+        result += pbEsc(normText.slice(lastIdx));
+        return result;
+    }
+
+    async function pbLoad() {
+        if (pbLoaded) return pbData;
+        try {
+            // Сначала пробуем кэш в localStorage (для офлайна)
+            const cached = localStorage.getItem('kip8test_phonebook_cache');
+            if (cached) {
+                pbData = JSON.parse(cached);
+                pbFlatten();
+                pbLoaded = true;
+                return pbData;
+            }
+            // Иначе грузим из data/phonebook.json
+            const resp = await fetch('data/phonebook.json', { cache: 'no-cache' });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            pbData = await resp.json();
+            try {
+                localStorage.setItem('kip8test_phonebook_cache', JSON.stringify(pbData));
+            } catch (e) { /* квота переполнена — не критично */ }
+            pbFlatten();
+            pbLoaded = true;
+            return pbData;
+        } catch (e) {
+            console.warn('Phonebook load failed:', e);
+            return null;
+        }
+    }
+
+    function pbFlatten() {
+        pbFlat = [];
+        if (!pbData || !pbData.sections) return;
+        for (const secName of Object.keys(pbData.sections)) {
+            for (const item of pbData.sections[secName]) {
+                pbFlat.push({
+                    section: secName,
+                    position: item.position || '',
+                    name: item.name || '',
+                    phone: item.phone || '',
+                });
+            }
+        }
+    }
+
+    function pbRender() {
+        const list = document.getElementById('pbList');
+        const info = document.getElementById('pbInfo');
+        if (!list || !info) return;
+
+        const query = pbNorm((document.getElementById('pbSearchInput')?.value || '').trim());
+
+        if (!pbLoaded) {
+            list.innerHTML = '';
+            info.textContent = 'Загрузка…';
+            return;
+        }
+
+        // Фильтрация
+        let filtered;
+        if (!query) {
+            filtered = pbFlat;
+        } else {
+            filtered = pbFlat.filter(item =>
+                pbNorm(item.name).includes(query) ||
+                pbNorm(item.position).includes(query) ||
+                pbNorm(item.phone).includes(query) ||
+                pbNorm(item.section).includes(query)
+            );
+        }
+
+        // Группировка по секциям (сохраним порядок из pbData.sections)
+        const grouped = {};
+        for (const item of filtered) {
+            if (!grouped[item.section]) grouped[item.section] = [];
+            grouped[item.section].push(item);
+        }
+
+        // Инфо
+        if (query) {
+            info.textContent = 'Найдено: ' + filtered.length + ' ' + pbPlural(filtered.length, ['запись', 'записи', 'записей']);
+        } else {
+            info.textContent = 'Всего: ' + pbFlat.length + ' ' + pbPlural(pbFlat.length, ['запись', 'записи', 'записей']) +
+                               ' · ' + Object.keys(pbData.sections).length + ' подразделений';
+        }
+
+        // Рендер
+        if (filtered.length === 0) {
+            list.innerHTML = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
+            return;
+        }
+
+        let html = '';
+        for (const secName of Object.keys(pbData.sections)) {
+            if (!grouped[secName] || grouped[secName].length === 0) continue;
+            html += '<div class="pb-section">';
+            html += '<div class="pb-section-title">' + pbMark(secName, query) + '</div>';
+            for (const item of grouped[secName]) {
+                html += '<div class="pb-card">';
+                if (item.name) {
+                    html += '<div class="pb-card-name">' + pbMark(item.name, query) + '</div>';
+                }
+                if (item.position) {
+                    html += '<div class="pb-card-pos">' + pbMark(item.position, query) + '</div>';
+                }
+                if (item.phone) {
+                    html += '<div class="pb-card-phone">' + pbMark(item.phone, query) + '</div>';
+                }
+                html += '</div>';
+            }
+            html += '</div>';
+        }
+        list.innerHTML = html;
+    }
+
+    // Простая функция плюарализации для русского языка
+    function pbPlural(n, forms) {
+        const n10 = n % 10;
+        const n100 = n % 100;
+        if (n10 === 1 && n100 !== 11) return forms[0];
+        if (n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20)) return forms[1];
+        return forms[2];
+    }
+
+    // Инициализация при первом открытии страницы
+    function pbInit() {
+        if (pbLoaded) { pbRender(); return; }
+        pbLoad().then(() => pbRender());
+    }
 
     // ИСТОРИЯ И НАВИГАЦИЯ
     let pageHistory = [];
@@ -4811,6 +5163,7 @@
     function navigateTo(page, addToHistory=true) {
         if (page === 'library') { navigateTo('library-internal'); return; }
         if (page === 'minesweeper') { setTimeout(() => { if (typeof msInit === 'function') msInit(); }, 50); }
+        if (page === 'phonebook') { setTimeout(() => { if (typeof pbInit === 'function') pbInit(); }, 30); }
         if (TICKET_IDS.includes(page)) { setTimeout(() => initTicketsPage(page), 30); }
         if (page === 'exam-tickets') { setTimeout(() => loadTicketsData(), 30); }
         // Снять блокировку прокрутки и закрыть открытые билеты при уходе со страницы
