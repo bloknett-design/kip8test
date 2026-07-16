@@ -323,9 +323,9 @@
     .content-header h2 { color: #e0e0e0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
     .content-header p { color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 5px; }
     
-    /* Все menu-btn-row используют grid с gap: 4px — кнопки растянуты на всю ширину, плотно */
-    .menu-btn-row { display: grid; grid-template-columns: 1fr; gap: 4px; padding: 8px 8px 10px; position: relative; z-index: 2; }
-    #page-dashboard .menu-btn-row { display: grid; grid-template-columns: 1fr; gap: 4px; padding: 8px 8px 10px; }
+    /* Все menu-btn-row используют grid с gap: 2px — кнопки растянуты на всю ширину, минимальный зазор */
+    .menu-btn-row { display: grid; grid-template-columns: 1fr; gap: 2px; padding: 8px 8px 10px; position: relative; z-index: 2; }
+    #page-dashboard .menu-btn-row { display: grid; grid-template-columns: 1fr; gap: 2px; padding: 8px 8px 10px; }
 
     /* ===== Группы блоков на главной странице ===== */
     /* Контейнер группы с рамкой и заголовком цвета палитры */
@@ -356,10 +356,10 @@
         border-color: rgba(20,20,19,0.12);
         background: rgba(0,0,0,0.015);
     }
-    #page-dashboard .menu-btn { width: 100%; margin: 0; min-height: 65px; }
+    
     .menu-btn {
         display: flex; align-items: center; justify-content: flex-start; position: relative;
-        width: 100%; min-width: 0; min-height: 44px; padding: 6px 16px; margin: 0;
+        width: 100%; min-width: 0; min-height: 65px; padding: 6px 16px; margin: 0;
         background: var(--card-bg); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
         border: 1px solid var(--card-border); border-radius: 14px; cursor: pointer;
         overflow: hidden; -webkit-user-select: none; user-select: none;
@@ -401,7 +401,6 @@
     }
     /* Схематичное изображение для геометрических калькуляторов.
        Размещается по центру страницы под навигационной панелью. */
-    .geo-image { display: block; max-width: 200px; width: 50%; margin: 12px auto; border-radius: 12px; border: 1px solid var(--card-border); }
     .kit-dev-form { padding: 10px 12px !important; margin: 4px 0 !important; border-radius: 10px !important; }
     .kit-dev-form .scale-form-label { font-size: 10px; margin-bottom: 3px; }
     .kit-dev-form .scale-field { height: 36px !important; padding: 6px 10px !important; margin-bottom: 8px !important; font-size: 12px !important; border-radius: 8px !important; }
@@ -1032,11 +1031,11 @@
     
 
     @media (max-width: 480px) {
-        .menu-btn { width: 100%; margin: 0; padding: 6px 14px; min-height: 52px; }
+        .menu-btn { width: 100%; margin: 0; padding: 6px 14px; min-height: 61px; }
         .menu-btn-label { font-size: 17px; } .menu-btn-sublabel { font-size: 13px; }
         #page-dashboard .menu-btn-label { font-size: 21px; }
         #page-dashboard .menu-btn-sublabel { font-size: 15px; }
-        #page-dashboard .menu-btn { min-height: 61px; }
+        
         .nav-btn { padding: 9px 14px; font-size: 13px; }
         .form-field, .scale-field { padding: 9px 12px; font-size: 14px; height: 40px; }
         select.scale-field, select.form-field { font-size: 13px; height: 40px; min-height: 40px; padding-top: 9px; padding-bottom: 9px; }
@@ -1052,11 +1051,11 @@
         .header-title svg.led-display { height: 36px; }
     }
     @media (max-width: 400px) {
-        .menu-btn { width: 100%; margin: 0; padding: 5px 12px; min-height: 50px; }
+        .menu-btn { width: 100%; margin: 0; padding: 5px 12px; min-height: 57px; }
         .menu-btn-label { font-size: 16px; } .menu-btn-sublabel { font-size: 12px; }
         #page-dashboard .menu-btn-label { font-size: 19px; }
         #page-dashboard .menu-btn-sublabel { font-size: 14px; }
-        #page-dashboard .menu-btn { min-height: 57px; }
+        
         /* На 375-400px все тексты умещаются в 1 строку — текущий min-height: 57px достаточен */
         .nav-btn { padding: 8px 12px; font-size: 12px; gap: 5px; }
         .nav-btn svg { width: 12px; height: 12px; }
@@ -1084,14 +1083,14 @@
     /* 341–374px: подзаголовки типа "ГОСТ 8.401-80, ГОСТ OIML R 76-1-2011, ТС, ТП" переносятся на 2 строки.
        min-height: 75px вмещает 1 строку заголовка + 2 строки подзаголовка (padding 5px×2). */
     @media (max-width: 374px) {
-        #page-dashboard .menu-btn { min-height: 75px; }
+        .menu-btn { min-height: 70px; }
     }
 
     /* ≤340px: заголовок "Автоматический выключатель" тоже переносится на 2 строки.
        Уменьшаем шрифт до 17/12px (с 19/14px), чтобы сократить количество переносов и пустое пространство.
        min-height: 68px вмещает 1 строку заголовка + 2 строки подзаголовка при уменьшенном шрифте. */
     @media (max-width: 340px) {
-        #page-dashboard .menu-btn { min-height: 68px; }
+        .menu-btn { min-height: 68px; }
         #page-dashboard .menu-btn-label { font-size: 17px; }
         #page-dashboard .menu-btn-sublabel { font-size: 12px; }
     }
@@ -1099,7 +1098,7 @@
     /* ≤300px: на очень узких экранах (280-300px) даже с уменьшенным шрифтом "Автоматический выключатель"
        переносится на 2 строки + 2 строки подзаголовка. min-height: 89px для баланса. */
     @media (max-width: 300px) {
-        #page-dashboard .menu-btn { min-height: 89px; }
+        .menu-btn { min-height: 75px; }
     }
 
     @media (min-width: 481px) { .menu-btn { max-width: 480px; } }
@@ -1116,14 +1115,8 @@
     .page-inline-header-title { font-size: 18px; font-weight: 700; color: #e0e0e0; letter-spacing: -0.3px; }
     #page-dashboard ~ .app-header, body:has(#page-dashboard.active) .app-header { display: block; }
     body:has(.page-content.active:not(#page-dashboard)) .app-header { display: none; }
-
-
-
-
     .greek-gamma { font-family: Georgia, 'Times New Roman', serif; font-style: italic; text-transform: none; }
     .greek-delta { font-family: Georgia, 'Times New Roman', serif; font-style: italic; text-transform: none; }
-
-
     /* Sidebar */
     .sidebar-overlay {
         position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -2584,7 +2577,6 @@
             <div class="page-inline-header"><div class="page-inline-header-title">Круг</div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
             <div style="text-align:center; padding: 12px 16px 0;">
-                <img src="images/geo-circle.png" alt="Схема круга" class="geo-image">
             </div>
             <div class="scale-form">
                 <div class="scale-form-label">Диаметр D</div>
@@ -2599,7 +2591,6 @@
             <div class="page-inline-header"><div class="page-inline-header-title">Кольцо</div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
             <div style="text-align:center; padding: 12px 16px 0;">
-                <img src="images/geo-ring.png" alt="Схема кольца" class="geo-image">
             </div>
             <div class="scale-form">
                 <div class="scale-form-label">Наружный диаметр D</div>
@@ -2618,7 +2609,6 @@
             <div class="page-inline-header"><div class="page-inline-header-title">Цилиндр вертикальный</div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
             <div style="text-align:center; padding: 12px 16px 0;">
-                <img src="images/geo-cylinder.png" alt="Схема вертикального цилиндра" class="geo-image">
             </div>
             <div class="scale-form">
                 <div class="scale-form-label">Диаметр D</div>
@@ -2637,7 +2627,6 @@
             <div class="page-inline-header"><div class="page-inline-header-title">Цилиндр горизонтальный</div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
             <div style="text-align:center; padding: 12px 16px 0;">
-                <img src="images/geo-horiz-cyl.png" alt="Схема горизонтального цилиндра" class="geo-image">
             </div>
             <div class="scale-form">
                 <div class="scale-form-label">Длина L</div>
@@ -2661,7 +2650,6 @@
             <div class="page-inline-header"><div class="page-inline-header-title">Сфера</div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
             <div style="text-align:center; padding: 12px 16px 0;">
-                <img src="images/geo-sphere.png" alt="Схема сферы" class="geo-image">
             </div>
             <div class="scale-form">
                 <div class="scale-form-label">Диаметр D</div>
@@ -2676,7 +2664,6 @@
             <div class="page-inline-header"><div class="page-inline-header-title">Конус</div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
             <div style="text-align:center; padding: 12px 16px 0;">
-                <img src="images/geo-cone.png" alt="Схема конуса" class="geo-image">
             </div>
             <div class="scale-form">
                 <div class="scale-form-label">Диаметр основания D</div>
@@ -3891,8 +3878,6 @@
         </div>
     </div>
 </div>
-
-
 
 <div id="toast" class="toast"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg><span id="toastMessage"></span></div>
 
