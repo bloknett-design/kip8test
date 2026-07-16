@@ -1939,6 +1939,36 @@
     .pb-list.searching .pb-section-title {
         cursor: default;
     }
+    /* Подзаголовок группы (второй уровень) внутри секции */
+    .pb-subgroup {
+        border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    [data-theme="light"] .pb-subgroup { border-top-color: rgba(20,20,19,0.08); }
+    .pb-subgroup:first-child { border-top: none; }
+    .pb-subgroup-title {
+        padding: 8px 14px 6px;
+        font-size: 11px; font-weight: 600;
+        color: rgba(106,166,224,0.85);
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        background: rgba(106,166,224,0.04);
+        display: flex; justify-content: space-between; align-items: center;
+        gap: 8px;
+    }
+    [data-theme="light"] .pb-subgroup-title {
+        color: rgba(42,93,143,0.85);
+        background: rgba(42,93,143,0.06);
+    }
+    .pb-subgroup-count {
+        font-size: 10px; font-weight: 400;
+        color: rgba(106,166,224,0.5);
+        text-transform: none;
+        font-feature-settings: "tnum";
+    }
+    [data-theme="light"] .pb-subgroup-count { color: rgba(42,93,143,0.5); }
+    .pb-subgroup-body {
+        /* контейнер для карточек внутри группы */
+    }
     .pb-card {
         padding: 9px 14px;
         border-bottom: 1px solid rgba(255,255,255,0.04);
@@ -4565,7 +4595,10 @@
     const PB_NOTES_KEY = 'kip8test_phonebook_notes';
 
     function pbMakeId(item) {
-        return (item.section || '') + '|' + (item.name || '') + '|' + (item.phone || '');
+        // ID строится из header + group + position + name + phone для уникальности.
+        // Старые ID (section|name|phone) больше не используются — структура изменилась.
+        return (item.header || '') + '|' + (item.group || '') + '|' +
+               (item.position || '') + '|' + (item.name || '') + '|' + (item.phone || '');
     }
     function pbLoadFavorites() {
         try {
@@ -4636,12 +4669,17 @@
         return result;
     }
 
+    // Версия кэша phonebook в localStorage. При изменении структуры данных —
+    // инкрементировать, чтобы старый кэш автоматически сбросился.
+    const PB_CACHE_VERSION = 'v2-header-group';
+
     async function pbLoad() {
         if (pbLoaded) return pbData;
         try {
-            // Сначала пробуем кэш в localStorage (для офлайна)
+            // Сначала пробуем кэш в localStorage (для офлайна) — с проверкой версии
+            const cachedVer = localStorage.getItem('kip8test_phonebook_cache_ver');
             const cached = localStorage.getItem('kip8test_phonebook_cache');
-            if (cached) {
+            if (cached && cachedVer === PB_CACHE_VERSION) {
                 pbData = JSON.parse(cached);
                 pbFlatten();
                 pbLoaded = true;
@@ -4653,6 +4691,7 @@
             pbData = await resp.json();
             try {
                 localStorage.setItem('kip8test_phonebook_cache', JSON.stringify(pbData));
+                localStorage.setItem('kip8test_phonebook_cache_ver', PB_CACHE_VERSION);
             } catch (e) { /* квота переполнена — не критично */ }
             pbFlatten();
             pbLoaded = true;
@@ -4666,10 +4705,11 @@
     function pbFlatten() {
         pbFlat = [];
         if (!pbData || !pbData.sections) return;
-        for (const secName of Object.keys(pbData.sections)) {
-            for (const item of pbData.sections[secName]) {
+        for (const header of Object.keys(pbData.sections)) {
+            for (const item of pbData.sections[header]) {
                 pbFlat.push({
-                    section: secName,
+                    header: header,
+                    group: item.group || null,
                     position: item.position || '',
                     name: item.name || '',
                     phone: item.phone || '',
@@ -4704,27 +4744,29 @@
                 pbNorm(item.name).includes(query) ||
                 pbNorm(item.position).includes(query) ||
                 pbNorm(item.phone).includes(query) ||
-                pbNorm(item.section).includes(query)
+                pbNorm(item.header).includes(query) ||
+                (item.group && pbNorm(item.group).includes(query))
             );
         }
 
-        // Группировка по секциям (сохраним порядок из pbData.sections)
-        const grouped = {};
+        // Группировка по header'ам (верхний уровень) с сохранением порядка
+        const groupedByHeader = {};
         for (const item of filtered) {
-            if (!grouped[item.section]) grouped[item.section] = [];
-            grouped[item.section].push(item);
+            if (!groupedByHeader[item.header]) groupedByHeader[item.header] = [];
+            groupedByHeader[item.header].push(item);
         }
 
         // Инфо
         let infoParts = [];
+        const headerCount = Object.keys(groupedByHeader).length;
         if (pbFilterFavOnly) {
             infoParts.push('Избранные: ' + filtered.length + ' ' + pbPlural(filtered.length, ['запись', 'записи', 'записей']));
         } else if (query) {
             infoParts.push('Найдено: ' + filtered.length + ' ' + pbPlural(filtered.length, ['запись', 'записи', 'записей']) +
-                           ' в ' + Object.keys(grouped).length + ' ' + pbPlural(Object.keys(grouped).length, ['подразделении', 'подразделениях', 'подразделениях']));
+                           ' в ' + headerCount + ' ' + pbPlural(headerCount, ['организации', 'организациях', 'организациях']));
         } else {
             infoParts.push('Всего: ' + pbFlat.length + ' ' + pbPlural(pbFlat.length, ['запись', 'записи', 'записей']) +
-                           ' · ' + Object.keys(pbData.sections).length + ' подразделений');
+                           ' · ' + Object.keys(pbData.sections).length + ' организаций');
             const favCount = pbGetFavoritesCount();
             if (favCount > 0) {
                 infoParts.push(' · избранное: ' + favCount);
@@ -4753,55 +4795,92 @@
         }
 
         let html = '';
-        for (const secName of Object.keys(pbData.sections)) {
-            if (!grouped[secName] || grouped[secName].length === 0) continue;
-            const count = grouped[secName].length;
-            // В режиме поиска/фильтра — секция раскрыта (через класс .searching на списке).
-            // В обычном режиме — сохраняем состояние раскрытия по secName.
-            const isExpanded = forceExpand ? true : (pbExpandedSections[secName] === true);
-            html += '<div class="pb-section' + (isExpanded ? ' expanded' : '') + '" data-section="' + pbEsc(secName) + '">';
+        for (const header of Object.keys(pbData.sections)) {
+            if (!groupedByHeader[header] || groupedByHeader[header].length === 0) continue;
+            const items = groupedByHeader[header];
+            const count = items.length;
+
+            // В режиме поиска/фильтра — секция раскрыта. Иначе — сохраняем состояние.
+            const isExpanded = forceExpand ? true : (pbExpandedSections[header] === true);
+            html += '<div class="pb-section' + (isExpanded ? ' expanded' : '') + '" data-section="' + pbEsc(header) + '">';
             html += '<div class="pb-section-title" onclick="pbToggleSection(this)">';
-            html += '<span class="pb-section-title-text">' + pbMark(secName, query) + '</span>';
+            html += '<span class="pb-section-title-text">' + pbMark(header, query) + '</span>';
             html += '<span class="pb-section-title-count">' + count + '</span>';
             html += '<span class="pb-section-arrow"></span>';
             html += '</div>';
             html += '<div class="pb-section-body">';
-            for (const item of grouped[secName]) {
-                const id = pbMakeId(item);
-                const isFav = pbIsFavorite(id);
-                const note = pbGetNote(id);
-                html += '<div class="pb-card" data-id="' + pbEsc(id) + '">';
-                html += '<div class="pb-card-top">';
-                html += '<div class="pb-card-top-text">';
-                if (item.name) {
-                    html += '<div class="pb-card-name">' + pbMark(item.name, query) + '</div>';
+
+            // Внутри секции — группировка по group (второй уровень)
+            // Сначала записи без группы (group === null), потом — по группам в порядке появления
+            const groupedByGroup = {};
+            const groupOrder = []; // порядок групп (включая null для записей без группы)
+            for (const item of items) {
+                const g = item.group || null;
+                if (!(g in groupedByGroup)) {
+                    groupedByGroup[g] = [];
+                    groupOrder.push(g);
                 }
-                if (item.position) {
-                    html += '<div class="pb-card-pos">' + pbMark(item.position, query) + '</div>';
+                groupedByGroup[g].push(item);
+            }
+
+            // Показываем подзаголовки групп, если:
+            // - есть хотя бы одна именованная группа (group !== null), ИЛИ
+            // - есть несколько разных групп
+            // "Без группы" показываем только если в секции есть и именованные группы.
+            const hasAnyNamedGroup = groupOrder.some(g => g !== null);
+            const hasMultipleGroups = groupOrder.length > 1 || hasAnyNamedGroup;
+
+            for (const g of groupOrder) {
+                if (hasMultipleGroups) {
+                    // Подзаголовок группы (второй уровень)
+                    const groupLabel = g === null ? 'Без группы' : g;
+                    const groupCount = groupedByGroup[g].length;
+                    html += '<div class="pb-subgroup">';
+                    html += '<div class="pb-subgroup-title">' + pbMark(groupLabel, query) +
+                            '<span class="pb-subgroup-count">' + groupCount + '</span></div>';
+                    html += '<div class="pb-subgroup-body">';
                 }
-                if (item.phone) {
-                    html += '<div class="pb-card-phone">' + pbMark(item.phone, query) + '</div>';
+                for (const item of groupedByGroup[g]) {
+                    const id = pbMakeId(item);
+                    const isFav = pbIsFavorite(id);
+                    const note = pbGetNote(id);
+                    html += '<div class="pb-card" data-id="' + pbEsc(id) + '">';
+                    html += '<div class="pb-card-top">';
+                    html += '<div class="pb-card-top-text">';
+                    if (item.name) {
+                        html += '<div class="pb-card-name">' + pbMark(item.name, query) + '</div>';
+                    }
+                    if (item.position) {
+                        html += '<div class="pb-card-pos">' + pbMark(item.position, query) + '</div>';
+                    }
+                    if (item.phone) {
+                        html += '<div class="pb-card-phone">' + pbMark(item.phone, query) + '</div>';
+                    }
+                    html += '</div>'; // .pb-card-top-text
+                    // Кнопка-звёздочка
+                    html += '<button type="button" class="pb-fav-btn' + (isFav ? ' fav-active' : '') + '" ' +
+                            'aria-label="' + (isFav ? 'Убрать из избранного' : 'Добавить в избранное') + '" ' +
+                            'onclick="pbToggleFavorite(this, event)">' +
+                            '<svg viewBox="0 0 24 24" fill="' + (isFav ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' +
+                            '</button>';
+                    html += '</div>'; // .pb-card-top
+                    // Примечание (если есть) — с кнопкой редактирования
+                    if (note) {
+                        html += '<div class="pb-note">' + pbEsc(note) +
+                                '<button type="button" class="pb-note-edit" aria-label="Редактировать примечание" onclick="pbEditNote(this)">' +
+                                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+                                '</button></div>';
+                    } else {
+                        html += '<button type="button" class="pb-note-add" onclick="pbEditNote(this)">' +
+                                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+                                'добавить примечание</button>';
+                    }
+                    html += '</div>'; // .pb-card
                 }
-                html += '</div>'; // .pb-card-top-text
-                // Кнопка-звёздочка
-                html += '<button type="button" class="pb-fav-btn' + (isFav ? ' fav-active' : '') + '" ' +
-                        'aria-label="' + (isFav ? 'Убрать из избранного' : 'Добавить в избранное') + '" ' +
-                        'onclick="pbToggleFavorite(this, event)">' +
-                        '<svg viewBox="0 0 24 24" fill="' + (isFav ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' +
-                        '</button>';
-                html += '</div>'; // .pb-card-top
-                // Примечание (если есть) — с кнопкой редактирования
-                if (note) {
-                    html += '<div class="pb-note">' + pbEsc(note) +
-                            '<button type="button" class="pb-note-edit" aria-label="Редактировать примечание" onclick="pbEditNote(this)">' +
-                            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
-                            '</button></div>';
-                } else {
-                    html += '<button type="button" class="pb-note-add" onclick="pbEditNote(this)">' +
-                            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
-                            'добавить примечание</button>';
+                if (hasMultipleGroups) {
+                    html += '</div>'; // .pb-subgroup-body
+                    html += '</div>'; // .pb-subgroup
                 }
-                html += '</div>'; // .pb-card
             }
             html += '</div>'; // .pb-section-body
             html += '</div>'; // .pb-section
