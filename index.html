@@ -326,6 +326,19 @@
     /* Все menu-btn-row используют grid с gap: 2px — кнопки растянуты на всю ширину, минимальный зазор */
     .menu-btn-row { display: grid; grid-template-columns: 1fr; gap: 2px; padding: 8px 8px 10px; position: relative; z-index: 2; }
     #page-dashboard .menu-btn-row { display: grid; grid-template-columns: 1fr; gap: 2px; padding: 8px 8px 10px; }
+    /* Секретные кнопки (Сапёр + Телефонный справочник) — две в ряд */
+    .menu-btn-row-secret-pair {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 4px !important;
+    }
+    /* На узких экранах кнопки могут стать слишком маленькими — переключаем в 1 колонку */
+    @media (max-width: 360px) {
+        .menu-btn-row-secret-pair { grid-template-columns: 1fr !important; }
+    }
+    /* На телефонах горизонтальные кнопки должны переносить текст аккуратно */
+    .menu-btn-row-secret-pair .menu-btn { min-width: 0; }
+    .menu-btn-row-secret-pair .menu-btn-label { font-size: 13px; line-height: 1.2; }
+    .menu-btn-row-secret-pair .menu-btn-sublabel { font-size: 10px; }
 
     /* Контейнер для SVG-схем в разделах Геометрии — точно по шаблону: */
     /* светло-голубые линии, белые подписи, двусторонние стрелки, тёмный фон */
@@ -1849,11 +1862,11 @@
     [data-theme="light"] .pb-search-wrap { background: #f3ecdc; }
     .pb-search-input {
         width: 100%; box-sizing: border-box;
-        padding: 10px 14px 10px 36px;
+        padding: 11px 14px 11px 38px;
         border: 1px solid rgba(255,255,255,0.12);
         border-radius: 10px;
-        background: rgba(255,255,255,0.04) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a0b4c8' stroke-width='2'><circle cx='11' cy='11' r='7'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>") no-repeat 12px center / 14px;
-        color: #e0e0e0; font-size: 14px; font-family: 'Inter', sans-serif;
+        background: rgba(255,255,255,0.04) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a0b4c8' stroke-width='2'><circle cx='11' cy='11' r='7'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>") no-repeat 13px center / 15px;
+        color: #e8e8e8; font-size: 15px; font-family: 'Inter', sans-serif;
         outline: none; transition: border-color 0.15s;
     }
     [data-theme="light"] .pb-search-input {
@@ -1861,10 +1874,10 @@
         border-color: rgba(20,20,19,0.18); color: #1a1a1a;
     }
     .pb-search-input:focus { border-color: rgba(199,150,74,0.55); }
-    .pb-search-input::placeholder { color: rgba(255,255,255,0.3); }
+    .pb-search-input::placeholder { color: rgba(255,255,255,0.35); }
     [data-theme="light"] .pb-search-input::placeholder { color: rgba(20,20,19,0.4); }
-    .pb-info { padding: 6px 16px 4px; font-size: 11px; color: rgba(255,255,255,0.35); text-align: center; }
-    [data-theme="light"] .pb-info { color: rgba(20,20,19,0.5); }
+    .pb-info { padding: 6px 16px 4px; font-size: 12px; color: rgba(255,255,255,0.4); text-align: center; }
+    [data-theme="light"] .pb-info { color: rgba(20,20,19,0.55); }
     .pb-section {
         margin: 6px 8px 8px;
         border: 1px solid rgba(255,255,255,0.07);
@@ -1877,8 +1890,8 @@
         background: rgba(255,255,255,0.55);
     }
     .pb-section-title {
-        padding: 11px 36px 11px 14px;
-        font-size: 13px; font-weight: 600;
+        padding: 12px 36px 12px 14px;
+        font-size: 14px; font-weight: 700;
         color: #c7964a;
         background: rgba(199,150,74,0.06);
         border-bottom: 1px solid rgba(199,150,74,0.12);
@@ -1899,8 +1912,8 @@
         overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     .pb-section-title-count {
-        font-size: 11px; font-weight: 400;
-        color: rgba(199,150,74,0.55);
+        font-size: 12px; font-weight: 500;
+        color: rgba(199,150,74,0.6);
         font-feature-settings: "tnum";
         flex-shrink: 0;
     }
@@ -1946,21 +1959,21 @@
     [data-theme="light"] .pb-subgroup { border-top-color: rgba(20,20,19,0.08); }
     .pb-subgroup:first-child { border-top: none; }
     .pb-subgroup-title {
-        padding: 8px 14px 6px;
-        font-size: 11px; font-weight: 600;
+        padding: 9px 14px 7px;
+        font-size: 12px; font-weight: 600;
         color: rgba(106,166,224,0.85);
         letter-spacing: 0.3px;
         text-transform: uppercase;
-        background: rgba(106,166,224,0.04);
+        background: rgba(106,166,224,0.05);
         display: flex; justify-content: space-between; align-items: center;
         gap: 8px;
     }
     [data-theme="light"] .pb-subgroup-title {
         color: rgba(42,93,143,0.85);
-        background: rgba(42,93,143,0.06);
+        background: rgba(42,93,143,0.07);
     }
     .pb-subgroup-count {
-        font-size: 10px; font-weight: 400;
+        font-size: 11px; font-weight: 400;
         color: rgba(106,166,224,0.5);
         text-transform: none;
         font-feature-settings: "tnum";
@@ -1969,21 +1982,61 @@
     .pb-subgroup-body {
         /* контейнер для карточек внутри группы */
     }
+    /* Подзаголовок подгруппы (третий уровень) внутри группы */
+    .pb-subsubgroup {
+        border-top: 1px dashed rgba(255,255,255,0.04);
+    }
+    [data-theme="light"] .pb-subsubgroup { border-top-color: rgba(20,20,19,0.06); }
+    .pb-subsubgroup:first-child { border-top: none; }
+    .pb-subsubgroup-title {
+        padding: 7px 14px 5px 18px;
+        font-size: 11px; font-weight: 600;
+        color: rgba(199,150,74,0.7);
+        letter-spacing: 0.2px;
+        background: rgba(199,150,74,0.03);
+        display: flex; justify-content: space-between; align-items: center;
+        gap: 8px;
+    }
+    [data-theme="light"] .pb-subsubgroup-title {
+        color: rgba(150,100,40,0.75);
+        background: rgba(199,150,74,0.06);
+    }
+    .pb-subsubgroup-count {
+        font-size: 10px; font-weight: 400;
+        color: rgba(199,150,74,0.5);
+        font-feature-settings: "tnum";
+    }
+    [data-theme="light"] .pb-subsubgroup-count { color: rgba(150,100,40,0.5); }
     .pb-card {
-        padding: 9px 14px;
+        padding: 10px 14px;
         border-bottom: 1px solid rgba(255,255,255,0.04);
         display: flex; flex-direction: column; gap: 3px;
         cursor: default;
+        transition: background 0.15s;
+    }
+    /* Зебра-фон для зрительного разделения карточек */
+    .pb-card-even {
+        background: rgba(255,255,255,0.012);
+    }
+    .pb-card-odd {
+        background: rgba(255,255,255,0.035);
+    }
+    [data-theme="light"] .pb-card-even {
+        background: rgba(255,255,255,0.5);
+    }
+    [data-theme="light"] .pb-card-odd {
+        background: rgba(20,20,19,0.04);
     }
     [data-theme="light"] .pb-card { border-bottom-color: rgba(20,20,19,0.06); }
     .pb-card:last-child { border-bottom: none; }
-    .pb-card-name { font-size: 14px; font-weight: 500; color: #e0e0e0; line-height: 1.3; }
+    .pb-card-name { font-size: 16px; font-weight: 600; color: #e8e8e8; line-height: 1.3; }
     [data-theme="light"] .pb-card-name { color: #1a1a1a; }
-    .pb-card-pos { font-size: 12px; color: rgba(255,255,255,0.45); line-height: 1.3; }
-    [data-theme="light"] .pb-card-pos { color: rgba(20,20,19,0.55); }
+    .pb-card-pos { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.3; }
+    [data-theme="light"] .pb-card-pos { color: rgba(20,20,19,0.6); }
     .pb-card-phone {
-        font-size: 13px; color: #6aa6e0; font-weight: 500;
+        font-size: 15px; color: #6aa6e0; font-weight: 600;
         font-feature-settings: "tnum"; font-variant-numeric: tabular-nums;
+        letter-spacing: 0.3px;
     }
     [data-theme="light"] .pb-card-phone { color: #2a5d8f; }
     .pb-card mark {
@@ -2019,19 +2072,19 @@
     /* Примечание к контакту */
     .pb-note {
         margin-top: 6px;
-        padding: 6px 10px;
-        background: rgba(199,150,74,0.08);
-        border-left: 2px solid rgba(199,150,74,0.4);
+        padding: 7px 30px 7px 12px;
+        background: rgba(199,150,74,0.1);
+        border-left: 3px solid rgba(199,150,74,0.45);
         border-radius: 4px;
-        font-size: 12px;
-        color: rgba(255,255,255,0.7);
-        line-height: 1.35;
+        font-size: 13px;
+        color: rgba(255,255,255,0.75);
+        line-height: 1.4;
         position: relative;
         word-wrap: break-word; overflow-wrap: break-word;
     }
     [data-theme="light"] .pb-note {
-        background: rgba(199,150,74,0.1);
-        color: rgba(20,20,19,0.7);
+        background: rgba(199,150,74,0.12);
+        color: rgba(20,20,19,0.75);
     }
     .pb-note-edit {
         position: absolute; top: 4px; right: 4px;
@@ -2048,7 +2101,7 @@
     /* Кнопка "Добавить примечание" */
     .pb-note-add {
         margin-top: 6px;
-        font-size: 11px; color: rgba(106,166,224,0.7);
+        font-size: 12px; color: rgba(106,166,224,0.7);
         background: transparent; border: none; cursor: pointer;
         padding: 2px 0;
         display: inline-flex; align-items: center; gap: 4px;
@@ -2056,7 +2109,7 @@
     }
     [data-theme="light"] .pb-note-add { color: rgba(42,93,143,0.8); }
     .pb-note-add:active { opacity: 0.7; }
-    .pb-note-add svg { width: 10px; height: 10px; }
+    .pb-note-add svg { width: 11px; height: 11px; }
     /* Панель фильтров над списком */
     .pb-toolbar {
         padding: 4px 8px 6px;
@@ -2065,12 +2118,12 @@
     }
     .pb-filter-btn {
         display: inline-flex; align-items: center; gap: 6px;
-        padding: 6px 12px;
+        padding: 7px 14px;
         border: 1px solid rgba(240,181,60,0.25);
         border-radius: 18px;
         background: rgba(240,181,60,0.04);
         color: rgba(240,181,60,0.8);
-        font-size: 12px; font-weight: 500;
+        font-size: 13px; font-weight: 500;
         font-family: 'Inter', sans-serif;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
@@ -2499,13 +2552,11 @@
             <!-- ===== Закреплённые пользователем подразделы ===== -->
             <div id="pinnedItemsContainer" class="pinned-items-container"></div>
 
-            <!-- Секретная кнопка «Сапёр» — скрыта по умолчанию.
-                 Открывается 2 тапами по заголовку приложения. -->
-            <div class="menu-btn-row">
+            <!-- Секретные кнопки «Сапёр» и «Телефонный справочник» — скрыты по умолчанию.
+                 Открываются 2 тапами по заголовку приложения.
+                 Объединены в один menu-btn-row, чтобы стояли рядом друг с другом. -->
+            <div class="menu-btn-row menu-btn-row-secret-pair">
                 <div class="menu-btn menu-btn-secret" id="minesweeperBtn" onclick="navigateTo('minesweeper')" style="border-color:rgba(199,150,74,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#c7964a;">Сапёр</div></div></div>
-            </div>
-            <!-- Секретная кнопка «Телефонный справочник» — открывается тем же жестом. -->
-            <div class="menu-btn-row">
                 <div class="menu-btn menu-btn-secret" id="phonebookBtn" onclick="navigateTo('phonebook')" style="border-color:rgba(74,143,199,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#6aa6e0;">Телефонный справочник</div><div class="menu-btn-sublabel">ООО ПО «ТОКЕМ»</div></div><i class="menu-btn-arrow" style="color:rgba(74,143,199,0.4);">›</i></div>
             </div>
         </div>
@@ -4595,9 +4646,8 @@
     const PB_NOTES_KEY = 'kip8test_phonebook_notes';
 
     function pbMakeId(item) {
-        // ID строится из header + group + position + name + phone для уникальности.
-        // Старые ID (section|name|phone) больше не используются — структура изменилась.
-        return (item.header || '') + '|' + (item.group || '') + '|' +
+        // ID строится из header + group + subgroup + position + name + phone для уникальности.
+        return (item.header || '') + '|' + (item.group || '') + '|' + (item.subgroup || '') + '|' +
                (item.position || '') + '|' + (item.name || '') + '|' + (item.phone || '');
     }
     function pbLoadFavorites() {
@@ -4671,7 +4721,7 @@
 
     // Версия кэша phonebook в localStorage. При изменении структуры данных —
     // инкрементировать, чтобы старый кэш автоматически сбросился.
-    const PB_CACHE_VERSION = 'v2-header-group';
+    const PB_CACHE_VERSION = 'v3-header-group-subgroup';
 
     async function pbLoad() {
         if (pbLoaded) return pbData;
@@ -4710,6 +4760,7 @@
                 pbFlat.push({
                     header: header,
                     group: item.group || null,
+                    subgroup: item.subgroup || null,
                     position: item.position || '',
                     name: item.name || '',
                     phone: item.phone || '',
@@ -4745,7 +4796,8 @@
                 pbNorm(item.position).includes(query) ||
                 pbNorm(item.phone).includes(query) ||
                 pbNorm(item.header).includes(query) ||
-                (item.group && pbNorm(item.group).includes(query))
+                (item.group && pbNorm(item.group).includes(query)) ||
+                (item.subgroup && pbNorm(item.subgroup).includes(query))
             );
         }
 
@@ -4810,10 +4862,9 @@
             html += '</div>';
             html += '<div class="pb-section-body">';
 
-            // Внутри секции — группировка по group (второй уровень)
-            // Сначала записи без группы (group === null), потом — по группам в порядке появления
+            // Внутри секции — группировка по group (второй уровень) с сохранением порядка
             const groupedByGroup = {};
-            const groupOrder = []; // порядок групп (включая null для записей без группы)
+            const groupOrder = [];
             for (const item of items) {
                 const g = item.group || null;
                 if (!(g in groupedByGroup)) {
@@ -4823,16 +4874,15 @@
                 groupedByGroup[g].push(item);
             }
 
-            // Показываем подзаголовки групп, если:
-            // - есть хотя бы одна именованная группа (group !== null), ИЛИ
-            // - есть несколько разных групп
-            // "Без группы" показываем только если в секции есть и именованные группы.
+            // Показываем подзаголовки групп, если есть хотя бы одна именованная группа
             const hasAnyNamedGroup = groupOrder.some(g => g !== null);
-            const hasMultipleGroups = groupOrder.length > 1 || hasAnyNamedGroup;
+            const showGroupHeaders = groupOrder.length > 1 || hasAnyNamedGroup;
+
+            // Глобальный счётчик карточек для зебра-фона
+            let cardIndex = 0;
 
             for (const g of groupOrder) {
-                if (hasMultipleGroups) {
-                    // Подзаголовок группы (второй уровень)
+                if (showGroupHeaders) {
                     const groupLabel = g === null ? 'Без группы' : g;
                     const groupCount = groupedByGroup[g].length;
                     html += '<div class="pb-subgroup">';
@@ -4840,44 +4890,77 @@
                             '<span class="pb-subgroup-count">' + groupCount + '</span></div>';
                     html += '<div class="pb-subgroup-body">';
                 }
+
+                // Внутри группы — группировка по subgroup (третий уровень)
+                const groupedBySubgroup = {};
+                const subgroupOrder = [];
                 for (const item of groupedByGroup[g]) {
-                    const id = pbMakeId(item);
-                    const isFav = pbIsFavorite(id);
-                    const note = pbGetNote(id);
-                    html += '<div class="pb-card" data-id="' + pbEsc(id) + '">';
-                    html += '<div class="pb-card-top">';
-                    html += '<div class="pb-card-top-text">';
-                    if (item.name) {
-                        html += '<div class="pb-card-name">' + pbMark(item.name, query) + '</div>';
+                    const sg = item.subgroup || null;
+                    if (!(sg in groupedBySubgroup)) {
+                        groupedBySubgroup[sg] = [];
+                        subgroupOrder.push(sg);
                     }
-                    if (item.position) {
-                        html += '<div class="pb-card-pos">' + pbMark(item.position, query) + '</div>';
-                    }
-                    if (item.phone) {
-                        html += '<div class="pb-card-phone">' + pbMark(item.phone, query) + '</div>';
-                    }
-                    html += '</div>'; // .pb-card-top-text
-                    // Кнопка-звёздочка
-                    html += '<button type="button" class="pb-fav-btn' + (isFav ? ' fav-active' : '') + '" ' +
-                            'aria-label="' + (isFav ? 'Убрать из избранного' : 'Добавить в избранное') + '" ' +
-                            'onclick="pbToggleFavorite(this, event)">' +
-                            '<svg viewBox="0 0 24 24" fill="' + (isFav ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' +
-                            '</button>';
-                    html += '</div>'; // .pb-card-top
-                    // Примечание (если есть) — с кнопкой редактирования
-                    if (note) {
-                        html += '<div class="pb-note">' + pbEsc(note) +
-                                '<button type="button" class="pb-note-edit" aria-label="Редактировать примечание" onclick="pbEditNote(this)">' +
-                                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
-                                '</button></div>';
-                    } else {
-                        html += '<button type="button" class="pb-note-add" onclick="pbEditNote(this)">' +
-                                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
-                                'добавить примечание</button>';
-                    }
-                    html += '</div>'; // .pb-card
+                    groupedBySubgroup[sg].push(item);
                 }
-                if (hasMultipleGroups) {
+
+                const hasAnySubgroup = subgroupOrder.some(sg => sg !== null);
+                const showSubgroupHeaders = subgroupOrder.length > 1 || hasAnySubgroup;
+
+                for (const sg of subgroupOrder) {
+                    if (showSubgroupHeaders && sg !== null) {
+                        const sgCount = groupedBySubgroup[sg].length;
+                        html += '<div class="pb-subsubgroup">';
+                        html += '<div class="pb-subsubgroup-title">' + pbMark(sg, query) +
+                                '<span class="pb-subsubgroup-count">' + sgCount + '</span></div>';
+                        html += '<div class="pb-subsubgroup-body">';
+                    }
+                    for (const item of groupedBySubgroup[sg]) {
+                        const id = pbMakeId(item);
+                        const isFav = pbIsFavorite(id);
+                        const note = pbGetNote(id);
+                        // Зебра: чётная/нечётная карточка
+                        const zebraClass = (cardIndex % 2 === 0) ? ' pb-card-even' : ' pb-card-odd';
+                        cardIndex++;
+                        html += '<div class="pb-card' + zebraClass + '" data-id="' + pbEsc(id) + '">';
+                        html += '<div class="pb-card-top">';
+                        html += '<div class="pb-card-top-text">';
+                        if (item.name) {
+                            html += '<div class="pb-card-name">' + pbMark(item.name, query) + '</div>';
+                        }
+                        if (item.position) {
+                            html += '<div class="pb-card-pos">' + pbMark(item.position, query) + '</div>';
+                        }
+                        if (item.phone) {
+                            html += '<div class="pb-card-phone">' + pbMark(item.phone, query) + '</div>';
+                        }
+                        html += '</div>'; // .pb-card-top-text
+                        // Кнопка-звёздочка
+                        html += '<button type="button" class="pb-fav-btn' + (isFav ? ' fav-active' : '') + '" ' +
+                                'aria-label="' + (isFav ? 'Убрать из избранного' : 'Добавить в избранное') + '" ' +
+                                'onclick="pbToggleFavorite(this, event)">' +
+                                '<svg viewBox="0 0 24 24" fill="' + (isFav ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' +
+                                '</button>';
+                        html += '</div>'; // .pb-card-top
+                        // Примечание (если есть) — с кнопкой редактирования
+                        if (note) {
+                            html += '<div class="pb-note">' + pbEsc(note) +
+                                    '<button type="button" class="pb-note-edit" aria-label="Редактировать примечание" onclick="pbEditNote(this)">' +
+                                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+                                    '</button></div>';
+                        } else {
+                            html += '<button type="button" class="pb-note-add" onclick="pbEditNote(this)">' +
+                                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+                                    'добавить примечание</button>';
+                        }
+                        html += '</div>'; // .pb-card
+                    }
+                    if (showSubgroupHeaders && sg !== null) {
+                        html += '</div>'; // .pb-subsubgroup-body
+                        html += '</div>'; // .pb-subsubgroup
+                    }
+                }
+
+                if (showGroupHeaders) {
                     html += '</div>'; // .pb-subgroup-body
                     html += '</div>'; // .pb-subgroup
                 }
