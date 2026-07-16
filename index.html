@@ -4756,6 +4756,41 @@
         return Object.keys(pbFavorites).filter(k => pbFavorites[k] === true).length;
     }
 
+    // Очистка "фантомных" записей в избранном и примечаниях.
+    // При изменении структуры pbMakeId (например, при добавлении поля subgroup)
+    // старые ключи в localStorage больше не соответствуют реальным контактам.
+    // Эта функция удаляет все записи, ID которых не найден в pbFlat,
+    // и сохраняет очищенные данные обратно в localStorage.
+    // Возвращает количество удалённых записей.
+    function pbCleanupStaleFavorites() {
+        if (!pbFlat || pbFlat.length === 0) return { fav: 0, notes: 0 };
+        // Построить множество валидных ID
+        const validIds = new Set(pbFlat.map(item => pbMakeId(item)));
+        let favRemoved = 0;
+        let notesRemoved = 0;
+        // Очистить pbFavorites
+        for (const key of Object.keys(pbFavorites)) {
+            if (!validIds.has(key)) {
+                delete pbFavorites[key];
+                favRemoved++;
+            }
+        }
+        // Очистить pbNotes
+        for (const key of Object.keys(pbNotes)) {
+            if (!validIds.has(key)) {
+                delete pbNotes[key];
+                notesRemoved++;
+            }
+        }
+        // Сохранить обратно, если что-то изменилось
+        if (favRemoved > 0) pbSaveFavorites();
+        if (notesRemoved > 0) pbSaveNotes();
+        if (favRemoved > 0 || notesRemoved > 0) {
+            console.log('[phonebook] Очистка устаревших записей: избранное −' + favRemoved + ', примечания −' + notesRemoved);
+        }
+        return { fav: favRemoved, notes: notesRemoved };
+    }
+
     // Нормализация строки для сравнения (lowercase, без лишних пробелов)
     function pbNorm(s) {
         return (s || '').toString().toLowerCase().replace(/\s+/g, ' ').trim();
@@ -5140,6 +5175,18 @@
     // Хранит {sectionName: true}. При открытии новой — предыдущая закрывается.
     let pbExpandedSections = {};
 
+    // Вспомогательная функция: прокрутить элемент к верхней части экрана,
+    // учитывая высоту sticky-блока поиска (чтобы заголовок не перекрывался).
+    function pbScrollToTop(el) {
+        if (!el) return;
+        const searchWrap = document.querySelector('.pb-search-wrap');
+        const stickyHeight = searchWrap ? searchWrap.getBoundingClientRect().height : 0;
+        const rect = el.getBoundingClientRect();
+        // Текущая позиция прокрутки + смещение элемента от верха viewport - высота sticky - маленький отступ
+        const targetY = window.scrollY + rect.top - stickyHeight - 8;
+        window.scrollTo({ top: Math.max(0, targetY), behavior: 'auto' });
+    }
+
     // Обработчик клика по заголовку секции (аккордеон).
     function pbToggleSection(titleEl) {
         const list = document.getElementById('pbList');
@@ -5169,10 +5216,13 @@
             section.classList.add('expanded');
             pbExpandedSections[secName] = true;
             if (navigator.vibrate) navigator.vibrate(30);
-            // Прокрутить к началу секции
-            setTimeout(() => {
-                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
+            // Прокрутить заголовок секции к верхней части экрана.
+            // Двойной requestAnimationFrame: DOM обновился → анимация началась → позиция точная.
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    pbScrollToTop(section);
+                });
+            });
         }
     }
 
@@ -5213,10 +5263,12 @@
             subgroup.classList.add('expanded');
             pbExpandedSubgroups[sgKey] = true;
             if (navigator.vibrate) navigator.vibrate(25);
-            // Прокрутить к началу подгруппы
-            setTimeout(() => {
-                subgroup.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
+            // Прокрутить заголовок подгруппы к верхней части экрана.
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    pbScrollToTop(subgroup);
+                });
+            });
         }
     }
 
@@ -5234,8 +5286,18 @@
         // Загрузить избранное и примечания из localStorage (всегда)
         pbLoadFavorites();
         pbLoadNotes();
-        if (pbLoaded) { pbRender(); return; }
-        pbLoad().then(() => pbRender());
+        if (pbLoaded) {
+            // Данные уже загружены — сразу очистить устаревшие записи
+            pbCleanupStaleFavorites();
+            pbRender();
+            return;
+        }
+        pbLoad().then(() => {
+            // После загрузки данных — очистить устаревшие записи (старые ID
+            // от предыдущих версий pbMakeId, которые больше не валидны)
+            pbCleanupStaleFavorites();
+            pbRender();
+        });
     }
 
     // ИСТОРИЯ И НАВИГАЦИЯ
