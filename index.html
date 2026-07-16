@@ -1952,14 +1952,26 @@
     .pb-list.searching .pb-section-title {
         cursor: default;
     }
-    /* Подзаголовок группы (второй уровень) внутри секции */
+    /* В режиме поиска — все подгруппы тоже раскрыты */
+    .pb-list.searching .pb-subgroup .pb-subgroup-body {
+        max-height: 5000px;
+        transition: none;
+    }
+    .pb-list.searching .pb-subgroup .pb-subgroup-arrow {
+        transform: rotate(45deg);
+        opacity: 0.3;
+    }
+    .pb-list.searching .pb-subgroup-title {
+        cursor: default;
+    }
+    /* Подзаголовок группы (второй уровень) внутри секции — сворачиваемый */
     .pb-subgroup {
         border-top: 1px solid rgba(255,255,255,0.05);
     }
     [data-theme="light"] .pb-subgroup { border-top-color: rgba(20,20,19,0.08); }
     .pb-subgroup:first-child { border-top: none; }
     .pb-subgroup-title {
-        padding: 9px 14px 7px;
+        padding: 10px 32px 10px 14px;
         font-size: 12px; font-weight: 600;
         color: rgba(106,166,224,0.85);
         letter-spacing: 0.3px;
@@ -1967,20 +1979,53 @@
         background: rgba(106,166,224,0.05);
         display: flex; justify-content: space-between; align-items: center;
         gap: 8px;
+        cursor: pointer;
+        position: relative;
+        user-select: none; -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.15s;
     }
     [data-theme="light"] .pb-subgroup-title {
         color: rgba(42,93,143,0.85);
         background: rgba(42,93,143,0.07);
     }
+    .pb-subgroup-title:active { background: rgba(106,166,224,0.12); }
+    [data-theme="light"] .pb-subgroup-title:active { background: rgba(42,93,143,0.14); }
     .pb-subgroup-count {
         font-size: 11px; font-weight: 400;
         color: rgba(106,166,224,0.5);
         text-transform: none;
         font-feature-settings: "tnum";
+        flex-shrink: 0;
     }
     [data-theme="light"] .pb-subgroup-count { color: rgba(42,93,143,0.5); }
+    /* Стрелка-индикатор для подгруппы */
+    .pb-subgroup-arrow {
+        position: absolute;
+        right: 12px; top: 50%;
+        transform: translateY(-50%) rotate(0deg);
+        width: 8px; height: 8px;
+        border-right: 1.4px solid rgba(106,166,224,0.55);
+        border-bottom: 1.4px solid rgba(106,166,224,0.55);
+        transition: transform 0.22s ease;
+        pointer-events: none;
+    }
+    [data-theme="light"] .pb-subgroup-arrow {
+        border-right-color: rgba(42,93,143,0.55);
+        border-bottom-color: rgba(42,93,143,0.55);
+    }
+    .pb-subgroup.expanded .pb-subgroup-arrow {
+        transform: translateY(-50%) rotate(45deg);
+    }
+    /* Тело подгруппы — сворачивается через max-height */
     .pb-subgroup-body {
-        /* контейнер для карточек внутри группы */
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+    .pb-subgroup.expanded .pb-subgroup-body {
+        max-height: 5000px;
+        transition: max-height 0.4s ease;
     }
     /* Подзаголовок подгруппы (третий уровень) внутри группы */
     .pb-subsubgroup {
@@ -4823,7 +4868,7 @@
             if (favCount > 0) {
                 infoParts.push(' · избранное: ' + favCount);
             } else {
-                infoParts.push(' · тапните по ★, чтобы добавить в избранное');
+                infoParts.push(' · тапните по организации или отделу, чтобы раскрыть');
             }
         }
         info.textContent = infoParts.join('');
@@ -4885,9 +4930,15 @@
                 if (showGroupHeaders) {
                     const groupLabel = g === null ? 'Без группы' : g;
                     const groupCount = groupedByGroup[g].length;
-                    html += '<div class="pb-subgroup">';
-                    html += '<div class="pb-subgroup-title">' + pbMark(groupLabel, query) +
-                            '<span class="pb-subgroup-count">' + groupCount + '</span></div>';
+                    // Сворачиваемая подгруппа: data-subgroup = header + '|' + group
+                    const subgroupKey = header + '|' + (g === null ? '' : g);
+                    const sgExpanded = forceExpand ? true : (pbExpandedSubgroups[subgroupKey] === true);
+                    html += '<div class="pb-subgroup' + (sgExpanded ? ' expanded' : '') + '" data-subgroup="' + pbEsc(subgroupKey) + '">';
+                    html += '<div class="pb-subgroup-title" onclick="pbToggleSubgroup(this)">';
+                    html += '<span class="pb-subgroup-title-text">' + pbMark(groupLabel, query) + '</span>';
+                    html += '<span class="pb-subgroup-count">' + groupCount + '</span>';
+                    html += '<span class="pb-subgroup-arrow"></span>';
+                    html += '</div>';
                     html += '<div class="pb-subgroup-body">';
                 }
 
@@ -5088,6 +5139,39 @@
             // Прокрутить к началу секции
             setTimeout(() => {
                 section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+    }
+
+    // Состояние раскрытых подгрупп (второй уровень) в обычном режиме.
+    // Ключ = header + '|' + group. Может быть раскрыто несколько одновременно
+    // (в отличие от секций, где аккордеон = только одна открытая).
+    let pbExpandedSubgroups = {};
+
+    // Обработчик клика по заголовку подгруппы (второй уровень, сворачиваемый).
+    function pbToggleSubgroup(titleEl) {
+        const list = document.getElementById('pbList');
+        // В режиме поиска подгруппы не сворачиваются (все раскрыты автоматически)
+        if (list && list.classList.contains('searching')) return;
+
+        const subgroup = titleEl.closest('.pb-subgroup');
+        if (!subgroup) return;
+        const sgKey = subgroup.getAttribute('data-subgroup');
+        if (!sgKey) return;
+
+        const isExpanded = subgroup.classList.contains('expanded');
+
+        if (isExpanded) {
+            subgroup.classList.remove('expanded');
+            delete pbExpandedSubgroups[sgKey];
+            if (navigator.vibrate) navigator.vibrate(15);
+        } else {
+            subgroup.classList.add('expanded');
+            pbExpandedSubgroups[sgKey] = true;
+            if (navigator.vibrate) navigator.vibrate(25);
+            // Прокрутить к началу подгруппы
+            setTimeout(() => {
+                subgroup.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 100);
         }
     }
