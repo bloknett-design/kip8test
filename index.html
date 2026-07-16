@@ -1866,7 +1866,7 @@
     .pb-info { padding: 6px 16px 4px; font-size: 11px; color: rgba(255,255,255,0.35); text-align: center; }
     [data-theme="light"] .pb-info { color: rgba(20,20,19,0.5); }
     .pb-section {
-        margin: 6px 8px 10px;
+        margin: 6px 8px 8px;
         border: 1px solid rgba(255,255,255,0.07);
         border-radius: 12px;
         background: rgba(255,255,255,0.015);
@@ -1877,14 +1877,68 @@
         background: rgba(255,255,255,0.55);
     }
     .pb-section-title {
-        padding: 9px 14px;
-        font-size: 12px; font-weight: 600;
+        padding: 11px 36px 11px 14px;
+        font-size: 13px; font-weight: 600;
         color: #c7964a;
         background: rgba(199,150,74,0.06);
         border-bottom: 1px solid rgba(199,150,74,0.12);
         letter-spacing: 0.2px;
+        cursor: pointer;
+        position: relative;
+        user-select: none; -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.15s;
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 8px;
     }
     [data-theme="light"] .pb-section-title { background: rgba(199,150,74,0.1); }
+    .pb-section-title:active { background: rgba(199,150,74,0.14); }
+    [data-theme="light"] .pb-section-title:active { background: rgba(199,150,74,0.18); }
+    .pb-section-title-text {
+        flex: 1; min-width: 0;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .pb-section-title-count {
+        font-size: 11px; font-weight: 400;
+        color: rgba(199,150,74,0.55);
+        font-feature-settings: "tnum";
+        flex-shrink: 0;
+    }
+    .pb-section-arrow {
+        position: absolute;
+        right: 12px; top: 50%;
+        transform: translateY(-50%) rotate(0deg);
+        width: 10px; height: 10px;
+        border-right: 1.6px solid rgba(199,150,74,0.55);
+        border-bottom: 1.6px solid rgba(199,150,74,0.55);
+        transition: transform 0.22s ease;
+        pointer-events: none;
+    }
+    .pb-section.expanded .pb-section-arrow {
+        transform: translateY(-50%) rotate(45deg);
+    }
+    /* По умолчанию тело секции скрыто */
+    .pb-section-body {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.25s ease;
+    }
+    .pb-section.expanded .pb-section-body {
+        max-height: 5000px; /* достаточно для любого раздела */
+        transition: max-height 0.35s ease;
+    }
+    /* В режиме поиска (есть query) — все секции раскрыты автоматически */
+    .pb-list.searching .pb-section .pb-section-body {
+        max-height: 5000px;
+        transition: none;
+    }
+    .pb-list.searching .pb-section .pb-section-arrow {
+        transform: translateY(-50%) rotate(45deg);
+        opacity: 0.3;
+    }
+    .pb-list.searching .pb-section-title {
+        cursor: default;
+    }
     .pb-card {
         padding: 9px 14px;
         border-bottom: 1px solid rgba(255,255,255,0.04);
@@ -1906,6 +1960,117 @@
         background: rgba(199,150,74,0.25);
         color: inherit; padding: 0 1px; border-radius: 2px;
     }
+    .pb-card-top {
+        display: flex; align-items: flex-start; gap: 8px;
+    }
+    .pb-card-top-text {
+        flex: 1; min-width: 0;
+    }
+    /* Звёздочка избранного */
+    .pb-fav-btn {
+        flex-shrink: 0;
+        width: 28px; height: 28px;
+        display: flex; align-items: center; justify-content: center;
+        background: transparent; border: none;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        color: rgba(255,255,255,0.25);
+        transition: color 0.15s, transform 0.15s;
+        padding: 0; margin: -4px -4px 0 0;
+    }
+    [data-theme="light"] .pb-fav-btn { color: rgba(20,20,19,0.3); }
+    .pb-fav-btn svg { width: 18px; height: 18px; }
+    .pb-fav-btn.fav-active {
+        color: #f0b53c;
+    }
+    [data-theme="light"] .pb-fav-btn.fav-active { color: #b8821a; }
+    .pb-fav-btn:active { transform: scale(0.85); }
+    /* Примечание к контакту */
+    .pb-note {
+        margin-top: 6px;
+        padding: 6px 10px;
+        background: rgba(199,150,74,0.08);
+        border-left: 2px solid rgba(199,150,74,0.4);
+        border-radius: 4px;
+        font-size: 12px;
+        color: rgba(255,255,255,0.7);
+        line-height: 1.35;
+        position: relative;
+        word-wrap: break-word; overflow-wrap: break-word;
+    }
+    [data-theme="light"] .pb-note {
+        background: rgba(199,150,74,0.1);
+        color: rgba(20,20,19,0.7);
+    }
+    .pb-note-edit {
+        position: absolute; top: 4px; right: 4px;
+        width: 20px; height: 20px;
+        background: transparent; border: none; cursor: pointer;
+        color: rgba(255,255,255,0.35);
+        display: flex; align-items: center; justify-content: center;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+    }
+    [data-theme="light"] .pb-note-edit { color: rgba(20,20,19,0.4); }
+    .pb-note-edit svg { width: 12px; height: 12px; }
+    .pb-note-edit:active { transform: scale(0.9); }
+    /* Кнопка "Добавить примечание" */
+    .pb-note-add {
+        margin-top: 6px;
+        font-size: 11px; color: rgba(106,166,224,0.7);
+        background: transparent; border: none; cursor: pointer;
+        padding: 2px 0;
+        display: inline-flex; align-items: center; gap: 4px;
+        -webkit-tap-highlight-color: transparent;
+    }
+    [data-theme="light"] .pb-note-add { color: rgba(42,93,143,0.8); }
+    .pb-note-add:active { opacity: 0.7; }
+    .pb-note-add svg { width: 10px; height: 10px; }
+    /* Панель фильтров над списком */
+    .pb-toolbar {
+        padding: 4px 8px 6px;
+        display: flex; align-items: center; gap: 8px;
+        flex-wrap: wrap;
+    }
+    .pb-filter-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 6px 12px;
+        border: 1px solid rgba(240,181,60,0.25);
+        border-radius: 18px;
+        background: rgba(240,181,60,0.04);
+        color: rgba(240,181,60,0.8);
+        font-size: 12px; font-weight: 500;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: all 0.15s;
+    }
+    [data-theme="light"] .pb-filter-btn {
+        border-color: rgba(184,130,26,0.3);
+        background: rgba(184,130,26,0.06);
+        color: rgba(184,130,26,0.85);
+    }
+    .pb-filter-btn svg { width: 12px; height: 12px; }
+    .pb-filter-btn.active {
+        background: rgba(240,181,60,0.18);
+        border-color: rgba(240,181,60,0.5);
+        color: #f0b53c;
+    }
+    [data-theme="light"] .pb-filter-btn.active {
+        background: rgba(184,130,26,0.18);
+        border-color: rgba(184,130,26,0.55);
+        color: #b8821a;
+    }
+    .pb-filter-btn:active { transform: scale(0.96); }
+    .pb-toolbar-spacer { flex: 1; }
+    .pb-clear-note {
+        font-size: 11px; color: rgba(224,90,90,0.7);
+        background: transparent; border: none; cursor: pointer;
+        padding: 2px 6px;
+        -webkit-tap-highlight-color: transparent;
+    }
+    [data-theme="light"] .pb-clear-note { color: rgba(198,75,75,0.8); }
     .pb-empty {
         padding: 40px 20px; text-align: center;
         color: rgba(255,255,255,0.4); font-size: 13px;
@@ -2411,9 +2576,15 @@
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
             <div class="pb-search-wrap">
                 <input type="search" id="pbSearchInput" class="pb-search-input" placeholder="Поиск: имя, должность, телефон…" autocomplete="off" enterkeyhint="search" oninput="pbRender()">
+                <div class="pb-toolbar">
+                    <button type="button" id="pbFilterFav" class="pb-filter-btn" onclick="pbToggleFavFilter()">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <span id="pbFilterFavLabel">Только избранные</span>
+                    </button>
+                </div>
             </div>
             <div class="pb-info" id="pbInfo">Загрузка…</div>
-            <div id="pbList"></div>
+            <div id="pbList" class="pb-list"></div>
         </div>
 
         <!-- ======================== КОНВЕРТЕР ЕДИНИЦ ======================== -->
@@ -4383,6 +4554,47 @@
     let pbFlat = [];            // плоский массив: {section, position, name, phone}
     let pbLoaded = false;
 
+    // === Избранные контакты и пользовательские примечания ===
+    // Хранение в localStorage. ID контакта = section + '|' + name + '|' + phone
+    // (уникален в пределах справочника).
+    let pbFavorites = {};       // {id: true}
+    let pbNotes = {};           // {id: "текст примечания"}
+    let pbFilterFavOnly = false; // показывать только избранные
+
+    const PB_FAV_KEY = 'kip8test_phonebook_favorites';
+    const PB_NOTES_KEY = 'kip8test_phonebook_notes';
+
+    function pbMakeId(item) {
+        return (item.section || '') + '|' + (item.name || '') + '|' + (item.phone || '');
+    }
+    function pbLoadFavorites() {
+        try {
+            const raw = localStorage.getItem(PB_FAV_KEY);
+            pbFavorites = raw ? JSON.parse(raw) : {};
+        } catch (e) { pbFavorites = {}; }
+    }
+    function pbSaveFavorites() {
+        try { localStorage.setItem(PB_FAV_KEY, JSON.stringify(pbFavorites)); } catch (e) {}
+    }
+    function pbLoadNotes() {
+        try {
+            const raw = localStorage.getItem(PB_NOTES_KEY);
+            pbNotes = raw ? JSON.parse(raw) : {};
+        } catch (e) { pbNotes = {}; }
+    }
+    function pbSaveNotes() {
+        try { localStorage.setItem(PB_NOTES_KEY, JSON.stringify(pbNotes)); } catch (e) {}
+    }
+    function pbIsFavorite(id) {
+        return pbFavorites[id] === true;
+    }
+    function pbGetNote(id) {
+        return pbNotes[id] || '';
+    }
+    function pbGetFavoritesCount() {
+        return Object.keys(pbFavorites).filter(k => pbFavorites[k] === true).length;
+    }
+
     // Нормализация строки для сравнения (lowercase, без лишних пробелов)
     function pbNorm(s) {
         return (s || '').toString().toLowerCase().replace(/\s+/g, ' ').trim();
@@ -4473,18 +4685,22 @@
 
         const query = pbNorm((document.getElementById('pbSearchInput')?.value || '').trim());
 
+        // Обновить счётчик на кнопке фильтра
+        pbUpdateFilterButton();
+
         if (!pbLoaded) {
             list.innerHTML = '';
             info.textContent = 'Загрузка…';
             return;
         }
 
-        // Фильтрация
-        let filtered;
-        if (!query) {
-            filtered = pbFlat;
-        } else {
-            filtered = pbFlat.filter(item =>
+        // Фильтрация: по поиску + по избранным (если включён фильтр)
+        let filtered = pbFlat.slice();
+        if (pbFilterFavOnly) {
+            filtered = filtered.filter(item => pbIsFavorite(pbMakeId(item)));
+        }
+        if (query) {
+            filtered = filtered.filter(item =>
                 pbNorm(item.name).includes(query) ||
                 pbNorm(item.position).includes(query) ||
                 pbNorm(item.phone).includes(query) ||
@@ -4500,26 +4716,63 @@
         }
 
         // Инфо
-        if (query) {
-            info.textContent = 'Найдено: ' + filtered.length + ' ' + pbPlural(filtered.length, ['запись', 'записи', 'записей']);
+        let infoParts = [];
+        if (pbFilterFavOnly) {
+            infoParts.push('Избранные: ' + filtered.length + ' ' + pbPlural(filtered.length, ['запись', 'записи', 'записей']));
+        } else if (query) {
+            infoParts.push('Найдено: ' + filtered.length + ' ' + pbPlural(filtered.length, ['запись', 'записи', 'записей']) +
+                           ' в ' + Object.keys(grouped).length + ' ' + pbPlural(Object.keys(grouped).length, ['подразделении', 'подразделениях', 'подразделениях']));
         } else {
-            info.textContent = 'Всего: ' + pbFlat.length + ' ' + pbPlural(pbFlat.length, ['запись', 'записи', 'записей']) +
-                               ' · ' + Object.keys(pbData.sections).length + ' подразделений';
+            infoParts.push('Всего: ' + pbFlat.length + ' ' + pbPlural(pbFlat.length, ['запись', 'записи', 'записей']) +
+                           ' · ' + Object.keys(pbData.sections).length + ' подразделений');
+            const favCount = pbGetFavoritesCount();
+            if (favCount > 0) {
+                infoParts.push(' · избранное: ' + favCount);
+            } else {
+                infoParts.push(' · тапните по ★, чтобы добавить в избранное');
+            }
+        }
+        info.textContent = infoParts.join('');
+
+        // Режим: есть поисковый запрос ИЛИ фильтр избранных → все секции раскрыты
+        const forceExpand = query || pbFilterFavOnly;
+        if (forceExpand) {
+            list.classList.add('searching');
+        } else {
+            list.classList.remove('searching');
         }
 
         // Рендер
         if (filtered.length === 0) {
-            list.innerHTML = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
+            if (pbFilterFavOnly && !query) {
+                list.innerHTML = '<div class="pb-empty">Нет избранных контактов.<br>Нажмите на ★ рядом с контактом, чтобы добавить его сюда.</div>';
+            } else {
+                list.innerHTML = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
+            }
             return;
         }
 
         let html = '';
         for (const secName of Object.keys(pbData.sections)) {
             if (!grouped[secName] || grouped[secName].length === 0) continue;
-            html += '<div class="pb-section">';
-            html += '<div class="pb-section-title">' + pbMark(secName, query) + '</div>';
+            const count = grouped[secName].length;
+            // В режиме поиска/фильтра — секция раскрыта (через класс .searching на списке).
+            // В обычном режиме — сохраняем состояние раскрытия по secName.
+            const isExpanded = forceExpand ? true : (pbExpandedSections[secName] === true);
+            html += '<div class="pb-section' + (isExpanded ? ' expanded' : '') + '" data-section="' + pbEsc(secName) + '">';
+            html += '<div class="pb-section-title" onclick="pbToggleSection(this)">';
+            html += '<span class="pb-section-title-text">' + pbMark(secName, query) + '</span>';
+            html += '<span class="pb-section-title-count">' + count + '</span>';
+            html += '<span class="pb-section-arrow"></span>';
+            html += '</div>';
+            html += '<div class="pb-section-body">';
             for (const item of grouped[secName]) {
-                html += '<div class="pb-card">';
+                const id = pbMakeId(item);
+                const isFav = pbIsFavorite(id);
+                const note = pbGetNote(id);
+                html += '<div class="pb-card" data-id="' + pbEsc(id) + '">';
+                html += '<div class="pb-card-top">';
+                html += '<div class="pb-card-top-text">';
                 if (item.name) {
                     html += '<div class="pb-card-name">' + pbMark(item.name, query) + '</div>';
                 }
@@ -4529,11 +4782,152 @@
                 if (item.phone) {
                     html += '<div class="pb-card-phone">' + pbMark(item.phone, query) + '</div>';
                 }
-                html += '</div>';
+                html += '</div>'; // .pb-card-top-text
+                // Кнопка-звёздочка
+                html += '<button type="button" class="pb-fav-btn' + (isFav ? ' fav-active' : '') + '" ' +
+                        'aria-label="' + (isFav ? 'Убрать из избранного' : 'Добавить в избранное') + '" ' +
+                        'onclick="pbToggleFavorite(this, event)">' +
+                        '<svg viewBox="0 0 24 24" fill="' + (isFav ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' +
+                        '</button>';
+                html += '</div>'; // .pb-card-top
+                // Примечание (если есть) — с кнопкой редактирования
+                if (note) {
+                    html += '<div class="pb-note">' + pbEsc(note) +
+                            '<button type="button" class="pb-note-edit" aria-label="Редактировать примечание" onclick="pbEditNote(this)">' +
+                            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+                            '</button></div>';
+                } else {
+                    html += '<button type="button" class="pb-note-add" onclick="pbEditNote(this)">' +
+                            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+                            'добавить примечание</button>';
+                }
+                html += '</div>'; // .pb-card
             }
-            html += '</div>';
+            html += '</div>'; // .pb-section-body
+            html += '</div>'; // .pb-section
         }
         list.innerHTML = html;
+    }
+
+    // Обновить состояние кнопки "Только избранные" и счётчик
+    function pbUpdateFilterButton() {
+        const btn = document.getElementById('pbFilterFav');
+        const label = document.getElementById('pbFilterFavLabel');
+        if (!btn || !label) return;
+        if (pbFilterFavOnly) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+        const count = pbGetFavoritesCount();
+        label.textContent = 'Избранные' + (count > 0 ? ': ' + count : '');
+    }
+
+    // Переключить фильтр "только избранные"
+    function pbToggleFavFilter() {
+        pbFilterFavOnly = !pbFilterFavOnly;
+        if (navigator.vibrate) navigator.vibrate(25);
+        // Сбросить раскрытые секции — в режиме фильтра они раскрываются автоматически
+        pbExpandedSections = {};
+        pbRender();
+    }
+
+    // Переключить избранное у контакта
+    function pbToggleFavorite(btnEl, ev) {
+        if (ev) { ev.stopPropagation(); ev.preventDefault(); }
+        const card = btnEl.closest('.pb-card');
+        if (!card) return;
+        const id = card.getAttribute('data-id');
+        if (!id) return;
+        if (pbIsFavorite(id)) {
+            delete pbFavorites[id];
+            btnEl.classList.remove('fav-active');
+            btnEl.setAttribute('aria-label', 'Добавить в избранное');
+            // Убрать заливку звёздочки
+            const svg = btnEl.querySelector('svg path');
+            if (svg) svg.setAttribute('fill', 'none');
+            if (navigator.vibrate) navigator.vibrate(20);
+        } else {
+            pbFavorites[id] = true;
+            btnEl.classList.add('fav-active');
+            btnEl.setAttribute('aria-label', 'Убрать из избранного');
+            const svg = btnEl.querySelector('svg path');
+            if (svg) svg.setAttribute('fill', 'currentColor');
+            if (navigator.vibrate) navigator.vibrate([20, 30, 40]);
+        }
+        pbSaveFavorites();
+        // Если включён фильтр избранных — пере-рендер (карточка может исчезнуть)
+        if (pbFilterFavOnly) {
+            pbRender();
+        } else {
+            pbUpdateFilterButton();
+            // Обновить инфо-строку (там показывается счётчик избранного)
+            pbRender();
+        }
+    }
+
+    // Редактировать примечание (через prompt)
+    function pbEditNote(btnEl) {
+        const card = btnEl.closest('.pb-card');
+        if (!card) return;
+        const id = card.getAttribute('data-id');
+        if (!id) return;
+        const currentNote = pbGetNote(id);
+        const newName = card.querySelector('.pb-card-name')?.textContent || 'этот контакт';
+        const promptText = 'Примечание для: ' + newName + '\n\n(оставьте пустым, чтобы удалить)';
+        const newNote = prompt(promptText, currentNote);
+        // prompt возвращает null при отмене
+        if (newNote === null) return;
+        const trimmed = newNote.trim();
+        if (trimmed) {
+            pbNotes[id] = trimmed;
+        } else {
+            delete pbNotes[id];
+        }
+        pbSaveNotes();
+        if (navigator.vibrate) navigator.vibrate(25);
+        // Пере-рендер карточки (или всего списка — проще)
+        pbRender();
+    }
+
+    // Состояние раскрытых секций в обычном режиме (без поиска).
+    // Хранит {sectionName: true}. При открытии новой — предыдущая закрывается.
+    let pbExpandedSections = {};
+
+    // Обработчик клика по заголовку секции (аккордеон).
+    function pbToggleSection(titleEl) {
+        const list = document.getElementById('pbList');
+        // В режиме поиска секции не сворачиваются (все раскрыты автоматически)
+        if (list && list.classList.contains('searching')) return;
+
+        const section = titleEl.closest('.pb-section');
+        if (!section) return;
+        const secName = section.getAttribute('data-section');
+        if (!secName) return;
+
+        const isExpanded = section.classList.contains('expanded');
+
+        if (isExpanded) {
+            // Закрыть текущую
+            section.classList.remove('expanded');
+            delete pbExpandedSections[secName];
+            if (navigator.vibrate) navigator.vibrate(20);
+        } else {
+            // Закрыть ВСЕ остальные (аккордеон — только одна открытая)
+            list.querySelectorAll('.pb-section.expanded').forEach(s => {
+                s.classList.remove('expanded');
+                const name = s.getAttribute('data-section');
+                if (name) delete pbExpandedSections[name];
+            });
+            // Раскрыть текущую
+            section.classList.add('expanded');
+            pbExpandedSections[secName] = true;
+            if (navigator.vibrate) navigator.vibrate(30);
+            // Прокрутить к началу секции
+            setTimeout(() => {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
     }
 
     // Простая функция плюарализации для русского языка
@@ -4547,6 +4941,9 @@
 
     // Инициализация при первом открытии страницы
     function pbInit() {
+        // Загрузить избранное и примечания из localStorage (всегда)
+        pbLoadFavorites();
+        pbLoadNotes();
         if (pbLoaded) { pbRender(); return; }
         pbLoad().then(() => pbRender());
     }
