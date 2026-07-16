@@ -1967,9 +1967,33 @@
     /* Подзаголовок группы (второй уровень) внутри секции — сворачиваемый */
     .pb-subgroup {
         border-top: 1px solid rgba(255,255,255,0.05);
+        margin: 4px 6px;
+        border-radius: 8px;
+        overflow: hidden;
+        background: rgba(255,255,255,0.015);
+        /* Тонкая граница для зрительного разделения подгрупп */
+        border: 1px solid rgba(106,166,224,0.1);
     }
-    [data-theme="light"] .pb-subgroup { border-top-color: rgba(20,20,19,0.08); }
-    .pb-subgroup:first-child { border-top: none; }
+    [data-theme="light"] .pb-subgroup {
+        border-top-color: rgba(20,20,19,0.08);
+        background: rgba(255,255,255,0.6);
+        border-color: rgba(42,93,143,0.12);
+    }
+    .pb-subgroup:first-child {
+        border-top: 1px solid rgba(106,166,224,0.1);
+    }
+    [data-theme="light"] .pb-subgroup:first-child {
+        border-top-color: rgba(42,93,143,0.12);
+    }
+    /* Раскрытая подгруппа — чуть ярче граница и фон */
+    .pb-subgroup.expanded {
+        border-color: rgba(106,166,224,0.3);
+        background: rgba(106,166,224,0.03);
+    }
+    [data-theme="light"] .pb-subgroup.expanded {
+        border-color: rgba(42,93,143,0.35);
+        background: rgba(42,93,143,0.05);
+    }
     .pb-subgroup-title {
         padding: 10px 32px 10px 14px;
         font-size: 12px; font-weight: 600;
@@ -1989,8 +2013,17 @@
         color: rgba(42,93,143,0.85);
         background: rgba(42,93,143,0.07);
     }
-    .pb-subgroup-title:active { background: rgba(106,166,224,0.12); }
-    [data-theme="light"] .pb-subgroup-title:active { background: rgba(42,93,143,0.14); }
+    .pb-subgroup-title:active { background: rgba(106,166,224,0.14); }
+    [data-theme="light"] .pb-subgroup-title:active { background: rgba(42,93,143,0.16); }
+    /* Раскрытая подгруппа — чуть темнее заголовок для визуального акцента */
+    .pb-subgroup.expanded .pb-subgroup-title {
+        background: rgba(106,166,224,0.12);
+        color: rgba(140,190,240,0.95);
+    }
+    [data-theme="light"] .pb-subgroup.expanded .pb-subgroup-title {
+        background: rgba(42,93,143,0.14);
+        color: rgba(42,93,143,0.95);
+    }
     .pb-subgroup-count {
         font-size: 11px; font-weight: 400;
         color: rgba(106,166,224,0.5);
@@ -5144,11 +5177,10 @@
     }
 
     // Состояние раскрытых подгрупп (второй уровень) в обычном режиме.
-    // Ключ = header + '|' + group. Может быть раскрыто несколько одновременно
-    // (в отличие от секций, где аккордеон = только одна открытая).
+    // Ключ = header + '|' + group. Аккордеон: только одна открытая в пределах секции.
     let pbExpandedSubgroups = {};
 
-    // Обработчик клика по заголовку подгруппы (второй уровень, сворачиваемый).
+    // Обработчик клика по заголовку подгруппы (второй уровень, аккордеон).
     function pbToggleSubgroup(titleEl) {
         const list = document.getElementById('pbList');
         // В режиме поиска подгруппы не сворачиваются (все раскрыты автоматически)
@@ -5159,13 +5191,25 @@
         const sgKey = subgroup.getAttribute('data-subgroup');
         if (!sgKey) return;
 
+        // Найти родительскую секцию, чтобы закрыть другие подгруппы только в её пределах
+        const section = subgroup.closest('.pb-section');
+        if (!section) return;
+
         const isExpanded = subgroup.classList.contains('expanded');
 
         if (isExpanded) {
+            // Закрыть текущую
             subgroup.classList.remove('expanded');
             delete pbExpandedSubgroups[sgKey];
             if (navigator.vibrate) navigator.vibrate(15);
         } else {
+            // Аккордеон: закрыть ВСЕ остальные подгруппы ВНУТРИ этой же секции
+            section.querySelectorAll('.pb-subgroup.expanded').forEach(s => {
+                s.classList.remove('expanded');
+                const k = s.getAttribute('data-subgroup');
+                if (k) delete pbExpandedSubgroups[k];
+            });
+            // Раскрыть текущую
             subgroup.classList.add('expanded');
             pbExpandedSubgroups[sgKey] = true;
             if (navigator.vibrate) navigator.vibrate(25);
