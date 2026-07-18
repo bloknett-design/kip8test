@@ -2248,14 +2248,34 @@
     [data-theme="light"] .pb-empty { color: rgba(20,20,19,0.5); }
 
     /* ===== Приборы (КИП ИОС) ===== */
-    .dev-search-wrap {
-        padding: 8px 8px 6px;
-        position: sticky; top: 0;
-        background: var(--bg-deep, #0d1b2a);
-        z-index: 3;
-        backdrop-filter: blur(8px);
+    /* Поле поиска в верхнем баре, справа от названия */
+    .dev-header-search {
+        width: 120px;
+        max-width: 40vw;
+        padding: 6px 10px 6px 30px;
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 8px;
+        background: rgba(255,255,255,0.04) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a0b4c8' stroke-width='2'><circle cx='11' cy='11' r='7'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>") no-repeat 8px center / 13px;
+        color: #e0e0e0; font-size: 13px; font-family: 'Inter', sans-serif;
+        outline: none; transition: all 0.15s;
+        flex-shrink: 1;
     }
-    [data-theme="light"] .dev-search-wrap { background: #f3ecdc; }
+    [data-theme="light"] .dev-header-search {
+        background-color: #fbf6ea;
+        border-color: rgba(20,20,19,0.18); color: #1a1a1a;
+    }
+    .dev-header-search:focus {
+        border-color: rgba(199,150,74,0.55);
+        width: 160px;
+        max-width: 50vw;
+    }
+    .dev-header-search::placeholder { color: rgba(255,255,255,0.3); }
+    [data-theme="light"] .dev-header-search::placeholder { color: rgba(20,20,19,0.4); }
+    .page-content.scrolled .dev-header-search {
+        width: 100px;
+        padding: 4px 8px 4px 26px;
+        font-size: 12px;
+    }
     /* Список карточек приборов — без рамок, с разделителями */
     .dev-list {
         background: rgba(255, 250, 240, 0.95);
@@ -2922,11 +2942,8 @@
 
         <!-- ======================== ПРИБОРЫ (КИП ИОС) ======================== -->
         <div id="page-devices" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Приборы</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Приборы</div><input type="search" id="devSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="devRender()"></div>
 
-            <div class="dev-search-wrap">
-                <input type="search" id="devSearchInput" class="pb-search-input" placeholder="Поиск: тип, №, место установки…" autocomplete="off" enterkeyhint="search" oninput="devRender()">
-            </div>
             <div class="pb-info" id="devInfo">Загрузка…</div>
             <div id="devList"></div>
         </div>
@@ -5582,10 +5599,8 @@
     const DEV_PLACEHOLDER_SVG = 'data:image/svg+xml,' + encodeURIComponent(
         '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">' +
         '<rect width="100" height="100" rx="12" fill="rgba(199,150,74,0.06)"/>' +
-        '<circle cx="50" cy="42" r="16" fill="none" stroke="rgba(199,150,74,0.35)" stroke-width="2.5" stroke-dasharray="24 16" stroke-linecap="round">' +
-        '<animateTransform attributeName="transform" type="rotate" from="0 50 42" to="360 50 42" dur="2s" repeatCount="indefinite"/>' +
-        '</circle>' +
-        '<text x="50" y="80" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="rgba(199,150,74,0.5)">КИПиА</text>' +
+        '<circle cx="50" cy="50" r="32" fill="none" stroke="rgba(199,150,74,0.35)" stroke-width="2.5"/>' +
+        '<text x="50" y="56" text-anchor="middle" font-family="sans-serif" font-size="16" font-weight="700" fill="rgba(199,150,74,0.5)">КИП</text>' +
         '</svg>'
     );
 
