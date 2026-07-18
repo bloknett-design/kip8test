@@ -21,11 +21,19 @@ import os
 import sys
 import json
 import re
+import base64
+import io
+import time
 from pathlib import Path
 from datetime import datetime
 
 import requests
 import openpyxl
+try:
+    from PIL import Image
+    HAS_PILLOW = True
+except ImportError:
+    HAS_PILLOW = False
 
 
 # === Настройки ===
@@ -135,6 +143,88 @@ def parse_devices(xlsx_path, sheet_name):
     return devices, headers
 
 
+def resolve_share_link_images(devices, max_size=(100, 100)):
+    """
+    Для записей с share-ссылками (https://disk.yandex.ru/i/...) в поле 'Изображение':
+    1. Разрешает ссылку через Yandex Disk API → file URL
+    2. Скачивает картинку
+    3. Уменьшает до max_size
+    4. Заменяет share-ссылку на base64 data URI в поле 'Изображение'
+    
+    Записи с локальными путями или без картинки — не трогаются.
+    """
+    if not HAS_PILLOW:
+        log('Pillow не установлен — пропуск загрузки картинок')
+        return devices
+    
+    # Соберём уникальные share-ссылки
+    share_links = {}  # { shareLink: base64dataUri }
+    for d in devices:
+        img = (d.get('Изображение') or '').strip()
+        if img.startswith('https://disk.yandex.ru/i/'):
+            if img not in share_links:
+                share_links[img] = None
+    
+    if not share_links:
+        log('Share-ссылок не найдено — картинки не загружаются')
+        return devices
+    
+    log(f'Найдено уникальных share-ссылок: {len(share_links)}')
+    session = requests.Session()
+    
+    for i, link in enumerate(share_links.keys()):
+        try:
+            # 1. Получаем file URL через API
+            log(f'  [{i+1}/{len(share_links)}] Разрешение: {link[:50]}...')
+            api_resp = session.get(YANDEX_PUBLIC_API, params={
+                'public_key': link,
+            }, timeout=30)
+            if api_resp.status_code != 200:
+                log(f'    ✗ API HTTP {api_resp.status_code}')
+                continue
+            file_url = api_resp.json().get('file', '')
+            if not file_url:
+                log(f'    ✗ Нет file URL в ответе')
+                continue
+            
+            # 2. Скачиваем картинку (в той же сессии — cookies сохраняются)
+            img_resp = session.get(file_url, timeout=60)
+            if img_resp.status_code != 200:
+                log(f'    ✗ Download HTTP {img_resp.status_code}')
+                continue
+            
+            # 3. Уменьшаем и конвертируем в base64
+            img = Image.open(io.BytesIO(img_resp.content))
+            img.thumbnail(max_size, Image.Resampling.LANCZOS)
+            buf = io.BytesIO()
+            if img.mode in ('RGBA', 'LA', 'P'):
+                img.save(buf, format='PNG')
+                mime = 'image/png'
+            else:
+                img = img.convert('RGB')
+                img.save(buf, format='JPEG', quality=85)
+                mime = 'image/jpeg'
+            b64 = base64.b64encode(buf.getvalue()).decode('ascii')
+            data_uri = f'data:{mime};base64,{b64}'
+            share_links[link] = data_uri
+            log(f'    ✓ {len(b64)/1024:.1f}KB')
+            
+        except Exception as e:
+            log(f'    ✗ Ошибка: {e}')
+        time.sleep(0.3)
+    
+    # Заменяем share-ссылки на base64 в записях
+    replaced = 0
+    for d in devices:
+        img = (d.get('Изображение') or '').strip()
+        if img in share_links and share_links[img]:
+            d['Изображение'] = share_links[img]
+            replaced += 1
+    
+    log(f'Заменено ссылок на base64: {replaced}')
+    return devices
+
+
 def main():
     public_key = os.environ.get('DEVICES_PUBLIC_KEY', '').strip() or DEFAULT_PUBLIC_KEY
     sheet_name = os.environ.get('DEVICES_SHEET_NAME', '').strip() or DEFAULT_SHEET_NAME
@@ -148,6 +238,9 @@ def main():
         
         # 3. Распарсить лист
         devices, headers = parse_devices(local_file, sheet_name)
+        
+        # 3.5. Разрешить share-ссылки на картинки → base64
+        devices = resolve_share_link_images(devices)
         
         # 4. Сохранить JSON
         out = {
