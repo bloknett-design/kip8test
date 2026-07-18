@@ -11,7 +11,7 @@
 // свежие версии файлов из ASSETS.
 // ============================================================
 
-const CACHE_VERSION = 'kipia-test-v72';
+const CACHE_VERSION = 'kipia-test-v74';
 const CACHE_NAME = CACHE_VERSION;
 
 // Отдельный кэш для картинок Google Drive (превью + полные).
@@ -211,8 +211,7 @@ self.addEventListener('fetch', event => {
                                 url.hostname === 'lh3.googleusercontent.com';
 
     // ===== Картинки приборов с Яндекс Диска =====
-    // downloader.disk.yandex.ru отдаёт application/octet-stream + nosniff,
-    // что блокирует <img> в Chrome. Проксируем через SW с no-cors.
+    // downloader.disk.yandex.ru → no-cors, кэшируем opaque response
     const isYandexDiskImage = url.hostname === 'downloader.disk.yandex.ru' ||
                                url.hostname.endsWith('.storage.yandex.net');
 
@@ -221,10 +220,13 @@ self.addEventListener('fetch', event => {
         caches.open(IMAGE_CACHE_NAME).then(cache =>
           cache.match(request).then(cached => {
             if (cached) return cached;
-            // no-cors: браузер не проверяет CORS/content-type,
-            // возвращает opaque response (status 0) — <img> может отрендерить
-            return fetch(request, { mode: 'no-cors', redirect: 'follow' })
-              .then(response => response)
+            return fetch(request, { mode: 'no-cors', redirect: 'follow', credentials: 'include' })
+              .then(response => {
+                if (response.type === 'opaque' || response.ok) {
+                  cache.put(request, response.clone());
+                }
+                return response;
+              })
               .catch(() => cached || new Response('', { status: 503 }));
           })
         )
