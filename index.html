@@ -2290,11 +2290,15 @@
         transition: background 0.15s;
     }
     .dev-card-header:active { background: rgba(199, 150, 74, 0.08); }
-    /* Превью картинки прибора — слева от заголовка */
+    /* Превью картинки прибора — слева от текста, не сдвигает строки */
+    .dev-card-header-inner {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+    }
     .dev-card-image {
-        float: left;
+        flex-shrink: 0;
         width: 56px; height: 56px;
-        margin: 2px 10px 4px 0;
         border-radius: 8px;
         object-fit: contain;
         background: rgba(255, 255, 255, 0.5);
@@ -2306,6 +2310,10 @@
     .dev-card-image-loading {
         display: flex; align-items: center; justify-content: center;
         font-size: 10px; color: rgba(40, 40, 40, 0.3);
+    }
+    .dev-card-text {
+        flex: 1;
+        min-width: 0;
     }
     .dev-card-title {
         font-size: 14px; font-weight: 700;
@@ -5668,7 +5676,6 @@
         for (const card of cards) {
             const devId = card.getAttribute('data-dev-id');
             if (!devId) continue;
-            // Найдём прибор по ID в devData
             const dev = devData?.devices?.find(d => String(d['ID'] ?? '') === devId);
             if (!dev) continue;
             const imgPath = dev['Изображение'] || '';
@@ -5676,21 +5683,20 @@
             const newUrl = imgKey ? (devImages[imgKey] || '') : '';
             const imgEl = card.querySelector('.dev-card-image');
             if (newUrl && imgEl) {
-                // Обновим src только если URL изменился
                 if (imgEl.src !== newUrl) {
                     imgEl.src = newUrl;
                 }
             } else if (newUrl && !imgEl) {
-                // Картинки не было (старый кэш был пуст) — добавим её
-                const header = card.querySelector('.dev-card-header');
-                if (header) {
-                    const title = header.querySelector('.dev-card-title');
+                // Картинки не было — добавим её перед .dev-card-text
+                const inner = card.querySelector('.dev-card-header-inner');
+                const textEl = card.querySelector('.dev-card-text');
+                if (inner && textEl) {
                     const img = document.createElement('img');
                     img.className = 'dev-card-image';
                     img.src = newUrl;
                     img.alt = dev['Наименование'] || '';
                     img.loading = 'lazy';
-                    header.insertBefore(img, title);
+                    inner.insertBefore(img, textEl);
                 }
             }
         }
@@ -5758,10 +5764,12 @@
 
             html += '<div class="dev-card' + (isExpanded ? ' expanded' : '') + '" data-dev-id="' + devEsc(devId) + '">';
             html += '<div class="dev-card-header" onclick="devToggleCard(this)">';
+            html += '<div class="dev-card-header-inner">';
             // Превью картинки (если есть)
             if (imgUrl) {
                 html += '<img class="dev-card-image" src="' + devEsc(imgUrl) + '" alt="' + devEsc(name) + '" loading="lazy">';
             }
+            html += '<div class="dev-card-text">';
             html += '<div class="dev-card-title">' + devMark(name, query) + '</div>';
             let subtitle = '';
             if (type) subtitle += type;
@@ -5770,8 +5778,10 @@
             if (subtitle) {
                 html += '<div class="dev-card-subtitle">' + devMark(subtitle, query) + '</div>';
             }
+            html += '</div>'; // .dev-card-text
             html += '<span class="dev-card-arrow"></span>';
-            html += '</div>';
+            html += '</div>'; // .dev-card-header-inner
+            html += '</div>'; // .dev-card-header
             html += '<div class="dev-card-body">';
             for (const f of DEV_FIELDS) {
                 const val = dev[f.key];

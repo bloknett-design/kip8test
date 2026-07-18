@@ -11,7 +11,7 @@
 // свежие версии файлов из ASSETS.
 // ============================================================
 
-const CACHE_VERSION = 'kipia-test-v69';
+const CACHE_VERSION = 'kipia-test-v70';
 const CACHE_NAME = CACHE_VERSION;
 
 // Отдельный кэш для картинок Google Drive (превью + полные).
@@ -219,25 +219,39 @@ self.addEventListener('fetch', event => {
 
     if (isYandexDiskImage) {
       event.respondWith(
-        // Сначала проверим кэш
         caches.open(IMAGE_CACHE_NAME).then(cache =>
           cache.match(request).then(cached => {
             if (cached) return cached;
-            // Нет в кэше — идём в сеть с no-cors (чтобы обойти CORS)
-            return fetch(request, { mode: 'no-cors' }).then(response => {
-              // response.type === 'opaque' (status 0) — это нормально для no-cors
-              // Но <img> может отрендерить opaque response
-              const newResponse = new Response(response.body, {
-                status: response.status,
-                statusText: response.statusText,
-                headers: new Headers({
-                  'Content-Type': request.url.match(/\.(jpg|jpeg)$/i) ? 'image/jpeg' : 'image/png',
-                  'Cache-Control': 'max-age=2592000',
-                }),
+            // Идём в сеть с credentials (cookies от яндекса нужны для авторизации)
+            return fetch(request, { credentials: 'include', redirect: 'follow' }).then(response => {
+              if (response.ok) {
+                // Меняем content-type на image/png (или jpeg)
+                const contentType = request.url.match(/\.(jpe?g)$/i) ? 'image/jpeg' : 'image/png';
+                const headers = new Headers(response.headers);
+                headers.set('Content-Type', contentType);
+                headers.delete('X-Content-Type-Options');
+                const newResponse = new Response(response.body, {
+                  status: 200,
+                  statusText: 'OK',
+                  headers: headers,
+                });
+                cache.put(request, newResponse.clone());
+                return newResponse;
+              }
+              // Если 403 — попробуем без credentials (opaque)
+              return fetch(request, { mode: 'no-cors' }).then(opaqueResp => {
+                const contentType = request.url.match(/\.(jpe?g)$/i) ? 'image/jpeg' : 'image/png';
+                const newResponse = new Response(opaqueResp.body, {
+                  status: 200,
+                  statusText: 'OK',
+                  headers: new Headers({
+                    'Content-Type': contentType,
+                    'Cache-Control': 'max-age=2592000',
+                  }),
+                });
+                cache.put(request, newResponse.clone());
+                return newResponse;
               });
-              // Кэшируем
-              cache.put(request, newResponse.clone());
-              return newResponse;
             }).catch(() => cached || new Response('', { status: 503 }));
           })
         )
