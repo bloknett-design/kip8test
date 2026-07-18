@@ -1,0 +1,50 @@
+name: Update Devices Images (TEST)
+
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: '0 6 * * *'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Sync images from Yandex Disk
+        run: python scripts/sync-devices-images.py
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          git diff --exit-code data/devices-images.json || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Commit and push if changed
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/devices-images.json
+          git commit -m "auto: update devices images from Yandex Disk (test repo)"
+          git push
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Devices Images Sync Summary" >> $GITHUB_STEP_SUMMARY
+          if [ -f data/devices-images.json ]; then
+            COUNT=$(python3 -c "import json; d=json.load(open('data/devices-images.json')); print(d.get('total_images', 'N/A'))")
+            echo "**Картинок:** $COUNT" >> $GITHUB_STEP_SUMMARY
+          fi
