@@ -5567,82 +5567,78 @@
         { key: 'Замечания', label: 'Замечания' },
     ];
 
-    let devImages = {};  // { "СИ_Images/flow/пульсар тх.png": "https://file_url..." }
-    const DEV_IMAGES_PUBLIC_KEY = 'https://disk.yandex.ru/d/cCyJzs4tThjxYA';
-    const DEV_IMAGES_SUBFOLDERS = ['analytics', 'asutp', 'flow', 'indicator', 'level', 'pressure', 'registrar', 'temperature'];
+    let devImages = {};  // { shareLink: fileUrl } — resolved Yandex Disk share links
 
-    // Загрузка свежих URL картинок с Яндекс Диска (URL истекают через ~час)
-    async function devLoadImagesFresh() {
-        try {
-            const baseUrl = 'https://cloud-api.yandex.net/v1/disk/public/resources';
-            const params = new URLSearchParams({
-                public_key: DEV_IMAGES_PUBLIC_KEY,
-                path: '/СИ_Images',
-                limit: '200',
-            });
-            const resp = await fetch(baseUrl + '?' + params.toString());
-            if (!resp.ok) return;
-            const data = await resp.json();
-            const items = data._embedded?.items || [];
-            const images = {};
-            // Файлы в корне
-            for (const f of items) {
-                if (f.type === 'file' && f.name.match(/\.(png|jpg|jpeg|gif|webp)$/i)) {
-                    images['СИ_Images/' + f.name] = f.file || f.preview || '';
-                }
+    // Разрешить Yandex Disk share-ссылки (https://disk.yandex.ru/i/...) в прямые URL.
+    // API вызов с CORS: access-control-allow-origin: *
+    // Возвращает { shareLink: fileUrl } для каждой уникальной share-ссылки.
+    async function devResolveImageLinks() {
+        if (!devData || !devData.devices) return;
+        // Соберём уникальные share-ссылки
+        const shareLinks = new Set();
+        for (const d of devData.devices) {
+            const img = (d['Изображение'] || '').trim();
+            if (img.startsWith('https://disk.yandex.ru/i/')) {
+                shareLinks.add(img);
             }
-            // Файлы в подпапках (загружаем параллельно)
-            const subfolders = items.filter(i => i.type === 'dir');
-            const promises = subfolders.map(sf => 
-                fetch(baseUrl + '?' + new URLSearchParams({
-                    public_key: DEV_IMAGES_PUBLIC_KEY,
-                    path: '/СИ_Images/' + sf.name,
-                    limit: '200',
-                }).toString()).then(r => r.json()).then(d => {
-                    const files = d._embedded?.items || [];
-                    for (const f of files) {
-                        if (f.type === 'file' && f.name.match(/\.(png|jpg|jpeg|gif|webp)$/i)) {
-                            images['СИ_Images/' + sf.name + '/' + f.name] = f.file || f.preview || '';
-                        }
-                    }
-                }).catch(() => null)
-            );
-            await Promise.all(promises);
-            devImages = images;
-            // Сохраняем в localStorage
-            try {
-                localStorage.setItem('kip8test:' + DEV_CACHE_KEY + '_images', JSON.stringify(devImages));
-            } catch (e) {}
-            console.log('[devices] Загружено свежих URL картинок: ' + Object.keys(devImages).length);
-        } catch (e) {
-            console.warn('[devices] Не удалось загрузить свежие URL картинок:', e);
         }
+        if (shareLinks.size === 0) return;
+        console.log('[devices] Разрешение ' + shareLinks.size + ' share-ссылок Яндекс Диска...');
+        // Разрешаем параллельно
+        const promises = Array.from(shareLinks).map(link =>
+            fetch('https://cloud-api.yandex.net/v1/disk/public/resources?public_key=' + encodeURIComponent(link))
+                .then(r => r.ok ? r.json() : null)
+                .then(data => {
+                    if (data && data.file) {
+                        devImages[link] = data.file;
+                    }
+                })
+                .catch(() => null)
+        );
+        await Promise.all(promises);
+        console.log('[devices] Разрешено: ' + Object.keys(devImages).length + ' ссылок');
+        // Сохраняем в localStorage (file URL живёт несколько часов)
+        try {
+            localStorage.setItem('kip8test:' + DEV_CACHE_KEY + '_images', JSON.stringify(devImages));
+        } catch (e) {}
     }
+
+    // Получить URL картинки для прибора.
+    // Если в "Изображение" — share-ссылка, возвращаем разрешённый file URL.
+    // Если путь или пусто — возвращаем пустую строку (показываем SVG-заставку).
+    function devGetImageUrl(dev) {
+        const img = (dev['Изображение'] || '').trim();
+        if (img.startsWith('https://disk.yandex.ru/i/')) {
+            return devImages[img] || ''; // разрешённый file URL
+        }
+        return ''; // локальный путь или пусто → SVG-заставка
+    }
+
+    // SVG-заставка для приборов без картинки
+    const DEV_PLACEHOLDER_SVG = 'data:image/svg+xml,' + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">' +
+        '<rect width="100" height="100" rx="12" fill="rgba(199,150,74,0.08)"/>' +
+        '<text x="50" y="58" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="rgba(199,150,74,0.5)">КИПиА</text>' +
+        '<circle cx="50" cy="35" r="12" fill="none" stroke="rgba(199,150,74,0.35)" stroke-width="2"/>' +
+        '<line x1="50" y1="47" x2="50" y2="55" stroke="rgba(199,150,74,0.35)" stroke-width="2"/>' +
+        '</svg>'
+    );
 
     async function devLoad() {
         if (devLoaded) return devData;
         try {
-            // Cache-busting: добавляем ?v=timestamp, чтобы обойти HTTP-кэш браузера
-            // и Service Worker Cache. SW использует makeCacheKey (URL без query),
-            // поэтому кэш обновится, но ключ останется стабильным.
-            // cache: 'no-store' — гарантированно не используем HTTP-кэш браузера.
             const bust = '?v=' + Date.now();
-            // Загружаем данные приборов
             const resp = await fetch('data/devices.json' + bust, { cache: 'no-store' });
             if (!resp.ok) throw new Error('HTTP ' + resp.status);
             devData = await resp.json();
-            // Загружаем свежие URL картинок с Яндекс Диска (URL истекают через ~час)
-            // Не делаем полный re-render — обновляем только src у существующих <img>,
-            // чтобы избежать мигания (картинки появляются, затем исчезают при re-render).
-            devLoadImagesFresh().then(() => {
-                devUpdateImageSrcs();
-            });
-            // Сначала попробуем использовать кэш картинок из localStorage (для быстрого рендера)
+            // Загружаем кэш разрешённых ссылок из localStorage
             try {
                 const cachedImgs = localStorage.getItem('kip8test:' + DEV_CACHE_KEY + '_images');
                 devImages = cachedImgs ? JSON.parse(cachedImgs) : {};
             } catch (e2) { devImages = {}; }
-            // Сохраняем данные в localStorage как резервный кэш для офлайна
+            // Разрешаем share-ссылки (свежие file URL) — асинхронно, не блокируем рендер
+            devResolveImageLinks().then(() => devRender());
+            // Сохраняем в localStorage
             try {
                 localStorage.setItem('kip8test:' + DEV_CACHE_KEY, JSON.stringify(devData));
             } catch (e) {}
@@ -5650,13 +5646,11 @@
             return devData;
         } catch (e) {
             console.warn('Devices load from network failed, trying cache:', e);
-            // Офлайн — берём из localStorage
             try {
                 const cached = localStorage.getItem('kip8test:' + DEV_CACHE_KEY);
                 if (cached) {
                     devData = JSON.parse(cached);
                     devLoaded = true;
-                    // Загружаем кэш картинок
                     try {
                         const cachedImgs = localStorage.getItem('kip8test:' + DEV_CACHE_KEY + '_images');
                         devImages = cachedImgs ? JSON.parse(cachedImgs) : {};
@@ -5666,39 +5660,6 @@
                 }
             } catch (e2) {}
             return null;
-        }
-    }
-
-    // Обновить src у существующих <img> картинок без полного ре-рендера.
-    // Избегает мигания: старые <img> остаются видимыми, пока новые URL загружаются.
-    function devUpdateImageSrcs() {
-        const cards = document.querySelectorAll('#devList .dev-card');
-        for (const card of cards) {
-            const devId = card.getAttribute('data-dev-id');
-            if (!devId) continue;
-            const dev = devData?.devices?.find(d => String(d['ID'] ?? '') === devId);
-            if (!dev) continue;
-            const imgPath = dev['Изображение'] || '';
-            const imgKey = imgPath ? imgPath.replace(/\\/g, '/').replace(/^кип_app\//, '') : '';
-            const newUrl = imgKey ? (devImages[imgKey] || '') : '';
-            const imgEl = card.querySelector('.dev-card-image');
-            if (newUrl && imgEl) {
-                if (imgEl.src !== newUrl) {
-                    imgEl.src = newUrl;
-                }
-            } else if (newUrl && !imgEl) {
-                // Картинки не было — добавим её перед .dev-card-text
-                const inner = card.querySelector('.dev-card-header-inner');
-                const textEl = card.querySelector('.dev-card-text');
-                if (inner && textEl) {
-                    const img = document.createElement('img');
-                    img.className = 'dev-card-image';
-                    img.src = newUrl;
-                    img.alt = dev['Наименование'] || '';
-                    img.loading = 'lazy';
-                    inner.insertBefore(img, textEl);
-                }
-            }
         }
     }
 
@@ -5758,17 +5719,19 @@
             const number = dev['№ прибора'] || '';
             const place = dev['Место установки'] || '';
             const imgPath = dev['Изображение'] || '';
-            // Нормализуем путь: "кип_app\СИ_Images\flow\пульсар тх.png" → "СИ_Images/flow/пульсар тх.png"
-            const imgKey = imgPath ? imgPath.replace(/\\/g, '/').replace(/^кип_app\//, '') : '';
-            const imgUrl = imgKey ? (devImages[imgKey] || '') : '';
+            const imgUrl = devGetImageUrl(dev);
+            // Если есть share-ссылка и она разрешена — показываем картинку.
+            // Если share-ссылка есть, но ещё не разрешена — показываем SVG-заставку
+            //   (после разрешения devRender() вызовется снова).
+            // Если пути нет или это локальный путь — показываем SVG-заставку.
+            const isShareLink = imgPath.startsWith('https://disk.yandex.ru/i/');
+            const finalImgUrl = imgUrl || DEV_PLACEHOLDER_SVG;
 
             html += '<div class="dev-card' + (isExpanded ? ' expanded' : '') + '" data-dev-id="' + devEsc(devId) + '">';
             html += '<div class="dev-card-header" onclick="devToggleCard(this)">';
             html += '<div class="dev-card-header-inner">';
-            // Превью картинки (если есть)
-            if (imgUrl) {
-                html += '<img class="dev-card-image" src="' + devEsc(imgUrl) + '" alt="' + devEsc(name) + '" loading="lazy">';
-            }
+            // Превью картинки
+            html += '<img class="dev-card-image" src="' + devEsc(finalImgUrl) + '" alt="' + devEsc(name) + '" loading="lazy">';
             html += '<div class="dev-card-text">';
             html += '<div class="dev-card-title">' + devMark(name, query) + '</div>';
             let subtitle = '';

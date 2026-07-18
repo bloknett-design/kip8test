@@ -11,7 +11,7 @@
 // свежие версии файлов из ASSETS.
 // ============================================================
 
-const CACHE_VERSION = 'kipia-test-v70';
+const CACHE_VERSION = 'kipia-test-v72';
 const CACHE_NAME = CACHE_VERSION;
 
 // Отдельный кэш для картинок Google Drive (превью + полные).
@@ -40,8 +40,7 @@ const ASSETS = [
   './images/6\u0440.png',
   './data/exam-tickets.json',
   './data/phonebook.json',
-  './data/devices.json',
-  './data/devices-images.json'
+  './data/devices.json'
 ];
 
 // App Shell — главный HTML-файл, который обслуживает все навигационные
@@ -212,8 +211,8 @@ self.addEventListener('fetch', event => {
                                 url.hostname === 'lh3.googleusercontent.com';
 
     // ===== Картинки приборов с Яндекс Диска =====
-    // downloader.disk.yandex.ru отдаёт application/octet-stream с nosniff,
-    // что блокирует <img> в Chrome. Проксируем через SW, меняем content-type.
+    // downloader.disk.yandex.ru отдаёт application/octet-stream + nosniff,
+    // что блокирует <img> в Chrome. Проксируем через SW с no-cors.
     const isYandexDiskImage = url.hostname === 'downloader.disk.yandex.ru' ||
                                url.hostname.endsWith('.storage.yandex.net');
 
@@ -222,37 +221,11 @@ self.addEventListener('fetch', event => {
         caches.open(IMAGE_CACHE_NAME).then(cache =>
           cache.match(request).then(cached => {
             if (cached) return cached;
-            // Идём в сеть с credentials (cookies от яндекса нужны для авторизации)
-            return fetch(request, { credentials: 'include', redirect: 'follow' }).then(response => {
-              if (response.ok) {
-                // Меняем content-type на image/png (или jpeg)
-                const contentType = request.url.match(/\.(jpe?g)$/i) ? 'image/jpeg' : 'image/png';
-                const headers = new Headers(response.headers);
-                headers.set('Content-Type', contentType);
-                headers.delete('X-Content-Type-Options');
-                const newResponse = new Response(response.body, {
-                  status: 200,
-                  statusText: 'OK',
-                  headers: headers,
-                });
-                cache.put(request, newResponse.clone());
-                return newResponse;
-              }
-              // Если 403 — попробуем без credentials (opaque)
-              return fetch(request, { mode: 'no-cors' }).then(opaqueResp => {
-                const contentType = request.url.match(/\.(jpe?g)$/i) ? 'image/jpeg' : 'image/png';
-                const newResponse = new Response(opaqueResp.body, {
-                  status: 200,
-                  statusText: 'OK',
-                  headers: new Headers({
-                    'Content-Type': contentType,
-                    'Cache-Control': 'max-age=2592000',
-                  }),
-                });
-                cache.put(request, newResponse.clone());
-                return newResponse;
-              });
-            }).catch(() => cached || new Response('', { status: 503 }));
+            // no-cors: браузер не проверяет CORS/content-type,
+            // возвращает opaque response (status 0) — <img> может отрендерить
+            return fetch(request, { mode: 'no-cors', redirect: 'follow' })
+              .then(response => response)
+              .catch(() => cached || new Response('', { status: 503 }));
           })
         )
       );
