@@ -5567,74 +5567,7 @@
         { key: 'Замечания', label: 'Замечания' },
     ];
 
-    let devImages = {};  // { shareLink: fileUrl } — resolved Yandex Disk share links
-
-    // Разрешить Yandex Disk share-ссылки (https://disk.yandex.ru/i/...) в прямые URL.
-    // Скачиваем картинку как blob → object URL (не истекает).
-    async function devResolveImageLinks() {
-        if (!devData || !devData.devices) return;
-        const shareLinks = new Set();
-        for (const d of devData.devices) {
-            const img = (d['Изображение'] || '').trim();
-            if (img.startsWith('https://disk.yandex.ru/i/')) {
-                shareLinks.add(img);
-            }
-        }
-        if (shareLinks.size === 0) return;
-        console.log('[devices] Разрешение ' + shareLinks.size + ' share-ссылок...');
-        const promises = Array.from(shareLinks).map(async link => {
-            try {
-                // 1. Получаем file URL через API
-                const apiResp = await fetch('https://cloud-api.yandex.net/v1/disk/public/resources?public_key=' + encodeURIComponent(link));
-                if (!apiResp.ok) return;
-                const apiData = await apiResp.json();
-                const fileUrl = apiData.file;
-                if (!fileUrl) return;
-                // 2. Скачиваем картинку как blob.
-                // credentials: 'include' — передаём cookies от .yandex.ru (от API вызова)
-                let imgResp;
-                try {
-                    imgResp = await fetch(fileUrl, { mode: 'cors', credentials: 'include' });
-                } catch (e1) {
-                    // Fallback: пробуем без credentials
-                    try {
-                        imgResp = await fetch(fileUrl, { mode: 'cors' });
-                    } catch (e2) {
-                        // Fallback: no-cors → opaque (не сможем прочитать body, но <img> может рендерить)
-                        // В этом случае сохраняем fileUrl напрямую, SW может проксировать
-                        devImages[link] = fileUrl;
-                        return;
-                    }
-                }
-                if (imgResp && imgResp.ok) {
-                    const blob = await imgResp.blob();
-                    if (blob.size > 0) {
-                        const objectUrl = URL.createObjectURL(blob);
-                        devImages[link] = objectUrl;
-                        console.log('[devices] ✓ blob ' + (blob.size / 1024).toFixed(1) + 'KB');
-                        return;
-                    }
-                }
-                // Если blob не получился — сохраняем fileUrl напрямую
-                devImages[link] = fileUrl;
-            } catch (e) {
-                console.warn('[devices] ✗ ' + e.message);
-            }
-        });
-        await Promise.all(promises);
-        console.log('[devices] Разрешено: ' + Object.keys(devImages).length + ' картинок');
-    }
-
-    // Получить URL картинки для прибора.
-    // Если в "Изображение" — share-ссылка, возвращаем разрешённый file URL.
-    // Если путь или пусто — возвращаем пустую строку (показываем SVG-заставку).
-    function devGetImageUrl(dev) {
-        const img = (dev['Изображение'] || '').trim();
-        if (img.startsWith('https://disk.yandex.ru/i/')) {
-            return devImages[img] || ''; // разрешённый file URL
-        }
-        return ''; // локальный путь или пусто → SVG-заставка
-    }
+    let devImages = {};  // не используется (base64 встроены в devices.json)
 
     // SVG-заставка для приборов без картинки или при загрузке
     const DEV_PLACEHOLDER_SVG = 'data:image/svg+xml,' + encodeURIComponent(
@@ -5646,6 +5579,17 @@
         '<text x="50" y="80" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="rgba(199,150,74,0.5)">КИПиА</text>' +
         '</svg>'
     );
+
+    // Получить URL картинки для прибора.
+    // Если "Изображение" — base64 data URI, возвращаем его.
+    // Иначе — SVG-заставка.
+    function devGetImageUrl(dev) {
+        const img = (dev['Изображение'] || '').trim();
+        if (img.startsWith('data:image/')) {
+            return img;
+        }
+        return DEV_PLACEHOLDER_SVG;
+    }
 
     async function devLoad() {
         if (devLoaded) return devData;
@@ -5899,14 +5843,9 @@
     function devInit() {
         devLoaded = false;
         devData = null;
-        devImages = {};
         devVisibleCount = DEV_DEFAULT_LIMIT;
         devExpandedCards = {};
-        devLoad().then(() => {
-            devRender();
-            // Асинхронно разрешаем share-ссылки и скачиваем картинки как blob
-            devResolveImageLinks().then(() => devRender());
-        });
+        devLoad().then(() => devRender());
     }
 
     // ИСТОРИЯ И НАВИГАЦИЯ

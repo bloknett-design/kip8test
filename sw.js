@@ -11,7 +11,7 @@
 // свежие версии файлов из ASSETS.
 // ============================================================
 
-const CACHE_VERSION = 'kipia-test-v74';
+const CACHE_VERSION = 'kipia-test-v75';
 const CACHE_NAME = CACHE_VERSION;
 
 // Отдельный кэш для картинок Google Drive (превью + полные).
@@ -209,30 +209,6 @@ self.addEventListener('fetch', event => {
   if (!isLocal) {
     const isGoogleDriveImage = url.hostname === 'drive.google.com' ||
                                 url.hostname === 'lh3.googleusercontent.com';
-
-    // ===== Картинки приборов с Яндекс Диска =====
-    // downloader.disk.yandex.ru → no-cors, кэшируем opaque response
-    const isYandexDiskImage = url.hostname === 'downloader.disk.yandex.ru' ||
-                               url.hostname.endsWith('.storage.yandex.net');
-
-    if (isYandexDiskImage) {
-      event.respondWith(
-        caches.open(IMAGE_CACHE_NAME).then(cache =>
-          cache.match(request).then(cached => {
-            if (cached) return cached;
-            return fetch(request, { mode: 'no-cors', redirect: 'follow', credentials: 'include' })
-              .then(response => {
-                if (response.type === 'opaque' || response.ok) {
-                  cache.put(request, response.clone());
-                }
-                return response;
-              })
-              .catch(() => cached || new Response('', { status: 503 }));
-          })
-        )
-      );
-      return;
-    }
 
     if (isGoogleDriveImage) {
       // Stale-while-revalidate через отдельный IMAGE_CACHE_NAME (переживает обновления версии)
