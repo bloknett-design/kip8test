@@ -5187,6 +5187,28 @@
         window.scrollTo({ top: Math.max(0, targetY), behavior: 'auto' });
     }
 
+    // Отложенная прокрутка с корректировкой после завершения анимации.
+    // Анимация max-height длится ~400ms. Если прокрутить слишком рано,
+    // позиция "уплывёт", потому что контент ещё растёт.
+    // Стратегия:
+    //   1. Мгновенная прокрутка через 2 кадра (requestAnimationFrame × 2) —
+    //      убирает резкий скачок, позиция примерно правильная.
+    //   2. Повторная корректировка через 450ms — после завершения анимации,
+    //      когда финальная высота стабильна.
+    function pbScrollToTopDelayed(el) {
+        if (!el) return;
+        // 1-я прокрутка: быстро, чтобы убрать скачок
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                pbScrollToTop(el);
+            });
+        });
+        // 2-я прокрутка: после завершения анимации max-height (0.4s = 400ms)
+        setTimeout(() => {
+            pbScrollToTop(el);
+        }, 450);
+    }
+
     // Обработчик клика по заголовку секции (аккордеон).
     function pbToggleSection(titleEl) {
         const list = document.getElementById('pbList');
@@ -5217,12 +5239,8 @@
             pbExpandedSections[secName] = true;
             if (navigator.vibrate) navigator.vibrate(30);
             // Прокрутить заголовок секции к верхней части экрана.
-            // Двойной requestAnimationFrame: DOM обновился → анимация началась → позиция точная.
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    pbScrollToTop(section);
-                });
-            });
+            // Используем отложенную прокрутку с корректировкой после анимации.
+            pbScrollToTopDelayed(section);
         }
     }
 
@@ -5264,11 +5282,8 @@
             pbExpandedSubgroups[sgKey] = true;
             if (navigator.vibrate) navigator.vibrate(25);
             // Прокрутить заголовок подгруппы к верхней части экрана.
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    pbScrollToTop(subgroup);
-                });
-            });
+            // Используем отложенную прокрутку с корректировкой после анимации.
+            pbScrollToTopDelayed(subgroup);
         }
     }
 
