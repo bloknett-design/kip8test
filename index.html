@@ -2292,11 +2292,11 @@
     .dev-card-header:active { background: rgba(199, 150, 74, 0.08); }
     .dev-card-title {
         font-size: 14px; font-weight: 700;
-        color: #2a2a2a;
+        color: #2a4a7a;
         line-height: 1.3;
         padding-right: 24px;
     }
-    [data-theme="light"] .dev-card-title { color: #1a1a1a; }
+    [data-theme="light"] .dev-card-title { color: #1a3a6a; }
     .dev-card-subtitle {
         font-size: 12px;
         color: rgba(40, 40, 40, 0.6);
@@ -5519,7 +5519,6 @@
 
     // Поля для отображения в карточке (порядок = как в карточке)
     const DEV_FIELDS = [
-        { key: 'ID', label: 'ID', class: 'dev-card-id' },
         { key: 'Тип', label: 'Тип' },
         { key: '№ прибора', label: '№ прибора', class: 'dev-card-number' },
         { key: 'Предел измерения', label: 'Предел измерения' },
@@ -5595,7 +5594,11 @@
         }
 
         // Фильтрация
-        let filtered = devData.devices.slice();
+        // Исключаем служебную запись с ID=0 (содержит дату изменения перечня)
+        let filtered = devData.devices.filter(d => {
+            const id = d['ID'];
+            return id !== 0 && id !== '0' && String(id ?? '').trim() !== '0';
+        });
         if (query) {
             filtered = filtered.filter(d =>
                 DEV_FIELDS.some(f => devNorm(d[f.key] || '').includes(query))
@@ -5603,10 +5606,12 @@
         }
 
         // Инфо
+        const lastUpdate = devGetLastUpdateDate();
+        const updateStr = lastUpdate ? ' · обновлено: ' + lastUpdate : '';
         if (query) {
-            info.textContent = 'Найдено: ' + filtered.length + ' ' + devPlural(filtered.length, ['прибор', 'прибора', 'приборов']);
+            info.textContent = 'Найдено: ' + filtered.length + ' ' + devPlural(filtered.length, ['прибор', 'прибора', 'приборов']) + updateStr;
         } else {
-            info.textContent = 'Всего: ' + filtered.length + ' ' + devPlural(filtered.length, ['прибор', 'прибора', 'приборов']);
+            info.textContent = 'Всего: ' + filtered.length + ' ' + devPlural(filtered.length, ['прибор', 'прибора', 'приборов']) + updateStr;
         }
 
         if (filtered.length === 0) {
@@ -5675,10 +5680,21 @@
         const devId = card.getAttribute('data-dev-id');
         const isExpanded = card.classList.contains('expanded');
         if (isExpanded) {
+            // Закрыть текущую
             card.classList.remove('expanded');
             delete devExpandedCards[devId];
             if (navigator.vibrate) navigator.vibrate(15);
         } else {
+            // Аккордеон: закрыть ВСЕ остальные карточки
+            const list = document.getElementById('devList');
+            if (list) {
+                list.querySelectorAll('.dev-card.expanded').forEach(c => {
+                    c.classList.remove('expanded');
+                    const k = c.getAttribute('data-dev-id');
+                    if (k) delete devExpandedCards[k];
+                });
+            }
+            // Раскрыть текущую
             card.classList.add('expanded');
             devExpandedCards[devId] = true;
             if (navigator.vibrate) navigator.vibrate(25);
@@ -5725,6 +5741,38 @@
         devVisibleCount = DEV_DEFAULT_LIMIT;
         if (navigator.vibrate) navigator.vibrate(25);
         devRender();
+    }
+
+    // Конвертация Excel serial date (число дней с 1899-12-30) в формат DD.MM.YYYY
+    function devExcelDateToString(serial) {
+        if (!serial) return '';
+        const num = parseFloat(serial);
+        if (isNaN(num)) return '';
+        // Excel epoch: 1899-12-30 (с учётом бага 1900 високосного года)
+        const ms = Math.round((num - 25569) * 86400 * 1000);  // 25569 = дней между 1899-12-30 и 1970-01-01
+        const d = new Date(ms);
+        if (isNaN(d.getTime())) return '';
+        const dd = String(d.getUTCDate()).padStart(2, '0');
+        const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+        const yyyy = d.getUTCFullYear();
+        return dd + '.' + mm + '.' + yyyy;
+    }
+
+    // Получить дату последнего изменения перечня из записи с ID=0
+    // (в столбце "Тип" хранится Excel serial date)
+    function devGetLastUpdateDate() {
+        if (!devData || !devData.devices) return '';
+        for (const d of devData.devices) {
+            const id = d['ID'];
+            // ID может быть числом 0 или строкой '0' — проверяем оба
+            if (id === 0 || id === '0' || String(id ?? '').trim() === '0') {
+                const typeVal = d['Тип'] || '';
+                if (typeVal) {
+                    return devExcelDateToString(typeVal);
+                }
+            }
+        }
+        return '';
     }
 
     function devPlural(n, forms) {
