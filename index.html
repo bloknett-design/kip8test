@@ -2247,52 +2247,69 @@
         backdrop-filter: blur(8px);
     }
     [data-theme="light"] .dev-search-wrap { background: #f3ecdc; }
-    /* Карточка прибора — список параметров в виде таблицы */
-    .dev-card {
-        margin: 6px 8px 8px;
-        border: 1px solid rgba(106,170,90,0.15);
+    /* Список карточек приборов — без рамок, с разделителями */
+    .dev-list {
+        background: rgba(255, 250, 240, 0.95);
+        margin: 0 8px 8px;
         border-radius: 12px;
-        background: rgba(106,170,90,0.02);
         overflow: hidden;
     }
-    [data-theme="light"] .dev-card {
-        border-color: rgba(80,140,60,0.2);
-        background: rgba(255,255,255,0.6);
+    [data-theme="light"] .dev-list {
+        background: rgba(255, 252, 245, 0.98);
+    }
+    /* Карточка прибора — без рамки, с разделителем снизу */
+    .dev-card {
+        margin: 0;
+        border: none;
+        border-bottom: 1px solid rgba(20, 20, 19, 0.08);
+        border-radius: 0;
+        background: transparent;
+        overflow: hidden;
+    }
+    .dev-card:last-child { border-bottom: none; }
+    /* Зебра: чётные карточки — темнее, нечётные — светлее */
+    .dev-card:nth-child(odd) {
+        background: rgba(225, 218, 205, 0.7);
+    }
+    .dev-card:nth-child(even) {
+        background: rgba(252, 248, 240, 0.9);
+    }
+    [data-theme="light"] .dev-card:nth-child(odd) {
+        background: rgba(220, 213, 200, 0.6);
+    }
+    [data-theme="light"] .dev-card:nth-child(even) {
+        background: rgba(252, 248, 240, 0.95);
     }
     .dev-card-header {
         padding: 11px 14px 9px;
-        background: rgba(106,170,90,0.08);
-        border-bottom: 1px solid rgba(106,170,90,0.15);
+        background: transparent;
+        border-bottom: none;
         cursor: pointer;
         position: relative;
         -webkit-tap-highlight-color: transparent;
         transition: background 0.15s;
     }
-    [data-theme="light"] .dev-card-header {
-        background: rgba(80,140,60,0.1);
-    }
-    .dev-card-header:active { background: rgba(106,170,90,0.16); }
-    [data-theme="light"] .dev-card-header:active { background: rgba(80,140,60,0.18); }
+    .dev-card-header:active { background: rgba(199, 150, 74, 0.08); }
     .dev-card-title {
         font-size: 14px; font-weight: 700;
-        color: #6aaa5a;
+        color: #2a2a2a;
         line-height: 1.3;
         padding-right: 24px;
     }
-    [data-theme="light"] .dev-card-title { color: #4a8a3a; }
+    [data-theme="light"] .dev-card-title { color: #1a1a1a; }
     .dev-card-subtitle {
         font-size: 12px;
-        color: rgba(255,255,255,0.5);
+        color: rgba(40, 40, 40, 0.6);
         margin-top: 2px;
     }
-    [data-theme="light"] .dev-card-subtitle { color: rgba(20,20,19,0.55); }
+    [data-theme="light"] .dev-card-subtitle { color: rgba(20, 20, 19, 0.6); }
     .dev-card-arrow {
         position: absolute;
         right: 12px; top: 50%;
         transform: translateY(-50%) rotate(0deg);
         width: 8px; height: 8px;
-        border-right: 1.4px solid rgba(106,170,90,0.6);
-        border-bottom: 1.4px solid rgba(106,170,90,0.6);
+        border-right: 1.4px solid rgba(80, 80, 80, 0.5);
+        border-bottom: 1.4px solid rgba(80, 80, 80, 0.5);
         transition: transform 0.22s ease;
         pointer-events: none;
     }
@@ -2311,47 +2328,44 @@
     .dev-card-row {
         display: flex;
         padding: 7px 14px;
-        border-bottom: 1px solid rgba(255,255,255,0.04);
+        border-bottom: 1px solid rgba(20, 20, 19, 0.06);
         gap: 8px;
         font-size: 13px;
         line-height: 1.35;
     }
-    [data-theme="light"] .dev-card-row { border-bottom-color: rgba(20,20,19,0.06); }
     .dev-card-row:last-child { border-bottom: none; }
-    .dev-card-row:nth-child(odd) { background: rgba(255,255,255,0.015); }
-    [data-theme="light"] .dev-card-row:nth-child(odd) { background: rgba(20,20,19,0.02); }
     .dev-card-label {
         flex-shrink: 0;
         width: 130px;
-        color: rgba(255,255,255,0.4);
+        color: rgba(40, 40, 40, 0.5);
         font-size: 12px;
     }
-    [data-theme="light"] .dev-card-label { color: rgba(20,20,19,0.5); }
+    [data-theme="light"] .dev-card-label { color: rgba(20, 20, 19, 0.55); }
     .dev-card-value {
         flex: 1;
-        color: #e0e0e0;
+        color: #2a2a2a;
         word-wrap: break-word; overflow-wrap: break-word;
     }
     [data-theme="light"] .dev-card-value { color: #1a1a1a; }
     .dev-card-value mark {
-        background: rgba(106,170,90,0.3);
+        background: rgba(199, 150, 74, 0.3);
         color: inherit; padding: 0 1px; border-radius: 2px;
     }
     .dev-card-value.dev-card-id {
-        color: #6aaa5a; font-weight: 600;
+        color: #c7964a; font-weight: 600;
         font-feature-settings: "tnum";
     }
-    [data-theme="light"] .dev-card-value.dev-card-id { color: #4a8a3a; }
+    [data-theme="light"] .dev-card-value.dev-card-id { color: #a67a30; }
     .dev-card-value.dev-card-number {
-        color: #6aa6e0; font-weight: 600;
+        color: #2a5d8f; font-weight: 600;
         font-feature-settings: "tnum";
     }
-    [data-theme="light"] .dev-card-value.dev-card-number { color: #2a5d8f; }
+    [data-theme="light"] .dev-card-value.dev-card-number { color: #1a4060; }
     .dev-card-value.dev-card-date {
-        color: rgba(255,255,255,0.6);
+        color: rgba(40, 40, 40, 0.7);
         font-feature-settings: "tnum";
     }
-    [data-theme="light"] .dev-card-value.dev-card-date { color: rgba(20,20,19,0.65); }
+    [data-theme="light"] .dev-card-value.dev-card-date { color: rgba(20, 20, 19, 0.7); }
     .header-title {
         cursor: pointer; user-select: none; -webkit-user-select: none;
         -webkit-touch-callout: none; touch-action: manipulation;
@@ -2782,7 +2796,7 @@
             <div class="page-inline-header"><div class="page-inline-header-title">КИП ИОС</div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
             <div class="menu-btn-row">
-                <div class="menu-btn" onclick="navigateTo('devices')" style="border-color:rgba(199,150,74,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#c7964a;">Приборы</div><div class="menu-btn-sublabel">Перечень КИП ИОС — 1312 приборов</div></div><i class="menu-btn-arrow" style="color:rgba(199,150,74,0.4);">›</i></div>
+                <div class="menu-btn" onclick="navigateTo('devices')"><div class="menu-btn-text"><div class="menu-btn-label">Приборы</div><div class="menu-btn-sublabel">Перечень КИП ИОС — 1312 приборов</div></div><i class="menu-btn-arrow">›</i></div>
             </div>
         </div>
 
@@ -2878,15 +2892,9 @@
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
             <div class="dev-search-wrap">
                 <input type="search" id="devSearchInput" class="pb-search-input" placeholder="Поиск: тип, №, место установки…" autocomplete="off" enterkeyhint="search" oninput="devRender()">
-                <div class="pb-toolbar">
-                    <button type="button" id="devFilterType" class="pb-filter-btn" onclick="devToggleTypeFilter()" style="border-color:rgba(106,170,90,0.25); background:rgba(106,170,90,0.04); color:rgba(106,170,90,0.8);">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M7 12h10M10 18h4"/></svg>
-                        <span id="devFilterTypeLabel">Все типы</span>
-                    </button>
-                </div>
             </div>
             <div class="pb-info" id="devInfo">Загрузка…</div>
-            <div id="devList" class="pb-list"></div>
+            <div id="devList"></div>
         </div>
 
         <!-- ======================== КОНВЕРТЕР ЕДИНИЦ ======================== -->
@@ -5580,9 +5588,6 @@
 
         const query = devNorm((document.getElementById('devSearchInput')?.value || '').trim());
 
-        // Обновить кнопку фильтра по типу
-        devUpdateFilterButton();
-
         if (!devLoaded || !devData) {
             list.innerHTML = '';
             info.textContent = 'Загрузка…';
@@ -5591,9 +5596,6 @@
 
         // Фильтрация
         let filtered = devData.devices.slice();
-        if (devFilterType) {
-            filtered = filtered.filter(d => (d['Тип'] || '') === devFilterType);
-        }
         if (query) {
             filtered = filtered.filter(d =>
                 DEV_FIELDS.some(f => devNorm(d[f.key] || '').includes(query))
@@ -5601,7 +5603,7 @@
         }
 
         // Инфо
-        if (query || devFilterType) {
+        if (query) {
             info.textContent = 'Найдено: ' + filtered.length + ' ' + devPlural(filtered.length, ['прибор', 'прибора', 'приборов']);
         } else {
             info.textContent = 'Всего: ' + filtered.length + ' ' + devPlural(filtered.length, ['прибор', 'прибора', 'приборов']);
@@ -5616,7 +5618,7 @@
         const visible = filtered.slice(0, devVisibleCount);
         const remaining = filtered.length - visible.length;
 
-        let html = '';
+        let html = '<div class="dev-list">';
         for (const dev of visible) {
             const devId = String(dev['ID'] || '');
             const isExpanded = devExpandedCards[devId] === true;
@@ -5650,10 +5652,11 @@
             html += '</div>'; // .dev-card-body
             html += '</div>'; // .dev-card
         }
+        html += '</div>'; // .dev-list
         // Кнопка "Показать ещё"
         if (remaining > 0) {
             html += '<div style="text-align:center; padding:12px;">';
-            html += '<button type="button" class="pb-filter-btn" onclick="devShowMore()" style="border-color:rgba(106,170,90,0.25); background:rgba(106,170,90,0.04); color:rgba(106,170,90,0.8);">';
+            html += '<button type="button" class="pb-filter-btn" onclick="devShowMore()" style="border-color:rgba(199,150,74,0.35); background:rgba(199,150,74,0.06); color:#c7964a;">';
             html += 'Показать ещё ' + Math.min(50, remaining) + ' (осталось ' + remaining + ')';
             html += '</button>';
             html += '</div>';
