@@ -1,0 +1,70 @@
+name: Update Devices (TEST)
+
+# ВНИМАНИЕ: это тестовый репозиторий kip8test.
+# Автоматический cron ОТКЛЮЧЁН, чтобы не дублировать запросы к Яндекс Диску
+# с основным репозиторием kip8. Запуск только вручную через workflow_dispatch.
+# При необходимости можно временно включить schedule, раскомментировав блок ниже.
+#
+# КАК НАСТРОИТЬ:
+# По умолчанию используется публичная ссылка:
+#   https://disk.yandex.ru/i/KNVTQ7Q6II7zbA
+#   лист: Приборы_app
+# Можно переопределить через переменные окружения в шаге "Download and parse":
+#   DEVICES_PUBLIC_KEY, DEVICES_SHEET_NAME
+
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: '0 6 * * *'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install openpyxl requests
+
+      - name: Download from Yandex Disk and convert to JSON
+        run: python scripts/sync-devices.py
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          git diff --exit-code data/devices.json || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Commit and push if changed
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/devices.json
+          git commit -m "auto: update devices data from Yandex Disk (test repo)"
+          git push
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Devices Sync Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.check_changes.outputs.changed }}" == "true" ]; then
+            echo "✅ Данные обновлены и закоммичены" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ℹ️ Изменений нет" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -f data/devices.json ]; then
+            COUNT=$(python3 -c "import json; d=json.load(open('data/devices.json')); print(d.get('total_devices', 'N/A'))")
+            echo "**Приборов:** $COUNT" >> $GITHUB_STEP_SUMMARY
+            echo "**Источник:** Yandex Disk (public)" >> $GITHUB_STEP_SUMMARY
+            echo "**Лист:** Приборы_app" >> $GITHUB_STEP_SUMMARY
+          fi
