@@ -33,7 +33,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install openpyxl requests
+        run: pip install openpyxl requests Pillow
 
       - name: Download from Yandex Disk and convert to JSON
         run: python scripts/sync-devices.py
