@@ -279,21 +279,10 @@
         backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
         will-change: transform, opacity;
     }
-    /* Состояние при прокрутке вниз: nav-bar скрыт, заголовок сжат */
-    .page-content.scrolled .nav-bar {
-        transform: translateY(-100%);
-        opacity: 0;
-        max-height: 0;
-        padding-top: 0;
-        padding-bottom: 0;
-        margin-top: -1px;
-        pointer-events: none;
-        overflow: hidden;
-        visibility: hidden;
-    }
+    /* Состояние при прокрутке вниз: заголовок сжат */
     .page-content.scrolled .page-inline-header {
         height: 40px;
-        padding: 0 16px;
+        padding: 0 16px 0 8px;
         top: 0;
     }
     .page-content.scrolled .page-inline-header-title {
@@ -1126,11 +1115,31 @@
         backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
         background: var(--header-bg);
         border-bottom: 1px solid rgba(74, 143, 199, 0.15); height: 56px;
-        display: flex; align-items: center; justify-content: space-between;
-        padding: 0 20px;
+        display: flex; align-items: center; gap: 6px;
+        padding: 0 20px 0 8px;
         -webkit-transform: translateZ(0); transform: translateZ(0); will-change: transform;
     }
-    .page-inline-header-title { font-size: 18px; font-weight: 700; color: #e0e0e0; letter-spacing: -0.3px; }
+    .page-inline-header-chevron {
+        display: flex; align-items: center;
+        cursor: pointer;
+        -webkit-user-select: none; user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        padding: 8px 4px;
+        border-radius: 6px;
+        transition: background 0.15s;
+    }
+    .page-inline-header-chevron:active { background: rgba(74, 143, 199, 0.15); }
+    .page-inline-header-chevron svg {
+        width: 22px; height: 22px;
+        stroke: rgba(140, 170, 200, 0.7);
+        fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+        pointer-events: none;
+    }
+    [data-theme="light"] .page-inline-header-chevron svg {
+        stroke: rgba(42, 93, 143, 0.6);
+    }
+    .page-inline-header-title { font-size: 18px; font-weight: 700; color: #e0e0e0; letter-spacing: -0.3px; flex: 1; }
     #page-dashboard ~ .app-header, body:has(#page-dashboard.active) .app-header { display: block; }
     body:has(.page-content.active:not(#page-dashboard)) .app-header { display: none; }
     .greek-gamma { font-family: Georgia, 'Times New Roman', serif; font-style: italic; text-transform: none; }
@@ -2796,8 +2805,8 @@
 
         <!-- ======================== ИНЖЕНЕРНЫЕ КАЛЬКУЛЯТОРЫ (родительское меню) ======================== -->
         <div id="page-calculators" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Инженерные калькуляторы</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Инженерные калькуляторы</div></div>
+
             <div class="menu-btn-row">
                 <div class="menu-btn" onclick="navigateTo('calc-kipa')"><div class="menu-btn-text"><div class="menu-btn-label">КИП и А</div><div class="menu-btn-sublabel">Конвертеры, погрешности, датчики, диафрагмы</div></div><i class="menu-btn-arrow">›</i></div>
                 <div class="menu-btn" onclick="navigateTo('calc-electro')"><div class="menu-btn-text"><div class="menu-btn-label">Электротехника</div><div class="menu-btn-sublabel">Автоматический выключатель</div></div><i class="menu-btn-arrow">›</i></div>
@@ -2807,8 +2816,8 @@
 
         <!-- ======================== ДОКУМЕНТАЦИЯ (родительское меню) ======================== -->
         <div id="page-docs" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Документация</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Документация</div></div>
+
             <div class="menu-btn-row">
                 <div class="menu-btn" onclick="navigateTo('exam-tickets')" style="border-color:rgba(199,150,74,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#c7964a;">Экзаменационные билеты</div><div class="menu-btn-sublabel">4, 5, 6 разряд, до 1000 В</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('exam-tickets')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(199,150,74,0.4);">›</i></div>
                 <div class="menu-btn" onclick="navigateTo('library')" style="border-color:rgba(199,150,74,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#c7964a;">Библиотека КИП и А</div><div class="menu-btn-sublabel">Документация, схемы, инструкции</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('library')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(199,150,74,0.4);">›</i></div>
@@ -2818,8 +2827,8 @@
 
         <!-- ======================== КИП ИОС (родительское меню) ======================== -->
         <div id="page-kip-ios" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">КИП ИОС</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">КИП ИОС</div></div>
+
             <div class="menu-btn-row">
                 <div class="menu-btn" onclick="navigateTo('devices')"><div class="menu-btn-text"><div class="menu-btn-label">Приборы</div><div class="menu-btn-sublabel">Перечень КИП ИОС — 1312 приборов</div></div><i class="menu-btn-arrow">›</i></div>
             </div>
@@ -2827,8 +2836,8 @@
 
         <!-- ======================== ИНЖЕНЕРНЫЕ КАЛЬКУЛЯТОРЫ — КИП и А ======================== -->
         <div id="page-calc-kipa" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">КИП и А</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">КИП и А</div></div>
+
             <div class="menu-btn-row">
                 <div class="menu-btn" onclick="navigateTo('converter')"><div class="menu-btn-text"><div class="menu-btn-label">Конвертер единиц</div><div class="menu-btn-sublabel">Давление, расход, температура и др.</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('converter')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
                 <div class="menu-btn" onclick="navigateTo('scale-signal')"><div class="menu-btn-text"><div class="menu-btn-label">Шкала-сигнал</div><div class="menu-btn-sublabel">Расчёт диапазонов шкалы и сигнала</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('scale-signal')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
@@ -2841,8 +2850,8 @@
 
         <!-- ======================== ИНЖЕНЕРНЫЕ КАЛЬКУЛЯТОРЫ — ЭЛЕКТРОТЕХНИКА ======================== -->
         <div id="page-calc-electro" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Электротехника</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Электротехника</div></div>
+
             <div class="menu-btn-row">
                 <div class="menu-btn" onclick="navigateTo('circuit-breaker')"><div class="menu-btn-text"><div class="menu-btn-label">Автоматический выключатель</div><div class="menu-btn-sublabel">Расчёт по мощности, току, сечению кабеля</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('circuit-breaker')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
             </div>
@@ -2850,8 +2859,8 @@
 
         <!-- ======================== ИНЖЕНЕРНЫЕ КАЛЬКУЛЯТОРЫ — ГЕОМЕТРИЯ ======================== -->
         <div id="page-calc-geometry" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Геометрия</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Геометрия</div></div>
+
             <div class="menu-btn-row">
                 <div class="menu-btn" onclick="navigateTo('geo-circle')"><div class="menu-btn-text"><div class="menu-btn-label">Круг</div><div class="menu-btn-sublabel">Площадь, периметр, радиус</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('geo-circle')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
                 <div class="menu-btn" onclick="navigateTo('geo-ring')"><div class="menu-btn-text"><div class="menu-btn-label">Кольцо</div><div class="menu-btn-sublabel">Площадь сечения, эквивалентный диаметр</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('geo-ring')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
@@ -2864,8 +2873,8 @@
 
         <!-- ======================== ИГРА САПЁР ======================== -->
         <div id="page-minesweeper" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Сапёр</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Сапёр</div></div>
+
             <div class="ms-container">
                 <div class="ms-header">
                     <div class="ms-left">
@@ -2896,8 +2905,8 @@
 
         <!-- ======================== ТЕЛЕФОННЫЙ СПРАВОЧНИК ======================== -->
         <div id="page-phonebook" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Телефонный справочник</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Телефонный справочник</div></div>
+
             <div class="pb-search-wrap">
                 <input type="search" id="pbSearchInput" class="pb-search-input" placeholder="Поиск: имя, должность, телефон…" autocomplete="off" enterkeyhint="search" oninput="pbRender()">
                 <div class="pb-toolbar">
@@ -2913,8 +2922,8 @@
 
         <!-- ======================== ПРИБОРЫ (КИП ИОС) ======================== -->
         <div id="page-devices" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Приборы</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Приборы</div></div>
+
             <div class="dev-search-wrap">
                 <input type="search" id="devSearchInput" class="pb-search-input" placeholder="Поиск: тип, №, место установки…" autocomplete="off" enterkeyhint="search" oninput="devRender()">
             </div>
@@ -2924,8 +2933,8 @@
 
         <!-- ======================== КОНВЕРТЕР ЕДИНИЦ ======================== -->
         <div id="page-converter" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Конвертер единиц</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Конвертер единиц</div></div>
+
             <div class="menu-btn-row">
                 <div class="menu-btn" onclick="navigateTo('conv-pressure')"><div class="menu-btn-text"><div class="menu-btn-label">Давление</div><div class="menu-btn-sublabel">Па, МПа, бар, атм, мм рт. ст.</div></div><i class="menu-btn-arrow">›</i></div>
                 <div class="menu-btn" onclick="navigateTo('conv-flow')"><div class="menu-btn-text"><div class="menu-btn-label">Расход</div><div class="menu-btn-sublabel">м³/ч, л/мин, т/ч</div></div><i class="menu-btn-arrow">›</i></div>
@@ -2940,8 +2949,8 @@
 
         <!-- Давление -->
         <div id="page-conv-pressure" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Давление</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Давление</div></div>
+
             <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-pressure-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-pressure-unit" class="form-field" autocomplete="off"><option value="Pa">Па</option><option value="kPa">кПа</option><option value="MPa" selected>МПа</option><option value="bar">бар</option><option value="mbar">мбар</option><option value="atm">атм</option><option value="kgf_cm2">кгс/см²</option><option value="kgf_m2">кгс/м²</option><option value="mmHg">мм рт. ст.</option><option value="PSI">PSI</option><option value="mmH2O">мм вод. ст.</option></select></div>
             <button type="button" class="converter-convert-btn" onclick="convertUnits('pressure')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
             <div class="converter-result-group" id="conv-pressure-results"></div>
@@ -2951,8 +2960,8 @@
 
         <!-- Расход -->
         <div id="page-conv-flow" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Расход</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Расход</div></div>
+
             <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-flow-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-flow-unit" class="form-field" autocomplete="off"><option value="m3h" selected>м³/ч</option><option value="m3s">м³/с</option><option value="l_min">л/мин</option><option value="l_s">л/с</option><option value="t_h">т/ч</option><option value="kg_s">кг/с</option><option value="kg_h">кг/ч</option></select></div>
             <button type="button" class="converter-convert-btn" onclick="convertUnits('flow')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
             <div class="converter-result-group" id="conv-flow-results"></div>
@@ -2962,8 +2971,8 @@
 
         <!-- Вес и масса -->
         <div id="page-conv-mass" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Вес и масса</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Вес и масса</div></div>
+
             <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-mass-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-mass-unit" class="form-field" autocomplete="off"><option value="kg" selected>кг</option><option value="g">г</option><option value="mg">мг</option><option value="t">т</option><option value="lb">lb</option><option value="oz">oz</option></select></div>
             <button type="button" class="converter-convert-btn" onclick="convertUnits('mass')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
             <div class="converter-result-group" id="conv-mass-results"></div>
@@ -2973,8 +2982,8 @@
 
         <!-- Температура -->
         <div id="page-conv-temp" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Температура</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Температура</div></div>
+
             <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-temp-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-temp-unit" class="form-field" autocomplete="off"><option value="C" selected>°C</option><option value="F">°F</option><option value="K">K</option><option value="R">°R</option><option value="Ra">°Ra</option></select></div>
             <button type="button" class="converter-convert-btn" onclick="convertTemp()"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
             <div class="converter-result-group" id="conv-temp-results"></div>
@@ -2984,8 +2993,8 @@
 
         <!-- Длина и расстояние -->
         <div id="page-conv-length" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Длина и расстояние</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Длина и расстояние</div></div>
+
             <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-length-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-length-unit" class="form-field" autocomplete="off"><option value="m" selected>м</option><option value="km">км</option><option value="cm">см</option><option value="mm">мм</option><option value="um">мкм</option><option value="mi">миля</option><option value="ft">фут</option><option value="in">дюйм</option><option value="yd">ярд</option></select></div>
             <button type="button" class="converter-convert-btn" onclick="convertUnits('length')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
             <div class="converter-result-group" id="conv-length-results"></div>
@@ -2995,8 +3004,8 @@
 
         <!-- Плотность -->
         <div id="page-conv-density" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Плотность</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Плотность</div></div>
+
             <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-density-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-density-unit" class="form-field" autocomplete="off"><option value="kg_m3" selected>кг/м³</option><option value="g_cm3">г/см³</option><option value="g_l">г/л</option><option value="kg_l">кг/л</option></select></div>
             <button type="button" class="converter-convert-btn" onclick="convertUnits('density')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
             <div class="converter-result-group" id="conv-density-results"></div>
@@ -3006,8 +3015,8 @@
 
         <!-- Время -->
         <div id="page-conv-time" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Время</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Время</div></div>
+
             <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-time-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-time-unit" class="form-field" autocomplete="off"><option value="s" selected>секунда</option><option value="ms">миллисекунда</option><option value="min">минута</option><option value="h">час</option><option value="d">сутки</option><option value="week">неделя</option><option value="month">месяц</option><option value="year">год</option></select></div>
             <button type="button" class="converter-convert-btn" onclick="convertUnits('time')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
             <div class="converter-result-group" id="conv-time-results"></div>
@@ -3017,8 +3026,8 @@
 
         <!-- Объём -->
         <div id="page-conv-volume" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Объём</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Объём</div></div>
+
             <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-volume-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-volume-unit" class="form-field" autocomplete="off"><option value="m3" selected>м³</option><option value="l">литр</option><option value="ml">мл</option><option value="cm3">см³</option><option value="gal">галлон</option><option value="bbl">баррель</option><option value="ft3">куб. фут</option><option value="dm3">дм³</option></select></div>
             <button type="button" class="converter-convert-btn" onclick="convertUnits('volume')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
             <div class="converter-result-group" id="conv-volume-results"></div>
@@ -3028,8 +3037,8 @@
 
         <!-- ======================== ШКАЛА-СИГНАЛ ======================== -->
         <div id="page-scale-signal" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Шкала-сигнал</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Шкала-сигнал</div></div>
+
             <div class="scale-form"><div class="scale-form-label">Тип шкалы</div><select id="scaleType" class="scale-field" autocomplete="off"><option value="linear" selected data-hint="прямая">Линейная</option><option value="quadratic" data-hint="сигнал ∝ X²">Квадратичная</option><option value="sqrt" data-hint="сигнал ∝ √X">Корнеизвлекающая</option></select><div style="color:rgba(255,255,255,0.25); font-size:10px; margin-top:4px; padding-left:4px;">Линейная: прямая зависимость · Квадратичная: сигнал ∝ (шкала)² · Корнеизвлекающая: сигнал ∝ √(шкала)</div></div>
             <div class="scale-form"><div class="scale-form-label">Диапазон шкалы измерения</div><select id="scalePreset" class="scale-field" onchange="setScaleDefaults()" autocomplete="off"><option value="0_100" selected>0 – 100 %</option><option value="4_20" data-hint="ток">4 – 20 мА</option><option value="0_20" data-hint="ток">0 – 20 мА</option><option value="0_5mA" data-hint="ток">0 – 5 мА</option><option value="0_10V" data-hint="напряжение">0 – 10 В</option><option value="1_5V" data-hint="напряжение">1 – 5 В</option><option value="0_5V" data-hint="напряжение">0 – 5 В</option><option value="bipolar_10" data-hint="напряжение">-10 – +10 В</option><option value="20_100_kPa" data-hint="пневматика">20 – 100 кПа</option><option value="0_2_1_0_bar" data-hint="пневматика">0,2 – 1,0 бар</option><option value="3_15_psi" data-hint="пневматика">3 – 15 psi</option><option value="0_2_1_0_kgf_cm2" data-hint="пневматика">0,2 – 1,0 кгс/см²</option><option value="custom" data-hint="Вручную">Своё значение</option></select><div id="scaleCustomRange" style="margin-top:12px;"><input type="text" inputmode="numeric" id="scaleMin" class="scale-field" placeholder="Минимум шкалы" value="0" style="margin-bottom:6px;" autocomplete="off" enterkeyhint="next" oninput="validateNumericField(this)"><input type="text" inputmode="numeric" id="scaleMax" class="scale-field" placeholder="Максимум шкалы" value="100" autocomplete="off" enterkeyhint="next" oninput="validateNumericField(this)"><input type="text" inputmode="text" id="scaleUnitName" class="scale-field" placeholder="Ед. измерения" value="%" style="margin-top:6px;" autocomplete="off" enterkeyhint="done" ></div></div>
             <div class="scale-form"><div class="scale-form-label">Тип выходного сигнала</div><select id="sigType" class="scale-field" onchange="setSignalDefaults()" autocomplete="off"><optgroup label="Токовые"><option value="4_20">4 – 20 мА</option><option value="0_20">0 – 20 мА</option><option value="0_5mA">0 – 5 мА</option></optgroup><optgroup label="Напряжения"><option value="0_10V">0 – 10 В</option><option value="1_5V">1 – 5 В</option><option value="0_5V">0 – 5 В</option><option value="bipolar_10">-10 – +10 В</option></optgroup><optgroup label="Пневматические"><option value="20_100_kPa">20 – 100 кПа</option><option value="0_2_1_0_bar">0,2 – 1,0 бар</option><option value="3_15_psi">3 – 15 psi</option><option value="0_2_1_0_kgf_cm2" selected>0,2 – 1,0 кгс/см²</option></optgroup><optgroup label="Другие"><option value="0_100_pct">0 – 100 %</option><option value="custom">Своё</option></optgroup></select>
@@ -3041,8 +3050,8 @@
 
         <!-- ======================== АВТОМАТИЧЕСКИЙ ВЫКЛЮЧАТЕЛЬ ======================== -->
         <div id="page-circuit-breaker" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Автоматический выключатель</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Автоматический выключатель</div></div>
+
 
             <div class="scale-form">
                 <div class="scale-form-label">Тип питания</div>
@@ -3174,8 +3183,8 @@
 
         <!-- ======================== ГЕОМЕТРИЯ: КРУГ ======================== -->
         <div id="page-geo-circle" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Круг</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Круг</div></div>
+
             <div class="geo-svg-container"><svg viewBox="0 0 140 140" class="geo-svg" font-family="Inter, sans-serif">
 <defs>
 <marker id="gc-as" markerWidth="8" markerHeight="8" refX="3" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M7,1 L3,4 L7,7" fill="none" stroke="#5a9fd4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></marker>
@@ -3198,8 +3207,8 @@
 
         <!-- ======================== ГЕОМЕТРИЯ: КОЛЬЦО ======================== -->
         <div id="page-geo-ring" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Кольцо</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Кольцо</div></div>
+
             <div class="geo-svg-container"><svg viewBox="0 0 140 140" class="geo-svg" font-family="Inter, sans-serif">
 <defs>
 <marker id="gr-as" markerWidth="8" markerHeight="8" refX="3" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M7,1 L3,4 L7,7" fill="none" stroke="#5a9fd4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></marker>
@@ -3227,8 +3236,8 @@
 
         <!-- ======================== ГЕОМЕТРИЯ: ЦИЛИНДР ВЕРТИКАЛЬНЫЙ ======================== -->
         <div id="page-geo-cylinder" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Цилиндр вертикальный</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Цилиндр вертикальный</div></div>
+
             <div class="geo-svg-container"><svg viewBox="0 0 140 140" class="geo-svg" font-family="Inter, sans-serif">
 <defs>
 <marker id="gcy-as" markerWidth="8" markerHeight="8" refX="3" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M7,1 L3,4 L7,7" fill="none" stroke="#5a9fd4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></marker>
@@ -3258,8 +3267,8 @@
 
         <!-- ======================== ГЕОМЕТРИЯ: ЦИЛИНДР ГОРИЗОНТАЛЬНЫЙ ======================== -->
         <div id="page-geo-horiz" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Цилиндр горизонтальный</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Цилиндр горизонтальный</div></div>
+
             <div class="geo-svg-container"><svg viewBox="0 0 160 100" class="geo-svg" font-family="Inter, sans-serif">
 <defs>
 <marker id="gh-as" markerWidth="8" markerHeight="8" refX="3" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M7,1 L3,4 L7,7" fill="none" stroke="#5a9fd4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></marker>
@@ -3298,8 +3307,8 @@
 
         <!-- ======================== ГЕОМЕТРИЯ: СФЕРА ======================== -->
         <div id="page-geo-sphere" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Сфера</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Сфера</div></div>
+
             <div class="geo-svg-container"><svg viewBox="0 0 140 140" class="geo-svg" font-family="Inter, sans-serif">
 <defs>
 <marker id="gs-as" markerWidth="8" markerHeight="8" refX="3" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M7,1 L3,4 L7,7" fill="none" stroke="#5a9fd4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></marker>
@@ -3322,8 +3331,8 @@
 
         <!-- ======================== ГЕОМЕТРИЯ: КОНУС ======================== -->
         <div id="page-geo-cone" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Конус</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Конус</div></div>
+
             <div class="geo-svg-container"><svg viewBox="0 0 140 140" class="geo-svg" font-family="Inter, sans-serif">
 <defs>
 <marker id="gco-as" markerWidth="8" markerHeight="8" refX="3" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M7,1 L3,4 L7,7" fill="none" stroke="#5a9fd4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></marker>
@@ -3354,8 +3363,8 @@
 
         <!-- ======================== ВЫБОР РАСЧЁТА СУЖАЮЩЕГО УСТРОЙСТВА ======================== -->
         <div id="page-orifice-select" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Сужающее устройство</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Сужающее устройство</div></div>
+
 
             <div class="content-header" style="padding: 14px 20px 10px;">
                 <h2 style="color: #e0e0e0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">Выбор расчёта</h2>
@@ -3396,8 +3405,8 @@
 
         <!-- ======================== БЫСТРЫЙ РАСЧЁТ ДИАФРАГМ (градуировка) ======================== -->
         <div id="page-orifice-quick" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Быстрый расчёт диафрагмы</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="navigateTo('orifice-select')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Быстрый расчёт диафрагмы</div></div>
+
 
             <div class="content-header" style="padding: 14px 20px 10px;">
                 <h2 style="color: #e0e0e0; font-size: 20px; font-weight: 700; letter-spacing: -0.3px;">Прикидочный расчёт</h2>
@@ -3469,8 +3478,8 @@
 
         <!-- ======================== РАСЧЁТ ПЕРЕПАДА ДАВЛЕНИЯ (Δp) ======================== -->
         <div id="page-orifice-dp" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Перепад давления Δp</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Перепад давления Δp</div></div>
+
 
             <div class="scale-form">
                 <div class="scale-form-label">Тип среды</div>
@@ -3571,8 +3580,8 @@
 
         <!-- ======================== РАСЧЁТ РАСХОДА (Q) ======================== -->
         <div id="page-orifice-flow" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Расход среды Q</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Расход среды Q</div></div>
+
 
             <div class="scale-form">
                 <div class="scale-form-label">Тип среды</div>
@@ -3673,8 +3682,8 @@
 
         <!-- ======================== СУЖАЮЩЕЕ УСТРОЙСТВО (ДИАФРАГМА) ======================== -->
         <div id="page-orifice-diameter" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Сужающее устройство</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Сужающее устройство</div></div>
+
 
             <div class="scale-form">
                 <div class="scale-form-label">Тип среды</div>
@@ -3794,8 +3803,8 @@
 
         <!-- ======================== БИБЛИОТЕКА КИП И А (ВНУТРЕННЯЯ) ======================== -->
         <div id="page-library-internal" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Библиотека КИП и А</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Библиотека КИП и А</div></div>
+
 
             <div class="content-header" style="padding: 14px 20px 10px;">
                 <h2 style="color: #e0e0e0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">Разделы библиотеки</h2>
@@ -3843,8 +3852,8 @@
 
         <!-- ======================== БИБЛИОТЕКА — ЭЛЕКТРОБЕЗОПАСНОСТЬ ======================== -->
         <div id="page-library-electro" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Электробезопасность</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Электробезопасность</div></div>
+
 
             <div class="content-header" style="padding: 14px 20px 10px;">
                 <h2 style="color: #e0e0e0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">Правила и инструкции</h2>
@@ -3885,8 +3894,8 @@
 
         <!-- ======================== ЭКЗАМЕНАЦИОННЫЕ БИЛЕТЫ ======================== -->
         <div id="page-exam-tickets" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Экзаменационные билеты</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Экзаменационные билеты</div></div>
+
             <div style="padding: 0 16px;">
                 <div class="ticket-cat-card" onclick="navigateTo('tickets-1000v')">
                     <img src="images/1000В.png" alt="1000В">
@@ -3909,36 +3918,36 @@
 
         <!-- Билеты до 1000 В -->
         <div id="page-tickets-1000v" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Билеты до 1000 В</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="navigateTo('exam-tickets')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Билеты</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Билеты до 1000 В</div></div>
+
             <div id="tickets-container-tickets-1000v" class="ticket-list"><div class="ticket-loading">Загрузка…</div></div>
         </div>
 
         <!-- Билеты на 4 разряд -->
         <div id="page-tickets-4" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Билеты на 4 разряд</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="navigateTo('exam-tickets')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Билеты</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Билеты на 4 разряд</div></div>
+
             <div id="tickets-container-tickets-4" class="ticket-list"><div class="ticket-loading">Загрузка…</div></div>
         </div>
 
         <!-- Билеты на 5 разряд -->
         <div id="page-tickets-5" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Билеты на 5 разряд</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="navigateTo('exam-tickets')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Билеты</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Билеты на 5 разряд</div></div>
+
             <div id="tickets-container-tickets-5" class="ticket-list"><div class="ticket-loading">Загрузка…</div></div>
         </div>
 
         <!-- Билеты на 6 разряд -->
         <div id="page-tickets-6" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Билеты на 6 разряд</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="navigateTo('exam-tickets')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Билеты</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Билеты на 6 разряд</div></div>
+
             <div id="tickets-container-tickets-6" class="ticket-list"><div class="ticket-loading">Загрузка…</div></div>
         </div>
 
         <!-- ======================== РАСЧЁТ ПОГРЕШНОСТИ ======================== -->
         <div id="page-error-select" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Расчёт погрешности</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Расчёт погрешности</div></div>
+
             <div class="menu-btn-row">
                 <div class="menu-btn" onclick="navigateTo('error-temp-rtd')"><div class="menu-btn-text"><div class="menu-btn-label">Термопреобразователи сопротивления (ТС)</div><div class="menu-btn-sublabel">ГОСТ 6651-2009</div></div><i class="menu-btn-arrow">›</i></div>
                 <div class="menu-btn" onclick="navigateTo('error-temp-tc')"><div class="menu-btn-text"><div class="menu-btn-label">Термопары (ТП)</div><div class="menu-btn-sublabel">ГОСТ Р 8.585-2001</div></div><i class="menu-btn-arrow">›</i></div>
@@ -3953,8 +3962,8 @@
 
         <!-- Датчик давления -->
         <div id="page-error-pressure" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Датчики давления — ГОСТ 8.401-80</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Датчики давления — ГОСТ 8.401-80</div></div>
+
             <div class="scale-form">
                 <input type="hidden" id="ep_class_form" value="number">
                 <div class="scale-form-label">Класс точности <span class="greek-gamma">γ</span> (%)</div>
@@ -3993,8 +4002,8 @@
 
         <!-- Термопреобразователи сопротивления -->
         <div id="page-error-temp-rtd" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Термопреобразователи сопротивления</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Термопреобразователи сопротивления</div></div>
+
             <div class="scale-form"><div class="scale-form-label">Группа ТС</div><select id="rtd_group" class="scale-field" onchange="updateRtdTypeOptions()" autocomplete="off"><option value="Pt">Платина (Pt)</option><option value="Cu" selected>Медь (Cu)</option><option value="Ni">Никель (Ni)</option></select>
             <div class="scale-form-label">Тип ТС (НСХ)</div><select id="rtd_type" class="scale-field" onchange="updateRtdClassOptions()" autocomplete="off"><option value="cu10">10М (Cu10)</option><option value="cu50" selected>50М (Cu50)</option><option value="cu100">100М (Cu100)</option></select>
             <div class="scale-form-label">Класс допуска</div><select id="rtd_class" class="scale-field" autocomplete="off"><option value="AA" data-hint="высокоточный">AA</option><option value="A" data-hint="точный">A</option><option value="B" selected data-hint="стандартный">B</option><option value="C" data-hint="грубый">C</option></select>
@@ -4017,8 +4026,8 @@
 
         <!-- Термопары -->
         <div id="page-error-temp-tc" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Термопары (ТП)</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Термопары (ТП)</div></div>
+
             <div class="scale-form"><div class="scale-form-label">Тип термопары</div><select id="tc_type" class="scale-field" onchange="updateTcRanges()" autocomplete="off"><option value="K" selected>ТХА (K)</option><option value="J">ТЖК (J)</option><option value="T">ТМК (T)</option><option value="N">ТНН (N)</option><option value="E">ТХКн (E)</option><option value="R">ТПП (R)</option><option value="S">ТПП (S)</option><option value="B">ТПР (B)</option></select>
             <div class="scale-form-label">Класс точности</div><select id="tc_class" class="scale-field" onchange="updateTcRanges()" autocomplete="off"><option value="1" data-hint="высокоточный">1</option><option value="2" selected data-hint="стандартный">2</option><option value="3" data-hint="пониженный">3</option></select>
             <div class="scale-form-label">Температура (t), °C</div><input type="text" inputmode="numeric" id="tc_temperature" class="scale-field" value="100" placeholder="температура в °C" autocomplete="off" enterkeyhint="done">
@@ -4036,8 +4045,8 @@
             </div>
         </div>
         <div id="page-error-flow" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Расходомеры — ГОСТ 8.401-80</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Расходомеры — ГОСТ 8.401-80</div></div>
+
             <div class="scale-form">
                 <input type="hidden" id="ef_class_form" value="circle">
                 <div class="scale-form-label">Класс точности <span class="greek-delta">δ</span> (%)</div>
@@ -4074,8 +4083,8 @@
 
         <!-- Уровнемер -->
         <div id="page-error-level" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Уровнемеры — ГОСТ 8.401-80</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Уровнемеры — ГОСТ 8.401-80</div></div>
+
             <div class="scale-form">
                 <input type="hidden" id="el_class_form" value="number">
                 <div class="scale-form-label">Класс точности <span class="greek-gamma">γ</span> (%)</div>
@@ -4113,8 +4122,8 @@
 
         <!-- Общий расчёт погрешности — выбор формы -->
         <div id="page-error-generic" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Расчёт погрешности по классу точности</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Расчёт погрешности по классу точности</div></div>
+
             <div class="menu-btn-row">
                 <div class="menu-btn" onclick="navigateTo('error-generic-number')"><div class="menu-btn-text"><div class="menu-btn-label" style="display:flex;align-items:center;gap:10px;"><span style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:rgba(74,143,199,0.9);min-width:36px;text-align:center;">0,5</span> Приведённая погрешность</div><div class="menu-btn-sublabel">Класс точности — число (например 0,5) · γ</div></div><i class="menu-btn-arrow">›</i></div>
                 <div class="menu-btn" onclick="navigateTo('error-generic-underline')"><div class="menu-btn-text"><div class="menu-btn-label" style="display:flex;align-items:center;gap:10px;"><span style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:rgba(74,143,199,0.9);min-width:36px;text-align:center;border-bottom:2px solid rgba(74,143,199,0.9);padding-bottom:2px;">0,5</span> Приведённая погрешность</div><div class="menu-btn-sublabel">Класс точности — число с подчёркиванием · γ</div></div><i class="menu-btn-arrow">›</i></div>
@@ -4125,8 +4134,8 @@
 
         <!-- Общий расчёт — Приведённая (число) -->
         <div id="page-error-generic-number" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Приведённая погрешность (<span class="greek-gamma">γ</span>) — число</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Приведённая погрешность (<span class="greek-gamma">γ</span>) — число</div></div>
+
             <div class="scale-form">
                 <div style="text-align:center;margin-bottom:12px;"><span style="font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:700;color:rgba(74,143,199,0.9);">0,5</span></div>
                 <div class="scale-form-label">Класс точности <span class="greek-gamma">γ</span> (%)</div>
@@ -4166,8 +4175,8 @@
 
         <!-- Общий расчёт — Приведённая (подчёркивание) -->
         <div id="page-error-generic-underline" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Приведённая погрешность (<span class="greek-gamma">γ</span>) — число с подчёркиванием</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Приведённая погрешность (<span class="greek-gamma">γ</span>) — число с подчёркиванием</div></div>
+
             <div class="scale-form">
                 <div style="text-align:center;margin-bottom:12px;"><span style="font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:700;color:rgba(74,143,199,0.9);border-bottom:2px solid rgba(74,143,199,0.9);padding-bottom:2px;">0,5</span></div>
                 <div class="scale-form-label">Класс точности <span class="greek-gamma">γ</span> (%)</div>
@@ -4207,8 +4216,8 @@
 
         <!-- Общий расчёт — Относительная (кружок) -->
         <div id="page-error-generic-circle" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Относительная погрешность (<span class="greek-delta">δ</span>) — число в кружке</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Относительная погрешность (<span class="greek-delta">δ</span>) — число в кружке</div></div>
+
             <div class="scale-form">
                 <div style="text-align:center;margin-bottom:12px;"><span style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:2.5px solid rgba(74,143,199,0.8);border-radius:50%;font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:700;color:rgba(74,143,199,0.9);">0,5</span></div>
                 <div class="scale-form-label">Класс точности <span class="greek-delta">δ</span> (%)</div>
@@ -4246,8 +4255,8 @@
 
         <!-- Общий расчёт — Относительная (дробь c/d) -->
         <div id="page-error-generic-fraction" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Относительная погрешность (<span class="greek-delta">δ</span>) — дробь c/d</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Относительная погрешность (<span class="greek-delta">δ</span>) — дробь c/d</div></div>
+
             <div class="scale-form">
                 <div style="text-align:center;margin-bottom:12px;"><span style="font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:700;color:rgba(74,143,199,0.9);"><sup style="font-size:18px;">c</sup>/<sub style="font-size:18px;">d</sub></span></div>
                 <div class="scale-form-label">c — аддитивная составляющая (%)</div>
@@ -4302,8 +4311,8 @@
             </div>
         </div>
         <div id="page-error-scale" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Весы (механические и электронные)</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Весы (механические и электронные)</div></div>
+
 
             <!-- Тип весов -->
             <div class="scale-form">
@@ -4495,8 +4504,8 @@
 
         <!-- Комплект приборов -->
         <div id="page-error-kit" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Комплект приборов</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Комплект приборов</div></div>
+
             <div id="kit_device_list"></div>
             <div style="padding:0 16px;position:relative;z-index:2;">
                 <button type="button" class="query-btn" onclick="addKitDevice()" style="margin-bottom:8px;"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Добавить прибор</button>
@@ -4531,8 +4540,8 @@
         <!-- ======================== БУЙКОВЫЙ УРОВНЕМЕР ======================== -->
         <!-- Выбор метода -->
         <div id="page-buoy-select" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Калибровка буйкового уровнемера</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Калибровка буйкового уровнемера</div></div>
+
             <div class="buoy-select-container">
                 <div class="buoy-card buoy-card-light" onclick="selectCalibMethod('with_buoy')"><div class="buoy-card-inner"><div class="buoy-card-top"><div class="buoy-illustration"><img id="buoy-with-img" src="images/buoy_with_black.png" alt="С буйком"></div><div class="buoy-card-body"><div class="buoy-card-title">С буйком</div><div class="buoy-card-desc">Компенсационный метод калибровки</div></div></div><div class="buoy-card-divider"></div><div class="buoy-card-formula"><span class="formula-inline">m<sub>гири</sub> = m<sub>выт</sub> + m<sub>подвеса</sub></span></div></div></div>
                 <div class="buoy-card buoy-card-dark" onclick="selectCalibMethod('without_buoy')"><div class="buoy-card-inner"><div class="buoy-card-top"><div class="buoy-illustration"><img id="buoy-without-img" src="images/buoy_without_black.png" alt="Без буйка"></div><div class="buoy-card-body"><div class="buoy-card-title">Без буйка</div><div class="buoy-card-desc">Имитация выталкивающей силы гирями</div></div></div><div class="buoy-card-divider"></div><div class="buoy-card-formula"><span class="formula-inline">m<sub>гири</sub> = m<sub>буйка</sub> − m<sub>выт</sub> + m<sub>подвеса</sub></span></div></div></div>
@@ -4541,8 +4550,8 @@
 
         <!-- Расчёт -->
         <div id="page-buoy-calc" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Буйковый уровнемер</div></div>
-    <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Буйковый уровнемер</div></div>
+
             <div class="scale-form"><div class="scale-form-label">Параметры буйка</div><div class="scale-form-label" style="margin-top:0;">Диаметр (D)</div><input type="text" inputmode="numeric" id="buoy_diam" class="scale-field" value="50" placeholder="мм" autocomplete="off" enterkeyhint="next"><div style="color:rgba(255,255,255,0.25); font-size:10px; margin-top:-6px; margin-bottom:8px; padding-left:4px;">мм</div><div class="scale-form-label">Длина (L)</div><input type="text" inputmode="numeric" id="buoy_length" class="scale-field" value="300" placeholder="мм" autocomplete="off" enterkeyhint="next"><div style="color:rgba(255,255,255,0.25); font-size:10px; margin-top:-6px; margin-bottom:8px; padding-left:4px;">мм</div><div id="buoyWeightContainer"><div class="scale-form-label">Вес буйка в воздухе</div><input type="text" inputmode="numeric" id="buoy_weight_kg" class="scale-field" value="2,0" placeholder="кг" autocomplete="off" enterkeyhint="done"><div style="color:rgba(255,255,255,0.25); font-size:10px; margin-top:-6px; margin-bottom:8px; padding-left:4px;"> Масса буйка (кг)</div></div></div>
             <div class="scale-form"><div class="scale-form-label">Параметры жидкости</div><div class="scale-form-label" style="margin-top:0;">Тип среды</div><div style="display:flex; gap:8px; margin-bottom:12px; align-items:stretch;"><select id="liquid_preset" class="scale-field" style="flex:2; margin-bottom:0;" onchange="setLiquidDensity()" autocomplete="off"><option value="998" data-hint="ρ=998">Вода</option><option value="926" data-hint="ρ=926">Дивинилбензол</option><option value="860" data-hint="ρ=860">Диэтилбензол</option><option value="906" data-hint="ρ=906">Стирол</option><option value="1253" data-hint="ρ=1253">Дихлорэтан</option><option value="789" data-hint="ρ=789">Этиловый спирт</option><option value="1111.5" data-hint="ρ=1112">Этиленгликоль</option><option value="2130" data-hint="ρ=2130">Едкий натр</option><option value="2530" data-hint="ρ=2530">Кальцинированная сода</option><option value="1890" data-hint="ρ=1890">Олеум</option><option value="1834" data-hint="ρ=1834">Серная кислота 96%</option><option value="1683" data-hint="ρ=1683">Динитрофенол</option><option value="1334" data-hint="ρ=1334">Перекись бензоила</option><option value="1450" data-hint="ρ=1450">Перекись водорода</option><option value="custom" data-hint="Вручную">Своё значение</option></select><input type="text" inputmode="numeric" id="liquid_density" class="scale-field" style="flex:1; margin-bottom:0;" value="998" placeholder="кг/м³" autocomplete="off" enterkeyhint="done"></div><div style="color:rgba(255,255,255,0.25); font-size:10px; margin-top:4px; padding-left:4px;">кг/м³</div></div>
             <div class="scale-form"><div class="scale-form-label">Подвесная система</div><input type="text" inputmode="numeric" id="suspension_mass" class="scale-field" value="0" placeholder="0" autocomplete="off" enterkeyhint="done"><div style="color:rgba(255,255,255,0.25); font-size:10px; margin-top:4px; padding-left:4px;"> Масса тарелки/крюка, г</div></div>
@@ -6518,6 +6527,31 @@
         }
         // Только history.back() — навигацию выполнит обработчик popstate
         history.back();
+    }
+
+    // ===== Шевроны в заголовке: 1 тап = назад, 2 тапа = на главную =====
+    let chevronTapCount = 0;
+    let chevronTapTimer = null;
+    const CHEVRON_DOUBLE_TAP_DELAY = 300; // мс
+
+    function chevronTap() {
+        chevronTapCount++;
+        if (navigator.vibrate) navigator.vibrate(10);
+        clearTimeout(chevronTapTimer);
+        if (chevronTapCount === 1) {
+            // Ждём — может быть второй тап
+            chevronTapTimer = setTimeout(() => {
+                // Одиночный тап — назад
+                goBack();
+                chevronTapCount = 0;
+            }, CHEVRON_DOUBLE_TAP_DELAY);
+        } else if (chevronTapCount === 2) {
+            // Двойной тап — на главную
+            clearTimeout(chevronTapTimer);
+            chevronTapCount = 0;
+            if (navigator.vibrate) navigator.vibrate([10, 30, 10]);
+            navigateTo('dashboard');
+        }
     }
 
     // ============================================================
@@ -10744,8 +10778,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
         <!-- Датчики температуры -->
         <div id="page-temp-sensors" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-title">Датчики температуры</div></div>
-            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Датчики температуры</div></div>
+
             <div class="scale-form">
                 <div class="scale-form-label">Тип датчика</div>
                 <select id="temp_sensor_type" class="scale-field" onchange="updateTempSensorOptions()" autocomplete="off">
