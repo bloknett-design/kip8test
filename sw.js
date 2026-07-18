@@ -11,7 +11,7 @@
 // свежие версии файлов из ASSETS.
 // ============================================================
 
-const CACHE_VERSION = 'kipia-test-v63';
+const CACHE_VERSION = 'kipia-test-v64';
 const CACHE_NAME = CACHE_VERSION;
 
 // Отдельный кэш для картинок Google Drive (превью + полные).
@@ -249,8 +249,43 @@ self.addEventListener('fetch', event => {
   }
 
   // ===== 3. Локальные файлы (CSS-in-HTML, JS-in-HTML, JSON, images) =====
+  // Для data/*.json (phonebook.json, devices.json, exam-tickets.json) —
+  // ВСЕГДА идём в сеть (cache-busting ?v=timestamp уже добавлен клиентом).
+  // Это гарантирует, что при обновлении данных через GitHub Actions
+  // пользователь сразу увидит свежие данные (а не старый кэш SW).
+  // Для остальных локальных файлов — обычный network-first с кэшированием.
   const cacheKey = makeCacheKey(request);
+  const isDataJson = isLocal && url.pathname.startsWith('/data/') && url.pathname.endsWith('.json');
 
+  if (isDataJson) {
+    // Стратегия: NETWORK-FIRST с принудительным обновлением кэша
+    // При любом запросе к data/*.json — всегда идём в сеть, обновляем кэш.
+    // Если сети нет — отдаём последний закэшированный вариант.
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          if (response.ok) {
+            // Обновляем кэш по нормализованному ключу (без ?v=...)
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(cacheKey, clone));
+          }
+          return response;
+        })
+        .catch(() => {
+          // Нет сети — отдаём из кэша
+          return caches.match(cacheKey).then(cached => {
+            return cached || new Response('{"error":"offline"}', {
+              status: 503,
+              statusText: 'Service Unavailable',
+              headers: { 'Content-Type': 'application/json; charset=utf-8' }
+            });
+          });
+        })
+    );
+    return;
+  }
+
+  // Остальные локальные файлы — обычный network-first
   event.respondWith(
     fetch(request)
       .then(response => {

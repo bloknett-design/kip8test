@@ -4973,28 +4973,33 @@
     async function pbLoad() {
         if (pbLoaded) return pbData;
         try {
-            // Сначала пробуем кэш в localStorage (для офлайна) — с проверкой версии
-            const cachedVer = localStorage.getItem('kip8test_phonebook_cache_ver');
-            const cached = localStorage.getItem('kip8test_phonebook_cache');
-            if (cached && cachedVer === PB_CACHE_VERSION) {
-                pbData = JSON.parse(cached);
-                pbFlatten();
-                pbLoaded = true;
-                return pbData;
-            }
-            // Иначе грузим из data/phonebook.json
-            const resp = await fetch('data/phonebook.json', { cache: 'no-cache' });
+            // Сначала пытаемся загрузить свежие данные из сети (NetworkFirst).
+            // Cache-busting: ?v=timestamp обходит HTTP-кэш и SW Cache.
+            // cache: 'no-store' — гарантированно не используем HTTP-кэш браузера.
+            const bust = '?v=' + Date.now();
+            const resp = await fetch('data/phonebook.json' + bust, { cache: 'no-store' });
             if (!resp.ok) throw new Error('HTTP ' + resp.status);
             pbData = await resp.json();
+            // Сохраняем в localStorage как резервный кэш для офлайна
             try {
                 localStorage.setItem('kip8test_phonebook_cache', JSON.stringify(pbData));
-                localStorage.setItem('kip8test_phonebook_cache_ver', PB_CACHE_VERSION);
-            } catch (e) { /* квота переполнена — не критично */ }
+            } catch (e) {}
             pbFlatten();
             pbLoaded = true;
             return pbData;
         } catch (e) {
-            console.warn('Phonebook load failed:', e);
+            console.warn('Phonebook load from network failed, trying cache:', e);
+            // Офлайн — берём из localStorage
+            try {
+                const cached = localStorage.getItem('kip8test_phonebook_cache');
+                if (cached) {
+                    pbData = JSON.parse(cached);
+                    pbFlatten();
+                    pbLoaded = true;
+                    console.log('[phonebook] Используется кэш localStorage (офлайн)');
+                    return pbData;
+                }
+            } catch (e2) {}
             return null;
         }
     }
@@ -5435,12 +5440,12 @@
         // Загрузить избранное и примечания из localStorage (всегда)
         pbLoadFavorites();
         pbLoadNotes();
-        if (pbLoaded) {
-            // Данные уже загружены — сразу очистить устаревшие записи
-            pbCleanupStaleFavorites();
-            pbRender();
-            return;
-        }
+        // Всегда перезагружаем данные из сети (cache-busting в pbLoad),
+        // чтобы увидеть изменения из Excel-файла на Яндекс Диске.
+        // Очистка устаревших избранного будет выполнена после загрузки.
+        pbLoaded = false;
+        pbData = null;
+        pbFlat = [];
         pbLoad().then(() => {
             // После загрузки данных — очистить устаревшие записи (старые ID
             // от предыдущих версий pbMakeId, которые больше не валидны)
@@ -5524,26 +5529,33 @@
     async function devLoad() {
         if (devLoaded) return devData;
         try {
-            // Сначала — кэш в localStorage (для офлайна)
-            const cachedVer = localStorage.getItem('kip8test:' + DEV_CACHE_KEY + '_ver');
-            const cached = localStorage.getItem('kip8test:' + DEV_CACHE_KEY);
-            if (cached && cachedVer === DEV_CACHE_VERSION) {
-                devData = JSON.parse(cached);
-                devLoaded = true;
-                return devData;
-            }
-            // Иначе — fetch
-            const resp = await fetch('data/devices.json', { cache: 'no-cache' });
+            // Cache-busting: добавляем ?v=timestamp, чтобы обойти HTTP-кэш браузера
+            // и Service Worker Cache. SW использует makeCacheKey (URL без query),
+            // поэтому кэш обновится, но ключ останется стабильным.
+            // cache: 'no-store' — гарантированно не используем HTTP-кэш браузера.
+            const bust = '?v=' + Date.now();
+            const resp = await fetch('data/devices.json' + bust, { cache: 'no-store' });
             if (!resp.ok) throw new Error('HTTP ' + resp.status);
             devData = await resp.json();
+            // Сохраняем в localStorage как резервный кэш для офлайна
+            // (без версии — данные обновляются при каждом успешном fetch)
             try {
                 localStorage.setItem('kip8test:' + DEV_CACHE_KEY, JSON.stringify(devData));
-                localStorage.setItem('kip8test:' + DEV_CACHE_KEY + '_ver', DEV_CACHE_VERSION);
             } catch (e) {}
             devLoaded = true;
             return devData;
         } catch (e) {
-            console.warn('Devices load failed:', e);
+            console.warn('Devices load from network failed, trying cache:', e);
+            // Офлайн — берём из localStorage
+            try {
+                const cached = localStorage.getItem('kip8test:' + DEV_CACHE_KEY);
+                if (cached) {
+                    devData = JSON.parse(cached);
+                    devLoaded = true;
+                    console.log('[devices] Используется кэш localStorage (офлайн)');
+                    return devData;
+                }
+            } catch (e2) {}
             return null;
         }
     }
@@ -5712,10 +5724,14 @@
     }
 
     function devInit() {
-        if (devLoaded) {
-            devRender();
-            return;
-        }
+        // Всегда пытаемся загрузить свежие данные из сети (cache-busting в devLoad).
+        // Если уже загружено — всё равно перезагружаем, чтобы увидеть изменения
+        // из Excel-файла на Яндекс Диске (через GitHub Actions).
+        devLoaded = false;
+        devData = null;
+        // Сброс пагинации
+        devVisibleCount = DEV_DEFAULT_LIMIT;
+        devExpandedCards = {};
         devLoad().then(() => devRender());
     }
 
