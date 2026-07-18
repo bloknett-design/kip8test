@@ -2630,12 +2630,10 @@
             <!-- ===== Закреплённые пользователем подразделы ===== -->
             <div id="pinnedItemsContainer" class="pinned-items-container"></div>
 
-            <!-- Секретные кнопки «Сапёр» и «Телефонный справочник» — скрыты по умолчанию.
-                 Открываются 2 тапами по заголовку приложения.
-                 Объединены в один menu-btn-row, чтобы стояли рядом друг с другом. -->
-            <div class="menu-btn-row menu-btn-row-secret-pair">
+            <!-- Секретная кнопка «Сапёр» — скрыта по умолчанию.
+                 Открывается 2 тапами по заголовку приложения. -->
+            <div class="menu-btn-row">
                 <div class="menu-btn menu-btn-secret" id="minesweeperBtn" onclick="navigateTo('minesweeper')" style="border-color:rgba(199,150,74,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#c7964a;">Сапёр</div></div></div>
-                <div class="menu-btn menu-btn-secret" id="phonebookBtn" onclick="navigateTo('phonebook')" style="border-color:rgba(74,143,199,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#6aa6e0;">Телефонный справочник</div><div class="menu-btn-sublabel">ООО ПО «ТОКЕМ»</div></div><i class="menu-btn-arrow" style="color:rgba(74,143,199,0.4);">›</i></div>
             </div>
         </div>
 
@@ -2657,6 +2655,7 @@
             <div class="menu-btn-row">
                 <div class="menu-btn" onclick="navigateTo('exam-tickets')" style="border-color:rgba(199,150,74,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#c7964a;">Экзаменационные билеты</div><div class="menu-btn-sublabel">4, 5, 6 разряд, до 1000 В</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('exam-tickets')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(199,150,74,0.4);">›</i></div>
                 <div class="menu-btn" onclick="navigateTo('library')" style="border-color:rgba(199,150,74,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#c7964a;">Библиотека КИП и А</div><div class="menu-btn-sublabel">Документация, схемы, инструкции</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('library')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(199,150,74,0.4);">›</i></div>
+                <div class="menu-btn" onclick="navigateTo('phonebook-orgs')" style="border-color:rgba(74,143,199,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#6aa6e0;">Телефонный справочник</div><div class="menu-btn-sublabel">ООО ПО «ТОКЕМ» и дочерние организации</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('phonebook-orgs')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(74,143,199,0.4);">›</i></div>
             </div>
         </div>
 
@@ -2729,9 +2728,20 @@
             </div>
         </div>
 
-        <!-- ======================== ТЕЛЕФОННЫЙ СПРАВОЧНИК ======================== -->
-        <div id="page-phonebook" class="page-content">
+        <!-- ======================== ТЕЛЕФОННЫЙ СПРАВОЧНИК — СПИСОК ОРГАНИЗАЦИЙ ======================== -->
+        <div id="page-phonebook-orgs" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-title">Телефонный справочник</div></div>
+            <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
+            <div class="content-header">
+                <h2>Организации</h2>
+                <p id="pbOrgsInfo">Выберите организацию для просмотра контактов</p>
+            </div>
+            <div class="menu-btn-row" id="pbOrgsList"></div>
+        </div>
+
+        <!-- ======================== ТЕЛЕФОННЫЙ СПРАВОЧНИК — КАРТОЧКИ КОНТАКТОВ ======================== -->
+        <div id="page-phonebook" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-title" id="pbPageTitle">Телефонный справочник</div></div>
             <div class="nav-bar"><div class="nav-btn nav-btn-home" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Главная</span></div><span class="nav-separator">‹</span><div class="nav-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><span>Назад</span></div></div>
             <div class="pb-search-wrap">
                 <input type="search" id="pbSearchInput" class="pb-search-input" placeholder="Поиск: имя, должность, телефон…" autocomplete="off" enterkeyhint="search" oninput="pbRender()">
@@ -2739,6 +2749,10 @@
                     <button type="button" id="pbFilterFav" class="pb-filter-btn" onclick="pbToggleFavFilter()">
                         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                         <span id="pbFilterFavLabel">Только избранные</span>
+                    </button>
+                    <button type="button" class="pb-filter-btn" onclick="navigateTo('phonebook-orgs')" style="border-color:rgba(106,166,224,0.25); background:rgba(106,166,224,0.04); color:rgba(106,166,224,0.8);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                        <span>Организации</span>
                     </button>
                 </div>
             </div>
@@ -4662,7 +4676,7 @@
     let secretTapTimer = null;
     const SECRET_TAP_THRESHOLD = 2;
     let secretTouchHandled = false;
-    const SECRET_BUTTON_IDS = ['minesweeperBtn', 'phonebookBtn'];
+    const SECRET_BUTTON_IDS = ['minesweeperBtn'];
     function secretTapHandler() {
         secretTapCount++;
         document.querySelector('.header-title').classList.add('hint-pulse');
@@ -4892,14 +4906,24 @@
         // Обновить счётчик на кнопке фильтра
         pbUpdateFilterButton();
 
+        // Обновить заголовок страницы в зависимости от выбранной организации
+        const titleEl = document.getElementById('pbPageTitle');
+        if (titleEl) {
+            titleEl.textContent = pbCurrentHeader || 'Телефонный справочник';
+        }
+
         if (!pbLoaded) {
             list.innerHTML = '';
             info.textContent = 'Загрузка…';
             return;
         }
 
-        // Фильтрация: по поиску + по избранным (если включён фильтр)
+        // Фильтрация: по выбранной организации + по поиску + по избранным (если включён фильтр)
         let filtered = pbFlat.slice();
+        // Если выбрана конкретная организация — показать только её контакты
+        if (pbCurrentHeader) {
+            filtered = filtered.filter(item => item.header === pbCurrentHeader);
+        }
         if (pbFilterFavOnly) {
             filtered = filtered.filter(item => pbIsFavorite(pbMakeId(item)));
         }
@@ -5296,7 +5320,93 @@
         return forms[2];
     }
 
-    // Инициализация при первом открытии страницы
+    // === Выбор организации (2-уровневая навигация) ===
+    // Когда пользователь открывает страницу "Телефонный справочник" из Документации,
+    // он видит список организаций. При клике на организацию — открывается страница
+    // с карточками контактов, отфильтрованная по этой организации.
+    // pbCurrentHeader = null означает "показывать все организации".
+    let pbCurrentHeader = null;
+
+    // Рендер списка организаций на странице page-phonebook-orgs
+    function pbRenderOrgs() {
+        const list = document.getElementById('pbOrgsList');
+        const info = document.getElementById('pbOrgsInfo');
+        if (!list || !info) return;
+
+        if (!pbLoaded || !pbData || !pbData.sections) {
+            list.innerHTML = '<div class="pb-empty">Загрузка данных…</div>';
+            info.textContent = '';
+            return;
+        }
+
+        const headers = Object.keys(pbData.sections);
+        const totalRecords = pbFlat.length;
+        info.textContent = `Всего организаций: ${headers.length} · записей: ${totalRecords}`;
+
+        // Кнопка "Показать все" — открывает все контакты без фильтра
+        let html = '';
+        html += '<div class="menu-btn" onclick="pbOpenOrg(null)" style="border-color:rgba(106,166,224,0.35);">';
+        html += '<div class="menu-btn-text">';
+        html += '<div class="menu-btn-label" style="color:#6aa6e0;">Все контакты</div>';
+        html += '<div class="menu-btn-sublabel">Полный список ' + totalRecords + ' ' + pbPlural(totalRecords, ['запись', 'записи', 'записей']) + '</div>';
+        html += '</div>';
+        html += '<button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet(\'phonebook\')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>';
+        html += '<i class="menu-btn-arrow" style="color:rgba(106,166,224,0.4);">›</i>';
+        html += '</div>';
+
+        // Список организаций
+        for (const header of headers) {
+            const records = pbData.sections[header];
+            const count = records.length;
+            // Подсчитать количество отделов (уникальных group)
+            const groups = new Set(records.map(r => r.group).filter(g => g));
+            const subgroups = new Set(records.map(r => r.subgroup).filter(s => s));
+            // Используем data-attribute + индекс, чтобы избежать проблем с кавычками в onclick.
+            // Сам header хранится в data-pb-header (HTML-экранированный).
+            html += '<div class="menu-btn" data-pb-header="' + pbEsc(header) + '" onclick="pbOpenOrgByAttr(this)" style="border-color:rgba(74,143,199,0.35);">';
+            html += '<div class="menu-btn-text">';
+            html += '<div class="menu-btn-label" style="color:#6aa6e0;">' + pbEsc(header) + '</div>';
+            let sub = count + ' ' + pbPlural(count, ['запись', 'записи', 'записей']);
+            if (groups.size > 0) sub += ' · ' + groups.size + ' ' + pbPlural(groups.size, ['отдел', 'отдела', 'отделов']);
+            if (subgroups.size > 0) sub += ' · ' + subgroups.size + ' ' + pbPlural(subgroups.size, ['подгруппа', 'подгруппы', 'подгрупп']);
+            html += '<div class="menu-btn-sublabel">' + sub + '</div>';
+            html += '</div>';
+            html += '<button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet(\'phonebook\')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>';
+            html += '<i class="menu-btn-arrow" style="color:rgba(74,143,199,0.4);">›</i>';
+            html += '</div>';
+        }
+        list.innerHTML = html;
+    }
+
+    // Обработчик клика по организации — читает data-pb-header
+    function pbOpenOrgByAttr(el) {
+        const header = el.getAttribute('data-pb-header');
+        pbOpenOrg(header);
+    }
+
+    // Открыть карточки контактов конкретной организации
+    function pbOpenOrg(header) {
+        pbCurrentHeader = header;
+        if (navigator.vibrate) navigator.vibrate(25);
+        navigateTo('phonebook');
+    }
+
+    // Инициализация списка организаций
+    function pbInitOrgs() {
+        pbLoadFavorites();
+        pbLoadNotes();
+        if (pbLoaded) {
+            pbCleanupStaleFavorites();
+            pbRenderOrgs();
+            return;
+        }
+        pbLoad().then(() => {
+            pbCleanupStaleFavorites();
+            pbRenderOrgs();
+        });
+    }
+
+    // Инициализация при первом открытии страницы контактов
     function pbInit() {
         // Загрузить избранное и примечания из localStorage (всегда)
         pbLoadFavorites();
@@ -5928,6 +6038,7 @@
         if (page === 'library') { navigateTo('library-internal'); return; }
         if (page === 'minesweeper') { setTimeout(() => { if (typeof msInit === 'function') msInit(); }, 50); }
         if (page === 'phonebook') { setTimeout(() => { if (typeof pbInit === 'function') pbInit(); }, 30); }
+        if (page === 'phonebook-orgs') { setTimeout(() => { if (typeof pbInitOrgs === 'function') pbInitOrgs(); }, 30); }
         if (TICKET_IDS.includes(page)) { setTimeout(() => initTicketsPage(page), 30); }
         if (page === 'exam-tickets') { setTimeout(() => loadTicketsData(), 30); }
         // Снять блокировку прокрутки и закрыть открытые билеты при уходе со страницы
@@ -5952,7 +6063,7 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
         if (page === 'buoy-calc') { updateBuoyCalcTitle(); setCalibMethodOnForm(); }
         // Обернуть карточки подразделов для swipe-to-add на страницах меню подразделов
-        if (page === 'calc-kipa' || page === 'calc-electro' || page === 'calc-geometry' || page === 'docs') {
+        if (page === 'calc-kipa' || page === 'calc-electro' || page === 'calc-geometry' || page === 'docs' || page === 'phonebook-orgs') {
             wrapSubsectionItems('page-' + page);
         }
         updateBottomNavActive(page);
