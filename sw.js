@@ -11,7 +11,7 @@
 // свежие версии файлов из ASSETS.
 // ============================================================
 
-const CACHE_VERSION = 'kipia-test-v67';
+const CACHE_VERSION = 'kipia-test-v68';
 const CACHE_NAME = CACHE_VERSION;
 
 // Отдельный кэш для картинок Google Drive (превью + полные).
@@ -40,7 +40,8 @@ const ASSETS = [
   './images/6\u0440.png',
   './data/exam-tickets.json',
   './data/phonebook.json',
-  './data/devices.json'
+  './data/devices.json',
+  './data/devices-images.json'
 ];
 
 // App Shell — главный HTML-файл, который обслуживает все навигационные
@@ -209,6 +210,40 @@ self.addEventListener('fetch', event => {
   if (!isLocal) {
     const isGoogleDriveImage = url.hostname === 'drive.google.com' ||
                                 url.hostname === 'lh3.googleusercontent.com';
+
+    // ===== Картинки приборов с Яндекс Диска =====
+    // downloader.disk.yandex.ru отдаёт application/octet-stream с nosniff,
+    // что блокирует <img> в Chrome. Проксируем через SW, меняем content-type.
+    const isYandexDiskImage = url.hostname === 'downloader.disk.yandex.ru' ||
+                               url.hostname.endsWith('.storage.yandex.net');
+
+    if (isYandexDiskImage) {
+      event.respondWith(
+        // Сначала проверим кэш
+        caches.open(IMAGE_CACHE_NAME).then(cache =>
+          cache.match(request).then(cached => {
+            if (cached) return cached;
+            // Нет в кэше — идём в сеть с no-cors (чтобы обойти CORS)
+            return fetch(request, { mode: 'no-cors' }).then(response => {
+              // response.type === 'opaque' (status 0) — это нормально для no-cors
+              // Но <img> может отрендерить opaque response
+              const newResponse = new Response(response.body, {
+                status: response.status,
+                statusText: response.statusText,
+                headers: new Headers({
+                  'Content-Type': request.url.match(/\.(jpg|jpeg)$/i) ? 'image/jpeg' : 'image/png',
+                  'Cache-Control': 'max-age=2592000',
+                }),
+              });
+              // Кэшируем
+              cache.put(request, newResponse.clone());
+              return newResponse;
+            }).catch(() => cached || new Response('', { status: 503 }));
+          })
+        )
+      );
+      return;
+    }
 
     if (isGoogleDriveImage) {
       // Stale-while-revalidate через отдельный IMAGE_CACHE_NAME (переживает обновления версии)

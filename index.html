@@ -2290,6 +2290,23 @@
         transition: background 0.15s;
     }
     .dev-card-header:active { background: rgba(199, 150, 74, 0.08); }
+    /* Превью картинки прибора */
+    .dev-card-image {
+        float: right;
+        width: 56px; height: 56px;
+        margin: 2px 0 4px 10px;
+        border-radius: 8px;
+        object-fit: contain;
+        background: rgba(255, 255, 255, 0.5);
+        border: 1px solid rgba(20, 20, 19, 0.08);
+    }
+    [data-theme="light"] .dev-card-image {
+        background: rgba(255, 255, 255, 0.8);
+    }
+    .dev-card-image-loading {
+        display: flex; align-items: center; justify-content: center;
+        font-size: 10px; color: rgba(40, 40, 40, 0.3);
+    }
     .dev-card-title {
         font-size: 14px; font-weight: 700;
         color: #2a4a7a;
@@ -5542,6 +5559,58 @@
         { key: 'Замечания', label: 'Замечания' },
     ];
 
+    let devImages = {};  // { "СИ_Images/flow/пульсар тх.png": "https://file_url..." }
+    const DEV_IMAGES_PUBLIC_KEY = 'https://disk.yandex.ru/d/cCyJzs4tThjxYA';
+    const DEV_IMAGES_SUBFOLDERS = ['analytics', 'asutp', 'flow', 'indicator', 'level', 'pressure', 'registrar', 'temperature'];
+
+    // Загрузка свежих URL картинок с Яндекс Диска (URL истекают через ~час)
+    async function devLoadImagesFresh() {
+        try {
+            const baseUrl = 'https://cloud-api.yandex.net/v1/disk/public/resources';
+            const params = new URLSearchParams({
+                public_key: DEV_IMAGES_PUBLIC_KEY,
+                path: '/СИ_Images',
+                limit: '200',
+            });
+            const resp = await fetch(baseUrl + '?' + params.toString());
+            if (!resp.ok) return;
+            const data = await resp.json();
+            const items = data._embedded?.items || [];
+            const images = {};
+            // Файлы в корне
+            for (const f of items) {
+                if (f.type === 'file' && f.name.match(/\.(png|jpg|jpeg|gif|webp)$/i)) {
+                    images['СИ_Images/' + f.name] = f.file || f.preview || '';
+                }
+            }
+            // Файлы в подпапках (загружаем параллельно)
+            const subfolders = items.filter(i => i.type === 'dir');
+            const promises = subfolders.map(sf => 
+                fetch(baseUrl + '?' + new URLSearchParams({
+                    public_key: DEV_IMAGES_PUBLIC_KEY,
+                    path: '/СИ_Images/' + sf.name,
+                    limit: '200',
+                }).toString()).then(r => r.json()).then(d => {
+                    const files = d._embedded?.items || [];
+                    for (const f of files) {
+                        if (f.type === 'file' && f.name.match(/\.(png|jpg|jpeg|gif|webp)$/i)) {
+                            images['СИ_Images/' + sf.name + '/' + f.name] = f.file || f.preview || '';
+                        }
+                    }
+                }).catch(() => null)
+            );
+            await Promise.all(promises);
+            devImages = images;
+            // Сохраняем в localStorage
+            try {
+                localStorage.setItem('kip8test:' + DEV_CACHE_KEY + '_images', JSON.stringify(devImages));
+            } catch (e) {}
+            console.log('[devices] Загружено свежих URL картинок: ' + Object.keys(devImages).length);
+        } catch (e) {
+            console.warn('[devices] Не удалось загрузить свежие URL картинок:', e);
+        }
+    }
+
     async function devLoad() {
         if (devLoaded) return devData;
         try {
@@ -5550,11 +5619,22 @@
             // поэтому кэш обновится, но ключ останется стабильным.
             // cache: 'no-store' — гарантированно не используем HTTP-кэш браузера.
             const bust = '?v=' + Date.now();
+            // Загружаем данные приборов
             const resp = await fetch('data/devices.json' + bust, { cache: 'no-store' });
             if (!resp.ok) throw new Error('HTTP ' + resp.status);
             devData = await resp.json();
-            // Сохраняем в localStorage как резервный кэш для офлайна
-            // (без версии — данные обновляются при каждом успешном fetch)
+            // Загружаем свежие URL картинок с Яндекс Диска (URL истекают через ~час)
+            // Делаем это параллельно с рендером — картинки появятся после загрузки
+            devLoadImagesFresh().then(() => {
+                // После загрузки URL картинок — перерендерим, чтобы они появились
+                devRender();
+            });
+            // Сначала попробуем использовать кэш картинок из localStorage (для быстрого рендера)
+            try {
+                const cachedImgs = localStorage.getItem('kip8test:' + DEV_CACHE_KEY + '_images');
+                devImages = cachedImgs ? JSON.parse(cachedImgs) : {};
+            } catch (e2) { devImages = {}; }
+            // Сохраняем данные в localStorage как резервный кэш для офлайна
             try {
                 localStorage.setItem('kip8test:' + DEV_CACHE_KEY, JSON.stringify(devData));
             } catch (e) {}
@@ -5568,6 +5648,11 @@
                 if (cached) {
                     devData = JSON.parse(cached);
                     devLoaded = true;
+                    // Загружаем кэш картинок
+                    try {
+                        const cachedImgs = localStorage.getItem('kip8test:' + DEV_CACHE_KEY + '_images');
+                        devImages = cachedImgs ? JSON.parse(cachedImgs) : {};
+                    } catch (e2) { devImages = {}; }
                     console.log('[devices] Используется кэш localStorage (офлайн)');
                     return devData;
                 }
@@ -5625,15 +5710,23 @@
 
         let html = '<div class="dev-list">';
         for (const dev of visible) {
-            const devId = String(dev['ID'] || '');
+            const devId = String(dev['ID'] ?? '');
             const isExpanded = devExpandedCards[devId] === true;
             const name = dev['Наименование'] || '(без названия)';
             const type = dev['Тип'] || '';
             const number = dev['№ прибора'] || '';
             const place = dev['Место установки'] || '';
+            const imgPath = dev['Изображение'] || '';
+            // Нормализуем путь: "кип_app\СИ_Images\flow\пульсар тх.png" → "СИ_Images/flow/пульсар тх.png"
+            const imgKey = imgPath ? imgPath.replace(/\\/g, '/').replace(/^кип_app\//, '') : '';
+            const imgUrl = imgKey ? (devImages[imgKey] || '') : '';
 
             html += '<div class="dev-card' + (isExpanded ? ' expanded' : '') + '" data-dev-id="' + devEsc(devId) + '">';
             html += '<div class="dev-card-header" onclick="devToggleCard(this)">';
+            // Превью картинки (если есть)
+            if (imgUrl) {
+                html += '<img class="dev-card-image" src="' + devEsc(imgUrl) + '" alt="' + devEsc(name) + '" loading="lazy" onerror="this.style.display=\'none\'">';
+            }
             html += '<div class="dev-card-title">' + devMark(name, query) + '</div>';
             let subtitle = '';
             if (type) subtitle += type;
