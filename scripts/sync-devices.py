@@ -143,7 +143,7 @@ def parse_devices(xlsx_path, sheet_name):
     return devices, headers
 
 
-def resolve_share_link_images(devices, max_size=(100, 100)):
+def resolve_share_link_images(devices, max_size=(150, 150)):
     """
     Для записей с share-ссылками (https://disk.yandex.ru/i/...) в поле 'Изображение':
     1. Разрешает ссылку через Yandex Disk API → file URL
