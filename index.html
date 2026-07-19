@@ -1139,7 +1139,7 @@
     [data-theme="light"] .page-inline-header-chevron svg {
         stroke: rgba(42, 93, 143, 0.6);
     }
-    .page-inline-header-title { font-size: 18px; font-weight: 700; color: #e0e0e0; letter-spacing: -0.3px; flex: 1; }
+    .page-inline-header-title { font-size: 18px; font-weight: 700; color: #e0e0e0; letter-spacing: -0.3px; flex: 1; text-shadow: 0 0 6px rgba(186, 85, 211, 0.45), 0 0 14px rgba(186, 85, 211, 0.25), 0 0 22px rgba(186, 85, 211, 0.12); }
     #page-dashboard ~ .app-header, body:has(#page-dashboard.active) .app-header { display: block; }
     body:has(.page-content.active:not(#page-dashboard)) .app-header { display: none; }
     .greek-gamma { font-family: Georgia, 'Times New Roman', serif; font-style: italic; text-transform: none; }
@@ -1531,6 +1531,7 @@
     }
     [data-theme="light"] .page-inline-header-title {
         color: #141413;
+        text-shadow: 0 0 6px rgba(147, 51, 234, 0.25), 0 0 14px rgba(147, 51, 234, 0.12);
     }
     [data-theme="light"] .menu-btn-arrow {
         color: rgba(0, 0, 0, 0.15);
@@ -2467,6 +2468,7 @@
     }
     .dev-card.expanded .dev-card-info-block {
         display: flex;
+        align-self: center;
     }
     .dev-card.expanded .dev-card-subtitle {
         display: none;
@@ -2530,14 +2532,15 @@
     [data-theme="light"] .dev-card-row { border-bottom-color: rgba(20, 20, 19, 0.06); }
     .dev-card-row:last-child { border-bottom: none; }
     /* Толстые разделители */
-    .dev-card-row.dev-row-divider {
-        border-top: 2px solid rgba(255, 255, 255, 0.12);
-        margin-top: 4px;
-        padding-top: 10px;
-    }
-    [data-theme="light"] .dev-card-row.dev-row-divider {
-        border-top-color: rgba(20, 20, 19, 0.15);
-    }
+    /* Группировка строк карточки по цвету */
+    .dev-card-row.dev-row-group-1 { background: rgba(255,255,255,0.015); }
+    .dev-card-row.dev-row-group-2 { background: rgba(255,255,255,0.055); }
+    .dev-card-row.dev-row-group-3 { background: rgba(255,255,255,0.015); }
+    .dev-card-row.dev-row-group-4 { background: rgba(255,255,255,0.055); }
+    [data-theme="light"] .dev-card-row.dev-row-group-1 { background: rgba(0,0,0,0.01); }
+    [data-theme="light"] .dev-card-row.dev-row-group-2 { background: rgba(0,0,0,0.04); }
+    [data-theme="light"] .dev-card-row.dev-row-group-3 { background: rgba(0,0,0,0.01); }
+    [data-theme="light"] .dev-card-row.dev-row-group-4 { background: rgba(0,0,0,0.04); }
     .dev-card-label {
         font-size: 12px;
         color: rgba(180, 200, 220, 0.45);
@@ -5742,22 +5745,22 @@
 
     // Поля для отображения в карточке (порядок = как в карточке)
     const DEV_FIELDS = [
-        { key: 'Предел измерения', label: 'Предел измерения' },
-        { key: 'Погрешность', label: 'Погрешность' },
-        { key: '__period__', label: 'Период ремонта', isCombined: true },
-        { key: 'Оборудование', label: 'Оборудование', divider: true },
-        { key: 'Параметр', label: 'Параметр' },
-        { key: 'Место расположения', label: 'Место расположения' },
-        { key: 'Производство', label: 'Производство', divider: true },
-        { key: 'Позиция', label: 'Позиция' },
-        { key: '№ проекта', label: '№ проекта' },
-        { key: '№ СБС', label: '№ СБС' },
-        { key: '№ САР', label: '№ САР' },
-        { key: 'В перечне', label: 'В перечне' },
-        { key: 'В гр. ППР', label: 'В гр. ППР' },
-        { key: 'Технические характеристики', label: 'Тех. характеристики' },
-        { key: 'Примечания', label: 'Примечания' },
-        { key: 'Замечания', label: 'Замечания' },
+        { key: 'Предел измерения', label: 'Предел измерения', group: 1 },
+        { key: 'Погрешность', label: 'Погрешность', group: 1 },
+        { key: '__period__', label: 'Период ремонта', isCombined: true, group: 1 },
+        { key: 'Оборудование', label: 'Оборудование', group: 2 },
+        { key: 'Параметр', label: 'Параметр', group: 2 },
+        { key: 'Место расположения', label: 'Место расположения', group: 2 },
+        { key: 'Производство', label: 'Производство', group: 2 },
+        { key: 'Позиция', label: 'Позиция', group: 3 },
+        { key: '№ проекта', label: '№ проекта', group: 3 },
+        { key: '№ СБС', label: '№ СБС', group: 3 },
+        { key: '№ САР', label: '№ САР', group: 3 },
+        { key: 'В перечне', label: 'В перечне', group: 3 },
+        { key: 'В гр. ППР', label: 'В гр. ППР', group: 3 },
+        { key: 'Технические характеристики', label: 'Тех. характеристики', group: 4 },
+        { key: 'Примечания', label: 'Примечания', group: 4 },
+        { key: 'Замечания', label: 'Замечания', group: 4 },
     ];
 
     let devImages = {};  // не используется (base64 встроены в devices.json)
@@ -5899,7 +5902,7 @@
                 html += '<div class="dev-card-info-row">' + devMark(type, query) + '</div>';
             }
             if (number) {
-                html += '<div class="dev-card-info-row" style="color:#6aa6e0;font-weight:600;">' + devMark(number, query) + '</div>';
+                html += '<div class="dev-card-info-row" style="color:#6aa6e0;font-weight:600;">№ ' + devMark(number, query) + '</div>';
             }
             if (place) {
                 html += '<div class="dev-card-info-row">' + devMark(place, query) + '</div>';
@@ -5916,15 +5919,16 @@
                     const dateVal = dev['Дата'] || '';
                     const vidVal = dev['Вид ремонта'] || '';
                     const perVal = dev['Период ремонта'] || '';
-                    const parts = [dateVal, vidVal, perVal].filter(p => p);
+                    const dateFormatted = dateVal ? devFormatDate(dateVal) : '';
+                    const parts = [dateFormatted, vidVal, perVal].filter(p => p);
                     val = parts.join(' ');
                 } else {
                     val = dev[f.key];
                 }
                 if (val === undefined || val === null || val === '') continue;
                 const cls = f.class ? ' ' + f.class : '';
-                const divCls = f.divider ? ' dev-row-divider' : '';
-                html += '<div class="dev-card-row' + divCls + '">';
+                const grpCls = f.group ? ' dev-row-group-' + f.group : '';
+                html += '<div class="dev-card-row' + grpCls + '">';
                 html += '<div class="dev-card-label">' + devEsc(f.label) + '</div>';
                 html += '<div class="dev-card-value' + cls + '">' + devMark(String(val), query) + '</div>';
                 html += '</div>';
@@ -5997,8 +6001,15 @@
     }
 
     function devGetStickyHeight() {
-        const ph = document.querySelector('#page-devices .page-inline-header');
-        return ph ? ph.offsetHeight : 56;
+        const pages = ['page-devices', 'page-devices-type', 'page-devices-name', 'page-devices-prod'];
+        for (const pid of pages) {
+            const el = document.getElementById(pid);
+            if (el && el.offsetParent !== null) {
+                const ph = el.querySelector('.page-inline-header');
+                if (ph) return ph.offsetHeight;
+            }
+        }
+        return 56;
     }
 
     // Прокрутить так, чтобы header карточки прилип к нижней части sticky header.
@@ -6006,8 +6017,15 @@
     function devScrollToCardContent(card) {
         const stickyHeight = devGetStickyHeight();
         const cardHeader = card.querySelector('.dev-card-header');
-        const rect = cardHeader ? cardHeader.getBoundingClientRect() : card.getBoundingClientRect();
-        const targetY = window.scrollY + rect.top - stickyHeight - 2;
+        const targetEl = cardHeader || card;
+        // Используем offsetTop для точного позиционирования относительно документа
+        let offsetTop = 0;
+        let el = targetEl;
+        while (el && el !== document.body) {
+            offsetTop += el.offsetTop;
+            el = el.offsetParent;
+        }
+        const targetY = offsetTop - stickyHeight;
         window.scrollTo({ top: Math.max(0, targetY), behavior: 'auto' });
     }
 
@@ -6124,6 +6142,25 @@
 
     // Получить дату последнего изменения перечня из записи с ID=0
     // (в столбце "Тип" хранится Excel serial date)
+    function devFormatDate(dateVal) {
+        if (!dateVal) return '';
+        // Если это число (Excel serial date)
+        const num = parseFloat(dateVal);
+        if (!isNaN(num) && num > 30000) {
+            return devExcelDateToString(dateVal);
+        }
+        // Если строка в формате YYYY-MM-DD
+        const str = String(dateVal).trim();
+        const m = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (m) {
+            return m[3] + '.' + m[2] + '.' + m[1];
+        }
+        // Если уже в формате DD.MM.YYYY
+        if (/^\d{2}\.\d{2}\.\d{4}$/.test(str)) {
+            return str;
+        }
+        return str;
+    }
     function devGetLastUpdateDate() {
         if (!devData || !devData.devices) return '';
         for (const d of devData.devices) {
@@ -6339,7 +6376,7 @@
                 html += '</div>';
                 html += '<div class="dev-card-info-block">';
                 if (type) html += '<div class="dev-card-info-row">' + devMark(type, query) + '</div>';
-                if (number) html += '<div class="dev-card-info-row" style="color:#6aa6e0;font-weight:600;">' + devMark(number, query) + '</div>';
+                if (number) html += '<div class="dev-card-info-row" style="color:#6aa6e0;font-weight:600;">№ ' + devMark(number, query) + '</div>';
                 if (place) html += '<div class="dev-card-info-row">' + devMark(place, query) + '</div>';
                 html += '</div>';
                 html += '<span class="dev-card-arrow"></span>';
@@ -6349,15 +6386,19 @@
                 for (const f of DEV_FIELDS) {
                     let val = '';
                     if (f.isCombined) {
-                        const parts = [dev['Дата'], dev['Вид ремонта'], dev['Период ремонта']].filter(p => p);
+                        const dateRaw = dev['Дата'] || '';
+                        const vidVal = dev['Вид ремонта'] || '';
+                        const perVal = dev['Период ремонта'] || '';
+                        const dateFormatted = dateRaw ? devFormatDate(dateRaw) : '';
+                        const parts = [dateFormatted, vidVal, perVal].filter(p => p);
                         val = parts.join(' ');
                     } else {
                         val = dev[f.key];
                     }
                     if (!val) continue;
                     const cls = f.class ? ' ' + f.class : '';
-                    const divCls = f.divider ? ' dev-row-divider' : '';
-                    html += '<div class="dev-card-row' + divCls + '">';
+                    const grpCls = f.group ? ' dev-row-group-' + f.group : '';
+                    html += '<div class="dev-card-row' + grpCls + '">';
                     html += '<div class="dev-card-label">' + devEsc(f.label) + '</div>';
                     html += '<div class="dev-card-value' + cls + '">' + devMark(String(val), query) + '</div>';
                     html += '</div>';
@@ -11371,6 +11412,31 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         <div class="sidebar-show-more" onclick="toggleSidebarGroup(this.parentElement)">
             <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
             <span>Показать все (2)</span>
+        </div>
+        </div>
+
+        <!-- ===== Группа: Приборы ===== -->
+        <div class="sidebar-group" data-group="devices">
+        <div class="sidebar-group-title sidebar-group-title-devices">Приборы</div>
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('devices'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(106,166,224,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span style="color:rgba(106,166,224,0.9);">Общий список</span>
+        </div>
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('devices-type'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(106,166,224,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            <span style="color:rgba(106,166,224,0.9);">По типу</span>
+        </div>
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('devices-name'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(106,166,224,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <span style="color:rgba(106,166,224,0.9);">По наименованию</span>
+        </div>
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('devices-prod'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(106,166,224,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            <span style="color:rgba(106,166,224,0.9);">По производствам</span>
+        </div>
+        <div class="sidebar-show-more" onclick="toggleSidebarGroup(this.parentElement)">
+            <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            <span>Показать все (4)</span>
         </div>
         </div>
 
