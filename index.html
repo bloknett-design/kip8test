@@ -5794,22 +5794,25 @@
             if (navigator.vibrate) navigator.vibrate(25);
             devLockSwipe(500);
             requestAnimationFrame(() => {
-                requestAnimationFrame(() => devScrollToCardHeader(card));
+                requestAnimationFrame(() => devScrollToCardContent(card));
             });
         }
     }
 
     // ===== Swipe-навигация между карточками =====
-    // Вверх (прокрутка вниз): body карточки ушло вверх на 25% viewport → следующая
-    // Вниз (прокрутка вверх): body карточки ушло вниз на 50% viewport → предыдущая
+    // Вниз: body ушло вверх на 50% viewport → следующая
+    // Вверх: body ушло вниз на 50% viewport → предыдущая
+    // Строгий переход: только одна карточка за свайп, блокировка до завершения
     let devSwipeTimer = null;
     let devSwipeLock = false;
     let devSwipeLockTimer = null;
+    let devSwipeStartY = null;       // начальная позиция касания
+    let devSwipeTriggered = false;   // сработал ли переход в текущем свайпе
 
     function devLockSwipe(duration) {
         devSwipeLock = true;
         clearTimeout(devSwipeLockTimer);
-        devSwipeLockTimer = setTimeout(() => { devSwipeLock = false; }, duration || 600);
+        devSwipeLockTimer = setTimeout(() => { devSwipeLock = false; }, duration || 700);
     }
 
     function devGetStickyHeight() {
@@ -5817,16 +5820,34 @@
         return ph ? ph.offsetHeight : 56;
     }
 
-    function devScrollToCardHeader(card) {
+    // Прокрутить так, чтобы НАЧАЛО КОНТЕНТА карточки (первая строка данных)
+    // было сразу под sticky header + header карточки
+    function devScrollToCardContent(card) {
         const stickyHeight = devGetStickyHeight();
-        const header = card.querySelector('.dev-card-header');
-        const rect = header ? header.getBoundingClientRect() : card.getBoundingClientRect();
+        const cardHeader = card.querySelector('.dev-card-header');
+        const headerHeight = cardHeader ? cardHeader.offsetHeight : 50;
+        // Цель: header карточки прилипает к sticky header, 
+        // а первая строка данных сразу под header карточки
+        const rect = cardHeader ? cardHeader.getBoundingClientRect() : card.getBoundingClientRect();
         const targetY = window.scrollY + rect.top - stickyHeight - 2;
         window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
     }
 
+    function devSwitchToCard(fromCard, toCard) {
+        fromCard.classList.remove('expanded');
+        delete devExpandedCards[fromCard.getAttribute('data-dev-id')];
+        toCard.classList.add('expanded');
+        devExpandedCards[toCard.getAttribute('data-dev-id')] = true;
+        if (navigator.vibrate) navigator.vibrate(20);
+        devLockSwipe(700);
+        devSwipeTriggered = true;
+        requestAnimationFrame(() => devScrollToCardContent(toCard));
+    }
+
     function devCheckSwipe() {
         if (devSwipeLock) return;
+        // Только один переход за свайп
+        if (devSwipeTriggered) return;
         const list = document.getElementById('devList');
         if (!list) return;
         const expanded = list.querySelector('.dev-card.expanded');
@@ -5841,30 +5862,16 @@
         const bodyRect = body.getBoundingClientRect();
         const vh = window.innerHeight;
 
-        // Прокрутка ВНИЗ: body ушло вверх на 25% viewport → открыть следующую
-        if (bodyRect.bottom < vh * 0.25) {
+        // Прокрутка ВНИЗ: body ушло вверх на 50% viewport → следующая
+        if (bodyRect.bottom < vh * 0.5) {
             if (currentIdx + 1 < allCards.length) {
-                const next = allCards[currentIdx + 1];
-                expanded.classList.remove('expanded');
-                delete devExpandedCards[expanded.getAttribute('data-dev-id')];
-                next.classList.add('expanded');
-                devExpandedCards[next.getAttribute('data-dev-id')] = true;
-                if (navigator.vibrate) navigator.vibrate(20);
-                devLockSwipe(600);
-                requestAnimationFrame(() => devScrollToCardHeader(next));
+                devSwitchToCard(expanded, allCards[currentIdx + 1]);
             }
         }
-        // Прокрутка ВВЕРХ: body ушло вниз на 50% viewport → открыть предыдущую
+        // Прокрутка ВВЕРХ: body ушло вниз на 50% viewport → предыдущая
         else if (bodyRect.top > vh * 0.5) {
             if (currentIdx - 1 >= 0) {
-                const prev = allCards[currentIdx - 1];
-                expanded.classList.remove('expanded');
-                delete devExpandedCards[expanded.getAttribute('data-dev-id')];
-                prev.classList.add('expanded');
-                devExpandedCards[prev.getAttribute('data-dev-id')] = true;
-                if (navigator.vibrate) navigator.vibrate(20);
-                devLockSwipe(600);
-                requestAnimationFrame(() => devScrollToCardHeader(prev));
+                devSwitchToCard(expanded, allCards[currentIdx - 1]);
             }
         }
     }
@@ -5874,7 +5881,7 @@
         devSwipeTimer = setTimeout(() => {
             devSwipeTimer = null;
             devCheckSwipe();
-        }, 100);
+        }, 80);
     }
 
     // === Фильтр по типу ===
@@ -5966,9 +5973,15 @@
         devExpandedCards = {};
         // Регистрируем scroll listener для swipe-навигации
         window.addEventListener('scroll', devOnScroll, { passive: true });
-        // Снимаем блокировку swipe при ручном касании
-        window.addEventListener('touchstart', () => { devSwipeLock = false; }, { passive: true });
-        window.addEventListener('wheel', () => { devSwipeLock = false; }, { passive: true });
+        // При новом касании — сброс блокировки и флага "уже сработал"
+        window.addEventListener('touchstart', () => {
+            devSwipeLock = false;
+            devSwipeTriggered = false;
+        }, { passive: true });
+        window.addEventListener('wheel', () => {
+            devSwipeLock = false;
+            devSwipeTriggered = false;
+        }, { passive: true });
         devLoad().then(() => devRender());
     }
 
