@@ -2309,7 +2309,7 @@
         background: rgba(252, 248, 240, 0.95);
     }
     .dev-card-header {
-        padding: 11px 14px 9px 0;
+        padding: 0 14px 0 0;
         background: transparent;
         border-bottom: none;
         cursor: pointer;
@@ -2317,12 +2317,18 @@
         -webkit-tap-highlight-color: transparent;
         transition: background 0.15s;
     }
+    .dev-card.expanded .dev-card-header {
+        padding: 11px 14px 9px 0;
+    }
     .dev-card-header:active { background: rgba(199, 150, 74, 0.08); }
     /* Превью картинки прибора — слева от текста, не сдвигает строки */
     .dev-card-header-inner {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         gap: 0;
+    }
+    .dev-card.expanded .dev-card-header-inner {
+        align-items: flex-start;
     }
     .dev-card-image {
         flex-shrink: 0;
