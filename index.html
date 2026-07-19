@@ -2281,7 +2281,6 @@
         background: rgba(25, 32, 45, 0.95);
         margin: 0 8px 8px;
         border-radius: 12px;
-        overflow: hidden;
     }
     [data-theme="light"] .dev-list {
         background: rgba(255, 252, 245, 0.98);
@@ -2293,7 +2292,6 @@
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         border-radius: 0;
         background: transparent;
-        overflow: hidden;
     }
     [data-theme="light"] .dev-card { border-bottom-color: rgba(20, 20, 19, 0.08); }
     .dev-card:last-child { border-bottom: none; }
@@ -2380,6 +2378,16 @@
     .dev-card.expanded .dev-card-body {
         max-height: 3000px;
         transition: max-height 0.45s ease;
+    }
+    /* Раскрытая карточка — прилипает к нижней части sticky header */
+    .dev-card.expanded .dev-card-header {
+        position: sticky;
+        top: 56px;
+        z-index: 55;
+        background: inherit;
+    }
+    .page-content.scrolled .dev-card.expanded .dev-card-header {
+        top: 40px;
     }
     .dev-card-row {
         display: flex;
@@ -5782,7 +5790,91 @@
             card.classList.add('expanded');
             devExpandedCards[devId] = true;
             if (navigator.vibrate) navigator.vibrate(25);
+            // Прокрутить к началу карточки (header карточки прилипнет под page-inline-header)
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    const headerEl = card.querySelector('.dev-card-header');
+                    const pageHeader = document.querySelector('#page-devices .page-inline-header');
+                    const stickyHeight = pageHeader ? pageHeader.offsetHeight : 56;
+                    const rect = headerEl ? headerEl.getBoundingClientRect() : card.getBoundingClientRect();
+                    const targetY = window.scrollY + rect.top - stickyHeight - 2;
+                    window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+                });
+            });
         }
+    }
+
+    // ===== Swipe-навигация между карточками =====
+    // При прокрутке раскрытой карточки вверх на 75% её высоты → открыть следующую
+    // При прокрутке вниз на 75% → открыть предыдущую
+    let devSwipeTimer = null;
+    function devCheckSwipe() {
+        const list = document.getElementById('devList');
+        if (!list) return;
+        const expanded = list.querySelector('.dev-card.expanded');
+        if (!expanded) return;
+        
+        const allCards = Array.from(list.querySelectorAll('.dev-card'));
+        const currentIdx = allCards.indexOf(expanded);
+        if (currentIdx < 0) return;
+        
+        // Проверяем позицию body карточки (без header, который sticky)
+        const body = expanded.querySelector('.dev-card-body');
+        if (!body) return;
+        const bodyRect = body.getBoundingClientRect();
+        const cardHeight = expanded.offsetHeight;
+        const viewportHeight = window.innerHeight;
+        const threshold = cardHeight * 0.75;
+        
+        // Если body карточки ушло вверх за viewport (прокрутили вниз)
+        // → открыть следующую
+        if (bodyRect.bottom < viewportHeight * 0.25) {
+            if (currentIdx + 1 < allCards.length) {
+                const next = allCards[currentIdx + 1];
+                expanded.classList.remove('expanded');
+                delete devExpandedCards[expanded.getAttribute('data-dev-id')];
+                next.classList.add('expanded');
+                devExpandedCards[next.getAttribute('data-dev-id')] = true;
+                if (navigator.vibrate) navigator.vibrate(20);
+                requestAnimationFrame(() => {
+                    const pageHeader = document.querySelector('#page-devices .page-inline-header');
+                    const stickyHeight = pageHeader ? pageHeader.offsetHeight : 56;
+                    const nextHeader = next.querySelector('.dev-card-header');
+                    const rect = nextHeader ? nextHeader.getBoundingClientRect() : next.getBoundingClientRect();
+                    const targetY = window.scrollY + rect.top - stickyHeight - 2;
+                    window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+                });
+            }
+        }
+        // Если body карточки ушло вниз за viewport (прокрутили вверх)
+        // → открыть предыдущую
+        else if (bodyRect.top > viewportHeight * 0.75) {
+            if (currentIdx - 1 >= 0) {
+                const prev = allCards[currentIdx - 1];
+                expanded.classList.remove('expanded');
+                delete devExpandedCards[expanded.getAttribute('data-dev-id')];
+                prev.classList.add('expanded');
+                devExpandedCards[prev.getAttribute('data-dev-id')] = true;
+                if (navigator.vibrate) navigator.vibrate(20);
+                requestAnimationFrame(() => {
+                    const pageHeader = document.querySelector('#page-devices .page-inline-header');
+                    const stickyHeight = pageHeader ? pageHeader.offsetHeight : 56;
+                    const prevHeader = prev.querySelector('.dev-card-header');
+                    const rect = prevHeader ? prevHeader.getBoundingClientRect() : prev.getBoundingClientRect();
+                    const targetY = window.scrollY + rect.top - stickyHeight - 2;
+                    window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+                });
+            }
+        }
+    }
+
+    // throttled scroll listener для swipe-навигации
+    function devOnScroll() {
+        if (devSwipeTimer) return;
+        devSwipeTimer = setTimeout(() => {
+            devSwipeTimer = null;
+            devCheckSwipe();
+        }, 150);
     }
 
     // === Фильтр по типу ===
@@ -5872,6 +5964,8 @@
         devData = null;
         devVisibleCount = DEV_DEFAULT_LIMIT;
         devExpandedCards = {};
+        // Регистрируем scroll listener для swipe-навигации
+        window.addEventListener('scroll', devOnScroll, { passive: true });
         devLoad().then(() => devRender());
     }
 
