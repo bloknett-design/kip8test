@@ -2389,13 +2389,10 @@
     .page-content.scrolled .dev-card.expanded .dev-card-header {
         top: 40px;
     }
-    /* Замедление прокрутки при раскрытой карточке */
-    .dev-list.has-expanded {
-        scroll-snap-type: y proximity;
-    }
-    .dev-list.has-expanded .dev-card .dev-card-header {
-        scroll-snap-align: start;
-        scroll-snap-margin-top: 56px;
+    /* Отключение инерции прокрутки на странице приборов */
+    #page-devices {
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: auto;
     }
     .dev-card-row {
         display: flex;
@@ -5783,7 +5780,6 @@
         if (isExpanded) {
             card.classList.remove('expanded');
             delete devExpandedCards[devId];
-            if (list) list.classList.remove('has-expanded');
             if (navigator.vibrate) navigator.vibrate(15);
         } else {
             if (list) {
@@ -5792,7 +5788,6 @@
                     const k = c.getAttribute('data-dev-id');
                     if (k) delete devExpandedCards[k];
                 });
-                list.classList.add('has-expanded');
             }
             card.classList.add('expanded');
             devExpandedCards[devId] = true;
@@ -5805,13 +5800,11 @@
     }
 
     // ===== Swipe-навигация между карточками =====
-    // Условие: следующая карточка открывается, когда её header ПОЛНОСТЬЮ виден в viewport.
-    // Если прокрутка прекращена и header следующей не виден полностью —
-    // открытая карточка пружинно возвращается к верхнему бару.
+    // Вверх (прокрутка вниз): body карточки ушло вверх на 25% viewport → следующая
+    // Вниз (прокрутка вверх): body карточки ушло вниз на 50% viewport → предыдущая
     let devSwipeTimer = null;
     let devSwipeLock = false;
     let devSwipeLockTimer = null;
-    let devScrollStopTimer = null;
 
     function devLockSwipe(duration) {
         devSwipeLock = true;
@@ -5819,13 +5812,11 @@
         devSwipeLockTimer = setTimeout(() => { devSwipeLock = false; }, duration || 600);
     }
 
-    // Получить высоту sticky page-inline-header
     function devGetStickyHeight() {
         const ph = document.querySelector('#page-devices .page-inline-header');
         return ph ? ph.offsetHeight : 56;
     }
 
-    // Прокрутить так, чтобы header карточки прилип к нижней части page-inline-header
     function devScrollToCardHeader(card) {
         const stickyHeight = devGetStickyHeight();
         const header = card.querySelector('.dev-card-header');
@@ -5845,71 +5836,36 @@
         const currentIdx = allCards.indexOf(expanded);
         if (currentIdx < 0) return;
 
-        const stickyHeight = devGetStickyHeight();
-        const viewportHeight = window.innerHeight;
+        const body = expanded.querySelector('.dev-card-body');
+        if (!body) return;
+        const bodyRect = body.getBoundingClientRect();
+        const vh = window.innerHeight;
 
-        // Проверяем следующую карточку
-        if (currentIdx + 1 < allCards.length) {
-            const next = allCards[currentIdx + 1];
-            const nextHeader = next.querySelector('.dev-card-header');
-            if (nextHeader) {
-                const r = nextHeader.getBoundingClientRect();
-                // Header следующей карточки ПОЛНОСТЬЮ виден в viewport
-                // (ниже sticky header и выше низа экрана)
-                if (r.top >= stickyHeight && r.bottom <= viewportHeight) {
-                    // Переключаемся на следующую
-                    expanded.classList.remove('expanded');
-                    delete devExpandedCards[expanded.getAttribute('data-dev-id')];
-                    next.classList.add('expanded');
-                    devExpandedCards[next.getAttribute('data-dev-id')] = true;
-                    if (navigator.vibrate) navigator.vibrate(20);
-                    devLockSwipe(600);
-                    requestAnimationFrame(() => devScrollToCardHeader(next));
-                    return;
-                }
+        // Прокрутка ВНИЗ: body ушло вверх на 25% viewport → открыть следующую
+        if (bodyRect.bottom < vh * 0.25) {
+            if (currentIdx + 1 < allCards.length) {
+                const next = allCards[currentIdx + 1];
+                expanded.classList.remove('expanded');
+                delete devExpandedCards[expanded.getAttribute('data-dev-id')];
+                next.classList.add('expanded');
+                devExpandedCards[next.getAttribute('data-dev-id')] = true;
+                if (navigator.vibrate) navigator.vibrate(20);
+                devLockSwipe(600);
+                requestAnimationFrame(() => devScrollToCardHeader(next));
             }
         }
-
-        // Проверяем предыдущую карточку
-        if (currentIdx - 1 >= 0) {
-            const prev = allCards[currentIdx - 1];
-            const prevHeader = prev.querySelector('.dev-card-header');
-            if (prevHeader) {
-                const r = prevHeader.getBoundingClientRect();
-                // Header предыдущей карточки ПОЛНОСТЬЮ виден
-                if (r.top >= stickyHeight && r.bottom <= viewportHeight) {
-                    expanded.classList.remove('expanded');
-                    delete devExpandedCards[expanded.getAttribute('data-dev-id')];
-                    prev.classList.add('expanded');
-                    devExpandedCards[prev.getAttribute('data-dev-id')] = true;
-                    if (navigator.vibrate) navigator.vibrate(20);
-                    devLockSwipe(600);
-                    requestAnimationFrame(() => devScrollToCardHeader(prev));
-                    return;
-                }
+        // Прокрутка ВВЕРХ: body ушло вниз на 50% viewport → открыть предыдущую
+        else if (bodyRect.top > vh * 0.5) {
+            if (currentIdx - 1 >= 0) {
+                const prev = allCards[currentIdx - 1];
+                expanded.classList.remove('expanded');
+                delete devExpandedCards[expanded.getAttribute('data-dev-id')];
+                prev.classList.add('expanded');
+                devExpandedCards[prev.getAttribute('data-dev-id')] = true;
+                if (navigator.vibrate) navigator.vibrate(20);
+                devLockSwipe(600);
+                requestAnimationFrame(() => devScrollToCardHeader(prev));
             }
-        }
-    }
-
-    // При остановке прокрутки — если текущая карточка не прилипла, вернуть её
-    function devOnScrollStop() {
-        if (devSwipeLock) return;
-        const list = document.getElementById('devList');
-        if (!list) return;
-        const expanded = list.querySelector('.dev-card.expanded');
-        if (!expanded) return;
-
-        // Проверим: header раскрытой карточки прилип к sticky header?
-        const header = expanded.querySelector('.dev-card-header');
-        if (!header) return;
-        const stickyHeight = devGetStickyHeight();
-        const r = header.getBoundingClientRect();
-        const isStuck = Math.abs(r.top - stickyHeight - 2) < 10;
-
-        if (!isStuck) {
-            // Не прилип — вернуть к верхнему бару
-            devLockSwipe(400);
-            devScrollToCardHeader(expanded);
         }
     }
 
@@ -5919,9 +5875,6 @@
             devSwipeTimer = null;
             devCheckSwipe();
         }, 100);
-        // Детект остановки прокрутки
-        clearTimeout(devScrollStopTimer);
-        devScrollStopTimer = setTimeout(devOnScrollStop, 200);
     }
 
     // === Фильтр по типу ===
