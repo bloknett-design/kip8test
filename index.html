@@ -2334,7 +2334,8 @@
         transition: width 0.2s, height 0.2s;
     }
     .dev-card.expanded .dev-card-image {
-        width: 200px; height: 200px;
+        width: 50vw; height: 50vw;
+        max-width: 200px; max-height: 200px;
     }
     [data-theme="light"] .dev-card-image {
         background: rgba(255, 255, 255, 0.8);
@@ -2344,24 +2345,34 @@
         display: flex; align-items: center; justify-content: center;
         font-size: 10px; color: rgba(200, 210, 220, 0.3);
     }
-    /* При раскрытии — обёртка картинки с наименованием снизу */
+    /* При раскрытии — обёртка картинки с наименованием поверх */
     .dev-card-image-wrap {
         flex-shrink: 0;
+        position: relative;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        gap: 4px;
     }
     .dev-card-name-overlay {
-        font-size: 12px; font-weight: 600;
-        color: #8ab4e0;
-        text-align: center;
-        max-width: 200px;
-        line-height: 1.3;
         display: none;
     }
     .dev-card.expanded .dev-card-name-overlay {
-        display: block;
+        display: flex;
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        background: linear-gradient(transparent, rgba(0,0,0,0.7));
+        color: #fff;
+        font-size: 11px; font-weight: 600;
+        text-align: center;
+        padding: 16px 6px 6px;
+        line-height: 1.3;
+        border-radius: 0 0 8px 8px;
+        align-items: flex-end;
+        justify-content: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        display: -webkit-box;
     }
     .dev-card.expanded .dev-card-title {
         display: none;
@@ -2399,17 +2410,10 @@
     }
     .dev-card-info-row {
         font-size: 13px;
-        line-height: 1.3;
+        line-height: 1.4;
         color: #d0dce8;
     }
     [data-theme="light"] .dev-card-info-row { color: #1a1a1a; }
-    .dev-card-info-label {
-        font-size: 10px;
-        color: rgba(180, 200, 220, 0.45);
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-    }
-    [data-theme="light"] .dev-card-info-label { color: rgba(20, 20, 19, 0.45); }
     .dev-card-arrow {
         position: absolute;
         right: 12px; top: 50%;
@@ -5797,16 +5801,16 @@
                 html += '<div class="dev-card-subtitle">' + devMark(subtitle, query) + '</div>';
             }
             html += '</div>'; // .dev-card-text
-            // При раскрытом виде: Тип/№/Место справа от картинки
+            // При раскрытом виде: Тип/№/Место справа от картинки (без labels)
             html += '<div class="dev-card-info-block">';
             if (type) {
-                html += '<div><div class="dev-card-info-label">Тип</div><div class="dev-card-info-row">' + devMark(type, query) + '</div></div>';
+                html += '<div class="dev-card-info-row">' + devMark(type, query) + '</div>';
             }
             if (number) {
-                html += '<div><div class="dev-card-info-label">№ прибора</div><div class="dev-card-info-row" style="color:#6aa6e0;font-weight:600;">' + devMark(number, query) + '</div></div>';
+                html += '<div class="dev-card-info-row" style="color:#6aa6e0;font-weight:600;">' + devMark(number, query) + '</div>';
             }
             if (place) {
-                html += '<div><div class="dev-card-info-label">Место установки</div><div class="dev-card-info-row">' + devMark(place, query) + '</div></div>';
+                html += '<div class="dev-card-info-row">' + devMark(place, query) + '</div>';
             }
             html += '</div>'; // .dev-card-info-block
             html += '<span class="dev-card-arrow"></span>';
