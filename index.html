@@ -2379,6 +2379,10 @@
         max-height: 3000px;
         transition: max-height 0.45s ease;
     }
+    /* При первичном раскрытии — без анимации (мгновенно) */
+    .dev-card.expanded.no-anim .dev-card-body {
+        transition: none;
+    }
     /* Раскрытая карточка — прилипает к нижней части sticky header */
     .dev-card.expanded .dev-card-header {
         position: sticky;
@@ -5789,12 +5793,15 @@
                     if (k) delete devExpandedCards[k];
                 });
             }
-            card.classList.add('expanded');
+            card.classList.add('expanded', 'no-anim');
             devExpandedCards[devId] = true;
             if (navigator.vibrate) navigator.vibrate(25);
             devLockSwipe(500);
+            // Мгновенная прокрутка — без отскоков
             requestAnimationFrame(() => {
-                requestAnimationFrame(() => devScrollToCardContent(card));
+                devScrollToCardContent(card);
+                // Убираем no-anim после позиционирования
+                requestAnimationFrame(() => card.classList.remove('no-anim'));
             });
         }
     }
@@ -5820,28 +5827,28 @@
         return ph ? ph.offsetHeight : 56;
     }
 
-    // Прокрутить так, чтобы НАЧАЛО КОНТЕНТА карточки (первая строка данных)
-    // было сразу под sticky header + header карточки
+    // Прокрутить так, чтобы header карточки прилип к нижней части sticky header.
+    // Мгновенная прокрутка (behavior: 'auto') — без отскоков и анимации.
     function devScrollToCardContent(card) {
         const stickyHeight = devGetStickyHeight();
         const cardHeader = card.querySelector('.dev-card-header');
-        const headerHeight = cardHeader ? cardHeader.offsetHeight : 50;
-        // Цель: header карточки прилипает к sticky header, 
-        // а первая строка данных сразу под header карточки
         const rect = cardHeader ? cardHeader.getBoundingClientRect() : card.getBoundingClientRect();
         const targetY = window.scrollY + rect.top - stickyHeight - 2;
-        window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+        window.scrollTo({ top: Math.max(0, targetY), behavior: 'auto' });
     }
 
     function devSwitchToCard(fromCard, toCard) {
         fromCard.classList.remove('expanded');
         delete devExpandedCards[fromCard.getAttribute('data-dev-id')];
-        toCard.classList.add('expanded');
+        toCard.classList.add('expanded', 'no-anim');
         devExpandedCards[toCard.getAttribute('data-dev-id')] = true;
         if (navigator.vibrate) navigator.vibrate(20);
         devLockSwipe(700);
         devSwipeTriggered = true;
-        requestAnimationFrame(() => devScrollToCardContent(toCard));
+        requestAnimationFrame(() => {
+            devScrollToCardContent(toCard);
+            requestAnimationFrame(() => toCard.classList.remove('no-anim'));
+        });
     }
 
     function devCheckSwipe() {
