@@ -2469,6 +2469,8 @@
     .dev-card.expanded .dev-card-info-block {
         display: flex;
         align-self: center;
+        padding-top: 8px;
+        justify-content: center;
     }
     .dev-card.expanded .dev-card-subtitle {
         display: none;
@@ -5964,6 +5966,7 @@
             delete devExpandedCards[devId];
             if (navigator.vibrate) navigator.vibrate(15);
         } else {
+            // Сначала закрываем все остальные карточки и даём DOM пересчитаться
             if (list) {
                 list.querySelectorAll('.dev-card.expanded').forEach(c => {
                     c.classList.remove('expanded');
@@ -5971,15 +5974,18 @@
                     if (k) delete devExpandedCards[k];
                 });
             }
+            // Принудительный reflow перед раскрытием
+            if (list) list.offsetHeight;
             card.classList.add('expanded', 'no-anim');
             devExpandedCards[devId] = true;
             if (navigator.vibrate) navigator.vibrate(25);
             devLockSwipe(500);
-            // Мгновенная прокрутка — без отскоков
+            // Прокрутка после полного пересчёта layout
             requestAnimationFrame(() => {
-                devScrollToCardContent(card);
-                // Убираем no-anim после позиционирования
-                requestAnimationFrame(() => card.classList.remove('no-anim'));
+                requestAnimationFrame(() => {
+                    devScrollToCardContent(card);
+                    card.classList.remove('no-anim');
+                });
             });
         }
     }
@@ -6018,14 +6024,9 @@
         const stickyHeight = devGetStickyHeight();
         const cardHeader = card.querySelector('.dev-card-header');
         const targetEl = cardHeader || card;
-        // Используем offsetTop для точного позиционирования относительно документа
-        let offsetTop = 0;
-        let el = targetEl;
-        while (el && el !== document.body) {
-            offsetTop += el.offsetTop;
-            el = el.offsetParent;
-        }
-        const targetY = offsetTop - stickyHeight;
+        // getBoundingClientRect даёт точную позицию с учётом текущего layout
+        const rect = targetEl.getBoundingClientRect();
+        const targetY = window.scrollY + rect.top - stickyHeight;
         window.scrollTo({ top: Math.max(0, targetY), behavior: 'auto' });
     }
 
@@ -6485,7 +6486,7 @@
             delete expandedCards[devId];
             if (navigator.vibrate) navigator.vibrate(15);
         } else {
-            // Аккордеон
+            // Аккордеон: сначала закрываем все, потом раскрываем текущую
             const list = card.closest('[id$="List"]');
             if (list) {
                 list.querySelectorAll('.dev-card.expanded').forEach(c => {
@@ -6493,12 +6494,15 @@
                     delete expandedCards[c.getAttribute('data-dev-id')];
                 });
             }
+            if (list) list.offsetHeight;
             card.classList.add('expanded', 'no-anim');
             expandedCards[devId] = true;
             if (navigator.vibrate) navigator.vibrate(25);
             requestAnimationFrame(() => {
-                devScrollToCardContent(card);
-                requestAnimationFrame(() => card.classList.remove('no-anim'));
+                requestAnimationFrame(() => {
+                    devScrollToCardContent(card);
+                    card.classList.remove('no-anim');
+                });
             });
         }
     }
