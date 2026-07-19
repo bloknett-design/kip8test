@@ -1961,6 +1961,57 @@
     .pb-list.searching .pb-section-title {
         cursor: default;
     }
+
+    /* ===== Группы приборов в сортировке (непрозрачный фон + аккордеон) ===== */
+    .dev-sorted-list {
+        margin: 0 8px;
+    }
+    .dev-sorted-list.searching .pb-section.dev-group .pb-section-body {
+        max-height: 5000px;
+        transition: none;
+    }
+    .dev-sorted-list.searching .pb-section.dev-group .pb-section-arrow {
+        transform: translateY(-50%) rotate(45deg);
+        opacity: 0.3;
+    }
+    .dev-sorted-list.searching .pb-section.dev-group .pb-section-title {
+        cursor: default;
+    }
+
+    .dev-group {
+        margin: 6px 0 8px;
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 12px;
+        background: rgba(255,255,255,0.015);
+        overflow: hidden;
+    }
+    [data-theme="light"] .dev-group {
+        border-color: rgba(20,20,19,0.1);
+        background: rgba(255,255,255,0.55);
+    }
+
+    /* Непрозрачный фон заголовка группы */
+    .dev-group .pb-section-title {
+        background: #3d3225;
+        color: #d4a85c;
+        border-bottom: 1px solid rgba(199,150,74,0.2);
+    }
+    [data-theme="light"] .dev-group .pb-section-title {
+        background: #ede0cc;
+        color: #7a5a2a;
+        border-bottom: 1px solid rgba(199,150,74,0.25);
+    }
+    .dev-group .pb-section-title:active {
+        background: #4a3e2e;
+    }
+    [data-theme="light"] .dev-group .pb-section-title:active {
+        background: #e5d5b8;
+    }
+
+    /* Карточки внутри группы */
+    .dev-group .dev-card:first-child {
+        border-top: none;
+    }
     /* В режиме поиска — все подгруппы тоже раскрыты */
     .pb-list.searching .pb-subgroup .pb-subgroup-body {
         max-height: 5000px;
@@ -6167,6 +6218,7 @@
     // mode: 'type' — по типу, 'name' — по наименованию, 'prod' — по производствам
     let devSortedVisibleCount = {};
     let devSortedExpandedCards = {};
+    let devGroupExpanded = {};  // { 'type|Группа': true, ... } — раскрытые группы в сортировке
 
     function devRenderSorted(mode) {
         const ids = {
@@ -6243,14 +6295,22 @@
         const visibleCount = devSortedVisibleCount[mode];
         const expandedCards = devSortedExpandedCards[mode] || {};
 
-        let html = '';
+        let html = '<div class="dev-sorted-list' + (query ? ' searching' : '') + '">';
         let shown = 0;
         for (const g of groupOrder) {
             const items = groups[g];
-            // Групповой заголовок
-            html += '<div class="pb-section" style="margin: 6px 0 0; border-radius: 0; border: none;">';
-            html += '<div class="pb-section-title" style="background: rgba(199,150,74,0.1); color: #c7964a;">' + devMark(g, query) + '<span class="pb-section-title-count">' + items.length + '</span></div>';
-            html += '<div class="pb-section-body" style="max-height: none;">';
+            const groupKey = mode + '|' + g;
+            const isGroupExpanded = query ? true : (devGroupExpanded[groupKey] === true);
+
+            // Групповой заголовок (сворачиваемый)
+            html += '<div class="pb-section dev-group' + (isGroupExpanded ? ' expanded' : '') + '" data-group="' + devEsc(g) + '" data-mode="' + mode + '">';
+            html += '<div class="pb-section-title dev-group-title" onclick="devToggleGroup(this)">';
+            html += '<span class="pb-section-title-text">' + devMark(g, query) + '</span>';
+            html += '<span class="pb-section-title-count">' + items.length + '</span>';
+            html += '<span class="pb-section-arrow"></span>';
+            html += '</div>';
+            html += '<div class="pb-section-body">';
+
             for (const dev of items) {
                 if (shown >= visibleCount) break;
                 shown++;
@@ -6309,6 +6369,7 @@
             html += '</div>'; // section
             if (shown >= visibleCount) break;
         }
+        html += '</div>'; // dev-sorted-list
 
         const remaining = filtered.length - shown;
         if (remaining > 0) {
@@ -6320,7 +6381,57 @@
         list.innerHTML = html;
     }
 
-    function devShowMoreSorted(mode) {
+    
+    function devToggleGroup(titleEl) {
+        const section = titleEl.closest('.pb-section');
+        if (!section) return;
+        const mode = section.getAttribute('data-mode') || 'type';
+        const group = section.getAttribute('data-group');
+        if (!group) return;
+
+        const groupKey = mode + '|' + group;
+        const isExpanded = section.classList.contains('expanded');
+
+        if (isExpanded) {
+            // Закрыть текущую
+            section.classList.remove('expanded');
+            delete devGroupExpanded[groupKey];
+            if (navigator.vibrate) navigator.vibrate(20);
+        } else {
+            // Аккордеон: закрыть все остальные группы в этом списке
+            const listIds = { type: 'devTypeList', name: 'devNameList', prod: 'devProdList' };
+            const list = document.getElementById(listIds[mode]);
+            if (list) {
+                list.querySelectorAll('.pb-section.expanded').forEach(s => {
+                    s.classList.remove('expanded');
+                    const sMode = s.getAttribute('data-mode') || mode;
+                    const sGroup = s.getAttribute('data-group');
+                    if (sGroup) delete devGroupExpanded[sMode + '|' + sGroup];
+                });
+            }
+            // Раскрыть текущую
+            section.classList.add('expanded');
+            devGroupExpanded[groupKey] = true;
+            if (navigator.vibrate) navigator.vibrate(30);
+            // Прокрутка с корректировкой после анимации
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => devScrollToGroup(section));
+            });
+            setTimeout(() => devScrollToGroup(section), 450);
+        }
+    }
+
+    function devScrollToGroup(el) {
+        if (!el) return;
+        const mode = el.getAttribute('data-mode') || 'type';
+        const ph = document.querySelector('#page-devices-' + mode + ' .page-inline-header');
+        const stickyHeight = ph ? ph.offsetHeight : 56;
+        const rect = el.getBoundingClientRect();
+        const targetY = window.scrollY + rect.top - stickyHeight - 8;
+        window.scrollTo({ top: Math.max(0, targetY), behavior: 'auto' });
+    }
+
+        function devShowMoreSorted(mode) {
         if (!devSortedVisibleCount[mode]) devSortedVisibleCount[mode] = 50;
         devSortedVisibleCount[mode] += 50;
         devRenderSorted(mode);
