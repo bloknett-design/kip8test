@@ -5808,7 +5808,17 @@
     // При прокрутке раскрытой карточки вверх на 75% её высоты → открыть следующую
     // При прокрутке вниз на 75% → открыть предыдущую
     let devSwipeTimer = null;
+    let devSwipeLock = false;       // блокировка во время плавной прокрутки
+    let devSwipeLockTimer = null;   // таймер снятия блокировки
+
+    function devLockSwipe(duration) {
+        devSwipeLock = true;
+        clearTimeout(devSwipeLockTimer);
+        devSwipeLockTimer = setTimeout(() => { devSwipeLock = false; }, duration || 800);
+    }
+
     function devCheckSwipe() {
+        if (devSwipeLock) return;  // заблокировано — выходим
         const list = document.getElementById('devList');
         if (!list) return;
         const expanded = list.querySelector('.dev-card.expanded');
@@ -5818,13 +5828,10 @@
         const currentIdx = allCards.indexOf(expanded);
         if (currentIdx < 0) return;
         
-        // Проверяем позицию body карточки (без header, который sticky)
         const body = expanded.querySelector('.dev-card-body');
         if (!body) return;
         const bodyRect = body.getBoundingClientRect();
-        const cardHeight = expanded.offsetHeight;
         const viewportHeight = window.innerHeight;
-        const threshold = cardHeight * 0.75;
         
         // Если body карточки ушло вверх за viewport (прокрутили вниз)
         // → открыть следующую
@@ -5836,6 +5843,8 @@
                 next.classList.add('expanded');
                 devExpandedCards[next.getAttribute('data-dev-id')] = true;
                 if (navigator.vibrate) navigator.vibrate(20);
+                // Блокируем swipe до завершения прокрутки
+                devLockSwipe(800);
                 requestAnimationFrame(() => {
                     const pageHeader = document.querySelector('#page-devices .page-inline-header');
                     const stickyHeight = pageHeader ? pageHeader.offsetHeight : 56;
@@ -5856,6 +5865,8 @@
                 prev.classList.add('expanded');
                 devExpandedCards[prev.getAttribute('data-dev-id')] = true;
                 if (navigator.vibrate) navigator.vibrate(20);
+                // Блокируем swipe до завершения прокрутки
+                devLockSwipe(800);
                 requestAnimationFrame(() => {
                     const pageHeader = document.querySelector('#page-devices .page-inline-header');
                     const stickyHeight = pageHeader ? pageHeader.offsetHeight : 56;
@@ -5966,6 +5977,9 @@
         devExpandedCards = {};
         // Регистрируем scroll listener для swipe-навигации
         window.addEventListener('scroll', devOnScroll, { passive: true });
+        // Снимаем блокировку swipe при ручном касании
+        window.addEventListener('touchstart', () => { devSwipeLock = false; }, { passive: true });
+        window.addEventListener('wheel', () => { devSwipeLock = false; }, { passive: true });
         devLoad().then(() => devRender());
     }
 
