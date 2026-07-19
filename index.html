@@ -6291,12 +6291,10 @@
         }
 
         // Пагинация
-        if (!devSortedVisibleCount[mode]) devSortedVisibleCount[mode] = 50;
-        const visibleCount = devSortedVisibleCount[mode];
         const expandedCards = devSortedExpandedCards[mode] || {};
 
         let html = '<div class="dev-sorted-list' + (query ? ' searching' : '') + '">';
-        let shown = 0;
+
         for (const g of groupOrder) {
             const items = groups[g];
             const groupKey = mode + '|' + g;
@@ -6312,8 +6310,7 @@
             html += '<div class="pb-section-body">';
 
             for (const dev of items) {
-                if (shown >= visibleCount) break;
-                shown++;
+
                 const devId = String(dev['ID'] ?? '');
                 const isExpanded = expandedCards[devId] === true;
                 const name = dev['Наименование'] || '(без названия)';
@@ -6367,17 +6364,11 @@
             }
             html += '</div>'; // section-body
             html += '</div>'; // section
-            if (shown >= visibleCount) break;
+
         }
         html += '</div>'; // dev-sorted-list
 
-        const remaining = filtered.length - shown;
-        if (remaining > 0) {
-            html += '<div style="text-align:center; padding:12px;">';
-            html += '<button type="button" class="pb-filter-btn" onclick="devShowMoreSorted(\'' + mode + '\')" style="border-color:rgba(199,150,74,0.35); background:rgba(199,150,74,0.06); color:#c7964a;">';
-            html += 'Показать ещё ' + Math.min(50, remaining) + ' (осталось ' + remaining + ')';
-            html += '</button></div>';
-        }
+
         list.innerHTML = html;
     }
 
