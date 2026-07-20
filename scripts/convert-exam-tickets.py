@@ -1,52 +1,58 @@
 #!/usr/bin/env python3
 """
-Конвертирует xlsx-файл в JSON для PWA «КИПиА».
+Синхронизация экзаменационных билетов с публичной ссылкой Яндекс Диска.
 
-Логика:
-  1. Если xlsx-файл есть в репозитории (data/exam-tickets.xlsx) — берём его.
-  2. Если нет — пробуем скачать с OneDrive по ссылке общего доступа.
-  3. Конвертируем все листы в JSON и сохраняем.
+Источник: https://disk.yandex.ru/i/oAuOyVb4OkmNtA
+          (файл «Экзаминационные билеты_app.xlsx»)
 
-Запускается через GitHub Actions (workflow_dispatch или schedule).
+Скрипт работает по тому же принципу, что и scripts/sync-devices.py
+(раздел «Приборы»):
 
-Единый принцип работы с картинками (поле Image):
-  - Значение из ячейки столбца Image копируется в JSON КАК ЕСТЬ.
-  - В Excel-таблице должны быть указаны ТОЛЬКО HTTP/HTTPS-ссылки
-    на изображения (например, Google Drive share-ссылка с доступом
-    «Anyone with the link», либо прямая ссылка на PNG/JPG).
-  - Любые другие значения (локальные Windows-пути, относительные пути
-    вида images/tickets/...) НЕ КОНВЕРТИРУЮТСЯ и НЕ ОТОБРАЖАЮТСЯ в PWA —
-    они просто сохраняются в JSON как строка, но фронтенд через
-    isWorkingUrl() их отклонит.
-  - Это гарантирует, что картинки грузятся по единому принципу —
-    только по URL из ячейки Image.
+  1. Через Yandex Disk Public API (https://cloud-api.yandex.net/v1/disk/public/resources)
+     получает download_url по публичной ссылке.
+  2. Скачивает XLSX-файл напрямую с Яндекс Диска.
+  3. Парсит 4 листа («4 разряд», «5 разряд», «6 разряд», «До 1000 В»).
+  4. Сохраняет результат в data/exam-tickets.json.
+
+Переменные окружения:
+  EXAM_TICKETS_PUBLIC_KEY — публичная ссылка
+      (по умолчанию https://disk.yandex.ru/i/oAuOyVb4OkmNtA)
+
+Если нет интернета или API недоступен — использует уже существующий
+data/exam-tickets.json как заглушку (PWA продолжает работать с последними
+закоммиченными данными).
+
+Полностью заменяет прежнюю реализацию на OneDrive-ссылке, которая тянула
+файл из основного репозитория kip8. Теперь источник независимый и хостится
+на Яндекс Диске — так же, как и приборы.
 """
 
 import json
 import os
 import re
 import sys
+from pathlib import Path
 
+import requests
 import openpyxl
 
-# Попробуем импортировать requests (может не быть при оффлайн-конвертации)
-try:
-    import requests
-    HAS_REQUESTS = True
-except ImportError:
-    HAS_REQUESTS = False
 
 # ============================================================
-# Конфигурация
+# Настройки Яндекс Диска
 # ============================================================
-ONEDRIVE_SHARE_URL = os.environ.get(
-    "ONEDRIVE_SHARE_URL",
-    "https://1drv.ms/x/c/c9414adb26fe5b28/IQDqsaT9uFR_T6HBWRyYhhEtAXDVcDPDoT3-O_um4E6V7O0?e=IKtgRl",
-)
+YANDEX_PUBLIC_API = 'https://cloud-api.yandex.net/v1/disk/public/resources'
+DEFAULT_PUBLIC_KEY = 'https://disk.yandex.ru/i/oAuOyVb4OkmNtA'
 
-LOCAL_XLSX = os.environ.get("LOCAL_XLSX", "data/exam-tickets.xlsx")
-OUTPUT_PATH = os.environ.get("OUTPUT_PATH", "data/exam-tickets.json")
+DOWNLOAD_DIR = Path('/tmp/exam_tickets_download')
+DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+JSON_OUT = PROJECT_ROOT / 'data' / 'exam-tickets.json'
+
+
+# ============================================================
+# Конфигурация листов
+# ============================================================
 SHEETS_CONFIG = {
     "4 разряд": {"id": "tickets-4", "title": "Билеты на 4 разряд"},
     "5 разряд": {"id": "tickets-5", "title": "Билеты на 5 разряд"},
@@ -80,9 +86,9 @@ FIELD_NAME_MAP = {
     "Файл": "file_url",
 }
 
-# Обратное отображение (для fallback в JS) — не используется в конвертере,
-# но задокументировано здесь для согласованности с фронтендом.
-FIELD_NAME_REVERSE_MAP = {v: k for k, v in FIELD_NAME_MAP.items()}
+
+def log(msg):
+    print(f'[exam-tickets] {msg}', flush=True)
 
 
 def _normalize_field_name(raw_name: str) -> str:
@@ -120,8 +126,6 @@ def _normalize_image_field(raw_value: str) -> str:
         return ""
     if _is_http_url(raw_value):
         return raw_value.strip()
-    # Любое нерабочее значение игнорируем — оно не должно отображаться.
-    # В логе конвертера это будет видно как предупреждение.
     print(f"  [ВНИМАНИЕ] Поле Image содержит не-URL значение, "
           f"оно будет проигнорировано в PWA: {raw_value[:80]}",
           file=sys.stderr)
@@ -137,129 +141,82 @@ def _normalize_file_field(raw_value: str) -> str:
         return ""
     if _is_http_url(raw_value):
         return raw_value.strip()
-    # Нерабочие пути — игнорируем (но не выводим предупреждение,
-    # т.к. поле Файл может быть пустым, если литература без ссылки)
     return ""
 
 
-def _unescape_url(url: str) -> str:
-    """Расшифровывает экранированные символы в URL."""
-    return url.replace("\\u0026", "&").replace("&amp;", "&")
+# ============================================================
+# Скачивание через Yandex Disk Public API
+# (по образцу scripts/sync-devices.py)
+# ============================================================
+def get_download_url(public_key):
+    """Получает download_url для публичного файла через Yandex Disk Public API."""
+    log(f'Запрос метаданных публичного файла: {public_key}')
+    params = {'public_key': public_key}
+    resp = requests.get(YANDEX_PUBLIC_API, params=params, timeout=30)
+    if resp.status_code != 200:
+        raise RuntimeError(f'Ошибка API: HTTP {resp.status_code} — {resp.text[:200]}')
+    data = resp.json()
+    download_url = data.get('file')
+    if not download_url:
+        raise RuntimeError(
+            f'Не удалось получить download_url: {json.dumps(data, ensure_ascii=False)[:500]}'
+        )
+    name = data.get('name', 'exam-tickets.xlsx')
+    log(f'Имя файла на Яндекс Диске: {name}')
+    return download_url, name
 
 
-def _try_download(dl_url: str, dest: str, headers: dict) -> bool:
-    """Пытается скачать файл по URL и проверяет, что это xlsx (ZIP)."""
-    try:
-        r = requests.get(dl_url, headers=headers, allow_redirects=True, timeout=30)
-        if r.status_code == 200 and len(r.content) > 100 and r.content[:2] == b"PK":
-            with open(dest, "wb") as f:
-                f.write(r.content)
-            print(f"Скачано: {len(r.content)} байт")
-            return True
-        print(f"Скачивание: статус {r.status_code}, размер {len(r.content)}, первые байты: {r.content[:4]}")
-    except Exception as e:
-        print(f"Ошибка скачивания: {e}")
-    return False
-
-
-def download_xlsx(share_url: str, dest: str) -> bool:
-    """Скачивает xlsx по ссылке OneDrive (несколько способов)."""
-    if not HAS_REQUESTS:
-        print("Библиотека requests недоступна, скачивание невозможно", file=sys.stderr)
-        return False
-
+def download_file(url, filename):
+    """Скачивает файл по URL."""
+    local_path = DOWNLOAD_DIR / filename
+    log(f'Скачивание: {url[:80]}...')
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
     }
+    resp = requests.get(url, headers=headers, timeout=120)
+    if resp.status_code != 200:
+        raise RuntimeError(f'Ошибка скачивания: HTTP {resp.status_code}')
+    local_path.write_bytes(resp.content)
+    file_size = local_path.stat().st_size
+    log(f'Файл скачан: {local_path} ({file_size} байт)')
 
-    # ================================================================
-    # Способ 1: Извлечение FileGetUrl из HTML-страницы (САМЫЙ НАДЁЖНЫЙ)
-    # ================================================================
-    try:
-        print(f"Открываем ссылку: {share_url}")
-        r = requests.get(share_url, headers=headers, allow_redirects=True, timeout=20)
-        page_text = r.text
-        print(f"Страница загружена: {len(page_text)} символов, URL: {r.url[:80]}...")
-
-        # 1a. Ищем FileGetUrl (содержит tempauth-токен для скачивания)
-        file_get_match = re.search(
-            r'"FileGetUrl"\s*:\s*"(https://[^"]+)"',
-            page_text,
+    # Проверяем, что это xlsx (ZIP, начинается с PK)
+    if resp.content[:2] != b'PK':
+        raise RuntimeError(
+            f'Скачанный файл не является xlsx (не ZIP). '
+            f'Первые байты: {resp.content[:4]!r}'
         )
-        if file_get_match:
-            dl_url = _unescape_url(file_get_match.group(1))
-            print(f"Найден FileGetUrl (длина {len(dl_url)})")
-            if _try_download(dl_url, dest, headers):
-                return True
-            print("FileGetUrl не дал валидный xlsx, пробуем другие способы...")
-
-        # 1b. Ищем @content.downloadUrl
-        content_dl_match = re.search(
-            r'"@content\.downloadUrl"\s*:\s*"(https://[^"]+)"',
-            page_text,
-        )
-        if content_dl_match:
-            dl_url = _unescape_url(content_dl_match.group(1))
-            print(f"Найден @content.downloadUrl (длина {len(dl_url)})")
-            if _try_download(dl_url, dest, headers):
-                return True
-            print("@content.downloadUrl не дал валидный xlsx, пробуем другие способы...")
-
-        # 1c. Ищем любой URL с tempauth на my.microsoftpersonalcontent.com
-        tempauth_match = re.search(
-            r'(https://my\.microsoftpersonalcontent\.com/[^"\s]+tempauth=[^"\s]+)',
-            page_text,
-        )
-        if tempauth_match:
-            dl_url = _unescape_url(tempauth_match.group(1))
-            print(f"Найден tempauth URL на my.microsoftpersonalcontent.com (длина {len(dl_url)})")
-            if _try_download(dl_url, dest, headers):
-                return True
-
-        # 1d. Ищем любой URL с tempauth на onedrive.live.com
-        tempauth_match2 = re.search(
-            r'(https://onedrive\.live\.com/[^"\s]+download\.aspx[^"\s]*tempauth=[^"\s]+)',
-            page_text,
-        )
-        if tempauth_match2:
-            dl_url = _unescape_url(tempauth_match2.group(1))
-            print(f"Найден tempauth URL на onedrive.live.com (длина {len(dl_url)})")
-            if _try_download(dl_url, dest, headers):
-                return True
-
-    except Exception as e:
-        print(f"Ошибка при разборе страницы: {e}")
-
-    # ================================================================
-    # Способ 2: Graph API shares (может потребовать токен)
-    # ================================================================
-    try:
-        import base64
-        encoded = base64.urlsafe_b64encode(share_url.encode()).decode().rstrip("=")
-        api_url = f"https://graph.microsoft.com/v1.0/shares/u!{encoded}/root/content"
-        print(f"Пробуем Graph API: {api_url[:80]}...")
-        r = requests.get(api_url, headers=headers, allow_redirects=True, timeout=30)
-        if r.status_code == 200 and len(r.content) > 100 and r.content[:2] == b"PK":
-            with open(dest, "wb") as f:
-                f.write(r.content)
-            print(f"Скачано через Graph API: {len(r.content)} байт")
-            return True
-        print(f"Graph API: статус {r.status_code}")
-    except Exception as e:
-        print(f"Graph API: ошибка — {e}")
-
-    print("Не удалось скачать файл с OneDrive", file=sys.stderr)
-    return False
+    return local_path
 
 
-def convert_xlsx_to_json(xlsx_path: str, json_path: str) -> bool:
-    """Конвертирует xlsx в JSON."""
-    wb = openpyxl.load_workbook(xlsx_path)
+# ============================================================
+# Парсинг XLSX → JSON
+# ============================================================
+def convert_xlsx_to_json(xlsx_path, json_path):
+    """Конвертирует xlsx в JSON.
+
+    Структура вывода (для обратной совместимости с фронтендом):
+    {
+      "tickets-4": {
+        "title": "Билеты на 4 разряд",
+        "sheet": "4 разряд",
+        "headers": ["id", "ticket_number", ...],
+        "rows": [ {...}, {...} ],
+        "total": N
+      },
+      "tickets-5": {...},
+      "tickets-6": {...},
+      "tickets-1000v": {...}
+    }
+    """
+    log(f'Парсинг {xlsx_path}')
+    wb = openpyxl.load_workbook(xlsx_path, data_only=True)
+    log(f'Листы в файле: {wb.sheetnames}')
+
     all_data = {}
-
     for sheet_name, config in SHEETS_CONFIG.items():
         if sheet_name not in wb.sheetnames:
-            print(f"Лист «{sheet_name}» не найден, пропускаю", file=sys.stderr)
+            log(f'Лист «{sheet_name}» не найден, пропускаю')
             continue
 
         ws = wb[sheet_name]
@@ -268,7 +225,6 @@ def convert_xlsx_to_json(xlsx_path: str, json_path: str) -> bool:
             continue
 
         headers = [str(h) if h else "" for h in rows[0]]
-        # Стандартизируем имена полей: русские → латинские snake_case
         normalized_headers = [_normalize_field_name(h) for h in headers]
         data_rows = []
 
@@ -279,8 +235,6 @@ def convert_xlsx_to_json(xlsx_path: str, json_path: str) -> bool:
                     field_name = normalized_headers[i]
                     cell_val = str(val) if val is not None else ""
                     # Единый принцип: только HTTP/HTTPS-ссылки.
-                    # Локальные/относительные пути игнорируются —
-                    # фронтенд PWA отображает только URL.
                     if field_name == "image_url":
                         cell_val = _normalize_image_field(cell_val)
                     elif field_name == "file_url":
@@ -295,48 +249,41 @@ def convert_xlsx_to_json(xlsx_path: str, json_path: str) -> bool:
             "rows": data_rows,
             "total": len(data_rows),
         }
-        print(f"  {sheet_name}: {len(data_rows)} строк")
+        log(f'  {sheet_name}: {len(data_rows)} строк')
 
-    os.makedirs(os.path.dirname(json_path), exist_ok=True)
-    with open(json_path, "w", encoding="utf-8") as f:
+    json_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(json_path, 'w', encoding='utf-8') as f:
         json.dump(all_data, f, ensure_ascii=False, indent=2)
-
-    size = os.path.getsize(json_path)
-    print(f"JSON сохранён: {json_path} ({size / 1024:.1f} КБ)")
+    size = json_path.stat().st_size
+    log(f'JSON сохранён: {json_path} ({size / 1024:.1f} КБ)')
     return True
 
 
 def main():
-    xlsx_path = LOCAL_XLSX
+    public_key = os.environ.get('EXAM_TICKETS_PUBLIC_KEY', '').strip() or DEFAULT_PUBLIC_KEY
 
-    # 1. Проверяем локальный xlsx в репозитории
-    if os.path.isfile(xlsx_path):
-        print(f"Найден локальный файл: {xlsx_path}")
-    else:
-        # 2. Пробуем скачать с OneDrive
-        print("Локальный xlsx не найден, скачиваем с OneDrive...")
-        xlsx_path = "/tmp/exam_tickets.xlsx"
-        if not download_xlsx(ONEDRIVE_SHARE_URL, xlsx_path):
-            print("ОШИБКА: не удалось получить xlsx файл", file=sys.stderr)
-            sys.exit(1)
-
-    # Проверяем что файл валидный
     try:
-        with open(xlsx_path, "rb") as f:
-            header = f.read(4)
-        if header[:2] != b"PK":
-            print(f"ОШИБКА: файл {xlsx_path} не является xlsx (не ZIP)", file=sys.stderr)
-            sys.exit(1)
+        # 1. Получить download_url
+        download_url, filename = get_download_url(public_key)
+
+        # 2. Скачать файл
+        local_file = download_file(download_url, filename)
+
+        # 3. Конвертировать в JSON
+        if not convert_xlsx_to_json(local_file, JSON_OUT):
+            return 1
+        return 0
+
     except Exception as e:
-        print(f"ОШИБКА: не удалось прочитать файл — {e}", file=sys.stderr)
-        sys.exit(1)
+        log(f'ОШИБКА: {e}')
+        import traceback
+        traceback.print_exc()
+        # Если файл уже существует — не падать (используем как заглушку)
+        if JSON_OUT.exists():
+            log(f'Используется существующий файл: {JSON_OUT}')
+            return 0
+        return 1
 
-    print("Конвертация xlsx → JSON...")
-    if not convert_xlsx_to_json(xlsx_path, OUTPUT_PATH):
-        sys.exit(1)
 
-    print("Готово!")
-
-
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    sys.exit(main())
