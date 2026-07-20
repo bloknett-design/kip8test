@@ -1,9 +1,21 @@
 name: Update Exam Tickets (TEST)
 
 # ВНИМАНИЕ: это тестовый репозиторий kip8test.
-# Автоматический cron ОТКЛЮЧЁН, чтобы не дублировать запросы к OneDrive
+# Автоматический cron ОТКЛЮЧЁН, чтобы не дублировать запросы к Яндекс Диску
 # с основным репозиторием kip8. Запуск только вручную через workflow_dispatch.
 # При необходимости можно временно включить schedule, раскомментировав блок ниже.
+#
+# КАК НАСТРОИТЬ:
+# По умолчанию используется публичная ссылка:
+#   https://disk.yandex.ru/i/oAuOyVb4OkmNtA
+#   файл: «Экзаминационные билеты_app.xlsx»
+#   листы: «4 разряд», «5 разряд», «6 разряд», «До 1000 В»
+# Можно переопределить через переменную окружения в шаге "Sync":
+#   EXAM_TICKETS_PUBLIC_KEY
+#
+# Источник независим от основного репозитория kip8 —
+# файлы билетов больше не тянутся с OneDrive,
+# используется тот же подход, что и для приборов (sync-devices.py).
 
 on:
   # Ручной запуск — всегда доступен
@@ -30,7 +42,7 @@ jobs:
       - name: Install dependencies
         run: pip install openpyxl requests
 
-      - name: Convert XLSX to JSON
+      - name: Sync from Yandex Disk and convert to JSON
         run: python scripts/convert-exam-tickets.py
 
       - name: Check for changes
@@ -44,5 +56,27 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/exam-tickets.json
-          git commit -m "auto: update exam tickets data (test repo)"
+          git commit -m "auto: update exam tickets data from Yandex Disk (test repo)"
           git push
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Exam Tickets Sync Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.check_changes.outputs.changed }}" == "true" ]; then
+            echo "✅ Данные обновлены и закоммичены" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ℹ️ Изменений нет" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -f data/exam-tickets.json ]; then
+            TOTAL=$(python3 -c "
+          import json
+          d = json.load(open('data/exam-tickets.json'))
+          n = sum(v.get('total', 0) for v in d.values() if isinstance(v, dict))
+          print(n)
+          ")
+            echo "**Всего строк (суммарно):** $TOTAL" >> $GITHUB_STEP_SUMMARY
+            echo "**Источник:** Yandex Disk (public)" >> $GITHUB_STEP_SUMMARY
+            echo "**Листы:** 4 разряд, 5 разряд, 6 разряд, До 1000 В" >> $GITHUB_STEP_SUMMARY
+          fi
