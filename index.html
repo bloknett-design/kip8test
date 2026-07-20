@@ -2022,6 +2022,196 @@
     .dev-group .dev-card:first-child {
         border-top: none;
     }
+
+    /* ===== БЛОКИРОВКИ ===== */
+    .lock-sorted-list {
+        margin: 0 8px;
+    }
+    .lock-sorted-list.searching .pb-section.lock-group .pb-section-body {
+        max-height: 5000px;
+        transition: none;
+    }
+    .lock-sorted-list.searching .pb-section.lock-group .pb-section-arrow {
+        transform: translateY(-50%) rotate(45deg);
+        opacity: 0.3;
+    }
+    .lock-sorted-list.searching .pb-section.lock-group .pb-section-title {
+        cursor: default;
+    }
+
+    .lock-group {
+        margin: 6px 0 8px;
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 12px;
+        background: rgba(255,255,255,0.015);
+        overflow: hidden;
+    }
+    [data-theme="light"] .lock-group {
+        border-color: rgba(20,20,19,0.1);
+        background: rgba(255,255,255,0.55);
+    }
+
+    .lock-group .pb-section-title {
+        background: #3d2532;
+        color: #d48a9e;
+        border-bottom: 1px solid rgba(212,138,158,0.2);
+    }
+    [data-theme="light"] .lock-group .pb-section-title {
+        background: #edd0d8;
+        color: #7a2a3a;
+        border-bottom: 1px solid rgba(212,138,158,0.25);
+    }
+    .lock-group .pb-section-title:active {
+        background: #4a2e3a;
+    }
+    [data-theme="light"] .lock-group .pb-section-title:active {
+        background: #e5c0cc;
+    }
+    .lock-group .pb-section-body {
+        padding: 0;
+    }
+
+    .lock-card {
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        transition: background 0.15s;
+    }
+    [data-theme="light"] .lock-card {
+        border-bottom-color: rgba(20,20,19,0.08);
+    }
+    .lock-card:last-child {
+        border-bottom: none;
+    }
+    .lock-card-header {
+        padding: 0 14px 0 0;
+        background: transparent;
+        cursor: pointer;
+        position: relative;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .lock-card-header-inner {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        min-height: 56px;
+    }
+    .lock-card-text {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding-left: 14px;
+        flex: 1;
+        min-width: 0;
+    }
+    .lock-card-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #e0e0e0;
+        line-height: 1.3;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    [data-theme="light"] .lock-card-title {
+        color: #141413;
+    }
+    .lock-card-subtitle {
+        font-size: 12px;
+        color: rgba(160,160,160,0.7);
+        margin-top: 2px;
+        line-height: 1.3;
+    }
+    [data-theme="light"] .lock-card-subtitle {
+        color: rgba(100,100,100,0.7);
+    }
+    .lock-card-arrow {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+        margin-left: 6px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 18 15 12 9 6'/%3E%3C/svg%3E");
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        transition: transform 0.2s;
+        opacity: 0.5;
+    }
+    .lock-card.expanded .lock-card-arrow {
+        transform: rotate(90deg);
+        opacity: 0.8;
+    }
+
+    .lock-card-body {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.35s ease;
+        padding: 0 14px;
+    }
+    .lock-card.expanded .lock-card-body {
+        max-height: 2000px;
+    }
+
+    .lock-card-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        gap: 8px;
+    }
+    [data-theme="light"] .lock-card-row {
+        border-bottom-color: rgba(20,20,19,0.06);
+    }
+    .lock-card-row:last-child {
+        border-bottom: none;
+    }
+    .lock-card-label {
+        font-size: 10px;
+        color: rgba(160,160,160,0.55);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        flex-shrink: 0;
+        min-width: 100px;
+        line-height: 1.4;
+    }
+    [data-theme="light"] .lock-card-label {
+        color: rgba(100,100,100,0.5);
+    }
+    .lock-card-value {
+        font-size: 14px;
+        color: #e0e0e0;
+        text-align: right;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        line-height: 1.4;
+    }
+    [data-theme="light"] .lock-card-value {
+        color: #141413;
+    }
+
+    /* Группировка строк */
+    .lock-card-row.lock-row-group-1 { background: rgba(255,255,255,0.015); }
+    .lock-card-row.lock-row-group-2 { background: rgba(255,255,255,0.055); }
+    .lock-card-row.lock-row-group-3 { background: rgba(255,255,255,0.015); }
+    .lock-card-row.lock-row-group-4 { background: rgba(255,255,255,0.055); }
+    [data-theme="light"] .lock-card-row.lock-row-group-1 { background: rgba(0,0,0,0.01); }
+    [data-theme="light"] .lock-card-row.lock-row-group-2 { background: rgba(0,0,0,0.04); }
+    [data-theme="light"] .lock-card-row.lock-row-group-3 { background: rgba(0,0,0,0.01); }
+    [data-theme="light"] .lock-card-row.lock-row-group-4 { background: rgba(0,0,0,0.04); }
+
+    /* Кнопка обновления в заголовке */
+    .page-refresh-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 18px;
+        cursor: pointer;
+        padding: 4px 8px;
+        margin-right: 4px;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .page-refresh-btn:active {
+        color: var(--accent-gold, #c7964a);
+    }
+
     /* В режиме поиска — все подгруппы тоже раскрыты */
     .pb-list.searching .pb-subgroup .pb-subgroup-body {
         max-height: 5000px;
@@ -3060,7 +3250,27 @@
             <div id="devProdList"></div>
         </div>
 
-        <!-- ======================== ИНЖЕНЕРНЫЕ КАЛЬКУЛЯТОРЫ — КИП и А ======================== -->
+        
+        <!-- ======================== БЛОКИРОВКИ ======================== -->
+        <div id="page-lockouts-type" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Блокировки по типу</div><button type="button" class="page-refresh-btn" onclick="lockForceRefresh('type')" title="Обновить данные">↻</button><input type="search" id="lockTypeSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="lockRenderSorted('type')"></div>
+            <div id="lockTypeInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
+            <div id="lockTypeList"></div>
+        </div>
+
+        <div id="page-lockouts-name" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Блокировки по наименованию</div><button type="button" class="page-refresh-btn" onclick="lockForceRefresh('name')" title="Обновить данные">↻</button><input type="search" id="lockNameSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="lockRenderSorted('name')"></div>
+            <div id="lockNameInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
+            <div id="lockNameList"></div>
+        </div>
+
+        <div id="page-lockouts-prod" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Блокировки по производствам</div><button type="button" class="page-refresh-btn" onclick="lockForceRefresh('prod')" title="Обновить данные">↻</button><input type="search" id="lockProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="lockRenderSorted('prod')"></div>
+            <div id="lockProdInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
+            <div id="lockProdList"></div>
+        </div>
+
+<!-- ======================== ИНЖЕНЕРНЫЕ КАЛЬКУЛЯТОРЫ — КИП и А ======================== -->
         <div id="page-calc-kipa" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">КИП и А</div></div>
 
@@ -6501,6 +6711,316 @@
         devSortedVisibleCount[mode] += 50;
         devRenderSorted(mode);
     }
+
+    // ===== БЛОКИРОВКИ =====
+    const LOCK_FIELDS = [
+        { key: 'Тип', label: 'Тип', group: 1 },
+        { key: 'Наименование', label: 'Наименование', group: 1 },
+        { key: 'Производство', label: 'Производство', group: 1 },
+        { key: 'Место установки', label: 'Место установки', group: 2 },
+        { key: 'Оборудование', label: 'Оборудование', group: 2 },
+        { key: 'Параметр', label: 'Параметр', group: 2 },
+        { key: 'Предел измерения', label: 'Предел измерения', group: 3 },
+        { key: 'Погрешность', label: 'Погрешность', group: 3 },
+        { key: 'Период ремонта', label: 'Период ремонта', group: 3 },
+        { key: 'Примечания', label: 'Примечания', group: 4 },
+        { key: 'Замечания', label: 'Замечания', group: 4 },
+    ];
+    let lockData = null;
+    let lockLoaded = false;
+    let lockSortedExpandedCards = {};
+    let lockGroupExpanded = {};
+
+    function lockEsc(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function lockNorm(s) {
+        if (s == null) return '';
+        return String(s).toLowerCase().replace(/[ё]/g, 'е').replace(/[^a-zа-я0-9]/gi, '');
+    }
+    function lockMark(text, query) {
+        if (!query) return lockEsc(text);
+        const t = String(text);
+        const q = lockNorm(query);
+        if (!q) return lockEsc(t);
+        const idx = lockNorm(t).indexOf(q);
+        if (idx === -1) return lockEsc(t);
+        const before = t.substring(0, idx);
+        const match = t.substring(idx, idx + q.length);
+        const after = t.substring(idx + q.length);
+        return lockEsc(before) + '<mark>' + lockEsc(match) + '</mark>' + lockMark(after, query);
+    }
+    function lockPlural(n, forms) {
+        const m = n % 100;
+        const m1 = m % 10;
+        if (m >= 5 && m <= 20) return forms[2];
+        if (m1 === 1) return forms[0];
+        if (m1 >= 2 && m1 <= 4) return forms[1];
+        return forms[2];
+    }
+    function lockFormatDate(dateVal) {
+        if (!dateVal) return '';
+        const num = parseFloat(dateVal);
+        if (!isNaN(num) && num > 30000) {
+            const epoch = new Date(1899, 11, 30);
+            const d = new Date(epoch.getTime() + num * 86400000);
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return day + '.' + month + '.' + year;
+        }
+        const str = String(dateVal).trim();
+        const m = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (m) return m[3] + '.' + m[2] + '.' + m[1];
+        if (/^\d{2}\.\d{2}\.\d{4}$/.test(str)) return str;
+        return str;
+    }
+    function lockGetLastUpdateDate() {
+        try {
+            const raw = localStorage.getItem('lockoutsLastUpdate');
+            if (!raw) return '';
+            const d = new Date(raw);
+            if (isNaN(d.getTime())) return '';
+            return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
+        } catch (e) { return ''; }
+    }
+
+    async function lockInitSorted(mode) {
+        if (!lockLoaded || !lockData) {
+            try {
+                const bust = '?v=' + Date.now();
+                const resp = await fetch('data/lockouts.json' + bust, { cache: 'no-store' });
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                lockData = await resp.json();
+                lockLoaded = true;
+                localStorage.setItem('lockoutsLastUpdate', new Date().toISOString());
+            } catch (e) {
+                console.error('lockInitSorted error:', e);
+                const ids = { type: 'lockTypeList', name: 'lockNameList', prod: 'lockProdList' };
+                const el = document.getElementById(ids[mode]);
+                if (el) el.innerHTML = '<div class="pb-empty">Ошибка загрузки.<br>Проверьте соединение.</div>';
+                return;
+            }
+        }
+        lockRenderSorted(mode);
+    }
+
+    function lockForceRefresh(mode) {
+        lockData = null;
+        lockLoaded = false;
+        lockInitSorted(mode);
+        if (navigator.vibrate) navigator.vibrate(40);
+    }
+
+    function lockRenderSorted(mode) {
+        const ids = {
+            type: { list: 'lockTypeList', info: 'lockTypeInfo', search: 'lockTypeSearchInput', page: 'page-lockouts-type' },
+            name: { list: 'lockNameList', info: 'lockNameInfo', search: 'lockNameSearchInput', page: 'page-lockouts-name' },
+            prod: { list: 'lockProdList', info: 'lockProdInfo', search: 'lockProdSearchInput', page: 'page-lockouts-prod' },
+        };
+        const id = ids[mode];
+        if (!id) return;
+        const list = document.getElementById(id.list);
+        const info = document.getElementById(id.info);
+        if (!list || !info) return;
+
+        if (!lockLoaded || !lockData) {
+            list.innerHTML = '';
+            info.textContent = 'Загрузка…';
+            return;
+        }
+
+        const query = lockNorm((document.getElementById(id.search)?.value || '').trim());
+        let filtered = lockData.lockouts || [];
+
+        const sortKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
+        filtered.sort((a, b) => {
+            const va = (a[sortKey] || '').toString().toLowerCase();
+            const vb = (b[sortKey] || '').toString().toLowerCase();
+            if (va < vb) return -1;
+            if (va > vb) return 1;
+            return 0;
+        });
+
+        if (query) {
+            filtered = filtered.filter(d =>
+                LOCK_FIELDS.some(f => lockNorm(d[f.key] || '').includes(query))
+            );
+        }
+
+        const groups = {};
+        const groupOrder = [];
+        for (const d of filtered) {
+            const g = d[sortKey] || '(без группы)';
+            if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
+            groups[g].push(d);
+        }
+
+        const lastUpdate = lockGetLastUpdateDate();
+        const updateStr = lastUpdate ? ' · обновлено: ' + lastUpdate : '';
+        if (query) {
+            info.textContent = 'Найдено: ' + filtered.length + ' ' + lockPlural(filtered.length, ['блокировка', 'блокировки', 'блокировок']) + updateStr;
+        } else {
+            info.textContent = 'Всего: ' + filtered.length + ' ' + lockPlural(filtered.length, ['блокировка', 'блокировки', 'блокировок']) + ' · групп: ' + groupOrder.length + updateStr;
+        }
+
+        if (filtered.length === 0) {
+            list.innerHTML = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
+            return;
+        }
+
+        const expandedCards = lockSortedExpandedCards[mode] || {};
+        let html = '<div class="lock-sorted-list' + (query ? ' searching' : '') + '">';
+        for (const g of groupOrder) {
+            const items = groups[g];
+            const groupKey = mode + '|' + g;
+            const isGroupExpanded = query ? true : (lockGroupExpanded[groupKey] === true);
+
+            html += '<div class="pb-section lock-group' + (isGroupExpanded ? ' expanded' : '') + '" data-group="' + lockEsc(g) + '" data-mode="' + mode + '">';
+            html += '<div class="pb-section-title lock-group-title" onclick="lockToggleGroup(this)">';
+            html += '<span class="pb-section-title-text">' + lockMark(g, query) + '</span>';
+            html += '<span class="pb-section-title-count">' + items.length + '</span>';
+            html += '<span class="pb-section-arrow"></span>';
+            html += '</div>';
+            html += '<div class="pb-section-body">';
+
+            for (const item of items) {
+                const itemId = String(item['ID'] ?? '');
+                const isExpanded = expandedCards[itemId] === true;
+                const name = item['Наименование'] || '(без названия)';
+                const type = item['Тип'] || '';
+                const place = item['Место установки'] || '';
+
+                html += '<div class="lock-card' + (isExpanded ? ' expanded' : '') + '" data-lock-id="' + lockEsc(itemId) + '" data-mode="' + mode + '">';
+                html += '<div class="lock-card-header" onclick="lockToggleCard(this)">';
+                html += '<div class="lock-card-header-inner">';
+                html += '<div class="lock-card-text">';
+                html += '<div class="lock-card-title">' + lockMark(name, query) + '</div>';
+                let subtitle = '';
+                if (type) subtitle += type;
+                if (place) subtitle += (subtitle ? ' · ' : '') + place;
+                if (subtitle) html += '<div class="lock-card-subtitle">' + lockMark(subtitle, query) + '</div>';
+                html += '</div>';
+                html += '<span class="lock-card-arrow"></span>';
+                html += '</div>';
+                html += '</div>';
+                html += '<div class="lock-card-body">';
+                for (const f of LOCK_FIELDS) {
+                    let val = item[f.key];
+                    if (!val) continue;
+                    if (f.key === 'Период ремонта') val = lockFormatDate(val);
+                    const grpCls = f.group ? ' lock-row-group-' + f.group : '';
+                    html += '<div class="lock-card-row' + grpCls + '">';
+                    html += '<div class="lock-card-label">' + lockEsc(f.label) + '</div>';
+                    html += '<div class="lock-card-value">' + lockMark(String(val), query) + '</div>';
+                    html += '</div>';
+                }
+                html += '</div>';
+                html += '</div>';
+            }
+            html += '</div>';
+            html += '</div>';
+        }
+        html += '</div>';
+        list.innerHTML = html;
+    }
+
+    function lockToggleGroup(titleEl) {
+        const section = titleEl.closest('.pb-section');
+        if (!section) return;
+        const mode = section.getAttribute('data-mode') || 'type';
+        const group = section.getAttribute('data-group');
+        if (!group) return;
+        const groupKey = mode + '|' + group;
+        const isExpanded = section.classList.contains('expanded');
+        if (isExpanded) {
+            section.classList.remove('expanded');
+            delete lockGroupExpanded[groupKey];
+            if (navigator.vibrate) navigator.vibrate(20);
+        } else {
+            const listIds = { type: 'lockTypeList', name: 'lockNameList', prod: 'lockProdList' };
+            const list = document.getElementById(listIds[mode]);
+            if (list) {
+                list.querySelectorAll('.pb-section.expanded').forEach(s => {
+                    s.classList.remove('expanded');
+                    const sMode = s.getAttribute('data-mode') || mode;
+                    const sGroup = s.getAttribute('data-group');
+                    if (sGroup) delete lockGroupExpanded[sMode + '|' + sGroup];
+                });
+            }
+            section.classList.add('expanded');
+            lockGroupExpanded[groupKey] = true;
+            if (navigator.vibrate) navigator.vibrate(30);
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => lockScrollToGroup(section));
+            });
+            setTimeout(() => lockScrollToGroup(section), 450);
+        }
+    }
+
+    function lockScrollToGroup(el) {
+        if (!el) return;
+        const mode = el.getAttribute('data-mode') || 'type';
+        const ph = document.querySelector('#page-lockouts-' + mode + ' .page-inline-header');
+        const stickyHeight = ph ? ph.offsetHeight : 56;
+        const rect = el.getBoundingClientRect();
+        const targetY = window.scrollY + rect.top - stickyHeight - 8;
+        window.scrollTo({ top: Math.max(0, targetY), behavior: 'auto' });
+    }
+
+    function lockToggleCard(headerEl) {
+        const card = headerEl.closest('.lock-card');
+        if (!card) return;
+        const mode = card.getAttribute('data-mode') || 'type';
+        if (!lockSortedExpandedCards[mode]) lockSortedExpandedCards[mode] = {};
+        const expandedCards = lockSortedExpandedCards[mode];
+        const lockId = card.getAttribute('data-lock-id');
+        const isExpanded = card.classList.contains('expanded');
+        if (isExpanded) {
+            card.classList.remove('expanded');
+            delete expandedCards[lockId];
+            if (navigator.vibrate) navigator.vibrate(15);
+        } else {
+            const list = card.closest('[id$="List"]');
+            if (list) {
+                list.querySelectorAll('.lock-card.expanded').forEach(c => {
+                    c.classList.remove('expanded');
+                    delete expandedCards[c.getAttribute('data-lock-id')];
+                });
+            }
+            if (list) list.offsetHeight;
+            card.classList.add('expanded', 'no-anim');
+            expandedCards[lockId] = true;
+            if (navigator.vibrate) navigator.vibrate(25);
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => lockScrollToCard(card));
+            });
+        }
+    }
+
+    function lockScrollToCard(card) {
+        const stickyHeight = lockGetStickyHeight();
+        const header = card.querySelector('.lock-card-header');
+        const targetEl = header || card;
+        const rect = targetEl.getBoundingClientRect();
+        const targetY = window.scrollY + rect.top - stickyHeight;
+        window.scrollTo({ top: Math.max(0, targetY), behavior: 'auto' });
+        card.classList.remove('no-anim');
+    }
+
+    function lockGetStickyHeight() {
+        const pages = ['page-lockouts-type', 'page-lockouts-name', 'page-lockouts-prod'];
+        for (const pid of pages) {
+            const el = document.getElementById(pid);
+            if (el && el.offsetParent !== null) {
+                const ph = el.querySelector('.page-inline-header');
+                if (ph) return ph.offsetHeight;
+            }
+        }
+        return 56;
+    }
+
 
     function devToggleCardSorted(headerEl) {
         const card = headerEl.closest('.dev-card');
