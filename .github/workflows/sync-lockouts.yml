@@ -1,0 +1,40 @@
+name: Sync Lockouts
+
+on:
+  # Ручной запуск через кнопку "Run workflow" в GitHub
+  workflow_dispatch:
+  # Автоматический запуск по расписанию (раскомментируйте при необходимости)
+  # schedule:
+  #   - cron: '0 3 * * *'  # Ежедневно в 3:00 UTC
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install openpyxl requests
+
+      - name: Sync lockouts from Yandex Disk
+        env:
+          YANDEX_LOCKOUTS_URL: ${{ secrets.YANDEX_LOCKOUTS_URL }}
+        run: python scripts/sync-lockouts.py
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/lockouts.json
+          if git diff --cached --quiet; then
+            echo "Нет изменений"
+          else
+            git commit -m "chore: sync lockouts from Yandex Disk [$(date +%Y-%m-%d)]"
+            git push
+          fi
