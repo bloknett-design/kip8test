@@ -3225,7 +3225,7 @@
 
             <div class="menu-btn-row">
                 <div class="menu-btn" id="devicesEntryBtn"><div class="menu-btn-text"><div class="menu-btn-label">Приборы</div><div class="menu-btn-sublabel">Свайп ← по типу · свайп → по наименованию · тап по производствам</div></div><i class="menu-btn-arrow">›</i></div>
-                <div class="menu-btn" onclick="navigateTo('lockouts-type')" style="border-color:rgba(184,90,122,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#b85a7a;">Блокировки</div><div class="menu-btn-sublabel">По типу, наименованию, производствам</div></div><i class="menu-btn-arrow" style="color:rgba(184,90,122,0.4);">›</i></div>
+                <div class="menu-btn" id="lockoutsEntryBtn" style="border-color:rgba(184,90,122,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#b85a7a;">Блокировки</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(184,90,122,0.4);">›</i></div>
             </div>
         </div>
 
@@ -3252,18 +3252,6 @@
 
         
         <!-- ======================== БЛОКИРОВКИ ======================== -->
-        <div id="page-lockouts-type" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Блокировки по типу</div><button type="button" class="page-refresh-btn" onclick="lockForceRefresh('type')" title="Обновить данные">↻</button><input type="search" id="lockTypeSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="lockRenderSorted('type')"></div>
-            <div id="lockTypeInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
-            <div id="lockTypeList"></div>
-        </div>
-
-        <div id="page-lockouts-name" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Блокировки по наименованию</div><button type="button" class="page-refresh-btn" onclick="lockForceRefresh('name')" title="Обновить данные">↻</button><input type="search" id="lockNameSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="lockRenderSorted('name')"></div>
-            <div id="lockNameInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
-            <div id="lockNameList"></div>
-        </div>
-
         <div id="page-lockouts-prod" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Блокировки по производствам</div><button type="button" class="page-refresh-btn" onclick="lockForceRefresh('prod')" title="Обновить данные">↻</button><input type="search" id="lockProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="lockRenderSorted('prod')"></div>
             <div id="lockProdInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
@@ -6494,6 +6482,17 @@
         });
     }
 
+    // ===== Кнопка Блокировки на странице КИП И ОС: только tap =====
+    function lockInitEntryButton() {
+        const btn = document.getElementById('lockoutsEntryBtn');
+        if (!btn || btn.dataset.initialized) return;
+        btn.dataset.initialized = '1';
+        btn.addEventListener('click', function() {
+            if (navigator.vibrate) navigator.vibrate(15);
+            navigateTo('lockouts-prod');
+        });
+    }
+
     // ===== Рендер приборов с сортировкой =====
     // mode: 'type' — по типу, 'name' — по наименованию, 'prod' — по производствам
     let devSortedVisibleCount = {};
@@ -7010,7 +7009,7 @@
     }
 
     function lockGetStickyHeight() {
-        const pages = ['page-lockouts-type', 'page-lockouts-name', 'page-lockouts-prod'];
+        const pages = ['page-lockouts-prod'];
         for (const pid of pages) {
             const el = document.getElementById(pid);
             if (el && el.offsetParent !== null) {
@@ -7681,7 +7680,9 @@
         if (page === 'devices-type') { setTimeout(() => { if (typeof devInitSorted === 'function') devInitSorted('type'); }, 30); }
         if (page === 'devices-name') { setTimeout(() => { if (typeof devInitSorted === 'function') devInitSorted('name'); }, 30); }
         if (page === 'devices-prod') { setTimeout(() => { if (typeof devInitSorted === 'function') devInitSorted('prod'); }, 30); }
+        if (page === 'lockouts-prod') { setTimeout(() => { if (typeof lockInitSorted === 'function') lockInitSorted('prod'); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof devInitEntryButton === 'function') devInitEntryButton(); }, 30); }
+        if (page === 'kip-ios') { setTimeout(() => { if (typeof lockInitEntryButton === 'function') lockInitEntryButton(); }, 30); }
         if (TICKET_IDS.includes(page)) { setTimeout(() => initTicketsPage(page), 30); }
         if (page === 'exam-tickets') { setTimeout(() => loadTicketsData(), 30); }
         // Снять блокировку прокрутки и закрыть открытые билеты при уходе со страницы
@@ -11971,21 +11972,15 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         <!-- ===== Группа: Блокировки ===== -->
         <div class="sidebar-group" data-group="lockouts">
         <div class="sidebar-group-title sidebar-group-title-lockouts">Блокировки</div>
-        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('lockouts-type'); toggleSidebar();">
-            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(184,90,122,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-            <span style="color:rgba(184,90,122,0.9);">По типу</span>
-        </div>
-        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('lockouts-name'); toggleSidebar();">
-            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(184,90,122,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            <span style="color:rgba(184,90,122,0.9);">По наименованию</span>
-        </div>
+        
+        
         <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('lockouts-prod'); toggleSidebar();">
             <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(184,90,122,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
             <span style="color:rgba(184,90,122,0.9);">По производствам</span>
         </div>
         <div class="sidebar-show-more" onclick="toggleSidebarGroup(this.parentElement)">
             <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-            <span>Показать все (3)</span>
+            <span>Показать все (1)</span>
         </div>
         </div>
 
