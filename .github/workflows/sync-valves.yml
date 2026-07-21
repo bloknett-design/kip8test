@@ -1,0 +1,73 @@
+name: Update Valves (TEST)
+
+# ВНИМАНИЕ: это тестовый репозиторий kip8test.
+# Автоматический cron ОТКЛЮЧЁН, чтобы не дублировать запросы к Яндекс Диску
+# с основным репозиторием kip8. Запуск только вручную через workflow_dispatch.
+# При необходимости можно временно включить schedule, раскомментировав блок ниже.
+#
+# КАК НАСТРОИТЬ:
+# По умолчанию используется публичная ссылка:
+#   https://disk.yandex.ru/i/KNVTQ7Q6II7zbA
+#   лист: Клапана_app
+#   (файл «Перечень КИП ИОС рабочий.xlsx» — тот же, что и для приборов/блокировок)
+# Можно переопределить через переменные окружения в шаге "Sync":
+#   VALVES_PUBLIC_KEY, VALVES_SHEET_NAME
+#
+# Секреты НЕ требуются — публичная ссылка вшита в DEFAULT_PUBLIC_KEY.
+
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: '0 3 * * *'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install openpyxl requests
+
+      - name: Sync from Yandex Disk and convert to JSON
+        run: python scripts/sync-valves.py
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          git diff --exit-code data/valves.json || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Commit and push if changed
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/valves.json
+          git commit -m "auto: update valves data from Yandex Disk (test repo)"
+          git push
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Valves Sync Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.check_changes.outputs.changed }}" == "true" ]; then
+            echo "✅ Данные обновлены и закоммичены" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ℹ️ Изменений нет" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -f data/valves.json ]; then
+            COUNT=$(python3 -c "import json; d=json.load(open('data/valves.json')); print(d.get('total_valves', 'N/A'))")
+            echo "**Всего клапанов:** $COUNT" >> $GITHUB_STEP_SUMMARY
+            echo "**Источник:** Yandex Disk (public)" >> $GITHUB_STEP_SUMMARY
+            echo "**Лист:** Клапана_app" >> $GITHUB_STEP_SUMMARY
+          fi
