@@ -2178,20 +2178,6 @@
         transition: transform 0.2s;
         opacity: 0.5;
     }
-    .lock-card.expanded .lock-card-arrow {
-        transform: rotate(90deg);
-        opacity: 0.8;
-    }
-
-    .lock-card-body {
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.35s ease;
-        padding: 0 14px;
-    }
-    .lock-card.expanded .lock-card-body {
-        max-height: 2000px;
-    }
 
     .lock-card-row {
         display: flex;
@@ -2240,6 +2226,53 @@
     [data-theme="light"] .lock-card-row.lock-row-group-2 { background: rgba(0,0,0,0.04); }
     [data-theme="light"] .lock-card-row.lock-row-group-3 { background: rgba(0,0,0,0.01); }
     [data-theme="light"] .lock-card-row.lock-row-group-4 { background: rgba(0,0,0,0.04); }
+
+    /* ===== Страница детального просмотра блокировки ===== */
+    .lock-detail-card {
+        padding: 12px 14px 24px;
+    }
+    .lock-detail-rows {
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+    }
+    .lock-detail-row {
+        display: flex;
+        flex-direction: column;
+        padding: 8px 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        gap: 2px;
+        font-size: 16px;
+        line-height: 1.4;
+    }
+    [data-theme="light"] .lock-detail-row { border-bottom-color: rgba(20, 20, 19, 0.06); }
+    .lock-detail-row:last-child { border-bottom: none; }
+    .lock-detail-row.lock-row-group-1 { background: rgba(255,255,255,0.015); }
+    .lock-detail-row.lock-row-group-2 { background: rgba(255,255,255,0.055); }
+    .lock-detail-row.lock-row-group-3 { background: rgba(255,255,255,0.015); }
+    .lock-detail-row.lock-row-group-4 { background: rgba(255,255,255,0.055); }
+    .lock-detail-row.lock-row-group-5 { background: rgba(255,255,255,0.025); }
+    [data-theme="light"] .lock-detail-row.lock-row-group-1 { background: rgba(0,0,0,0.01); }
+    [data-theme="light"] .lock-detail-row.lock-row-group-2 { background: rgba(0,0,0,0.04); }
+    [data-theme="light"] .lock-detail-row.lock-row-group-3 { background: rgba(0,0,0,0.01); }
+    [data-theme="light"] .lock-detail-row.lock-row-group-4 { background: rgba(0,0,0,0.04); }
+    [data-theme="light"] .lock-detail-row.lock-row-group-5 { background: rgba(0,0,0,0.02); }
+    .lock-detail-label {
+        font-size: 12px;
+        color: rgba(180, 200, 220, 0.45);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        margin-bottom: 2px;
+    }
+    [data-theme="light"] .lock-detail-label { color: rgba(20, 20, 19, 0.45); }
+    .lock-detail-value {
+        font-size: 16px;
+        color: #d0dce8;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        line-height: 1.4;
+    }
+    [data-theme="light"] .lock-detail-value { color: #1a1a1a; }
 
     /* Кнопка обновления в заголовке */
     .page-refresh-btn {
@@ -2933,14 +2966,6 @@
     [data-theme="light"] .dev-detail-meta-value.dev-detail-meta-number {
         color: #1a4060;
     }
-    .dev-detail-name {
-        font-size: 17px;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 6px;
-        line-height: 1.3;
-        letter-spacing: -0.3px;
-    }
     .dev-detail-rows {
         border-radius: 12px;
         overflow: hidden;
@@ -3419,6 +3444,12 @@
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Блокировки по производствам</div><button type="button" class="page-refresh-btn" onclick="lockForceRefresh('prod')" title="Обновить данные">↻</button><input type="search" id="lockProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="lockRenderSorted('prod')"></div>
             <div id="lockProdInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
             <div id="lockProdList"></div>
+        </div>
+
+        <!-- ======================== КАРТОЧКА БЛОКИРОВКИ ======================== -->
+        <div id="page-lockout-detail" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title" id="lockoutDetailTitle">Блокировка</div></div>
+            <div id="lockoutDetailContent"></div>
         </div>
 
 <!-- ======================== ИНЖЕНЕРНЫЕ КАЛЬКУЛЯТОРЫ — КИП и А ======================== -->
@@ -6365,7 +6396,6 @@
         }
         html += '</div>'; // .dev-detail-meta
         html += '</div>'; // .dev-detail-top
-        html += '<div class="dev-detail-name">' + devEsc(name) + '</div>';
         html += '<div class="dev-detail-rows">';
         for (const f of DEV_FIELDS) {
             let val = '';
@@ -6885,7 +6915,6 @@
     ];
     let lockData = null;
     let lockLoaded = false;
-    let lockSortedExpandedCards = {};
     let lockGroupExpanded = {};
 
     function lockEsc(s) {
@@ -7027,7 +7056,6 @@
             return;
         }
 
-        const expandedCards = lockSortedExpandedCards[mode] || {};
         let html = '<div class="lock-sorted-list' + (query ? ' searching' : '') + '">';
         for (const g of groupOrder) {
             const items = groups[g];
@@ -7044,13 +7072,12 @@
 
             for (const item of items) {
                 const itemId = String(item['ID'] ?? '');
-                const isExpanded = expandedCards[itemId] === true;
                 const name = item['Параметр'] || '(без названия)';
                 const type = item['Уставка'] || '';
                 const place = item['Расположение'] || '';
 
-                html += '<div class="lock-card' + (isExpanded ? ' expanded' : '') + '" data-lock-id="' + lockEsc(itemId) + '" data-mode="' + mode + '">';
-                html += '<div class="lock-card-header" onclick="lockToggleCard(this)">';
+                html += '<div class="lock-card" data-lock-id="' + lockEsc(itemId) + '" data-mode="' + mode + '">';
+                html += '<div class="lock-card-header" onclick="lockOpenDetail(\'' + lockEsc(itemId) + '\')">';
                 html += '<div class="lock-card-header-inner">';
                 html += '<div class="lock-card-text">';
                 html += '<div class="lock-card-title">' + lockMark(name, query) + '</div>';
@@ -7061,18 +7088,6 @@
                 html += '</div>';
                 html += '<span class="lock-card-arrow"></span>';
                 html += '</div>';
-                html += '</div>';
-                html += '<div class="lock-card-body">';
-                for (const f of LOCK_FIELDS) {
-                    let val = item[f.key];
-                    if (!val) continue;
-                    if (f.key === 'Дата проверки') val = lockFormatDate(val);
-                    const grpCls = f.group ? ' lock-row-group-' + f.group : '';
-                    html += '<div class="lock-card-row' + grpCls + '">';
-                    html += '<div class="lock-card-label">' + lockEsc(f.label) + '</div>';
-                    html += '<div class="lock-card-value">' + lockMark(String(val), query) + '</div>';
-                    html += '</div>';
-                }
                 html += '</div>';
                 html += '</div>';
             }
@@ -7126,56 +7141,40 @@
         window.scrollTo({ top: Math.max(0, targetY), behavior: 'auto' });
     }
 
-    function lockToggleCard(headerEl) {
-        const card = headerEl.closest('.lock-card');
-        if (!card) return;
-        const mode = card.getAttribute('data-mode') || 'type';
-        if (!lockSortedExpandedCards[mode]) lockSortedExpandedCards[mode] = {};
-        const expandedCards = lockSortedExpandedCards[mode];
-        const lockId = card.getAttribute('data-lock-id');
-        const isExpanded = card.classList.contains('expanded');
-        if (isExpanded) {
-            card.classList.remove('expanded');
-            delete expandedCards[lockId];
-            if (navigator.vibrate) navigator.vibrate(15);
-        } else {
-            const list = card.closest('[id$="List"]');
-            if (list) {
-                list.querySelectorAll('.lock-card.expanded').forEach(c => {
-                    c.classList.remove('expanded');
-                    delete expandedCards[c.getAttribute('data-lock-id')];
-                });
-            }
-            if (list) list.offsetHeight;
-            card.classList.add('expanded', 'no-anim');
-            expandedCards[lockId] = true;
-            if (navigator.vibrate) navigator.vibrate(25);
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => lockScrollToCard(card));
-            });
-        }
+    // ===== Открытие карточки блокировки (отдельная страница, как у приборов) =====
+    function lockOpenDetail(lockId) {
+        if (!lockId) return;
+        if (navigator.vibrate) navigator.vibrate(15);
+        window._lockDetailId = lockId;
+        navigateTo('lockout-detail');
     }
 
-    function lockScrollToCard(card) {
-        const stickyHeight = lockGetStickyHeight();
-        const header = card.querySelector('.lock-card-header');
-        const targetEl = header || card;
-        const rect = targetEl.getBoundingClientRect();
-        const targetY = window.scrollY + rect.top - stickyHeight;
-        window.scrollTo({ top: Math.max(0, targetY), behavior: 'auto' });
-        card.classList.remove('no-anim');
-    }
+    function lockRenderDetail() {
+        const lockId = window._lockDetailId;
+        if (!lockId || !lockLoaded || !lockData) return;
+        const item = lockData.lockouts.find(d => String(d['ID'] ?? '') === String(lockId));
+        if (!item) return;
+        const titleEl = document.getElementById('lockoutDetailTitle');
+        const content = document.getElementById('lockoutDetailContent');
+        if (!titleEl || !content) return;
+        const name = item['Параметр'] || '(без названия)';
+        titleEl.textContent = name;
 
-    function lockGetStickyHeight() {
-        const pages = ['page-lockouts-prod'];
-        for (const pid of pages) {
-            const el = document.getElementById(pid);
-            if (el && el.offsetParent !== null) {
-                const ph = el.querySelector('.page-inline-header');
-                if (ph) return ph.offsetHeight;
-            }
+        let html = '<div class="lock-detail-card">';
+        html += '<div class="lock-detail-rows">';
+        for (const f of LOCK_FIELDS) {
+            let val = item[f.key];
+            if (val === undefined || val === null || val === '') continue;
+            if (f.key === 'Дата проверки') val = lockFormatDate(val);
+            const grpCls = f.group ? ' lock-row-group-' + f.group : '';
+            html += '<div class="lock-detail-row' + grpCls + '">';
+            html += '<div class="lock-detail-label">' + lockEsc(f.label) + '</div>';
+            html += '<div class="lock-detail-value">' + lockEsc(String(val)) + '</div>';
+            html += '</div>';
         }
-        return 56;
+        html += '</div>';
+        html += '</div>';
+        content.innerHTML = html;
     }
 
 
@@ -7806,6 +7805,7 @@
         if (page === 'devices-prod') { setTimeout(() => { if (typeof devInitSorted === 'function') devInitSorted('prod'); }, 30); }
         if (page === 'device-detail') { setTimeout(() => { if (typeof devRenderDetail === 'function') devRenderDetail(); }, 30); }
         if (page === 'lockouts-prod') { setTimeout(() => { if (typeof lockInitSorted === 'function') lockInitSorted('prod'); }, 30); }
+        if (page === 'lockout-detail') { setTimeout(() => { if (typeof lockRenderDetail === 'function') lockRenderDetail(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof devInitEntryButton === 'function') devInitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof lockInitEntryButton === 'function') lockInitEntryButton(); }, 30); }
         if (TICKET_IDS.includes(page)) { setTimeout(() => initTicketsPage(page), 30); }
