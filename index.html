@@ -2274,6 +2274,165 @@
     }
     [data-theme="light"] .lock-detail-value { color: #1a1a1a; }
 
+    /* ===== КЛАПАНЫ (зеркало блокировок, бирюзовый акцент) ===== */
+    .valve-sorted-list {
+        margin: 0 8px;
+    }
+    .valve-sorted-list.searching .pb-section.valve-group .pb-section-body {
+        max-height: 5000px;
+        transition: none;
+    }
+    .valve-sorted-list.searching .pb-section.valve-group .pb-section-arrow {
+        transform: translateY(-50%) rotate(45deg);
+        opacity: 0.3;
+    }
+    .valve-sorted-list.searching .pb-section.valve-group .pb-section-title {
+        cursor: default;
+    }
+
+    .valve-group {
+        margin: 6px 0 8px;
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 12px;
+        background: rgba(255,255,255,0.015);
+        overflow: hidden;
+    }
+    [data-theme="light"] .valve-group {
+        border-color: rgba(20,20,19,0.1);
+        background: rgba(255,255,255,0.55);
+    }
+
+    .valve-group .pb-section-title {
+        background: #1f3d3e;
+        color: #6fc0c2;
+        border-bottom: 1px solid rgba(111,192,194,0.2);
+    }
+    [data-theme="light"] .valve-group .pb-section-title {
+        background: #cce5e6;
+        color: #1a4d4f;
+        border-bottom: 1px solid rgba(111,192,194,0.25);
+    }
+    .valve-group .pb-section-title:active {
+        background: #2a4a4c;
+    }
+    [data-theme="light"] .valve-group .pb-section-title:active {
+        background: #b8d8da;
+    }
+    .valve-group .pb-section-body {
+        padding: 0;
+    }
+
+    .valve-card {
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        transition: background 0.15s;
+    }
+    [data-theme="light"] .valve-card {
+        border-bottom-color: rgba(20,20,19,0.08);
+    }
+    .valve-card:last-child {
+        border-bottom: none;
+    }
+    .valve-card-header {
+        padding: 0 14px 0 0;
+        background: transparent;
+        cursor: pointer;
+        position: relative;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .valve-card-header-inner {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        min-height: 56px;
+    }
+    .valve-card-text {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding-left: 14px;
+        flex: 1;
+        min-width: 0;
+    }
+    .valve-card-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #e0e0e0;
+        line-height: 1.3;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    [data-theme="light"] .valve-card-title {
+        color: #141413;
+    }
+    .valve-card-subtitle {
+        font-size: 12px;
+        color: rgba(160,160,160,0.7);
+        margin-top: 2px;
+        line-height: 1.3;
+    }
+    [data-theme="light"] .valve-card-subtitle {
+        color: rgba(100,100,100,0.7);
+    }
+    .valve-card-arrow {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+        margin-left: 6px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 18 15 12 9 6'/%3E%3C/svg%3E");
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        transition: transform 0.2s;
+        opacity: 0.5;
+    }
+
+    /* ===== Страница детального просмотра клапана ===== */
+    .valve-detail-card {
+        padding: 12px 14px 24px;
+    }
+    .valve-detail-rows {
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+    }
+    .valve-detail-row {
+        display: flex;
+        flex-direction: column;
+        padding: 8px 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        gap: 2px;
+        font-size: 16px;
+        line-height: 1.4;
+    }
+    [data-theme="light"] .valve-detail-row { border-bottom-color: rgba(20, 20, 19, 0.06); }
+    .valve-detail-row:last-child { border-bottom: none; }
+    .valve-detail-row.valve-row-group-1 { background: rgba(255,255,255,0.015); }
+    .valve-detail-row.valve-row-group-2 { background: rgba(255,255,255,0.055); }
+    .valve-detail-row.valve-row-group-3 { background: rgba(255,255,255,0.015); }
+    .valve-detail-row.valve-row-group-4 { background: rgba(255,255,255,0.055); }
+    .valve-detail-row.valve-row-group-5 { background: rgba(255,255,255,0.025); }
+    [data-theme="light"] .valve-detail-row.valve-row-group-1 { background: rgba(0,0,0,0.01); }
+    [data-theme="light"] .valve-detail-row.valve-row-group-2 { background: rgba(0,0,0,0.04); }
+    [data-theme="light"] .valve-detail-row.valve-row-group-3 { background: rgba(0,0,0,0.01); }
+    [data-theme="light"] .valve-detail-row.valve-row-group-4 { background: rgba(0,0,0,0.04); }
+    [data-theme="light"] .valve-detail-row.valve-row-group-5 { background: rgba(0,0,0,0.02); }
+    .valve-detail-label {
+        font-size: 12px;
+        color: rgba(180, 200, 220, 0.45);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        margin-bottom: 2px;
+    }
+    [data-theme="light"] .valve-detail-label { color: rgba(20, 20, 19, 0.45); }
+    .valve-detail-value {
+        font-size: 16px;
+        color: #d0dce8;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        line-height: 1.4;
+    }
+    [data-theme="light"] .valve-detail-value { color: #1a1a1a; }
+
     /* Кнопка обновления в заголовке */
     .page-refresh-btn {
         background: transparent;
@@ -3408,6 +3567,7 @@
                     <div class="menu-btn" id="devicesEntryBtn"><div class="menu-btn-text"><div class="menu-btn-label">Приборы</div><div class="menu-btn-sublabel">1312 приборов КИП ИОС</div></div><i class="menu-btn-arrow">›</i></div>
                 </div>
                 <div class="menu-btn" id="lockoutsEntryBtn" style="border-color:rgba(184,90,122,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#b85a7a;">Блокировки</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(184,90,122,0.4);">›</i></div>
+                <div class="menu-btn" id="valvesEntryBtn" style="border-color:rgba(74,138,140,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#4a8a8c;">Клапаны</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(74,138,140,0.4);">›</i></div>
             </div>
         </div>
 
@@ -3450,6 +3610,19 @@
         <div id="page-lockout-detail" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title" id="lockoutDetailTitle">Блокировка</div></div>
             <div id="lockoutDetailContent"></div>
+        </div>
+
+        <!-- ======================== КЛАПАНЫ — ПО ПРОИЗВОДСТВАМ ======================== -->
+        <div id="page-valves-prod" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Клапаны по производствам</div><button type="button" class="page-refresh-btn" onclick="valveForceRefresh('prod')" title="Обновить данные">↻</button><input type="search" id="valveProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="valveRenderSorted('prod')"></div>
+            <div id="valveProdInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
+            <div id="valveProdList"></div>
+        </div>
+
+        <!-- ======================== КАРТОЧКА КЛАПАНА ======================== -->
+        <div id="page-valve-detail" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title" id="valveDetailTitle">Клапан</div></div>
+            <div id="valveDetailContent"></div>
         </div>
 
 <!-- ======================== ИНЖЕНЕРНЫЕ КАЛЬКУЛЯТОРЫ — КИП и А ======================== -->
@@ -7177,6 +7350,321 @@
         content.innerHTML = html;
     }
 
+    // ===== КЛАПАНЫ (зеркало блокировок) =====
+    // Поля соответствуют листу "Клапана_app" файла Excel
+    // https://disk.yandex.ru/i/KNVTQ7Q6II7zbA (тот же файл, что и для приборов/блокировок)
+    // Реальная структура полей определяется на этапе парсинга sync-valves.py,
+    // здесь заданы только предполагаемые группы для типичного набора колонок.
+    // Если в данных есть колонки, не указанные в VALVE_FIELDS — они не будут показаны.
+    const VALVE_FIELDS = [
+        { key: 'Наименование', label: 'Наименование', group: 1 },
+        { key: 'Тип', label: 'Тип', group: 1 },
+        { key: 'Производство', label: 'Производство', group: 1 },
+        { key: 'Назначение', label: 'Назначение', group: 2 },
+        { key: 'Расположение', label: 'Расположение', group: 2 },
+        { key: '№ позиции', label: '№ позиции', group: 3 },
+        { key: '№ СБС', label: '№ СБС', group: 3 },
+        { key: '№ проекта', label: '№ проекта', group: 4 },
+        { key: 'Дата проверки', label: 'Дата проверки', group: 4 },
+        { key: 'В перечне', label: 'В перечне', group: 4 },
+        { key: 'Примечания', label: 'Примечания', group: 5 },
+        { key: 'Замечания', label: 'Замечания', group: 5 },
+    ];
+    let valveData = null;
+    let valveLoaded = false;
+    let valveGroupExpanded = {};
+
+    function valveEsc(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function valveNorm(s) {
+        if (s == null) return '';
+        return String(s).toLowerCase().replace(/[ё]/g, 'е').replace(/[^a-zа-я0-9]/gi, '');
+    }
+    function valveMark(text, query) {
+        if (!query) return valveEsc(text);
+        const t = String(text);
+        const q = valveNorm(query);
+        if (!q) return valveEsc(t);
+        const idx = valveNorm(t).indexOf(q);
+        if (idx === -1) return valveEsc(t);
+        const before = t.substring(0, idx);
+        const match = t.substring(idx, idx + q.length);
+        const after = t.substring(idx + q.length);
+        return valveEsc(before) + '<mark>' + valveEsc(match) + '</mark>' + valveMark(after, query);
+    }
+    function valvePlural(n, forms) {
+        const m = n % 100;
+        const m1 = m % 10;
+        if (m >= 5 && m <= 20) return forms[2];
+        if (m1 === 1) return forms[0];
+        if (m1 >= 2 && m1 <= 4) return forms[1];
+        return forms[2];
+    }
+    function valveFormatDate(dateVal) {
+        if (!dateVal) return '';
+        const num = parseFloat(dateVal);
+        if (!isNaN(num) && num > 30000) {
+            const epoch = new Date(1899, 11, 30);
+            const d = new Date(epoch.getTime() + num * 86400000);
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return day + '.' + month + '.' + year;
+        }
+        const str = String(dateVal).trim();
+        const m = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (m) return m[3] + '.' + m[2] + '.' + m[1];
+        if (/^\d{2}\.\d{2}\.\d{4}$/.test(str)) return str;
+        return str;
+    }
+    function valveGetLastUpdateDate() {
+        try {
+            const raw = localStorage.getItem('valvesLastUpdate');
+            if (!raw) return '';
+            const d = new Date(raw);
+            if (isNaN(d.getTime())) return '';
+            return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
+        } catch (e) { return ''; }
+    }
+
+    async function valveInitSorted(mode) {
+        if (!valveLoaded || !valveData) {
+            try {
+                const bust = '?v=' + Date.now();
+                const resp = await fetch('data/valves.json' + bust, { cache: 'no-store' });
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                valveData = await resp.json();
+                valveLoaded = true;
+                localStorage.setItem('valvesLastUpdate', new Date().toISOString());
+            } catch (e) {
+                console.error('valveInitSorted error:', e);
+                const ids = { type: 'valveTypeList', name: 'valveNameList', prod: 'valveProdList' };
+                const el = document.getElementById(ids[mode]);
+                if (el) el.innerHTML = '<div class="pb-empty">Ошибка загрузки.<br>Проверьте соединение.</div>';
+                return;
+            }
+        }
+        valveRenderSorted(mode);
+    }
+
+    function valveForceRefresh(mode) {
+        valveData = null;
+        valveLoaded = false;
+        valveInitSorted(mode);
+        if (navigator.vibrate) navigator.vibrate(40);
+    }
+
+    function valveRenderSorted(mode) {
+        const ids = {
+            type: { list: 'valveTypeList', info: 'valveTypeInfo', search: 'valveTypeSearchInput', page: 'page-valves-type' },
+            name: { list: 'valveNameList', info: 'valveNameInfo', search: 'valveNameSearchInput', page: 'page-valves-name' },
+            prod: { list: 'valveProdList', info: 'valveProdInfo', search: 'valveProdSearchInput', page: 'page-valves-prod' },
+        };
+        const id = ids[mode];
+        if (!id) return;
+        const list = document.getElementById(id.list);
+        const info = document.getElementById(id.info);
+        if (!list || !info) return;
+
+        if (!valveLoaded || !valveData) {
+            list.innerHTML = '';
+            info.textContent = 'Загрузка…';
+            return;
+        }
+
+        const query = valveNorm((document.getElementById(id.search)?.value || '').trim());
+        let filtered = valveData.valves || [];
+
+        const sortKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
+        filtered.sort((a, b) => {
+            const va = (a[sortKey] || '').toString().toLowerCase();
+            const vb = (b[sortKey] || '').toString().toLowerCase();
+            if (va < vb) return -1;
+            if (va > vb) return 1;
+            return 0;
+        });
+
+        if (query) {
+            filtered = filtered.filter(d =>
+                VALVE_FIELDS.some(f => valveNorm(d[f.key] || '').includes(query))
+            );
+        }
+
+        const groups = {};
+        const groupOrder = [];
+        for (const d of filtered) {
+            const g = d[sortKey] || '(без группы)';
+            if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
+            groups[g].push(d);
+        }
+
+        const lastUpdate = valveGetLastUpdateDate();
+        const updateStr = lastUpdate ? ' · обновлено: ' + lastUpdate : '';
+        if (query) {
+            info.textContent = 'Найдено: ' + filtered.length + ' ' + valvePlural(filtered.length, ['клапан', 'клапана', 'клапанов']) + updateStr;
+        } else {
+            info.textContent = 'Всего: ' + filtered.length + ' ' + valvePlural(filtered.length, ['клапан', 'клапана', 'клапанов']) + ' · групп: ' + groupOrder.length + updateStr;
+        }
+
+        if (filtered.length === 0) {
+            list.innerHTML = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
+            return;
+        }
+
+        let html = '<div class="valve-sorted-list' + (query ? ' searching' : '') + '">';
+        for (const g of groupOrder) {
+            const items = groups[g];
+            const groupKey = mode + '|' + g;
+            const isGroupExpanded = query ? true : (valveGroupExpanded[groupKey] === true);
+
+            html += '<div class="pb-section valve-group' + (isGroupExpanded ? ' expanded' : '') + '" data-group="' + valveEsc(g) + '" data-mode="' + mode + '">';
+            html += '<div class="pb-section-title valve-group-title" onclick="valveToggleGroup(this)">';
+            html += '<span class="pb-section-title-text">' + valveMark(g, query) + '</span>';
+            html += '<span class="pb-section-title-count">' + items.length + '</span>';
+            html += '<span class="pb-section-arrow"></span>';
+            html += '</div>';
+            html += '<div class="pb-section-body">';
+
+            for (const item of items) {
+                const itemId = String(item['ID'] ?? '');
+                const name = item['Наименование'] || '(без названия)';
+                const type = item['Тип'] || '';
+                const place = item['Расположение'] || '';
+
+                html += '<div class="valve-card" data-valve-id="' + valveEsc(itemId) + '" data-mode="' + mode + '">';
+                html += '<div class="valve-card-header" onclick="valveOpenDetail(\'' + valveEsc(itemId) + '\')">';
+                html += '<div class="valve-card-header-inner">';
+                html += '<div class="valve-card-text">';
+                html += '<div class="valve-card-title">' + valveMark(name, query) + '</div>';
+                let subtitle = '';
+                if (type) subtitle += type;
+                if (place) subtitle += (subtitle ? ' · ' : '') + place;
+                if (subtitle) html += '<div class="valve-card-subtitle">' + valveMark(subtitle, query) + '</div>';
+                html += '</div>';
+                html += '<span class="valve-card-arrow"></span>';
+                html += '</div>';
+                html += '</div>';
+                html += '</div>';
+            }
+            html += '</div>';
+            html += '</div>';
+        }
+        html += '</div>';
+        list.innerHTML = html;
+    }
+
+    function valveToggleGroup(titleEl) {
+        const section = titleEl.closest('.pb-section');
+        if (!section) return;
+        const mode = section.getAttribute('data-mode') || 'type';
+        const group = section.getAttribute('data-group');
+        if (!group) return;
+        const groupKey = mode + '|' + group;
+        const isExpanded = section.classList.contains('expanded');
+        if (isExpanded) {
+            section.classList.remove('expanded');
+            delete valveGroupExpanded[groupKey];
+            if (navigator.vibrate) navigator.vibrate(20);
+        } else {
+            const listIds = { type: 'valveTypeList', name: 'valveNameList', prod: 'valveProdList' };
+            const list = document.getElementById(listIds[mode]);
+            if (list) {
+                list.querySelectorAll('.pb-section.expanded').forEach(s => {
+                    s.classList.remove('expanded');
+                    const sMode = s.getAttribute('data-mode') || mode;
+                    const sGroup = s.getAttribute('data-group');
+                    if (sGroup) delete valveGroupExpanded[sMode + '|' + sGroup];
+                });
+            }
+            section.classList.add('expanded');
+            valveGroupExpanded[groupKey] = true;
+            if (navigator.vibrate) navigator.vibrate(30);
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => valveScrollToGroup(section));
+            });
+            setTimeout(() => valveScrollToGroup(section), 450);
+        }
+    }
+
+    function valveScrollToGroup(el) {
+        if (!el) return;
+        const mode = el.getAttribute('data-mode') || 'type';
+        const ph = document.querySelector('#page-valves-' + mode + ' .page-inline-header');
+        const stickyHeight = ph ? ph.offsetHeight : 56;
+        const rect = el.getBoundingClientRect();
+        const targetY = window.scrollY + rect.top - stickyHeight - 8;
+        window.scrollTo({ top: Math.max(0, targetY), behavior: 'auto' });
+    }
+
+    // ===== Открытие карточки клапана (отдельная страница, как у приборов/блокировок) =====
+    function valveOpenDetail(valveId) {
+        if (!valveId) return;
+        if (navigator.vibrate) navigator.vibrate(15);
+        window._valveDetailId = valveId;
+        navigateTo('valve-detail');
+    }
+
+    function valveRenderDetail() {
+        const valveId = window._valveDetailId;
+        if (!valveId || !valveLoaded || !valveData) return;
+        const item = valveData.valves.find(d => String(d['ID'] ?? '') === String(valveId));
+        if (!item) return;
+        const titleEl = document.getElementById('valveDetailTitle');
+        const content = document.getElementById('valveDetailContent');
+        if (!titleEl || !content) return;
+        const name = item['Наименование'] || '(без названия)';
+        titleEl.textContent = name;
+
+        let html = '<div class="valve-detail-card">';
+        html += '<div class="valve-detail-rows">';
+        for (const f of VALVE_FIELDS) {
+            let val = item[f.key];
+            if (val === undefined || val === null || val === '') continue;
+            if (f.key === 'Дата проверки') val = valveFormatDate(val);
+            const grpCls = f.group ? ' valve-row-group-' + f.group : '';
+            html += '<div class="valve-detail-row' + grpCls + '">';
+            html += '<div class="valve-detail-label">' + valveEsc(f.label) + '</div>';
+            html += '<div class="valve-detail-value">' + valveEsc(String(val)) + '</div>';
+            html += '</div>';
+        }
+        html += '</div>';
+        html += '</div>';
+        content.innerHTML = html;
+    }
+
+    // ===== Кнопка Клапаны на странице КИП И ОС: только tap =====
+    function valveInitEntryButton() {
+        const btn = document.getElementById('valvesEntryBtn');
+        if (!btn || btn.dataset.initialized) return;
+        btn.dataset.initialized = '1';
+        btn.addEventListener('click', function() {
+            if (navigator.vibrate) navigator.vibrate(15);
+            navigateTo('valves-prod');
+        });
+        // Обновить sublabel количеством клапанов
+        valveUpdateEntrySublabel();
+    }
+    async function valveUpdateEntrySublabel() {
+        const btn = document.getElementById('valvesEntryBtn');
+        if (!btn) return;
+        const sublabel = btn.querySelector('.menu-btn-sublabel');
+        if (!sublabel) return;
+        if (!valveLoaded || !valveData) {
+            try {
+                const bust = '?v=' + Date.now();
+                const resp = await fetch('data/valves.json' + bust, { cache: 'no-store' });
+                if (!resp.ok) return;
+                valveData = await resp.json();
+                valveLoaded = true;
+                localStorage.setItem('valvesLastUpdate', new Date().toISOString());
+            } catch (e) { return; }
+        }
+        const count = (valveData.valves || []).length;
+        sublabel.textContent = count + ' ' + valvePlural(count, ['клапан', 'клапана', 'клапанов']) + ' КИП ИОС';
+    }
+
 
     function devInitSorted(mode) {
         if (!devLoaded) {
@@ -7806,8 +8294,11 @@
         if (page === 'device-detail') { setTimeout(() => { if (typeof devRenderDetail === 'function') devRenderDetail(); }, 30); }
         if (page === 'lockouts-prod') { setTimeout(() => { if (typeof lockInitSorted === 'function') lockInitSorted('prod'); }, 30); }
         if (page === 'lockout-detail') { setTimeout(() => { if (typeof lockRenderDetail === 'function') lockRenderDetail(); }, 30); }
+        if (page === 'valves-prod') { setTimeout(() => { if (typeof valveInitSorted === 'function') valveInitSorted('prod'); }, 30); }
+        if (page === 'valve-detail') { setTimeout(() => { if (typeof valveRenderDetail === 'function') valveRenderDetail(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof devInitEntryButton === 'function') devInitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof lockInitEntryButton === 'function') lockInitEntryButton(); }, 30); }
+        if (page === 'kip-ios') { setTimeout(() => { if (typeof valveInitEntryButton === 'function') valveInitEntryButton(); }, 30); }
         if (TICKET_IDS.includes(page)) { setTimeout(() => initTicketsPage(page), 30); }
         if (page === 'exam-tickets') { setTimeout(() => loadTicketsData(), 30); }
         // Снять блокировку прокрутки и закрыть открытые билеты при уходе со страницы
