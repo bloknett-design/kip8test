@@ -1891,7 +1891,7 @@
         width: 100%;
         display: flex;
         align-items: center;
-        gap: 8px;
+        justify-content: center;
         font-size: 15px;
         font-weight: 700;
         letter-spacing: -0.2px;
@@ -1902,14 +1902,8 @@
         opacity: 0;
         transition: opacity 0.15s;
     }
-    .dev-swipe-bg svg {
-        width: 20px; height: 20px;
-        stroke: #fff; fill: none; stroke-width: 2;
-        stroke-linecap: round; stroke-linejoin: round;
-        flex-shrink: 0;
-    }
-    .dev-swipe-bg-left  { left: 0;  padding-left: 20px; justify-content: flex-start; }
-    .dev-swipe-bg-right { right: 0; padding-right: 20px; justify-content: flex-end; }
+    .dev-swipe-bg-left  { left: 0; justify-content: center; }
+    .dev-swipe-bg-right { right: 0; justify-content: center; }
     /* Подложка видна когда карточка сдвинута в противоположную сторону */
     .dev-swipe-cell.swiping-right .dev-swipe-bg-left  { opacity: 1; }
     .dev-swipe-cell.swiping-left  .dev-swipe-bg-right { opacity: 1; }
@@ -2844,6 +2838,45 @@
         font-feature-settings: "tnum";
     }
     [data-theme="light"] .dev-card-value.dev-card-date { color: rgba(20, 20, 19, 0.7); }
+
+    /* ===== Страница детального просмотра прибора ===== */
+    .dev-detail-card {
+        padding: 12px 14px 24px;
+    }
+    .dev-detail-image-wrap {
+        text-align: center;
+        margin-bottom: 14px;
+    }
+    .dev-detail-image {
+        max-width: 100%;
+        max-height: 260px;
+        border-radius: 12px;
+        object-fit: contain;
+        background: rgba(255,255,255,0.02);
+    }
+    .dev-detail-name {
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 6px;
+        line-height: 1.3;
+        letter-spacing: -0.3px;
+    }
+    .dev-detail-subtitle {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 16px;
+        line-height: 1.4;
+    }
+    .dev-detail-rows {
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+    }
+    [data-theme="light"] .dev-detail-image {
+        background: rgba(0,0,0,0.02);
+    }
+
     .header-title {
         cursor: pointer; user-select: none; -webkit-user-select: none;
         -webkit-touch-callout: none; touch-action: manipulation;
@@ -3275,8 +3308,8 @@
 
             <div class="menu-btn-row">
                 <div class="dev-swipe-cell" id="devSwipeCell">
-                    <div class="dev-swipe-bg dev-swipe-bg-left"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg><span>По типу</span></div>
-                    <div class="dev-swipe-bg dev-swipe-bg-right"><span>По наименованию</span><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+                    <div class="dev-swipe-bg dev-swipe-bg-left"><span>По типу</span></div>
+                    <div class="dev-swipe-bg dev-swipe-bg-right"><span>По наименованию</span></div>
                     <div class="menu-btn" id="devicesEntryBtn"><div class="menu-btn-text"><div class="menu-btn-label">Приборы</div><div class="menu-btn-sublabel">1312 приборов КИП ИОС</div></div><i class="menu-btn-arrow">›</i></div>
                 </div>
                 <div class="menu-btn" id="lockoutsEntryBtn" style="border-color:rgba(184,90,122,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#b85a7a;">Блокировки</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(184,90,122,0.4);">›</i></div>
@@ -3305,6 +3338,12 @@
         </div>
 
         
+        <!-- ======================== КАРТОЧКА ПРИБОРА ======================== -->
+        <div id="page-device-detail" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title" id="deviceDetailTitle">Прибор</div></div>
+            <div id="deviceDetailContent"></div>
+        </div>
+
         <!-- ======================== БЛОКИРОВКИ ======================== -->
         <div id="page-lockouts-prod" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Блокировки по производствам</div><button type="button" class="page-refresh-btn" onclick="lockForceRefresh('prod')" title="Обновить данные">↻</button><input type="search" id="lockProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="lockRenderSorted('prod')"></div>
@@ -6105,7 +6144,6 @@
 
     // Состояние: сколько карточек сейчас показано (для пагинации)
     let devVisibleCount = DEV_DEFAULT_LIMIT;
-    let devExpandedCards = {};  // {deviceId: true} — какие карточки раскрыты
 
     function devRender() {
         const list = document.getElementById('devList');
@@ -6153,29 +6191,22 @@
         let html = '<div class="dev-list">';
         for (const dev of visible) {
             const devId = String(dev['ID'] ?? '');
-            const isExpanded = devExpandedCards[devId] === true;
             const name = dev['Наименование'] || '(без названия)';
             const type = dev['Тип'] || '';
             const number = dev['№ прибора'] || '';
             const place = dev['Место установки'] || '';
             const imgPath = dev['Изображение'] || '';
             const imgUrl = devGetImageUrl(dev);
-            // Если есть share-ссылка и она разрешена — показываем картинку.
-            // Если share-ссылка есть, но ещё не разрешена — показываем SVG-заставку
-            //   (после разрешения devRender() вызовется снова).
-            // Если пути нет или это локальный путь — показываем SVG-заставку.
             const isShareLink = imgPath.startsWith('https://disk.yandex.ru/i/');
             const finalImgUrl = imgUrl || DEV_PLACEHOLDER_SVG;
 
-            html += '<div class="dev-card' + (isExpanded ? ' expanded' : '') + '" data-dev-id="' + devEsc(devId) + '">';
-            html += '<div class="dev-card-header" onclick="devToggleCard(this)">';
+            html += '<div class="dev-card" data-dev-id="' + devEsc(devId) + '">';
+            html += '<div class="dev-card-header" onclick="devOpenDetail(\'' + devEsc(devId) + '\')">';
             html += '<div class="dev-card-header-inner">';
-            // Картинка + наименование снизу (при раскрытии)
             html += '<div class="dev-card-image-wrap">';
             html += '<img class="dev-card-image" src="' + devEsc(finalImgUrl) + '" alt="' + devEsc(name) + '" loading="lazy">';
             html += '<div class="dev-card-name-overlay">' + devMark(name, query) + '</div>';
             html += '</div>'; // .dev-card-image-wrap
-            // При свёрнутом виде: заголовок + subtitle
             html += '<div class="dev-card-text">';
             html += '<div class="dev-card-title">' + devMark(name, query) + '</div>';
             let subtitle = '';
@@ -6186,7 +6217,6 @@
                 html += '<div class="dev-card-subtitle">' + devMark(subtitle, query) + '</div>';
             }
             html += '</div>'; // .dev-card-text
-            // При раскрытом виде: Тип/№/Место справа от картинки (без labels)
             html += '<div class="dev-card-info-block">';
             if (type) {
                 html += '<div class="dev-card-info-row">' + devMark(type, query) + '</div>';
@@ -6201,29 +6231,6 @@
             html += '<span class="dev-card-arrow"></span>';
             html += '</div>'; // .dev-card-header-inner
             html += '</div>'; // .dev-card-header
-            html += '<div class="dev-card-body">';
-            for (const f of DEV_FIELDS) {
-                let val = '';
-                if (f.isCombined) {
-                    // Объединить Дата + Вид ремонта + Период ремонта
-                    const dateVal = dev['Дата'] || '';
-                    const vidVal = dev['Вид ремонта'] || '';
-                    const perVal = dev['Период ремонта'] || '';
-                    const dateFormatted = dateVal ? devFormatDate(dateVal) : '';
-                    const parts = [dateFormatted, vidVal, perVal].filter(p => p);
-                    val = parts.join(' ');
-                } else {
-                    val = dev[f.key];
-                }
-                if (val === undefined || val === null || val === '') continue;
-                const cls = f.class ? ' ' + f.class : '';
-                const grpCls = f.group ? ' dev-row-group-' + f.group : '';
-                html += '<div class="dev-card-row' + grpCls + '">';
-                html += '<div class="dev-card-label">' + devEsc(f.label) + '</div>';
-                html += '<div class="dev-card-value' + cls + '">' + devMark(String(val), query) + '</div>';
-                html += '</div>';
-            }
-            html += '</div>'; // .dev-card-body
             html += '</div>'; // .dev-card
         }
         html += '</div>'; // .dev-list
@@ -6243,134 +6250,62 @@
         devRender();
     }
 
-    function devToggleCard(headerEl) {
-        const card = headerEl.closest('.dev-card');
-        if (!card) return;
-        const devId = card.getAttribute('data-dev-id');
-        const isExpanded = card.classList.contains('expanded');
-        const list = document.getElementById('devList');
-        if (isExpanded) {
-            card.classList.remove('expanded');
-            delete devExpandedCards[devId];
-            if (navigator.vibrate) navigator.vibrate(15);
-        } else {
-            // Сначала закрываем все остальные карточки и даём DOM пересчитаться
-            if (list) {
-                list.querySelectorAll('.dev-card.expanded').forEach(c => {
-                    c.classList.remove('expanded');
-                    const k = c.getAttribute('data-dev-id');
-                    if (k) delete devExpandedCards[k];
-                });
+    function devOpenDetail(devId) {
+        if (!devId) return;
+        if (navigator.vibrate) navigator.vibrate(15);
+        window._devDetailId = devId;
+        navigateTo('device-detail');
+    }
+
+    function devRenderDetail() {
+        const devId = window._devDetailId;
+        if (!devId || !devLoaded || !devData) return;
+        const dev = devData.devices.find(d => String(d['ID'] ?? '') === String(devId));
+        if (!dev) return;
+        const titleEl = document.getElementById('deviceDetailTitle');
+        const content = document.getElementById('deviceDetailContent');
+        if (!titleEl || !content) return;
+        const name = dev['Наименование'] || '(без названия)';
+        titleEl.textContent = name;
+        const imgUrl = devGetImageUrl(dev) || DEV_PLACEHOLDER_SVG;
+        let html = '<div class="dev-detail-card">';
+        html += '<div class="dev-detail-image-wrap"><img class="dev-detail-image" src="' + devEsc(imgUrl) + '" alt="' + devEsc(name) + '"></div>';
+        html += '<div class="dev-detail-name">' + devEsc(name) + '</div>';
+        const type = dev['Тип'] || '';
+        const number = dev['№ прибора'] || '';
+        const place = dev['Место установки'] || '';
+        let subtitle = '';
+        if (type) subtitle += type;
+        if (number) subtitle += (subtitle ? ' · №' : '№') + number;
+        if (place) subtitle += (subtitle ? ' · ' : '') + place;
+        if (subtitle) html += '<div class="dev-detail-subtitle">' + devEsc(subtitle) + '</div>';
+        html += '<div class="dev-detail-rows">';
+        for (const f of DEV_FIELDS) {
+            let val = '';
+            if (f.isCombined) {
+                const dateRaw = dev['Дата'] || '';
+                const vidVal = dev['Вид ремонта'] || '';
+                const perVal = dev['Период ремонта'] || '';
+                const dateFormatted = dateRaw ? devFormatDate(dateRaw) : '';
+                const parts = [dateFormatted, vidVal, perVal].filter(p => p);
+                val = parts.join(' ');
+            } else {
+                val = dev[f.key];
             }
-            // Принудительный reflow перед раскрытием
-            if (list) list.offsetHeight;
-            card.classList.add('expanded', 'no-anim');
-            devExpandedCards[devId] = true;
-            if (navigator.vibrate) navigator.vibrate(25);
-            devLockSwipe(500);
-            // Прокрутка после полного пересчёта layout
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    devScrollToCardContent(card);
-                    card.classList.remove('no-anim');
-                });
-            });
+            if (val === undefined || val === null || val === '') continue;
+            const cls = f.class ? ' ' + f.class : '';
+            const grpCls = f.group ? ' dev-row-group-' + f.group : '';
+            html += '<div class="dev-card-row' + grpCls + '">';
+            html += '<div class="dev-card-label">' + devEsc(f.label) + '</div>';
+            html += '<div class="dev-card-value' + cls + '">' + devEsc(String(val)) + '</div>';
+            html += '</div>';
         }
+        html += '</div>';
+        html += '</div>';
+        content.innerHTML = html;
     }
 
-    // ===== Swipe-навигация между карточками =====
-    // Вниз: body ушло вверх на 50% viewport → следующая
-    // Вверх: body ушло вниз на 50% viewport → предыдущая
-    // Строгий переход: только одна карточка за свайп, блокировка до завершения
-    let devSwipeTimer = null;
-    let devSwipeLock = false;
-    let devSwipeLockTimer = null;
-    let devSwipeStartY = null;       // начальная позиция касания
-    let devSwipeTriggered = false;   // сработал ли переход в текущем свайпе
 
-    function devLockSwipe(duration) {
-        devSwipeLock = true;
-        clearTimeout(devSwipeLockTimer);
-        devSwipeLockTimer = setTimeout(() => { devSwipeLock = false; }, duration || 700);
-    }
-
-    function devGetStickyHeight() {
-        const pages = ['page-devices', 'page-devices-type', 'page-devices-name', 'page-devices-prod'];
-        for (const pid of pages) {
-            const el = document.getElementById(pid);
-            if (el && el.offsetParent !== null) {
-                const ph = el.querySelector('.page-inline-header');
-                if (ph) return ph.offsetHeight;
-            }
-        }
-        return 56;
-    }
-
-    // Прокрутить так, чтобы header карточки прилип к нижней части sticky header.
-    // Мгновенная прокрутка (behavior: 'auto') — без отскоков и анимации.
-    function devScrollToCardContent(card) {
-        const stickyHeight = devGetStickyHeight();
-        const cardHeader = card.querySelector('.dev-card-header');
-        const targetEl = cardHeader || card;
-        // getBoundingClientRect даёт точную позицию с учётом текущего layout
-        const rect = targetEl.getBoundingClientRect();
-        const targetY = window.scrollY + rect.top - stickyHeight;
-        window.scrollTo({ top: Math.max(0, targetY), behavior: 'auto' });
-    }
-
-    function devSwitchToCard(fromCard, toCard) {
-        fromCard.classList.remove('expanded');
-        delete devExpandedCards[fromCard.getAttribute('data-dev-id')];
-        toCard.classList.add('expanded', 'no-anim');
-        devExpandedCards[toCard.getAttribute('data-dev-id')] = true;
-        if (navigator.vibrate) navigator.vibrate(20);
-        devLockSwipe(700);
-        devSwipeTriggered = true;
-        requestAnimationFrame(() => {
-            devScrollToCardContent(toCard);
-            requestAnimationFrame(() => toCard.classList.remove('no-anim'));
-        });
-    }
-
-    function devCheckSwipe() {
-        if (devSwipeLock) return;
-        // Только один переход за свайп
-        if (devSwipeTriggered) return;
-        const list = document.getElementById('devList');
-        if (!list) return;
-        const expanded = list.querySelector('.dev-card.expanded');
-        if (!expanded) return;
-
-        const allCards = Array.from(list.querySelectorAll('.dev-card'));
-        const currentIdx = allCards.indexOf(expanded);
-        if (currentIdx < 0) return;
-
-        const body = expanded.querySelector('.dev-card-body');
-        if (!body) return;
-        const bodyRect = body.getBoundingClientRect();
-        const vh = window.innerHeight;
-
-        // Прокрутка ВНИЗ: body ушло вверх на 50% viewport → следующая
-        if (bodyRect.bottom < vh * 0.5) {
-            if (currentIdx + 1 < allCards.length) {
-                devSwitchToCard(expanded, allCards[currentIdx + 1]);
-            }
-        }
-        // Прокрутка ВВЕРХ: body ушло вниз на 50% viewport → предыдущая
-        else if (bodyRect.top > vh * 0.5) {
-            if (currentIdx - 1 >= 0) {
-                devSwitchToCard(expanded, allCards[currentIdx - 1]);
-            }
-        }
-    }
-
-    function devOnScroll() {
-        if (devSwipeTimer) return;
-        devSwipeTimer = setTimeout(() => {
-            devSwipeTimer = null;
-            devCheckSwipe();
-        }, 80);
-    }
 
     // === Фильтр по типу ===
     function devUpdateFilterButton() {
@@ -6477,18 +6412,6 @@
         devLoaded = false;
         devData = null;
         devVisibleCount = DEV_DEFAULT_LIMIT;
-        devExpandedCards = {};
-        // Регистрируем scroll listener для swipe-навигации
-        window.addEventListener('scroll', devOnScroll, { passive: true });
-        // При новом касании — сброс блокировки и флага "уже сработал"
-        window.addEventListener('touchstart', () => {
-            devSwipeLock = false;
-            devSwipeTriggered = false;
-        }, { passive: true });
-        window.addEventListener('wheel', () => {
-            devSwipeLock = false;
-            devSwipeTriggered = false;
-        }, { passive: true });
         devLoad().then(() => devRender());
     }
 
@@ -6641,12 +6564,31 @@
             if (navigator.vibrate) navigator.vibrate(15);
             navigateTo('lockouts-prod');
         });
+        // Обновить sublabel количеством блокировок
+        lockUpdateEntrySublabel();
+    }
+    async function lockUpdateEntrySublabel() {
+        const btn = document.getElementById('lockoutsEntryBtn');
+        if (!btn) return;
+        const sublabel = btn.querySelector('.menu-btn-sublabel');
+        if (!sublabel) return;
+        if (!lockLoaded || !lockData) {
+            try {
+                const bust = '?v=' + Date.now();
+                const resp = await fetch('data/lockouts.json' + bust, { cache: 'no-store' });
+                if (!resp.ok) return;
+                lockData = await resp.json();
+                lockLoaded = true;
+                localStorage.setItem('lockoutsLastUpdate', new Date().toISOString());
+            } catch (e) { return; }
+        }
+        const count = (lockData.lockouts || []).length;
+        sublabel.textContent = count + ' ' + lockPlural(count, ['блокировка', 'блокировки', 'блокировок']) + ' КИП ИОС';
     }
 
     // ===== Рендер приборов с сортировкой =====
     // mode: 'type' — по типу, 'name' — по наименованию, 'prod' — по производствам
     let devSortedVisibleCount = {};
-    let devSortedExpandedCards = {};
     let devGroupExpanded = {};  // { 'type|Группа': true, ... } — раскрытые группы в сортировке
 
     function devRenderSorted(mode) {
@@ -6720,7 +6662,6 @@
         }
 
         // Пагинация
-        const expandedCards = devSortedExpandedCards[mode] || {};
 
         let html = '<div class="dev-sorted-list' + (query ? ' searching' : '') + '">';
 
@@ -6741,15 +6682,14 @@
             for (const dev of items) {
 
                 const devId = String(dev['ID'] ?? '');
-                const isExpanded = expandedCards[devId] === true;
                 const name = dev['Наименование'] || '(без названия)';
                 const type = dev['Тип'] || '';
                 const number = dev['№ прибора'] || '';
                 const place = dev['Место установки'] || '';
                 const imgUrl = devGetImageUrl(dev);
 
-                html += '<div class="dev-card' + (isExpanded ? ' expanded' : '') + '" data-dev-id="' + devEsc(devId) + '" data-mode="' + mode + '">';
-                html += '<div class="dev-card-header" onclick="devToggleCardSorted(this)">';
+                html += '<div class="dev-card" data-dev-id="' + devEsc(devId) + '" data-mode="' + mode + '">';
+                html += '<div class="dev-card-header" onclick="devOpenDetail(\'' + devEsc(devId) + '\')">';
                 html += '<div class="dev-card-header-inner">';
                 html += '<div class="dev-card-image-wrap">';
                 html += '<img class="dev-card-image" src="' + devEsc(imgUrl) + '" alt="' + devEsc(name) + '" loading="lazy">';
@@ -6771,28 +6711,6 @@
                 html += '<span class="dev-card-arrow"></span>';
                 html += '</div>'; // header-inner
                 html += '</div>'; // header
-                html += '<div class="dev-card-body">';
-                for (const f of DEV_FIELDS) {
-                    let val = '';
-                    if (f.isCombined) {
-                        const dateRaw = dev['Дата'] || '';
-                        const vidVal = dev['Вид ремонта'] || '';
-                        const perVal = dev['Период ремонта'] || '';
-                        const dateFormatted = dateRaw ? devFormatDate(dateRaw) : '';
-                        const parts = [dateFormatted, vidVal, perVal].filter(p => p);
-                        val = parts.join(' ');
-                    } else {
-                        val = dev[f.key];
-                    }
-                    if (!val) continue;
-                    const cls = f.class ? ' ' + f.class : '';
-                    const grpCls = f.group ? ' dev-row-group-' + f.group : '';
-                    html += '<div class="dev-card-row' + grpCls + '">';
-                    html += '<div class="dev-card-label">' + devEsc(f.label) + '</div>';
-                    html += '<div class="dev-card-value' + cls + '">' + devMark(String(val), query) + '</div>';
-                    html += '</div>';
-                }
-                html += '</div>'; // body
                 html += '</div>'; // card
             }
             html += '</div>'; // section-body
@@ -7173,40 +7091,6 @@
         return 56;
     }
 
-
-    function devToggleCardSorted(headerEl) {
-        const card = headerEl.closest('.dev-card');
-        if (!card) return;
-        const mode = card.getAttribute('data-mode') || 'type';
-        if (!devSortedExpandedCards[mode]) devSortedExpandedCards[mode] = {};
-        const expandedCards = devSortedExpandedCards[mode];
-        const devId = card.getAttribute('data-dev-id');
-        const isExpanded = card.classList.contains('expanded');
-        if (isExpanded) {
-            card.classList.remove('expanded');
-            delete expandedCards[devId];
-            if (navigator.vibrate) navigator.vibrate(15);
-        } else {
-            // Аккордеон: сначала закрываем все, потом раскрываем текущую
-            const list = card.closest('[id$="List"]');
-            if (list) {
-                list.querySelectorAll('.dev-card.expanded').forEach(c => {
-                    c.classList.remove('expanded');
-                    delete expandedCards[c.getAttribute('data-dev-id')];
-                });
-            }
-            if (list) list.offsetHeight;
-            card.classList.add('expanded', 'no-anim');
-            expandedCards[devId] = true;
-            if (navigator.vibrate) navigator.vibrate(25);
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    devScrollToCardContent(card);
-                    card.classList.remove('no-anim');
-                });
-            });
-        }
-    }
 
     function devInitSorted(mode) {
         if (!devLoaded) {
@@ -7833,6 +7717,7 @@
         if (page === 'devices-type') { setTimeout(() => { if (typeof devInitSorted === 'function') devInitSorted('type'); }, 30); }
         if (page === 'devices-name') { setTimeout(() => { if (typeof devInitSorted === 'function') devInitSorted('name'); }, 30); }
         if (page === 'devices-prod') { setTimeout(() => { if (typeof devInitSorted === 'function') devInitSorted('prod'); }, 30); }
+        if (page === 'device-detail') { setTimeout(() => { if (typeof devRenderDetail === 'function') devRenderDetail(); }, 30); }
         if (page === 'lockouts-prod') { setTimeout(() => { if (typeof lockInitSorted === 'function') lockInitSorted('prod'); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof devInitEntryButton === 'function') devInitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof lockInitEntryButton === 'function') lockInitEntryButton(); }, 30); }
