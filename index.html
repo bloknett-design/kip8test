@@ -2433,6 +2433,165 @@
     }
     [data-theme="light"] .valve-detail-value { color: #1a1a1a; }
 
+    /* ===== РЕГУЛЯТОРЫ (зеркало клапанов/блокировок, фиолетовый акцент) ===== */
+    .regulator-sorted-list {
+        margin: 0 8px;
+    }
+    .regulator-sorted-list.searching .pb-section.regulator-group .pb-section-body {
+        max-height: 5000px;
+        transition: none;
+    }
+    .regulator-sorted-list.searching .pb-section.regulator-group .pb-section-arrow {
+        transform: translateY(-50%) rotate(45deg);
+        opacity: 0.3;
+    }
+    .regulator-sorted-list.searching .pb-section.regulator-group .pb-section-title {
+        cursor: default;
+    }
+
+    .regulator-group {
+        margin: 6px 0 8px;
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 12px;
+        background: rgba(255,255,255,0.015);
+        overflow: hidden;
+    }
+    [data-theme="light"] .regulator-group {
+        border-color: rgba(20,20,19,0.1);
+        background: rgba(255,255,255,0.55);
+    }
+
+    .regulator-group .pb-section-title {
+        background: #2a1f3d;
+        color: #b8a4d8;
+        border-bottom: 1px solid rgba(184,164,216,0.2);
+    }
+    [data-theme="light"] .regulator-group .pb-section-title {
+        background: #e2d6f0;
+        color: #4a2d6f;
+        border-bottom: 1px solid rgba(184,164,216,0.25);
+    }
+    .regulator-group .pb-section-title:active {
+        background: #352a4c;
+    }
+    [data-theme="light"] .regulator-group .pb-section-title:active {
+        background: #d0c0e3;
+    }
+    .regulator-group .pb-section-body {
+        padding: 0;
+    }
+
+    .regulator-card {
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        transition: background 0.15s;
+    }
+    [data-theme="light"] .regulator-card {
+        border-bottom-color: rgba(20,20,19,0.08);
+    }
+    .regulator-card:last-child {
+        border-bottom: none;
+    }
+    .regulator-card-header {
+        padding: 0 14px 0 0;
+        background: transparent;
+        cursor: pointer;
+        position: relative;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .regulator-card-header-inner {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        min-height: 56px;
+    }
+    .regulator-card-text {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding-left: 14px;
+        flex: 1;
+        min-width: 0;
+    }
+    .regulator-card-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #e0e0e0;
+        line-height: 1.3;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    [data-theme="light"] .regulator-card-title {
+        color: #141413;
+    }
+    .regulator-card-subtitle {
+        font-size: 12px;
+        color: rgba(160,160,160,0.7);
+        margin-top: 2px;
+        line-height: 1.3;
+    }
+    [data-theme="light"] .regulator-card-subtitle {
+        color: rgba(100,100,100,0.7);
+    }
+    .regulator-card-arrow {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+        margin-left: 6px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 18 15 12 9 6'/%3E%3C/svg%3E");
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        transition: transform 0.2s;
+        opacity: 0.5;
+    }
+
+    /* ===== Страница детального просмотра регулятора ===== */
+    .regulator-detail-card {
+        padding: 12px 14px 24px;
+    }
+    .regulator-detail-rows {
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+    }
+    .regulator-detail-row {
+        display: flex;
+        flex-direction: column;
+        padding: 8px 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        gap: 2px;
+        font-size: 16px;
+        line-height: 1.4;
+    }
+    [data-theme="light"] .regulator-detail-row { border-bottom-color: rgba(20, 20, 19, 0.06); }
+    .regulator-detail-row:last-child { border-bottom: none; }
+    .regulator-detail-row.regulator-row-group-1 { background: rgba(255,255,255,0.015); }
+    .regulator-detail-row.regulator-row-group-2 { background: rgba(255,255,255,0.055); }
+    .regulator-detail-row.regulator-row-group-3 { background: rgba(255,255,255,0.015); }
+    .regulator-detail-row.regulator-row-group-4 { background: rgba(255,255,255,0.055); }
+    .regulator-detail-row.regulator-row-group-5 { background: rgba(255,255,255,0.025); }
+    [data-theme="light"] .regulator-detail-row.regulator-row-group-1 { background: rgba(0,0,0,0.01); }
+    [data-theme="light"] .regulator-detail-row.regulator-row-group-2 { background: rgba(0,0,0,0.04); }
+    [data-theme="light"] .regulator-detail-row.regulator-row-group-3 { background: rgba(0,0,0,0.01); }
+    [data-theme="light"] .regulator-detail-row.regulator-row-group-4 { background: rgba(0,0,0,0.04); }
+    [data-theme="light"] .regulator-detail-row.regulator-row-group-5 { background: rgba(0,0,0,0.02); }
+    .regulator-detail-label {
+        font-size: 12px;
+        color: rgba(200, 190, 220, 0.45);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        margin-bottom: 2px;
+    }
+    [data-theme="light"] .regulator-detail-label { color: rgba(20, 20, 19, 0.45); }
+    .regulator-detail-value {
+        font-size: 16px;
+        color: #d8d0e8;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        line-height: 1.4;
+    }
+    [data-theme="light"] .regulator-detail-value { color: #1a1a1a; }
+
     /* Кнопка обновления в заголовке */
     .page-refresh-btn {
         background: transparent;
@@ -3568,6 +3727,7 @@
                 </div>
                 <div class="menu-btn" id="lockoutsEntryBtn" style="border-color:rgba(184,90,122,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#b85a7a;">Блокировки</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(184,90,122,0.4);">›</i></div>
                 <div class="menu-btn" id="valvesEntryBtn" style="border-color:rgba(74,138,140,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#4a8a8c;">Клапаны</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(74,138,140,0.4);">›</i></div>
+                <div class="menu-btn" id="regulatorsEntryBtn" style="border-color:rgba(126,90,184,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#7e5ab8;">Регуляторы</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(126,90,184,0.4);">›</i></div>
             </div>
         </div>
 
@@ -3623,6 +3783,19 @@
         <div id="page-valve-detail" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title" id="valveDetailTitle">Клапан</div></div>
             <div id="valveDetailContent"></div>
+        </div>
+
+        <!-- ======================== РЕГУЛЯТОРЫ — ПО ПРОИЗВОДСТВАМ ======================== -->
+        <div id="page-regulators-prod" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Регуляторы по производствам</div><button type="button" class="page-refresh-btn" onclick="regulatorForceRefresh('prod')" title="Обновить данные">↻</button><input type="search" id="regulatorProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="regulatorRenderSorted('prod')"></div>
+            <div id="regulatorProdInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
+            <div id="regulatorProdList"></div>
+        </div>
+
+        <!-- ======================== КАРТОЧКА РЕГУЛЯТОРА ======================== -->
+        <div id="page-regulator-detail" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title" id="regulatorDetailTitle">Регулятор</div></div>
+            <div id="regulatorDetailContent"></div>
         </div>
 
 <!-- ======================== ИНЖЕНЕРНЫЕ КАЛЬКУЛЯТОРЫ — КИП и А ======================== -->
@@ -7665,6 +7838,321 @@
         sublabel.textContent = count + ' ' + valvePlural(count, ['клапан', 'клапана', 'клапанов']) + ' КИП ИОС';
     }
 
+    // ===== РЕГУЛЯТОРЫ (зеркало клапанов/блокировок) =====
+    // Поля соответствуют листу "Регуляторы_app" файла Excel
+    // https://disk.yandex.ru/i/KNVTQ7Q6II7zbA (тот же файл, что и для приборов/блокировок/клапанов)
+    // Реальная структура полей определяется на этапе парсинга sync-regulators.py,
+    // здесь заданы только предполагаемые группы для типичного набора колонок.
+    // Если в данных есть колонки, не указанные в REGULATOR_FIELDS — они не будут показаны.
+    const REGULATOR_FIELDS = [
+        { key: 'Наименование', label: 'Наименование', group: 1 },
+        { key: 'Тип', label: 'Тип', group: 1 },
+        { key: 'Производство', label: 'Производство', group: 1 },
+        { key: 'Назначение', label: 'Назначение', group: 2 },
+        { key: 'Расположение', label: 'Расположение', group: 2 },
+        { key: '№ позиции', label: '№ позиции', group: 3 },
+        { key: '№ СБС', label: '№ СБС', group: 3 },
+        { key: '№ проекта', label: '№ проекта', group: 4 },
+        { key: 'Дата проверки', label: 'Дата проверки', group: 4 },
+        { key: 'В перечне', label: 'В перечне', group: 4 },
+        { key: 'Примечания', label: 'Примечания', group: 5 },
+        { key: 'Замечания', label: 'Замечания', group: 5 },
+    ];
+    let regulatorData = null;
+    let regulatorLoaded = false;
+    let regulatorGroupExpanded = {};
+
+    function regulatorEsc(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function regulatorNorm(s) {
+        if (s == null) return '';
+        return String(s).toLowerCase().replace(/[ё]/g, 'е').replace(/[^a-zа-я0-9]/gi, '');
+    }
+    function regulatorMark(text, query) {
+        if (!query) return regulatorEsc(text);
+        const t = String(text);
+        const q = regulatorNorm(query);
+        if (!q) return regulatorEsc(t);
+        const idx = regulatorNorm(t).indexOf(q);
+        if (idx === -1) return regulatorEsc(t);
+        const before = t.substring(0, idx);
+        const match = t.substring(idx, idx + q.length);
+        const after = t.substring(idx + q.length);
+        return regulatorEsc(before) + '<mark>' + regulatorEsc(match) + '</mark>' + regulatorMark(after, query);
+    }
+    function regulatorPlural(n, forms) {
+        const m = n % 100;
+        const m1 = m % 10;
+        if (m >= 5 && m <= 20) return forms[2];
+        if (m1 === 1) return forms[0];
+        if (m1 >= 2 && m1 <= 4) return forms[1];
+        return forms[2];
+    }
+    function regulatorFormatDate(dateVal) {
+        if (!dateVal) return '';
+        const num = parseFloat(dateVal);
+        if (!isNaN(num) && num > 30000) {
+            const epoch = new Date(1899, 11, 30);
+            const d = new Date(epoch.getTime() + num * 86400000);
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return day + '.' + month + '.' + year;
+        }
+        const str = String(dateVal).trim();
+        const m = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (m) return m[3] + '.' + m[2] + '.' + m[1];
+        if (/^\d{2}\.\d{2}\.\d{4}$/.test(str)) return str;
+        return str;
+    }
+    function regulatorGetLastUpdateDate() {
+        try {
+            const raw = localStorage.getItem('regulatorsLastUpdate');
+            if (!raw) return '';
+            const d = new Date(raw);
+            if (isNaN(d.getTime())) return '';
+            return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
+        } catch (e) { return ''; }
+    }
+
+    async function regulatorInitSorted(mode) {
+        if (!regulatorLoaded || !regulatorData) {
+            try {
+                const bust = '?v=' + Date.now();
+                const resp = await fetch('data/regulators.json' + bust, { cache: 'no-store' });
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                regulatorData = await resp.json();
+                regulatorLoaded = true;
+                localStorage.setItem('regulatorsLastUpdate', new Date().toISOString());
+            } catch (e) {
+                console.error('regulatorInitSorted error:', e);
+                const ids = { type: 'regulatorTypeList', name: 'regulatorNameList', prod: 'regulatorProdList' };
+                const el = document.getElementById(ids[mode]);
+                if (el) el.innerHTML = '<div class="pb-empty">Ошибка загрузки.<br>Проверьте соединение.</div>';
+                return;
+            }
+        }
+        regulatorRenderSorted(mode);
+    }
+
+    function regulatorForceRefresh(mode) {
+        regulatorData = null;
+        regulatorLoaded = false;
+        regulatorInitSorted(mode);
+        if (navigator.vibrate) navigator.vibrate(40);
+    }
+
+    function regulatorRenderSorted(mode) {
+        const ids = {
+            type: { list: 'regulatorTypeList', info: 'regulatorTypeInfo', search: 'regulatorTypeSearchInput', page: 'page-regulators-type' },
+            name: { list: 'regulatorNameList', info: 'regulatorNameInfo', search: 'regulatorNameSearchInput', page: 'page-regulators-name' },
+            prod: { list: 'regulatorProdList', info: 'regulatorProdInfo', search: 'regulatorProdSearchInput', page: 'page-regulators-prod' },
+        };
+        const id = ids[mode];
+        if (!id) return;
+        const list = document.getElementById(id.list);
+        const info = document.getElementById(id.info);
+        if (!list || !info) return;
+
+        if (!regulatorLoaded || !regulatorData) {
+            list.innerHTML = '';
+            info.textContent = 'Загрузка…';
+            return;
+        }
+
+        const query = regulatorNorm((document.getElementById(id.search)?.value || '').trim());
+        let filtered = regulatorData.regulators || [];
+
+        const sortKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
+        filtered.sort((a, b) => {
+            const va = (a[sortKey] || '').toString().toLowerCase();
+            const vb = (b[sortKey] || '').toString().toLowerCase();
+            if (va < vb) return -1;
+            if (va > vb) return 1;
+            return 0;
+        });
+
+        if (query) {
+            filtered = filtered.filter(d =>
+                REGULATOR_FIELDS.some(f => regulatorNorm(d[f.key] || '').includes(query))
+            );
+        }
+
+        const groups = {};
+        const groupOrder = [];
+        for (const d of filtered) {
+            const g = d[sortKey] || '(без группы)';
+            if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
+            groups[g].push(d);
+        }
+
+        const lastUpdate = regulatorGetLastUpdateDate();
+        const updateStr = lastUpdate ? ' · обновлено: ' + lastUpdate : '';
+        if (query) {
+            info.textContent = 'Найдено: ' + filtered.length + ' ' + regulatorPlural(filtered.length, ['регулятор', 'регулятора', 'регуляторов']) + updateStr;
+        } else {
+            info.textContent = 'Всего: ' + filtered.length + ' ' + regulatorPlural(filtered.length, ['регулятор', 'регулятора', 'регуляторов']) + ' · групп: ' + groupOrder.length + updateStr;
+        }
+
+        if (filtered.length === 0) {
+            list.innerHTML = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
+            return;
+        }
+
+        let html = '<div class="regulator-sorted-list' + (query ? ' searching' : '') + '">';
+        for (const g of groupOrder) {
+            const items = groups[g];
+            const groupKey = mode + '|' + g;
+            const isGroupExpanded = query ? true : (regulatorGroupExpanded[groupKey] === true);
+
+            html += '<div class="pb-section regulator-group' + (isGroupExpanded ? ' expanded' : '') + '" data-group="' + regulatorEsc(g) + '" data-mode="' + mode + '">';
+            html += '<div class="pb-section-title regulator-group-title" onclick="regulatorToggleGroup(this)">';
+            html += '<span class="pb-section-title-text">' + regulatorMark(g, query) + '</span>';
+            html += '<span class="pb-section-title-count">' + items.length + '</span>';
+            html += '<span class="pb-section-arrow"></span>';
+            html += '</div>';
+            html += '<div class="pb-section-body">';
+
+            for (const item of items) {
+                const itemId = String(item['ID'] ?? '');
+                const name = item['Наименование'] || '(без названия)';
+                const type = item['Тип'] || '';
+                const place = item['Расположение'] || '';
+
+                html += '<div class="regulator-card" data-regulator-id="' + regulatorEsc(itemId) + '" data-mode="' + mode + '">';
+                html += '<div class="regulator-card-header" onclick="regulatorOpenDetail(\'' + regulatorEsc(itemId) + '\')">';
+                html += '<div class="regulator-card-header-inner">';
+                html += '<div class="regulator-card-text">';
+                html += '<div class="regulator-card-title">' + regulatorMark(name, query) + '</div>';
+                let subtitle = '';
+                if (type) subtitle += type;
+                if (place) subtitle += (subtitle ? ' · ' : '') + place;
+                if (subtitle) html += '<div class="regulator-card-subtitle">' + regulatorMark(subtitle, query) + '</div>';
+                html += '</div>';
+                html += '<span class="regulator-card-arrow"></span>';
+                html += '</div>';
+                html += '</div>';
+                html += '</div>';
+            }
+            html += '</div>';
+            html += '</div>';
+        }
+        html += '</div>';
+        list.innerHTML = html;
+    }
+
+    function regulatorToggleGroup(titleEl) {
+        const section = titleEl.closest('.pb-section');
+        if (!section) return;
+        const mode = section.getAttribute('data-mode') || 'type';
+        const group = section.getAttribute('data-group');
+        if (!group) return;
+        const groupKey = mode + '|' + group;
+        const isExpanded = section.classList.contains('expanded');
+        if (isExpanded) {
+            section.classList.remove('expanded');
+            delete regulatorGroupExpanded[groupKey];
+            if (navigator.vibrate) navigator.vibrate(20);
+        } else {
+            const listIds = { type: 'regulatorTypeList', name: 'regulatorNameList', prod: 'regulatorProdList' };
+            const list = document.getElementById(listIds[mode]);
+            if (list) {
+                list.querySelectorAll('.pb-section.expanded').forEach(s => {
+                    s.classList.remove('expanded');
+                    const sMode = s.getAttribute('data-mode') || mode;
+                    const sGroup = s.getAttribute('data-group');
+                    if (sGroup) delete regulatorGroupExpanded[sMode + '|' + sGroup];
+                });
+            }
+            section.classList.add('expanded');
+            regulatorGroupExpanded[groupKey] = true;
+            if (navigator.vibrate) navigator.vibrate(30);
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => regulatorScrollToGroup(section));
+            });
+            setTimeout(() => regulatorScrollToGroup(section), 450);
+        }
+    }
+
+    function regulatorScrollToGroup(el) {
+        if (!el) return;
+        const mode = el.getAttribute('data-mode') || 'type';
+        const ph = document.querySelector('#page-regulators-' + mode + ' .page-inline-header');
+        const stickyHeight = ph ? ph.offsetHeight : 56;
+        const rect = el.getBoundingClientRect();
+        const targetY = window.scrollY + rect.top - stickyHeight - 8;
+        window.scrollTo({ top: Math.max(0, targetY), behavior: 'auto' });
+    }
+
+    // ===== Открытие карточки регулятора (отдельная страница, как у приборов/блокировок/клапанов) =====
+    function regulatorOpenDetail(regulatorId) {
+        if (!regulatorId) return;
+        if (navigator.vibrate) navigator.vibrate(15);
+        window._regulatorDetailId = regulatorId;
+        navigateTo('regulator-detail');
+    }
+
+    function regulatorRenderDetail() {
+        const regulatorId = window._regulatorDetailId;
+        if (!regulatorId || !regulatorLoaded || !regulatorData) return;
+        const item = regulatorData.regulators.find(d => String(d['ID'] ?? '') === String(regulatorId));
+        if (!item) return;
+        const titleEl = document.getElementById('regulatorDetailTitle');
+        const content = document.getElementById('regulatorDetailContent');
+        if (!titleEl || !content) return;
+        const name = item['Наименование'] || '(без названия)';
+        titleEl.textContent = name;
+
+        let html = '<div class="regulator-detail-card">';
+        html += '<div class="regulator-detail-rows">';
+        for (const f of REGULATOR_FIELDS) {
+            let val = item[f.key];
+            if (val === undefined || val === null || val === '') continue;
+            if (f.key === 'Дата проверки') val = regulatorFormatDate(val);
+            const grpCls = f.group ? ' regulator-row-group-' + f.group : '';
+            html += '<div class="regulator-detail-row' + grpCls + '">';
+            html += '<div class="regulator-detail-label">' + regulatorEsc(f.label) + '</div>';
+            html += '<div class="regulator-detail-value">' + regulatorEsc(String(val)) + '</div>';
+            html += '</div>';
+        }
+        html += '</div>';
+        html += '</div>';
+        content.innerHTML = html;
+    }
+
+    // ===== Кнопка Регуляторы на странице КИП И ОС: только tap =====
+    function regulatorInitEntryButton() {
+        const btn = document.getElementById('regulatorsEntryBtn');
+        if (!btn || btn.dataset.initialized) return;
+        btn.dataset.initialized = '1';
+        btn.addEventListener('click', function() {
+            if (navigator.vibrate) navigator.vibrate(15);
+            navigateTo('regulators-prod');
+        });
+        // Обновить sublabel количеством регуляторов
+        regulatorUpdateEntrySublabel();
+    }
+    async function regulatorUpdateEntrySublabel() {
+        const btn = document.getElementById('regulatorsEntryBtn');
+        if (!btn) return;
+        const sublabel = btn.querySelector('.menu-btn-sublabel');
+        if (!sublabel) return;
+        if (!regulatorLoaded || !regulatorData) {
+            try {
+                const bust = '?v=' + Date.now();
+                const resp = await fetch('data/regulators.json' + bust, { cache: 'no-store' });
+                if (!resp.ok) return;
+                regulatorData = await resp.json();
+                regulatorLoaded = true;
+                localStorage.setItem('regulatorsLastUpdate', new Date().toISOString());
+            } catch (e) { return; }
+        }
+        const count = (regulatorData.regulators || []).length;
+        sublabel.textContent = count + ' ' + regulatorPlural(count, ['регулятор', 'регулятора', 'регуляторов']) + ' КИП ИОС';
+    }
+
 
     function devInitSorted(mode) {
         if (!devLoaded) {
@@ -8296,9 +8784,12 @@
         if (page === 'lockout-detail') { setTimeout(() => { if (typeof lockRenderDetail === 'function') lockRenderDetail(); }, 30); }
         if (page === 'valves-prod') { setTimeout(() => { if (typeof valveInitSorted === 'function') valveInitSorted('prod'); }, 30); }
         if (page === 'valve-detail') { setTimeout(() => { if (typeof valveRenderDetail === 'function') valveRenderDetail(); }, 30); }
+        if (page === 'regulators-prod') { setTimeout(() => { if (typeof regulatorInitSorted === 'function') regulatorInitSorted('prod'); }, 30); }
+        if (page === 'regulator-detail') { setTimeout(() => { if (typeof regulatorRenderDetail === 'function') regulatorRenderDetail(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof devInitEntryButton === 'function') devInitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof lockInitEntryButton === 'function') lockInitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof valveInitEntryButton === 'function') valveInitEntryButton(); }, 30); }
+        if (page === 'kip-ios') { setTimeout(() => { if (typeof regulatorInitEntryButton === 'function') regulatorInitEntryButton(); }, 30); }
         if (TICKET_IDS.includes(page)) { setTimeout(() => initTicketsPage(page), 30); }
         if (page === 'exam-tickets') { setTimeout(() => loadTicketsData(), 30); }
         // Снять блокировку прокрутки и закрыть открытые билеты при уходе со страницы
