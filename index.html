@@ -1970,6 +1970,53 @@
     [data-theme="light"] .pb-search-input::placeholder { color: rgba(20,20,19,0.4); }
     .pb-info { padding: 6px 16px 4px; font-size: 12px; color: rgba(255,255,255,0.4); text-align: center; }
     [data-theme="light"] .pb-info { color: rgba(20,20,19,0.55); }
+
+    /* КИП ИОС — общий блок с кнопками подразделов и датой последнего изменения */
+    .kip-ios-block {
+        margin: 12px 8px;
+        padding: 14px 14px 8px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid var(--card-border, rgba(255,255,255,0.08));
+        border-radius: 14px;
+        position: relative;
+        z-index: 2;
+    }
+    .kip-ios-block-update {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        margin-bottom: 10px;
+        padding: 0 6px 10px;
+        border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.08));
+        font-size: 12px;
+        color: var(--text-secondary, rgba(255,255,255,0.5));
+    }
+    .kip-ios-block-update-label {
+        opacity: 0.85;
+    }
+    .kip-ios-block-update-date {
+        color: var(--text-primary, rgba(255,255,255,0.9));
+        font-weight: 600;
+        letter-spacing: -0.1px;
+    }
+    [data-theme="light"] .kip-ios-block {
+        background: rgba(255,255,255,0.7);
+        border-color: rgba(0,0,0,0.08);
+    }
+    [data-theme="light"] .kip-ios-block-update {
+        color: rgba(20,20,19,0.55);
+        border-bottom-color: rgba(0,0,0,0.08);
+    }
+    [data-theme="light"] .kip-ios-block-update-date {
+        color: #1a1a1a;
+    }
+    /* Внутри блока — убираем внешние отступы у menu-btn-row (управляет сам блок) */
+    .kip-ios-block .menu-btn-row {
+        padding: 0;
+    }
+
     .pb-section {
         margin: 6px 8px 8px;
         border: 1px solid rgba(255,255,255,0.07);
@@ -3751,36 +3798,42 @@
         <div id="page-kip-ios" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">КИП ИОС</div></div>
 
-            <div class="menu-btn-row">
-                <div class="dev-swipe-cell" id="devSwipeCell">
-                    <div class="dev-swipe-bg dev-swipe-bg-left"><span>По типу</span></div>
-                    <div class="dev-swipe-bg dev-swipe-bg-right"><span>По наименованию</span></div>
-                    <div class="menu-btn" id="devicesEntryBtn"><div class="menu-btn-text"><div class="menu-btn-label">Приборы</div><div class="menu-btn-sublabel">1312 приборов КИП ИОС</div></div><i class="menu-btn-arrow">›</i></div>
+            <div class="kip-ios-block">
+                <div class="kip-ios-block-update">
+                    <span class="kip-ios-block-update-label">Последние изменения:</span>
+                    <span class="kip-ios-block-update-date" id="kip-ios-last-update">—</span>
                 </div>
-                <div class="menu-btn" id="lockoutsEntryBtn" style="border-color:rgba(184,90,122,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#b85a7a;">Блокировки</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(184,90,122,0.4);">›</i></div>
-                <div class="menu-btn" id="valvesEntryBtn" style="border-color:rgba(74,138,140,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#4a8a8c;">Клапаны</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(74,138,140,0.4);">›</i></div>
-                <div class="menu-btn" id="regulatorsEntryBtn" style="border-color:rgba(126,90,184,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#7e5ab8;">Регуляторы</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(126,90,184,0.4);">›</i></div>
+                <div class="menu-btn-row">
+                    <div class="dev-swipe-cell" id="devSwipeCell">
+                        <div class="dev-swipe-bg dev-swipe-bg-left"><span>По типу</span></div>
+                        <div class="dev-swipe-bg dev-swipe-bg-right"><span>По наименованию</span></div>
+                        <div class="menu-btn" id="devicesEntryBtn"><div class="menu-btn-text"><div class="menu-btn-label">Приборы</div><div class="menu-btn-sublabel">1312 приборов КИП ИОС</div></div><i class="menu-btn-arrow">›</i></div>
+                    </div>
+                    <div class="menu-btn" id="lockoutsEntryBtn" style="border-color:rgba(184,90,122,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#b85a7a;">Блокировки</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(184,90,122,0.4);">›</i></div>
+                    <div class="menu-btn" id="valvesEntryBtn" style="border-color:rgba(74,138,140,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#4a8a8c;">Клапаны</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(74,138,140,0.4);">›</i></div>
+                    <div class="menu-btn" id="regulatorsEntryBtn" style="border-color:rgba(126,90,184,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#7e5ab8;">Регуляторы</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(126,90,184,0.4);">›</i></div>
+                </div>
             </div>
         </div>
 
         <!-- ======================== ПРИБОРЫ — ПО ТИПУ ======================== -->
         <div id="page-devices-type" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Приборы по типу</div><input type="search" id="devTypeSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="devRenderSorted('type')"></div>
-            <div class="pb-info" id="devTypeInfo">Загрузка…</div>
+            <div class="pb-info" id="devTypeInfo" style="display:none;"></div>
             <div id="devTypeList"></div>
         </div>
 
         <!-- ======================== ПРИБОРЫ — ПО НАИМЕНОВАНИЮ ======================== -->
         <div id="page-devices-name" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Приборы по наименованию</div><input type="search" id="devNameSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="devRenderSorted('name')"></div>
-            <div class="pb-info" id="devNameInfo">Загрузка…</div>
+            <div class="pb-info" id="devNameInfo" style="display:none;"></div>
             <div id="devNameList"></div>
         </div>
 
         <!-- ======================== ПРИБОРЫ — ПО ПРОИЗВОДСТВАМ ======================== -->
         <div id="page-devices-prod" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Приборы по производствам</div><input type="search" id="devProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="devRenderSorted('prod')"></div>
-            <div class="pb-info" id="devProdInfo">Загрузка…</div>
+            <div class="pb-info" id="devProdInfo" style="display:none;"></div>
             <div id="devProdList"></div>
         </div>
 
@@ -3793,8 +3846,8 @@
 
         <!-- ======================== БЛОКИРОВКИ ======================== -->
         <div id="page-lockouts-prod" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Блокировки по производствам</div><button type="button" class="page-refresh-btn" onclick="lockForceRefresh('prod')" title="Обновить данные">↻</button><input type="search" id="lockProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="lockRenderSorted('prod')"></div>
-            <div id="lockProdInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Блокировки по производствам</div><input type="search" id="lockProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="lockRenderSorted('prod')"></div>
+            <div id="lockProdInfo" class="pb-info-bar" style="display:none;padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);"></div>
             <div id="lockProdList"></div>
         </div>
 
@@ -3806,8 +3859,8 @@
 
         <!-- ======================== КЛАПАНЫ — ПО ПРОИЗВОДСТВАМ ======================== -->
         <div id="page-valves-prod" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Клапаны по производствам</div><button type="button" class="page-refresh-btn" onclick="valveForceRefresh('prod')" title="Обновить данные">↻</button><input type="search" id="valveProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="valveRenderSorted('prod')"></div>
-            <div id="valveProdInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Клапаны по производствам</div><input type="search" id="valveProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="valveRenderSorted('prod')"></div>
+            <div id="valveProdInfo" class="pb-info-bar" style="display:none;padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);"></div>
             <div id="valveProdList"></div>
         </div>
 
@@ -3819,8 +3872,8 @@
 
         <!-- ======================== РЕГУЛЯТОРЫ — ПО ПРОИЗВОДСТВАМ ======================== -->
         <div id="page-regulators-prod" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Регуляторы по производствам</div><button type="button" class="page-refresh-btn" onclick="regulatorForceRefresh('prod')" title="Обновить данные">↻</button><input type="search" id="regulatorProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="regulatorRenderSorted('prod')"></div>
-            <div id="regulatorProdInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Регуляторы по производствам</div><input type="search" id="regulatorProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="regulatorRenderSorted('prod')"></div>
+            <div id="regulatorProdInfo" class="pb-info-bar" style="display:none;padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);"></div>
             <div id="regulatorProdList"></div>
         </div>
 
@@ -3920,7 +3973,7 @@
         <div id="page-devices" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Приборы</div><input type="search" id="devSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="devRender()"></div>
 
-            <div class="pb-info" id="devInfo">Загрузка…</div>
+            <div class="pb-info" id="devInfo" style="display:none;"></div>
             <div id="devList"></div>
         </div>
 
@@ -6651,14 +6704,8 @@
             );
         }
 
-        // Инфо
-        const lastUpdate = devGetLastUpdateDate();
-        const updateStr = lastUpdate ? ' · обновлено: ' + lastUpdate : '';
-        if (query) {
-            info.textContent = 'Найдено: ' + filtered.length + ' ' + devPlural(filtered.length, ['прибор', 'прибора', 'приборов']) + updateStr;
-        } else {
-            info.textContent = 'Всего: ' + filtered.length + ' ' + devPlural(filtered.length, ['прибор', 'прибора', 'приборов']) + updateStr;
-        }
+        // Инфо-текст скрыт по требованию пользователя (дата обновления перенесена в родительский раздел КИП ИОС)
+        info.textContent = '';
 
         if (filtered.length === 0) {
             list.innerHTML = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
@@ -6892,6 +6939,23 @@
             }
         }
         return '';
+    }
+
+    // Обновить строку "Последние изменения: <дата>" в родительском разделе КИП ИОС.
+    // Дата берётся из строки с ID=0, столбца "Тип" таблицы Приборы (devices.json),
+    // как реализовано в подразделе Приборы (devGetLastUpdateDate()).
+    // Вызывается при каждом переходе на страницу kip-ios.
+    async function kipIOSUpdateLastChange() {
+        const span = document.getElementById('kip-ios-last-update');
+        if (!span) return;
+        // Подгружаем данные приборов, если ещё не загружены
+        if (typeof devLoad === 'function') {
+            try { await devLoad(); } catch (e) {}
+        }
+        const dateStr = (typeof devGetLastUpdateDate === 'function')
+            ? devGetLastUpdateDate()
+            : '';
+        span.textContent = dateStr || '—';
     }
 
     function devPlural(n, forms) {
@@ -7142,13 +7206,7 @@
         }
 
         // Инфо
-        const lastUpdate = devGetLastUpdateDate();
-        const updateStr = lastUpdate ? ' · обновлено: ' + lastUpdate : '';
-        if (query) {
-            info.textContent = 'Найдено: ' + filtered.length + ' ' + devPlural(filtered.length, ['прибор', 'прибора', 'приборов']) + updateStr;
-        } else {
-            info.textContent = 'Всего: ' + filtered.length + ' ' + devPlural(filtered.length, ['прибор', 'прибора', 'приборов']) + ' · групп: ' + groupOrder.length + updateStr;
-        }
+        info.textContent = '';
 
         if (filtered.length === 0) {
             list.innerHTML = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
@@ -7420,13 +7478,7 @@
             groups[g].push(d);
         }
 
-        const lastUpdate = lockGetLastUpdateDate();
-        const updateStr = lastUpdate ? ' · обновлено: ' + lastUpdate : '';
-        if (query) {
-            info.textContent = 'Найдено: ' + filtered.length + ' ' + lockPlural(filtered.length, ['блокировка', 'блокировки', 'блокировок']) + updateStr;
-        } else {
-            info.textContent = 'Всего: ' + filtered.length + ' ' + lockPlural(filtered.length, ['блокировка', 'блокировки', 'блокировок']) + ' · групп: ' + groupOrder.length + updateStr;
-        }
+        info.textContent = '';
 
         if (filtered.length === 0) {
             list.innerHTML = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
@@ -7719,13 +7771,7 @@
             groups[g].push(d);
         }
 
-        const lastUpdate = valveGetLastUpdateDate();
-        const updateStr = lastUpdate ? ' · обновлено: ' + lastUpdate : '';
-        if (query) {
-            info.textContent = 'Найдено: ' + filtered.length + ' ' + valvePlural(filtered.length, ['клапан', 'клапана', 'клапанов']) + updateStr;
-        } else {
-            info.textContent = 'Всего: ' + filtered.length + ' ' + valvePlural(filtered.length, ['клапан', 'клапана', 'клапанов']) + ' · групп: ' + groupOrder.length + updateStr;
-        }
+        info.textContent = '';
 
         if (filtered.length === 0) {
             list.innerHTML = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
@@ -8039,13 +8085,7 @@
             groups[g].push(d);
         }
 
-        const lastUpdate = regulatorGetLastUpdateDate();
-        const updateStr = lastUpdate ? ' · обновлено: ' + lastUpdate : '';
-        if (query) {
-            info.textContent = 'Найдено: ' + filtered.length + ' ' + regulatorPlural(filtered.length, ['регулятор', 'регулятора', 'регуляторов']) + updateStr;
-        } else {
-            info.textContent = 'Всего: ' + filtered.length + ' ' + regulatorPlural(filtered.length, ['регулятор', 'регулятора', 'регуляторов']) + ' · групп: ' + groupOrder.length + updateStr;
-        }
+        info.textContent = '';
 
         if (filtered.length === 0) {
             list.innerHTML = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
@@ -8842,6 +8882,7 @@
         if (page === 'regulators-prod') { setTimeout(() => { if (typeof regulatorInitSorted === 'function') regulatorInitSorted('prod'); }, 30); }
         if (page === 'regulator-detail') { setTimeout(() => { if (typeof regulatorRenderDetail === 'function') regulatorRenderDetail(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof devInitEntryButton === 'function') devInitEntryButton(); }, 30); }
+        if (page === 'kip-ios') { setTimeout(() => { if (typeof kipIOSUpdateLastChange === 'function') kipIOSUpdateLastChange(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof lockInitEntryButton === 'function') lockInitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof valveInitEntryButton === 'function') valveInitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof regulatorInitEntryButton === 'function') regulatorInitEntryButton(); }, 30); }
