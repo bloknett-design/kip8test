@@ -1186,14 +1186,15 @@
     .sidebar-item:hover { background: rgba(74, 143, 199, 0.05); border-left-color: rgba(74, 143, 199, 0.4); }
     .sidebar-item svg { flex-shrink: 0; }
 
-    /* <a> вариант sidebar-item — для внешних ссылок (Яндекс Диск и т.п.) */
+    /* <a> вариант sidebar-item — для внешних ссылок (Яндекс Диск и т.п.)
+       Повторяет стили .sidebar-item, но добавляет text-decoration: none. */
     a.sidebar-item {
+        display: flex; align-items: center; gap: 14px;
+        padding: 9px 20px; color: rgba(180, 200, 220, 0.9);
+        font-size: 14px; font-weight: 500; cursor: pointer;
+        transition: all 0.2s; border-left: 3px solid transparent;
+        -webkit-tap-highlight-color: transparent; touch-action: manipulation;
         text-decoration: none;
-        color: inherit;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 10px 14px 10px 38px;
     }
     a.sidebar-item:hover, a.sidebar-item:active {
         background: rgba(255,255,255,0.06);
@@ -1215,9 +1216,14 @@
        SIDEBAR_GROUPS функцией renderSidebar() — для добавления нового
        раздела достаточно добавить запись в этот реестр. */
 
-    /* Пункты внутри группы скрыты по умолчанию, показываются при .expanded */
-    .sidebar-item-extra { display: none; }
-    .sidebar-group.expanded .sidebar-item-extra { display: flex; }
+    /* Пункты внутри группы скрыты по умолчанию, показываются при .expanded.
+       ВАЖНО: правила применяются и к <div>, и к <a> вариантам sidebar-item-extra.
+       Используем комбинированный селектор, чтобы specificity был достаточно высоким
+       для обоих случаев (иначе a.sidebar-item {display:flex} перекрывает .sidebar-item-extra). */
+    .sidebar-item-extra,
+    a.sidebar-item-extra { display: none; }
+    .sidebar-group.expanded .sidebar-item-extra,
+    .sidebar-group.expanded a.sidebar-item-extra { display: flex; }
 
     /* Кликабельный заголовок группы — содержит текст, счётчик и шеврон */
     .sidebar-group-title {
@@ -10507,18 +10513,12 @@ const SIDEBAR_GROUPS = [
         title: 'КИП и А',
         accent: 'blue',
         items: [
-            { target: 'converter',     label: 'Конвертер единиц',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>' },
-            { target: 'scale-signal',  label: 'Шкала-сигнал',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M2 12h6l3-9 4 18 3-9h4"/></svg>' },
-            { target: 'error-select',  label: 'Расчёт погрешности',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' },
-            { target: 'buoy-select',   label: 'Буйковый уровнемер',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M12 2v6"/><path d="M5 8h14l-1 12H6L5 8z"/></svg>' },
-            { target: 'temp-sensors',  label: 'Датчики температуры',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>' },
-            { target: 'orifice-select', label: 'Сужающее устройство',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>' }
+            { target: 'converter',     label: 'Конвертер единиц' },
+            { target: 'scale-signal',  label: 'Шкала-сигнал' },
+            { target: 'error-select',  label: 'Расчёт погрешности' },
+            { target: 'buoy-select',   label: 'Буйковый уровнемер' },
+            { target: 'temp-sensors',  label: 'Датчики температуры' },
+            { target: 'orifice-select', label: 'Сужающее устройство' }
         ]
     },
     // === ПЕРВИЧНЫЙ РАЗДЕЛ: Электротехника ===
@@ -10527,8 +10527,7 @@ const SIDEBAR_GROUPS = [
         title: 'Электротехника',
         accent: 'blue',
         items: [
-            { target: 'circuit-breaker', label: 'Автоматический выключатель',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>' }
+            { target: 'circuit-breaker', label: 'Автоматический выключатель' }
         ]
     },
     // === ПЕРВИЧНЫЙ РАЗДЕЛ: Геометрия ===
@@ -10537,18 +10536,12 @@ const SIDEBAR_GROUPS = [
         title: 'Геометрия',
         accent: 'blue',
         items: [
-            { target: 'geo-circle',   label: 'Круг',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="9"/></svg>' },
-            { target: 'geo-ring',     label: 'Кольцо',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>' },
-            { target: 'geo-cylinder', label: 'Цилиндр вертикальный',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><ellipse cx="12" cy="5" rx="8" ry="2.5"/><path d="M4 5v14c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5V5"/></svg>' },
-            { target: 'geo-horiz',    label: 'Цилиндр горизонтальный',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><ellipse cx="5" cy="12" rx="2" ry="8"/><ellipse cx="19" cy="12" rx="2" ry="8"/><line x1="5" y1="4" x2="19" y2="4"/><line x1="5" y1="20" x2="19" y2="20"/></svg>' },
-            { target: 'geo-sphere',   label: 'Сфера',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 010 18"/><path d="M12 3a15 15 0 000 18"/></svg>' },
-            { target: 'geo-cone',     label: 'Конус',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M12 2L3 20h18z"/><ellipse cx="12" cy="20" rx="9" ry="1.5"/></svg>' }
+            { target: 'geo-circle',   label: 'Круг' },
+            { target: 'geo-ring',     label: 'Кольцо' },
+            { target: 'geo-cylinder', label: 'Цилиндр вертикальный' },
+            { target: 'geo-horiz',    label: 'Цилиндр горизонтальный' },
+            { target: 'geo-sphere',   label: 'Сфера' },
+            { target: 'geo-cone',     label: 'Конус' }
         ]
     },
     // === ПЕРВИЧНЫЙ РАЗДЕЛ: Экзаменационные билеты ===
@@ -10558,14 +10551,10 @@ const SIDEBAR_GROUPS = [
         title: 'Экзаменационные билеты',
         accent: 'docs',
         items: [
-            { target: 'tickets-1000v', label: 'Билеты до 1000 В',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>' },
-            { target: 'tickets-4',     label: 'Билеты на 4 разряд',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>' },
-            { target: 'tickets-5',     label: 'Билеты на 5 разряд',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>' },
-            { target: 'tickets-6',     label: 'Билеты на 6 разряд',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>' }
+            { target: 'tickets-1000v', label: 'Билеты до 1000 В' },
+            { target: 'tickets-4',     label: 'Билеты на 4 разряд' },
+            { target: 'tickets-5',     label: 'Билеты на 5 разряд' },
+            { target: 'tickets-6',     label: 'Билеты на 6 разряд' }
         ]
     },
     // === ПЕРВИЧНЫЙ РАЗДЕЛ: Библиотека КИП и А ===
@@ -10579,14 +10568,10 @@ const SIDEBAR_GROUPS = [
         title: 'Библиотека КИП и А',
         accent: 'docs',
         items: [
-            { url: 'https://disk.yandex.ru/d/JyIJWdDwGsPOSA', label: 'Метрология',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' },
-            { url: 'https://disk.yandex.ru/d/2DPQAftytDKDAQ', label: 'ОТ и ПБ, пожарная безопасность',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M12 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>' },
-            { target: 'library-electro', label: 'Электробезопасность',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>' },
-            { url: 'https://disk.yandex.ru/d/Bc2ASBGtPUxABA', label: 'Справочник',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>' }
+            { url: 'https://disk.yandex.ru/d/JyIJWdDwGsPOSA', label: 'Метрология' },
+            { url: 'https://disk.yandex.ru/d/2DPQAftytDKDAQ', label: 'ОТ и ПБ, пожарная безопасность' },
+            { target: 'library-electro', label: 'Электробезопасность' },
+            { url: 'https://disk.yandex.ru/d/Bc2ASBGtPUxABA', label: 'Справочник' }
         ]
     },
     // === ПЕРВИЧНЫЙ РАЗДЕЛ: КИП ИОС ===
@@ -10599,14 +10584,10 @@ const SIDEBAR_GROUPS = [
         title: 'КИП ИОС',
         accent: 'kipios',
         items: [
-            { target: 'devices',         label: 'Приборы',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>' },
-            { target: 'lockouts-prod',   label: 'Блокировки',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>' },
-            { target: 'valves-prod',     label: 'Клапаны',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M4 4l16 16M4 20L20 4"/><circle cx="12" cy="12" r="2"/></svg>' },
-            { target: 'regulators-prod', label: 'Регуляторы',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="9"/><line x1="12" y1="12" x2="12" y2="6"/><line x1="12" y1="12" x2="16" y2="14"/></svg>' }
+            { target: 'devices',         label: 'Приборы' },
+            { target: 'lockouts-prod',   label: 'Блокировки' },
+            { target: 'valves-prod',     label: 'Клапаны' },
+            { target: 'regulators-prod', label: 'Регуляторы' }
         ]
     }
 ];
@@ -10637,7 +10618,7 @@ function renderSidebar() {
                 '</div>';
             continue;
         }
-        // Пункты
+        // Пункты — только текст, без иконок
         let itemsHtml = '';
         for (const item of group.items) {
             // Внешняя ссылка (например, на Яндекс Диск) — открывается в новой вкладке.
@@ -10645,13 +10626,11 @@ function renderSidebar() {
             if (item.url) {
                 itemsHtml +=
                     '<a href="' + item.url + '" target="_blank" rel="noopener" class="sidebar-item sidebar-item-extra" onclick="toggleSidebar();">' +
-                        item.icon +
                         '<span>' + item.label + '</span>' +
                     '</a>';
             } else {
                 itemsHtml +=
                     '<div class="sidebar-item sidebar-item-extra" onclick="navigateTo(\'' + item.target + '\'); toggleSidebar();">' +
-                        item.icon +
                         '<span>' + item.label + '</span>' +
                     '</div>';
             }
