@@ -7524,24 +7524,36 @@
     }
 
     // ===== КЛАПАНЫ (зеркало блокировок) =====
-    // Поля соответствуют листу "Клапана_app" файла Excel
-    // https://disk.yandex.ru/i/KNVTQ7Q6II7zbA (тот же файл, что и для приборов/блокировок)
-    // Реальная структура полей определяется на этапе парсинга sync-valves.py,
-    // здесь заданы только предполагаемые группы для типичного набора колонок.
-    // Если в данных есть колонки, не указанные в VALVE_FIELDS — они не будут показаны.
+    // Поля соответствуют реальным заголовкам листа "Клапана_app" файла Excel
+    // https://disk.yandex.ru/i/B8-c9XnMZlgTkw (тот же файл, что и для приборов/блокировок)
+    // Лист не имеет колонки "ID" — sync-valves.py копирует "№ п/п" в record['ID']
+    // Группировка: 1 — идентификация, 2 — характеристики, 3 — исполнение,
+    // 4 — производство/расположение, 5 — проектные данные, 6 — примечания.
     const VALVE_FIELDS = [
-        { key: 'Наименование', label: 'Наименование', group: 1 },
-        { key: 'Тип', label: 'Тип', group: 1 },
-        { key: 'Производство', label: 'Производство', group: 1 },
-        { key: 'Назначение', label: 'Назначение', group: 2 },
-        { key: 'Расположение', label: 'Расположение', group: 2 },
-        { key: '№ позиции', label: '№ позиции', group: 3 },
-        { key: '№ СБС', label: '№ СБС', group: 3 },
-        { key: '№ проекта', label: '№ проекта', group: 4 },
-        { key: 'Дата проверки', label: 'Дата проверки', group: 4 },
-        { key: 'В перечне', label: 'В перечне', group: 4 },
-        { key: 'Примечания', label: 'Примечания', group: 5 },
-        { key: 'Замечания', label: 'Замечания', group: 5 },
+        { key: '№ п/п', label: '№ п/п', group: 1 },
+        { key: '№ арматуры/ привода', label: '№ арматуры/привода', group: 1 },
+        { key: 'Марка', label: 'Марка', group: 1 },
+        { key: 'Тип, пропускная характеристика', label: 'Тип, пропускная характеристика', group: 2 },
+        { key: 'Действие', label: 'Действие', group: 2 },
+        { key: 'DN (мм)', label: 'DN (мм)', group: 2 },
+        { key: 'PN (кгс/ см2)', label: 'PN (кгс/см²)', group: 2 },
+        { key: 'Kvy (м3/ч)', label: 'Kvy (м³/ч)', group: 2 },
+        { key: 't рабочей среды (°С)', label: 't рабочей среды (°C)', group: 2 },
+        { key: 'Тип запорной части. Материал затвора/ корпуса', label: 'Тип запорной части. Материал затвора/корпуса', group: 3 },
+        { key: 'Тип присоединения', label: 'Тип присоединения', group: 3 },
+        { key: 'Размер строительный (мм)', label: 'Размер строительный (мм)', group: 3 },
+        { key: 'Межосевое расстояние отверстий под крепёж (мм)/ резьба', label: 'Межосевое расстояние отверстий под крепёж (мм)/резьба', group: 3 },
+        { key: 'Позиционер (усилитель сигнала)', label: 'Позиционер (усилитель сигнала)', group: 3 },
+        { key: 'Год выпуска клапана', label: 'Год выпуска клапана', group: 3 },
+        { key: 'Производство', label: 'Производство', group: 4 },
+        { key: 'Технологическое оборудование', label: 'Технологическое оборудование', group: 4 },
+        { key: 'Назначение арматуры (параметр)', label: 'Назначение арматуры (параметр)', group: 4 },
+        { key: 'Место расположения', label: 'Место расположения', group: 4 },
+        { key: '№ проекта', label: '№ проекта', group: 5 },
+        { key: 'Позиция по проекту (регламенту)', label: 'Позиция по проекту (регламенту)', group: 5 },
+        { key: '№ СБС', label: '№ СБС', group: 5 },
+        { key: '№ САРиРУ', label: '№ САРиРУ', group: 5 },
+        { key: 'Примечание', label: 'Примечание', group: 6 },
     ];
     let valveData = null;
     let valveLoaded = false;
@@ -7650,7 +7662,10 @@
         const query = valveNorm((document.getElementById(id.search)?.value || '').trim());
         let filtered = valveData.valves || [];
 
-        const sortKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
+        // Лист "Клапана_app" содержит только колонку "Производство"
+        // (колонок "Тип"/"Наименование" нет), поэтому для всех режимов
+        // используем "Производство" как ключ сортировки и группировки.
+        const sortKey = 'Производство';
         filtered.sort((a, b) => {
             const va = (a[sortKey] || '').toString().toLowerCase();
             const vb = (b[sortKey] || '').toString().toLowerCase();
@@ -7702,9 +7717,11 @@
 
             for (const item of items) {
                 const itemId = String(item['ID'] ?? '');
-                const name = item['Наименование'] || '(без названия)';
-                const type = item['Тип'] || '';
-                const place = item['Расположение'] || '';
+                // Для клапанов заголовок карточки — Марка (например "25с923нж"),
+                // подзаголовок — тип/пропускная характеристика + место расположения.
+                const name = item['Марка'] || '(без марки)';
+                const type = item['Тип, пропускная характеристика'] || '';
+                const place = item['Место расположения'] || '';
 
                 html += '<div class="valve-card" data-valve-id="' + valveEsc(itemId) + '" data-mode="' + mode + '">';
                 html += '<div class="valve-card-header" onclick="valveOpenDetail(\'' + valveEsc(itemId) + '\')">';
@@ -7787,7 +7804,8 @@
         const titleEl = document.getElementById('valveDetailTitle');
         const content = document.getElementById('valveDetailContent');
         if (!titleEl || !content) return;
-        const name = item['Наименование'] || '(без названия)';
+        // Заголовок страницы — Марка клапана
+        const name = item['Марка'] || '(без марки)';
         titleEl.textContent = name;
 
         let html = '<div class="valve-detail-card">';
@@ -7795,7 +7813,6 @@
         for (const f of VALVE_FIELDS) {
             let val = item[f.key];
             if (val === undefined || val === null || val === '') continue;
-            if (f.key === 'Дата проверки') val = valveFormatDate(val);
             const grpCls = f.group ? ' valve-row-group-' + f.group : '';
             html += '<div class="valve-detail-row' + grpCls + '">';
             html += '<div class="valve-detail-label">' + valveEsc(f.label) + '</div>';
@@ -7839,24 +7856,24 @@
     }
 
     // ===== РЕГУЛЯТОРЫ (зеркало клапанов/блокировок) =====
-    // Поля соответствуют листу "Регуляторы_app" файла Excel
-    // https://disk.yandex.ru/i/KNVTQ7Q6II7zbA (тот же файл, что и для приборов/блокировок/клапанов)
-    // Реальная структура полей определяется на этапе парсинга sync-regulators.py,
-    // здесь заданы только предполагаемые группы для типичного набора колонок.
-    // Если в данных есть колонки, не указанные в REGULATOR_FIELDS — они не будут показаны.
+    // Поля соответствуют реальным заголовкам листа "Регуляторы_app" файла Excel
+    // https://disk.yandex.ru/i/B8-c9XnMZlgTkw (тот же файл, что и для приборов/блокировок/клапанов)
+    // Лист не имеет колонки "ID" — sync-regulators.py копирует "№ п/п" в record['ID']
+    // Группировка: 1 — идентификация, 2 — настроечные параметры ПИД,
+    // 3 — производство/устройство, 4 — проектные данные, 5 — примечания.
     const REGULATOR_FIELDS = [
-        { key: 'Наименование', label: 'Наименование', group: 1 },
-        { key: 'Тип', label: 'Тип', group: 1 },
-        { key: 'Производство', label: 'Производство', group: 1 },
-        { key: 'Назначение', label: 'Назначение', group: 2 },
-        { key: 'Расположение', label: 'Расположение', group: 2 },
-        { key: '№ позиции', label: '№ позиции', group: 3 },
-        { key: '№ СБС', label: '№ СБС', group: 3 },
+        { key: '№ п/п', label: '№ п/п', group: 1 },
+        { key: 'Параметр', label: 'Параметр', group: 1 },
+        { key: '№ САРиРУ', label: '№ САРиРУ', group: 1 },
+        { key: 'Уставка', label: 'Уставка', group: 2 },
+        { key: 'Кп', label: 'Кп', group: 2 },
+        { key: 'Ти', label: 'Ти', group: 2 },
+        { key: 'Тд', label: 'Тд', group: 2 },
+        { key: 'Производство', label: 'Производство', group: 3 },
+        { key: 'Устроиство регулятора или ручного управления', label: 'Устройство регулятора или ручного управления', group: 3 },
         { key: '№ проекта', label: '№ проекта', group: 4 },
-        { key: 'Дата проверки', label: 'Дата проверки', group: 4 },
-        { key: 'В перечне', label: 'В перечне', group: 4 },
-        { key: 'Примечания', label: 'Примечания', group: 5 },
-        { key: 'Замечания', label: 'Замечания', group: 5 },
+        { key: 'Примечание', label: 'Примечание', group: 5 },
+        { key: 'Замечание', label: 'Замечание', group: 5 },
     ];
     let regulatorData = null;
     let regulatorLoaded = false;
@@ -7965,7 +7982,10 @@
         const query = regulatorNorm((document.getElementById(id.search)?.value || '').trim());
         let filtered = regulatorData.regulators || [];
 
-        const sortKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
+        // Лист "Регуляторы_app" содержит только колонку "Производство"
+        // (колонок "Тип"/"Наименование" нет), поэтому для всех режимов
+        // используем "Производство" как ключ сортировки и группировки.
+        const sortKey = 'Производство';
         filtered.sort((a, b) => {
             const va = (a[sortKey] || '').toString().toLowerCase();
             const vb = (b[sortKey] || '').toString().toLowerCase();
@@ -8017,19 +8037,17 @@
 
             for (const item of items) {
                 const itemId = String(item['ID'] ?? '');
-                const name = item['Наименование'] || '(без названия)';
-                const type = item['Тип'] || '';
-                const place = item['Расположение'] || '';
+                // Заголовок карточки регулятора — Параметр,
+                // подзаголовок — Устройство регулятора (краткая сводка).
+                const name = item['Параметр'] || '(без параметра)';
+                const device = item['Устроиство регулятора или ручного управления'] || '';
 
                 html += '<div class="regulator-card" data-regulator-id="' + regulatorEsc(itemId) + '" data-mode="' + mode + '">';
                 html += '<div class="regulator-card-header" onclick="regulatorOpenDetail(\'' + regulatorEsc(itemId) + '\')">';
                 html += '<div class="regulator-card-header-inner">';
                 html += '<div class="regulator-card-text">';
                 html += '<div class="regulator-card-title">' + regulatorMark(name, query) + '</div>';
-                let subtitle = '';
-                if (type) subtitle += type;
-                if (place) subtitle += (subtitle ? ' · ' : '') + place;
-                if (subtitle) html += '<div class="regulator-card-subtitle">' + regulatorMark(subtitle, query) + '</div>';
+                if (device) html += '<div class="regulator-card-subtitle">' + regulatorMark(device, query) + '</div>';
                 html += '</div>';
                 html += '<span class="regulator-card-arrow"></span>';
                 html += '</div>';
@@ -8102,7 +8120,8 @@
         const titleEl = document.getElementById('regulatorDetailTitle');
         const content = document.getElementById('regulatorDetailContent');
         if (!titleEl || !content) return;
-        const name = item['Наименование'] || '(без названия)';
+        // Заголовок страницы — Параметр регулятора
+        const name = item['Параметр'] || '(без параметра)';
         titleEl.textContent = name;
 
         let html = '<div class="regulator-detail-card">';
@@ -8110,7 +8129,6 @@
         for (const f of REGULATOR_FIELDS) {
             let val = item[f.key];
             if (val === undefined || val === null || val === '') continue;
-            if (f.key === 'Дата проверки') val = regulatorFormatDate(val);
             const grpCls = f.group ? ' regulator-row-group-' + f.group : '';
             html += '<div class="regulator-detail-row' + grpCls + '">';
             html += '<div class="regulator-detail-label">' + regulatorEsc(f.label) + '</div>';
