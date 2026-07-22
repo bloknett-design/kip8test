@@ -2,7 +2,7 @@
 """
 Синхронизация перечня приборов КИП ИОС с публичной ссылкой Яндекс Диска.
 
-Источник: https://disk.yandex.ru/i/KNVTQ7Q6II7zbA (файл "Перечень КИП ИОС рабочий.xlsx")
+Источник: https://disk.yandex.ru/i/B8-c9XnMZlgTkw (файл "Перечень КИП ИОС рабочий.xlsx")
 Лист: "Приборы_app"
 
 Скрипт:
@@ -12,7 +12,7 @@
 4. Сохраняет результат в data/devices.json.
 
 Переменные окружения:
-  DEVICES_PUBLIC_KEY — публичная ссылка (по умолчанию https://disk.yandex.ru/i/KNVTQ7Q6II7zbA)
+  DEVICES_PUBLIC_KEY — публичная ссылка (по умолчанию https://disk.yandex.ru/i/B8-c9XnMZlgTkw)
   DEVICES_SHEET_NAME — имя листа (по умолчанию "Приборы_app")
 
 Если нет интернета — использует уже существующий data/devices.json как заглушку.
@@ -38,7 +38,7 @@ except ImportError:
 
 # === Настройки ===
 YANDEX_PUBLIC_API = 'https://cloud-api.yandex.net/v1/disk/public/resources'
-DEFAULT_PUBLIC_KEY = 'https://disk.yandex.ru/i/KNVTQ7Q6II7zbA'
+DEFAULT_PUBLIC_KEY = 'https://disk.yandex.ru/i/B8-c9XnMZlgTkw'
 DEFAULT_SHEET_NAME = 'Приборы_app'
 DOWNLOAD_DIR = Path('/tmp/devices_download')
 DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)

@@ -2,7 +2,7 @@
 """
 Синхронизация блокировок с публичной ссылкой Яндекс Диска.
 
-Источник: https://disk.yandex.ru/i/KNVTQ7Q6II7zbA
+Источник: https://disk.yandex.ru/i/B8-c9XnMZlgTkw
           (файл «Перечень КИП ИОС рабочий.xlsx», тот же что и для приборов)
 Лист: "Блокировки_app"
 
@@ -17,7 +17,7 @@
 
 Переменные окружения:
   LOCKOUTS_PUBLIC_KEY — публичная ссылка
-      (по умолчанию https://disk.yandex.ru/i/KNVTQ7Q6II7zbA)
+      (по умолчанию https://disk.yandex.ru/i/B8-c9XnMZlgTkw)
   LOCKOUTS_SHEET_NAME — имя листа (по умолчанию "Блокировки_app")
 
 Если нет интернета или API недоступен — используется уже существующий
@@ -40,7 +40,7 @@ import openpyxl
 # Настройки Яндекс Диска
 # ============================================================
 YANDEX_PUBLIC_API = 'https://cloud-api.yandex.net/v1/disk/public/resources'
-DEFAULT_PUBLIC_KEY = 'https://disk.yandex.ru/i/KNVTQ7Q6II7zbA'
+DEFAULT_PUBLIC_KEY = 'https://disk.yandex.ru/i/B8-c9XnMZlgTkw'
 DEFAULT_SHEET_NAME = 'Блокировки_app'
 
 DOWNLOAD_DIR = Path('/tmp/lockouts_download')

@@ -2,7 +2,7 @@
 """
 Синхронизация клапанов с публичной ссылкой Яндекс Диска.
 
-Источник: https://disk.yandex.ru/i/KNVTQ7Q6II7zbA
+Источник: https://disk.yandex.ru/i/B8-c9XnMZlgTkw
           (файл «Перечень КИП ИОС рабочий.xlsx», тот же что и для приборов/блокировок)
 Лист: "Клапана_app"
 
@@ -17,7 +17,7 @@
 
 Переменные окружения:
   VALVES_PUBLIC_KEY — публичная ссылка
-      (по умолчанию https://disk.yandex.ru/i/KNVTQ7Q6II7zbA)
+      (по умолчанию https://disk.yandex.ru/i/B8-c9XnMZlgTkw)
   VALVES_SHEET_NAME — имя листа (по умолчанию "Клапана_app")
 
 Если нет интернета или API недоступен — используется уже существующий
@@ -40,7 +40,7 @@ import openpyxl
 # Настройки Яндекс Диска
 # ============================================================
 YANDEX_PUBLIC_API = 'https://cloud-api.yandex.net/v1/disk/public/resources'
-DEFAULT_PUBLIC_KEY = 'https://disk.yandex.ru/i/KNVTQ7Q6II7zbA'
+DEFAULT_PUBLIC_KEY = 'https://disk.yandex.ru/i/B8-c9XnMZlgTkw'
 DEFAULT_SHEET_NAME = 'Клапана_app'
 
 DOWNLOAD_DIR = Path('/tmp/valves_download')
@@ -151,10 +151,20 @@ def parse_valves(xlsx_path, sheet_name):
             if h:  # пропускаем пустые заголовки
                 record[h] = v
 
-        # Пропускаем строки без ID и без Наименования
-        id_val = record.get('ID', '').strip() if isinstance(record.get('ID'), str) else record.get('ID')
-        name_val = record.get('Наименование', '').strip() if isinstance(record.get('Наименование'), str) else record.get('Наименование')
-        if (id_val == '' or id_val is None) and (name_val == '' or name_val is None):
+        # Лист "Клапана_app" не имеет колонки "ID" — используем "№ п/п"
+        # в качестве идентификатора. Если колонка "№ п/п" есть, копируем
+        # её значение в record['ID'] для совместимости с JS-логикой PWA.
+        if 'ID' not in record and '№ п/п' in record:
+            record['ID'] = record['№ п/п']
+
+        # Пропускаем строки без ID и без Марки (основное поле клапана)
+        id_val = record.get('ID', '')
+        if isinstance(id_val, str):
+            id_val = id_val.strip()
+        mark_val = record.get('Марка', '')
+        if isinstance(mark_val, str):
+            mark_val = mark_val.strip()
+        if (id_val == '' or id_val is None) and (mark_val == '' or mark_val is None):
             skipped += 1
             continue
 
