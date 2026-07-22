@@ -2017,6 +2017,22 @@
         padding: 0;
     }
 
+    /* Выравнивание расстояния между кнопками внутри блока КИП ИОС.
+       Кнопка «Приборы» обёрнута в .dev-swipe-cell (для swipe-жестов),
+       у которого есть собственный margin-bottom. Внутри .kip-ios-block
+       обнуляем этот margin, чтобы все 4 кнопки имели одинаковый зазор. */
+    .kip-ios-block .dev-swipe-cell {
+        margin-bottom: 0;
+    }
+    /* Единый зазор для всех кнопок внутри блока */
+    .kip-ios-block .menu-btn-row {
+        gap: 6px;
+    }
+    .kip-ios-block .menu-btn {
+        margin-bottom: 0;
+    }
+
+
     .pb-section {
         margin: 6px 8px 8px;
         border: 1px solid rgba(255,255,255,0.07);
@@ -10518,24 +10534,35 @@ const SIDEBAR_GROUPS = [
         ]
     },
     // === ПЕРВИЧНЫЙ РАЗДЕЛ: Экзаменационные билеты ===
-    // Самостоятельная страница, не имеет вторичных подразделов.
-    // Клик по заголовку ведёт напрямую на страницу (без аккордеона).
+    // Вторичные пункты — подкатегории билетов по разрядам.
     {
         id: 'exam-tickets',
         title: 'Экзаменационные билеты',
         accent: 'docs',
-        target: 'exam-tickets',
-        items: []
+        items: [
+            { target: 'tickets-1000v', label: 'Билеты до 1000 В',
+              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>' },
+            { target: 'tickets-4',     label: 'Билеты на 4 разряд',
+              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>' },
+            { target: 'tickets-5',     label: 'Билеты на 5 разряд',
+              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>' },
+            { target: 'tickets-6',     label: 'Билеты на 6 разряд',
+              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>' }
+        ]
     },
     // === ПЕРВИЧНЫЙ РАЗДЕЛ: Библиотека КИП и А ===
-    // Самостоятельная страница, не имеет вторичных подразделов.
-    // Клик по заголовку ведёт напрямую на страницу (без аккордеона).
+    // Вторичный пункт — подраздел «Электробезопасность».
+    // Сама страница «Библиотека» также доступна напрямую из дашборда
+    // (через navigateTo('library') → редирект на library-internal),
+    // но в боковом меню показываем только её скрытые подразделы.
     {
         id: 'library',
         title: 'Библиотека КИП и А',
         accent: 'docs',
-        target: 'library',
-        items: []
+        items: [
+            { target: 'library-electro', label: 'Электробезопасность',
+              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>' }
+        ]
     },
     // === ПЕРВИЧНЫЙ РАЗДЕЛ: КИП ИОС ===
     // Вторичные пункты — четыре подраздела перечня КИП ИОС.
