@@ -6539,12 +6539,6 @@
         { key: 'Замечания', label: 'Замечания', group: 4 },
     ];
 
-    // Словарь "нормализованный_путь → URL" из data/devices-images.json.
-    // Заполняется в devLoad() параллельно с devices.json.
-    // Если файл недоступен или пуст — остаётся пустым объектом,
-    // и devGetImageUrl() просто вернёт placeholder для путей.
-    let devImages = {};
-
     // SVG-заставка для приборов без картинки или при загрузке
     const DEV_PLACEHOLDER_SVG = 'data:image/svg+xml,' + encodeURIComponent(
         '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">' +
@@ -6554,35 +6548,18 @@
         '</svg>'
     );
 
-    // Нормализация пути картинки из поля "Изображение" в ключ для поиска в devImages.
-    // Примеры входа:
-    //   "кип_app\\СИ_Images\\flow\\пульсар тх.png" → "СИ_Images/flow/пульсар тх.png"
-    //   "СИ_Images\\flow\\пульсар тх.png"          → "СИ_Images/flow/пульсар тх.png"
-    //   "СИ_Images/flow/пульсар тх.png"             → "СИ_Images/flow/пульсар тх.png"
-    function devNormalizeImagePath(raw) {
-        if (!raw) return '';
-        let s = String(raw).trim();
-        if (!s) return '';
-        // Приводим обратные слэши к прямым
-        s = s.replace(/\\/g, '/');
-        // Убираем префикс "кип_app/" в начале (1-е вхождение)
-        s = s.replace(/^кип_app\//i, '');
-        return s;
-    }
-
     // Получить URL картинки для прибора.
     // Приоритет:
-    //   1. base64 data URI в поле "Изображение" — возвращает как есть.
-    //   2. Прямая ссылка https://disk.yandex.ru/i/... или любой http(s) URL в "Изображение" — возвращает как есть.
-    //   3. Нормализованный путь найден в devImages (заполнен из devices-images.json) — возвращает URL.
-    //   4. Иначе — SVG-заставка.
+    //   1. base64 data URI в поле "Изображение" — возвращается как есть.
+    //      (sync-devices.py разрешает share-ссылки https://disk.yandex.ru/i/...
+    //       из Excel-таблицы и встраивает их как base64 в devices.json.)
+    //   2. Прямая ссылка http(s)://... в поле "Изображение" — возвращается как есть.
+    //   3. Иначе — SVG-заставка.
     function devGetImageUrl(dev) {
         const img = (dev['Изображение'] || '').trim();
         if (!img) return DEV_PLACEHOLDER_SVG;
         if (img.startsWith('data:image/')) return img;
         if (/^https?:\/\//i.test(img)) return img;
-        const key = devNormalizeImagePath(img);
-        if (key && devImages[key]) return devImages[key];
         return DEV_PLACEHOLDER_SVG;
     }
 
@@ -6590,31 +6567,13 @@
         if (devLoaded) return devData;
         try {
             const bust = '?v=' + Date.now();
-            // Загружаем devices.json и devices-images.json параллельно.
-            // devices-images.json не критичен — если он пуст или 404,
-            // просто останется пустым объектом и в карточках будет placeholder.
-            const [devResp, imgResp] = await Promise.all([
-                fetch('data/devices.json' + bust, { cache: 'no-store' }),
-                fetch('data/devices-images.json' + bust, { cache: 'no-store' }).catch(() => null),
-            ]);
+            const devResp = await fetch('data/devices.json' + bust, { cache: 'no-store' });
             if (!devResp.ok) throw new Error('HTTP ' + devResp.status);
             devData = await devResp.json();
             // Сохраняем в localStorage
             try {
                 localStorage.setItem('kip8test:' + DEV_CACHE_KEY, JSON.stringify(devData));
             } catch (e) {}
-            // Загружаем словарь картинок (если файл доступен)
-            if (imgResp && imgResp.ok) {
-                try {
-                    const imgData = await imgResp.json();
-                    if (imgData && imgData.images && typeof imgData.images === 'object') {
-                        devImages = imgData.images;
-                        console.log('[devices] Загружено URL картинок: ' + Object.keys(devImages).length);
-                    }
-                } catch (e) {
-                    console.warn('[devices] Не удалось распарсить devices-images.json:', e);
-                }
-            }
             devLoaded = true;
             return devData;
         } catch (e) {
@@ -7284,7 +7243,7 @@
 
     // ===== БЛОКИРОВКИ =====
     // Поля соответствуют листу "Блокировки_app" файла Excel
-    // https://disk.yandex.ru/i/KNVTQ7Q6II7zbA (тот же файл, что и для приборов)
+    // https://disk.yandex.ru/i/B8-c9XnMZlgTkw (тот же файл, что и для приборов)
     const LOCK_FIELDS = [
         { key: 'Параметр', label: 'Параметр', group: 1 },
         { key: 'Производство', label: 'Производство', group: 1 },

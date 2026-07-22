@@ -29,13 +29,13 @@
 
 | Переменная | В kip8 | В kip8test (этот репо) |
 |------------|--------|------------------------|
-| `CACHE_VERSION` | `kipia-v15` | `kipia-test-v123` |
+| `CACHE_VERSION` | `kipia-v15` | `kipia-test-v124` |
 | `IMAGE_CACHE_VERSION` | `kipia-images-v1` | `kipia-images-test-v1` |
 
 **Почему это важно:** Cache Storage общий на весь origin `bloknett-design.github.io`. Одинаковые имена кэшей привели бы к взаимному удалению данных и поломке офлайн-режима в обоих репозиториях.
 
 При обновлении файлов в этом репо **инкрементируйте** `CACHE_VERSION`:
-- `kipia-test-v1` → `kipia-test-v2` → … → `kipia-test-v123` (текущая)
+- `kipia-test-v1` → `kipia-test-v2` → … → `kipia-test-v124` (текущая)
 
 ### 3. `index.html` — изоляция localStorage
 
@@ -135,8 +135,8 @@ git push origin main
 
 ### 3. Cache Storage
 - [ ] DevTools → Application → Cache Storage
-- [ ] Должен быть кэш `kipia-test-v123` (НЕ `kipia-v15`!)
-- [ ] В кэше должны быть: `index.html`, `manifest.json`, `data/exam-tickets.json`, `data/devices.json`, `data/devices-images.json`, `data/lockouts.json`, `data/valves.json`, `data/regulators.json`, иконки
+- [ ] Должен быть кэш `kipia-test-v124` (НЕ `kipia-v15`!)
+- [ ] В кэше должны быть: `index.html`, `manifest.json`, `data/exam-tickets.json`, `data/devices.json`, `data/lockouts.json`, `data/valves.json`, `data/regulators.json`, иконки
 - [ ] Опционально: кэш `kipia-images-test-v1` для картинок Google Drive
 
 ### 4. localStorage
@@ -154,13 +154,12 @@ git push origin main
 - [ ] Открыть параллельно https://bloknett-design.github.io/kip8/
 - [ ] Переключить тему в kip8test (тёмная ↔ светлая)
 - [ ] Тема в kip8 **НЕ должна измениться**
-- [ ] Проверить Cache Storage в kip8 — кэш `kipia-v15` должен быть на месте, `kipia-test-v123` не должен появиться
+- [ ] Проверить Cache Storage в kip8 — кэш `kipia-v15` должен быть на месте, `kipia-test-v124` не должен появиться
 
 ### 7. Картинки приборов
 - [ ] Открыть раздел «Приборы»
-- [ ] В карточках приборов с заполненным полем «Изображение» должна отображаться картинка (если в `data/devices-images.json` есть URL для соответствующего пути)
-- [ ] Если URL отсутствует — показывается SVG-заставка с надписью «КИП»
-- [ ] В Console должно появиться сообщение `[devices] Загружено URL картинок: N` (N = количество записей в `devices-images.json`)
+- [ ] В карточках приборов с заполненным полем «Изображение» (share-ссылка из Excel → base64 в `devices.json`) должна отображаться картинка
+- [ ] Если для прибора в Excel ещё не указана share-ссылка `https://disk.yandex.ru/i/...` — показывается SVG-заставка с надписью «КИП»
 
 ---
 
@@ -171,7 +170,7 @@ git push origin main
 ```
 1. В kip8test:
    - Внести правки в index.html
-   - Инкрементировать CACHE_VERSION в sw.js: kipia-test-v123 → kipia-test-v124
+   - Инкрементировать CACHE_VERSION в sw.js: kipia-test-v124 → kipia-test-v125
    - Запустить тесты: node tests/run-all.js (ожидается 207 passed)
    - Запушить в kip8test
    - Проверить на https://bloknett-design.github.io/kip8test/
@@ -211,27 +210,24 @@ git push origin main
 
 | Файл | Изменён для kip8test | Действие при переносе в kip8 |
 |------|---------------------|------------------------------|
-| `index.html` | ✅ Добавлен `isolateLocalStorage()`, расширен `devGetImageUrl()` для preview-картинок | Скопировать, **удалить** блок `isolateLocalStorage()` |
+| `index.html` | ✅ Добавлен `isolateLocalStorage()`, `devGetImageUrl()` для preview-картинок (base64 + прямые URL) | Скопировать, **удалить** блок `isolateLocalStorage()` |
 | `manifest.json` | ✅ Все `/kip8/` → `/kip8test/` | **Не копировать** — в kip8 свои пути |
-| `sw.js` | ✅ `kipia-test-*` имена кэшей, добавлен `data/devices-images.json` в ASSETS | Скопировать код, **вернуть** имена `kipia-v*`, инкрементировать версию |
+| `sw.js` | ✅ `kipia-test-*` имена кэшей | Скопировать код, **вернуть** имена `kipia-v*`, инкрементировать версию |
 | `.github/workflows/update-exam-tickets.yml` | ✅ Cron закомментирован | **Не копировать** — в kip8 cron нужен |
 | `.github/workflows/ci.yml` | ❌ Без изменений | Можно копировать |
 | `.github/workflows/sync-devices.yml` | ✅ Cron закомментирован | **Не копировать** — в kip8 cron нужен |
 | `.github/workflows/sync-lockouts.yml` | ✅ Cron закомментирован | **Не копировать** — в kip8 cron нужен |
 | `.github/workflows/sync-valves.yml` | ✅ Cron закомментирован | **Не копировать** — в kip8 cron нужен |
 | `.github/workflows/sync-regulators.yml` | ✅ Cron закомментирован | **Не копировать** — в kip8 cron нужен |
-| `.github/workflows/sync-devices-images.yml` | ❌ Без изменений (только `workflow_dispatch`) | Можно копировать |
 | `tests/` | ❌ Без изменений | Можно копировать |
 | `scripts/convert-exam-tickets.py` | ✅ Переведён с OneDrive на Яндекс Диск (Public API) | Можно копировать |
 | `scripts/sync-devices.py` | ✅ Обновлена ссылка Яндекс Диска | Можно копировать |
 | `scripts/sync-lockouts.py` | ✅ Добавлен скрипт | Можно копировать |
 | `scripts/sync-valves.py` | ✅ Адаптирован под лист «Клапана_app» | Можно копировать |
 | `scripts/sync-regulators.py` | ✅ Адаптирован под лист «Регуляторы_app» | Можно копировать |
-| `scripts/sync-devices-images.py` | ❌ Без изменений | Можно копировать |
 | `images/` | ❌ Без изменений | Можно копировать |
 | `data/exam-tickets.json` | ❌ Без изменений | Можно копировать |
-| `data/devices.json` | ❌ Без изменений | Можно копировать |
-| `data/devices-images.json` | ✅ Подключён к UI (preview-картинки в карточках приборов) | Можно копировать |
+| `data/devices.json` | ❌ Без изменений (включая base64-картинки, разрешённые из share-ссылок) | Можно копировать |
 | `data/lockouts.json` | ❌ Без изменений | Можно копировать |
 | `data/valves.json` | ❌ Без изменений | Можно копировать |
 | `data/regulators.json` | ❌ Без изменений | Можно копировать |
@@ -258,8 +254,8 @@ grep 'CACHE_VERSION\|IMAGE_CACHE_VERSION' sw.js
 # Проверка префикса localStorage в index.html
 grep 'PREFIX' index.html
 
-# Ручной запуск sync-devices-images.py (картинки приборов)
-python3 scripts/sync-devices-images.py
+# Ручной запуск sync-devices.py (приборы + разрешение share-ссылок → base64)
+python3 scripts/sync-devices.py
 ```
 
 ---
@@ -276,7 +272,7 @@ python3 scripts/sync-devices-images.py
 
 5. **НЕ коммитить `signing.keystore` и пароли.** Как и в основном репозитории — критично.
 
-6. **НЕ удалять `data/phonebook.json` и `scripts/sync-devices-images.py`/`.github/workflows/sync-devices-images.yml`/`data/devices-images.json`** — эти файлы используются PWA (телефонный справочник и картинки приборов соответственно).
+6. **НЕ удалять `data/phonebook.json`** — файл используется PWA (телефонный справочник, обновляется вручную).
 
 ---
 
@@ -318,54 +314,45 @@ data/phonebook.json (закоммичен в репо)
 
 ## 🖼 Картинки приборов (preview в карточках)
 
-В карточках приборов (раздел «Приборы») отображаются preview-изображения, если для прибора указано поле `Изображение`.
+В карточках приборов (раздел «Приборы») отображаются preview-изображения, если для прибора в Excel-таблице «Перечень КИП ИОС рабочий.xlsx» (лист «Приборы_app», колонка «Изображение») указана индивидуальная публичная ссылка Яндекс Диска вида `https://disk.yandex.ru/i/...`.
 
 ### Архитектура
 
 ```
-Папка Яндекс Диска: кип_app/СИ_Images/{категория}/{имя_файла}.png
-    ↓ (GitHub Actions, ручной запуск)
-scripts/sync-devices-images.py
-    ↓ (Yandex Disk Public API: список файлов → preview/file URL)
-data/devices-images.json (словарь "нормализованный_путь → URL")
-    ↓ (PWA: fetch + devGetImageUrl)
-Карточка прибора: <img src="URL из словаря">
+Excel-таблица «Перечень КИП ИОС рабочий.xlsx», лист «Приборы_app», колонка «Изображение»
+    → содержит индивидуальные публичные share-ссылки https://disk.yandex.ru/i/<ID>
+    ↓ (GitHub Actions: workflow_dispatch «Update Devices (TEST)»)
+scripts/sync-devices.py → resolve_share_link_images()
+    ↓ (Yandex Disk Public API: share-ссылка → file URL → бинарные данные → base64 data URI)
+data/devices.json (поле «Изображение» содержит base64 data URI)
+    ↓ (PWA: fetch devices.json → devGetImageUrl())
+Карточка прибора: <img src="data:image/jpeg;base64,...">
 ```
+
+**Ключевое:** доступ к общей папке `/СИ_Images` на Яндекс Диске **не нужен**. Каждая картинка загружается по своей индивидуальной публичной ссылке, прописанной в Excel-таблице. Это означает, что:
+- добавление/удаление картинки = правка одной ячейки в Excel + повторный запуск `sync-devices.py`;
+- нет отдельного скрипта `sync-devices-images.py` и файла `data/devices-images.json` — эта инфраструктура удалена как избыточная;
+- base64 встраивается прямо в `devices.json`, поэтому картинки доступны офлайн (кэшируются вместе с `devices.json` в Service Worker).
 
 ### Логика `devGetImageUrl(dev)`
 
-Приоритет выбора URL для картинки:
+Приоритет выбора URL для картинки в карточке прибора:
 
-1. **base64 data URI** в поле `Изображение` (`data:image/...`) — возвращается как есть.
-2. **Прямая ссылка** `http(s)://...` в поле `Изображение` — возвращается как есть.
-3. **Путь** вида `кип_app\СИ_Images\flow\пульсар тх.png` — нормализуется в `СИ_Images/flow/пульсар тх.png` и ищется в `devImages` (загружается из `data/devices-images.json`). Если найден — возвращается URL.
-4. **Иначе** — SVG-заставка с надписью «КИП».
+1. **base64 data URI** в поле `Изображение` (`data:image/...`) — возвращается как есть. Это основной путь: `sync-devices.py` заранее разрешает все share-ссылки и встраивает base64 в `devices.json`.
+2. **Прямая ссылка** `http(s)://...` в поле `Изображение` — возвращается как есть. Если по какой-то причине `sync-devices.py` не смог разрешить share-ссылку, она остаётся в поле как URL и PWA попробует загрузить её напрямую.
+3. **Иначе** — SVG-заставка с надписью «КИП». Это касается приборов, у которых в Excel колонка «Изображение» пуста или содержит устаревший путь вида `кип_app\СИ_Images\...` (такие пути не обрабатываются и должны быть заменены на share-ссылки).
 
-### Загрузка `devices-images.json` в PWA
+### Если картинка не отображается
 
-Файл `data/devices-images.json` загружается в `index.html` параллельно с `data/devices.json` в функции `devLoad()`. Загрузка некритична: если файл недоступен (404) или пуст, `devImages` остаётся пустым объектом, и для всех путей показывается SVG-заставка. Когда файл будет обновлён (после успешного запуска `sync-devices-images.py`), картинки автоматически появятся в карточках при следующей загрузке PWA.
+1. Проверить, что в Excel в колонке «Изображение» для нужного прибора стоит именно `https://disk.yandex.ru/i/...` (а не путь вида `кип_app\СИ_Images\...`).
+2. Запустить workflow «Update Devices (TEST)» в GitHub Actions (или локально `python3 scripts/sync-devices.py`) — скрипт скачает Excel, разрешит share-ссылки и пересоберёт `data/devices.json`.
+3. Инкрементировать `CACHE_VERSION` в `sw.js`, закоммитить обновлённые `data/devices.json` и `sw.js`, запушить.
+4. В PWA (после обновления Service Worker) карточка прибора покажет картинку.
 
-Файл также пред-кэшируется в Service Worker (добавлен в массив `ASSETS` в `sw.js`), поэтому доступен офлайн.
+### Ограничения
 
-### Файлы
-
-| Файл | Назначение |
-|------|------------|
-| `scripts/sync-devices-images.py` | Скрипт сбора URL картинок с Яндекс Диска |
-| `.github/workflows/sync-devices-images.yml` | GitHub Actions workflow (ручной запуск) |
-| `data/devices-images.json` | Словарь путь→URL (закоммичен в репо) |
-
-### Ручной запуск обновления картинок
-
-В GitHub: Actions → "Update Devices Images (TEST)" → Run workflow. Или локально:
-
-```bash
-python3 scripts/sync-devices-images.py
-```
-
-### Если папка Яндекс Диска недоступна
-
-Скрипт выведет `HTTP 404 для path=/СИ_Images` и сохранит `devices-images.json` с `total_images: 0`. PWA продолжит работать с SVG-заставками. Чтобы восстановить картинки, нужно проверить публичную ссылку `https://disk.yandex.ru/d/cCyJzs4tThjxYA` и наличие в ней папки `СИ_Images`.
+- `sync-devices.py` использует библиотеку **Pillow** для уменьшения картинок до 150×150 px. Если Pillow не установлен в окружении запуска — share-ссылки не разрешаются и в `devices.json` остаются как текст (картинки не отобразятся). В GitHub Actions Pillow устанавливается по умолчанию.
+- Дублирующиеся share-ссылки (одно и то же изображение у нескольких приборов) скачиваются один раз и переиспользуются — это оптимизация в `resolve_share_link_images()`.
 
 ---
 
@@ -391,6 +378,25 @@ python3 scripts/sync-devices-images.py
 
 ## 🆕 История обновлений
 
+### 2026-07-22 — удаление избыточной инфраструктуры `devices-images.json`
+
+**Контекст:** предыдущая архитектура preview-картинок приборов опиралась на отдельный скрипт `sync-devices-images.py`, который перебирал общую папку Яндекс Диска `https://disk.yandex.ru/d/cCyJzs4tThjxYA` (подпапка `/СИ_Images`) и собирал словарь «путь → URL» в `data/devices-images.json`. На практике этот подход не работал (папка отдаёт 404, в JSON попадало 0 картинок), да и не нужен: каждая картинка прибора имеет индивидуальную публичную ссылку `https://disk.yandex.ru/i/...`, прописанную прямо в Excel-таблице в колонке «Изображение».
+
+**Что изменилось:**
+
+1. Удалены файлы:
+   - `data/devices-images.json` (всегда был пуст: `total_images: 0`);
+   - `scripts/sync-devices-images.py` (перебор общей папки больше не нужен);
+   - `.github/workflows/sync-devices-images.yml` (workflow для удалённого скрипта).
+
+2. `index.html`: из `devLoad()` убрана параллельная загрузка `devices-images.json`, удалён словарь `devImages`, удалена функция `devNormalizeImagePath()`, упрощена `devGetImageUrl()` — теперь только 3 ветки: base64 / прямой URL / SVG-заставка.
+
+3. `sw.js`: `CACHE_VERSION` v123 → v124; из массива `ASSETS` удалён `./data/devices-images.json`.
+
+4. `README.md`: переписан раздел «🖼 Картинки приборов» — теперь описывает реальную архитектуру (share-ссылки в Excel → `sync-devices.py` → base64 в `devices.json` → `devGetImageUrl()`); обновлены чек-листы и сводная таблица файлов.
+
+**Результат:** preview-картинки приборов работают через существующий механизм `sync-devices.py` (функция `resolve_share_link_images()` уже умеет скачивать share-ссылки и встраивать их как base64). Чтобы картинка появилась в карточке, нужно прописать её share-ссылку в Excel-таблице и перезапустить workflow «Update Devices (TEST)».
+
 ### 2026-07-22 — обновление sync-скриптов и UI клапанов/регуляторов
 
 **Что изменилось:**
@@ -405,8 +411,6 @@ python3 scripts/sync-devices-images.py
 
 4. Адаптирована JS-логика отображения карточек: заголовок карточки клапана = Марка, регулятора = Параметр; сортировка/группировка в обоих подразделах по полю «Производство».
 
-5. Service Worker: `CACHE_VERSION` v121 → v122 → v123; в `ASSETS` добавлены `data/lockouts.json`, `data/regulators.json`, `data/devices-images.json`.
+5. Service Worker: `CACHE_VERSION` v121 → v122 → v123; в `ASSETS` добавлены `data/lockouts.json`, `data/regulators.json`.
 
-6. Подключён `data/devices-images.json` к UI: функция `devGetImageUrl()` теперь ищет URL по нормализованному пути в словаре `devImages`, который загружается параллельно с `devices.json`.
-
-7. Тесты: все 207 тестов проходят (0 failed).
+6. Тесты: все 207 тестов проходят (0 failed).
