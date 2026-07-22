@@ -10425,6 +10425,8 @@
 // Счётчик (N) в заголовке пересчитается автоматически.
 
 const SIDEBAR_GROUPS = [
+    // === ПЕРВИЧНЫЙ РАЗДЕЛ: КИП и А ===
+    // Вторичные пункты — калькуляторы этого раздела.
     {
         id: 'kipa',
         title: 'КИП и А',
@@ -10444,6 +10446,7 @@ const SIDEBAR_GROUPS = [
               icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>' }
         ]
     },
+    // === ПЕРВИЧНЫЙ РАЗДЕЛ: Электротехника ===
     {
         id: 'electro',
         title: 'Электротехника',
@@ -10453,6 +10456,7 @@ const SIDEBAR_GROUPS = [
               icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>' }
         ]
     },
+    // === ПЕРВИЧНЫЙ РАЗДЕЛ: Геометрия ===
     {
         id: 'geometry',
         title: 'Геометрия',
@@ -10472,63 +10476,27 @@ const SIDEBAR_GROUPS = [
               icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M12 2L3 20h18z"/><ellipse cx="12" cy="20" rx="9" ry="1.5"/></svg>' }
         ]
     },
+    // === ПЕРВИЧНЫЙ РАЗДЕЛ: КИП ИОС ===
+    // Вторичные пункты — четыре подраздела перечня КИП ИОС.
+    // Каждая страница-подраздел имеет свои внутренние фильтры
+    // (по типу / по наименованию / по производствам), но эти фильтры
+    // — третичный уровень и в боковое меню не выносятся.
     {
         id: 'kipios',
         title: 'КИП ИОС',
         accent: 'kipios',
         items: [
-            { target: 'kip-ios',      label: 'Раздел КИП ИОС',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>' },
-            { target: 'devices',      label: 'Приборы',
+            { target: 'devices',         label: 'Приборы',
               icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>' },
-            { target: 'lockouts-prod', label: 'Блокировки',
+            { target: 'lockouts-prod',   label: 'Блокировки',
               icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>' },
-            { target: 'valves-prod',   label: 'Клапаны',
+            { target: 'valves-prod',     label: 'Клапаны',
               icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M4 4l16 16M4 20L20 4"/><circle cx="12" cy="12" r="2"/></svg>' },
             { target: 'regulators-prod', label: 'Регуляторы',
               icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="9"/><line x1="12" y1="12" x2="12" y2="6"/><line x1="12" y1="12" x2="16" y2="14"/></svg>' }
         ]
     },
-    {
-        id: 'devices',
-        title: 'Приборы',
-        accent: 'blue',
-        items: [
-            { target: 'devices-type', label: 'По типу',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(106,166,224,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>' },
-            { target: 'devices-name', label: 'По наименованию',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(106,166,224,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' },
-            { target: 'devices-prod', label: 'По производствам',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(106,166,224,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>' }
-        ]
-    },
-    {
-        id: 'lockouts',
-        title: 'Блокировки',
-        accent: 'lockouts',
-        items: [
-            { target: 'lockouts-prod', label: 'По производствам',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(184,90,122,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>' }
-        ]
-    },
-    {
-        id: 'valves',
-        title: 'Клапаны',
-        accent: 'valves',
-        items: [
-            { target: 'valves-prod', label: 'По производствам',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(74,138,140,0.85);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M4 4l16 16M4 20L20 4"/><circle cx="12" cy="12" r="2"/></svg>' }
-        ]
-    },
-    {
-        id: 'regulators',
-        title: 'Регуляторы',
-        accent: 'regulators',
-        items: [
-            { target: 'regulators-prod', label: 'По производствам',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(126,90,184,0.85);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="9"/><line x1="12" y1="12" x2="12" y2="6"/><line x1="12" y1="12" x2="16" y2="14"/></svg>' }
-        ]
-    },
+    // === ПЕРВИЧНЫЙ РАЗДЕЛ: Документация ===
     {
         id: 'docs',
         title: 'Документация',
@@ -10540,6 +10508,8 @@ const SIDEBAR_GROUPS = [
               icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>' }
         ]
     },
+    // === ПЕРВИЧНЫЙ РАЗДЕЛ: Сервис ===
+    // Самостоятельные страницы, не входящие в тематические разделы.
     {
         id: 'service',
         title: 'Сервис',
