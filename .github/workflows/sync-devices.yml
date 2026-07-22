@@ -7,7 +7,7 @@ name: Update Devices (TEST)
 #
 # КАК НАСТРОИТЬ:
 # По умолчанию используется публичная ссылка:
-#   https://disk.yandex.ru/i/KNVTQ7Q6II7zbA
+#   https://disk.yandex.ru/i/B8-c9XnMZlgTkw
 #   лист: Приборы_app
 # Можно переопределить через переменные окружения в шаге "Download and parse":
 #   DEVICES_PUBLIC_KEY, DEVICES_SHEET_NAME
