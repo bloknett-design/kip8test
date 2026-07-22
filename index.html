@@ -10569,9 +10569,11 @@ const SIDEBAR_GROUPS = [
         ]
     },
     // === ПЕРВИЧНЫЙ РАЗДЕЛ: Библиотека КИП и А ===
-    // Все подразделы библиотеки. 4 из них — внешние ссылки на Яндекс Диск
+    // Все подразделы библиотеки. 3 из них — внешние ссылки на Яндекс Диск
     // (открываются в новой вкладке), 1 (Электробезопасность) — внутренняя
     // страница. Сама страница «Библиотека» доступна напрямую из дашборда.
+    // Подраздел «Приборы» (внешняя ссылка) не вынесен в боковое меню, т.к.
+    // его название дублирует пункт «Приборы» раздела КИП ИОС.
     {
         id: 'library',
         title: 'Библиотека КИП и А',
@@ -10581,8 +10583,6 @@ const SIDEBAR_GROUPS = [
               icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' },
             { url: 'https://disk.yandex.ru/d/2DPQAftytDKDAQ', label: 'ОТ и ПБ, пожарная безопасность',
               icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M12 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>' },
-            { url: 'https://disk.yandex.ru/d/0DnXLISSam_oiw', label: 'Приборы',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>' },
             { target: 'library-electro', label: 'Электробезопасность',
               icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>' },
             { url: 'https://disk.yandex.ru/d/Bc2ASBGtPUxABA', label: 'Справочник',
