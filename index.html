@@ -1186,6 +1186,24 @@
     .sidebar-item:hover { background: rgba(74, 143, 199, 0.05); border-left-color: rgba(74, 143, 199, 0.4); }
     .sidebar-item svg { flex-shrink: 0; }
 
+    /* <a> вариант sidebar-item — для внешних ссылок (Яндекс Диск и т.п.) */
+    a.sidebar-item {
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px 10px 38px;
+    }
+    a.sidebar-item:hover, a.sidebar-item:active {
+        background: rgba(255,255,255,0.06);
+    }
+    [data-theme="light"] a.sidebar-item:hover,
+    [data-theme="light"] a.sidebar-item:active {
+        background: rgba(0,0,0,0.05);
+    }
+
+
     /* ============================================================
        АККОРДЕОН БОКОВОГО МЕНЮ — КЛИКАБЕЛЬНЫЕ ЗАГОЛОВКИ РАЗДЕЛОВ
        ============================================================
@@ -10551,17 +10569,24 @@ const SIDEBAR_GROUPS = [
         ]
     },
     // === ПЕРВИЧНЫЙ РАЗДЕЛ: Библиотека КИП и А ===
-    // Вторичный пункт — подраздел «Электробезопасность».
-    // Сама страница «Библиотека» также доступна напрямую из дашборда
-    // (через navigateTo('library') → редирект на library-internal),
-    // но в боковом меню показываем только её скрытые подразделы.
+    // Все подразделы библиотеки. 4 из них — внешние ссылки на Яндекс Диск
+    // (открываются в новой вкладке), 1 (Электробезопасность) — внутренняя
+    // страница. Сама страница «Библиотека» доступна напрямую из дашборда.
     {
         id: 'library',
         title: 'Библиотека КИП и А',
         accent: 'docs',
         items: [
+            { url: 'https://disk.yandex.ru/d/JyIJWdDwGsPOSA', label: 'Метрология',
+              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' },
+            { url: 'https://disk.yandex.ru/d/2DPQAftytDKDAQ', label: 'ОТ и ПБ, пожарная безопасность',
+              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M12 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>' },
+            { url: 'https://disk.yandex.ru/d/0DnXLISSam_oiw', label: 'Приборы',
+              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>' },
             { target: 'library-electro', label: 'Электробезопасность',
-              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>' }
+              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>' },
+            { url: 'https://disk.yandex.ru/d/Bc2ASBGtPUxABA', label: 'Справочник',
+              icon: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>' }
         ]
     },
     // === ПЕРВИЧНЫЙ РАЗДЕЛ: КИП ИОС ===
@@ -10615,11 +10640,21 @@ function renderSidebar() {
         // Пункты
         let itemsHtml = '';
         for (const item of group.items) {
-            itemsHtml +=
-                '<div class="sidebar-item sidebar-item-extra" onclick="navigateTo(\'' + item.target + '\'); toggleSidebar();">' +
-                    item.icon +
-                    '<span>' + item.label + '</span>' +
-                '</div>';
+            // Внешняя ссылка (например, на Яндекс Диск) — открывается в новой вкладке.
+            // Внутренняя страница — переход через navigateTo().
+            if (item.url) {
+                itemsHtml +=
+                    '<a href="' + item.url + '" target="_blank" rel="noopener" class="sidebar-item sidebar-item-extra" onclick="toggleSidebar();">' +
+                        item.icon +
+                        '<span>' + item.label + '</span>' +
+                    '</a>';
+            } else {
+                itemsHtml +=
+                    '<div class="sidebar-item sidebar-item-extra" onclick="navigateTo(\'' + item.target + '\'); toggleSidebar();">' +
+                        item.icon +
+                        '<span>' + item.label + '</span>' +
+                    '</div>';
+            }
         }
         // Группа целиком: кликабельный заголовок с текстом, счётчиком (N) и шевроном ▼
         html +=
