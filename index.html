@@ -3952,6 +3952,31 @@
             <div id="regulatorDetailContent"></div>
         </div>
 
+        <!-- ======================== СПИСОК ПРИБОРОВ ВНУТРИ ГРУППЫ ======================== -->
+        <div id="page-dev-group" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title" id="devGroupTitle">Приборы</div></div>
+            <div id="devGroupList"></div>
+        </div>
+
+        <!-- ======================== СПИСОК БЛОКИРОВОК ВНУТРИ ГРУППЫ ======================== -->
+        <div id="page-lock-group" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title" id="lockGroupTitle">Блокировки</div></div>
+            <div id="lockGroupList"></div>
+        </div>
+
+        <!-- ======================== СПИСОК КЛАПАНОВ ВНУТРИ ГРУППЫ ======================== -->
+        <div id="page-valve-group" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title" id="valveGroupTitle">Клапаны</div></div>
+            <div id="valveGroupList"></div>
+        </div>
+
+        <!-- ======================== СПИСОК РЕГУЛЯТОРОВ ВНУТРИ ГРУППЫ ======================== -->
+        <div id="page-regulator-group" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title" id="regulatorGroupTitle">Регуляторы</div></div>
+            <div id="regulatorGroupList"></div>
+        </div>
+
+
 <!-- ======================== ИНЖЕНЕРНЫЕ КАЛЬКУЛЯТОРЫ — КИП и А ======================== -->
         <div id="page-calc-kipa" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">КИП и А</div></div>
@@ -7351,37 +7376,83 @@
         const mode = section.getAttribute('data-mode') || 'type';
         const group = section.getAttribute('data-group');
         if (!group) return;
+        if (navigator.vibrate) navigator.vibrate(25);
+        window._devGroupCtx = { mode: mode, group: group };
+        navigateTo('dev-group');
+    }
 
-        const groupKey = mode + '|' + group;
-        const isExpanded = section.classList.contains('expanded');
+    // Рендер отдельной страницы со списком приборов в выбранной группе
+    function devRenderGroup() {
+        const ctx = window._devGroupCtx || {};
+        const mode = ctx.mode || 'type';
+        const group = ctx.group || '';
+        const list = document.getElementById('devGroupList');
+        const titleEl = document.getElementById('devGroupTitle');
+        if (!list) return;
+        if (titleEl) titleEl.textContent = group || 'Приборы';
 
-        if (isExpanded) {
-            // Закрыть текущую
-            section.classList.remove('expanded');
-            delete devGroupExpanded[groupKey];
-            if (navigator.vibrate) navigator.vibrate(20);
-        } else {
-            // Аккордеон: закрыть все остальные группы в этом списке
-            const listIds = { type: 'devTypeList', name: 'devNameList', prod: 'devProdList' };
-            const list = document.getElementById(listIds[mode]);
-            if (list) {
-                list.querySelectorAll('.pb-section.expanded').forEach(s => {
-                    s.classList.remove('expanded');
-                    const sMode = s.getAttribute('data-mode') || mode;
-                    const sGroup = s.getAttribute('data-group');
-                    if (sGroup) delete devGroupExpanded[sMode + '|' + sGroup];
-                });
-            }
-            // Раскрыть текущую
-            section.classList.add('expanded');
-            devGroupExpanded[groupKey] = true;
-            if (navigator.vibrate) navigator.vibrate(30);
-            // Прокрутка с корректировкой после анимации
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => devScrollToGroup(section));
-            });
-            setTimeout(() => devScrollToGroup(section), 450);
+        if (!devLoaded || !devData) {
+            list.innerHTML = '<div class="pb-empty">Загрузка…</div>';
+            return;
         }
+
+        const sortKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
+        // Фильтруем приборы: ID != 0 и принадлежат выбранной группе
+        let items = devData.devices.filter(d => {
+            const idv = d['ID'];
+            if (idv === 0 || idv === '0' || String(idv ?? '').trim() === '0') return false;
+            const g = d[sortKey] || '(без группы)';
+            return g === group;
+        });
+        items.sort((a, b) => {
+            const va = (a['Наименование'] || '').toString().toLowerCase();
+            const vb = (b['Наименование'] || '').toString().toLowerCase();
+            if (va < vb) return -1;
+            if (va > vb) return 1;
+            return 0;
+        });
+
+        if (items.length === 0) {
+            list.innerHTML = '<div class="pb-empty">В группе нет приборов.</div>';
+            return;
+        }
+
+        let html = '<div class="dev-sorted-list">';
+        for (const dev of items) {
+            const devId = String(dev['ID'] ?? '');
+            const name = dev['Наименование'] || '(без названия)';
+            const type = dev['Тип'] || '';
+            const number = dev['№ прибора'] || '';
+            const place = dev['Место установки'] || '';
+            const imgUrl = devGetImageUrl(dev);
+
+            html += '<div class="dev-card" data-dev-id="' + devEsc(devId) + '" data-mode="' + mode + '">';
+            html += '<div class="dev-card-header" onclick="devOpenDetail(\'' + devEsc(devId) + '\')">';
+            html += '<div class="dev-card-header-inner">';
+            html += '<div class="dev-card-image-wrap">';
+            html += '<img class="dev-card-image" src="' + devEsc(imgUrl) + '" alt="' + devEsc(name) + '" loading="lazy">';
+            html += '<div class="dev-card-name-overlay">' + devEsc(name) + '</div>';
+            html += '</div>';
+            html += '<div class="dev-card-text">';
+            html += '<div class="dev-card-title">' + devEsc(name) + '</div>';
+            let subtitle = '';
+            if (type) subtitle += type;
+            if (number) subtitle += (subtitle ? ' · №' : '№') + number;
+            if (place) subtitle += (subtitle ? ' · ' : '') + place;
+            if (subtitle) html += '<div class="dev-card-subtitle">' + devEsc(subtitle) + '</div>';
+            html += '</div>';
+            html += '<div class="dev-card-info-block">';
+            if (type) html += '<div class="dev-card-info-row">' + devEsc(type) + '</div>';
+            if (number) html += '<div class="dev-card-info-row" style="color:#6aa6e0;font-weight:600;">№ ' + devEsc(number) + '</div>';
+            if (place) html += '<div class="dev-card-info-row">' + devEsc(place) + '</div>';
+            html += '</div>';
+            html += '<span class="dev-card-arrow"></span>';
+            html += '</div>'; // header-inner
+            html += '</div>'; // header
+            html += '</div>'; // card
+        }
+        html += '</div>';
+        list.innerHTML = html;
     }
 
     function devScrollToGroup(el) {
@@ -7602,31 +7673,67 @@
         const mode = section.getAttribute('data-mode') || 'type';
         const group = section.getAttribute('data-group');
         if (!group) return;
-        const groupKey = mode + '|' + group;
-        const isExpanded = section.classList.contains('expanded');
-        if (isExpanded) {
-            section.classList.remove('expanded');
-            delete lockGroupExpanded[groupKey];
-            if (navigator.vibrate) navigator.vibrate(20);
-        } else {
-            const listIds = { type: 'lockTypeList', name: 'lockNameList', prod: 'lockProdList' };
-            const list = document.getElementById(listIds[mode]);
-            if (list) {
-                list.querySelectorAll('.pb-section.expanded').forEach(s => {
-                    s.classList.remove('expanded');
-                    const sMode = s.getAttribute('data-mode') || mode;
-                    const sGroup = s.getAttribute('data-group');
-                    if (sGroup) delete lockGroupExpanded[sMode + '|' + sGroup];
-                });
-            }
-            section.classList.add('expanded');
-            lockGroupExpanded[groupKey] = true;
-            if (navigator.vibrate) navigator.vibrate(30);
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => lockScrollToGroup(section));
-            });
-            setTimeout(() => lockScrollToGroup(section), 450);
+        if (navigator.vibrate) navigator.vibrate(25);
+        window._lockGroupCtx = { mode: mode, group: group };
+        navigateTo('lock-group');
+    }
+
+    function lockRenderGroup() {
+        const ctx = window._lockGroupCtx || {};
+        const mode = ctx.mode || 'type';
+        const group = ctx.group || '';
+        const list = document.getElementById('lockGroupList');
+        const titleEl = document.getElementById('lockGroupTitle');
+        if (!list) return;
+        if (titleEl) titleEl.textContent = group || 'Блокировки';
+
+        if (!lockLoaded || !lockData) {
+            list.innerHTML = '<div class="pb-empty">Загрузка…</div>';
+            return;
         }
+
+        const sortKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
+        let items = (lockData.lockouts || []).filter(d => {
+            const g = d[sortKey] || '(без группы)';
+            return g === group;
+        });
+        items.sort((a, b) => {
+            const va = (a['Параметр'] || '').toString().toLowerCase();
+            const vb = (b['Параметр'] || '').toString().toLowerCase();
+            if (va < vb) return -1;
+            if (va > vb) return 1;
+            return 0;
+        });
+
+        if (items.length === 0) {
+            list.innerHTML = '<div class="pb-empty">В группе нет блокировок.</div>';
+            return;
+        }
+
+        let html = '<div class="lock-sorted-list">';
+        for (const item of items) {
+            const itemId = String(item['ID'] ?? '');
+            const name = item['Параметр'] || '(без названия)';
+            const type = item['Уставка'] || '';
+            const place = item['Расположение'] || '';
+
+            html += '<div class="lock-card" data-lock-id="' + lockEsc(itemId) + '" data-mode="' + mode + '">';
+            html += '<div class="lock-card-header" onclick="lockOpenDetail(\'' + lockEsc(itemId) + '\')">';
+            html += '<div class="lock-card-header-inner">';
+            html += '<div class="lock-card-text">';
+            html += '<div class="lock-card-title">' + lockEsc(name) + '</div>';
+            let subtitle = '';
+            if (type) subtitle += type;
+            if (place) subtitle += (subtitle ? ' · ' : '') + place;
+            if (subtitle) html += '<div class="lock-card-subtitle">' + lockEsc(subtitle) + '</div>';
+            html += '</div>';
+            html += '<span class="lock-card-arrow"></span>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+        }
+        html += '</div>';
+        list.innerHTML = html;
     }
 
     function lockScrollToGroup(el) {
@@ -7880,31 +7987,67 @@
         const mode = section.getAttribute('data-mode') || 'type';
         const group = section.getAttribute('data-group');
         if (!group) return;
-        const groupKey = mode + '|' + group;
-        const isExpanded = section.classList.contains('expanded');
-        if (isExpanded) {
-            section.classList.remove('expanded');
-            delete valveGroupExpanded[groupKey];
-            if (navigator.vibrate) navigator.vibrate(20);
-        } else {
-            const listIds = { type: 'valveTypeList', name: 'valveNameList', prod: 'valveProdList' };
-            const list = document.getElementById(listIds[mode]);
-            if (list) {
-                list.querySelectorAll('.pb-section.expanded').forEach(s => {
-                    s.classList.remove('expanded');
-                    const sMode = s.getAttribute('data-mode') || mode;
-                    const sGroup = s.getAttribute('data-group');
-                    if (sGroup) delete valveGroupExpanded[sMode + '|' + sGroup];
-                });
-            }
-            section.classList.add('expanded');
-            valveGroupExpanded[groupKey] = true;
-            if (navigator.vibrate) navigator.vibrate(30);
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => valveScrollToGroup(section));
-            });
-            setTimeout(() => valveScrollToGroup(section), 450);
+        if (navigator.vibrate) navigator.vibrate(25);
+        window._valveGroupCtx = { mode: mode, group: group };
+        navigateTo('valve-group');
+    }
+
+    function valveRenderGroup() {
+        const ctx = window._valveGroupCtx || {};
+        const mode = ctx.mode || 'type';
+        const group = ctx.group || '';
+        const list = document.getElementById('valveGroupList');
+        const titleEl = document.getElementById('valveGroupTitle');
+        if (!list) return;
+        if (titleEl) titleEl.textContent = group || 'Клапаны';
+
+        if (!valveLoaded || !valveData) {
+            list.innerHTML = '<div class="pb-empty">Загрузка…</div>';
+            return;
         }
+
+        const sortKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
+        let items = (valveData.valves || []).filter(d => {
+            const g = d[sortKey] || '(без группы)';
+            return g === group;
+        });
+        items.sort((a, b) => {
+            const va = (a['Наименование'] || '').toString().toLowerCase();
+            const vb = (b['Наименование'] || '').toString().toLowerCase();
+            if (va < vb) return -1;
+            if (va > vb) return 1;
+            return 0;
+        });
+
+        if (items.length === 0) {
+            list.innerHTML = '<div class="pb-empty">В группе нет клапанов.</div>';
+            return;
+        }
+
+        let html = '<div class="valve-sorted-list">';
+        for (const item of items) {
+            const itemId = String(item['ID'] ?? '');
+            const name = item['Наименование'] || '(без названия)';
+            const type = item['Тип'] || '';
+            const place = item['Расположение'] || '';
+
+            html += '<div class="valve-card" data-valve-id="' + valveEsc(itemId) + '" data-mode="' + mode + '">';
+            html += '<div class="valve-card-header" onclick="valveOpenDetail(\'' + valveEsc(itemId) + '\')">';
+            html += '<div class="valve-card-header-inner">';
+            html += '<div class="valve-card-text">';
+            html += '<div class="valve-card-title">' + valveEsc(name) + '</div>';
+            let subtitle = '';
+            if (type) subtitle += type;
+            if (place) subtitle += (subtitle ? ' · ' : '') + place;
+            if (subtitle) html += '<div class="valve-card-subtitle">' + valveEsc(subtitle) + '</div>';
+            html += '</div>';
+            html += '<span class="valve-card-arrow"></span>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+        }
+        html += '</div>';
+        list.innerHTML = html;
     }
 
     function valveScrollToGroup(el) {
@@ -8189,31 +8332,67 @@
         const mode = section.getAttribute('data-mode') || 'type';
         const group = section.getAttribute('data-group');
         if (!group) return;
-        const groupKey = mode + '|' + group;
-        const isExpanded = section.classList.contains('expanded');
-        if (isExpanded) {
-            section.classList.remove('expanded');
-            delete regulatorGroupExpanded[groupKey];
-            if (navigator.vibrate) navigator.vibrate(20);
-        } else {
-            const listIds = { type: 'regulatorTypeList', name: 'regulatorNameList', prod: 'regulatorProdList' };
-            const list = document.getElementById(listIds[mode]);
-            if (list) {
-                list.querySelectorAll('.pb-section.expanded').forEach(s => {
-                    s.classList.remove('expanded');
-                    const sMode = s.getAttribute('data-mode') || mode;
-                    const sGroup = s.getAttribute('data-group');
-                    if (sGroup) delete regulatorGroupExpanded[sMode + '|' + sGroup];
-                });
-            }
-            section.classList.add('expanded');
-            regulatorGroupExpanded[groupKey] = true;
-            if (navigator.vibrate) navigator.vibrate(30);
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => regulatorScrollToGroup(section));
-            });
-            setTimeout(() => regulatorScrollToGroup(section), 450);
+        if (navigator.vibrate) navigator.vibrate(25);
+        window._regulatorGroupCtx = { mode: mode, group: group };
+        navigateTo('regulator-group');
+    }
+
+    function regulatorRenderGroup() {
+        const ctx = window._regulatorGroupCtx || {};
+        const mode = ctx.mode || 'type';
+        const group = ctx.group || '';
+        const list = document.getElementById('regulatorGroupList');
+        const titleEl = document.getElementById('regulatorGroupTitle');
+        if (!list) return;
+        if (titleEl) titleEl.textContent = group || 'Регуляторы';
+
+        if (!regulatorLoaded || !regulatorData) {
+            list.innerHTML = '<div class="pb-empty">Загрузка…</div>';
+            return;
         }
+
+        const sortKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
+        let items = (regulatorData.regulators || []).filter(d => {
+            const g = d[sortKey] || '(без группы)';
+            return g === group;
+        });
+        items.sort((a, b) => {
+            const va = (a['Наименование'] || '').toString().toLowerCase();
+            const vb = (b['Наименование'] || '').toString().toLowerCase();
+            if (va < vb) return -1;
+            if (va > vb) return 1;
+            return 0;
+        });
+
+        if (items.length === 0) {
+            list.innerHTML = '<div class="pb-empty">В группе нет регуляторов.</div>';
+            return;
+        }
+
+        let html = '<div class="regulator-sorted-list">';
+        for (const item of items) {
+            const itemId = String(item['ID'] ?? '');
+            const name = item['Наименование'] || '(без названия)';
+            const type = item['Тип'] || '';
+            const place = item['Расположение'] || '';
+
+            html += '<div class="regulator-card" data-regulator-id="' + regulatorEsc(itemId) + '" data-mode="' + mode + '">';
+            html += '<div class="regulator-card-header" onclick="regulatorOpenDetail(\'' + regulatorEsc(itemId) + '\')">';
+            html += '<div class="regulator-card-header-inner">';
+            html += '<div class="regulator-card-text">';
+            html += '<div class="regulator-card-title">' + regulatorEsc(name) + '</div>';
+            let subtitle = '';
+            if (type) subtitle += type;
+            if (place) subtitle += (subtitle ? ' · ' : '') + place;
+            if (subtitle) html += '<div class="regulator-card-subtitle">' + regulatorEsc(subtitle) + '</div>';
+            html += '</div>';
+            html += '<span class="regulator-card-arrow"></span>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+        }
+        html += '</div>';
+        list.innerHTML = html;
     }
 
     function regulatorScrollToGroup(el) {
@@ -8926,6 +9105,10 @@
         if (page === 'valve-detail') { setTimeout(() => { if (typeof valveRenderDetail === 'function') valveRenderDetail(); }, 30); }
         if (page === 'regulators-prod') { setTimeout(() => { if (typeof regulatorInitSorted === 'function') regulatorInitSorted('prod'); }, 30); }
         if (page === 'regulator-detail') { setTimeout(() => { if (typeof regulatorRenderDetail === 'function') regulatorRenderDetail(); }, 30); }
+        if (page === 'dev-group') { setTimeout(() => { if (typeof devRenderGroup === 'function') devRenderGroup(); }, 30); }
+        if (page === 'lock-group') { setTimeout(() => { if (typeof lockRenderGroup === 'function') lockRenderGroup(); }, 30); }
+        if (page === 'valve-group') { setTimeout(() => { if (typeof valveRenderGroup === 'function') valveRenderGroup(); }, 30); }
+        if (page === 'regulator-group') { setTimeout(() => { if (typeof regulatorRenderGroup === 'function') regulatorRenderGroup(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof devInitEntryButton === 'function') devInitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof kipIOSUpdateLastChange === 'function') kipIOSUpdateLastChange(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof lockInitEntryButton === 'function') lockInitEntryButton(); }, 30); }
