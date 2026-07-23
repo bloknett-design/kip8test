@@ -2015,7 +2015,7 @@
 
     /* ===== Группы приборов в сортировке (непрозрачный фон + аккордеон) ===== */
     .dev-sorted-list {
-        margin: 0 8px;
+        margin: 0;
     }
     .dev-sorted-list.searching .pb-section.dev-group .pb-section-body {
         max-height: 5000px;
@@ -2030,22 +2030,38 @@
     }
 
     .dev-group {
-        margin: 6px 0 8px;
-        border: 1px solid rgba(255,255,255,0.07);
-        border-radius: 12px;
+        margin: 0;
+        border: none;
+        border-radius: 0;
         background: rgba(255,255,255,0.015);
         overflow: hidden;
     }
     [data-theme="light"] .dev-group {
-        border-color: rgba(20,20,19,0.1);
+        border: none;
         background: rgba(255,255,255,0.55);
     }
 
-    /* Непрозрачный фон заголовка группы */
+    /* Непрозрачный фон заголовка группы — край в край, в 2 строки, без стрелки */
     .dev-group .pb-section-title {
         background: #3d3225;
         color: #d4a85c;
         border-bottom: 1px solid rgba(199,150,74,0.2);
+        padding: 14px 16px;
+        min-height: 64px;
+        align-items: center;
+    }
+    .dev-group .pb-section-title-text {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+        line-height: 1.25;
+    }
+    .dev-group .pb-section-title-count {
+        align-self: center;
+    }
+    /* Прячем правую стрелку раскрытия у кнопок разделов Приборы */
+    .dev-group .pb-section-arrow {
+        display: none;
     }
     [data-theme="light"] .dev-group .pb-section-title {
         background: #ede0cc;
