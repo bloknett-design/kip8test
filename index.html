@@ -8706,20 +8706,36 @@
     // Реальная структура полей определяется на этапе парсинга sync-valves.py,
     // здесь заданы только предполагаемые группы для типичного набора колонок.
     // Если в данных есть колонки, не указанные в VALVE_FIELDS — они не будут показаны.
+    // Поля соответствуют листу "Клапаны_app" файла Excel.
+    // Все 22 ключа взяты из реальных столбцов valves.json (sync-valves.py).
     const VALVE_FIELDS = [
-        { key: 'Наименование', label: 'Наименование', group: 1 },
-        { key: 'Тип', label: 'Тип', group: 1 },
-        { key: 'Производство', label: 'Производство', group: 1 },
-        { key: 'Назначение', label: 'Назначение', group: 2 },
-        { key: 'Расположение', label: 'Расположение', group: 2 },
-        { key: '№ позиции', label: '№ позиции', group: 3 },
+        // group 1 -- идентификация и технические характеристики клапана
+        { key: 'Марка', label: 'Марка', group: 1 },
+        { key: 'Тип, пропускная характеристика', label: 'Тип, пропускная характеристика', group: 1 },
+        { key: 'Действие', label: 'Действие', group: 1 },
+        { key: 'DN (мм)', label: 'DN (мм)', group: 1 },
+        { key: 'PN (кгс/ см2)', label: 'PN (кгс/см2)', group: 1 },
+        { key: 'Kvy (м3/ч)', label: 'Kvy (м3/ч)', group: 1 },
+        { key: 't рабочей среды (°С)', label: 't рабочей среды (°C)', group: 1 },
+        { key: 'Тип запорной части. Материал затвора/ корпуса', label: 'Тип запорной части. Материал затвора/корпуса', group: 1 },
+        { key: 'Тип присоединения', label: 'Тип присоединения', group: 1 },
+        { key: 'Размер строительный (мм)', label: 'Размер строительный (мм)', group: 1 },
+        { key: 'Межосевое расстояние отверстий под крепёж (мм)/ резьба', label: 'Межосевое расстояние (мм)/резьба', group: 1 },
+        { key: 'Позиционер (усилитель сигнала)', label: 'Позиционер (усилитель сигнала)', group: 1 },
+        { key: 'Год выпуска клапана', label: 'Год выпуска клапана', group: 1 },
+        // group 2 -- расположение и назначение
+        { key: 'Производство', label: 'Производство', group: 2 },
+        { key: 'Технологическое оборудование', label: 'Технологическое оборудование', group: 2 },
+        { key: 'Назначение арматуры (параметр)', label: 'Назначение арматуры (параметр)', group: 2 },
+        { key: 'Место расположения', label: 'Место расположения', group: 2 },
+        // group 3 -- идентификаторы и привязки (с гиперссылками)
+        { key: '№ арматуры/ привода', label: '№ арматуры/привода', group: 3 },
+        { key: 'Позиция по проекту (регламенту)', label: 'Позиция по проекту (регламенту)', group: 3 },
+        { key: '№ проекта', label: '№ проекта', group: 3 },
         { key: '№ СБС', label: '№ СБС', group: 3 },
         { key: '№ САРиРУ', label: '№ САРиРУ', group: 3 },
-        { key: '№ проекта', label: '№ проекта', group: 4 },
-        { key: 'Дата проверки', label: 'Дата проверки', group: 4 },
-        { key: 'В перечне', label: 'В перечне', group: 4 },
-        { key: 'Примечания', label: 'Примечания', group: 5 },
-        { key: 'Замечания', label: 'Замечания', group: 5 },
+        // group 4 -- примечание
+        { key: 'Примечание', label: 'Примечание', group: 4 },
     ];
     let valveData = null;
     let valveLoaded = false;
@@ -8840,7 +8856,7 @@
         }
         let filtered = valveData.valves || [];
 
-        const sortKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
+        const sortKey = mode === 'type' ? 'Тип, пропускная характеристика' : mode === 'name' ? 'Марка' : 'Производство';
         filtered.sort((a, b) => {
             const va = (a[sortKey] || '').toString().toLowerCase();
             const vb = (b[sortKey] || '').toString().toLowerCase();
@@ -8928,9 +8944,9 @@
 
             for (const item of items) {
                 const itemId = String(item['ID'] ?? '');
-                const name = item['Наименование'] || '(без названия)';
-                const type = item['Тип'] || '';
-                const place = item['Расположение'] || '';
+                const name = item['Марка'] || item['Назначение арматуры (параметр)'] || '(без названия)';
+                const type = item['Тип, пропускная характеристика'] || '';
+                const place = item['Место расположения'] || '';
 
                 html += '<div class="valve-card" data-valve-id="' + valveEsc(itemId) + '" data-mode="' + mode + '">';
                 html += '<div class="valve-card-header" onclick="valveOpenDetail(\'' + valveEsc(itemId) + '\')">';
@@ -8983,14 +8999,14 @@
             return;
         }
 
-        const sortKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
+        const sortKey = mode === 'type' ? 'Тип, пропускная характеристика' : mode === 'name' ? 'Марка' : 'Производство';
         let items = (valveData.valves || []).filter(d => {
             const g = d[sortKey] || '(без группы)';
             return g === group;
         });
         items.sort((a, b) => {
-            const va = (a['Наименование'] || '').toString().toLowerCase();
-            const vb = (b['Наименование'] || '').toString().toLowerCase();
+            const va = (a['Марка'] || a['Назначение арматуры (параметр)'] || '').toString().toLowerCase();
+            const vb = (b['Марка'] || b['Назначение арматуры (параметр)'] || '').toString().toLowerCase();
             if (va < vb) return -1;
             if (va > vb) return 1;
             return 0;
@@ -9048,9 +9064,9 @@
             html += '<div class="pb-section-body">';
             for (const item of gItems) {
                 const itemId = String(item['ID'] ?? '');
-                const name = item['Наименование'] || '(без названия)';
-                const type = item['Тип'] || '';
-                const place = item['Расположение'] || '';
+                const name = item['Марка'] || item['Назначение арматуры (параметр)'] || '(без названия)';
+                const type = item['Тип, пропускная характеристика'] || '';
+                const place = item['Место расположения'] || '';
 
                 html += '<div class="valve-card" data-valve-id="' + valveEsc(itemId) + '" data-mode="' + mode + '">';
                 html += '<div class="valve-card-header" onclick="valveOpenDetail(\'' + valveEsc(itemId) + '\')">';
@@ -9100,7 +9116,7 @@
         const titleEl = document.getElementById('valveDetailTitle');
         const content = document.getElementById('valveDetailContent');
         if (!titleEl || !content) return;
-        const name = item['Наименование'] || '(без названия)';
+        const name = item['Марка'] || item['Назначение арматуры (параметр)'] || '(без названия)';
         titleEl.textContent = name;
 
         let html = '<div class="valve-detail-card">';
@@ -9191,20 +9207,24 @@
     // Реальная структура полей определяется на этапе парсинга sync-regulators.py,
     // здесь заданы только предполагаемые группы для типичного набора колонок.
     // Если в данных есть колонки, не указанные в REGULATOR_FIELDS — они не будут показаны.
+    // Поля соответствуют листу "Регуляторы_app" файла Excel.
+    // Все 10 ключей взяты из реальных столбцов regulators.json (sync-regulators.py).
     const REGULATOR_FIELDS = [
-        { key: 'Наименование', label: 'Наименование', group: 1 },
-        { key: 'Тип', label: 'Тип', group: 1 },
-        { key: 'Производство', label: 'Производство', group: 1 },
-        { key: 'Назначение', label: 'Назначение', group: 2 },
-        { key: 'Расположение', label: 'Расположение', group: 2 },
-        { key: '№ позиции', label: '№ позиции', group: 3 },
-        { key: '№ СБС', label: '№ СБС', group: 3 },
+        // group 1 -- идентификация и наладка регулятора
+        { key: 'Параметр', label: 'Параметр', group: 1 },
+        { key: 'Уставка', label: 'Уставка', group: 1 },
+        { key: 'Кп', label: 'Кп', group: 1 },
+        { key: 'Ти', label: 'Ти', group: 1 },
+        { key: 'Тд', label: 'Тд', group: 1 },
+        { key: 'Устроиство регулятора или ручного управления', label: 'Устройство регулятора или ручного управления', group: 1 },
+        // group 2 -- расположение
+        { key: 'Производство', label: 'Производство', group: 2 },
+        // group 3 -- идентификаторы и привязки (с гиперссылками)
         { key: '№ САРиРУ', label: '№ САРиРУ', group: 3 },
-        { key: '№ проекта', label: '№ проекта', group: 4 },
-        { key: 'Дата проверки', label: 'Дата проверки', group: 4 },
-        { key: 'В перечне', label: 'В перечне', group: 4 },
-        { key: 'Примечания', label: 'Примечания', group: 5 },
-        { key: 'Замечания', label: 'Замечания', group: 5 },
+        { key: '№ проекта', label: '№ проекта', group: 3 },
+        // group 4 -- примечания
+        { key: 'Примечание', label: 'Примечание', group: 4 },
+        { key: 'Замечание', label: 'Замечание', group: 4 },
     ];
     let regulatorData = null;
     let regulatorLoaded = false;
@@ -9321,7 +9341,7 @@
         }
         let filtered = regulatorData.regulators || [];
 
-        const sortKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
+        const sortKey = mode === 'type' ? 'Устроиство регулятора или ручного управления' : mode === 'name' ? 'Параметр' : 'Производство';
         filtered.sort((a, b) => {
             const va = (a[sortKey] || '').toString().toLowerCase();
             const vb = (b[sortKey] || '').toString().toLowerCase();
@@ -9397,9 +9417,9 @@
 
             for (const item of items) {
                 const itemId = String(item['ID'] ?? '');
-                const name = item['Наименование'] || '(без названия)';
-                const type = item['Тип'] || '';
-                const place = item['Расположение'] || '';
+                const name = item['Параметр'] || '(без названия)';
+                const type = item['Устроиство регулятора или ручного управления'] || '';
+                const place = item['Производство'] || '';
 
                 html += '<div class="regulator-card" data-regulator-id="' + regulatorEsc(itemId) + '" data-mode="' + mode + '">';
                 html += '<div class="regulator-card-header" onclick="regulatorOpenDetail(\'' + regulatorEsc(itemId) + '\')">';
@@ -9451,14 +9471,14 @@
             return;
         }
 
-        const sortKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
+        const sortKey = mode === 'type' ? 'Устроиство регулятора или ручного управления' : mode === 'name' ? 'Параметр' : 'Производство';
         let items = (regulatorData.regulators || []).filter(d => {
             const g = d[sortKey] || '(без группы)';
             return g === group;
         });
         items.sort((a, b) => {
-            const va = (a['Наименование'] || '').toString().toLowerCase();
-            const vb = (b['Наименование'] || '').toString().toLowerCase();
+            const va = (a['Параметр'] || '').toString().toLowerCase();
+            const vb = (b['Параметр'] || '').toString().toLowerCase();
             if (va < vb) return -1;
             if (va > vb) return 1;
             return 0;
@@ -9498,9 +9518,9 @@
             html += '<div class="pb-section-body">';
             for (const item of gItems) {
                 const itemId = String(item['ID'] ?? '');
-                const name = item['Наименование'] || '(без названия)';
-                const type = item['Тип'] || '';
-                const place = item['Расположение'] || '';
+                const name = item['Параметр'] || '(без названия)';
+                const type = item['Устроиство регулятора или ручного управления'] || '';
+                const place = item['Производство'] || '';
 
                 html += '<div class="regulator-card" data-regulator-id="' + regulatorEsc(itemId) + '" data-mode="' + mode + '">';
                 html += '<div class="regulator-card-header" onclick="regulatorOpenDetail(\'' + regulatorEsc(itemId) + '\')">';
@@ -9550,7 +9570,7 @@
         const titleEl = document.getElementById('regulatorDetailTitle');
         const content = document.getElementById('regulatorDetailContent');
         if (!titleEl || !content) return;
-        const name = item['Наименование'] || '(без названия)';
+        const name = item['Параметр'] || '(без названия)';
         titleEl.textContent = name;
 
         let html = '<div class="regulator-detail-card">';
