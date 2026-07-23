@@ -2041,14 +2041,15 @@
         background: rgba(255,255,255,0.55);
     }
 
-    /* Непрозрачный фон заголовка группы — край в край, в 2 строки, без стрелки */
+    /* Спокойная сланцево-серая палитра заголовков групп — край в край, в 2 строки, без стрелки */
     .dev-group .pb-section-title {
-        background: #3d3225;
-        color: #d4a85c;
-        border-bottom: 1px solid rgba(199,150,74,0.2);
+        background: #2a2e33;
+        color: #b8c0c8;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
         padding: 14px 16px;
         min-height: 64px;
         align-items: center;
+        letter-spacing: 0.1px;
     }
     .dev-group .pb-section-title-text {
         white-space: normal;
@@ -2058,21 +2059,38 @@
     }
     .dev-group .pb-section-title-count {
         align-self: center;
+        color: rgba(184,192,200,0.55);
     }
     /* Прячем правую стрелку раскрытия у кнопок разделов Приборы */
     .dev-group .pb-section-arrow {
         display: none;
     }
+
+    /* Скрываем информационные надписи «Всего: ... · групп: ... · обновлено: ...»
+       на страницах: Приборы (3 сортировки + основная), Блокировки, Клапаны, Регуляторы */
+    #devInfo,
+    #devTypeInfo,
+    #devNameInfo,
+    #devProdInfo,
+    #lockProdInfo,
+    #valveProdInfo,
+    #regulatorProdInfo {
+        display: none !important;
+    }
+
     [data-theme="light"] .dev-group .pb-section-title {
-        background: #ede0cc;
-        color: #7a5a2a;
-        border-bottom: 1px solid rgba(199,150,74,0.25);
+        background: #eef1f4;
+        color: #3d4651;
+        border-bottom: 1px solid rgba(20,20,19,0.06);
+    }
+    [data-theme="light"] .dev-group .pb-section-title-count {
+        color: rgba(61,70,81,0.5);
     }
     .dev-group .pb-section-title:active {
-        background: #4a3e2e;
+        background: #353a40;
     }
     [data-theme="light"] .dev-group .pb-section-title:active {
-        background: #e5d5b8;
+        background: #e1e5e9;
     }
 
     /* Карточки внутри группы */
@@ -2085,7 +2103,7 @@
 
     /* ===== БЛОКИРОВКИ ===== */
     .lock-sorted-list {
-        margin: 0 8px;
+        margin: 0;
     }
     .lock-sorted-list.searching .pb-section.lock-group .pb-section-body {
         max-height: 5000px;
@@ -2100,14 +2118,14 @@
     }
 
     .lock-group {
-        margin: 6px 0 8px;
-        border: 1px solid rgba(255,255,255,0.07);
-        border-radius: 12px;
+        margin: 0;
+        border: none;
+        border-radius: 0;
         background: rgba(255,255,255,0.015);
         overflow: hidden;
     }
     [data-theme="light"] .lock-group {
-        border-color: rgba(20,20,19,0.1);
+        border: none;
         background: rgba(255,255,255,0.55);
     }
 
@@ -2115,6 +2133,21 @@
         background: #3d2532;
         color: #d48a9e;
         border-bottom: 1px solid rgba(212,138,158,0.2);
+        padding: 14px 16px;
+        min-height: 64px;
+        align-items: center;
+    }
+    .lock-group .pb-section-title-text {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+        line-height: 1.25;
+    }
+    .lock-group .pb-section-title-count {
+        align-self: center;
+    }
+    .lock-group .pb-section-arrow {
+        display: none;
     }
     [data-theme="light"] .lock-group .pb-section-title {
         background: #edd0d8;
@@ -2292,7 +2325,7 @@
 
     /* ===== КЛАПАНЫ (зеркало блокировок, бирюзовый акцент) ===== */
     .valve-sorted-list {
-        margin: 0 8px;
+        margin: 0;
     }
     .valve-sorted-list.searching .pb-section.valve-group .pb-section-body {
         max-height: 5000px;
@@ -2307,14 +2340,14 @@
     }
 
     .valve-group {
-        margin: 6px 0 8px;
-        border: 1px solid rgba(255,255,255,0.07);
-        border-radius: 12px;
+        margin: 0;
+        border: none;
+        border-radius: 0;
         background: rgba(255,255,255,0.015);
         overflow: hidden;
     }
     [data-theme="light"] .valve-group {
-        border-color: rgba(20,20,19,0.1);
+        border: none;
         background: rgba(255,255,255,0.55);
     }
 
@@ -2322,6 +2355,21 @@
         background: #1f3d3e;
         color: #6fc0c2;
         border-bottom: 1px solid rgba(111,192,194,0.2);
+        padding: 14px 16px;
+        min-height: 64px;
+        align-items: center;
+    }
+    .valve-group .pb-section-title-text {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+        line-height: 1.25;
+    }
+    .valve-group .pb-section-title-count {
+        align-self: center;
+    }
+    .valve-group .pb-section-arrow {
+        display: none;
     }
     [data-theme="light"] .valve-group .pb-section-title {
         background: #cce5e6;
@@ -2451,7 +2499,7 @@
 
     /* ===== РЕГУЛЯТОРЫ (зеркало клапанов/блокировок, фиолетовый акцент) ===== */
     .regulator-sorted-list {
-        margin: 0 8px;
+        margin: 0;
     }
     .regulator-sorted-list.searching .pb-section.regulator-group .pb-section-body {
         max-height: 5000px;
@@ -2466,14 +2514,14 @@
     }
 
     .regulator-group {
-        margin: 6px 0 8px;
-        border: 1px solid rgba(255,255,255,0.07);
-        border-radius: 12px;
+        margin: 0;
+        border: none;
+        border-radius: 0;
         background: rgba(255,255,255,0.015);
         overflow: hidden;
     }
     [data-theme="light"] .regulator-group {
-        border-color: rgba(20,20,19,0.1);
+        border: none;
         background: rgba(255,255,255,0.55);
     }
 
@@ -2481,6 +2529,21 @@
         background: #2a1f3d;
         color: #b8a4d8;
         border-bottom: 1px solid rgba(184,164,216,0.2);
+        padding: 14px 16px;
+        min-height: 64px;
+        align-items: center;
+    }
+    .regulator-group .pb-section-title-text {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+        line-height: 1.25;
+    }
+    .regulator-group .pb-section-title-count {
+        align-self: center;
+    }
+    .regulator-group .pb-section-arrow {
+        display: none;
     }
     [data-theme="light"] .regulator-group .pb-section-title {
         background: #e2d6f0;
@@ -6634,13 +6697,7 @@
         }
 
         // Инфо
-        const lastUpdate = devGetLastUpdateDate();
-        const updateStr = lastUpdate ? ' · обновлено: ' + lastUpdate : '';
-        if (query) {
-            info.textContent = 'Найдено: ' + filtered.length + ' ' + devPlural(filtered.length, ['прибор', 'прибора', 'приборов']) + updateStr;
-        } else {
-            info.textContent = 'Всего: ' + filtered.length + ' ' + devPlural(filtered.length, ['прибор', 'прибора', 'приборов']) + updateStr;
-        }
+        info.textContent = '';
 
         if (filtered.length === 0) {
             list.innerHTML = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
@@ -7127,13 +7184,7 @@
         }
 
         // Инфо
-        const lastUpdate = devGetLastUpdateDate();
-        const updateStr = lastUpdate ? ' · обновлено: ' + lastUpdate : '';
-        if (query) {
-            info.textContent = 'Найдено: ' + filtered.length + ' ' + devPlural(filtered.length, ['прибор', 'прибора', 'приборов']) + updateStr;
-        } else {
-            info.textContent = 'Всего: ' + filtered.length + ' ' + devPlural(filtered.length, ['прибор', 'прибора', 'приборов']) + ' · групп: ' + groupOrder.length + updateStr;
-        }
+        info.textContent = '';
 
         if (filtered.length === 0) {
             list.innerHTML = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
@@ -7405,13 +7456,7 @@
             groups[g].push(d);
         }
 
-        const lastUpdate = lockGetLastUpdateDate();
-        const updateStr = lastUpdate ? ' · обновлено: ' + lastUpdate : '';
-        if (query) {
-            info.textContent = 'Найдено: ' + filtered.length + ' ' + lockPlural(filtered.length, ['блокировка', 'блокировки', 'блокировок']) + updateStr;
-        } else {
-            info.textContent = 'Всего: ' + filtered.length + ' ' + lockPlural(filtered.length, ['блокировка', 'блокировки', 'блокировок']) + ' · групп: ' + groupOrder.length + updateStr;
-        }
+        info.textContent = '';
 
         if (filtered.length === 0) {
             list.innerHTML = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
@@ -7689,13 +7734,7 @@
             groups[g].push(d);
         }
 
-        const lastUpdate = valveGetLastUpdateDate();
-        const updateStr = lastUpdate ? ' · обновлено: ' + lastUpdate : '';
-        if (query) {
-            info.textContent = 'Найдено: ' + filtered.length + ' ' + valvePlural(filtered.length, ['клапан', 'клапана', 'клапанов']) + updateStr;
-        } else {
-            info.textContent = 'Всего: ' + filtered.length + ' ' + valvePlural(filtered.length, ['клапан', 'клапана', 'клапанов']) + ' · групп: ' + groupOrder.length + updateStr;
-        }
+        info.textContent = '';
 
         if (filtered.length === 0) {
             list.innerHTML = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
@@ -8004,13 +8043,7 @@
             groups[g].push(d);
         }
 
-        const lastUpdate = regulatorGetLastUpdateDate();
-        const updateStr = lastUpdate ? ' · обновлено: ' + lastUpdate : '';
-        if (query) {
-            info.textContent = 'Найдено: ' + filtered.length + ' ' + regulatorPlural(filtered.length, ['регулятор', 'регулятора', 'регуляторов']) + updateStr;
-        } else {
-            info.textContent = 'Всего: ' + filtered.length + ' ' + regulatorPlural(filtered.length, ['регулятор', 'регулятора', 'регуляторов']) + ' · групп: ' + groupOrder.length + updateStr;
-        }
+        info.textContent = '';
 
         if (filtered.length === 0) {
             list.innerHTML = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
