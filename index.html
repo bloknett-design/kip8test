@@ -1938,6 +1938,60 @@
     [data-theme="light"] .pb-search-input::placeholder { color: rgba(20,20,19,0.4); }
     .pb-info { padding: 6px 16px 4px; font-size: 12px; color: rgba(255,255,255,0.4); text-align: center; }
     [data-theme="light"] .pb-info { color: rgba(20,20,19,0.55); }
+
+    /* КИП ИОС — общий блок с кнопками подразделов и датой последнего изменения */
+    .kip-ios-block {
+        margin: 12px 8px;
+        padding: 14px 14px 8px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid var(--card-border, rgba(255,255,255,0.08));
+        border-radius: 14px;
+        position: relative;
+        z-index: 2;
+    }
+    .kip-ios-block-update {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        margin-bottom: 10px;
+        padding: 0 6px 10px;
+        border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.08));
+        font-size: 12px;
+        color: var(--text-secondary, rgba(255,255,255,0.5));
+    }
+    .kip-ios-block-update-label {
+        opacity: 0.85;
+    }
+    .kip-ios-block-update-date {
+        color: var(--text-primary, rgba(255,255,255,0.9));
+        font-weight: 600;
+        letter-spacing: -0.1px;
+    }
+    [data-theme="light"] .kip-ios-block {
+        background: rgba(255,255,255,0.7);
+        border-color: rgba(0,0,0,0.08);
+    }
+    [data-theme="light"] .kip-ios-block-update {
+        color: rgba(20,20,19,0.55);
+        border-bottom-color: rgba(0,0,0,0.08);
+    }
+    [data-theme="light"] .kip-ios-block-update-date {
+        color: #1a1a1a;
+    }
+    /* Внутри блока убираем внешние отступы и выравниваем расстояние между 4 кнопками */
+    .kip-ios-block .menu-btn-row {
+        padding: 0;
+        gap: 6px;
+    }
+    .kip-ios-block .dev-swipe-cell {
+        margin-bottom: 0;
+    }
+    .kip-ios-block .menu-btn {
+        margin-bottom: 0;
+    }
+
     .pb-section {
         margin: 6px 8px 8px;
         border: 1px solid rgba(255,255,255,0.07);
@@ -3813,15 +3867,21 @@
         <div id="page-kip-ios" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">КИП ИОС</div></div>
 
-            <div class="menu-btn-row">
-                <div class="dev-swipe-cell" id="devSwipeCell">
-                    <div class="dev-swipe-bg dev-swipe-bg-left"><span>По типу</span></div>
-                    <div class="dev-swipe-bg dev-swipe-bg-right"><span>По наименованию</span></div>
-                    <div class="menu-btn" id="devicesEntryBtn"><div class="menu-btn-text"><div class="menu-btn-label">Приборы</div><div class="menu-btn-sublabel">1312 приборов КИП ИОС</div></div><i class="menu-btn-arrow">›</i></div>
+            <div class="kip-ios-block">
+                <div class="kip-ios-block-update">
+                    <span class="kip-ios-block-update-label">Последние изменения:</span>
+                    <span class="kip-ios-block-update-date" id="kip-ios-last-update">—</span>
                 </div>
-                <div class="menu-btn" id="lockoutsEntryBtn" style="border-color:rgba(184,90,122,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#b85a7a;">Блокировки</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(184,90,122,0.4);">›</i></div>
-                <div class="menu-btn" id="valvesEntryBtn" style="border-color:rgba(74,138,140,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#4a8a8c;">Клапаны</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(74,138,140,0.4);">›</i></div>
-                <div class="menu-btn" id="regulatorsEntryBtn" style="border-color:rgba(126,90,184,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#7e5ab8;">Регуляторы</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(126,90,184,0.4);">›</i></div>
+                <div class="menu-btn-row">
+                    <div class="dev-swipe-cell" id="devSwipeCell">
+                        <div class="dev-swipe-bg dev-swipe-bg-left"><span>По типу</span></div>
+                        <div class="dev-swipe-bg dev-swipe-bg-right"><span>По наименованию</span></div>
+                        <div class="menu-btn" id="devicesEntryBtn"><div class="menu-btn-text"><div class="menu-btn-label">Приборы</div><div class="menu-btn-sublabel">1312 приборов КИП ИОС</div></div><i class="menu-btn-arrow">›</i></div>
+                    </div>
+                    <div class="menu-btn" id="lockoutsEntryBtn" style="border-color:rgba(184,90,122,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#b85a7a;">Блокировки</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(184,90,122,0.4);">›</i></div>
+                    <div class="menu-btn" id="valvesEntryBtn" style="border-color:rgba(74,138,140,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#4a8a8c;">Клапаны</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(74,138,140,0.4);">›</i></div>
+                    <div class="menu-btn" id="regulatorsEntryBtn" style="border-color:rgba(126,90,184,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#7e5ab8;">Регуляторы</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(126,90,184,0.4);">›</i></div>
+                </div>
             </div>
         </div>
 
@@ -6951,6 +7011,22 @@
         return '';
     }
 
+    // Обновить строку "Последние изменения: <дата>" в родительском разделе КИП ИОС.
+    // Дата берётся из строки с ID=0, столбца "Тип" таблицы Приборы (devices.json),
+    // как реализовано в подразделе Приборы (devGetLastUpdateDate()).
+    // Вызывается при каждом переходе на страницу kip-ios.
+    async function kipIOSUpdateLastChange() {
+        const span = document.getElementById('kip-ios-last-update');
+        if (!span) return;
+        if (typeof devLoad === 'function') {
+            try { await devLoad(); } catch (e) {}
+        }
+        const dateStr = (typeof devGetLastUpdateDate === 'function')
+            ? devGetLastUpdateDate()
+            : '';
+        span.textContent = dateStr || '—';
+    }
+
     function devPlural(n, forms) {
         const n10 = n % 10;
         const n100 = n % 100;
@@ -8851,6 +8927,7 @@
         if (page === 'regulators-prod') { setTimeout(() => { if (typeof regulatorInitSorted === 'function') regulatorInitSorted('prod'); }, 30); }
         if (page === 'regulator-detail') { setTimeout(() => { if (typeof regulatorRenderDetail === 'function') regulatorRenderDetail(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof devInitEntryButton === 'function') devInitEntryButton(); }, 30); }
+        if (page === 'kip-ios') { setTimeout(() => { if (typeof kipIOSUpdateLastChange === 'function') kipIOSUpdateLastChange(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof lockInitEntryButton === 'function') lockInitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof valveInitEntryButton === 'function') valveInitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof regulatorInitEntryButton === 'function') regulatorInitEntryButton(); }, 30); }
