@@ -3774,8 +3774,80 @@
         color: #1a4060;
     }
 
-    /* ===== Бейдж активного фильтра «Проект: …» в шапке списка ===== */
-    /* Показывается в разделах КИП ИОС, когда открыт переход из карточки проекта */
+    /* ===== Единая кликабельная ссылка «№ СБС» в карточках КИП ИОС ===== */
+    /* Применяется в разделах: приборы / клапаны / регуляторы.
+       Клик открывает карточку блокировки с соответствующим № СБС.
+       Цвет — бордовый, как у раздела «Блокировки» в KIP_RELATED_SECTIONS,
+       чтобы визуально отличать от синей ссылки «№ проекта». */
+    .kip-sbs-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #b85a7a;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        -webkit-tap-highlight-color: transparent;
+        transition: opacity 0.15s ease;
+        font-feature-settings: "tnum";
+    }
+    [data-theme="light"] .kip-sbs-link { color: #7a2a48; }
+    .kip-sbs-link:active { opacity: 0.55; }
+    .kip-sbs-link-arrow {
+        font-size: 18px;
+        line-height: 1;
+        opacity: 0.75;
+        transform: translateY(-1px);
+    }
+    .dev-detail-value.kip-sbs-link,
+    .valve-detail-value.kip-sbs-link,
+    .regulator-detail-value.kip-sbs-link {
+        color: #b85a7a;
+    }
+    [data-theme="light"] .dev-detail-value.kip-sbs-link,
+    [data-theme="light"] .valve-detail-value.kip-sbs-link,
+    [data-theme="light"] .regulator-detail-value.kip-sbs-link {
+        color: #7a2a48;
+    }
+
+    /* ===== Единая кликабельная ссылка «№ САР» / «№ САРиРУ» в карточках КИП ИОС ===== */
+    /* Применяется в разделах: приборы (поле «№ САР») и клапаны (поле «№ САРиРУ»).
+       Клик открывает карточку регулятора с соответствующим № САРиРУ.
+       Цвет — тёмно-зелёный (бирюзовый), чтобы визуально отличать
+       от синей ссылки «№ проекта» и бордовой ссылки «№ СБС». */
+    .kip-sar-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #3a8a6e;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        -webkit-tap-highlight-color: transparent;
+        transition: opacity 0.15s ease;
+        font-feature-settings: "tnum";
+    }
+    [data-theme="light"] .kip-sar-link { color: #1f5a48; }
+    .kip-sar-link:active { opacity: 0.55; }
+    .kip-sar-link-arrow {
+        font-size: 18px;
+        line-height: 1;
+        opacity: 0.75;
+        transform: translateY(-1px);
+    }
+    .dev-detail-value.kip-sar-link,
+    .valve-detail-value.kip-sar-link,
+    .regulator-detail-value.kip-sar-link {
+        color: #3a8a6e;
+    }
+    [data-theme="light"] .dev-detail-value.kip-sar-link,
+    [data-theme="light"] .valve-detail-value.kip-sar-link,
+    [data-theme="light"] .regulator-detail-value.kip-sar-link {
+        color: #1f5a48;
+    }
+
+    /* ===== Бейдж активного фильтра в шапке списка (общий для проекта и СБС) ===== */
+    /* Показывается в разделах КИП ИОС, когда открыт переход из карточки проекта/блокировки */
     .kip-filter-badge {
         display: flex;
         align-items: center;
@@ -7586,6 +7658,14 @@
                 html += '<div class="dev-card-value' + cls + ' kip-project-link" data-project-link="' + devEsc(String(val)) + '">';
                 html += devEsc(String(val)) + '<span class="kip-project-link-arrow">›</span>';
                 html += '</div>';
+            } else if (f.key === '№ СБС' && !kipIsEmptySbsNo(val)) {
+                html += '<div class="dev-card-value' + cls + ' kip-sbs-link" data-sbs-link="' + devEsc(String(val)) + '">';
+                html += devEsc(String(val)) + '<span class="kip-sbs-link-arrow">›</span>';
+                html += '</div>';
+            } else if (f.key === '№ САР' && !kipIsEmptySarNo(val)) {
+                html += '<div class="dev-card-value' + cls + ' kip-sar-link" data-sar-link="' + devEsc(String(val)) + '">';
+                html += devEsc(String(val)) + '<span class="kip-sar-link-arrow">›</span>';
+                html += '</div>';
             } else {
                 html += '<div class="dev-card-value' + cls + '">' + devEsc(String(val)) + '</div>';
             }
@@ -7598,6 +7678,18 @@
         content.querySelectorAll('[data-project-link]').forEach(function(el) {
             el.addEventListener('click', function() {
                 projectOpenByProjectNo(this.getAttribute('data-project-link'));
+            });
+        });
+        // Привязка кликов по ссылкам «№ СБС» → карточка блокировки
+        content.querySelectorAll('[data-sbs-link]').forEach(function(el) {
+            el.addEventListener('click', function() {
+                lockOpenBySbsNo(this.getAttribute('data-sbs-link'));
+            });
+        });
+        // Привязка кликов по ссылкам «№ САР» → карточка регулятора
+        content.querySelectorAll('[data-sar-link]').forEach(function(el) {
+            el.addEventListener('click', function() {
+                regulatorOpenBySarNo(this.getAttribute('data-sar-link'));
             });
         });
     }
@@ -7928,6 +8020,14 @@
         if (query && kipIsProjectLinkFilterActive('devices')) {
             kipClearProjectLinkFilter('devices');
         }
+        // Если пользователь вручную ввёл поисковый запрос — сбросить фильтр по «№ СБС»
+        if (query && kipIsSbsLinkFilterActive('devices')) {
+            kipClearSbsLinkFilter('devices');
+        }
+        // Если пользователь вручную ввёл поисковый запрос — сбросить фильтр по «№ САР»
+        if (query && kipIsSarLinkFilterActive('devices')) {
+            kipClearSarLinkFilter('devices');
+        }
 
         // Исключаем ID=0
         let filtered = devData.devices.filter(d => {
@@ -7948,6 +8048,14 @@
         // Фильтр по «№ проекта» (из карточки проекта)
         if (kipIsProjectLinkFilterActive('devices')) {
             filtered = filtered.filter(d => kipMatchesProjectFilter(d, 'devices'));
+        }
+        // Фильтр по «№ СБС» (из карточки блокировки)
+        if (kipIsSbsLinkFilterActive('devices')) {
+            filtered = filtered.filter(d => kipMatchesSbsFilter(d, 'devices'));
+        }
+        // Фильтр по «№ САР» (из карточки регулятора)
+        if (kipIsSarLinkFilterActive('devices')) {
+            filtered = filtered.filter(d => kipMatchesSarFilter(d, 'devices'));
         }
 
         // Поиск
@@ -7978,11 +8086,19 @@
             if (kipIsProjectLinkFilterActive('devices')) {
                 emptyHtml += kipRenderFilterBadge('devices');
                 emptyHtml += '<div class="pb-empty">По проекту №«' + devEsc(kipProjectLinkFilter.projectNo) + '» приборов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
+            } else if (kipIsSbsLinkFilterActive('devices')) {
+                emptyHtml += kipRenderSbsFilterBadge('devices');
+                emptyHtml += '<div class="pb-empty">По СБС №«' + devEsc(kipSbsLinkFilter.sbsNo) + '» приборов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
+            } else if (kipIsSarLinkFilterActive('devices')) {
+                emptyHtml += kipRenderSarFilterBadge('devices');
+                emptyHtml += '<div class="pb-empty">По САР №«' + devEsc(kipSarLinkFilter.sarNo) + '» приборов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
             } else {
                 emptyHtml = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
             }
             list.innerHTML = emptyHtml;
             kipBindFilterBadge(list, 'devices', devRenderSorted);
+            kipBindSbsFilterBadge(list, 'devices', devRenderSorted);
+            kipBindSarFilterBadge(list, 'devices', devRenderSorted);
             return;
         }
 
@@ -7992,6 +8108,14 @@
         // Бейдж активного фильтра по проекту (вверху списка)
         if (kipIsProjectLinkFilterActive('devices')) {
             html += kipRenderFilterBadge('devices');
+        }
+        // Бейдж активного фильтра по «№ СБС» (вверху списка)
+        if (kipIsSbsLinkFilterActive('devices')) {
+            html += kipRenderSbsFilterBadge('devices');
+        }
+        // Бейдж активного фильтра по «№ САР» (вверху списка)
+        if (kipIsSarLinkFilterActive('devices')) {
+            html += kipRenderSarFilterBadge('devices');
         }
         html += '<div class="dev-sorted-list' + (query ? ' searching' : '') + '">';
 
@@ -8053,6 +8177,8 @@
         list.innerHTML = html;
         // Привязка обработчика к кнопке ✕ в бейдже фильтра
         kipBindFilterBadge(list, 'devices', devRenderSorted);
+        kipBindSbsFilterBadge(list, 'devices', devRenderSorted);
+        kipBindSarFilterBadge(list, 'devices', devRenderSorted);
     }
 
     
@@ -8555,6 +8681,12 @@
         }
         html += '</div>';
         html += '</div>';
+        // Блок «Связанные записи» — обратные ссылки на приборы/клапаны/регуляторы
+        // по полю «№ СБС» (если оно заполнено в карточке блокировки).
+        const sbsNo = item['№ СБС'];
+        if (sbsNo && !kipIsEmptySbsNo(sbsNo)) {
+            html += kipRenderSbsRelatedBlock(String(sbsNo));
+        }
         content.innerHTML = html;
         // Привязка кликов по ссылкам «№ проекта» (безопасно: через data-атрибут)
         content.querySelectorAll('[data-project-link]').forEach(function(el) {
@@ -8562,6 +8694,10 @@
                 projectOpenByProjectNo(this.getAttribute('data-project-link'));
             });
         });
+        // Запустить фоновую загрузку данных разделов и обновить счётчики по «№ СБС»
+        if (sbsNo && !kipIsEmptySbsNo(sbsNo)) {
+            kipLoadAndUpdateSbsRelated(String(sbsNo));
+        }
     }
 
     // ===== КЛАПАНЫ (зеркало блокировок) =====
@@ -8578,6 +8714,7 @@
         { key: 'Расположение', label: 'Расположение', group: 2 },
         { key: '№ позиции', label: '№ позиции', group: 3 },
         { key: '№ СБС', label: '№ СБС', group: 3 },
+        { key: '№ САРиРУ', label: '№ САРиРУ', group: 3 },
         { key: '№ проекта', label: '№ проекта', group: 4 },
         { key: 'Дата проверки', label: 'Дата проверки', group: 4 },
         { key: 'В перечне', label: 'В перечне', group: 4 },
@@ -8693,6 +8830,14 @@
         if (query && kipIsProjectLinkFilterActive('valves')) {
             kipClearProjectLinkFilter('valves');
         }
+        // Если пользователь вручную ввёл поисковый запрос — сбросить фильтр по «№ СБС»
+        if (query && kipIsSbsLinkFilterActive('valves')) {
+            kipClearSbsLinkFilter('valves');
+        }
+        // Если пользователь вручную ввёл поисковый запрос — сбросить фильтр по «№ САР»
+        if (query && kipIsSarLinkFilterActive('valves')) {
+            kipClearSarLinkFilter('valves');
+        }
         let filtered = valveData.valves || [];
 
         const sortKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
@@ -8707,6 +8852,14 @@
         // Фильтр по «№ проекта» (из карточки проекта)
         if (kipIsProjectLinkFilterActive('valves')) {
             filtered = filtered.filter(d => kipMatchesProjectFilter(d, 'valves'));
+        }
+        // Фильтр по «№ СБС» (из карточки блокировки)
+        if (kipIsSbsLinkFilterActive('valves')) {
+            filtered = filtered.filter(d => kipMatchesSbsFilter(d, 'valves'));
+        }
+        // Фильтр по «№ САР» (из карточки регулятора)
+        if (kipIsSarLinkFilterActive('valves')) {
+            filtered = filtered.filter(d => kipMatchesSarFilter(d, 'valves'));
         }
 
         if (query) {
@@ -8730,11 +8883,19 @@
             if (kipIsProjectLinkFilterActive('valves')) {
                 emptyHtml += kipRenderFilterBadge('valves');
                 emptyHtml += '<div class="pb-empty">По проекту №«' + valveEsc(kipProjectLinkFilter.projectNo) + '» клапанов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
+            } else if (kipIsSbsLinkFilterActive('valves')) {
+                emptyHtml += kipRenderSbsFilterBadge('valves');
+                emptyHtml += '<div class="pb-empty">По СБС №«' + valveEsc(kipSbsLinkFilter.sbsNo) + '» клапанов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
+            } else if (kipIsSarLinkFilterActive('valves')) {
+                emptyHtml += kipRenderSarFilterBadge('valves');
+                emptyHtml += '<div class="pb-empty">По САР №«' + valveEsc(kipSarLinkFilter.sarNo) + '» клапанов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
             } else {
                 emptyHtml = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
             }
             list.innerHTML = emptyHtml;
             kipBindFilterBadge(list, 'valves', valveRenderSorted);
+            kipBindSbsFilterBadge(list, 'valves', valveRenderSorted);
+            kipBindSarFilterBadge(list, 'valves', valveRenderSorted);
             return;
         }
 
@@ -8742,6 +8903,14 @@
         // Бейдж активного фильтра по проекту (вверху списка)
         if (kipIsProjectLinkFilterActive('valves')) {
             html += kipRenderFilterBadge('valves');
+        }
+        // Бейдж активного фильтра по «№ СБС» (вверху списка)
+        if (kipIsSbsLinkFilterActive('valves')) {
+            html += kipRenderSbsFilterBadge('valves');
+        }
+        // Бейдж активного фильтра по «№ САР» (вверху списка)
+        if (kipIsSarLinkFilterActive('valves')) {
+            html += kipRenderSarFilterBadge('valves');
         }
         html += '<div class="valve-sorted-list' + (query ? ' searching' : '') + '">';
         for (const g of groupOrder) {
@@ -8785,6 +8954,8 @@
         list.innerHTML = html;
         // Привязка обработчика к кнопке ✕ в бейдже фильтра
         kipBindFilterBadge(list, 'valves', valveRenderSorted);
+        kipBindSbsFilterBadge(list, 'valves', valveRenderSorted);
+        kipBindSarFilterBadge(list, 'valves', valveRenderSorted);
     }
 
     function valveToggleGroup(titleEl) {
@@ -8947,6 +9118,14 @@
                 html += '<div class="valve-detail-value kip-project-link" data-project-link="' + valveEsc(String(val)) + '">';
                 html += valveEsc(String(val)) + '<span class="kip-project-link-arrow">›</span>';
                 html += '</div>';
+            } else if (f.key === '№ СБС' && !kipIsEmptySbsNo(val)) {
+                html += '<div class="valve-detail-value kip-sbs-link" data-sbs-link="' + valveEsc(String(val)) + '">';
+                html += valveEsc(String(val)) + '<span class="kip-sbs-link-arrow">›</span>';
+                html += '</div>';
+            } else if (f.key === '№ САРиРУ' && !kipIsEmptySarNo(val)) {
+                html += '<div class="valve-detail-value kip-sar-link" data-sar-link="' + valveEsc(String(val)) + '">';
+                html += valveEsc(String(val)) + '<span class="kip-sar-link-arrow">›</span>';
+                html += '</div>';
             } else {
                 html += '<div class="valve-detail-value">' + valveEsc(String(val)) + '</div>';
             }
@@ -8959,6 +9138,18 @@
         content.querySelectorAll('[data-project-link]').forEach(function(el) {
             el.addEventListener('click', function() {
                 projectOpenByProjectNo(this.getAttribute('data-project-link'));
+            });
+        });
+        // Привязка кликов по ссылкам «№ СБС» → карточка блокировки
+        content.querySelectorAll('[data-sbs-link]').forEach(function(el) {
+            el.addEventListener('click', function() {
+                lockOpenBySbsNo(this.getAttribute('data-sbs-link'));
+            });
+        });
+        // Привязка кликов по ссылкам «№ САРиРУ» → карточка регулятора
+        content.querySelectorAll('[data-sar-link]').forEach(function(el) {
+            el.addEventListener('click', function() {
+                regulatorOpenBySarNo(this.getAttribute('data-sar-link'));
             });
         });
     }
@@ -9008,6 +9199,7 @@
         { key: 'Расположение', label: 'Расположение', group: 2 },
         { key: '№ позиции', label: '№ позиции', group: 3 },
         { key: '№ СБС', label: '№ СБС', group: 3 },
+        { key: '№ САРиРУ', label: '№ САРиРУ', group: 3 },
         { key: '№ проекта', label: '№ проекта', group: 4 },
         { key: 'Дата проверки', label: 'Дата проверки', group: 4 },
         { key: 'В перечне', label: 'В перечне', group: 4 },
@@ -9123,6 +9315,10 @@
         if (query && kipIsProjectLinkFilterActive('regulators')) {
             kipClearProjectLinkFilter('regulators');
         }
+        // Если пользователь вручную ввёл поисковый запрос — сбросить фильтр по «№ СБС»
+        if (query && kipIsSbsLinkFilterActive('regulators')) {
+            kipClearSbsLinkFilter('regulators');
+        }
         let filtered = regulatorData.regulators || [];
 
         const sortKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
@@ -9137,6 +9333,10 @@
         // Фильтр по «№ проекта» (из карточки проекта)
         if (kipIsProjectLinkFilterActive('regulators')) {
             filtered = filtered.filter(d => kipMatchesProjectFilter(d, 'regulators'));
+        }
+        // Фильтр по «№ СБС» (из карточки блокировки)
+        if (kipIsSbsLinkFilterActive('regulators')) {
+            filtered = filtered.filter(d => kipMatchesSbsFilter(d, 'regulators'));
         }
 
         if (query) {
@@ -9160,11 +9360,15 @@
             if (kipIsProjectLinkFilterActive('regulators')) {
                 emptyHtml += kipRenderFilterBadge('regulators');
                 emptyHtml += '<div class="pb-empty">По проекту №«' + regulatorEsc(kipProjectLinkFilter.projectNo) + '» регуляторов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
+            } else if (kipIsSbsLinkFilterActive('regulators')) {
+                emptyHtml += kipRenderSbsFilterBadge('regulators');
+                emptyHtml += '<div class="pb-empty">По СБС №«' + regulatorEsc(kipSbsLinkFilter.sbsNo) + '» регуляторов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
             } else {
                 emptyHtml = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
             }
             list.innerHTML = emptyHtml;
             kipBindFilterBadge(list, 'regulators', regulatorRenderSorted);
+            kipBindSbsFilterBadge(list, 'regulators', regulatorRenderSorted);
             return;
         }
 
@@ -9172,6 +9376,10 @@
         // Бейдж активного фильтра по проекту (вверху списка)
         if (kipIsProjectLinkFilterActive('regulators')) {
             html += kipRenderFilterBadge('regulators');
+        }
+        // Бейдж активного фильтра по «№ СБС» (вверху списка)
+        if (kipIsSbsLinkFilterActive('regulators')) {
+            html += kipRenderSbsFilterBadge('regulators');
         }
         html += '<div class="regulator-sorted-list' + (query ? ' searching' : '') + '">';
         for (const g of groupOrder) {
@@ -9215,6 +9423,7 @@
         list.innerHTML = html;
         // Привязка обработчика к кнопке ✕ в бейдже фильтра
         kipBindFilterBadge(list, 'regulators', regulatorRenderSorted);
+        kipBindSbsFilterBadge(list, 'regulators', regulatorRenderSorted);
     }
 
     function regulatorToggleGroup(titleEl) {
@@ -9359,6 +9568,10 @@
                 html += '<div class="regulator-detail-value kip-project-link" data-project-link="' + regulatorEsc(String(val)) + '">';
                 html += regulatorEsc(String(val)) + '<span class="kip-project-link-arrow">›</span>';
                 html += '</div>';
+            } else if (f.key === '№ СБС' && !kipIsEmptySbsNo(val)) {
+                html += '<div class="regulator-detail-value kip-sbs-link" data-sbs-link="' + regulatorEsc(String(val)) + '">';
+                html += regulatorEsc(String(val)) + '<span class="kip-sbs-link-arrow">›</span>';
+                html += '</div>';
             } else {
                 html += '<div class="regulator-detail-value">' + regulatorEsc(String(val)) + '</div>';
             }
@@ -9366,6 +9579,12 @@
         }
         html += '</div>';
         html += '</div>';
+        // Блок «Связанные записи» — обратные ссылки на приборы/клапаны
+        // по полю «№ САРиРУ» (если оно заполнено в карточке регулятора).
+        const sarNo = item['№ САРиРУ'];
+        if (sarNo && !kipIsEmptySarNo(sarNo)) {
+            html += kipRenderSarRelatedBlock(String(sarNo));
+        }
         content.innerHTML = html;
         // Привязка кликов по ссылкам «№ проекта» (безопасно: через data-атрибут)
         content.querySelectorAll('[data-project-link]').forEach(function(el) {
@@ -9373,6 +9592,16 @@
                 projectOpenByProjectNo(this.getAttribute('data-project-link'));
             });
         });
+        // Привязка кликов по ссылкам «№ СБС» → карточка блокировки
+        content.querySelectorAll('[data-sbs-link]').forEach(function(el) {
+            el.addEventListener('click', function() {
+                lockOpenBySbsNo(this.getAttribute('data-sbs-link'));
+            });
+        });
+        // Запустить фоновую загрузку данных разделов и обновить счётчики по «№ САРиРУ»
+        if (sarNo && !kipIsEmptySarNo(sarNo)) {
+            kipLoadAndUpdateSarRelated(String(sarNo));
+        }
     }
 
     // ===== Кнопка Регуляторы на странице КИП И ОС: только tap =====
@@ -9848,6 +10077,14 @@
         const target = pages[section];
         if (!target) return;
         if (navigator.vibrate) navigator.vibrate(15);
+        // Взаимное исключение: фильтр по «№ проекта», «№ СБС» и «№ САР» не могут
+        // быть активны одновременно для одного раздела — сбросить остальные.
+        if (kipSbsLinkFilter && kipSbsLinkFilter.section === section) {
+            kipSbsLinkFilter = null;
+        }
+        if (typeof kipSarLinkFilter !== 'undefined' && kipSarLinkFilter && kipSarLinkFilter.section === section) {
+            kipSarLinkFilter = null;
+        }
         kipProjectLinkFilter = { projectNo: raw, section: section };
         // Сбросить поисковый запрос (если инпут уже существует)
         const inputId = {
@@ -9934,6 +10171,614 @@
                 if (typeof renderFn === 'function') renderFn('prod');
             });
         }
+    }
+
+    // ===== Прямая навигация: клик по «№ СБС» в карточке прибора/клапана/регулятора =====
+    // Вспомогательная функция: считается ли значение «№ СБС» пустым/незаполненным.
+    // Для таких значений ссылка не рендерится в *RenderDetail, а в lockOpenBySbsNo
+    // показывается короткое сообщение вместо поиска.
+    // Возвращает true для: пусто, «Нет данных», «нет», «-», «—», «–», «н/д», «n/a».
+    function kipIsEmptySbsNo(val) {
+        if (val == null) return true;
+        const s = String(val).trim().toLowerCase().replace(/[ё]/g, 'е');
+        if (!s) return true;
+        const empties = ['нет данных', 'нет', '-', '—', '–', '—', 'н/д', 'n/a', 'na', 'null', 'undefined', 'нет сведений', 'нет сбс'];
+        return empties.indexOf(s) !== -1;
+    }
+
+    // Открыть карточку блокировки по значению «№ СБС».
+    // Сначала пытаемся найти точное совпадение в lockData.lockouts по полю «№ СБС»,
+    // в fallback — по частичному совпадению. Если ничего не найдено — alert.
+    // При необходимости догружает lockouts.json.
+    async function lockOpenBySbsNo(sbsNo) {
+        if (sbsNo == null) return;
+        const raw = String(sbsNo).trim();
+        if (!raw) return;
+        if (kipIsEmptySbsNo(raw)) {
+            if (navigator.vibrate) navigator.vibrate(10);
+            alert('№ СБС не указан.');
+            return;
+        }
+        if (navigator.vibrate) navigator.vibrate(15);
+
+        // Догрузить lockouts.json, если ещё не загружен
+        if (!lockLoaded || !lockData) {
+            try {
+                const bust = '?v=' + Date.now();
+                const resp = await fetch('data/lockouts.json' + bust, { cache: 'no-store' });
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                lockData = await resp.json();
+                lockLoaded = true;
+                localStorage.setItem('lockoutsLastUpdate', new Date().toISOString());
+            } catch (e) {
+                console.error('lockOpenBySbsNo: ошибка загрузки lockouts.json:', e);
+                alert('Не удалось загрузить данные блокировок. Проверьте соединение.');
+                return;
+            }
+        }
+
+        // Нормализация: нижний регистр, ё→е, схлопывание пробелов.
+        const norm = (s) => String(s == null ? '' : s)
+            .trim().toLowerCase().replace(/[ё]/g, 'е').replace(/\s+/g, ' ');
+
+        const items = lockData.lockouts || [];
+        const r = norm(raw);
+
+        // 1) Точное совпадение по «№ СБС»
+        const exact = items.find(d => norm(d['№ СБС']) === r);
+        if (exact && exact['ID'] != null && exact['ID'] !== '') {
+            lockOpenDetail(exact['ID']);
+            return;
+        }
+
+        // 2) Частичное совпадение (одно содержит другое) — на случай,
+        //    когда в одной ячейке записано «СБС-123», а в другой — «123».
+        //    Защита: длина искомой строки должна быть ≥ 3 символов.
+        if (r.length >= 3) {
+            const partial = items.find(d => {
+                const v = norm(d['№ СБС']);
+                if (!v || v.length < 2) return false;
+                return v.indexOf(r) !== -1 || r.indexOf(v) !== -1;
+            });
+            if (partial && partial['ID'] != null && partial['ID'] !== '') {
+                lockOpenDetail(partial['ID']);
+                return;
+            }
+        }
+
+        // 3) Не найдено — показать сообщение
+        alert('Блокировка с № СБС «' + raw + '» не найдена в базе блокировок.');
+    }
+
+    // ===== Обратные ссылки: фильтр списка раздела КИП ИОС по «№ СБС» =====
+    // Глобальное состояние фильтра. Когда не null — соответствующий
+    // *RenderSorted фильтрует записи по полю «№ СБС» (точное совпадение
+    // или подстрока, как в lockOpenBySbsNo). В шапке списка показывается
+    // бейдж с возможностью сброса.
+    //
+    // Структура:
+    //   { sbsNo: 'СБС-123', section: 'devices' }
+    // section — одно из: 'devices' | 'valves' | 'regulators'
+    let kipSbsLinkFilter = null;
+
+    // Установить фильтр по «№ СБС» и открыть страницу раздела КИП ИОС.
+    function kipSetSbsLinkFilter(section, sbsNo) {
+        if (!section || sbsNo == null) return;
+        const raw = String(sbsNo).trim();
+        if (!raw || kipIsEmptySbsNo(raw)) {
+            if (navigator.vibrate) navigator.vibrate(10);
+            alert('№ СБС не указан.');
+            return;
+        }
+        const pages = {
+            devices: 'devices-prod',
+            valves: 'valves-prod',
+            regulators: 'regulators-prod',
+        };
+        const target = pages[section];
+        if (!target) return;
+        if (navigator.vibrate) navigator.vibrate(15);
+        // Взаимное исключение: фильтр по «№ СБС», «№ проекта» и «№ САР» не могут
+        // быть активны одновременно для одного раздела — сбросить остальные.
+        if (kipProjectLinkFilter && kipProjectLinkFilter.section === section) {
+            kipProjectLinkFilter = null;
+        }
+        if (typeof kipSarLinkFilter !== 'undefined' && kipSarLinkFilter && kipSarLinkFilter.section === section) {
+            kipSarLinkFilter = null;
+        }
+        kipSbsLinkFilter = { sbsNo: raw, section: section };
+        const inputId = {
+            devices: 'devProdSearchInput',
+            valves: 'valveProdSearchInput',
+            regulators: 'regulatorProdSearchInput',
+        }[section];
+        const inp = document.getElementById(inputId);
+        if (inp) inp.value = '';
+        navigateTo(target);
+    }
+
+    // Сбросить активный СБС-фильтр (если он относится к данному разделу).
+    function kipClearSbsLinkFilter(section) {
+        if (!kipSbsLinkFilter) return;
+        if (!section || kipSbsLinkFilter.section === section) {
+            kipSbsLinkFilter = null;
+            if (navigator.vibrate) navigator.vibrate(8);
+        }
+    }
+
+    // Проверить, активен ли СБС-фильтр для данного раздела.
+    function kipIsSbsLinkFilterActive(section) {
+        return !!(kipSbsLinkFilter && kipSbsLinkFilter.section === section);
+    }
+
+    // Проверить, проходит ли запись СБС-фильтр.
+    function kipMatchesSbsFilter(item, section) {
+        if (!kipSbsLinkFilter || kipSbsLinkFilter.section !== section) return true;
+        const raw = kipSbsLinkFilter.sbsNo;
+        if (!raw) return true;
+        const norm = (s) => String(s == null ? '' : s)
+            .trim().toLowerCase().replace(/[ё]/g, 'е').replace(/\s+/g, ' ');
+        const r = norm(raw);
+        const v = norm(item['№ СБС']);
+        if (!v) return false;
+        if (v === r) return true;
+        if (r.length >= 3 && (v.indexOf(r) !== -1 || r.indexOf(v) !== -1)) return true;
+        return false;
+    }
+
+    // Рендер бейджа активного СБС-фильтра в шапке списка раздела.
+    // Возвращает HTML-строку (пустую, если фильтр не активен).
+    // Использует тот же CSS-класс .kip-filter-badge, что и проектный,
+    // но data-атрибут data-sbs-filter-badge отличает бейджи.
+    function kipRenderSbsFilterBadge(section) {
+        if (!kipIsSbsLinkFilterActive(section)) return '';
+        const esc = (s) => String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        const no = kipSbsLinkFilter.sbsNo;
+        return '<div class="kip-filter-badge" data-sbs-filter-badge="' + esc(section) + '">' +
+               '<span class="kip-filter-badge-label">СБС:</span>' +
+               '<span class="kip-filter-badge-value">' + esc(no) + '</span>' +
+               '<button class="kip-filter-badge-clear" data-sbs-filter-clear="' + esc(section) + '" aria-label="Сбросить фильтр">✕</button>' +
+               '</div>';
+    }
+
+    // Привязка обработчика к кнопке ✕ в бейдже СБС-фильтра.
+    function kipBindSbsFilterBadge(container, section, renderFn) {
+        if (!container) return;
+        const badge = container.querySelector('[data-sbs-filter-badge="' + section + '"]');
+        if (!badge) return;
+        const clear = badge.querySelector('[data-sbs-filter-clear]');
+        if (clear) {
+            clear.addEventListener('click', function(e) {
+                e.stopPropagation();
+                kipClearSbsLinkFilter(section);
+                const inputId = {
+                    devices: 'devProdSearchInput',
+                    valves: 'valveProdSearchInput',
+                    regulators: 'regulatorProdSearchInput',
+                }[section];
+                const inp = document.getElementById(inputId);
+                if (inp) inp.value = '';
+                if (typeof renderFn === 'function') renderFn('prod');
+            });
+        }
+    }
+
+    // ===== Обратные ссылки: блок «Связанные записи» в карточке блокировки =====
+    // Конфигурация разделов для отображения обратных ссылок по «№ СБС».
+    // В карточке блокировки показываем связанные:
+    //   - Приборы (devices) — имеют поле «№ СБС»
+    //   - Клапаны (valves) — имеют поле «№ СБС»
+    //   - Регуляторы (regulators) — имеют поле «№ СБС»
+    // Блокировки, кабели — не показываем (в блокировках это собственный ID,
+    // в кабелях поля «№ СБС» нет).
+    const KIP_SBS_RELATED_SECTIONS = [
+        { label: 'Приборы',    section: 'devices',    icon: 'П', color: '#6aa6e0' },
+        { label: 'Клапаны',    section: 'valves',     icon: 'К', color: '#4a8a8c' },
+        { label: 'Регуляторы', section: 'regulators', icon: 'Р', color: '#7e5ab8' },
+    ];
+
+    // Подсчитать количество связанных записей для данного «№ СБС».
+    // Использует ту же логику совпадения, что и kipMatchesSbsFilter.
+    function kipCountRelatedBySbs(section, items, sbsNo) {
+        if (!items || !items.length) return 0;
+        const norm = (s) => String(s == null ? '' : s)
+            .trim().toLowerCase().replace(/[ё]/g, 'е').replace(/\s+/g, ' ');
+        const r = norm(sbsNo);
+        if (!r) return 0;
+        let count = 0;
+        for (const it of items) {
+            const v = norm(it['№ СБС']);
+            if (!v) continue;
+            if (v === r) { count++; continue; }
+            if (r.length >= 3 && (v.indexOf(r) !== -1 || r.indexOf(v) !== -1)) count++;
+        }
+        return count;
+    }
+
+    // Сгенерировать HTML-строку блока «Связанные записи» для карточки блокировки.
+    // Сразу рендерит строки с пометкой «загрузка…», после загрузки данных
+    // вызывающий код должен перерисовать блок (вызвать kipUpdateSbsRelatedBlock).
+    function kipRenderSbsRelatedBlock(sbsNo) {
+        if (!sbsNo || kipIsEmptySbsNo(sbsNo)) return '';
+        const esc = (s) => String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        let html = '<div class="kip-related-section" id="kipSbsRelatedSection">';
+        html += '<div class="kip-related-title">Связанные записи</div>';
+        html += '<div class="kip-related-grid">';
+        for (const cfg of KIP_SBS_RELATED_SECTIONS) {
+            html += '<div class="kip-related-row is-loading" data-sbs-related-section="' + esc(cfg.section) + '">';
+            html += '<div class="kip-related-row-icon" style="background:' + esc(cfg.color) + ';">' + esc(cfg.icon) + '</div>';
+            html += '<div class="kip-related-row-text">';
+            html += '<div class="kip-related-row-label">' + esc(cfg.label) + '</div>';
+            html += '<div class="kip-related-row-count">Загрузка…</div>';
+            html += '</div>';
+            html += '<div class="kip-related-row-arrow">›</div>';
+            html += '</div>';
+        }
+        html += '</div>';
+        html += '</div>';
+        return html;
+    }
+
+    // Обновить счётчики в блоке «Связанные записи» карточки блокировки.
+    function kipUpdateSbsRelatedBlock(sbsNo, section) {
+        const root = document.getElementById('kipSbsRelatedSection');
+        if (!root) return;
+        const targets = section
+            ? [section]
+            : KIP_SBS_RELATED_SECTIONS.map(c => c.section);
+        for (const sec of targets) {
+            const row = root.querySelector('[data-sbs-related-section="' + sec + '"]');
+            if (!row) continue;
+            const countEl = row.querySelector('.kip-related-row-count');
+            if (!countEl) continue;
+            const items = kipGetSectionItems(sec);
+            if (!items) continue;
+            const count = kipCountRelatedBySbs(sec, items, sbsNo);
+            const forms = {
+                devices:    ['прибор', 'прибора', 'приборов'],
+                valves:     ['клапан', 'клапана', 'клапанов'],
+                regulators: ['регулятор', 'регулятора', 'регуляторов'],
+            }[sec] || ['запись', 'записи', 'записей'];
+            const plural = kipRelatedPlural(count, forms);
+            countEl.textContent = count + ' ' + plural;
+            if (count === 0) {
+                row.classList.remove('is-loading');
+                row.classList.add('is-empty');
+                countEl.textContent = 'Нет связанных ' + forms[2];
+            } else {
+                row.classList.remove('is-loading', 'is-empty');
+            }
+        }
+    }
+
+    // Асинхронно загрузить все недостающие разделы и обновить счётчики.
+    // Вызывается из lockRenderDetail после установки HTML.
+    async function kipLoadAndUpdateSbsRelated(sbsNo) {
+        if (!sbsNo || kipIsEmptySbsNo(sbsNo)) return;
+        const promises = KIP_SBS_RELATED_SECTIONS.map(c => c.section).map(sec => kipLoadSectionData(sec));
+        await Promise.all(promises);
+        kipUpdateSbsRelatedBlock(sbsNo, null);
+        const root = document.getElementById('kipSbsRelatedSection');
+        if (!root) return;
+        const rows = root.querySelectorAll('.kip-related-row');
+        rows.forEach(function(row) {
+            const sec = row.getAttribute('data-sbs-related-section');
+            if (row.classList.contains('is-empty')) return;
+            row.addEventListener('click', function() {
+                kipSetSbsLinkFilter(sec, sbsNo);
+            });
+        });
+    }
+
+    // ===== Прямая навигация: клик по «№ САР» (приборы) / «№ САРиРУ» (клапаны) =====
+    // Вспомогательная функция: считается ли значение «№ САР» / «№ САРиРУ» пустым.
+    // Для таких значений ссылка не рендерится в *RenderDetail, а в
+    // regulatorOpenBySarNo показывается короткое сообщение вместо поиска.
+    // Возвращает true для: пусто, «Нет данных», «нет», «-», «—», «–», «н/д»,
+    // «n/a», «na», «null», «undefined», «нет сведений», «нет сар», «нет сариру».
+    function kipIsEmptySarNo(val) {
+        if (val == null) return true;
+        const s = String(val).trim().toLowerCase().replace(/[ё]/g, 'е');
+        if (!s) return true;
+        const empties = ['нет данных', 'нет', '-', '—', '–', '—', 'н/д', 'n/a', 'na', 'null', 'undefined', 'нет сведений', 'нет сар', 'нет сариру', 'нет сар/ру'];
+        return empties.indexOf(s) !== -1;
+    }
+
+    // Возвращает имя поля «№ САР» для раздела:
+    //   devices  → «№ САР»
+    //   valves   → «№ САРиРУ»
+    //   regulators → «№ САРиРУ»
+    function kipSarFieldKey(section) {
+        return section === 'devices' ? '№ САР' : '№ САРиРУ';
+    }
+
+    // Открыть карточку регулятора по значению «№ САР» / «№ САРиРУ».
+    // Сначала пытаемся найти точное совпадение в regulatorData.regulators
+    // по полю «№ САРиРУ», в fallback — по частичному совпадению.
+    // Если ничего не найдено — alert. При необходимости догружает regulators.json.
+    async function regulatorOpenBySarNo(sarNo) {
+        if (sarNo == null) return;
+        const raw = String(sarNo).trim();
+        if (!raw) return;
+        if (kipIsEmptySarNo(raw)) {
+            if (navigator.vibrate) navigator.vibrate(10);
+            alert('№ САР не указан.');
+            return;
+        }
+        if (navigator.vibrate) navigator.vibrate(15);
+
+        // Догрузить regulators.json, если ещё не загружен
+        if (!regulatorLoaded || !regulatorData) {
+            try {
+                const bust = '?v=' + Date.now();
+                const resp = await fetch('data/regulators.json' + bust, { cache: 'no-store' });
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                regulatorData = await resp.json();
+                regulatorLoaded = true;
+                localStorage.setItem('regulatorsLastUpdate', new Date().toISOString());
+            } catch (e) {
+                console.error('regulatorOpenBySarNo: ошибка загрузки regulators.json:', e);
+                alert('Не удалось загрузить данные регуляторов. Проверьте соединение.');
+                return;
+            }
+        }
+
+        // Нормализация: нижний регистр, ё→е, схлопывание пробелов.
+        const norm = (s) => String(s == null ? '' : s)
+            .trim().toLowerCase().replace(/[ё]/g, 'е').replace(/\s+/g, ' ');
+
+        const items = regulatorData.regulators || [];
+        const r = norm(raw);
+        const fieldKey = '№ САРиРУ';
+
+        // 1) Точное совпадение по «№ САРиРУ»
+        const exact = items.find(d => norm(d[fieldKey]) === r);
+        if (exact && exact['ID'] != null && exact['ID'] !== '') {
+            regulatorOpenDetail(exact['ID']);
+            return;
+        }
+
+        // 2) Частичное совпадение (одно содержит другое) — на случай,
+        //    когда в одной ячейке записано «11405(1)», а в другой — «11405».
+        //    Защита: длина искомой строки должна быть ≥ 3 символов.
+        if (r.length >= 3) {
+            const partial = items.find(d => {
+                const v = norm(d[fieldKey]);
+                if (!v || v.length < 2) return false;
+                return v.indexOf(r) !== -1 || r.indexOf(v) !== -1;
+            });
+            if (partial && partial['ID'] != null && partial['ID'] !== '') {
+                regulatorOpenDetail(partial['ID']);
+                return;
+            }
+        }
+
+        // 3) Не найдено — показать сообщение
+        alert('Регулятор с № САР «' + raw + '» не найден в базе регуляторов.');
+    }
+
+    // ===== Обратные ссылки: фильтр списка раздела КИП ИОС по «№ САР» / «№ САРиРУ» =====
+    // Глобальное состояние фильтра. Когда не null — соответствующий
+    // *RenderSorted фильтрует записи по полю «№ САР» (devices) или «№ САРиРУ»
+    // (valves). В шапке списка показывается бейдж с возможностью сброса.
+    //
+    // Структура:
+    //   { sarNo: '11405', section: 'devices' }
+    // section — одно из: 'devices' | 'valves'
+    let kipSarLinkFilter = null;
+
+    // Установить фильтр по «№ САР» и открыть страницу раздела КИП ИОС.
+    function kipSetSarLinkFilter(section, sarNo) {
+        if (!section || sarNo == null) return;
+        const raw = String(sarNo).trim();
+        if (!raw || kipIsEmptySarNo(raw)) {
+            if (navigator.vibrate) navigator.vibrate(10);
+            alert('№ САР не указан.');
+            return;
+        }
+        const pages = {
+            devices: 'devices-prod',
+            valves: 'valves-prod',
+        };
+        const target = pages[section];
+        if (!target) return;
+        if (navigator.vibrate) navigator.vibrate(15);
+        // Взаимное исключение: фильтр по «№ САР», «№ проекта» и «№ СБС» не могут
+        // быть активны одновременно для одного раздела — сбросить остальные.
+        if (kipProjectLinkFilter && kipProjectLinkFilter.section === section) {
+            kipProjectLinkFilter = null;
+        }
+        if (kipSbsLinkFilter && kipSbsLinkFilter.section === section) {
+            kipSbsLinkFilter = null;
+        }
+        kipSarLinkFilter = { sarNo: raw, section: section };
+        const inputId = {
+            devices: 'devProdSearchInput',
+            valves: 'valveProdSearchInput',
+        }[section];
+        const inp = document.getElementById(inputId);
+        if (inp) inp.value = '';
+        navigateTo(target);
+    }
+
+    // Сбросить активный САР-фильтр (если он относится к данному разделу).
+    function kipClearSarLinkFilter(section) {
+        if (!kipSarLinkFilter) return;
+        if (!section || kipSarLinkFilter.section === section) {
+            kipSarLinkFilter = null;
+            if (navigator.vibrate) navigator.vibrate(8);
+        }
+    }
+
+    // Проверить, активен ли САР-фильтр для данного раздела.
+    function kipIsSarLinkFilterActive(section) {
+        return !!(kipSarLinkFilter && kipSarLinkFilter.section === section);
+    }
+
+    // Проверить, проходит ли запись САР-фильтр.
+    // Для devices — сравнение по полю «№ САР»;
+    // для valves — по полю «№ САРиРУ».
+    function kipMatchesSarFilter(item, section) {
+        if (!kipSarLinkFilter || kipSarLinkFilter.section !== section) return true;
+        const raw = kipSarLinkFilter.sarNo;
+        if (!raw) return true;
+        const norm = (s) => String(s == null ? '' : s)
+            .trim().toLowerCase().replace(/[ё]/g, 'е').replace(/\s+/g, ' ');
+        const r = norm(raw);
+        const v = norm(item[kipSarFieldKey(section)]);
+        if (!v) return false;
+        if (v === r) return true;
+        if (r.length >= 3 && (v.indexOf(r) !== -1 || r.indexOf(v) !== -1)) return true;
+        return false;
+    }
+
+    // Рендер бейджа активного САР-фильтра в шапке списка раздела.
+    // Возвращает HTML-строку (пустую, если фильтр не активен).
+    // Использует тот же CSS-класс .kip-filter-badge, что и проектный/СБС,
+    // но data-атрибут data-sar-filter-badge отличает бейджи.
+    function kipRenderSarFilterBadge(section) {
+        if (!kipIsSarLinkFilterActive(section)) return '';
+        const esc = (s) => String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        const no = kipSarLinkFilter.sarNo;
+        return '<div class="kip-filter-badge" data-sar-filter-badge="' + esc(section) + '">' +
+               '<span class="kip-filter-badge-label">САР:</span>' +
+               '<span class="kip-filter-badge-value">' + esc(no) + '</span>' +
+               '<button class="kip-filter-badge-clear" data-sar-filter-clear="' + esc(section) + '" aria-label="Сбросить фильтр">✕</button>' +
+               '</div>';
+    }
+
+    // Привязка обработчика к кнопке ✕ в бейдже САР-фильтра.
+    function kipBindSarFilterBadge(container, section, renderFn) {
+        if (!container) return;
+        const badge = container.querySelector('[data-sar-filter-badge="' + section + '"]');
+        if (!badge) return;
+        const clear = badge.querySelector('[data-sar-filter-clear]');
+        if (clear) {
+            clear.addEventListener('click', function(e) {
+                e.stopPropagation();
+                kipClearSarLinkFilter(section);
+                const inputId = {
+                    devices: 'devProdSearchInput',
+                    valves: 'valveProdSearchInput',
+                }[section];
+                const inp = document.getElementById(inputId);
+                if (inp) inp.value = '';
+                if (typeof renderFn === 'function') renderFn('prod');
+            });
+        }
+    }
+
+    // ===== Обратные ссылки: блок «Связанные записи» в карточке регулятора =====
+    // Конфигурация разделов для отображения обратных ссылок по «№ САР» / «№ САРиРУ».
+    // В карточке регулятора показываем связанные:
+    //   - Приборы (devices) — имеют поле «№ САР»
+    //   - Клапаны (valves) — имеют поле «№ САРиРУ»
+    // Регуляторы не показываем (это их собственный ID), блокировки/кабели
+    // не показываем (у них нет поля «№ САР» / «№ САРиРУ»).
+    const KIP_SAR_RELATED_SECTIONS = [
+        { label: 'Приборы', section: 'devices', icon: 'П', color: '#6aa6e0' },
+        { label: 'Клапаны', section: 'valves',  icon: 'К', color: '#4a8a8c' },
+    ];
+
+    // Подсчитать количество связанных записей для данного «№ САР».
+    // Использует ту же логику совпадения, что и kipMatchesSarFilter.
+    function kipCountRelatedBySar(section, items, sarNo) {
+        if (!items || !items.length) return 0;
+        const norm = (s) => String(s == null ? '' : s)
+            .trim().toLowerCase().replace(/[ё]/g, 'е').replace(/\s+/g, ' ');
+        const r = norm(sarNo);
+        if (!r) return 0;
+        const fieldKey = kipSarFieldKey(section);
+        let count = 0;
+        for (const it of items) {
+            const v = norm(it[fieldKey]);
+            if (!v) continue;
+            if (v === r) { count++; continue; }
+            if (r.length >= 3 && (v.indexOf(r) !== -1 || r.indexOf(v) !== -1)) count++;
+        }
+        return count;
+    }
+
+    // Сгенерировать HTML-строку блока «Связанные записи» для карточки регулятора.
+    // Сразу рендерит строки с пометкой «загрузка…», после загрузки данных
+    // вызывающий код должен перерисовать блок (вызвать kipUpdateSarRelatedBlock).
+    function kipRenderSarRelatedBlock(sarNo) {
+        if (!sarNo || kipIsEmptySarNo(sarNo)) return '';
+        const esc = (s) => String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        let html = '<div class="kip-related-section" id="kipSarRelatedSection">';
+        html += '<div class="kip-related-title">Связанные записи</div>';
+        html += '<div class="kip-related-grid">';
+        for (const cfg of KIP_SAR_RELATED_SECTIONS) {
+            html += '<div class="kip-related-row is-loading" data-sar-related-section="' + esc(cfg.section) + '">';
+            html += '<div class="kip-related-row-icon" style="background:' + esc(cfg.color) + ';">' + esc(cfg.icon) + '</div>';
+            html += '<div class="kip-related-row-text">';
+            html += '<div class="kip-related-row-label">' + esc(cfg.label) + '</div>';
+            html += '<div class="kip-related-row-count">Загрузка…</div>';
+            html += '</div>';
+            html += '<div class="kip-related-row-arrow">›</div>';
+            html += '</div>';
+        }
+        html += '</div>';
+        html += '</div>';
+        return html;
+    }
+
+    // Обновить счётчики в блоке «Связанные записи» карточки регулятора.
+    function kipUpdateSarRelatedBlock(sarNo, section) {
+        const root = document.getElementById('kipSarRelatedSection');
+        if (!root) return;
+        const targets = section
+            ? [section]
+            : KIP_SAR_RELATED_SECTIONS.map(c => c.section);
+        for (const sec of targets) {
+            const row = root.querySelector('[data-sar-related-section="' + sec + '"]');
+            if (!row) continue;
+            const countEl = row.querySelector('.kip-related-row-count');
+            if (!countEl) continue;
+            const items = kipGetSectionItems(sec);
+            if (!items) continue;
+            const count = kipCountRelatedBySar(sec, items, sarNo);
+            const forms = {
+                devices: ['прибор', 'прибора', 'приборов'],
+                valves:  ['клапан', 'клапана', 'клапанов'],
+            }[sec] || ['запись', 'записи', 'записей'];
+            const plural = kipRelatedPlural(count, forms);
+            countEl.textContent = count + ' ' + plural;
+            if (count === 0) {
+                row.classList.remove('is-loading');
+                row.classList.add('is-empty');
+                countEl.textContent = 'Нет связанных ' + forms[2];
+            } else {
+                row.classList.remove('is-loading', 'is-empty');
+            }
+        }
+    }
+
+    // Асинхронно загрузить все недостающие разделы и обновить счётчики.
+    // Вызывается из regulatorRenderDetail после установки HTML.
+    async function kipLoadAndUpdateSarRelated(sarNo) {
+        if (!sarNo || kipIsEmptySarNo(sarNo)) return;
+        const promises = KIP_SAR_RELATED_SECTIONS.map(c => c.section).map(sec => kipLoadSectionData(sec));
+        await Promise.all(promises);
+        kipUpdateSarRelatedBlock(sarNo, null);
+        const root = document.getElementById('kipSarRelatedSection');
+        if (!root) return;
+        const rows = root.querySelectorAll('.kip-related-row');
+        rows.forEach(function(row) {
+            const sec = row.getAttribute('data-sar-related-section');
+            if (row.classList.contains('is-empty')) return;
+            row.addEventListener('click', function() {
+                kipSetSarLinkFilter(sec, sarNo);
+            });
+        });
     }
 
     // ===== Обратные ссылки: блок «Связанные записи» в карточке проекта =====
@@ -11297,6 +12142,35 @@
             }[sec] || [];
             if (allowedPages.indexOf(page) === -1) {
                 kipClearProjectLinkFilter(sec);
+            }
+        }
+        // Сброс активного фильтра «№ СБС» при уходе со страницы соответствующего раздела.
+        // Карта: страница → раздел, к которому относится фильтр.
+        // Если пользователь уходит не на «свою» страницу раздела и не на детальную —
+        // фильтр считаем «зависшим» и сбрасываем.
+        if (typeof kipSbsLinkFilter !== 'undefined' && kipSbsLinkFilter) {
+            const sec = kipSbsLinkFilter.section;
+            const allowedPages = {
+                devices:    ['devices-prod', 'device-detail', 'dev-group'],
+                valves:     ['valves-prod', 'valve-detail', 'valve-group'],
+                regulators: ['regulators-prod', 'regulator-detail', 'regulator-group'],
+            }[sec] || [];
+            if (allowedPages.indexOf(page) === -1) {
+                kipClearSbsLinkFilter(sec);
+            }
+        }
+        // Сброс активного фильтра «№ САР» при уходе со страницы соответствующего раздела.
+        // Карта: страница → раздел, к которому относится фильтр.
+        // Если пользователь уходит не на «свою» страницу раздела и не на детальную —
+        // фильтр считаем «зависшим» и сбрасываем.
+        if (typeof kipSarLinkFilter !== 'undefined' && kipSarLinkFilter) {
+            const sec = kipSarLinkFilter.section;
+            const allowedPages = {
+                devices:    ['devices-prod', 'device-detail', 'dev-group'],
+                valves:     ['valves-prod', 'valve-detail', 'valve-group'],
+            }[sec] || [];
+            if (allowedPages.indexOf(page) === -1) {
+                kipClearSarLinkFilter(sec);
             }
         }
         if (page === 'minesweeper') { setTimeout(() => { if (typeof msInit === 'function') msInit(); }, 50); }
