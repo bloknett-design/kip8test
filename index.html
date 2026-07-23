@@ -3774,6 +3774,163 @@
         color: #1a4060;
     }
 
+    /* ===== Бейдж активного фильтра «Проект: …» в шапке списка ===== */
+    /* Показывается в разделах КИП ИОС, когда открыт переход из карточки проекта */
+    .kip-filter-badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 8px 14px 0;
+        padding: 8px 12px;
+        background: rgba(106, 166, 224, 0.14);
+        border: 1px solid rgba(106, 166, 224, 0.45);
+        border-radius: 10px;
+        font-size: 14px;
+        line-height: 1.2;
+        color: #c8dcec;
+    }
+    [data-theme="light"] .kip-filter-badge {
+        background: rgba(26, 64, 96, 0.08);
+        border-color: rgba(26, 64, 96, 0.35);
+        color: #1a4060;
+    }
+    .kip-filter-badge-label {
+        font-size: 12px;
+        opacity: 0.75;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+    .kip-filter-badge-value {
+        flex: 1 1 auto;
+        font-weight: 600;
+        font-feature-settings: "tnum";
+        word-break: break-all;
+    }
+    .kip-filter-badge-clear {
+        flex: 0 0 auto;
+        width: 26px;
+        height: 26px;
+        padding: 0;
+        border: none;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+        color: inherit;
+        font-size: 14px;
+        line-height: 1;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    [data-theme="light"] .kip-filter-badge-clear {
+        background: rgba(0, 0, 0, 0.06);
+    }
+    .kip-filter-badge-clear:active {
+        background: rgba(255, 255, 255, 0.18);
+    }
+    [data-theme="light"] .kip-filter-badge-clear:active {
+        background: rgba(0, 0, 0, 0.12);
+    }
+
+    /* ===== Блок «Связанные записи» в карточке проекта ===== */
+    .kip-related-section {
+        margin-top: 18px;
+        padding: 0 14px 24px;
+    }
+    .kip-related-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: rgba(200, 215, 230, 0.55);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0 0 10px;
+    }
+    [data-theme="light"] .kip-related-title { color: rgba(20, 20, 19, 0.55); }
+    .kip-related-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    .kip-related-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.15s ease, transform 0.05s ease;
+    }
+    [data-theme="light"] .kip-related-row {
+        background: rgba(0, 0, 0, 0.025);
+        border-color: rgba(0, 0, 0, 0.08);
+    }
+    .kip-related-row:active {
+        background: rgba(106, 166, 224, 0.12);
+        transform: scale(0.985);
+    }
+    [data-theme="light"] .kip-related-row:active {
+        background: rgba(26, 64, 96, 0.10);
+    }
+    .kip-related-row.is-empty {
+        cursor: default;
+        opacity: 0.5;
+    }
+    .kip-related-row.is-empty:active {
+        background: rgba(255, 255, 255, 0.04);
+        transform: none;
+    }
+    [data-theme="light"] .kip-related-row.is-empty:active {
+        background: rgba(0, 0, 0, 0.025);
+    }
+    .kip-related-row-icon {
+        flex: 0 0 auto;
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        font-weight: 700;
+        color: #fff;
+    }
+    .kip-related-row-text {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    .kip-related-row-label {
+        font-size: 15px;
+        font-weight: 600;
+        color: #d0dce8;
+        line-height: 1.2;
+    }
+    [data-theme="light"] .kip-related-row-label { color: #1a1a1a; }
+    .kip-related-row-count {
+        font-size: 12px;
+        color: rgba(200, 215, 230, 0.55);
+        margin-top: 2px;
+    }
+    [data-theme="light"] .kip-related-row-count { color: rgba(20, 20, 19, 0.55); }
+    .kip-related-row-arrow {
+        flex: 0 0 auto;
+        font-size: 18px;
+        color: rgba(200, 215, 230, 0.4);
+        line-height: 1;
+    }
+    [data-theme="light"] .kip-related-row-arrow { color: rgba(20, 20, 19, 0.4); }
+    .kip-related-row.is-empty .kip-related-row-arrow { display: none; }
+    /* Скелетон-заглушка во время загрузки счётчиков */
+    .kip-related-row.is-loading .kip-related-row-count {
+        color: rgba(200, 215, 230, 0.4);
+    }
+    [data-theme="light"] .kip-related-row.is-loading .kip-related-row-count {
+        color: rgba(20, 20, 19, 0.4);
+    }
+
     /* ===== Страница детального просмотра прибора ===== */
     /* Карточка: картинка слева в левом краю + блок №/Место справа от неё */
     .dev-detail-card {
@@ -7767,6 +7924,11 @@
 
         const query = devNorm((document.getElementById(id.search)?.value || '').trim());
 
+        // Если пользователь вручную ввёл поисковый запрос — сбросить фильтр по проекту
+        if (query && kipIsProjectLinkFilterActive('devices')) {
+            kipClearProjectLinkFilter('devices');
+        }
+
         // Исключаем ID=0
         let filtered = devData.devices.filter(d => {
             const idv = d['ID'];
@@ -7782,6 +7944,11 @@
             if (va > vb) return 1;
             return 0;
         });
+
+        // Фильтр по «№ проекта» (из карточки проекта)
+        if (kipIsProjectLinkFilterActive('devices')) {
+            filtered = filtered.filter(d => kipMatchesProjectFilter(d, 'devices'));
+        }
 
         // Поиск
         if (query) {
@@ -7807,13 +7974,26 @@
         info.textContent = '';
 
         if (filtered.length === 0) {
-            list.innerHTML = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
+            let emptyHtml = '';
+            if (kipIsProjectLinkFilterActive('devices')) {
+                emptyHtml += kipRenderFilterBadge('devices');
+                emptyHtml += '<div class="pb-empty">По проекту №«' + devEsc(kipProjectLinkFilter.projectNo) + '» приборов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
+            } else {
+                emptyHtml = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
+            }
+            list.innerHTML = emptyHtml;
+            kipBindFilterBadge(list, 'devices', devRenderSorted);
             return;
         }
 
         // Пагинация
 
-        let html = '<div class="dev-sorted-list' + (query ? ' searching' : '') + '">';
+        let html = '';
+        // Бейдж активного фильтра по проекту (вверху списка)
+        if (kipIsProjectLinkFilterActive('devices')) {
+            html += kipRenderFilterBadge('devices');
+        }
+        html += '<div class="dev-sorted-list' + (query ? ' searching' : '') + '">';
 
         for (const g of groupOrder) {
             const items = groups[g];
@@ -7871,6 +8051,8 @@
 
 
         list.innerHTML = html;
+        // Привязка обработчика к кнопке ✕ в бейдже фильтра
+        kipBindFilterBadge(list, 'devices', devRenderSorted);
     }
 
     
@@ -8126,6 +8308,10 @@
         }
 
         const query = lockNorm((document.getElementById(id.search)?.value || '').trim());
+        // Если пользователь вручную ввёл поисковый запрос — сбросить фильтр по проекту
+        if (query && kipIsProjectLinkFilterActive('lockouts')) {
+            kipClearProjectLinkFilter('lockouts');
+        }
         let filtered = lockData.lockouts || [];
 
         const sortKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
@@ -8136,6 +8322,11 @@
             if (va > vb) return 1;
             return 0;
         });
+
+        // Фильтр по «№ проекта» (из карточки проекта)
+        if (kipIsProjectLinkFilterActive('lockouts')) {
+            filtered = filtered.filter(d => kipMatchesProjectFilter(d, 'lockouts'));
+        }
 
         if (query) {
             filtered = filtered.filter(d =>
@@ -8154,11 +8345,24 @@
         info.textContent = '';
 
         if (filtered.length === 0) {
-            list.innerHTML = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
+            let emptyHtml = '';
+            if (kipIsProjectLinkFilterActive('lockouts')) {
+                emptyHtml += kipRenderFilterBadge('lockouts');
+                emptyHtml += '<div class="pb-empty">По проекту №«' + lockEsc(kipProjectLinkFilter.projectNo) + '» блокировок не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
+            } else {
+                emptyHtml = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
+            }
+            list.innerHTML = emptyHtml;
+            kipBindFilterBadge(list, 'lockouts', lockRenderSorted);
             return;
         }
 
-        let html = '<div class="lock-sorted-list' + (query ? ' searching' : '') + '">';
+        let html = '';
+        // Бейдж активного фильтра по проекту (вверху списка)
+        if (kipIsProjectLinkFilterActive('lockouts')) {
+            html += kipRenderFilterBadge('lockouts');
+        }
+        html += '<div class="lock-sorted-list' + (query ? ' searching' : '') + '">';
         for (const g of groupOrder) {
             const items = groups[g];
             const groupKey = mode + '|' + g;
@@ -8198,6 +8402,8 @@
         }
         html += '</div>';
         list.innerHTML = html;
+        // Привязка обработчика к кнопке ✕ в бейдже фильтра
+        kipBindFilterBadge(list, 'lockouts', lockRenderSorted);
     }
 
     function lockToggleGroup(titleEl) {
@@ -8483,6 +8689,10 @@
         }
 
         const query = valveNorm((document.getElementById(id.search)?.value || '').trim());
+        // Если пользователь вручную ввёл поисковый запрос — сбросить фильтр по проекту
+        if (query && kipIsProjectLinkFilterActive('valves')) {
+            kipClearProjectLinkFilter('valves');
+        }
         let filtered = valveData.valves || [];
 
         const sortKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
@@ -8493,6 +8703,11 @@
             if (va > vb) return 1;
             return 0;
         });
+
+        // Фильтр по «№ проекта» (из карточки проекта)
+        if (kipIsProjectLinkFilterActive('valves')) {
+            filtered = filtered.filter(d => kipMatchesProjectFilter(d, 'valves'));
+        }
 
         if (query) {
             filtered = filtered.filter(d =>
@@ -8511,11 +8726,24 @@
         info.textContent = '';
 
         if (filtered.length === 0) {
-            list.innerHTML = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
+            let emptyHtml = '';
+            if (kipIsProjectLinkFilterActive('valves')) {
+                emptyHtml += kipRenderFilterBadge('valves');
+                emptyHtml += '<div class="pb-empty">По проекту №«' + valveEsc(kipProjectLinkFilter.projectNo) + '» клапанов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
+            } else {
+                emptyHtml = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
+            }
+            list.innerHTML = emptyHtml;
+            kipBindFilterBadge(list, 'valves', valveRenderSorted);
             return;
         }
 
-        let html = '<div class="valve-sorted-list' + (query ? ' searching' : '') + '">';
+        let html = '';
+        // Бейдж активного фильтра по проекту (вверху списка)
+        if (kipIsProjectLinkFilterActive('valves')) {
+            html += kipRenderFilterBadge('valves');
+        }
+        html += '<div class="valve-sorted-list' + (query ? ' searching' : '') + '">';
         for (const g of groupOrder) {
             const items = groups[g];
             const groupKey = mode + '|' + g;
@@ -8555,6 +8783,8 @@
         }
         html += '</div>';
         list.innerHTML = html;
+        // Привязка обработчика к кнопке ✕ в бейдже фильтра
+        kipBindFilterBadge(list, 'valves', valveRenderSorted);
     }
 
     function valveToggleGroup(titleEl) {
@@ -8889,6 +9119,10 @@
         }
 
         const query = regulatorNorm((document.getElementById(id.search)?.value || '').trim());
+        // Если пользователь вручную ввёл поисковый запрос — сбросить фильтр по проекту
+        if (query && kipIsProjectLinkFilterActive('regulators')) {
+            kipClearProjectLinkFilter('regulators');
+        }
         let filtered = regulatorData.regulators || [];
 
         const sortKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
@@ -8899,6 +9133,11 @@
             if (va > vb) return 1;
             return 0;
         });
+
+        // Фильтр по «№ проекта» (из карточки проекта)
+        if (kipIsProjectLinkFilterActive('regulators')) {
+            filtered = filtered.filter(d => kipMatchesProjectFilter(d, 'regulators'));
+        }
 
         if (query) {
             filtered = filtered.filter(d =>
@@ -8917,11 +9156,24 @@
         info.textContent = '';
 
         if (filtered.length === 0) {
-            list.innerHTML = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
+            let emptyHtml = '';
+            if (kipIsProjectLinkFilterActive('regulators')) {
+                emptyHtml += kipRenderFilterBadge('regulators');
+                emptyHtml += '<div class="pb-empty">По проекту №«' + regulatorEsc(kipProjectLinkFilter.projectNo) + '» регуляторов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
+            } else {
+                emptyHtml = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
+            }
+            list.innerHTML = emptyHtml;
+            kipBindFilterBadge(list, 'regulators', regulatorRenderSorted);
             return;
         }
 
-        let html = '<div class="regulator-sorted-list' + (query ? ' searching' : '') + '">';
+        let html = '';
+        // Бейдж активного фильтра по проекту (вверху списка)
+        if (kipIsProjectLinkFilterActive('regulators')) {
+            html += kipRenderFilterBadge('regulators');
+        }
+        html += '<div class="regulator-sorted-list' + (query ? ' searching' : '') + '">';
         for (const g of groupOrder) {
             const items = groups[g];
             const groupKey = mode + '|' + g;
@@ -8961,6 +9213,8 @@
         }
         html += '</div>';
         list.innerHTML = html;
+        // Привязка обработчика к кнопке ✕ в бейдже фильтра
+        kipBindFilterBadge(list, 'regulators', regulatorRenderSorted);
     }
 
     function regulatorToggleGroup(titleEl) {
@@ -9562,6 +9816,335 @@
         return empties.indexOf(s) !== -1;
     }
 
+    // ===== Обратные ссылки: фильтр списка раздела КИП ИОС по «№ проекта» =====
+    // Глобальное состояние фильтра. Когда не null — соответствующий
+    // *RenderSorted фильтрует записи по полю «№ проекта» (точное совпадение
+    // или подстрока, как в projectOpenByProjectNo). В шапке списка показывается
+    // бейдж с возможностью сброса.
+    //
+    // Структура:
+    //   { projectNo: '551-115-008-АТХ-2', section: 'devices' }
+    // section — одно из: 'devices' | 'lockouts' | 'valves' | 'regulators' | 'cables'
+    let kipProjectLinkFilter = null;
+
+    // Установить фильтр и открыть страницу раздела КИП ИОС.
+    // section — идентификатор раздела; page — целевая страница (по умолчанию '*-prod').
+    function kipSetProjectLinkFilter(section, projectNo) {
+        if (!section || projectNo == null) return;
+        const raw = String(projectNo).trim();
+        if (!raw || kipIsEmptyProjectNo(raw)) {
+            if (navigator.vibrate) navigator.vibrate(10);
+            alert('№ проекта не указан.');
+            return;
+        }
+        // Карта section → страница по умолчанию. Если раздел неизвестен — молча выйти.
+        const pages = {
+            devices: 'devices-prod',
+            lockouts: 'lockouts-prod',
+            valves: 'valves-prod',
+            regulators: 'regulators-prod',
+            cables: 'cables-prod',
+        };
+        const target = pages[section];
+        if (!target) return;
+        if (navigator.vibrate) navigator.vibrate(15);
+        kipProjectLinkFilter = { projectNo: raw, section: section };
+        // Сбросить поисковый запрос (если инпут уже существует)
+        const inputId = {
+            devices: 'devProdSearchInput',
+            lockouts: 'lockProdSearchInput',
+            valves: 'valveProdSearchInput',
+            regulators: 'regulatorProdSearchInput',
+            cables: 'cableProdSearchInput',
+        }[section];
+        const inp = document.getElementById(inputId);
+        if (inp) inp.value = '';
+        navigateTo(target);
+    }
+
+    // Сбросить активный фильтр (если он относится к данному раздела).
+    // Если section не передан — сбросить любой.
+    function kipClearProjectLinkFilter(section) {
+        if (!kipProjectLinkFilter) return;
+        if (!section || kipProjectLinkFilter.section === section) {
+            kipProjectLinkFilter = null;
+            if (navigator.vibrate) navigator.vibrate(8);
+        }
+    }
+
+    // Проверить, активен ли фильтр для данного раздела.
+    function kipIsProjectLinkFilterActive(section) {
+        return !!(kipProjectLinkFilter && kipProjectLinkFilter.section === section);
+    }
+
+    // Проверить, проходит ли запись фильтр по «№ проекта».
+    // Используется в *RenderSorted.
+    function kipMatchesProjectFilter(item, section) {
+        if (!kipProjectLinkFilter || kipProjectLinkFilter.section !== section) return true;
+        const raw = kipProjectLinkFilter.projectNo;
+        if (!raw) return true;
+        const norm = (s) => String(s == null ? '' : s)
+            .trim().toLowerCase().replace(/[ё]/g, 'е').replace(/\s+/g, ' ');
+        const r = norm(raw);
+        const v = norm(item['№ проекта']);
+        if (!v) return false;
+        // Точное совпадение
+        if (v === r) return true;
+        // Частичное совпадение (длина ≥ 6, защита от ложных срабатываний)
+        if (r.length >= 6 && (v.indexOf(r) !== -1 || r.indexOf(v) !== -1)) return true;
+        return false;
+    }
+
+    // Рендер бейджа активного фильтра в шапке списка раздела.
+    // Возвращает HTML-строку (пустую, если фильтр не активен).
+    function kipRenderFilterBadge(section) {
+        if (!kipIsProjectLinkFilterActive(section)) return '';
+        const esc = (s) => String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        const no = kipProjectLinkFilter.projectNo;
+        return '<div class="kip-filter-badge" data-filter-badge="' + esc(section) + '">' +
+               '<span class="kip-filter-badge-label">Проект:</span>' +
+               '<span class="kip-filter-badge-value">' + esc(no) + '</span>' +
+               '<button class="kip-filter-badge-clear" data-filter-clear="' + esc(section) + '" aria-label="Сбросить фильтр">✕</button>' +
+               '</div>';
+    }
+
+    // Привязка обработчика к кнопке ✕ в бейдже.
+    // Вызывается после list.innerHTML = html в каждом *RenderSorted.
+    function kipBindFilterBadge(container, section, renderFn) {
+        if (!container) return;
+        const badge = container.querySelector('[data-filter-badge="' + section + '"]');
+        if (!badge) return;
+        const clear = badge.querySelector('[data-filter-clear]');
+        if (clear) {
+            clear.addEventListener('click', function(e) {
+                e.stopPropagation();
+                kipClearProjectLinkFilter(section);
+                // Сбросить также инпут поиска
+                const inputId = {
+                    devices: 'devProdSearchInput',
+                    lockouts: 'lockProdSearchInput',
+                    valves: 'valveProdSearchInput',
+                    regulators: 'regulatorProdSearchInput',
+                    cables: 'cableProdSearchInput',
+                }[section];
+                const inp = document.getElementById(inputId);
+                if (inp) inp.value = '';
+                if (typeof renderFn === 'function') renderFn('prod');
+            });
+        }
+    }
+
+    // ===== Обратные ссылки: блок «Связанные записи» в карточке проекта =====
+    // Конфигурация разделов для отображения обратных ссылок.
+    // label — название раздела в карточке проекта;
+    // section — идентификатор для kipProjectLinkFilter;
+    // itemsKey — ключ в JSON, где лежит массив записей (devices/lockouts/...);
+    // loadedFlag — имя глобальной переменной-флага (строкой не получится,
+    //   поэтому используем явные проверки в kipSectionLoaded/kipGetSectionItems);
+    // icon — буква для иконки; color — цвет иконки (RGB-строка).
+    const KIP_RELATED_SECTIONS = [
+        { label: 'Приборы',         section: 'devices',    icon: 'П', color: '#6aa6e0' },
+        { label: 'Блокировки',      section: 'lockouts',   icon: 'Б', color: '#b85a7a' },
+        { label: 'Клапаны',         section: 'valves',     icon: 'К', color: '#4a8a8c' },
+        { label: 'Регуляторы',      section: 'regulators', icon: 'Р', color: '#7e5ab8' },
+        { label: 'Кабельный журнал', section: 'cables',    icon: 'Ж', color: '#8aa070' },
+    ];
+
+    // Проверить, загружены ли данные раздела.
+    function kipSectionLoaded(section) {
+        switch (section) {
+            case 'devices':    return !!(typeof devLoaded !== 'undefined' && devLoaded && devData);
+            case 'lockouts':   return !!(typeof lockLoaded !== 'undefined' && lockLoaded && lockData);
+            case 'valves':     return !!(typeof valveLoaded !== 'undefined' && valveLoaded && valveData);
+            case 'regulators': return !!(typeof regulatorLoaded !== 'undefined' && regulatorLoaded && regulatorData);
+            case 'cables':     return !!(typeof cableLoaded !== 'undefined' && cableLoaded && cableData);
+        }
+        return false;
+    }
+
+    // Получить массив записей раздела (или null, если не загружен).
+    function kipGetSectionItems(section) {
+        switch (section) {
+            case 'devices':    return devData && devData.devices ? devData.devices : null;
+            case 'lockouts':   return lockData && lockData.lockouts ? lockData.lockouts : null;
+            case 'valves':     return valveData && valveData.valves ? valveData.valves : null;
+            case 'regulators': return regulatorData && regulatorData.regulators ? regulatorData.regulators : null;
+            case 'cables':     return cableData && cableData.cables ? cableData.cables : null;
+        }
+        return null;
+    }
+
+    // Загрузить данные раздела (если ещё не загружены). Возвращает Promise.
+    // Использует те же глобальные переменные и тот же формат fetch, что и
+    // соответствующий *InitSorted — без дублирования логики парсинга.
+    async function kipLoadSectionData(section) {
+        if (kipSectionLoaded(section)) return true;
+        const url = 'data/' + (
+            section === 'devices' ? 'devices.json' :
+            section === 'lockouts' ? 'lockouts.json' :
+            section === 'valves' ? 'valves.json' :
+            section === 'regulators' ? 'regulators.json' :
+            section === 'cables' ? 'cables.json' : null
+        );
+        if (!url) return false;
+        try {
+            const bust = '?v=' + Date.now();
+            const resp = await fetch(url + bust, { cache: 'no-store' });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const data = await resp.json();
+            switch (section) {
+                case 'devices':
+                    devData = data; devLoaded = true;
+                    localStorage.setItem('devicesLastUpdate', new Date().toISOString());
+                    break;
+                case 'lockouts':
+                    lockData = data; lockLoaded = true;
+                    localStorage.setItem('lockoutsLastUpdate', new Date().toISOString());
+                    break;
+                case 'valves':
+                    valveData = data; valveLoaded = true;
+                    localStorage.setItem('valvesLastUpdate', new Date().toISOString());
+                    break;
+                case 'regulators':
+                    regulatorData = data; regulatorLoaded = true;
+                    localStorage.setItem('regulatorsLastUpdate', new Date().toISOString());
+                    break;
+                case 'cables':
+                    cableData = data; cableLoaded = true;
+                    localStorage.setItem('cablesLastUpdate', new Date().toISOString());
+                    break;
+            }
+            return true;
+        } catch (e) {
+            console.error('kipLoadSectionData(' + section + ') error:', e);
+            return false;
+        }
+    }
+
+    // Подсчитать количество связанных записей для данного «№ проекта».
+    // Использует ту же логику совпадения, что и kipMatchesProjectFilter.
+    function kipCountRelated(section, items, projectNo) {
+        if (!items || !items.length) return 0;
+        const norm = (s) => String(s == null ? '' : s)
+            .trim().toLowerCase().replace(/[ё]/g, 'е').replace(/\s+/g, ' ');
+        const r = norm(projectNo);
+        if (!r) return 0;
+        let count = 0;
+        for (const it of items) {
+            const v = norm(it['№ проекта']);
+            if (!v) continue;
+            if (v === r) { count++; continue; }
+            if (r.length >= 6 && (v.indexOf(r) !== -1 || r.indexOf(v) !== -1)) count++;
+        }
+        return count;
+    }
+
+    // Сгенерировать HTML-строку блока «Связанные записи» для карточки проекта.
+    // Сразу рендерит строки с пометкой «загрузка…», после загрузки данных
+    // вызывающий код должен перерисовать блок (вызвать kipUpdateRelatedBlock).
+    function kipRenderRelatedBlock(projectNo) {
+        if (!projectNo || kipIsEmptyProjectNo(projectNo)) return '';
+        const esc = (s) => String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        let html = '<div class="kip-related-section" id="kipRelatedSection">';
+        html += '<div class="kip-related-title">Связанные записи</div>';
+        html += '<div class="kip-related-grid">';
+        for (const cfg of KIP_RELATED_SECTIONS) {
+            html += '<div class="kip-related-row is-loading" data-related-section="' + esc(cfg.section) + '">';
+            html += '<div class="kip-related-row-icon" style="background:' + esc(cfg.color) + ';">' + esc(cfg.icon) + '</div>';
+            html += '<div class="kip-related-row-text">';
+            html += '<div class="kip-related-row-label">' + esc(cfg.label) + '</div>';
+            html += '<div class="kip-related-row-count">Загрузка…</div>';
+            html += '</div>';
+            html += '<div class="kip-related-row-arrow">›</div>';
+            html += '</div>';
+        }
+        html += '</div>';
+        html += '</div>';
+        return html;
+    }
+
+    // Обновить счётчики в блоке «Связанные записи».
+    // section — какой раздел обновить (или null для всех).
+    // projectNo — № проекта для фильтрации.
+    function kipUpdateRelatedBlock(projectNo, section) {
+        const root = document.getElementById('kipRelatedSection');
+        if (!root) return;
+        const esc = (s) => String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        const targets = section
+            ? [section]
+            : KIP_RELATED_SECTIONS.map(c => c.section);
+        for (const sec of targets) {
+            const row = root.querySelector('[data-related-section="' + sec + '"]');
+            if (!row) continue;
+            const countEl = row.querySelector('.kip-related-row-count');
+            if (!countEl) continue;
+            const items = kipGetSectionItems(sec);
+            const cfg = KIP_RELATED_SECTIONS.find(c => c.section === sec);
+            if (!items) {
+                // Данные ещё не загружены — оставляем «Загрузка…»
+                continue;
+            }
+            // Если данные есть, но пустой массив — тоже считаем = 0
+            const count = kipCountRelated(sec, items, projectNo);
+            // Плюрализация
+            const forms = {
+                devices:    ['прибор', 'прибора', 'приборов'],
+                lockouts:   ['блокировка', 'блокировки', 'блокировок'],
+                valves:     ['клапан', 'клапана', 'клапанов'],
+                regulators: ['регулятор', 'регулятора', 'регуляторов'],
+                cables:     ['кабель', 'кабеля', 'кабелей'],
+            }[sec] || ['запись', 'записи', 'записей'];
+            const plural = kipRelatedPlural(count, forms);
+            countEl.textContent = count + ' ' + plural;
+            if (count === 0) {
+                row.classList.remove('is-loading');
+                row.classList.add('is-empty');
+                countEl.textContent = 'Нет связанных ' + forms[2];
+            } else {
+                row.classList.remove('is-loading', 'is-empty');
+            }
+        }
+    }
+
+    // Русская плюрализация для счётчиков в блоке связанных записей.
+    function kipRelatedPlural(n, forms) {
+        const m = n % 100;
+        const m1 = m % 10;
+        if (m >= 5 && m <= 20) return forms[2];
+        if (m1 === 1) return forms[0];
+        if (m1 >= 2 && m1 <= 4) return forms[1];
+        return forms[2];
+    }
+
+    // Асинхронно загрузить все недостающие разделы и обновить счётчики.
+    // Вызывается из projectRenderDetail после установки HTML.
+    async function kipLoadAndUpdateRelated(projectNo) {
+        if (!projectNo || kipIsEmptyProjectNo(projectNo)) return;
+        // Загружаем разделы параллельно
+        const promises = KIP_RELATED_SECTIONS.map(c => c.section).map(sec => kipLoadSectionData(sec));
+        await Promise.all(promises);
+        // После загрузки обновляем счётчики
+        kipUpdateRelatedBlock(projectNo, null);
+        // Привязываем обработчики кликов на строки (теперь они кликабельны)
+        const root = document.getElementById('kipRelatedSection');
+        if (!root) return;
+        const rows = root.querySelectorAll('.kip-related-row');
+        rows.forEach(function(row) {
+            const sec = row.getAttribute('data-related-section');
+            // Не привязывать, если 0 связанных
+            if (row.classList.contains('is-empty')) return;
+            row.addEventListener('click', function() {
+                kipSetProjectLinkFilter(sec, projectNo);
+            });
+        });
+    }
+
     function projectRenderDetail() {
         const projectId = window._projectDetailId;
         if (!projectId || !projectLoaded || !projectData) return;
@@ -9593,7 +10176,16 @@
         }
         html += '</div>';
         html += '</div>';
+        // Блок «Связанные записи» — обратные ссылки на приборы/блокировки/клапаны/регуляторы/кабели
+        const projectNo = item['№ проекта'];
+        if (projectNo && !kipIsEmptyProjectNo(projectNo)) {
+            html += kipRenderRelatedBlock(String(projectNo));
+        }
         content.innerHTML = html;
+        // Запустить фоновую загрузку данных разделов и обновить счётчики
+        if (projectNo && !kipIsEmptyProjectNo(projectNo)) {
+            kipLoadAndUpdateRelated(String(projectNo));
+        }
     }
 
     // ===== Кнопка Проекты на странице КИП И ОС =====
@@ -9760,6 +10352,10 @@
         }
 
         const query = cableNorm((document.getElementById(id.search)?.value || '').trim());
+        // Если пользователь вручную ввёл поисковый запрос — сбросить фильтр по проекту
+        if (query && kipIsProjectLinkFilterActive('cables')) {
+            kipClearProjectLinkFilter('cables');
+        }
         let filtered = cableData.cables || [];
 
         // Сортировка по столбцу «Отделение, производство»
@@ -9776,6 +10372,11 @@
             if (na > nb) return 1;
             return 0;
         });
+
+        // Фильтр по «№ проекта» (из карточки проекта)
+        if (kipIsProjectLinkFilterActive('cables')) {
+            filtered = filtered.filter(d => kipMatchesProjectFilter(d, 'cables'));
+        }
 
         if (query) {
             filtered = filtered.filter(d =>
@@ -9794,11 +10395,24 @@
         info.textContent = '';
 
         if (filtered.length === 0) {
-            list.innerHTML = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
+            let emptyHtml = '';
+            if (kipIsProjectLinkFilterActive('cables')) {
+                emptyHtml += kipRenderFilterBadge('cables');
+                emptyHtml += '<div class="pb-empty">По проекту №«' + cableEsc(kipProjectLinkFilter.projectNo) + '» кабелей не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
+            } else {
+                emptyHtml = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
+            }
+            list.innerHTML = emptyHtml;
+            kipBindFilterBadge(list, 'cables', cablesRenderSorted);
             return;
         }
 
-        let html = '<div class="cable-sorted-list' + (query ? ' searching' : '') + '>';
+        let html = '';
+        // Бейдж активного фильтра по проекту (вверху списка)
+        if (kipIsProjectLinkFilterActive('cables')) {
+            html += kipRenderFilterBadge('cables');
+        }
+        html += '<div class="cable-sorted-list' + (query ? ' searching' : '') + '>';
         for (const g of groupOrder) {
             const items = groups[g];
             const groupKey = mode + '|' + g;
@@ -9841,6 +10455,8 @@
         }
         html += '</div>';
         list.innerHTML = html;
+        // Привязка обработчика к кнопке ✕ в бейдже фильтра
+        kipBindFilterBadge(list, 'cables', cablesRenderSorted);
     }
 
     function cablesToggleGroup(titleEl) {
@@ -10666,6 +11282,23 @@
 
     function navigateTo(page, addToHistory=true) {
         if (page === 'library') { navigateTo('library-internal'); return; }
+        // Сброс активного фильтра «№ проекта» при уходе со страницы соответствующего раздела.
+        // Карта: страница → раздел, к которому относится фильтр.
+        // Если пользователь уходит не на «свою» страницу раздела и не на детальную —
+        // фильтр считаем «зависшим» и сбрасываем.
+        if (typeof kipProjectLinkFilter !== 'undefined' && kipProjectLinkFilter) {
+            const sec = kipProjectLinkFilter.section;
+            const allowedPages = {
+                devices:    ['devices-prod', 'device-detail', 'dev-group'],
+                lockouts:   ['lockouts-prod', 'lockout-detail', 'lock-group'],
+                valves:     ['valves-prod', 'valve-detail', 'valve-group'],
+                regulators: ['regulators-prod', 'regulator-detail', 'regulator-group'],
+                cables:     ['cables-prod', 'cable-detail', 'cable-group'],
+            }[sec] || [];
+            if (allowedPages.indexOf(page) === -1) {
+                kipClearProjectLinkFilter(sec);
+            }
+        }
         if (page === 'minesweeper') { setTimeout(() => { if (typeof msInit === 'function') msInit(); }, 50); }
         if (page === 'phonebook') { setTimeout(() => { if (typeof pbInit === 'function') pbInit(); }, 30); }
         if (page === 'devices') { setTimeout(() => { if (typeof devInit === 'function') devInit(); }, 30); }
