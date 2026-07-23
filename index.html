@@ -2054,6 +2054,48 @@
         max-height: 5000px; /* достаточно для любого раздела */
         transition: max-height 0.35s ease;
     }
+
+    /* ===== Статичные подгруппы (без сворачивания) на страницах групп ===== */
+    /* Применяется в: dev-group, lock-group, valve-group, regulator-group
+       при добавлении класса .static — тело всегда раскрыто, заголовок без
+       стрелки/курсора-указателя, без onclick. */
+    .pb-section.static .pb-section-body {
+        max-height: none !important;
+        transition: none !important;
+    }
+    .pb-section.static .pb-section-title {
+        cursor: default;
+    }
+    .pb-section.static .pb-section-arrow {
+        display: none !important;
+    }
+    /* Для статичных подгрупп — компактный заголовок с приглушённым фоном,
+       без интерактивности. Специфичность (0,3,0) превышает спокойные
+       палитры разделов (0,2,0), поэтому перебивает их. */
+    .pb-section.static > .pb-section-title {
+        padding: 8px 16px;
+        min-height: 0;
+        font-size: 13px;
+        font-weight: 600;
+        background: rgba(255,255,255,0.035);
+        border-top: 1px solid rgba(255,255,255,0.04);
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        letter-spacing: 0.1px;
+        color: var(--text-secondary);
+    }
+    [data-theme="light"] .pb-section.static > .pb-section-title {
+        background: rgba(0,0,0,0.025);
+        border-top: 1px solid rgba(0,0,0,0.05);
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    /* Подгруппа-заголовок: счётчик более яркий, чем в раскрываемых группах */
+    .pb-section.static > .pb-section-title .pb-section-title-count {
+        color: rgba(199,150,74,0.85);
+        font-weight: 600;
+    }
+    [data-theme="light"] .pb-section.static > .pb-section-title .pb-section-title-count {
+        color: rgba(160,110,30,0.85);
+    }
     /* В режиме поиска (есть query) — все секции раскрыты автоматически */
     .pb-list.searching .pb-section .pb-section-body {
         max-height: 5000px;
@@ -2568,6 +2610,360 @@
     .regulator-sorted-list.searching .pb-section.regulator-group .pb-section-body {
         max-height: 5000px;
         transition: none;
+    }
+
+    /* ===== ПРОЕКТЫ (зеркало регуляторов/клапанов/блокировок) ===== */
+    .project-sorted-list {
+        margin: 0;
+    }
+    .project-sorted-list.searching .pb-section.project-group .pb-section-body {
+        max-height: 5000px;
+        transition: none;
+    }
+    .project-sorted-list.searching .pb-section.project-group .pb-section-arrow {
+        transform: translateY(-50%) rotate(45deg);
+        opacity: 0.3;
+    }
+    .project-sorted-list.searching .pb-section.project-group .pb-section-title {
+        cursor: default;
+    }
+
+    .project-group {
+        margin: 0;
+        border: none;
+        border-radius: 0;
+        background: rgba(255,255,255,0.015);
+        overflow: hidden;
+    }
+    [data-theme="light"] .project-group {
+        border: none;
+        background: rgba(255,255,255,0.55);
+    }
+
+    /* Спокойная медно-янтарная палитра заголовков групп — край в край, в 2 строки, без стрелки */
+    .project-group .pb-section-title {
+        background: #2e2920;
+        color: #c4b48c;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        padding: 14px 16px;
+        min-height: 64px;
+        align-items: center;
+        letter-spacing: 0.1px;
+    }
+    .project-group .pb-section-title-text {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+        line-height: 1.25;
+    }
+    .project-group .pb-section-title-count {
+        align-self: center;
+        color: rgba(196,180,140,0.55);
+    }
+    /* Прячем правую стрелку раскрытия у кнопок разделов Проекты */
+    .project-group .pb-section-arrow {
+        display: none;
+    }
+    /* Активное состояние кнопок */
+    .project-group .pb-section-title:active {
+        background: #352f24;
+    }
+    [data-theme="light"] .project-group .pb-section-title {
+        background: #f1ece2;
+        color: #5a4a30;
+        border-bottom: 1px solid rgba(0,0,0,0.04);
+    }
+    [data-theme="light"] .project-group .pb-section-title-count {
+        color: rgba(90,74,48,0.6);
+    }
+    [data-theme="light"] .project-group .pb-section-title:active {
+        background: #e8e1d4;
+    }
+
+    /* Карточки проектов внутри группы */
+    .project-group .pb-section-body {
+        padding: 0;
+    }
+
+    /* Карточка проекта в списке */
+    .project-card {
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        background: var(--card-bg, rgba(255,255,255,0.025));
+    }
+    [data-theme="light"] .project-card {
+        background: rgba(255,255,255,0.55);
+        border-bottom-color: rgba(0,0,0,0.05);
+    }
+    .project-card-header {
+        cursor: pointer;
+        padding: 12px 16px;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .project-card-header:active {
+        background: rgba(255,255,255,0.03);
+    }
+    .project-card-header-inner {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .project-card-text {
+        flex: 1; min-width: 0;
+    }
+    .project-card-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        line-height: 1.3;
+        margin-bottom: 4px;
+        word-wrap: break-word;
+    }
+    .project-card-subtitle {
+        font-size: 12px;
+        color: var(--text-secondary);
+        line-height: 1.35;
+    }
+    .project-card-status {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 10px;
+        margin-top: 4px;
+        white-space: nowrap;
+    }
+    .project-card-status-done    { background: rgba(100,160,100,0.18); color: #8fcf8f; }
+    .project-card-status-new     { background: rgba(120,160,220,0.18); color: #9bbfe6; }
+    .project-card-status-stopped { background: rgba(220,170,80,0.18);  color: #d8b878; }
+    .project-card-status-cancel  { background: rgba(200,100,100,0.18); color: #d89090; }
+    [data-theme="light"] .project-card-status-done    { background: rgba(60,130,60,0.15);  color: #4a8a4a; }
+    [data-theme="light"] .project-card-status-new     { background: rgba(40,90,180,0.15);  color: #2a5ab0; }
+    [data-theme="light"] .project-card-status-stopped { background: rgba(160,110,20,0.15); color: #8a6020; }
+    [data-theme="light"] .project-card-status-cancel  { background: rgba(160,40,40,0.15);  color: #a04040; }
+    .project-card-arrow {
+        flex-shrink: 0;
+        color: var(--text-secondary);
+        font-size: 16px;
+        margin-top: 2px;
+    }
+    .project-card-arrow::before { content: '›'; }
+
+    /* Карточка деталей проекта */
+    .project-detail-card {
+        margin: 0;
+        background: var(--card-bg, rgba(255,255,255,0.025));
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    [data-theme="light"] .project-detail-card {
+        background: rgba(255,255,255,0.55);
+    }
+    .project-detail-rows {
+        padding: 8px 16px 16px;
+    }
+    .project-detail-row {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .project-detail-row:last-child { border-bottom: none; }
+    .project-detail-label {
+        font-size: 11px;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+    .project-detail-value {
+        font-size: 14px;
+        color: var(--text-primary);
+        line-height: 1.4;
+        word-wrap: break-word;
+    }
+
+    /* Дополнительная row для второй группы кнопок (Проекты) внутри .kip-ios-block */
+    .kip-ios-block .kip-ios-projects-row {
+        margin-top: 6px;
+        padding-top: 6px;
+        border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    [data-theme="light"] .kip-ios-block .kip-ios-projects-row {
+        border-top-color: rgba(0,0,0,0.05);
+    }
+
+    /* ===== КАБЕЛЬНЫЙ ЖУРНАЛ (зеркало проектов/регуляторов/клапанов/блокировок) ===== */
+    .cable-sorted-list {
+        margin: 0;
+    }
+    .cable-sorted-list.searching .pb-section.cable-group .pb-section-body {
+        max-height: 5000px;
+        transition: none;
+    }
+    .cable-sorted-list.searching .pb-section.cable-group .pb-section-arrow {
+        transform: translateY(-50%) rotate(45deg);
+        opacity: 0.3;
+    }
+    .cable-sorted-list.searching .pb-section.cable-group .pb-section-title {
+        cursor: default;
+    }
+
+    .cable-group {
+        margin: 0;
+        border: none;
+        border-radius: 0;
+        background: rgba(255,255,255,0.015);
+        overflow: hidden;
+    }
+    [data-theme="light"] .cable-group {
+        border: none;
+        background: rgba(255,255,255,0.55);
+    }
+
+    /* Спокойная оливково-зелёная палитра заголовков групп — край в край, в 2 строки, без стрелки */
+    .cable-group .pb-section-title {
+        background: #2a2e25;
+        color: #b8c4a4;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        padding: 14px 16px;
+        min-height: 64px;
+        align-items: center;
+        letter-spacing: 0.1px;
+    }
+    .cable-group .pb-section-title-text {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+        line-height: 1.25;
+    }
+    .cable-group .pb-section-title-count {
+        align-self: center;
+        color: rgba(184,196,164,0.55);
+    }
+    /* Прячем правую стрелку раскрытия у кнопок разделов Кабельный журнал */
+    .cable-group .pb-section-arrow {
+        display: none;
+    }
+    /* Активное состояние кнопок */
+    .cable-group .pb-section-title:active {
+        background: #313629;
+    }
+    [data-theme="light"] .cable-group .pb-section-title {
+        background: #eef1e8;
+        color: #4a5740;
+        border-bottom: 1px solid rgba(0,0,0,0.04);
+    }
+    [data-theme="light"] .cable-group .pb-section-title-count {
+        color: rgba(74,87,64,0.6);
+    }
+    [data-theme="light"] .cable-group .pb-section-title:active {
+        background: #e3e8da;
+    }
+
+    /* Карточки кабелей внутри группы */
+    .cable-group .pb-section-body {
+        padding: 0;
+    }
+
+    /* Карточка кабеля в списке */
+    .cable-card {
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        background: var(--card-bg, rgba(255,255,255,0.025));
+    }
+    [data-theme="light"] .cable-card {
+        background: rgba(255,255,255,0.55);
+        border-bottom-color: rgba(0,0,0,0.05);
+    }
+    .cable-card-header {
+        cursor: pointer;
+        padding: 12px 16px;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .cable-card-header:active {
+        background: rgba(255,255,255,0.03);
+    }
+    .cable-card-header-inner {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .cable-card-text {
+        flex: 1; min-width: 0;
+    }
+    .cable-card-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        line-height: 1.3;
+        margin-bottom: 4px;
+        word-wrap: break-word;
+    }
+    .cable-card-subtitle {
+        font-size: 12px;
+        color: var(--text-secondary);
+        line-height: 1.35;
+    }
+    .cable-card-purpose {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 10px;
+        margin-top: 4px;
+        white-space: nowrap;
+    }
+    .cable-card-purpose-signal    { background: rgba(120,160,220,0.18); color: #9bbfe6; }
+    .cable-card-purpose-control   { background: rgba(100,180,160,0.18); color: #8fc8b6; }
+    .cable-card-purpose-jumper    { background: rgba(200,170,100,0.18); color: #d8c078; }
+    .cable-card-purpose-power     { background: rgba(220,150,90,0.18);  color: #e0a878; }
+    .cable-card-purpose-manage    { background: rgba(170,140,200,0.18); color: #bca0d4; }
+    .cable-card-purpose-reserve   { background: rgba(140,140,140,0.18); color: #aaaaaa; }
+    .cable-card-purpose-other     { background: rgba(160,160,160,0.18); color: #b0b0b0; }
+    [data-theme="light"] .cable-card-purpose-signal    { background: rgba(40,90,180,0.15);  color: #2a5ab0; }
+    [data-theme="light"] .cable-card-purpose-control   { background: rgba(20,110,90,0.15);  color: #1a6a55; }
+    [data-theme="light"] .cable-card-purpose-jumper    { background: rgba(150,110,20,0.15); color: #8a6020; }
+    [data-theme="light"] .cable-card-purpose-power     { background: rgba(180,90,30,0.15);  color: #9a5020; }
+    [data-theme="light"] .cable-card-purpose-manage    { background: rgba(100,60,160,0.15); color: #6a3aa0; }
+    [data-theme="light"] .cable-card-purpose-reserve   { background: rgba(110,110,110,0.15); color: #555; }
+    [data-theme="light"] .cable-card-purpose-other     { background: rgba(130,130,130,0.15); color: #555; }
+    .cable-card-arrow {
+        flex-shrink: 0;
+        color: var(--text-secondary);
+        font-size: 16px;
+        margin-top: 2px;
+    }
+    .cable-card-arrow::before { content: '›'; }
+
+    /* Карточка деталей кабеля */
+    .cable-detail-card {
+        margin: 0;
+        background: var(--card-bg, rgba(255,255,255,0.025));
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    [data-theme="light"] .cable-detail-card {
+        background: rgba(255,255,255,0.55);
+    }
+    .cable-detail-rows {
+        padding: 8px 16px 16px;
+    }
+    .cable-detail-row {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .cable-detail-row:last-child { border-bottom: none; }
+    .cable-detail-label {
+        font-size: 11px;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+    .cable-detail-value {
+        font-size: 14px;
+        color: var(--text-primary);
+        line-height: 1.4;
+        word-wrap: break-word;
     }
     .regulator-sorted-list.searching .pb-section.regulator-group .pb-section-arrow {
         transform: translateY(-50%) rotate(45deg);
@@ -3843,7 +4239,7 @@
 
         <!-- ======================== ИНЖЕНЕРНЫЕ КАЛЬКУЛЯТОРЫ (родительское меню) ======================== -->
         <div id="page-calculators" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Инженерные калькуляторы</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Инженерные калькуляторы</div></div>
 
             <div class="menu-btn-row">
                 <div class="menu-btn" onclick="navigateTo('calc-kipa')"><div class="menu-btn-text"><div class="menu-btn-label">КИП и А</div><div class="menu-btn-sublabel">Конвертеры, погрешности, датчики, диафрагмы</div></div><i class="menu-btn-arrow">›</i></div>
@@ -3854,7 +4250,7 @@
 
         <!-- ======================== ДОКУМЕНТАЦИЯ (родительское меню) ======================== -->
         <div id="page-docs" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Документация</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Документация</div></div>
 
             <div class="menu-btn-row">
                 <div class="menu-btn" onclick="navigateTo('exam-tickets')" style="border-color:rgba(199,150,74,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#c7964a;">Экзаменационные билеты</div><div class="menu-btn-sublabel">4, 5, 6 разряд, до 1000 В</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('exam-tickets')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(199,150,74,0.4);">›</i></div>
@@ -3865,7 +4261,7 @@
 
         <!-- ======================== КИП ИОС (родительское меню) ======================== -->
         <div id="page-kip-ios" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">КИП ИОС</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">КИП ИОС</div></div>
 
             <div class="kip-ios-block">
                 <div class="kip-ios-block-update">
@@ -3882,26 +4278,35 @@
                     <div class="menu-btn" id="valvesEntryBtn" style="border-color:rgba(74,138,140,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#4a8a8c;">Клапаны</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(74,138,140,0.4);">›</i></div>
                     <div class="menu-btn" id="regulatorsEntryBtn" style="border-color:rgba(126,90,184,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#7e5ab8;">Регуляторы</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(126,90,184,0.4);">›</i></div>
                 </div>
+                <div class="menu-btn-row kip-ios-projects-row">
+                    <div class="menu-btn" id="projectsEntryBtn" style="border-color:rgba(176,128,72,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#b08048;">Проекты</div><div class="menu-btn-sublabel">По отделениям</div></div><i class="menu-btn-arrow" style="color:rgba(176,128,72,0.4);">›</i></div>
+                </div>
+                <div class="menu-btn-row kip-ios-projects-row">
+                    <div class="menu-btn" id="cablesEntryBtn" style="border-color:rgba(120,144,100,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#8aa070;">Кабельный журнал</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(120,144,100,0.4);">›</i></div>
+                </div>
+                <div class="menu-btn-row kip-ios-projects-row">
+                    <div class="menu-btn" id="plan114EntryBtn" style="border-color:rgba(120,140,170,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#7896b0;">План корпуса 114</div><div class="menu-btn-sublabel">Раздел в разработке</div></div><i class="menu-btn-arrow" style="color:rgba(120,140,170,0.4);">›</i></div>
+                </div>
             </div>
         </div>
 
         <!-- ======================== ПРИБОРЫ — ПО ТИПУ ======================== -->
         <div id="page-devices-type" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Приборы по типу</div><input type="search" id="devTypeSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="devRenderSorted('type')"></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Приборы по типу</div><input type="search" id="devTypeSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="devRenderSorted('type')"></div>
             <div class="pb-info" id="devTypeInfo">Загрузка…</div>
             <div id="devTypeList"></div>
         </div>
 
         <!-- ======================== ПРИБОРЫ — ПО НАИМЕНОВАНИЮ ======================== -->
         <div id="page-devices-name" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Приборы по наименованию</div><input type="search" id="devNameSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="devRenderSorted('name')"></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Приборы по наименованию</div><input type="search" id="devNameSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="devRenderSorted('name')"></div>
             <div class="pb-info" id="devNameInfo">Загрузка…</div>
             <div id="devNameList"></div>
         </div>
 
         <!-- ======================== ПРИБОРЫ — ПО ПРОИЗВОДСТВАМ ======================== -->
         <div id="page-devices-prod" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Приборы по производствам</div><input type="search" id="devProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="devRenderSorted('prod')"></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Приборы по производствам</div><input type="search" id="devProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="devRenderSorted('prod')"></div>
             <div class="pb-info" id="devProdInfo">Загрузка…</div>
             <div id="devProdList"></div>
         </div>
@@ -3909,77 +4314,121 @@
         
         <!-- ======================== КАРТОЧКА ПРИБОРА ======================== -->
         <div id="page-device-detail" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title" id="deviceDetailTitle">Прибор</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="deviceDetailTitle">Прибор</div></div>
             <div id="deviceDetailContent"></div>
         </div>
 
         <!-- ======================== БЛОКИРОВКИ ======================== -->
         <div id="page-lockouts-prod" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Блокировки по производствам</div><button type="button" class="page-refresh-btn" onclick="lockForceRefresh('prod')" title="Обновить данные">↻</button><input type="search" id="lockProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="lockRenderSorted('prod')"></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Блокировки по производствам</div><input type="search" id="lockProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="lockRenderSorted('prod')"></div>
             <div id="lockProdInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
             <div id="lockProdList"></div>
         </div>
 
         <!-- ======================== КАРТОЧКА БЛОКИРОВКИ ======================== -->
         <div id="page-lockout-detail" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title" id="lockoutDetailTitle">Блокировка</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="lockoutDetailTitle">Блокировка</div></div>
             <div id="lockoutDetailContent"></div>
         </div>
 
         <!-- ======================== КЛАПАНЫ — ПО ПРОИЗВОДСТВАМ ======================== -->
         <div id="page-valves-prod" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Клапаны по производствам</div><button type="button" class="page-refresh-btn" onclick="valveForceRefresh('prod')" title="Обновить данные">↻</button><input type="search" id="valveProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="valveRenderSorted('prod')"></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Клапаны по производствам</div><input type="search" id="valveProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="valveRenderSorted('prod')"></div>
             <div id="valveProdInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
             <div id="valveProdList"></div>
         </div>
 
         <!-- ======================== КАРТОЧКА КЛАПАНА ======================== -->
         <div id="page-valve-detail" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title" id="valveDetailTitle">Клапан</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="valveDetailTitle">Клапан</div></div>
             <div id="valveDetailContent"></div>
         </div>
 
         <!-- ======================== РЕГУЛЯТОРЫ — ПО ПРОИЗВОДСТВАМ ======================== -->
         <div id="page-regulators-prod" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Регуляторы по производствам</div><button type="button" class="page-refresh-btn" onclick="regulatorForceRefresh('prod')" title="Обновить данные">↻</button><input type="search" id="regulatorProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="regulatorRenderSorted('prod')"></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Регуляторы по производствам</div><input type="search" id="regulatorProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="regulatorRenderSorted('prod')"></div>
             <div id="regulatorProdInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
             <div id="regulatorProdList"></div>
         </div>
 
         <!-- ======================== КАРТОЧКА РЕГУЛЯТОРА ======================== -->
         <div id="page-regulator-detail" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title" id="regulatorDetailTitle">Регулятор</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="regulatorDetailTitle">Регулятор</div></div>
             <div id="regulatorDetailContent"></div>
         </div>
 
         <!-- ======================== СПИСОК ПРИБОРОВ ВНУТРИ ГРУППЫ ======================== -->
         <div id="page-dev-group" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title" id="devGroupTitle">Приборы</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="devGroupTitle">Приборы</div></div>
             <div id="devGroupList"></div>
         </div>
 
         <!-- ======================== СПИСОК БЛОКИРОВОК ВНУТРИ ГРУППЫ ======================== -->
         <div id="page-lock-group" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title" id="lockGroupTitle">Блокировки</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="lockGroupTitle">Блокировки</div></div>
             <div id="lockGroupList"></div>
         </div>
 
         <!-- ======================== СПИСОК КЛАПАНОВ ВНУТРИ ГРУППЫ ======================== -->
         <div id="page-valve-group" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title" id="valveGroupTitle">Клапаны</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="valveGroupTitle">Клапаны</div></div>
             <div id="valveGroupList"></div>
         </div>
 
         <!-- ======================== СПИСОК РЕГУЛЯТОРОВ ВНУТРИ ГРУППЫ ======================== -->
         <div id="page-regulator-group" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title" id="regulatorGroupTitle">Регуляторы</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="regulatorGroupTitle">Регуляторы</div></div>
             <div id="regulatorGroupList"></div>
+        </div>
+
+        <!-- ======================== ПРОЕКТЫ — ПО ОТДЕЛЕНИЯМ ======================== -->
+        <div id="page-projects-prod" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Проекты по отделениям</div><input type="search" id="projectProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="projectsRenderSorted('prod')"></div>
+            <div id="projectProdInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
+            <div id="projectProdList"></div>
+        </div>
+
+        <!-- ======================== КАРТОЧКА ПРОЕКТА ======================== -->
+        <div id="page-project-detail" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="projectDetailTitle">Проект</div></div>
+            <div id="projectDetailContent"></div>
+        </div>
+
+        <!-- ======================== СПИСОК ПРОЕКТОВ ВНУТРИ ГРУППЫ ======================== -->
+        <div id="page-project-group" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="projectGroupTitle">Проекты</div></div>
+            <div id="projectGroupList"></div>
+        </div>
+
+        <!-- ======================== КАБЕЛЬНЫЙ ЖУРНАЛ — ПО ПРОИЗВОДСТВАМ ======================== -->
+        <div id="page-cables-prod" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Кабельный журнал по производствам</div><input type="search" id="cableProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="cablesRenderSorted('prod')"></div>
+            <div id="cableProdInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
+            <div id="cableProdList"></div>
+        </div>
+
+        <!-- ======================== КАРТОЧКА КАБЕЛЯ ======================== -->
+        <div id="page-cable-detail" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="cableDetailTitle">Кабель</div></div>
+            <div id="cableDetailContent"></div>
+        </div>
+
+        <!-- ======================== СПИСОК КАБЕЛЕЙ ВНУТРИ ГРУППЫ ======================== -->
+        <div id="page-cable-group" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="cableGroupTitle">Кабели</div></div>
+            <div id="cableGroupList"></div>
+        </div>
+
+        <!-- ======================== ПЛАН КОРПУСА 114 (заглушка) ======================== -->
+        <div id="page-plan-114" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">План корпуса 114</div></div>
+            <div class="pb-empty" style="margin-top:32px;">Раздел в разработке.<br>Содержимое появится позже.</div>
         </div>
 
 
 <!-- ======================== ИНЖЕНЕРНЫЕ КАЛЬКУЛЯТОРЫ — КИП и А ======================== -->
         <div id="page-calc-kipa" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">КИП и А</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">КИП и А</div></div>
 
             <div class="menu-btn-row">
                 <div class="menu-btn" onclick="navigateTo('converter')"><div class="menu-btn-text"><div class="menu-btn-label">Конвертер единиц</div><div class="menu-btn-sublabel">Давление, расход, температура и др.</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('converter')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
@@ -3993,7 +4442,7 @@
 
         <!-- ======================== ИНЖЕНЕРНЫЕ КАЛЬКУЛЯТОРЫ — ЭЛЕКТРОТЕХНИКА ======================== -->
         <div id="page-calc-electro" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Электротехника</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Электротехника</div></div>
 
             <div class="menu-btn-row">
                 <div class="menu-btn" onclick="navigateTo('circuit-breaker')"><div class="menu-btn-text"><div class="menu-btn-label">Автоматический выключатель</div><div class="menu-btn-sublabel">Расчёт по мощности, току, сечению кабеля</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('circuit-breaker')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
@@ -4002,7 +4451,7 @@
 
         <!-- ======================== ИНЖЕНЕРНЫЕ КАЛЬКУЛЯТОРЫ — ГЕОМЕТРИЯ ======================== -->
         <div id="page-calc-geometry" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Геометрия</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Геометрия</div></div>
 
             <div class="menu-btn-row">
                 <div class="menu-btn" onclick="navigateTo('geo-circle')"><div class="menu-btn-text"><div class="menu-btn-label">Круг</div><div class="menu-btn-sublabel">Площадь, периметр, радиус</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('geo-circle')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
@@ -4016,7 +4465,7 @@
 
         <!-- ======================== ИГРА САПЁР ======================== -->
         <div id="page-minesweeper" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Сапёр</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Сапёр</div></div>
 
             <div class="ms-container">
                 <div class="ms-header">
@@ -4048,7 +4497,7 @@
 
         <!-- ======================== ТЕЛЕФОННЫЙ СПРАВОЧНИК ======================== -->
         <div id="page-phonebook" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Телефонный справочник</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Телефонный справочник</div></div>
 
             <div class="pb-search-wrap">
                 <input type="search" id="pbSearchInput" class="pb-search-input" placeholder="Поиск: имя, должность, телефон…" autocomplete="off" enterkeyhint="search" oninput="pbRender()">
@@ -4065,7 +4514,7 @@
 
         <!-- ======================== ПРИБОРЫ (КИП ИОС) ======================== -->
         <div id="page-devices" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Приборы</div><input type="search" id="devSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="devRender()"></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Приборы</div><input type="search" id="devSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="devRender()"></div>
 
             <div class="pb-info" id="devInfo">Загрузка…</div>
             <div id="devList"></div>
@@ -4073,7 +4522,7 @@
 
         <!-- ======================== КОНВЕРТЕР ЕДИНИЦ ======================== -->
         <div id="page-converter" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Конвертер единиц</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Конвертер единиц</div></div>
 
             <div class="menu-btn-row">
                 <div class="menu-btn" onclick="navigateTo('conv-pressure')"><div class="menu-btn-text"><div class="menu-btn-label">Давление</div><div class="menu-btn-sublabel">Па, МПа, бар, атм, мм рт. ст.</div></div><i class="menu-btn-arrow">›</i></div>
@@ -4089,7 +4538,7 @@
 
         <!-- Давление -->
         <div id="page-conv-pressure" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Давление</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Давление</div></div>
 
             <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-pressure-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-pressure-unit" class="form-field" autocomplete="off"><option value="Pa">Па</option><option value="kPa">кПа</option><option value="MPa" selected>МПа</option><option value="bar">бар</option><option value="mbar">мбар</option><option value="atm">атм</option><option value="kgf_cm2">кгс/см²</option><option value="kgf_m2">кгс/м²</option><option value="mmHg">мм рт. ст.</option><option value="PSI">PSI</option><option value="mmH2O">мм вод. ст.</option></select></div>
             <button type="button" class="converter-convert-btn" onclick="convertUnits('pressure')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
@@ -4100,7 +4549,7 @@
 
         <!-- Расход -->
         <div id="page-conv-flow" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Расход</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Расход</div></div>
 
             <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-flow-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-flow-unit" class="form-field" autocomplete="off"><option value="m3h" selected>м³/ч</option><option value="m3s">м³/с</option><option value="l_min">л/мин</option><option value="l_s">л/с</option><option value="t_h">т/ч</option><option value="kg_s">кг/с</option><option value="kg_h">кг/ч</option></select></div>
             <button type="button" class="converter-convert-btn" onclick="convertUnits('flow')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
@@ -4111,7 +4560,7 @@
 
         <!-- Вес и масса -->
         <div id="page-conv-mass" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Вес и масса</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Вес и масса</div></div>
 
             <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-mass-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-mass-unit" class="form-field" autocomplete="off"><option value="kg" selected>кг</option><option value="g">г</option><option value="mg">мг</option><option value="t">т</option><option value="lb">lb</option><option value="oz">oz</option></select></div>
             <button type="button" class="converter-convert-btn" onclick="convertUnits('mass')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
@@ -4122,7 +4571,7 @@
 
         <!-- Температура -->
         <div id="page-conv-temp" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Температура</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Температура</div></div>
 
             <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-temp-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-temp-unit" class="form-field" autocomplete="off"><option value="C" selected>°C</option><option value="F">°F</option><option value="K">K</option><option value="R">°R</option><option value="Ra">°Ra</option></select></div>
             <button type="button" class="converter-convert-btn" onclick="convertTemp()"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
@@ -4133,7 +4582,7 @@
 
         <!-- Длина и расстояние -->
         <div id="page-conv-length" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Длина и расстояние</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Длина и расстояние</div></div>
 
             <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-length-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-length-unit" class="form-field" autocomplete="off"><option value="m" selected>м</option><option value="km">км</option><option value="cm">см</option><option value="mm">мм</option><option value="um">мкм</option><option value="mi">миля</option><option value="ft">фут</option><option value="in">дюйм</option><option value="yd">ярд</option></select></div>
             <button type="button" class="converter-convert-btn" onclick="convertUnits('length')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
@@ -4144,7 +4593,7 @@
 
         <!-- Плотность -->
         <div id="page-conv-density" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Плотность</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Плотность</div></div>
 
             <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-density-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-density-unit" class="form-field" autocomplete="off"><option value="kg_m3" selected>кг/м³</option><option value="g_cm3">г/см³</option><option value="g_l">г/л</option><option value="kg_l">кг/л</option></select></div>
             <button type="button" class="converter-convert-btn" onclick="convertUnits('density')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
@@ -4155,7 +4604,7 @@
 
         <!-- Время -->
         <div id="page-conv-time" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Время</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Время</div></div>
 
             <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-time-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-time-unit" class="form-field" autocomplete="off"><option value="s" selected>секунда</option><option value="ms">миллисекунда</option><option value="min">минута</option><option value="h">час</option><option value="d">сутки</option><option value="week">неделя</option><option value="month">месяц</option><option value="year">год</option></select></div>
             <button type="button" class="converter-convert-btn" onclick="convertUnits('time')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
@@ -4166,7 +4615,7 @@
 
         <!-- Объём -->
         <div id="page-conv-volume" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Объём</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Объём</div></div>
 
             <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-volume-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-volume-unit" class="form-field" autocomplete="off"><option value="m3" selected>м³</option><option value="l">литр</option><option value="ml">мл</option><option value="cm3">см³</option><option value="gal">галлон</option><option value="bbl">баррель</option><option value="ft3">куб. фут</option><option value="dm3">дм³</option></select></div>
             <button type="button" class="converter-convert-btn" onclick="convertUnits('volume')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
@@ -4177,7 +4626,7 @@
 
         <!-- ======================== ШКАЛА-СИГНАЛ ======================== -->
         <div id="page-scale-signal" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Шкала-сигнал</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Шкала-сигнал</div></div>
 
             <div class="scale-form"><div class="scale-form-label">Тип шкалы</div><select id="scaleType" class="scale-field" autocomplete="off"><option value="linear" selected data-hint="прямая">Линейная</option><option value="quadratic" data-hint="сигнал ∝ X²">Квадратичная</option><option value="sqrt" data-hint="сигнал ∝ √X">Корнеизвлекающая</option></select><div style="color:rgba(255,255,255,0.25); font-size:10px; margin-top:4px; padding-left:4px;">Линейная: прямая зависимость · Квадратичная: сигнал ∝ (шкала)² · Корнеизвлекающая: сигнал ∝ √(шкала)</div></div>
             <div class="scale-form"><div class="scale-form-label">Диапазон шкалы измерения</div><select id="scalePreset" class="scale-field" onchange="setScaleDefaults()" autocomplete="off"><option value="0_100" selected>0 – 100 %</option><option value="4_20" data-hint="ток">4 – 20 мА</option><option value="0_20" data-hint="ток">0 – 20 мА</option><option value="0_5mA" data-hint="ток">0 – 5 мА</option><option value="0_10V" data-hint="напряжение">0 – 10 В</option><option value="1_5V" data-hint="напряжение">1 – 5 В</option><option value="0_5V" data-hint="напряжение">0 – 5 В</option><option value="bipolar_10" data-hint="напряжение">-10 – +10 В</option><option value="20_100_kPa" data-hint="пневматика">20 – 100 кПа</option><option value="0_2_1_0_bar" data-hint="пневматика">0,2 – 1,0 бар</option><option value="3_15_psi" data-hint="пневматика">3 – 15 psi</option><option value="0_2_1_0_kgf_cm2" data-hint="пневматика">0,2 – 1,0 кгс/см²</option><option value="custom" data-hint="Вручную">Своё значение</option></select><div id="scaleCustomRange" style="margin-top:12px;"><input type="text" inputmode="numeric" id="scaleMin" class="scale-field" placeholder="Минимум шкалы" value="0" style="margin-bottom:6px;" autocomplete="off" enterkeyhint="next" oninput="validateNumericField(this)"><input type="text" inputmode="numeric" id="scaleMax" class="scale-field" placeholder="Максимум шкалы" value="100" autocomplete="off" enterkeyhint="next" oninput="validateNumericField(this)"><input type="text" inputmode="text" id="scaleUnitName" class="scale-field" placeholder="Ед. измерения" value="%" style="margin-top:6px;" autocomplete="off" enterkeyhint="done" ></div></div>
@@ -4190,7 +4639,7 @@
 
         <!-- ======================== АВТОМАТИЧЕСКИЙ ВЫКЛЮЧАТЕЛЬ ======================== -->
         <div id="page-circuit-breaker" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Автоматический выключатель</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Автоматический выключатель</div></div>
 
 
             <div class="scale-form">
@@ -4323,7 +4772,7 @@
 
         <!-- ======================== ГЕОМЕТРИЯ: КРУГ ======================== -->
         <div id="page-geo-circle" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Круг</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Круг</div></div>
 
             <div class="geo-svg-container"><svg viewBox="0 0 140 140" class="geo-svg" font-family="Inter, sans-serif">
 <defs>
@@ -4347,7 +4796,7 @@
 
         <!-- ======================== ГЕОМЕТРИЯ: КОЛЬЦО ======================== -->
         <div id="page-geo-ring" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Кольцо</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Кольцо</div></div>
 
             <div class="geo-svg-container"><svg viewBox="0 0 140 140" class="geo-svg" font-family="Inter, sans-serif">
 <defs>
@@ -4376,7 +4825,7 @@
 
         <!-- ======================== ГЕОМЕТРИЯ: ЦИЛИНДР ВЕРТИКАЛЬНЫЙ ======================== -->
         <div id="page-geo-cylinder" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Цилиндр вертикальный</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Цилиндр вертикальный</div></div>
 
             <div class="geo-svg-container"><svg viewBox="0 0 140 140" class="geo-svg" font-family="Inter, sans-serif">
 <defs>
@@ -4407,7 +4856,7 @@
 
         <!-- ======================== ГЕОМЕТРИЯ: ЦИЛИНДР ГОРИЗОНТАЛЬНЫЙ ======================== -->
         <div id="page-geo-horiz" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Цилиндр горизонтальный</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Цилиндр горизонтальный</div></div>
 
             <div class="geo-svg-container"><svg viewBox="0 0 160 100" class="geo-svg" font-family="Inter, sans-serif">
 <defs>
@@ -4447,7 +4896,7 @@
 
         <!-- ======================== ГЕОМЕТРИЯ: СФЕРА ======================== -->
         <div id="page-geo-sphere" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Сфера</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Сфера</div></div>
 
             <div class="geo-svg-container"><svg viewBox="0 0 140 140" class="geo-svg" font-family="Inter, sans-serif">
 <defs>
@@ -4471,7 +4920,7 @@
 
         <!-- ======================== ГЕОМЕТРИЯ: КОНУС ======================== -->
         <div id="page-geo-cone" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Конус</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Конус</div></div>
 
             <div class="geo-svg-container"><svg viewBox="0 0 140 140" class="geo-svg" font-family="Inter, sans-serif">
 <defs>
@@ -4503,7 +4952,7 @@
 
         <!-- ======================== ВЫБОР РАСЧЁТА СУЖАЮЩЕГО УСТРОЙСТВА ======================== -->
         <div id="page-orifice-select" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Сужающее устройство</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Сужающее устройство</div></div>
 
 
             <div class="content-header" style="padding: 14px 20px 10px;">
@@ -4545,7 +4994,7 @@
 
         <!-- ======================== БЫСТРЫЙ РАСЧЁТ ДИАФРАГМ (градуировка) ======================== -->
         <div id="page-orifice-quick" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Быстрый расчёт диафрагмы</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Быстрый расчёт диафрагмы</div></div>
 
 
             <div class="content-header" style="padding: 14px 20px 10px;">
@@ -4618,7 +5067,7 @@
 
         <!-- ======================== РАСЧЁТ ПЕРЕПАДА ДАВЛЕНИЯ (Δp) ======================== -->
         <div id="page-orifice-dp" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Перепад давления Δp</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Перепад давления Δp</div></div>
 
 
             <div class="scale-form">
@@ -4720,7 +5169,7 @@
 
         <!-- ======================== РАСЧЁТ РАСХОДА (Q) ======================== -->
         <div id="page-orifice-flow" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Расход среды Q</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Расход среды Q</div></div>
 
 
             <div class="scale-form">
@@ -4822,7 +5271,7 @@
 
         <!-- ======================== СУЖАЮЩЕЕ УСТРОЙСТВО (ДИАФРАГМА) ======================== -->
         <div id="page-orifice-diameter" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Сужающее устройство</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Сужающее устройство</div></div>
 
 
             <div class="scale-form">
@@ -4943,7 +5392,7 @@
 
         <!-- ======================== БИБЛИОТЕКА КИП И А (ВНУТРЕННЯЯ) ======================== -->
         <div id="page-library-internal" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Библиотека КИП и А</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Библиотека КИП и А</div></div>
 
 
             <div class="content-header" style="padding: 14px 20px 10px;">
@@ -4992,7 +5441,7 @@
 
         <!-- ======================== БИБЛИОТЕКА — ЭЛЕКТРОБЕЗОПАСНОСТЬ ======================== -->
         <div id="page-library-electro" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Электробезопасность</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Электробезопасность</div></div>
 
 
             <div class="content-header" style="padding: 14px 20px 10px;">
@@ -5041,7 +5490,7 @@
 
         <!-- ======================== ЭКЗАМЕНАЦИОННЫЕ БИЛЕТЫ ======================== -->
         <div id="page-exam-tickets" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Экзаменационные билеты</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Экзаменационные билеты</div></div>
 
             <div style="padding: 0 16px;">
                 <div class="ticket-cat-card" onclick="navigateTo('tickets-1000v')">
@@ -5065,35 +5514,35 @@
 
         <!-- Билеты до 1000 В -->
         <div id="page-tickets-1000v" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Билеты до 1000 В</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Билеты до 1000 В</div></div>
 
             <div id="tickets-container-tickets-1000v" class="ticket-list"><div class="ticket-loading">Загрузка…</div></div>
         </div>
 
         <!-- Билеты на 4 разряд -->
         <div id="page-tickets-4" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Билеты на 4 разряд</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Билеты на 4 разряд</div></div>
 
             <div id="tickets-container-tickets-4" class="ticket-list"><div class="ticket-loading">Загрузка…</div></div>
         </div>
 
         <!-- Билеты на 5 разряд -->
         <div id="page-tickets-5" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Билеты на 5 разряд</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Билеты на 5 разряд</div></div>
 
             <div id="tickets-container-tickets-5" class="ticket-list"><div class="ticket-loading">Загрузка…</div></div>
         </div>
 
         <!-- Билеты на 6 разряд -->
         <div id="page-tickets-6" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Билеты на 6 разряд</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Билеты на 6 разряд</div></div>
 
             <div id="tickets-container-tickets-6" class="ticket-list"><div class="ticket-loading">Загрузка…</div></div>
         </div>
 
         <!-- ======================== РАСЧЁТ ПОГРЕШНОСТИ ======================== -->
         <div id="page-error-select" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Расчёт погрешности</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Расчёт погрешности</div></div>
 
             <div class="menu-btn-row">
                 <div class="menu-btn" onclick="navigateTo('error-temp-rtd')"><div class="menu-btn-text"><div class="menu-btn-label">Термопреобразователи сопротивления (ТС)</div><div class="menu-btn-sublabel">ГОСТ 6651-2009</div></div><i class="menu-btn-arrow">›</i></div>
@@ -5109,7 +5558,7 @@
 
         <!-- Датчик давления -->
         <div id="page-error-pressure" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Датчики давления — ГОСТ 8.401-80</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Датчики давления — ГОСТ 8.401-80</div></div>
 
             <div class="scale-form">
                 <input type="hidden" id="ep_class_form" value="number">
@@ -5149,7 +5598,7 @@
 
         <!-- Термопреобразователи сопротивления -->
         <div id="page-error-temp-rtd" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Термопреобразователи сопротивления</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Термопреобразователи сопротивления</div></div>
 
             <div class="scale-form"><div class="scale-form-label">Группа ТС</div><select id="rtd_group" class="scale-field" onchange="updateRtdTypeOptions()" autocomplete="off"><option value="Pt">Платина (Pt)</option><option value="Cu" selected>Медь (Cu)</option><option value="Ni">Никель (Ni)</option></select>
             <div class="scale-form-label">Тип ТС (НСХ)</div><select id="rtd_type" class="scale-field" onchange="updateRtdClassOptions()" autocomplete="off"><option value="cu10">10М (Cu10)</option><option value="cu50" selected>50М (Cu50)</option><option value="cu100">100М (Cu100)</option></select>
@@ -5173,7 +5622,7 @@
 
         <!-- Термопары -->
         <div id="page-error-temp-tc" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Термопары (ТП)</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Термопары (ТП)</div></div>
 
             <div class="scale-form"><div class="scale-form-label">Тип термопары</div><select id="tc_type" class="scale-field" onchange="updateTcRanges()" autocomplete="off"><option value="K" selected>ТХА (K)</option><option value="J">ТЖК (J)</option><option value="T">ТМК (T)</option><option value="N">ТНН (N)</option><option value="E">ТХКн (E)</option><option value="R">ТПП (R)</option><option value="S">ТПП (S)</option><option value="B">ТПР (B)</option></select>
             <div class="scale-form-label">Класс точности</div><select id="tc_class" class="scale-field" onchange="updateTcRanges()" autocomplete="off"><option value="1" data-hint="высокоточный">1</option><option value="2" selected data-hint="стандартный">2</option><option value="3" data-hint="пониженный">3</option></select>
@@ -5192,7 +5641,7 @@
             </div>
         </div>
         <div id="page-error-flow" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Расходомеры — ГОСТ 8.401-80</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Расходомеры — ГОСТ 8.401-80</div></div>
 
             <div class="scale-form">
                 <input type="hidden" id="ef_class_form" value="circle">
@@ -5230,7 +5679,7 @@
 
         <!-- Уровнемер -->
         <div id="page-error-level" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Уровнемеры — ГОСТ 8.401-80</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Уровнемеры — ГОСТ 8.401-80</div></div>
 
             <div class="scale-form">
                 <input type="hidden" id="el_class_form" value="number">
@@ -5269,7 +5718,7 @@
 
         <!-- Общий расчёт погрешности — выбор формы -->
         <div id="page-error-generic" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Расчёт погрешности по классу точности</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Расчёт погрешности по классу точности</div></div>
 
             <div class="menu-btn-row">
                 <div class="menu-btn" onclick="navigateTo('error-generic-number')"><div class="menu-btn-text"><div class="menu-btn-label" style="display:flex;align-items:center;gap:10px;"><span style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:rgba(74,143,199,0.9);min-width:36px;text-align:center;">0,5</span> Приведённая погрешность</div><div class="menu-btn-sublabel">Класс точности — число (например 0,5) · γ</div></div><i class="menu-btn-arrow">›</i></div>
@@ -5281,7 +5730,7 @@
 
         <!-- Общий расчёт — Приведённая (число) -->
         <div id="page-error-generic-number" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Приведённая погрешность (<span class="greek-gamma">γ</span>) — число</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Приведённая погрешность (<span class="greek-gamma">γ</span>) — число</div></div>
 
             <div class="scale-form">
                 <div style="text-align:center;margin-bottom:12px;"><span style="font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:700;color:rgba(74,143,199,0.9);">0,5</span></div>
@@ -5322,7 +5771,7 @@
 
         <!-- Общий расчёт — Приведённая (подчёркивание) -->
         <div id="page-error-generic-underline" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Приведённая погрешность (<span class="greek-gamma">γ</span>) — число с подчёркиванием</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Приведённая погрешность (<span class="greek-gamma">γ</span>) — число с подчёркиванием</div></div>
 
             <div class="scale-form">
                 <div style="text-align:center;margin-bottom:12px;"><span style="font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:700;color:rgba(74,143,199,0.9);border-bottom:2px solid rgba(74,143,199,0.9);padding-bottom:2px;">0,5</span></div>
@@ -5363,7 +5812,7 @@
 
         <!-- Общий расчёт — Относительная (кружок) -->
         <div id="page-error-generic-circle" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Относительная погрешность (<span class="greek-delta">δ</span>) — число в кружке</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Относительная погрешность (<span class="greek-delta">δ</span>) — число в кружке</div></div>
 
             <div class="scale-form">
                 <div style="text-align:center;margin-bottom:12px;"><span style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:2.5px solid rgba(74,143,199,0.8);border-radius:50%;font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:700;color:rgba(74,143,199,0.9);">0,5</span></div>
@@ -5402,7 +5851,7 @@
 
         <!-- Общий расчёт — Относительная (дробь c/d) -->
         <div id="page-error-generic-fraction" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Относительная погрешность (<span class="greek-delta">δ</span>) — дробь c/d</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Относительная погрешность (<span class="greek-delta">δ</span>) — дробь c/d</div></div>
 
             <div class="scale-form">
                 <div style="text-align:center;margin-bottom:12px;"><span style="font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:700;color:rgba(74,143,199,0.9);"><sup style="font-size:18px;">c</sup>/<sub style="font-size:18px;">d</sub></span></div>
@@ -5458,7 +5907,7 @@
             </div>
         </div>
         <div id="page-error-scale" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Весы (механические и электронные)</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Весы (механические и электронные)</div></div>
 
 
             <!-- Тип весов -->
@@ -5651,7 +6100,7 @@
 
         <!-- Комплект приборов -->
         <div id="page-error-kit" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Комплект приборов</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Комплект приборов</div></div>
 
             <div id="kit_device_list"></div>
             <div style="padding:0 16px;position:relative;z-index:2;">
@@ -5687,7 +6136,7 @@
         <!-- ======================== БУЙКОВЫЙ УРОВНЕМЕР ======================== -->
         <!-- Выбор метода -->
         <div id="page-buoy-select" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Калибровка буйкового уровнемера</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Калибровка буйкового уровнемера</div></div>
 
             <div class="buoy-select-container">
                 <div class="buoy-card buoy-card-light" onclick="selectCalibMethod('with_buoy')"><div class="buoy-card-inner"><div class="buoy-card-top"><div class="buoy-illustration"><img id="buoy-with-img" src="images/buoy_with_black.png" alt="С буйком"></div><div class="buoy-card-body"><div class="buoy-card-title">С буйком</div><div class="buoy-card-desc">Компенсационный метод калибровки</div></div></div><div class="buoy-card-divider"></div><div class="buoy-card-formula"><span class="formula-inline">m<sub>гири</sub> = m<sub>выт</sub> + m<sub>подвеса</sub></span></div></div></div>
@@ -5697,7 +6146,7 @@
 
         <!-- Расчёт -->
         <div id="page-buoy-calc" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Буйковый уровнемер</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Буйковый уровнемер</div></div>
 
             <div class="scale-form"><div class="scale-form-label">Параметры буйка</div><div class="scale-form-label" style="margin-top:0;">Диаметр (D)</div><input type="text" inputmode="numeric" id="buoy_diam" class="scale-field" value="50" placeholder="мм" autocomplete="off" enterkeyhint="next"><div style="color:rgba(255,255,255,0.25); font-size:10px; margin-top:-6px; margin-bottom:8px; padding-left:4px;">мм</div><div class="scale-form-label">Длина (L)</div><input type="text" inputmode="numeric" id="buoy_length" class="scale-field" value="300" placeholder="мм" autocomplete="off" enterkeyhint="next"><div style="color:rgba(255,255,255,0.25); font-size:10px; margin-top:-6px; margin-bottom:8px; padding-left:4px;">мм</div><div id="buoyWeightContainer"><div class="scale-form-label">Вес буйка в воздухе</div><input type="text" inputmode="numeric" id="buoy_weight_kg" class="scale-field" value="2,0" placeholder="кг" autocomplete="off" enterkeyhint="done"><div style="color:rgba(255,255,255,0.25); font-size:10px; margin-top:-6px; margin-bottom:8px; padding-left:4px;"> Масса буйка (кг)</div></div></div>
             <div class="scale-form"><div class="scale-form-label">Параметры жидкости</div><div class="scale-form-label" style="margin-top:0;">Тип среды</div><div style="display:flex; gap:8px; margin-bottom:12px; align-items:stretch;"><select id="liquid_preset" class="scale-field" style="flex:2; margin-bottom:0;" onchange="setLiquidDensity()" autocomplete="off"><option value="998" data-hint="ρ=998">Вода</option><option value="926" data-hint="ρ=926">Дивинилбензол</option><option value="860" data-hint="ρ=860">Диэтилбензол</option><option value="906" data-hint="ρ=906">Стирол</option><option value="1253" data-hint="ρ=1253">Дихлорэтан</option><option value="789" data-hint="ρ=789">Этиловый спирт</option><option value="1111.5" data-hint="ρ=1112">Этиленгликоль</option><option value="2130" data-hint="ρ=2130">Едкий натр</option><option value="2530" data-hint="ρ=2530">Кальцинированная сода</option><option value="1890" data-hint="ρ=1890">Олеум</option><option value="1834" data-hint="ρ=1834">Серная кислота 96%</option><option value="1683" data-hint="ρ=1683">Динитрофенол</option><option value="1334" data-hint="ρ=1334">Перекись бензоила</option><option value="1450" data-hint="ρ=1450">Перекись водорода</option><option value="custom" data-hint="Вручную">Своё значение</option></select><input type="text" inputmode="numeric" id="liquid_density" class="scale-field" style="flex:1; margin-bottom:0;" value="998" placeholder="кг/м³" autocomplete="off" enterkeyhint="done"></div><div style="color:rgba(255,255,255,0.25); font-size:10px; margin-top:4px; padding-left:4px;">кг/м³</div></div>
@@ -7417,39 +7866,68 @@
             return;
         }
 
-        let html = '<div class="dev-sorted-list">';
+        // Сгруппировать приборы по «Наименованию» — раскрытая группа без сворачивания.
+        const groups = {};
+        const groupOrder = [];
         for (const dev of items) {
-            const devId = String(dev['ID'] ?? '');
-            const name = dev['Наименование'] || '(без названия)';
-            const type = dev['Тип'] || '';
-            const number = dev['№ прибора'] || '';
-            const place = dev['Место установки'] || '';
-            const imgUrl = devGetImageUrl(dev);
+            const g = dev['Наименование'] || '(без названия)';
+            if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
+            groups[g].push(dev);
+        }
+        // Алфавитный порядок групп
+        groupOrder.sort((a, b) => {
+            const va = a.toString().toLowerCase();
+            const vb = b.toString().toLowerCase();
+            if (va < vb) return -1;
+            if (va > vb) return 1;
+            return 0;
+        });
 
-            html += '<div class="dev-card" data-dev-id="' + devEsc(devId) + '" data-mode="' + mode + '">';
-            html += '<div class="dev-card-header" onclick="devOpenDetail(\'' + devEsc(devId) + '\')">';
-            html += '<div class="dev-card-header-inner">';
-            html += '<div class="dev-card-image-wrap">';
-            html += '<img class="dev-card-image" src="' + devEsc(imgUrl) + '" alt="' + devEsc(name) + '" loading="lazy">';
-            html += '<div class="dev-card-name-overlay">' + devEsc(name) + '</div>';
+        let html = '<div class="dev-sorted-list">';
+        for (const g of groupOrder) {
+            const gItems = groups[g];
+            html += '<div class="pb-section dev-group dev-subgroup static">';
+            html += '<div class="pb-section-title">';
+            html += '<span class="pb-section-title-text">' + devEsc(g) + '</span>';
+            html += '<span class="pb-section-title-count">' + gItems.length + '</span>';
+            html += '<span class="pb-section-arrow"></span>';
             html += '</div>';
-            html += '<div class="dev-card-text">';
-            html += '<div class="dev-card-title">' + devEsc(name) + '</div>';
-            let subtitle = '';
-            if (type) subtitle += type;
-            if (number) subtitle += (subtitle ? ' · №' : '№') + number;
-            if (place) subtitle += (subtitle ? ' · ' : '') + place;
-            if (subtitle) html += '<div class="dev-card-subtitle">' + devEsc(subtitle) + '</div>';
-            html += '</div>';
-            html += '<div class="dev-card-info-block">';
-            if (type) html += '<div class="dev-card-info-row">' + devEsc(type) + '</div>';
-            if (number) html += '<div class="dev-card-info-row" style="color:#6aa6e0;font-weight:600;">№ ' + devEsc(number) + '</div>';
-            if (place) html += '<div class="dev-card-info-row">' + devEsc(place) + '</div>';
-            html += '</div>';
-            html += '<span class="dev-card-arrow"></span>';
-            html += '</div>'; // header-inner
-            html += '</div>'; // header
-            html += '</div>'; // card
+            html += '<div class="pb-section-body">';
+            for (const dev of gItems) {
+                const devId = String(dev['ID'] ?? '');
+                const name = dev['Наименование'] || '(без названия)';
+                const type = dev['Тип'] || '';
+                const number = dev['№ прибора'] || '';
+                const place = dev['Место установки'] || '';
+                const imgUrl = devGetImageUrl(dev);
+
+                html += '<div class="dev-card" data-dev-id="' + devEsc(devId) + '" data-mode="' + mode + '">';
+                html += '<div class="dev-card-header" onclick="devOpenDetail(\'' + devEsc(devId) + '\')">';
+                html += '<div class="dev-card-header-inner">';
+                html += '<div class="dev-card-image-wrap">';
+                html += '<img class="dev-card-image" src="' + devEsc(imgUrl) + '" alt="' + devEsc(name) + '" loading="lazy">';
+                html += '<div class="dev-card-name-overlay">' + devEsc(name) + '</div>';
+                html += '</div>';
+                html += '<div class="dev-card-text">';
+                html += '<div class="dev-card-title">' + devEsc(name) + '</div>';
+                let subtitle = '';
+                if (type) subtitle += type;
+                if (number) subtitle += (subtitle ? ' · №' : '№') + number;
+                if (place) subtitle += (subtitle ? ' · ' : '') + place;
+                if (subtitle) html += '<div class="dev-card-subtitle">' + devEsc(subtitle) + '</div>';
+                html += '</div>';
+                html += '<div class="dev-card-info-block">';
+                if (type) html += '<div class="dev-card-info-row">' + devEsc(type) + '</div>';
+                if (number) html += '<div class="dev-card-info-row" style="color:#6aa6e0;font-weight:600;">№ ' + devEsc(number) + '</div>';
+                if (place) html += '<div class="dev-card-info-row">' + devEsc(place) + '</div>';
+                html += '</div>';
+                html += '<span class="dev-card-arrow"></span>';
+                html += '</div>'; // header-inner
+                html += '</div>'; // header
+                html += '</div>'; // card
+            }
+            html += '</div>'; // pb-section-body
+            html += '</div>'; // pb-section
         }
         html += '</div>';
         list.innerHTML = html;
@@ -7710,27 +8188,56 @@
             return;
         }
 
-        let html = '<div class="lock-sorted-list">';
+        // Сгруппировать блокировки по «Производству» — раскрытая группа без сворачивания.
+        const groups = {};
+        const groupOrder = [];
         for (const item of items) {
-            const itemId = String(item['ID'] ?? '');
-            const name = item['Параметр'] || '(без названия)';
-            const type = item['Уставка'] || '';
-            const place = item['Расположение'] || '';
+            const g = item['Производство'] || '(без производства)';
+            if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
+            groups[g].push(item);
+        }
+        // Алфавитный порядок групп
+        groupOrder.sort((a, b) => {
+            const va = a.toString().toLowerCase();
+            const vb = b.toString().toLowerCase();
+            if (va < vb) return -1;
+            if (va > vb) return 1;
+            return 0;
+        });
 
-            html += '<div class="lock-card" data-lock-id="' + lockEsc(itemId) + '" data-mode="' + mode + '">';
-            html += '<div class="lock-card-header" onclick="lockOpenDetail(\'' + lockEsc(itemId) + '\')">';
-            html += '<div class="lock-card-header-inner">';
-            html += '<div class="lock-card-text">';
-            html += '<div class="lock-card-title">' + lockEsc(name) + '</div>';
-            let subtitle = '';
-            if (type) subtitle += type;
-            if (place) subtitle += (subtitle ? ' · ' : '') + place;
-            if (subtitle) html += '<div class="lock-card-subtitle">' + lockEsc(subtitle) + '</div>';
+        let html = '<div class="lock-sorted-list">';
+        for (const g of groupOrder) {
+            const gItems = groups[g];
+            html += '<div class="pb-section lock-group lock-subgroup static">';
+            html += '<div class="pb-section-title">';
+            html += '<span class="pb-section-title-text">' + lockEsc(g) + '</span>';
+            html += '<span class="pb-section-title-count">' + gItems.length + '</span>';
+            html += '<span class="pb-section-arrow"></span>';
             html += '</div>';
-            html += '<span class="lock-card-arrow"></span>';
-            html += '</div>';
-            html += '</div>';
-            html += '</div>';
+            html += '<div class="pb-section-body">';
+            for (const item of gItems) {
+                const itemId = String(item['ID'] ?? '');
+                const name = item['Параметр'] || '(без названия)';
+                const type = item['Уставка'] || '';
+                const place = item['Расположение'] || '';
+
+                html += '<div class="lock-card" data-lock-id="' + lockEsc(itemId) + '" data-mode="' + mode + '">';
+                html += '<div class="lock-card-header" onclick="lockOpenDetail(\'' + lockEsc(itemId) + '\')">';
+                html += '<div class="lock-card-header-inner">';
+                html += '<div class="lock-card-text">';
+                html += '<div class="lock-card-title">' + lockEsc(name) + '</div>';
+                let subtitle = '';
+                if (type) subtitle += type;
+                if (place) subtitle += (subtitle ? ' · ' : '') + place;
+                if (subtitle) html += '<div class="lock-card-subtitle">' + lockEsc(subtitle) + '</div>';
+                html += '</div>';
+                html += '<span class="lock-card-arrow"></span>';
+                html += '</div>';
+                html += '</div>';
+                html += '</div>';
+            }
+            html += '</div>'; // pb-section-body
+            html += '</div>'; // pb-section
         }
         html += '</div>';
         list.innerHTML = html;
@@ -8024,27 +8531,74 @@
             return;
         }
 
-        let html = '<div class="valve-sorted-list">';
+        // Сгруппировать клапаны по столбцу «DN (мм)» — раскрытая группа без сворачивания.
+        // Извлекаем числовое DN из строки (например, "DN 50" → 50, "100" → 100).
+        function _valveParseDn(raw) {
+            if (raw === null || raw === undefined || raw === '') return null;
+            const s = String(raw).trim();
+            const m = s.match(/(\d+(?:[.,]\d+)?)/);
+            if (!m) return null;
+            return parseFloat(m[1].replace(',', '.'));
+        }
+        const groups = {};
+        const groupOrder = []; // [{ key, dn }]
         for (const item of items) {
-            const itemId = String(item['ID'] ?? '');
-            const name = item['Наименование'] || '(без названия)';
-            const type = item['Тип'] || '';
-            const place = item['Расположение'] || '';
+            const dnRaw = item['DN (мм)'];
+            const dnNum = _valveParseDn(dnRaw);
+            const gKey = (dnRaw === null || dnRaw === undefined || String(dnRaw).trim() === '')
+                ? '(без DN)'
+                : String(dnRaw).trim();
+            if (!groups[gKey]) {
+                groups[gKey] = [];
+                groupOrder.push({ key: gKey, dn: dnNum });
+            }
+            groups[gKey].push(item);
+        }
+        // Сортировка: с DN по возрастанию, "(без DN)" — в конце.
+        groupOrder.sort((a, b) => {
+            if (a.dn === null && b.dn === null) {
+                return a.key.localeCompare(b.key, 'ru');
+            }
+            if (a.dn === null) return 1;
+            if (b.dn === null) return -1;
+            if (a.dn !== b.dn) return a.dn - b.dn;
+            return a.key.localeCompare(b.key, 'ru');
+        });
 
-            html += '<div class="valve-card" data-valve-id="' + valveEsc(itemId) + '" data-mode="' + mode + '">';
-            html += '<div class="valve-card-header" onclick="valveOpenDetail(\'' + valveEsc(itemId) + '\')">';
-            html += '<div class="valve-card-header-inner">';
-            html += '<div class="valve-card-text">';
-            html += '<div class="valve-card-title">' + valveEsc(name) + '</div>';
-            let subtitle = '';
-            if (type) subtitle += type;
-            if (place) subtitle += (subtitle ? ' · ' : '') + place;
-            if (subtitle) html += '<div class="valve-card-subtitle">' + valveEsc(subtitle) + '</div>';
+        let html = '<div class="valve-sorted-list">';
+        for (const g of groupOrder) {
+            const gItems = groups[g.key];
+            const label = (g.dn === null) ? g.key : ('DN ' + (Number.isInteger(g.dn) ? g.dn : g.dn.toString().replace('.', ',')));
+            html += '<div class="pb-section valve-group valve-subgroup static">';
+            html += '<div class="pb-section-title">';
+            html += '<span class="pb-section-title-text">' + valveEsc(label) + '</span>';
+            html += '<span class="pb-section-title-count">' + gItems.length + '</span>';
+            html += '<span class="pb-section-arrow"></span>';
             html += '</div>';
-            html += '<span class="valve-card-arrow"></span>';
-            html += '</div>';
-            html += '</div>';
-            html += '</div>';
+            html += '<div class="pb-section-body">';
+            for (const item of gItems) {
+                const itemId = String(item['ID'] ?? '');
+                const name = item['Наименование'] || '(без названия)';
+                const type = item['Тип'] || '';
+                const place = item['Расположение'] || '';
+
+                html += '<div class="valve-card" data-valve-id="' + valveEsc(itemId) + '" data-mode="' + mode + '">';
+                html += '<div class="valve-card-header" onclick="valveOpenDetail(\'' + valveEsc(itemId) + '\')">';
+                html += '<div class="valve-card-header-inner">';
+                html += '<div class="valve-card-text">';
+                html += '<div class="valve-card-title">' + valveEsc(name) + '</div>';
+                let subtitle = '';
+                if (type) subtitle += type;
+                if (place) subtitle += (subtitle ? ' · ' : '') + place;
+                if (subtitle) html += '<div class="valve-card-subtitle">' + valveEsc(subtitle) + '</div>';
+                html += '</div>';
+                html += '<span class="valve-card-arrow"></span>';
+                html += '</div>';
+                html += '</div>';
+                html += '</div>';
+            }
+            html += '</div>'; // pb-section-body
+            html += '</div>'; // pb-section
         }
         html += '</div>';
         list.innerHTML = html;
@@ -8369,27 +8923,56 @@
             return;
         }
 
-        let html = '<div class="regulator-sorted-list">';
+        // Сгруппировать регуляторы по «Производству» — раскрытая группа без сворачивания.
+        const groups = {};
+        const groupOrder = [];
         for (const item of items) {
-            const itemId = String(item['ID'] ?? '');
-            const name = item['Наименование'] || '(без названия)';
-            const type = item['Тип'] || '';
-            const place = item['Расположение'] || '';
+            const g = item['Производство'] || '(без производства)';
+            if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
+            groups[g].push(item);
+        }
+        // Алфавитный порядок групп
+        groupOrder.sort((a, b) => {
+            const va = a.toString().toLowerCase();
+            const vb = b.toString().toLowerCase();
+            if (va < vb) return -1;
+            if (va > vb) return 1;
+            return 0;
+        });
 
-            html += '<div class="regulator-card" data-regulator-id="' + regulatorEsc(itemId) + '" data-mode="' + mode + '">';
-            html += '<div class="regulator-card-header" onclick="regulatorOpenDetail(\'' + regulatorEsc(itemId) + '\')">';
-            html += '<div class="regulator-card-header-inner">';
-            html += '<div class="regulator-card-text">';
-            html += '<div class="regulator-card-title">' + regulatorEsc(name) + '</div>';
-            let subtitle = '';
-            if (type) subtitle += type;
-            if (place) subtitle += (subtitle ? ' · ' : '') + place;
-            if (subtitle) html += '<div class="regulator-card-subtitle">' + regulatorEsc(subtitle) + '</div>';
+        let html = '<div class="regulator-sorted-list">';
+        for (const g of groupOrder) {
+            const gItems = groups[g];
+            html += '<div class="pb-section regulator-group regulator-subgroup static">';
+            html += '<div class="pb-section-title">';
+            html += '<span class="pb-section-title-text">' + regulatorEsc(g) + '</span>';
+            html += '<span class="pb-section-title-count">' + gItems.length + '</span>';
+            html += '<span class="pb-section-arrow"></span>';
             html += '</div>';
-            html += '<span class="regulator-card-arrow"></span>';
-            html += '</div>';
-            html += '</div>';
-            html += '</div>';
+            html += '<div class="pb-section-body">';
+            for (const item of gItems) {
+                const itemId = String(item['ID'] ?? '');
+                const name = item['Наименование'] || '(без названия)';
+                const type = item['Тип'] || '';
+                const place = item['Расположение'] || '';
+
+                html += '<div class="regulator-card" data-regulator-id="' + regulatorEsc(itemId) + '" data-mode="' + mode + '">';
+                html += '<div class="regulator-card-header" onclick="regulatorOpenDetail(\'' + regulatorEsc(itemId) + '\')">';
+                html += '<div class="regulator-card-header-inner">';
+                html += '<div class="regulator-card-text">';
+                html += '<div class="regulator-card-title">' + regulatorEsc(name) + '</div>';
+                let subtitle = '';
+                if (type) subtitle += type;
+                if (place) subtitle += (subtitle ? ' · ' : '') + place;
+                if (subtitle) html += '<div class="regulator-card-subtitle">' + regulatorEsc(subtitle) + '</div>';
+                html += '</div>';
+                html += '<span class="regulator-card-arrow"></span>';
+                html += '</div>';
+                html += '</div>';
+                html += '</div>';
+            }
+            html += '</div>'; // pb-section-body
+            html += '</div>'; // pb-section
         }
         html += '</div>';
         list.innerHTML = html;
@@ -8470,6 +9053,803 @@
         }
         const count = (regulatorData.regulators || []).length;
         sublabel.textContent = count + ' ' + regulatorPlural(count, ['регулятор', 'регулятора', 'регуляторов']) + ' КИП ИОС';
+    }
+
+    // ===== ПРОЕКТЫ (зеркало регуляторов/клапанов/блокировок) =====
+    // Поля соответствуют листу "Проекты" файла Excel
+    // https://disk.yandex.ru/i/hfIfJ3EaHMWp9A (файл «Перечень проектов КИП пр-ва ИОС.xlsx»)
+    // Реальная структура полей определяется на этапе парсинга sync-projects.py.
+    // Если в данных есть колонки, не указанные в PROJECT_FIELDS — они не будут показаны.
+    const PROJECT_FIELDS = [
+        { key: 'Наименование проекта', label: 'Наименование проекта', group: 1 },
+        { key: '№ проекта',            label: '№ проекта',            group: 1 },
+        { key: 'Отделение',            label: 'Отделение',            group: 1 },
+        { key: 'Статус проекта',       label: 'Статус проекта',       group: 2 },
+        { key: 'Данные статуса',       label: 'Данные статуса',       group: 2 },
+        { key: 'Дата утв.',            label: 'Дата утв.',            group: 3 },
+        { key: 'Файл проекта',         label: 'Файл проекта',         group: 3 },
+        { key: 'Примечание',           label: 'Примечание',           group: 4 },
+        { key: 'Жёлтым отмечены приоритетные проекты', label: 'Приоритетный', group: 4 },
+    ];
+    let projectData = null;
+    let projectLoaded = false;
+    let projectGroupExpanded = {};
+
+    function projectEsc(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function projectNorm(s) {
+        if (s == null) return '';
+        return String(s).toLowerCase().replace(/[ё]/g, 'е').replace(/[^a-zа-я0-9]/gi, '');
+    }
+    function projectMark(text, query) {
+        if (!query) return projectEsc(text);
+        const t = String(text);
+        const q = projectNorm(query);
+        if (!q) return projectEsc(t);
+        const idx = projectNorm(t).indexOf(q);
+        if (idx === -1) return projectEsc(t);
+        const before = t.substring(0, idx);
+        const match = t.substring(idx, idx + q.length);
+        const after = t.substring(idx + q.length);
+        return projectEsc(before) + '<mark>' + projectEsc(match) + '</mark>' + projectMark(after, query);
+    }
+    function projectPlural(n, forms) {
+        const m = n % 100;
+        const m1 = m % 10;
+        if (m >= 5 && m <= 20) return forms[2];
+        if (m1 === 1) return forms[0];
+        if (m1 >= 2 && m1 <= 4) return forms[1];
+        return forms[2];
+    }
+    function projectFormatDate(dateVal) {
+        if (!dateVal) return '';
+        const num = parseFloat(dateVal);
+        if (!isNaN(num) && num > 30000) {
+            const epoch = new Date(1899, 11, 30);
+            const d = new Date(epoch.getTime() + num * 86400000);
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return day + '.' + month + '.' + year;
+        }
+        const str = String(dateVal).trim();
+        const m = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (m) return m[3] + '.' + m[2] + '.' + m[1];
+        if (/^\d{2}\.\d{2}\.\d{4}$/.test(str)) return str;
+        return str;
+    }
+    function projectGetLastUpdateDate() {
+        try {
+            const raw = localStorage.getItem('projectsLastUpdate');
+            if (!raw) return '';
+            const d = new Date(raw);
+            if (isNaN(d.getTime())) return '';
+            return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
+        } catch (e) { return ''; }
+    }
+    function projectStatusClass(status) {
+        const s = String(status || '').toLowerCase().trim();
+        if (s === 'выполнен')   return 'project-card-status-done';
+        if (s === 'новый')      return 'project-card-status-new';
+        if (s === 'остановлен') return 'project-card-status-stopped';
+        if (s === 'отменен' || s === 'отменён') return 'project-card-status-cancel';
+        return '';
+    }
+
+    async function projectInitSorted(mode) {
+        if (!projectLoaded || !projectData) {
+            try {
+                const bust = '?v=' + Date.now();
+                const resp = await fetch('data/projects.json' + bust, { cache: 'no-store' });
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                projectData = await resp.json();
+                projectLoaded = true;
+                localStorage.setItem('projectsLastUpdate', new Date().toISOString());
+            } catch (e) {
+                console.error('projectInitSorted error:', e);
+                const ids = { prod: 'projectProdList' };
+                const el = document.getElementById(ids[mode]);
+                if (el) el.innerHTML = '<div class="pb-empty">Ошибка загрузки.<br>Проверьте соединение.</div>';
+                return;
+            }
+        }
+        projectsRenderSorted(mode);
+    }
+
+    function projectsForceRefresh(mode) {
+        projectData = null;
+        projectLoaded = false;
+        projectInitSorted(mode);
+        if (navigator.vibrate) navigator.vibrate(40);
+    }
+
+    function projectsRenderSorted(mode) {
+        const ids = {
+            prod: { list: 'projectProdList', info: 'projectProdInfo', search: 'projectProdSearchInput', page: 'page-projects-prod' },
+        };
+        const id = ids[mode];
+        if (!id) return;
+        const list = document.getElementById(id.list);
+        const info = document.getElementById(id.info);
+        if (!list || !info) return;
+
+        if (!projectLoaded || !projectData) {
+            list.innerHTML = '';
+            info.textContent = 'Загрузка…';
+            return;
+        }
+
+        const query = projectNorm((document.getElementById(id.search)?.value || '').trim());
+        let filtered = projectData.projects || [];
+
+        // Сортировка по столбцу «Отделение» (production-like)
+        const sortKey = 'Отделение';
+        filtered.sort((a, b) => {
+            const va = (a[sortKey] || '').toString().toLowerCase();
+            const vb = (b[sortKey] || '').toString().toLowerCase();
+            if (va < vb) return -1;
+            if (va > vb) return 1;
+            // Внутри отделения — по наименованию проекта
+            const na = (a['Наименование проекта'] || '').toString().toLowerCase();
+            const nb = (b['Наименование проекта'] || '').toString().toLowerCase();
+            if (na < nb) return -1;
+            if (na > nb) return 1;
+            return 0;
+        });
+
+        if (query) {
+            filtered = filtered.filter(d =>
+                PROJECT_FIELDS.some(f => projectNorm(d[f.key] || '').includes(query))
+            );
+        }
+
+        const groups = {};
+        const groupOrder = [];
+        for (const d of filtered) {
+            const g = d[sortKey] || '(без отделения)';
+            if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
+            groups[g].push(d);
+        }
+
+        info.textContent = '';
+
+        if (filtered.length === 0) {
+            list.innerHTML = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
+            return;
+        }
+
+        let html = '<div class="project-sorted-list' + (query ? ' searching' : '') + '">';
+        for (const g of groupOrder) {
+            const items = groups[g];
+            const groupKey = mode + '|' + g;
+            const isGroupExpanded = query ? true : (projectGroupExpanded[groupKey] === true);
+
+            html += '<div class="pb-section project-group' + (isGroupExpanded ? ' expanded' : '') + '" data-group="' + projectEsc(g) + '" data-mode="' + mode + '">';
+            html += '<div class="pb-section-title project-group-title" onclick="projectsToggleGroup(this)">';
+            html += '<span class="pb-section-title-text">' + projectMark(g, query) + '</span>';
+            html += '<span class="pb-section-title-count">' + items.length + '</span>';
+            html += '<span class="pb-section-arrow"></span>';
+            html += '</div>';
+            html += '<div class="pb-section-body">';
+
+            for (const item of items) {
+                const itemId = String(item['ID'] ?? '');
+                const name = item['Наименование проекта'] || '(без названия)';
+                const num  = item['№ проекта'] || '';
+                const status = item['Статус проекта'] || '';
+                const statusCls = projectStatusClass(status);
+
+                html += '<div class="project-card" data-project-id="' + projectEsc(itemId) + '" data-mode="' + mode + '">';
+                html += '<div class="project-card-header" onclick="projectOpenDetail(\'' + projectEsc(itemId) + '\')">';
+                html += '<div class="project-card-header-inner">';
+                html += '<div class="project-card-text">';
+                html += '<div class="project-card-title">' + projectMark(name, query) + '</div>';
+                let subtitle = '';
+                if (num) subtitle += '№ ' + num;
+                if (subtitle) html += '<div class="project-card-subtitle">' + projectMark(subtitle, query) + '</div>';
+                if (status) html += '<div class="project-card-status ' + statusCls + '">' + projectMark(status, query) + '</div>';
+                html += '</div>';
+                html += '<span class="project-card-arrow"></span>';
+                html += '</div>';
+                html += '</div>';
+                html += '</div>';
+            }
+            html += '</div>';
+            html += '</div>';
+        }
+        html += '</div>';
+        list.innerHTML = html;
+    }
+
+    function projectsToggleGroup(titleEl) {
+        const section = titleEl.closest('.pb-section');
+        if (!section) return;
+        const mode = section.getAttribute('data-mode') || 'prod';
+        const group = section.getAttribute('data-group');
+        if (!group) return;
+        if (navigator.vibrate) navigator.vibrate(25);
+        window._projectGroupCtx = { mode: mode, group: group };
+        navigateTo('project-group');
+    }
+
+    function projectsRenderGroup() {
+        const ctx = window._projectGroupCtx || {};
+        const mode = ctx.mode || 'prod';
+        const group = ctx.group || '';
+        const list = document.getElementById('projectGroupList');
+        const titleEl = document.getElementById('projectGroupTitle');
+        if (!list) return;
+        if (titleEl) titleEl.textContent = group || 'Проекты';
+
+        if (!projectLoaded || !projectData) {
+            list.innerHTML = '<div class="pb-empty">Загрузка…</div>';
+            return;
+        }
+
+        const sortKey = 'Отделение';
+        let items = (projectData.projects || []).filter(d => {
+            const g = d[sortKey] || '(без отделения)';
+            return g === group;
+        });
+        // Сортировка по № проекта (строки), затем по наименованию
+        items.sort((a, b) => {
+            const na = (a['Наименование проекта'] || '').toString().toLowerCase();
+            const nb = (b['Наименование проекта'] || '').toString().toLowerCase();
+            if (na < nb) return -1;
+            if (na > nb) return 1;
+            return 0;
+        });
+
+        if (items.length === 0) {
+            list.innerHTML = '<div class="pb-empty">В группе нет проектов.</div>';
+            return;
+        }
+
+        // Сгруппировать проекты по «Наименованию проекта» — раскрытая группа без сворачивания.
+        // (Каждое наименование уникально, поэтому подгруппы обычно содержат 1 проект,
+        // но если есть одноимённые проекты — они соберутся вместе со счётчиком.)
+        const groups = {};
+        const groupOrder = [];
+        for (const item of items) {
+            const g = item['Наименование проекта'] || '(без названия)';
+            if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
+            groups[g].push(item);
+        }
+        groupOrder.sort((a, b) => {
+            const va = a.toString().toLowerCase();
+            const vb = b.toString().toLowerCase();
+            if (va < vb) return -1;
+            if (va > vb) return 1;
+            return 0;
+        });
+
+        let html = '<div class="project-sorted-list">';
+        for (const g of groupOrder) {
+            const gItems = groups[g];
+            html += '<div class="pb-section project-group project-subgroup static">';
+            html += '<div class="pb-section-title">';
+            html += '<span class="pb-section-title-text">' + projectEsc(g) + '</span>';
+            html += '<span class="pb-section-title-count">' + gItems.length + '</span>';
+            html += '<span class="pb-section-arrow"></span>';
+            html += '</div>';
+            html += '<div class="pb-section-body">';
+            for (const item of gItems) {
+                const itemId = String(item['ID'] ?? '');
+                const name = item['Наименование проекта'] || '(без названия)';
+                const num  = item['№ проекта'] || '';
+                const status = item['Статус проекта'] || '';
+                const statusCls = projectStatusClass(status);
+
+                html += '<div class="project-card" data-project-id="' + projectEsc(itemId) + '" data-mode="' + mode + '">';
+                html += '<div class="project-card-header" onclick="projectOpenDetail(\'' + projectEsc(itemId) + '\')">';
+                html += '<div class="project-card-header-inner">';
+                html += '<div class="project-card-text">';
+                html += '<div class="project-card-title">' + projectEsc(name) + '</div>';
+                let subtitle = '';
+                if (num) subtitle += '№ ' + num;
+                if (subtitle) html += '<div class="project-card-subtitle">' + projectEsc(subtitle) + '</div>';
+                if (status) html += '<div class="project-card-status ' + statusCls + '">' + projectEsc(status) + '</div>';
+                html += '</div>';
+                html += '<span class="project-card-arrow"></span>';
+                html += '</div>';
+                html += '</div>';
+                html += '</div>';
+            }
+            html += '</div>'; // pb-section-body
+            html += '</div>'; // pb-section
+        }
+        html += '</div>';
+        list.innerHTML = html;
+    }
+
+    function projectsScrollToGroup(el) {
+        if (!el) return;
+        const mode = el.getAttribute('data-mode') || 'prod';
+        const ph = document.querySelector('#page-projects-' + mode + ' .page-inline-header');
+        const stickyHeight = ph ? ph.offsetHeight : 56;
+        const rect = el.getBoundingClientRect();
+        const targetY = window.scrollY + rect.top - stickyHeight - 8;
+        window.scrollTo({ top: Math.max(0, targetY), behavior: 'auto' });
+    }
+
+    // ===== Открытие карточки проекта (отдельная страница) =====
+    function projectOpenDetail(projectId) {
+        if (!projectId) return;
+        if (navigator.vibrate) navigator.vibrate(15);
+        window._projectDetailId = projectId;
+        navigateTo('project-detail');
+    }
+
+    function projectRenderDetail() {
+        const projectId = window._projectDetailId;
+        if (!projectId || !projectLoaded || !projectData) return;
+        const item = projectData.projects.find(d => String(d['ID'] ?? '') === String(projectId));
+        if (!item) return;
+        const titleEl = document.getElementById('projectDetailTitle');
+        const content = document.getElementById('projectDetailContent');
+        if (!titleEl || !content) return;
+        const name = item['Наименование проекта'] || '(без названия)';
+        titleEl.textContent = name;
+
+        let html = '<div class="project-detail-card">';
+        html += '<div class="project-detail-rows">';
+        for (const f of PROJECT_FIELDS) {
+            let val = item[f.key];
+            if (val === undefined || val === null || val === '') continue;
+            if (f.key === 'Дата утв.') val = projectFormatDate(val);
+            // «Приоритетный» — переформулировать как Да/Нет
+            if (f.key === 'Жёлтым отмечены приоритетные проекты') {
+                const v = String(val).toLowerCase().trim();
+                if (v === 'да' || v === 'yes' || v === '1' || v === 'true') val = 'Да';
+                else continue;
+            }
+            const grpCls = f.group ? ' project-row-group-' + f.group : '';
+            html += '<div class="project-detail-row' + grpCls + '">';
+            html += '<div class="project-detail-label">' + projectEsc(f.label) + '</div>';
+            html += '<div class="project-detail-value">' + projectEsc(String(val)) + '</div>';
+            html += '</div>';
+        }
+        html += '</div>';
+        html += '</div>';
+        content.innerHTML = html;
+    }
+
+    // ===== Кнопка Проекты на странице КИП И ОС =====
+    function projectsInitEntryButton() {
+        const btn = document.getElementById('projectsEntryBtn');
+        if (!btn || btn.dataset.initialized) return;
+        btn.dataset.initialized = '1';
+        btn.addEventListener('click', function() {
+            if (navigator.vibrate) navigator.vibrate(15);
+            navigateTo('projects-prod');
+        });
+        // Обновить sublabel количеством проектов
+        projectsUpdateEntrySublabel();
+    }
+    async function projectsUpdateEntrySublabel() {
+        const btn = document.getElementById('projectsEntryBtn');
+        if (!btn) return;
+        const sublabel = btn.querySelector('.menu-btn-sublabel');
+        if (!sublabel) return;
+        if (!projectLoaded || !projectData) {
+            try {
+                const bust = '?v=' + Date.now();
+                const resp = await fetch('data/projects.json' + bust, { cache: 'no-store' });
+                if (!resp.ok) return;
+                projectData = await resp.json();
+                projectLoaded = true;
+                localStorage.setItem('projectsLastUpdate', new Date().toISOString());
+            } catch (e) { return; }
+        }
+        const count = (projectData.projects || []).length;
+        sublabel.textContent = count + ' ' + projectPlural(count, ['проект', 'проекта', 'проектов']) + ' КИП ИОС';
+    }
+
+    // ===== КАБЕЛЬНЫЙ ЖУРНАЛ (зеркало проектов) =====
+    // Поля соответствуют листу "Кабельный журнал" файла Excel
+    // https://disk.yandex.ru/i/wvleuW19NoQBPQ (файл «Кабельный журнал.xlsx»)
+    const CABLE_FIELDS = [
+        { key: 'Обозначение кабеля, провода',        label: 'Обозначение',           group: 1 },
+        { key: 'Начало трассы',                       label: 'Начало трассы',         group: 1 },
+        { key: 'Конец трассы',                        label: 'Конец трассы',          group: 1 },
+        { key: 'Участок трассы кабеля, провода',     label: 'Участок трассы',        group: 1 },
+        { key: 'Отделение, производство',            label: 'Отделение',             group: 2 },
+        { key: 'Назначение кабеля',                  label: 'Назначение',            group: 2 },
+        { key: '№ проекта',                          label: '№ проекта',             group: 2 },
+        { key: 'Марка (по проекту)',                  label: 'Марка (по проекту)',     group: 3 },
+        { key: 'Число и сечение жил (по проекту)',   label: 'Сечение (по проекту)',   group: 3 },
+        { key: 'Длина, м (по проекту)',               label: 'Длина, м (по проекту)',  group: 3 },
+        { key: 'Марка (проложен)',                    label: 'Марка (проложен)',       group: 4 },
+        { key: 'Число и сечение жил (проложен)',     label: 'Сечение (проложен)',     group: 4 },
+        { key: 'Длина, м (проложен)',                 label: 'Длина, м (проложен)',    group: 4 },
+        { key: 'Дата добавления',                    label: 'Дата добавления',       group: 5 },
+    ];
+    let cableData = null;
+    let cableLoaded = false;
+    let cableGroupExpanded = {};
+
+    function cableEsc(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function cableNorm(s) {
+        if (s == null) return '';
+        return String(s).toLowerCase().replace(/[ё]/g, 'е').replace(/[^a-zа-я0-9]/gi, '');
+    }
+    function cableMark(text, query) {
+        if (!query) return cableEsc(text);
+        const t = String(text);
+        const q = cableNorm(query);
+        if (!q) return cableEsc(t);
+        const idx = cableNorm(t).indexOf(q);
+        if (idx === -1) return cableEsc(t);
+        const before = t.substring(0, idx);
+        const match = t.substring(idx, idx + q.length);
+        const after = t.substring(idx + q.length);
+        return cableEsc(before) + '<mark>' + cableEsc(match) + '</mark>' + cableMark(after, query);
+    }
+    function cablePlural(n, forms) {
+        const m = n % 100;
+        const m1 = m % 10;
+        if (m >= 5 && m <= 20) return forms[2];
+        if (m1 === 1) return forms[0];
+        if (m1 >= 2 && m1 <= 4) return forms[1];
+        return forms[2];
+    }
+    function cableFormatDate(dateVal) {
+        if (!dateVal) return '';
+        const str = String(dateVal).trim();
+        const m = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (m) return m[3] + '.' + m[2] + '.' + m[1];
+        if (/^\d{2}\.\d{2}\.\d{4}$/.test(str)) return str;
+        // Excel serial date
+        const num = parseFloat(str);
+        if (!isNaN(num) && num > 30000) {
+            const epoch = new Date(1899, 11, 30);
+            const d = new Date(epoch.getTime() + num * 86400000);
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return day + '.' + month + '.' + year;
+        }
+        return str;
+    }
+    function cableGetLastUpdateDate() {
+        try {
+            const raw = localStorage.getItem('cablesLastUpdate');
+            if (!raw) return '';
+            const d = new Date(raw);
+            if (isNaN(d.getTime())) return '';
+            return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
+        } catch (e) { return ''; }
+    }
+    function cablePurposeClass(purpose) {
+        const s = String(purpose || '').toLowerCase().trim();
+        if (s === 'сигнальный' || s === 'сигнализация 220 в') return 'cable-card-purpose-signal';
+        if (s === 'контрольный')                                return 'cable-card-purpose-control';
+        if (s === 'перемычка')                                  return 'cable-card-purpose-jumper';
+        if (s === 'питание 220 в')                              return 'cable-card-purpose-power';
+        if (s === 'управление')                                return 'cable-card-purpose-manage';
+        if (s === 'резерв')                                    return 'cable-card-purpose-reserve';
+        return 'cable-card-purpose-other';
+    }
+
+    async function cablesInitSorted(mode) {
+        if (!cableLoaded || !cableData) {
+            try {
+                const bust = '?v=' + Date.now();
+                const resp = await fetch('data/cables.json' + bust, { cache: 'no-store' });
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                cableData = await resp.json();
+                cableLoaded = true;
+                localStorage.setItem('cablesLastUpdate', new Date().toISOString());
+            } catch (e) {
+                console.error('cablesInitSorted error:', e);
+                const ids = { prod: 'cableProdList' };
+                const el = document.getElementById(ids[mode]);
+                if (el) el.innerHTML = '<div class="pb-empty">Ошибка загрузки.<br>Проверьте соединение.</div>';
+                return;
+            }
+        }
+        cablesRenderSorted(mode);
+    }
+
+    function cablesForceRefresh(mode) {
+        cableData = null;
+        cableLoaded = false;
+        cablesInitSorted(mode);
+        if (navigator.vibrate) navigator.vibrate(40);
+    }
+
+    function cablesRenderSorted(mode) {
+        const ids = {
+            prod: { list: 'cableProdList', info: 'cableProdInfo', search: 'cableProdSearchInput', page: 'page-cables-prod' },
+        };
+        const id = ids[mode];
+        if (!id) return;
+        const list = document.getElementById(id.list);
+        const info = document.getElementById(id.info);
+        if (!list || !info) return;
+
+        if (!cableLoaded || !cableData) {
+            list.innerHTML = '';
+            info.textContent = 'Загрузка…';
+            return;
+        }
+
+        const query = cableNorm((document.getElementById(id.search)?.value || '').trim());
+        let filtered = cableData.cables || [];
+
+        // Сортировка по столбцу «Отделение, производство»
+        const sortKey = 'Отделение, производство';
+        filtered.sort((a, b) => {
+            const va = (a[sortKey] || '').toString().toLowerCase();
+            const vb = (b[sortKey] || '').toString().toLowerCase();
+            if (va < vb) return -1;
+            if (va > vb) return 1;
+            // Внутри отделения — по обозначению кабеля
+            const na = (a['Обозначение кабеля, провода'] || '').toString().toLowerCase();
+            const nb = (b['Обозначение кабеля, провода'] || '').toString().toLowerCase();
+            if (na < nb) return -1;
+            if (na > nb) return 1;
+            return 0;
+        });
+
+        if (query) {
+            filtered = filtered.filter(d =>
+                CABLE_FIELDS.some(f => cableNorm(d[f.key] || '').includes(query))
+            );
+        }
+
+        const groups = {};
+        const groupOrder = [];
+        for (const d of filtered) {
+            const g = d[sortKey] || '(без отделения)';
+            if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
+            groups[g].push(d);
+        }
+
+        info.textContent = '';
+
+        if (filtered.length === 0) {
+            list.innerHTML = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
+            return;
+        }
+
+        let html = '<div class="cable-sorted-list' + (query ? ' searching' : '') + '>';
+        for (const g of groupOrder) {
+            const items = groups[g];
+            const groupKey = mode + '|' + g;
+            const isGroupExpanded = query ? true : (cableGroupExpanded[groupKey] === true);
+
+            html += '<div class="pb-section cable-group' + (isGroupExpanded ? ' expanded' : '') + '" data-group="' + cableEsc(g) + '" data-mode="' + mode + '">';
+            html += '<div class="pb-section-title cable-group-title" onclick="cablesToggleGroup(this)">';
+            html += '<span class="pb-section-title-text">' + cableMark(g, query) + '</span>';
+            html += '<span class="pb-section-title-count">' + items.length + '</span>';
+            html += '<span class="pb-section-arrow"></span>';
+            html += '</div>';
+            html += '<div class="pb-section-body">';
+
+            for (const item of items) {
+                const itemId = String(item['№ п/п'] ?? '');
+                const name = item['Обозначение кабеля, провода'] || '(без обозначения)';
+                const start = item['Начало трассы'] || '';
+                const end   = item['Конец трассы'] || '';
+                const purpose = item['Назначение кабеля'] || '';
+                const purposeCls = cablePurposeClass(purpose);
+
+                html += '<div class="cable-card" data-cable-id="' + cableEsc(itemId) + '" data-mode="' + mode + '">';
+                html += '<div class="cable-card-header" onclick="cableOpenDetail(\x27' + cableEsc(itemId) + '\x27)">';
+                html += '<div class="cable-card-header-inner">';
+                html += '<div class="cable-card-text">';
+                html += '<div class="cable-card-title">' + cableMark(name, query) + '</div>';
+                let subtitle = '';
+                if (start) subtitle += start;
+                if (end)   subtitle += (subtitle ? ' → ' : '') + end;
+                if (subtitle) html += '<div class="cable-card-subtitle">' + cableMark(subtitle, query) + '</div>';
+                if (purpose) html += '<div class="cable-card-purpose ' + purposeCls + '">' + cableMark(purpose, query) + '</div>';
+                html += '</div>';
+                html += '<span class="cable-card-arrow"></span>';
+                html += '</div>';
+                html += '</div>';
+                html += '</div>';
+            }
+            html += '</div>';
+            html += '</div>';
+        }
+        html += '</div>';
+        list.innerHTML = html;
+    }
+
+    function cablesToggleGroup(titleEl) {
+        const section = titleEl.closest('.pb-section');
+        if (!section) return;
+        const mode = section.getAttribute('data-mode') || 'prod';
+        const group = section.getAttribute('data-group');
+        if (!group) return;
+        if (navigator.vibrate) navigator.vibrate(25);
+        window._cableGroupCtx = { mode: mode, group: group };
+        navigateTo('cable-group');
+    }
+
+    function cablesRenderGroup() {
+        const ctx = window._cableGroupCtx || {};
+        const mode = ctx.mode || 'prod';
+        const group = ctx.group || '';
+        const list = document.getElementById('cableGroupList');
+        const titleEl = document.getElementById('cableGroupTitle');
+        if (!list) return;
+        if (titleEl) titleEl.textContent = group || 'Кабели';
+
+        if (!cableLoaded || !cableData) {
+            list.innerHTML = '<div class="pb-empty">Загрузка…</div>';
+            return;
+        }
+
+        const sortKey = 'Отделение, производство';
+        let items = (cableData.cables || []).filter(d => {
+            const g = d[sortKey] || '(без отделения)';
+            return g === group;
+        });
+        // Сортировка по обозначению кабеля
+        items.sort((a, b) => {
+            const na = (a['Обозначение кабеля, провода'] || '').toString().toLowerCase();
+            const nb = (b['Обозначение кабеля, провода'] || '').toString().toLowerCase();
+            if (na < nb) return -1;
+            if (na > nb) return 1;
+            return 0;
+        });
+
+        if (items.length === 0) {
+            list.innerHTML = '<div class="pb-empty">В группе нет кабелей.</div>';
+            return;
+        }
+
+        // Сгруппировать кабели по «Назначение кабеля» — раскрытая группа без сворачивания.
+        const groups = {};
+        const groupOrder = [];
+        for (const item of items) {
+            const g = item['Назначение кабеля'] || '(без назначения)';
+            if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
+            groups[g].push(item);
+        }
+        groupOrder.sort((a, b) => {
+            const va = a.toString().toLowerCase();
+            const vb = b.toString().toLowerCase();
+            if (va < vb) return -1;
+            if (va > vb) return 1;
+            return 0;
+        });
+
+        let html = '<div class="cable-sorted-list">';
+        for (const g of groupOrder) {
+            const gItems = groups[g];
+            html += '<div class="pb-section cable-group cable-subgroup static">';
+            html += '<div class="pb-section-title">';
+            html += '<span class="pb-section-title-text">' + cableEsc(g) + '</span>';
+            html += '<span class="pb-section-title-count">' + gItems.length + '</span>';
+            html += '<span class="pb-section-arrow"></span>';
+            html += '</div>';
+            html += '<div class="pb-section-body">';
+            for (const item of gItems) {
+                const itemId = String(item['№ п/п'] ?? '');
+                const name = item['Обозначение кабеля, провода'] || '(без обозначения)';
+                const start = item['Начало трассы'] || '';
+                const end   = item['Конец трассы'] || '';
+                const purpose = item['Назначение кабеля'] || '';
+                const purposeCls = cablePurposeClass(purpose);
+
+                html += '<div class="cable-card" data-cable-id="' + cableEsc(itemId) + '" data-mode="' + mode + '">';
+                html += '<div class="cable-card-header" onclick="cableOpenDetail(\x27' + cableEsc(itemId) + '\x27)">';
+                html += '<div class="cable-card-header-inner">';
+                html += '<div class="cable-card-text">';
+                html += '<div class="cable-card-title">' + cableEsc(name) + '</div>';
+                let subtitle = '';
+                if (start) subtitle += start;
+                if (end)   subtitle += (subtitle ? ' → ' : '') + end;
+                if (subtitle) html += '<div class="cable-card-subtitle">' + cableEsc(subtitle) + '</div>';
+                if (purpose) html += '<div class="cable-card-purpose ' + purposeCls + '">' + cableEsc(purpose) + '</div>';
+                html += '</div>';
+                html += '<span class="cable-card-arrow"></span>';
+                html += '</div>';
+                html += '</div>';
+                html += '</div>';
+            }
+            html += '</div>'; // pb-section-body
+            html += '</div>'; // pb-section
+        }
+        html += '</div>';
+        list.innerHTML = html;
+    }
+
+    function cablesScrollToGroup(el) {
+        if (!el) return;
+        const mode = el.getAttribute('data-mode') || 'prod';
+        const ph = document.querySelector('#page-cables-' + mode + ' .page-inline-header');
+        const stickyHeight = ph ? ph.offsetHeight : 56;
+        const rect = el.getBoundingClientRect();
+        const targetY = window.scrollY + rect.top - stickyHeight - 8;
+        window.scrollTo({ top: Math.max(0, targetY), behavior: 'auto' });
+    }
+
+    // ===== Открытие карточки кабеля (отдельная страница) =====
+    function cableOpenDetail(cableId) {
+        if (!cableId) return;
+        if (navigator.vibrate) navigator.vibrate(15);
+        window._cableDetailId = cableId;
+        navigateTo('cable-detail');
+    }
+
+    function cableRenderDetail() {
+        const cableId = window._cableDetailId;
+        if (!cableId || !cableLoaded || !cableData) return;
+        const item = cableData.cables.find(d => String(d['№ п/п'] ?? '') === String(cableId));
+        if (!item) return;
+        const titleEl = document.getElementById('cableDetailTitle');
+        const content = document.getElementById('cableDetailContent');
+        if (!titleEl || !content) return;
+        const name = item['Обозначение кабеля, провода'] || '(без обозначения)';
+        titleEl.textContent = name;
+
+        let html = '<div class="cable-detail-card">';
+        html += '<div class="cable-detail-rows">';
+        for (const f of CABLE_FIELDS) {
+            let val = item[f.key];
+            if (val === undefined || val === null || val === '') continue;
+            if (f.key === 'Дата добавления') val = cableFormatDate(val);
+            const grpCls = f.group ? ' cable-row-group-' + f.group : '';
+            html += '<div class="cable-detail-row' + grpCls + '">';
+            html += '<div class="cable-detail-label">' + cableEsc(f.label) + '</div>';
+            html += '<div class="cable-detail-value">' + cableEsc(String(val)) + '</div>';
+            html += '</div>';
+        }
+        html += '</div>';
+        html += '</div>';
+        content.innerHTML = html;
+    }
+
+    // ===== Кнопка Кабельный журнал на странице КИП И ОС =====
+    function cablesInitEntryButton() {
+        const btn = document.getElementById('cablesEntryBtn');
+        if (!btn || btn.dataset.initialized) return;
+        btn.dataset.initialized = '1';
+        btn.addEventListener('click', function() {
+            if (navigator.vibrate) navigator.vibrate(15);
+            navigateTo('cables-prod');
+        });
+        // Обновить sublabel количеством кабелей
+        cablesUpdateEntrySublabel();
+    }
+    async function cablesUpdateEntrySublabel() {
+        const btn = document.getElementById('cablesEntryBtn');
+        if (!btn) return;
+        const sublabel = btn.querySelector('.menu-btn-sublabel');
+        if (!sublabel) return;
+        if (!cableLoaded || !cableData) {
+            try {
+                const bust = '?v=' + Date.now();
+                const resp = await fetch('data/cables.json' + bust, { cache: 'no-store' });
+                if (!resp.ok) return;
+                cableData = await resp.json();
+                cableLoaded = true;
+                localStorage.setItem('cablesLastUpdate', new Date().toISOString());
+            } catch (e) { return; }
+        }
+        const count = (cableData.cables || []).length;
+        sublabel.textContent = count + ' ' + cablePlural(count, ['кабель', 'кабеля', 'кабелей']) + ' в журнале';
+    }
+
+    // ===== Кнопка «План корпуса 114» на странице КИП И ОС (заглушка) =====
+    function plan114InitEntryButton() {
+        const btn = document.getElementById('plan114EntryBtn');
+        if (!btn || btn.dataset.initialized) return;
+        btn.dataset.initialized = '1';
+        btn.addEventListener('click', function() {
+            if (navigator.vibrate) navigator.vibrate(15);
+            navigateTo('plan-114');
+        });
     }
 
 
@@ -9109,11 +10489,20 @@
         if (page === 'lock-group') { setTimeout(() => { if (typeof lockRenderGroup === 'function') lockRenderGroup(); }, 30); }
         if (page === 'valve-group') { setTimeout(() => { if (typeof valveRenderGroup === 'function') valveRenderGroup(); }, 30); }
         if (page === 'regulator-group') { setTimeout(() => { if (typeof regulatorRenderGroup === 'function') regulatorRenderGroup(); }, 30); }
+        if (page === 'projects-prod') { setTimeout(() => { if (typeof projectInitSorted === 'function') projectInitSorted('prod'); }, 30); }
+        if (page === 'project-detail') { setTimeout(() => { if (typeof projectRenderDetail === 'function') projectRenderDetail(); }, 30); }
+        if (page === 'project-group') { setTimeout(() => { if (typeof projectsRenderGroup === 'function') projectsRenderGroup(); }, 30); }
+        if (page === 'cables-prod') { setTimeout(() => { if (typeof cablesInitSorted === 'function') cablesInitSorted('prod'); }, 30); }
+        if (page === 'cable-detail') { setTimeout(() => { if (typeof cableRenderDetail === 'function') cableRenderDetail(); }, 30); }
+        if (page === 'cable-group') { setTimeout(() => { if (typeof cablesRenderGroup === 'function') cablesRenderGroup(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof devInitEntryButton === 'function') devInitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof kipIOSUpdateLastChange === 'function') kipIOSUpdateLastChange(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof lockInitEntryButton === 'function') lockInitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof valveInitEntryButton === 'function') valveInitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof regulatorInitEntryButton === 'function') regulatorInitEntryButton(); }, 30); }
+        if (page === 'kip-ios') { setTimeout(() => { if (typeof projectsInitEntryButton === 'function') projectsInitEntryButton(); }, 30); }
+        if (page === 'kip-ios') { setTimeout(() => { if (typeof cablesInitEntryButton === 'function') cablesInitEntryButton(); }, 30); }
+        if (page === 'kip-ios') { setTimeout(() => { if (typeof plan114InitEntryButton === 'function') plan114InitEntryButton(); }, 30); }
         if (TICKET_IDS.includes(page)) { setTimeout(() => initTicketsPage(page), 30); }
         if (page === 'exam-tickets') { setTimeout(() => loadTicketsData(), 30); }
         // Снять блокировку прокрутки и закрыть открытые билеты при уходе со страницы
@@ -9149,6 +10538,14 @@
         if (addToHistory && !isNavigating) {
             history.pushState({ page: page }, '', '#' + page);
         }
+        // При переходе на главную — очистить внутреннюю историю навигации,
+        // чтобы шеврон на дочерних страницах показывал корректное число стрелок
+        // после возврата на главную (двойной тап по шеврону или popstate).
+        if (page === 'dashboard') {
+            pageHistory = [];
+        }
+        // Обновить количество стрелок шеврона в заголовке активной страницы
+        updateChevronArrows();
         isNavigating = false;
     }
     function updateBottomNavActive(page) {
@@ -9197,6 +10594,31 @@
         }
     }
 
+    // ===== Динамическое количество стрелок шеврона "Назад" =====
+    // Глубина навигации = pageHistory.length (число переходов назад до главной).
+    // На странице с глубиной 1 — одна стрелка, 2 — две, 3 — три, 4+ — четыре (кап).
+    // SVG-разметка та же, что использовалась в захардкоженных шевронах.
+    function updateChevronArrows() {
+        try {
+            const active = document.querySelector('.page-content.active');
+            if (!active) return;
+            const chevron = active.querySelector('.page-inline-header-chevron');
+            if (!chevron) return;
+            const n = Math.min(Math.max(pageHistory.length, 0), 4);
+            // Сгенерировать n SVG-стрелок. Первая — без margin, остальные с margin-left:-6px.
+            let html = '';
+            for (let i = 0; i < n; i++) {
+                const style = (i === 0) ? '' : ' style="margin-left:-6px;"';
+                html += '<svg viewBox="0 0 24 24"' + style + '><polyline points="15 18 9 12 15 6"/></svg>';
+            }
+            // Если n === 0 (например, мы на главной, но там нет chevron — этот случай не наступит),
+            // оставляем пусто.
+            chevron.innerHTML = html;
+        } catch (e) {
+            // Тихо игнорируем — обновление шеврона не должно ломать навигацию.
+        }
+    }
+
     // ============================================================
     // ЗАКРЕПЛЁННЫЕ ПОДРАЗДЕЛЫ НА ГЛАВНОЙ СТРАНИЦЕ
     // ============================================================
@@ -9225,7 +10647,10 @@
         'library':       { label: 'Библиотека КИП и А',      sublabel: 'Документация, схемы, инструкции',                target: 'library',       category: 'docs' },
         'kip-ios':       { label: 'КИП ИОС',                  sublabel: 'Перечень приборов, документация',               target: 'kip-ios',       category: 'docs' },
         // ===== КИП ИОС — подразделы (страница page-kip-ios) =====
-        'devices':       { label: 'Приборы',                  sublabel: 'Перечень КИП ИОС — 1312 приборов',              target: 'devices',       category: 'docs' }
+        'devices':       { label: 'Приборы',                  sublabel: 'Перечень КИП ИОС — 1312 приборов',              target: 'devices',       category: 'docs' },
+        'projects':      { label: 'Проекты',                  sublabel: 'Перечень проектов КИП пр-ва ИОС',               target: 'projects',      category: 'docs' },
+        'cables':        { label: 'Кабельный журнал',        sublabel: 'Кабельный журнал КИП пр-ва ИОС',                 target: 'cables',        category: 'docs' },
+        'plan-114':      { label: 'План корпуса 114',        sublabel: 'Раздел в разработке',                            target: 'plan-114',      category: 'docs' }
     };
     const PINNED_STORAGE_KEY = 'pinnedSubsections';
     let currentPinKey = null; // ключ подраздела, для которого открыт sheet
@@ -13457,7 +14882,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
         <!-- Датчики температуры -->
         <div id="page-temp-sensors" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><svg viewBox="0 0 24 24" style="margin-left:-6px;"><polyline points="15 18 9 12 15 6"/></svg></div><div class="page-inline-header-title">Датчики температуры</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Датчики температуры</div></div>
 
             <div class="scale-form">
                 <div class="scale-form-label">Тип датчика</div>
