@@ -3734,6 +3734,46 @@
     }
     [data-theme="light"] .dev-card-value.dev-card-date { color: rgba(20, 20, 19, 0.7); }
 
+    /* ===== Единая кликабельная ссылка «№ проекта» в карточках КИП ИОС ===== */
+    /* Применяется в разделах: приборы / блокировки / клапаны / регуляторы /
+       кабельный журнал. Клик открывает карточку проекта с соответствующим №. */
+    .kip-project-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #6aa6e0;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        -webkit-tap-highlight-color: transparent;
+        transition: opacity 0.15s ease;
+        font-feature-settings: "tnum";
+    }
+    [data-theme="light"] .kip-project-link { color: #1a4060; }
+    .kip-project-link:active { opacity: 0.55; }
+    .kip-project-link-arrow {
+        font-size: 18px;
+        line-height: 1;
+        opacity: 0.75;
+        transform: translateY(-1px);
+    }
+    /* План-зашлушка — остальные detail-value сохраняют свои цвета,
+       ссылка перекрывает цвет через !important при необходимости */
+    .dev-detail-value.kip-project-link,
+    .lock-detail-value.kip-project-link,
+    .valve-detail-value.kip-project-link,
+    .regulator-detail-value.kip-project-link,
+    .cable-detail-value.kip-project-link {
+        color: #6aa6e0;
+    }
+    [data-theme="light"] .dev-detail-value.kip-project-link,
+    [data-theme="light"] .lock-detail-value.kip-project-link,
+    [data-theme="light"] .valve-detail-value.kip-project-link,
+    [data-theme="light"] .regulator-detail-value.kip-project-link,
+    [data-theme="light"] .cable-detail-value.kip-project-link {
+        color: #1a4060;
+    }
+
     /* ===== Страница детального просмотра прибора ===== */
     /* Карточка: картинка слева в левом краю + блок №/Место справа от неё */
     .dev-detail-card {
@@ -7383,12 +7423,26 @@
             const grpCls = f.group ? ' dev-row-group-' + f.group : '';
             html += '<div class="dev-card-row' + grpCls + '">';
             html += '<div class="dev-card-label">' + devEsc(f.label) + '</div>';
-            html += '<div class="dev-card-value' + cls + '">' + devEsc(String(val)) + '</div>';
+            // Для поля «№ проекта» — кликабельная ссылка в карточку проекта
+            // (только если значение не пустое/«Нет данных»)
+            if (f.key === '№ проекта' && !kipIsEmptyProjectNo(val)) {
+                html += '<div class="dev-card-value' + cls + ' kip-project-link" data-project-link="' + devEsc(String(val)) + '">';
+                html += devEsc(String(val)) + '<span class="kip-project-link-arrow">›</span>';
+                html += '</div>';
+            } else {
+                html += '<div class="dev-card-value' + cls + '">' + devEsc(String(val)) + '</div>';
+            }
             html += '</div>';
         }
         html += '</div>';
         html += '</div>';
         content.innerHTML = html;
+        // Привязка кликов по ссылкам «№ проекта» (безопасно: через data-атрибут)
+        content.querySelectorAll('[data-project-link]').forEach(function(el) {
+            el.addEventListener('click', function() {
+                projectOpenByProjectNo(this.getAttribute('data-project-link'));
+            });
+        });
     }
 
 
@@ -8282,12 +8336,26 @@
             const grpCls = f.group ? ' lock-row-group-' + f.group : '';
             html += '<div class="lock-detail-row' + grpCls + '">';
             html += '<div class="lock-detail-label">' + lockEsc(f.label) + '</div>';
-            html += '<div class="lock-detail-value">' + lockEsc(String(val)) + '</div>';
+            // Для поля «№ проекта» — кликабельная ссылка в карточку проекта
+            // (только если значение не пустое/«Нет данных»)
+            if (f.key === '№ проекта' && !kipIsEmptyProjectNo(val)) {
+                html += '<div class="lock-detail-value kip-project-link" data-project-link="' + lockEsc(String(val)) + '">';
+                html += lockEsc(String(val)) + '<span class="kip-project-link-arrow">›</span>';
+                html += '</div>';
+            } else {
+                html += '<div class="lock-detail-value">' + lockEsc(String(val)) + '</div>';
+            }
             html += '</div>';
         }
         html += '</div>';
         html += '</div>';
         content.innerHTML = html;
+        // Привязка кликов по ссылкам «№ проекта» (безопасно: через data-атрибут)
+        content.querySelectorAll('[data-project-link]').forEach(function(el) {
+            el.addEventListener('click', function() {
+                projectOpenByProjectNo(this.getAttribute('data-project-link'));
+            });
+        });
     }
 
     // ===== КЛАПАНЫ (зеркало блокировок) =====
@@ -8643,12 +8711,26 @@
             const grpCls = f.group ? ' valve-row-group-' + f.group : '';
             html += '<div class="valve-detail-row' + grpCls + '">';
             html += '<div class="valve-detail-label">' + valveEsc(f.label) + '</div>';
-            html += '<div class="valve-detail-value">' + valveEsc(String(val)) + '</div>';
+            // Для поля «№ проекта» — кликабельная ссылка в карточку проекта
+            // (только если значение не пустое/«Нет данных»)
+            if (f.key === '№ проекта' && !kipIsEmptyProjectNo(val)) {
+                html += '<div class="valve-detail-value kip-project-link" data-project-link="' + valveEsc(String(val)) + '">';
+                html += valveEsc(String(val)) + '<span class="kip-project-link-arrow">›</span>';
+                html += '</div>';
+            } else {
+                html += '<div class="valve-detail-value">' + valveEsc(String(val)) + '</div>';
+            }
             html += '</div>';
         }
         html += '</div>';
         html += '</div>';
         content.innerHTML = html;
+        // Привязка кликов по ссылкам «№ проекта» (безопасно: через data-атрибут)
+        content.querySelectorAll('[data-project-link]').forEach(function(el) {
+            el.addEventListener('click', function() {
+                projectOpenByProjectNo(this.getAttribute('data-project-link'));
+            });
+        });
     }
 
     // ===== Кнопка Клапаны на странице КИП И ОС: только tap =====
@@ -9017,12 +9099,26 @@
             const grpCls = f.group ? ' regulator-row-group-' + f.group : '';
             html += '<div class="regulator-detail-row' + grpCls + '">';
             html += '<div class="regulator-detail-label">' + regulatorEsc(f.label) + '</div>';
-            html += '<div class="regulator-detail-value">' + regulatorEsc(String(val)) + '</div>';
+            // Для поля «№ проекта» — кликабельная ссылка в карточку проекта
+            // (только если значение не пустое/«Нет данных»)
+            if (f.key === '№ проекта' && !kipIsEmptyProjectNo(val)) {
+                html += '<div class="regulator-detail-value kip-project-link" data-project-link="' + regulatorEsc(String(val)) + '">';
+                html += regulatorEsc(String(val)) + '<span class="kip-project-link-arrow">›</span>';
+                html += '</div>';
+            } else {
+                html += '<div class="regulator-detail-value">' + regulatorEsc(String(val)) + '</div>';
+            }
             html += '</div>';
         }
         html += '</div>';
         html += '</div>';
         content.innerHTML = html;
+        // Привязка кликов по ссылкам «№ проекта» (безопасно: через data-атрибут)
+        content.querySelectorAll('[data-project-link]').forEach(function(el) {
+            el.addEventListener('click', function() {
+                projectOpenByProjectNo(this.getAttribute('data-project-link'));
+            });
+        });
     }
 
     // ===== Кнопка Регуляторы на странице КИП И ОС: только tap =====
@@ -9381,6 +9477,89 @@
         if (navigator.vibrate) navigator.vibrate(15);
         window._projectDetailId = projectId;
         navigateTo('project-detail');
+    }
+
+    // ===== Открытие карточки проекта по внешнему «№ проекта» =====
+    // Используется для перекрёстных ссылок из других разделов КИП ИОС
+    // (приборы / блокировки / клапаны / регуляторы / кабельный журнал).
+    // Если projects.json ещё не загружен — догружаем, затем ищем проект
+    // по точному совпадению поля «№ проекта» (с нормализацией регистра/пробелов),
+    // в fallback — по частичному совпадению. Если ничего не найдено — alert.
+    async function projectOpenByProjectNo(projectNo) {
+        if (projectNo == null) return;
+        const raw = String(projectNo).trim();
+        if (!raw) return;
+        // Защита: явно пустые значения («Нет данных», «-», «н/д») не обрабатываем
+        if (kipIsEmptyProjectNo(raw)) {
+            if (navigator.vibrate) navigator.vibrate(10);
+            alert('№ проекта не указан.');
+            return;
+        }
+        if (navigator.vibrate) navigator.vibrate(15);
+
+        // Догрузить projects.json, если ещё не загружен
+        if (!projectLoaded || !projectData) {
+            try {
+                const bust = '?v=' + Date.now();
+                const resp = await fetch('data/projects.json' + bust, { cache: 'no-store' });
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                projectData = await resp.json();
+                projectLoaded = true;
+                localStorage.setItem('projectsLastUpdate', new Date().toISOString());
+            } catch (e) {
+                console.error('projectOpenByProjectNo: ошибка загрузки projects.json:', e);
+                alert('Не удалось загрузить данные проектов. Проверьте соединение.');
+                return;
+            }
+        }
+
+        // Нормализация: нижний регистр, ё→е, обрезка пробелов по краям.
+        // Внутренние пробелы оставляем (номера проектов могут содержать их),
+        // но схлопываем подряд идущие.
+        const norm = (s) => String(s == null ? '' : s)
+            .trim().toLowerCase().replace(/[ё]/g, 'е').replace(/\s+/g, ' ');
+
+        const items = projectData.projects || [];
+        const r = norm(raw);
+
+        // 1) Точное совпадение по «№ проекта»
+        const exact = items.find(d => norm(d['№ проекта']) === r);
+        if (exact && exact['ID'] != null && exact['ID'] !== '') {
+            projectOpenDetail(exact['ID']);
+            return;
+        }
+
+        // 2) Частичное совпадение (одно содержит другое) — на случай,
+        //    когда в исходной ячейке записано «АН-603 551-114-1068-АТХ»,
+        //    а в projects.json — «551-114-1068-АТХ» (и наоборот).
+        //    Защита: длина искомой строки должна быть ≥ 6 символов,
+        //    чтобы не ловить ложные совпадения по коротким обрубкам.
+        if (r.length >= 6) {
+            const partial = items.find(d => {
+                const v = norm(d['№ проекта']);
+                if (!v || v.length < 4) return false;
+                return v.indexOf(r) !== -1 || r.indexOf(v) !== -1;
+            });
+            if (partial && partial['ID'] != null && partial['ID'] !== '') {
+                projectOpenDetail(partial['ID']);
+                return;
+            }
+        }
+
+        // 3) Не найдено — показать сообщение
+        alert('Проект с № «' + raw + '» не найден в базе проектов.');
+    }
+
+    // Вспомогательная функция: считается ли значение «№ проекта» пустым/
+    // незаполненным. Для таких значений ссылка не рендерится в RenderDetail,
+    // а в projectOpenByProjectNo показывается короткое сообщение вместо поиска.
+    // Возвращает true для: пусто, «Нет данных», «нет», «-», «—», «–», «н/д», «n/a».
+    function kipIsEmptyProjectNo(val) {
+        if (val == null) return true;
+        const s = String(val).trim().toLowerCase().replace(/[ё]/g, 'е');
+        if (!s) return true;
+        const empties = ['нет данных', 'нет', '-', '—', '–', '—', 'н/д', 'n/a', 'na', 'null', 'undefined', 'нет сведений'];
+        return empties.indexOf(s) !== -1;
     }
 
     function projectRenderDetail() {
@@ -9803,12 +9982,26 @@
             const grpCls = f.group ? ' cable-row-group-' + f.group : '';
             html += '<div class="cable-detail-row' + grpCls + '">';
             html += '<div class="cable-detail-label">' + cableEsc(f.label) + '</div>';
-            html += '<div class="cable-detail-value">' + cableEsc(String(val)) + '</div>';
+            // Для поля «№ проекта» — кликабельная ссылка в карточку проекта
+            // (только если значение не пустое/«Нет данных»)
+            if (f.key === '№ проекта' && !kipIsEmptyProjectNo(val)) {
+                html += '<div class="cable-detail-value kip-project-link" data-project-link="' + cableEsc(String(val)) + '">';
+                html += cableEsc(String(val)) + '<span class="kip-project-link-arrow">›</span>';
+                html += '</div>';
+            } else {
+                html += '<div class="cable-detail-value">' + cableEsc(String(val)) + '</div>';
+            }
             html += '</div>';
         }
         html += '</div>';
         html += '</div>';
         content.innerHTML = html;
+        // Привязка кликов по ссылкам «№ проекта» (безопасно: через data-атрибут)
+        content.querySelectorAll('[data-project-link]').forEach(function(el) {
+            el.addEventListener('click', function() {
+                projectOpenByProjectNo(this.getAttribute('data-project-link'));
+            });
+        });
     }
 
     // ===== Кнопка Кабельный журнал на странице КИП И ОС =====
