@@ -1199,7 +1199,7 @@
         font-weight: 700;
         letter-spacing: 0.4px;
         text-transform: uppercase;
-        color: var(--accent-blue, #4a8fc7);
+        color: var(--text-primary);
         padding: 10px 20px;
         margin-top: 2px;
         cursor: pointer;
@@ -1226,8 +1226,8 @@
         font-weight: 600;
         letter-spacing: 0;
         text-transform: none;
-        color: rgba(180, 200, 220, 0.55);
-        background: rgba(74, 143, 199, 0.12);
+        color: rgba(220, 230, 240, 0.65);
+        background: rgba(220, 230, 240, 0.10);
         padding: 1px 7px;
         border-radius: 8px;
         flex-shrink: 0;
@@ -1282,7 +1282,7 @@
         flex-shrink: 0;
     }
     [data-theme="light"] .sidebar-group-title {
-        color: #4a8fc7;
+        color: #141413;
     }
     [data-theme="light"] .sidebar-group-title-docs {
         color: #b8842e;
@@ -16597,7 +16597,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
         <!-- ===== Группа: КИП ИОС (6 подразделов) ===== -->
         <div class="sidebar-group" data-group="kip-ios">
-        <div class="sidebar-group-title" onclick="toggleSidebarGroup(this.parentElement)">
+        <div class="sidebar-group-title sidebar-group-title-docs" onclick="toggleSidebarGroup(this.parentElement)">
             <span class="sidebar-group-title-text">КИП ИОС</span>
             <span class="sidebar-group-title-count">6</span>
             <svg class="sidebar-group-title-arrow" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
