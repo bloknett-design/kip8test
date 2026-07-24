@@ -1120,26 +1120,44 @@
         -webkit-transform: translateZ(0); transform: translateZ(0); will-change: transform;
     }
     .page-inline-header-chevron {
+        position: absolute;
+        top: 0; bottom: 0; left: 4px;
         display: flex; align-items: center;
         cursor: pointer;
         -webkit-user-select: none; user-select: none;
         -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
-        padding: 8px 4px;
+        padding: 0 6px 0 8px;
         border-radius: 6px;
         transition: background 0.15s;
+        z-index: 2;
     }
     .page-inline-header-chevron:active { background: rgba(74, 143, 199, 0.15); }
     .page-inline-header-chevron svg {
-        width: 22px; height: 22px;
-        stroke: rgba(140, 170, 200, 0.7);
-        fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+        width: 14px; height: 14px;
+        stroke: rgba(140, 170, 200, 0.85);
+        fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round;
         pointer-events: none;
     }
     [data-theme="light"] .page-inline-header-chevron svg {
-        stroke: rgba(42, 93, 143, 0.6);
+        stroke: rgba(42, 93, 143, 0.7);
     }
-    .page-inline-header-title { font-size: 18px; font-weight: 700; color: #e0e0e0; letter-spacing: -0.3px; flex: 1; min-width: 0; text-shadow: 0 0 6px rgba(186, 85, 211, 0.45), 0 0 14px rgba(186, 85, 211, 0.25), 0 0 22px rgba(186, 85, 211, 0.12); }
+    .page-inline-header-title {
+        font-size: 18px; font-weight: 700; color: #e0e0e0; letter-spacing: -0.3px;
+        width: 100%; text-align: center;
+        padding: 0 40px; box-sizing: border-box;
+        min-width: 0;
+        text-shadow: 0 0 6px rgba(186, 85, 211, 0.45), 0 0 14px rgba(186, 85, 211, 0.25), 0 0 22px rgba(186, 85, 211, 0.12);
+    }
+    /* Когда в баре есть поле поиска — дополнительный правый padding,
+       чтобы текст заголовка не «залезал» под search input overlay. */
+    .page-inline-header:has(.dev-header-search) .page-inline-header-title {
+        padding: 0 130px 0 40px;
+    }
+    /* В scrolled-состоянии search input уже (100px), padding меньше. */
+    .page-content.scrolled .page-inline-header:has(.dev-header-search) .page-inline-header-title {
+        padding: 0 110px 0 40px;
+    }
     #page-dashboard ~ .app-header, body:has(#page-dashboard.active) .app-header { display: block; }
     body:has(.page-content.active:not(#page-dashboard)) .app-header { display: none; }
     .greek-gamma { font-family: Georgia, 'Times New Roman', serif; font-style: italic; text-transform: none; }
@@ -3497,6 +3515,10 @@
     /* ===== Приборы (КИП ИОС) ===== */
     /* Поле поиска в верхнем баре, справа от названия */
     .dev-header-search {
+        position: absolute;
+        top: 50%; right: 8px;
+        transform: translateY(-50%);
+        z-index: 2;
         width: 120px;
         max-width: 40vw;
         padding: 6px 10px 6px 30px;
@@ -3505,7 +3527,6 @@
         background: rgba(255,255,255,0.04) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a0b4c8' stroke-width='2'><circle cx='11' cy='11' r='7'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>") no-repeat 8px center / 13px;
         color: #e0e0e0; font-size: 13px; font-family: 'Inter', sans-serif;
         outline: none; transition: all 0.15s;
-        flex-shrink: 1;
     }
     [data-theme="light"] .dev-header-search {
         background-color: #fbf6ea;
@@ -3518,6 +3539,20 @@
     }
     .dev-header-search::placeholder { color: rgba(255,255,255,0.3); }
     [data-theme="light"] .dev-header-search::placeholder { color: rgba(20,20,19,0.4); }
+    /* На узких экранах (< 360px) уменьшаем search input, чтобы оставить
+       больше места под заголовок. */
+    @media (max-width: 359px) {
+        .dev-header-search {
+            width: 100px;
+            max-width: 35vw;
+        }
+        .page-inline-header:has(.dev-header-search) .page-inline-header-title {
+            padding: 0 110px 0 36px;
+        }
+        .page-content.scrolled .page-inline-header:has(.dev-header-search) .page-inline-header-title {
+            padding: 0 92px 0 36px;
+        }
+    }
     .page-content.scrolled .dev-header-search {
         width: 100px;
         padding: 4px 8px 4px 26px;
@@ -12751,6 +12786,8 @@
     // Глубина навигации = pageHistory.length (число переходов назад до главной).
     // На странице с глубиной 1 — одна стрелка, 2 — две, 3 — три, 4+ — четыре (кап).
     // SVG-разметка та же, что использовалась в захардкоженных шевронах.
+    // Стрелки очень компактные (14×14px) и плотно сгруппированы (margin-left:-8px),
+    // чтобы визуально занимать минимум места в углу бара поверх заголовка.
     function updateChevronArrows() {
         try {
             const active = document.querySelector('.page-content.active');
@@ -12758,10 +12795,10 @@
             const chevron = active.querySelector('.page-inline-header-chevron');
             if (!chevron) return;
             const n = Math.min(Math.max(pageHistory.length, 0), 4);
-            // Сгенерировать n SVG-стрелок. Первая — без margin, остальные с margin-left:-6px.
+            // Сгенерировать n SVG-стрелок. Первая — без margin, остальные с margin-left:-8px.
             let html = '';
             for (let i = 0; i < n; i++) {
-                const style = (i === 0) ? '' : ' style="margin-left:-6px;"';
+                const style = (i === 0) ? '' : ' style="margin-left:-8px;"';
                 html += '<svg viewBox="0 0 24 24"' + style + '><polyline points="15 18 9 12 15 6"/></svg>';
             }
             // Если n === 0 (например, мы на главной, но там нет chevron — этот случай не наступит),
