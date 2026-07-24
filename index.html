@@ -8526,7 +8526,7 @@
     // Поля соответствуют листу "Блокировки_app" файла Excel
     // https://disk.yandex.ru/i/KNVTQ7Q6II7zbA (тот же файл, что и для приборов)
     const LOCK_FIELDS = [
-        { key: 'Параметр', label: 'Параметр', group: 1 },
+        { key: 'Параметр', label: 'Параметр', group: 1, hiddenInCard: true },
         { key: 'Производство', label: 'Производство', group: 1 },
         { key: 'Назначение', label: 'Назначение', group: 2 },
         { key: 'Расположение', label: 'Расположение', group: 2 },
@@ -8893,6 +8893,7 @@
         let html = '<div class="lock-detail-card">';
         html += '<div class="lock-detail-rows">';
         for (const f of LOCK_FIELDS) {
+            if (f.hiddenInCard) continue;
             let val = item[f.key];
             if (val === undefined || val === null || val === '') continue;
             if (f.key === 'Дата проверки') val = lockFormatDate(val);
@@ -8944,7 +8945,7 @@
     // Все 22 ключа взяты из реальных столбцов valves.json (sync-valves.py).
     const VALVE_FIELDS = [
         // group 1 -- идентификация и технические характеристики клапана
-        { key: 'Марка', label: 'Марка', group: 1 },
+        { key: 'Марка', label: 'Марка', group: 1, hiddenInCard: true },
         { key: 'Тип, пропускная характеристика', label: 'Тип, пропускная характеристика', group: 1 },
         { key: 'Действие', label: 'Действие', group: 1 },
         { key: 'DN (мм)', label: 'DN (мм)', group: 1 },
@@ -9398,6 +9399,7 @@
         let html = '<div class="valve-detail-card">';
         html += '<div class="valve-detail-rows">';
         for (const f of VALVE_FIELDS) {
+            if (f.hiddenInCard) continue;
             let val = item[f.key];
             if (val === undefined || val === null || val === '') continue;
             if (f.key === 'Дата проверки') val = valveFormatDate(val);
@@ -9492,7 +9494,7 @@
     // Все 10 ключей взяты из реальных столбцов regulators.json (sync-regulators.py).
     const REGULATOR_FIELDS = [
         // group 1 -- идентификация и наладка регулятора
-        { key: 'Параметр', label: 'Параметр', group: 1 },
+        { key: 'Параметр', label: 'Параметр', group: 1, hiddenInCard: true },
         { key: 'Уставка', label: 'Уставка', group: 1 },
         { key: 'Кп', label: 'Кп', group: 1 },
         { key: 'Ти', label: 'Ти', group: 1 },
@@ -9890,6 +9892,7 @@
         let html = '<div class="regulator-detail-card">';
         html += '<div class="regulator-detail-rows">';
         for (const f of REGULATOR_FIELDS) {
+            if (f.hiddenInCard) continue;
             let val = item[f.key];
             if (val === undefined || val === null || val === '') continue;
             if (f.key === 'Дата проверки') val = regulatorFormatDate(val);
@@ -9979,7 +9982,7 @@
     // Реальная структура полей определяется на этапе парсинга sync-projects.py.
     // Если в данных есть колонки, не указанные в PROJECT_FIELDS — они не будут показаны.
     const PROJECT_FIELDS = [
-        { key: 'Наименование проекта', label: 'Наименование проекта', group: 1 },
+        { key: 'Наименование проекта', label: 'Наименование проекта', group: 1, hiddenInCard: true },
         { key: '№ проекта',            label: '№ проекта',            group: 1 },
         { key: 'Отделение',            label: 'Отделение',            group: 1 },
         { key: 'Статус проекта',       label: 'Статус проекта',       group: 2 },
@@ -11449,6 +11452,7 @@
         let html = '<div class="project-detail-card">';
         html += '<div class="project-detail-rows">';
         for (const f of PROJECT_FIELDS) {
+            if (f.hiddenInCard) continue;
             let val = item[f.key];
             if (val === undefined || val === null || val === '') continue;
             if (f.key === 'Дата утв.') val = projectFormatDate(val);
@@ -11513,7 +11517,7 @@
     // Поля соответствуют листу "Кабельный журнал" файла Excel
     // https://disk.yandex.ru/i/wvleuW19NoQBPQ (файл «Кабельный журнал.xlsx»)
     const CABLE_FIELDS = [
-        { key: 'Обозначение кабеля, провода',        label: 'Обозначение',           group: 1 },
+        { key: 'Обозначение кабеля, провода',        label: 'Обозначение',           group: 1, hiddenInCard: true },
         { key: 'Начало трассы',                       label: 'Начало трассы',         group: 1 },
         { key: 'Конец трассы',                        label: 'Конец трассы',          group: 1 },
         { key: 'Участок трассы кабеля, провода',     label: 'Участок трассы',        group: 1 },
@@ -11903,6 +11907,7 @@
         let html = '<div class="cable-detail-card">';
         html += '<div class="cable-detail-rows">';
         for (const f of CABLE_FIELDS) {
+            if (f.hiddenInCard) continue;
             let val = item[f.key];
             if (val === undefined || val === null || val === '') continue;
             if (f.key === 'Дата добавления') val = cableFormatDate(val);
