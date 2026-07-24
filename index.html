@@ -3903,6 +3903,27 @@
         color: #1f5a48;
     }
 
+    /* ===== Группа нескольких кликабельных ссылок в одном поле ===== */
+    /* Когда поле «№ проекта» / «№ СБС» / «№ САР» содержит несколько значений
+       (через запятую или точку с запятой), каждое значение рендерится как
+       отдельная кликабельная ссылка. Ссылки разделены визуальным разделителем. */
+    .kip-link-group {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 2px 0;
+        font-feature-settings: "tnum";
+    }
+    .kip-link-sep {
+        display: inline-block;
+        margin: 0 6px;
+        color: inherit;
+        opacity: 0.55;
+        font-weight: 400;
+        font-feature-settings: "tnum";
+        user-select: none;
+    }
+
     /* ===== Бейдж активного фильтра в шапке списка (общий для проекта и СБС) ===== */
     /* Показывается в разделах КИП ИОС, когда открыт переход из карточки проекта/блокировки */
     .kip-filter-badge {
@@ -7710,18 +7731,23 @@
             html += '<div class="dev-card-row' + grpCls + '">';
             html += '<div class="dev-card-label">' + devEsc(f.label) + '</div>';
             // Для поля «№ проекта» — кликабельная ссылка в карточку проекта
-            // (только если значение не пустое/«Нет данных»)
+            // (только если значение не пустое/«Нет данных»).
+            // Если значение содержит несколько номеров (через ',' или ';'),
+            // каждое число становится отдельной кликабельной ссылкой.
             if (f.key === '№ проекта' && !kipIsEmptyProjectNo(val)) {
-                html += '<div class="dev-card-value' + cls + ' kip-project-link" data-project-link="' + devEsc(String(val)) + '">';
-                html += devEsc(String(val)) + '<span class="kip-project-link-arrow">›</span>';
+                const parts = kipSplitProjectValues(val);
+                html += '<div class="dev-card-value' + cls + ' kip-link-group">';
+                html += kipRenderMultiLinks(parts, 'project', devEsc);
                 html += '</div>';
             } else if (f.key === '№ СБС' && !kipIsEmptySbsNo(val)) {
-                html += '<div class="dev-card-value' + cls + ' kip-sbs-link" data-sbs-link="' + devEsc(String(val)) + '">';
-                html += devEsc(String(val)) + '<span class="kip-sbs-link-arrow">›</span>';
+                const parts = kipSplitIdValues(val);
+                html += '<div class="dev-card-value' + cls + ' kip-link-group">';
+                html += kipRenderMultiLinks(parts, 'sbs', devEsc);
                 html += '</div>';
             } else if (f.key === '№ САР' && !kipIsEmptySarNo(val)) {
-                html += '<div class="dev-card-value' + cls + ' kip-sar-link" data-sar-link="' + devEsc(String(val)) + '">';
-                html += devEsc(String(val)) + '<span class="kip-sar-link-arrow">›</span>';
+                const parts = kipSplitIdValues(val);
+                html += '<div class="dev-card-value' + cls + ' kip-link-group">';
+                html += kipRenderMultiLinks(parts, 'sar', devEsc);
                 html += '</div>';
             } else {
                 html += '<div class="dev-card-value' + cls + '">' + devEsc(String(val)) + '</div>';
@@ -8839,10 +8865,13 @@
             html += '<div class="lock-detail-row' + grpCls + '">';
             html += '<div class="lock-detail-label">' + lockEsc(f.label) + '</div>';
             // Для поля «№ проекта» — кликабельная ссылка в карточку проекта
-            // (только если значение не пустое/«Нет данных»)
+            // (только если значение не пустое/«Нет данных»).
+            // Если значение содержит несколько номеров (через ',' или ';'),
+            // каждое число становится отдельной кликабельной ссылкой.
             if (f.key === '№ проекта' && !kipIsEmptyProjectNo(val)) {
-                html += '<div class="lock-detail-value kip-project-link" data-project-link="' + lockEsc(String(val)) + '">';
-                html += lockEsc(String(val)) + '<span class="kip-project-link-arrow">›</span>';
+                const parts = kipSplitProjectValues(val);
+                html += '<div class="lock-detail-value kip-link-group">';
+                html += kipRenderMultiLinks(parts, 'project', lockEsc);
                 html += '</div>';
             } else {
                 html += '<div class="lock-detail-value">' + lockEsc(String(val)) + '</div>';
@@ -9341,18 +9370,23 @@
             html += '<div class="valve-detail-row' + grpCls + '">';
             html += '<div class="valve-detail-label">' + valveEsc(f.label) + '</div>';
             // Для поля «№ проекта» — кликабельная ссылка в карточку проекта
-            // (только если значение не пустое/«Нет данных»)
+            // (только если значение не пустое/«Нет данных»).
+            // Если значение содержит несколько номеров (через ',' или ';'),
+            // каждое число становится отдельной кликабельной ссылкой.
             if (f.key === '№ проекта' && !kipIsEmptyProjectNo(val)) {
-                html += '<div class="valve-detail-value kip-project-link" data-project-link="' + valveEsc(String(val)) + '">';
-                html += valveEsc(String(val)) + '<span class="kip-project-link-arrow">›</span>';
+                const parts = kipSplitProjectValues(val);
+                html += '<div class="valve-detail-value kip-link-group">';
+                html += kipRenderMultiLinks(parts, 'project', valveEsc);
                 html += '</div>';
             } else if (f.key === '№ СБС' && !kipIsEmptySbsNo(val)) {
-                html += '<div class="valve-detail-value kip-sbs-link" data-sbs-link="' + valveEsc(String(val)) + '">';
-                html += valveEsc(String(val)) + '<span class="kip-sbs-link-arrow">›</span>';
+                const parts = kipSplitIdValues(val);
+                html += '<div class="valve-detail-value kip-link-group">';
+                html += kipRenderMultiLinks(parts, 'sbs', valveEsc);
                 html += '</div>';
             } else if (f.key === '№ САРиРУ' && !kipIsEmptySarNo(val)) {
-                html += '<div class="valve-detail-value kip-sar-link" data-sar-link="' + valveEsc(String(val)) + '">';
-                html += valveEsc(String(val)) + '<span class="kip-sar-link-arrow">›</span>';
+                const parts = kipSplitIdValues(val);
+                html += '<div class="valve-detail-value kip-link-group">';
+                html += kipRenderMultiLinks(parts, 'sar', valveEsc);
                 html += '</div>';
             } else {
                 html += '<div class="valve-detail-value">' + valveEsc(String(val)) + '</div>';
@@ -9828,14 +9862,18 @@
             html += '<div class="regulator-detail-row' + grpCls + '">';
             html += '<div class="regulator-detail-label">' + regulatorEsc(f.label) + '</div>';
             // Для поля «№ проекта» — кликабельная ссылка в карточку проекта
-            // (только если значение не пустое/«Нет данных»)
+            // (только если значение не пустое/«Нет данных»).
+            // Если значение содержит несколько номеров (через ',' или ';'),
+            // каждое число становится отдельной кликабельной ссылкой.
             if (f.key === '№ проекта' && !kipIsEmptyProjectNo(val)) {
-                html += '<div class="regulator-detail-value kip-project-link" data-project-link="' + regulatorEsc(String(val)) + '">';
-                html += regulatorEsc(String(val)) + '<span class="kip-project-link-arrow">›</span>';
+                const parts = kipSplitProjectValues(val);
+                html += '<div class="regulator-detail-value kip-link-group">';
+                html += kipRenderMultiLinks(parts, 'project', regulatorEsc);
                 html += '</div>';
             } else if (f.key === '№ СБС' && !kipIsEmptySbsNo(val)) {
-                html += '<div class="regulator-detail-value kip-sbs-link" data-sbs-link="' + regulatorEsc(String(val)) + '">';
-                html += regulatorEsc(String(val)) + '<span class="kip-sbs-link-arrow">›</span>';
+                const parts = kipSplitIdValues(val);
+                html += '<div class="regulator-detail-value kip-link-group">';
+                html += kipRenderMultiLinks(parts, 'sbs', regulatorEsc);
                 html += '</div>';
             } else {
                 html += '<div class="regulator-detail-value">' + regulatorEsc(String(val)) + '</div>';
@@ -10308,6 +10346,99 @@
         if (!s) return true;
         const empties = ['нет данных', 'нет', '-', '—', '–', '—', 'н/д', 'n/a', 'na', 'null', 'undefined', 'нет сведений'];
         return empties.indexOf(s) !== -1;
+    }
+
+    // ===== Разделение multi-value полей «№ проекта» / «№ СБС» / «№ САР» / «№ САРиРУ» =====
+    // В исходных данных одно поле может содержать несколько значений, разделённых
+    // запятой или точкой с запятой. Например:
+    //   «551-114-363-ТХ; 551-114-677-ТХ» — два разных проекта через ';'
+    //   «551-114-231-ТХ, 551-114-487-АТХ» — два разных проекта через ','
+    //   «109, 126» — два разных СБС
+    //   «513/1,2,3» — ОДИН составной СБС (запятая внутри /-группы — НЕ разделитель)
+    //   «551-114-487-АТХ-2,3,6» — ОДИН проект (запятая внутри списка подпроектов)
+    //
+    // Эти функции корректно разделяют такие значения, чтобы каждое значение
+    // стало отдельной кликабельной ссылкой в карточке.
+
+    // Разделить «№ проекта» на отдельные значения.
+    // Правила:
+    //   1. Точкака с запятой ';' ВСЕГДА разделяет разные проекты.
+    //   2. Запятая ',' разделяет ТОЛЬКО если КАЖДЫЙ полученный фрагмент
+    //      начинается с полного кода проекта (NNN-NNN-NNN...). Это защищает
+    //      «551-114-487-АТХ-2,3,6» (один проект) от разбиения на части.
+    // Возвращает массив непустых строк. Для одиночного значения — [value].
+    function kipSplitProjectValues(raw) {
+        if (raw == null) return [];
+        const s = String(raw).trim();
+        if (!s) return [];
+        const parts = s.split(';').map(p => p.trim()).filter(Boolean);
+        let result = [];
+        for (const p of parts) {
+            if (p.indexOf(',') === -1) {
+                result.push(p);
+                continue;
+            }
+            const commaParts = p.split(',').map(x => x.trim()).filter(Boolean);
+            const allFull = commaParts.length > 1 &&
+                commaParts.every(x => /^\d{3}-\d{3}-\d{3}/.test(x));
+            if (allFull) {
+                result = result.concat(commaParts);
+            } else {
+                result.push(p);
+            }
+        }
+        return result;
+    }
+
+    // Разделить «№ СБС» / «№ САР» / «№ САРиРУ» на отдельные значения.
+    // Это поля с чисто числовыми ID (иногда с суффиксами -1, /1,2,3 и т.п.).
+    // Правила:
+    //   1. Запятая ',' и точка с запятой ';' разделяют разные ID.
+    //   2. Запятые ВНУТРИ /-групп (например «513/1,2,3») НЕ разделяют —
+    //      это под-ID одного составного номера.
+    //   3. Удаляются trailing-точки и лишние пробелы.
+    // Возвращает массив непустых строк.
+    function kipSplitIdValues(raw) {
+        if (raw == null) return [];
+        const s = String(raw).trim();
+        if (!s) return [];
+        // Защитить запятые внутри /-групп: заменить их на placeholder \u0001.
+        // /-группа начинается с '/' и содержит ТОЛЬКО цифры и запятые (без пробелов!),
+        // заканчивается цифрой. Это позволяет отличить «513/1,2,3» (один составной ID,
+        // запятые внутри не разделяют) от «513/1, 2, 3» (три разных ID через запятую).
+        const protectedStr = s.replace(/\/\d[\d,]*\d|\/\d/g, function(m) {
+            return m.replace(/,/g, '\u0001');
+        });
+        const parts = protectedStr.split(/[,;]/)
+            .map(p => p.trim().replace(/\u0001/g, ',').replace(/\.+$/,'').trim())
+            .filter(Boolean);
+        return parts;
+    }
+
+    // Сгенерировать HTML-строку с одной или несколькими кликабельными ссылками
+    // для поля «№ проекта» / «№ СБС» / «№ САР» / «№ САРиРУ».
+    // parts — уже разделённый массив значений (из kipSplitProjectValues / kipSplitIdValues).
+    // kind — 'project' | 'sbs' | 'sar' (определяет CSS-класс и data-атрибут).
+    // escFn — функция экранирования для текущего раздела (devEsc / lockEsc / ...).
+    // Возвращает HTML-строку (без обёртки <div> — обёртку добавляет вызывающий код).
+    function kipRenderMultiLinks(parts, kind, escFn) {
+        if (!parts || parts.length === 0) return '';
+        const cls = kind === 'project' ? 'kip-project-link' :
+                    kind === 'sbs'     ? 'kip-sbs-link'     :
+                    kind === 'sar'     ? 'kip-sar-link'     : '';
+        const arrowCls = cls + '-arrow';
+        const dataAttr = kind === 'project' ? 'data-project-link' :
+                         kind === 'sbs'     ? 'data-sbs-link'     :
+                         kind === 'sar'     ? 'data-sar-link'     : '';
+        const sep = kind === 'project' ? '; ' : ', ';
+        let html = '';
+        for (let i = 0; i < parts.length; i++) {
+            if (i > 0) html += '<span class="kip-link-sep">' + sep + '</span>';
+            html += '<span class="' + cls + '" ' + dataAttr + '="' + escFn(parts[i]) + '">';
+            html += escFn(parts[i]) + '<span class="' + arrowCls + '">›</span>';
+            html += '</span>';
+        }
+        return html;
     }
 
     // ===== Обратные ссылки: фильтр списка раздела КИП ИОС по «№ проекта» =====
@@ -11744,10 +11875,13 @@
             html += '<div class="cable-detail-row' + grpCls + '">';
             html += '<div class="cable-detail-label">' + cableEsc(f.label) + '</div>';
             // Для поля «№ проекта» — кликабельная ссылка в карточку проекта
-            // (только если значение не пустое/«Нет данных»)
+            // (только если значение не пустое/«Нет данных»).
+            // Если значение содержит несколько номеров (через ',' или ';'),
+            // каждое число становится отдельной кликабельной ссылкой.
             if (f.key === '№ проекта' && !kipIsEmptyProjectNo(val)) {
-                html += '<div class="cable-detail-value kip-project-link" data-project-link="' + cableEsc(String(val)) + '">';
-                html += cableEsc(String(val)) + '<span class="kip-project-link-arrow">›</span>';
+                const parts = kipSplitProjectValues(val);
+                html += '<div class="cable-detail-value kip-link-group">';
+                html += kipRenderMultiLinks(parts, 'project', cableEsc);
                 html += '</div>';
             } else {
                 html += '<div class="cable-detail-value">' + cableEsc(String(val)) + '</div>';
