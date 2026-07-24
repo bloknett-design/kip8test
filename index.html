@@ -8121,6 +8121,20 @@
         if (query && kipIsSarLinkFilterActive('devices')) {
             kipClearSarLinkFilter('devices');
         }
+        // Если активен любой фильтр (проект/СБС/САР) — принудительно очистить
+        // поисковые запросы на остальных вкладках сортировки, чтобы при переключении
+        // вкладок фильтр не сбрасывался из-за «висящего» поискового запроса.
+        if (kipIsProjectLinkFilterActive('devices') || kipIsSbsLinkFilterActive('devices') || kipIsSarLinkFilterActive('devices')) {
+            const otherInputs = mode === 'prod'
+                ? ['devTypeSearchInput', 'devNameSearchInput']
+                : mode === 'type'
+                    ? ['devProdSearchInput', 'devNameSearchInput']
+                    : ['devProdSearchInput', 'devTypeSearchInput'];
+            for (const iid of otherInputs) {
+                const o = document.getElementById(iid);
+                if (o && o.value) o.value = '';
+            }
+        }
 
         // Исключаем ID=0
         let filtered = devData.devices.filter(d => {
@@ -10200,15 +10214,19 @@
         }
         kipProjectLinkFilter = { projectNo: raw, section: section };
         // Сбросить поисковый запрос (если инпут уже существует)
-        const inputId = {
-            devices: 'devProdSearchInput',
-            lockouts: 'lockProdSearchInput',
-            valves: 'valveProdSearchInput',
-            regulators: 'regulatorProdSearchInput',
-            cables: 'cableProdSearchInput',
-        }[section];
-        const inp = document.getElementById(inputId);
-        if (inp) inp.value = '';
+        // Очистить поисковые запросы на ВСЕХ вкладках сортировки целевого раздела.
+        // Для devices — это 3 вкладки (prod/type/name); для остальных — одна.
+        const inputIds = {
+            devices:    ['devProdSearchInput', 'devTypeSearchInput', 'devNameSearchInput'],
+            lockouts:   ['lockProdSearchInput'],
+            valves:     ['valveProdSearchInput'],
+            regulators: ['regulatorProdSearchInput'],
+            cables:     ['cableProdSearchInput'],
+        }[section] || [];
+        for (const iid of inputIds) {
+            const inp = document.getElementById(iid);
+            if (inp) inp.value = '';
+        }
         navigateTo(target);
     }
 
@@ -10271,16 +10289,18 @@
             clear.addEventListener('click', function(e) {
                 e.stopPropagation();
                 kipClearProjectLinkFilter(section);
-                // Сбросить также инпут поиска
-                const inputId = {
-                    devices: 'devProdSearchInput',
-                    lockouts: 'lockProdSearchInput',
-                    valves: 'valveProdSearchInput',
-                    regulators: 'regulatorProdSearchInput',
-                    cables: 'cableProdSearchInput',
-                }[section];
-                const inp = document.getElementById(inputId);
-                if (inp) inp.value = '';
+                // Сбросить поисковые запросы на всех вкладках сортировки раздела
+                const inputIds = {
+                    devices:    ['devProdSearchInput', 'devTypeSearchInput', 'devNameSearchInput'],
+                    lockouts:   ['lockProdSearchInput'],
+                    valves:     ['valveProdSearchInput'],
+                    regulators: ['regulatorProdSearchInput'],
+                    cables:     ['cableProdSearchInput'],
+                }[section] || [];
+                for (const iid of inputIds) {
+                    const inp = document.getElementById(iid);
+                    if (inp) inp.value = '';
+                }
                 if (typeof renderFn === 'function') renderFn('prod');
             });
         }
@@ -10400,13 +10420,15 @@
             kipSarLinkFilter = null;
         }
         kipSbsLinkFilter = { sbsNo: raw, section: section };
-        const inputId = {
-            devices: 'devProdSearchInput',
-            valves: 'valveProdSearchInput',
-            regulators: 'regulatorProdSearchInput',
-        }[section];
-        const inp = document.getElementById(inputId);
-        if (inp) inp.value = '';
+        const inputIds = {
+            devices:    ['devProdSearchInput', 'devTypeSearchInput', 'devNameSearchInput'],
+            valves:     ['valveProdSearchInput'],
+            regulators: ['regulatorProdSearchInput'],
+        }[section] || [];
+        for (const iid of inputIds) {
+            const inp = document.getElementById(iid);
+            if (inp) inp.value = '';
+        }
         navigateTo(target);
     }
 
@@ -10466,13 +10488,15 @@
             clear.addEventListener('click', function(e) {
                 e.stopPropagation();
                 kipClearSbsLinkFilter(section);
-                const inputId = {
-                    devices: 'devProdSearchInput',
-                    valves: 'valveProdSearchInput',
-                    regulators: 'regulatorProdSearchInput',
-                }[section];
-                const inp = document.getElementById(inputId);
-                if (inp) inp.value = '';
+                const inputIds = {
+                    devices:    ['devProdSearchInput', 'devTypeSearchInput', 'devNameSearchInput'],
+                    valves:     ['valveProdSearchInput'],
+                    regulators: ['regulatorProdSearchInput'],
+                }[section] || [];
+                for (const iid of inputIds) {
+                    const inp = document.getElementById(iid);
+                    if (inp) inp.value = '';
+                }
                 if (typeof renderFn === 'function') renderFn('prod');
             });
         }
@@ -10709,12 +10733,14 @@
             kipSbsLinkFilter = null;
         }
         kipSarLinkFilter = { sarNo: raw, section: section };
-        const inputId = {
-            devices: 'devProdSearchInput',
-            valves: 'valveProdSearchInput',
-        }[section];
-        const inp = document.getElementById(inputId);
-        if (inp) inp.value = '';
+        const inputIds = {
+            devices:    ['devProdSearchInput', 'devTypeSearchInput', 'devNameSearchInput'],
+            valves:     ['valveProdSearchInput'],
+        }[section] || [];
+        for (const iid of inputIds) {
+            const inp = document.getElementById(iid);
+            if (inp) inp.value = '';
+        }
         navigateTo(target);
     }
 
@@ -10776,12 +10802,14 @@
             clear.addEventListener('click', function(e) {
                 e.stopPropagation();
                 kipClearSarLinkFilter(section);
-                const inputId = {
-                    devices: 'devProdSearchInput',
-                    valves: 'valveProdSearchInput',
-                }[section];
-                const inp = document.getElementById(inputId);
-                if (inp) inp.value = '';
+                const inputIds = {
+                    devices:    ['devProdSearchInput', 'devTypeSearchInput', 'devNameSearchInput'],
+                    valves:     ['valveProdSearchInput'],
+                }[section] || [];
+                for (const iid of inputIds) {
+                    const inp = document.getElementById(iid);
+                    if (inp) inp.value = '';
+                }
                 if (typeof renderFn === 'function') renderFn('prod');
             });
         }
@@ -12246,8 +12274,10 @@
         // фильтр считаем «зависшим» и сбрасываем.
         if (typeof kipProjectLinkFilter !== 'undefined' && kipProjectLinkFilter) {
             const sec = kipProjectLinkFilter.section;
+            // Для devices разрешаем все 3 вкладки сортировки — фильтр должен
+            // сохраняться при переключении между По типу / По наименованию / По производствам.
             const allowedPages = {
-                devices:    ['devices-prod', 'device-detail', 'dev-group'],
+                devices:    ['devices-prod', 'devices-type', 'devices-name', 'device-detail', 'dev-group'],
                 lockouts:   ['lockouts-prod', 'lockout-detail', 'lock-group'],
                 valves:     ['valves-prod', 'valve-detail', 'valve-group'],
                 regulators: ['regulators-prod', 'regulator-detail', 'regulator-group'],
@@ -12263,8 +12293,10 @@
         // фильтр считаем «зависшим» и сбрасываем.
         if (typeof kipSbsLinkFilter !== 'undefined' && kipSbsLinkFilter) {
             const sec = kipSbsLinkFilter.section;
+            // Для devices разрешаем все 3 вкладки сортировки — фильтр должен
+            // сохраняться при переключении между По типу / По наименованию / По производствам.
             const allowedPages = {
-                devices:    ['devices-prod', 'device-detail', 'dev-group'],
+                devices:    ['devices-prod', 'devices-type', 'devices-name', 'device-detail', 'dev-group'],
                 valves:     ['valves-prod', 'valve-detail', 'valve-group'],
                 regulators: ['regulators-prod', 'regulator-detail', 'regulator-group'],
             }[sec] || [];
@@ -12278,8 +12310,10 @@
         // фильтр считаем «зависшим» и сбрасываем.
         if (typeof kipSarLinkFilter !== 'undefined' && kipSarLinkFilter) {
             const sec = kipSarLinkFilter.section;
+            // Для devices разрешаем все 3 вкладки сортировки — фильтр должен
+            // сохраняться при переключении между По типу / По наименованию / По производствам.
             const allowedPages = {
-                devices:    ['devices-prod', 'device-detail', 'dev-group'],
+                devices:    ['devices-prod', 'devices-type', 'devices-name', 'device-detail', 'dev-group'],
                 valves:     ['valves-prod', 'valve-detail', 'valve-group'],
             }[sec] || [];
             if (allowedPages.indexOf(page) === -1) {
