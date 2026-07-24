@@ -16550,26 +16550,49 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         </div>
         </div>
 
-        <!-- ===== Группа: Экзаменационные билеты (1 подраздел) ===== -->
+        <!-- ===== Группа: Экзаменационные билеты (4 подраздела) ===== -->
         <div class="sidebar-group" data-group="exam-tickets">
         <div class="sidebar-group-title sidebar-group-title-docs" onclick="toggleSidebarGroup(this.parentElement)">
             <span class="sidebar-group-title-text">Экзаменационные билеты</span>
+            <span class="sidebar-group-title-count">4</span>
             <svg class="sidebar-group-title-arrow" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
-        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('exam-tickets'); toggleSidebar();">
-            <span style="color:rgba(199,150,74,0.9);">4, 5, 6 разряд, до 1000 В</span>
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('tickets-1000v'); toggleSidebar();">
+            <span style="color:rgba(199,150,74,0.9);">Билеты до 1000 В</span>
+        </div>
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('tickets-4'); toggleSidebar();">
+            <span style="color:rgba(199,150,74,0.9);">Билеты на 4 разряд</span>
+        </div>
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('tickets-5'); toggleSidebar();">
+            <span style="color:rgba(199,150,74,0.9);">Билеты на 5 разряд</span>
+        </div>
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('tickets-6'); toggleSidebar();">
+            <span style="color:rgba(199,150,74,0.9);">Билеты на 6 разряд</span>
         </div>
         </div>
 
-        <!-- ===== Группа: Библиотека КИП и А (1 подраздел) ===== -->
+        <!-- ===== Группа: Библиотека КИП и А (5 подразделов) ===== -->
         <div class="sidebar-group" data-group="library">
         <div class="sidebar-group-title sidebar-group-title-docs" onclick="toggleSidebarGroup(this.parentElement)">
             <span class="sidebar-group-title-text">Библиотека КИП и А</span>
+            <span class="sidebar-group-title-count">5</span>
             <svg class="sidebar-group-title-arrow" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
-        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('library'); toggleSidebar();">
-            <span style="color:rgba(199,150,74,0.9);">Документация, схемы, инструкции</span>
+        <a class="sidebar-item sidebar-item-extra" href="https://disk.yandex.ru/d/JyIJWdDwGsPOSA" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;">
+            <span style="color:rgba(199,150,74,0.9);">Метрология</span>
+        </a>
+        <a class="sidebar-item sidebar-item-extra" href="https://disk.yandex.ru/d/2DPQAftytDKDAQ" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;">
+            <span style="color:rgba(199,150,74,0.9);">ОТ и ПБ, пожарная безопасность</span>
+        </a>
+        <a class="sidebar-item sidebar-item-extra" href="https://disk.yandex.ru/d/0DnXLISSam_oiw" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;">
+            <span style="color:rgba(199,150,74,0.9);">Приборы</span>
+        </a>
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('library-electro'); toggleSidebar();">
+            <span style="color:rgba(199,150,74,0.9);">Электробезопасность</span>
         </div>
+        <a class="sidebar-item sidebar-item-extra" href="https://disk.yandex.ru/d/Bc2ASBGtPUxABA" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;">
+            <span style="color:rgba(199,150,74,0.9);">Справочник</span>
+        </a>
         </div>
 
         <!-- ===== Группа: КИП ИОС (6 подразделов) ===== -->
