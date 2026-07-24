@@ -8212,7 +8212,6 @@
             if (va > vb) return 1;
             return 0;
         });
-
         // Фильтр по «№ проекта» (из карточки проекта)
         if (kipIsProjectLinkFilterActive('devices')) {
             filtered = filtered.filter(d => kipMatchesProjectFilter(d, 'devices'));
@@ -8237,11 +8236,15 @@
             );
         }
 
-        // Группировка по sortKey
+        // Группировка всегда по производству: в режимах «по типу» и «по наименованию»
+        // список делится на группы по полю «Производство», внутри каждой группы
+        // приборы отсортированы по типу/наименованию соответственно. В режиме
+        // «по производству» это эквивалентно прежнему поведению (sortKey === groupFieldKey).
+        const groupFieldKey = 'Производство';
         const groups = {};
         const groupOrder = [];
         for (const d of filtered) {
-            const g = d[sortKey] || '(без группы)';
+            const g = d[groupFieldKey] || '(без группы)';
             if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
             groups[g].push(d);
         }
@@ -8377,11 +8380,13 @@
         }
 
         const sortKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
+        // Группа всегда определяется по производству (см. devRenderSorted).
+        const groupFieldKey = 'Производство';
         // Фильтруем приборы: ID != 0 и принадлежат выбранной группе
         let items = devData.devices.filter(d => {
             const idv = d['ID'];
             if (idv === 0 || idv === '0' || String(idv ?? '').trim() === '0') return false;
-            const g = d[sortKey] || '(без группы)';
+            const g = d[groupFieldKey] || '(без группы)';
             return g === group;
         });
         // Применить активный фильтр (проект / СБС / САР), если он установлен.
