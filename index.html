@@ -1184,42 +1184,72 @@
     /* Группа разделов с аккордеоном — по умолчанию только 3 первых пункта */
     .sidebar-item-extra { display: none; }
     .sidebar-group.expanded .sidebar-item-extra { display: flex; }
-    /* Кнопка «Показать все» / «Свернуть» */
-    .sidebar-show-more {
-        display: flex; align-items: center; justify-content: center; gap: 6px;
-        padding: 6px 20px 8px;
-        color: rgba(140, 170, 200, 0.55);
-        font-size: 12px; font-weight: 500;
-        cursor: pointer;
-        border: none; background: transparent;
-        -webkit-tap-highlight-color: transparent;
-        transition: color 0.2s;
-        font-family: 'Inter', sans-serif;
-    }
-    .sidebar-show-more:active { color: rgba(74, 143, 199, 0.9); }
-    .sidebar-show-more svg {
-        width: 14px; height: 14px;
-        stroke: currentColor; fill: none; stroke-width: 2;
-        stroke-linecap: round; stroke-linejoin: round;
-        transition: transform 0.25s;
-    }
-    .sidebar-group.expanded .sidebar-show-more svg { transform: rotate(180deg); }
-    [data-theme="light"] .sidebar-show-more { color: rgba(20, 20, 19, 0.5); }
-    [data-theme="light"] .sidebar-show-more:active { color: rgba(198, 97, 63, 0.9); }
-
-    /* Заголовок группы разделов в шторке меню */
+    /* Заголовок группы разделов в шторке меню — компактная строка
+       (название + счётчик + стрелка), кликабельная */
     .sidebar-group-title {
-        font-size: 11px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
         font-weight: 700;
-        letter-spacing: 0.6px;
+        letter-spacing: 0.4px;
         text-transform: uppercase;
         color: var(--accent-blue, #4a8fc7);
-        padding: 10px 20px 4px;
+        padding: 10px 20px;
         margin-top: 2px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        transition: background 0.15s, color 0.15s;
+        border-left: 3px solid transparent;
+    }
+    .sidebar-group-title:active {
+        background: rgba(74, 143, 199, 0.08);
+    }
+    .sidebar-group-title:hover {
+        background: rgba(74, 143, 199, 0.05);
+    }
+    .sidebar-group-title-text {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .sidebar-group-title-count {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0;
+        text-transform: none;
+        color: rgba(180, 200, 220, 0.55);
+        background: rgba(74, 143, 199, 0.12);
+        padding: 1px 7px;
+        border-radius: 8px;
+        flex-shrink: 0;
+        line-height: 1.4;
+    }
+    .sidebar-group-title-arrow {
+        flex-shrink: 0;
+        width: 14px;
+        height: 14px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2.2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        opacity: 0.7;
+        transition: transform 0.25s ease;
+    }
+    .sidebar-group.expanded .sidebar-group-title-arrow {
+        transform: rotate(180deg);
     }
     /* Группа «Документация» — золотистый акцент */
     .sidebar-group-title-docs {
         color: var(--accent-gold, #c7964a);
+    }
+    .sidebar-group-title-docs .sidebar-group-title-count {
+        background: rgba(199, 150, 74, 0.14);
+        color: rgba(199, 150, 74, 0.85);
     }
     .sidebar-group-title-lockouts {
         color: #b85a7a;
@@ -1230,6 +1260,14 @@
     /* Первый заголовок группы — без верхнего отступа */
     .sidebar-content .sidebar-group-title:first-child {
         margin-top: 0;
+    }
+    [data-theme="light"] .sidebar-group-title-count {
+        color: rgba(20, 20, 19, 0.5);
+        background: rgba(20, 20, 19, 0.08);
+    }
+    [data-theme="light"] .sidebar-group-title-docs .sidebar-group-title-count {
+        color: rgba(184, 132, 46, 0.85);
+        background: rgba(184, 132, 46, 0.14);
     }
     /* Тонкий разделитель между разделами и сервисными кнопками */
     .sidebar-divider {
@@ -13744,27 +13782,18 @@
 }
 
 // Аккордеон в боковом меню: при разворачивании группы — сворачиваем ранее раскрытую.
-// Тогглит состояние группы: 3 видимих по умолчанию, при клике «Показать все» — все.
+// Заголовок группы (title + count + arrow) сам является тогглером.
 function toggleSidebarGroup(groupEl) {
     if (!groupEl) return;
     const isExpanded = groupEl.classList.contains('expanded');
-    // Аккордеон: сворачиваем все остальные раскрытые группы и обновляем их текст
+    // Аккордеон: сворачиваем все остальные раскрытые группы
     document.querySelectorAll('.sidebar-group.expanded').forEach(el => {
         if (el !== groupEl) {
             el.classList.remove('expanded');
-            const span = el.querySelector('.sidebar-show-more span');
-            const cnt = el.querySelectorAll('.sidebar-item-extra').length;
-            if (span) span.textContent = 'Показать все (' + cnt + ')';
         }
     });
     // Тогглим текущую группу
     groupEl.classList.toggle('expanded', !isExpanded);
-    // Обновляем текст кнопки: «Показать все (N)» ↔ «Свернуть»
-    const showMoreSpan = groupEl.querySelector('.sidebar-show-more span');
-    const count = groupEl.querySelectorAll('.sidebar-item-extra').length;
-    if (showMoreSpan) {
-        showMoreSpan.textContent = !isExpanded ? 'Свернуть' : ('Показать все (' + count + ')');
-    }
     // Вибрация для тактильного отклика
     if (navigator.vibrate) navigator.vibrate(15);
 }
@@ -16450,9 +16479,13 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         </div>
     </div>
     <div class="sidebar-content">
-        <!-- ===== Группа: КИП и А (0 видимых + 6 скрытых) ===== -->
+        <!-- ===== Группа: КИП и А (6 подразделов) ===== -->
         <div class="sidebar-group" data-group="kipa">
-        <div class="sidebar-group-title">КИП и А</div>
+        <div class="sidebar-group-title" onclick="toggleSidebarGroup(this.parentElement)">
+            <span class="sidebar-group-title-text">КИП и А</span>
+            <span class="sidebar-group-title-count">6</span>
+            <svg class="sidebar-group-title-arrow" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
         <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('converter'); toggleSidebar();">
             <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
             <span>Конвертер единиц</span>
@@ -16477,28 +16510,28 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
             <span>Сужающее устройство</span>
         </div>
-        <div class="sidebar-show-more" onclick="toggleSidebarGroup(this.parentElement)">
-            <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-            <span>Показать все (6)</span>
-        </div>
         </div>
 
-        <!-- ===== Группа: Электротехника (0 видимых + 1 скрытый) ===== -->
+        <!-- ===== Группа: Электротехника (1 подраздел) ===== -->
         <div class="sidebar-group" data-group="electro">
-        <div class="sidebar-group-title">Электротехника</div>
+        <div class="sidebar-group-title" onclick="toggleSidebarGroup(this.parentElement)">
+            <span class="sidebar-group-title-text">Электротехника</span>
+            <span class="sidebar-group-title-count">1</span>
+            <svg class="sidebar-group-title-arrow" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
         <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('circuit-breaker'); toggleSidebar();">
             <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
             <span>Автоматический выключатель</span>
         </div>
-        <div class="sidebar-show-more" onclick="toggleSidebarGroup(this.parentElement)">
-            <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-            <span>Показать все (1)</span>
-        </div>
         </div>
 
-        <!-- ===== Группа: Геометрия (0 видимых + 6 скрытых) ===== -->
+        <!-- ===== Группа: Геометрия (6 подразделов) ===== -->
         <div class="sidebar-group" data-group="geometry">
-        <div class="sidebar-group-title">Геометрия</div>
+        <div class="sidebar-group-title" onclick="toggleSidebarGroup(this.parentElement)">
+            <span class="sidebar-group-title-text">Геометрия</span>
+            <span class="sidebar-group-title-count">6</span>
+            <svg class="sidebar-group-title-arrow" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
         <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('geo-circle'); toggleSidebar();">
             <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="9"/></svg>
             <span>Круг</span>
@@ -16523,62 +16556,64 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M12 2L3 20h18z"/><ellipse cx="12" cy="20" rx="9" ry="1.5"/></svg>
             <span>Конус</span>
         </div>
-        <div class="sidebar-show-more" onclick="toggleSidebarGroup(this.parentElement)">
-            <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-            <span>Показать все (6)</span>
+        </div>
+
+        <!-- ===== Группа: Экзаменационные билеты (1 подраздел) ===== -->
+        <div class="sidebar-group" data-group="exam-tickets">
+        <div class="sidebar-group-title sidebar-group-title-docs" onclick="toggleSidebarGroup(this.parentElement)">
+            <span class="sidebar-group-title-text">Экзаменационные билеты</span>
+            <span class="sidebar-group-title-count">1</span>
+            <svg class="sidebar-group-title-arrow" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('exam-tickets'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+            <span style="color:rgba(199,150,74,0.9);">4, 5, 6 разряд, до 1000 В</span>
         </div>
         </div>
 
-        <!-- ===== Группа: Документация (0 видимых + 2 скрытых) ===== -->
-        <div class="sidebar-group" data-group="docs">
-        <div class="sidebar-group-title sidebar-group-title-docs">Документация</div>
-        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('exam-tickets'); toggleSidebar();">
-            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
-            <span style="color:rgba(199,150,74,0.9);">Экзаменационные билеты</span>
+        <!-- ===== Группа: Библиотека КИП и А (1 подраздел) ===== -->
+        <div class="sidebar-group" data-group="library">
+        <div class="sidebar-group-title sidebar-group-title-docs" onclick="toggleSidebarGroup(this.parentElement)">
+            <span class="sidebar-group-title-text">Библиотека КИП и А</span>
+            <span class="sidebar-group-title-count">1</span>
+            <svg class="sidebar-group-title-arrow" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
         <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('library'); toggleSidebar();">
             <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(199,150,74,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-            <span style="color:rgba(199,150,74,0.9);">Библиотека КИП и А</span>
-        </div>
-        <div class="sidebar-show-more" onclick="toggleSidebarGroup(this.parentElement)">
-            <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-            <span>Показать все (2)</span>
+            <span style="color:rgba(199,150,74,0.9);">Документация, схемы, инструкции</span>
         </div>
         </div>
 
-        <!-- ===== Группа: Блокировки ===== -->
-        <div class="sidebar-group" data-group="lockouts">
-        <div class="sidebar-group-title sidebar-group-title-lockouts">Блокировки</div>
-        
-        
-        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('lockouts-prod'); toggleSidebar();">
-            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(184,90,122,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-            <span style="color:rgba(184,90,122,0.9);">По производствам</span>
-        </div>
-        <div class="sidebar-show-more" onclick="toggleSidebarGroup(this.parentElement)">
-            <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-            <span>Показать все (1)</span>
-        </div>
-        </div>
-
-        <!-- ===== Группа: Приборы ===== -->
-        <div class="sidebar-group" data-group="devices">
-        <div class="sidebar-group-title sidebar-group-title-devices">Приборы</div>
-        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('devices-type'); toggleSidebar();">
-            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(106,166,224,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-            <span style="color:rgba(106,166,224,0.9);">По типу</span>
-        </div>
-        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('devices-name'); toggleSidebar();">
-            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(106,166,224,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            <span style="color:rgba(106,166,224,0.9);">По наименованию</span>
+        <!-- ===== Группа: КИП ИОС (6 подразделов) ===== -->
+        <div class="sidebar-group" data-group="kip-ios">
+        <div class="sidebar-group-title" onclick="toggleSidebarGroup(this.parentElement)">
+            <span class="sidebar-group-title-text">КИП ИОС</span>
+            <span class="sidebar-group-title-count">6</span>
+            <svg class="sidebar-group-title-arrow" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
         <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('devices-prod'); toggleSidebar();">
-            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(106,166,224,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-            <span style="color:rgba(106,166,224,0.9);">По производствам</span>
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(106,166,224,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            <span style="color:rgba(106,166,224,0.9);">Приборы</span>
         </div>
-        <div class="sidebar-show-more" onclick="toggleSidebarGroup(this.parentElement)">
-            <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-            <span>Показать все (3)</span>
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('lockouts-prod'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(184,90,122,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            <span style="color:rgba(184,90,122,0.9);">Блокировки</span>
+        </div>
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('valves-prod'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(74,138,140,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M5 19l3-3M16 8l3-3"/></svg>
+            <span style="color:rgba(74,138,140,0.9);">Клапаны</span>
+        </div>
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('regulators-prod'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(126,90,184,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
+            <span style="color:rgba(126,90,184,0.9);">Регуляторы</span>
+        </div>
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('projects-prod'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(176,128,72,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M3 6h18M3 12h18M3 18h18"/><path d="M7 3v18"/></svg>
+            <span style="color:rgba(176,128,72,0.9);">Проекты</span>
+        </div>
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('cables-prod'); toggleSidebar();">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:rgba(120,144,100,0.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M4 4h6v6H4z"/><path d="M14 14h6v6h-6z"/><path d="M10 7h4M14 17h6"/></svg>
+            <span style="color:rgba(120,144,100,0.9);">Кабельный журнал</span>
         </div>
         </div>
 
