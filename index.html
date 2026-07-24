@@ -8480,10 +8480,12 @@
                 html += '<div class="dev-card-header-inner">';
                 html += '<div class="dev-card-image-wrap">';
                 html += '<img class="dev-card-image" src="' + devEsc(imgUrl) + '" alt="' + devEsc(name) + '" loading="lazy">';
-                html += '<div class="dev-card-name-overlay">' + devEsc(name) + '</div>';
+                // На странице группы (по производству) приборы внутри уже
+                // сгруппированы по «Наименованию», и имя показано как заголовок
+                // подгруппы выше — поэтому overlay с именем на картинке не нужен.
                 html += '</div>';
                 html += '<div class="dev-card-text">';
-                html += '<div class="dev-card-title">' + devEsc(name) + '</div>';
+                // Имя прибора дублирует заголовок подгруппы — пропускаем .dev-card-title.
                 let subtitle = '';
                 if (type) subtitle += type;
                 if (number) subtitle += (subtitle ? ' · №' : '№') + number;
