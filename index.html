@@ -8323,6 +8323,19 @@
             const g = d[sortKey] || '(без группы)';
             return g === group;
         });
+        // Применить активный фильтр (проект / СБС / САР), если он установлен.
+        // Без этого при клике на группу из отфильтрованного списка будет показан
+        // весь список приборов этой группы, а не только относящиеся к проекту.
+        const hasFilter = kipIsProjectLinkFilterActive('devices')
+            || kipIsSbsLinkFilterActive('devices')
+            || kipIsSarLinkFilterActive('devices');
+        if (hasFilter) {
+            items = items.filter(d =>
+                kipMatchesProjectFilter(d, 'devices')
+                && kipMatchesSbsFilter(d, 'devices')
+                && kipMatchesSarFilter(d, 'devices')
+            );
+        }
         items.sort((a, b) => {
             const va = (a['Наименование'] || '').toString().toLowerCase();
             const vb = (b['Наименование'] || '').toString().toLowerCase();
@@ -8332,7 +8345,23 @@
         });
 
         if (items.length === 0) {
-            list.innerHTML = '<div class="pb-empty">В группе нет приборов.</div>';
+            let emptyHtml = '';
+            if (kipIsProjectLinkFilterActive('devices')) {
+                emptyHtml += kipRenderFilterBadge('devices');
+                emptyHtml += '<div class="pb-empty">В группе «' + devEsc(group) + '» по проекту №«' + devEsc(kipProjectLinkFilter.projectNo) + '» приборов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
+            } else if (kipIsSbsLinkFilterActive('devices')) {
+                emptyHtml += kipRenderSbsFilterBadge('devices');
+                emptyHtml += '<div class="pb-empty">В группе «' + devEsc(group) + '» по СБС №«' + devEsc(kipSbsLinkFilter.sbsNo) + '» приборов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
+            } else if (kipIsSarLinkFilterActive('devices')) {
+                emptyHtml += kipRenderSarFilterBadge('devices');
+                emptyHtml += '<div class="pb-empty">В группе «' + devEsc(group) + '» по САР №«' + devEsc(kipSarLinkFilter.sarNo) + '» приборов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
+            } else {
+                emptyHtml = '<div class="pb-empty">В группе нет приборов.</div>';
+            }
+            list.innerHTML = emptyHtml;
+            kipBindFilterBadge(list, 'devices', function() { devRenderGroup(); });
+            kipBindSbsFilterBadge(list, 'devices', function() { devRenderGroup(); });
+            kipBindSarFilterBadge(list, 'devices', function() { devRenderGroup(); });
             return;
         }
 
@@ -8353,7 +8382,16 @@
             return 0;
         });
 
-        let html = '<div class="dev-sorted-list">';
+        let html = '';
+        // Бейдж активного фильтра (проект / СБС / САР) вверху страницы группы
+        if (kipIsProjectLinkFilterActive('devices')) {
+            html += kipRenderFilterBadge('devices');
+        } else if (kipIsSbsLinkFilterActive('devices')) {
+            html += kipRenderSbsFilterBadge('devices');
+        } else if (kipIsSarLinkFilterActive('devices')) {
+            html += kipRenderSarFilterBadge('devices');
+        }
+        html += '<div class="dev-sorted-list">';
         for (const g of groupOrder) {
             const gItems = groups[g];
             html += '<div class="pb-section dev-group dev-subgroup static">';
@@ -8401,6 +8439,10 @@
         }
         html += '</div>';
         list.innerHTML = html;
+        // Привязка обработчиков к кнопкам ✕ в бейджах фильтра
+        kipBindFilterBadge(list, 'devices', function() { devRenderGroup(); });
+        kipBindSbsFilterBadge(list, 'devices', function() { devRenderGroup(); });
+        kipBindSarFilterBadge(list, 'devices', function() { devRenderGroup(); });
     }
 
     function devScrollToGroup(el) {
@@ -8669,6 +8711,12 @@
             const g = d[sortKey] || '(без группы)';
             return g === group;
         });
+        // Применить активный фильтр по «№ проекта», если он установлен.
+        // Без этого при клике на группу из отфильтрованного списка будет показан
+        // весь список блокировок этой группы, а не только относящиеся к проекту.
+        if (kipIsProjectLinkFilterActive('lockouts')) {
+            items = items.filter(d => kipMatchesProjectFilter(d, 'lockouts'));
+        }
         items.sort((a, b) => {
             const va = (a['Параметр'] || '').toString().toLowerCase();
             const vb = (b['Параметр'] || '').toString().toLowerCase();
@@ -8678,7 +8726,15 @@
         });
 
         if (items.length === 0) {
-            list.innerHTML = '<div class="pb-empty">В группе нет блокировок.</div>';
+            let emptyHtml = '';
+            if (kipIsProjectLinkFilterActive('lockouts')) {
+                emptyHtml += kipRenderFilterBadge('lockouts');
+                emptyHtml += '<div class="pb-empty">В группе «' + lockEsc(group) + '» по проекту №«' + lockEsc(kipProjectLinkFilter.projectNo) + '» блокировок не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
+            } else {
+                emptyHtml = '<div class="pb-empty">В группе нет блокировок.</div>';
+            }
+            list.innerHTML = emptyHtml;
+            kipBindFilterBadge(list, 'lockouts', function() { lockRenderGroup(); });
             return;
         }
 
@@ -8699,7 +8755,12 @@
             return 0;
         });
 
-        let html = '<div class="lock-sorted-list">';
+        let html = '';
+        // Бейдж активного фильтра по «№ проекта» вверху страницы группы
+        if (kipIsProjectLinkFilterActive('lockouts')) {
+            html += kipRenderFilterBadge('lockouts');
+        }
+        html += '<div class="lock-sorted-list">';
         for (const g of groupOrder) {
             const gItems = groups[g];
             html += '<div class="pb-section lock-group lock-subgroup static">';
@@ -8735,6 +8796,8 @@
         }
         html += '</div>';
         list.innerHTML = html;
+        // Привязка обработчика к кнопке ✕ в бейдже фильтра
+        kipBindFilterBadge(list, 'lockouts', function() { lockRenderGroup(); });
     }
 
     function lockScrollToGroup(el) {
@@ -9111,6 +9174,19 @@
             const g = d[sortKey] || '(без группы)';
             return g === group;
         });
+        // Применить активный фильтр (проект / СБС / САР), если он установлен.
+        // Без этого при клике на группу из отфильтрованного списка будет показан
+        // весь список клапанов этой группы, а не только относящиеся к проекту.
+        const hasValveFilter = kipIsProjectLinkFilterActive('valves')
+            || kipIsSbsLinkFilterActive('valves')
+            || kipIsSarLinkFilterActive('valves');
+        if (hasValveFilter) {
+            items = items.filter(d =>
+                kipMatchesProjectFilter(d, 'valves')
+                && kipMatchesSbsFilter(d, 'valves')
+                && kipMatchesSarFilter(d, 'valves')
+            );
+        }
         items.sort((a, b) => {
             const va = (a['Марка'] || a['Назначение арматуры (параметр)'] || '').toString().toLowerCase();
             const vb = (b['Марка'] || b['Назначение арматуры (параметр)'] || '').toString().toLowerCase();
@@ -9120,7 +9196,23 @@
         });
 
         if (items.length === 0) {
-            list.innerHTML = '<div class="pb-empty">В группе нет клапанов.</div>';
+            let emptyHtml = '';
+            if (kipIsProjectLinkFilterActive('valves')) {
+                emptyHtml += kipRenderFilterBadge('valves');
+                emptyHtml += '<div class="pb-empty">В группе «' + valveEsc(group) + '» по проекту №«' + valveEsc(kipProjectLinkFilter.projectNo) + '» клапанов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
+            } else if (kipIsSbsLinkFilterActive('valves')) {
+                emptyHtml += kipRenderSbsFilterBadge('valves');
+                emptyHtml += '<div class="pb-empty">В группе «' + valveEsc(group) + '» по СБС №«' + valveEsc(kipSbsLinkFilter.sbsNo) + '» клапанов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
+            } else if (kipIsSarLinkFilterActive('valves')) {
+                emptyHtml += kipRenderSarFilterBadge('valves');
+                emptyHtml += '<div class="pb-empty">В группе «' + valveEsc(group) + '» по САР №«' + valveEsc(kipSarLinkFilter.sarNo) + '» клапанов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
+            } else {
+                emptyHtml = '<div class="pb-empty">В группе нет клапанов.</div>';
+            }
+            list.innerHTML = emptyHtml;
+            kipBindFilterBadge(list, 'valves', function() { valveRenderGroup(); });
+            kipBindSbsFilterBadge(list, 'valves', function() { valveRenderGroup(); });
+            kipBindSarFilterBadge(list, 'valves', function() { valveRenderGroup(); });
             return;
         }
 
@@ -9158,7 +9250,16 @@
             return a.key.localeCompare(b.key, 'ru');
         });
 
-        let html = '<div class="valve-sorted-list">';
+        let html = '';
+        // Бейдж активного фильтра (проект / СБС / САР) вверху страницы группы
+        if (kipIsProjectLinkFilterActive('valves')) {
+            html += kipRenderFilterBadge('valves');
+        } else if (kipIsSbsLinkFilterActive('valves')) {
+            html += kipRenderSbsFilterBadge('valves');
+        } else if (kipIsSarLinkFilterActive('valves')) {
+            html += kipRenderSarFilterBadge('valves');
+        }
+        html += '<div class="valve-sorted-list">';
         for (const g of groupOrder) {
             const gItems = groups[g.key];
             const label = (g.dn === null) ? g.key : ('DN ' + (Number.isInteger(g.dn) ? g.dn : g.dn.toString().replace('.', ',')));
@@ -9195,6 +9296,10 @@
         }
         html += '</div>';
         list.innerHTML = html;
+        // Привязка обработчиков к кнопкам ✕ в бейджах фильтра
+        kipBindFilterBadge(list, 'valves', function() { valveRenderGroup(); });
+        kipBindSbsFilterBadge(list, 'valves', function() { valveRenderGroup(); });
+        kipBindSarFilterBadge(list, 'valves', function() { valveRenderGroup(); });
     }
 
     function valveScrollToGroup(el) {
@@ -9583,6 +9688,17 @@
             const g = d[sortKey] || '(без группы)';
             return g === group;
         });
+        // Применить активный фильтр (проект / СБС), если он установлен.
+        // Без этого при клике на группу из отфильтрованного списка будет показан
+        // весь список регуляторов этой группы, а не только относящиеся к проекту.
+        const hasRegFilter = kipIsProjectLinkFilterActive('regulators')
+            || kipIsSbsLinkFilterActive('regulators');
+        if (hasRegFilter) {
+            items = items.filter(d =>
+                kipMatchesProjectFilter(d, 'regulators')
+                && kipMatchesSbsFilter(d, 'regulators')
+            );
+        }
         items.sort((a, b) => {
             const va = (a['Параметр'] || '').toString().toLowerCase();
             const vb = (b['Параметр'] || '').toString().toLowerCase();
@@ -9592,7 +9708,19 @@
         });
 
         if (items.length === 0) {
-            list.innerHTML = '<div class="pb-empty">В группе нет регуляторов.</div>';
+            let emptyHtml = '';
+            if (kipIsProjectLinkFilterActive('regulators')) {
+                emptyHtml += kipRenderFilterBadge('regulators');
+                emptyHtml += '<div class="pb-empty">В группе «' + regulatorEsc(group) + '» по проекту №«' + regulatorEsc(kipProjectLinkFilter.projectNo) + '» регуляторов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
+            } else if (kipIsSbsLinkFilterActive('regulators')) {
+                emptyHtml += kipRenderSbsFilterBadge('regulators');
+                emptyHtml += '<div class="pb-empty">В группе «' + regulatorEsc(group) + '» по СБС №«' + regulatorEsc(kipSbsLinkFilter.sbsNo) + '» регуляторов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
+            } else {
+                emptyHtml = '<div class="pb-empty">В группе нет регуляторов.</div>';
+            }
+            list.innerHTML = emptyHtml;
+            kipBindFilterBadge(list, 'regulators', function() { regulatorRenderGroup(); });
+            kipBindSbsFilterBadge(list, 'regulators', function() { regulatorRenderGroup(); });
             return;
         }
 
@@ -9613,7 +9741,14 @@
             return 0;
         });
 
-        let html = '<div class="regulator-sorted-list">';
+        let html = '';
+        // Бейдж активного фильтра (проект / СБС) вверху страницы группы
+        if (kipIsProjectLinkFilterActive('regulators')) {
+            html += kipRenderFilterBadge('regulators');
+        } else if (kipIsSbsLinkFilterActive('regulators')) {
+            html += kipRenderSbsFilterBadge('regulators');
+        }
+        html += '<div class="regulator-sorted-list">';
         for (const g of groupOrder) {
             const gItems = groups[g];
             html += '<div class="pb-section regulator-group regulator-subgroup static">';
@@ -9649,6 +9784,9 @@
         }
         html += '</div>';
         list.innerHTML = html;
+        // Привязка обработчиков к кнопкам ✕ в бейджах фильтра
+        kipBindFilterBadge(list, 'regulators', function() { regulatorRenderGroup(); });
+        kipBindSbsFilterBadge(list, 'regulators', function() { regulatorRenderGroup(); });
     }
 
     function regulatorScrollToGroup(el) {
@@ -11475,6 +11613,12 @@
             const g = d[sortKey] || '(без отделения)';
             return g === group;
         });
+        // Применить активный фильтр по «№ проекта», если он установлен.
+        // Без этого при клике на группу из отфильтрованного списка будет показан
+        // весь список кабелей этой группы, а не только относящиеся к проекту.
+        if (kipIsProjectLinkFilterActive('cables')) {
+            items = items.filter(d => kipMatchesProjectFilter(d, 'cables'));
+        }
         // Сортировка по обозначению кабеля
         items.sort((a, b) => {
             const na = (a['Обозначение кабеля, провода'] || '').toString().toLowerCase();
@@ -11485,7 +11629,15 @@
         });
 
         if (items.length === 0) {
-            list.innerHTML = '<div class="pb-empty">В группе нет кабелей.</div>';
+            let emptyHtml = '';
+            if (kipIsProjectLinkFilterActive('cables')) {
+                emptyHtml += kipRenderFilterBadge('cables');
+                emptyHtml += '<div class="pb-empty">В группе «' + cableEsc(group) + '» по проекту №«' + cableEsc(kipProjectLinkFilter.projectNo) + '» кабелей не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
+            } else {
+                emptyHtml = '<div class="pb-empty">В группе нет кабелей.</div>';
+            }
+            list.innerHTML = emptyHtml;
+            kipBindFilterBadge(list, 'cables', function() { cablesRenderGroup(); });
             return;
         }
 
@@ -11505,7 +11657,12 @@
             return 0;
         });
 
-        let html = '<div class="cable-sorted-list">';
+        let html = '';
+        // Бейдж активного фильтра по «№ проекта» вверху страницы группы
+        if (kipIsProjectLinkFilterActive('cables')) {
+            html += kipRenderFilterBadge('cables');
+        }
+        html += '<div class="cable-sorted-list">';
         for (const g of groupOrder) {
             const gItems = groups[g];
             html += '<div class="pb-section cable-group cable-subgroup static">';
@@ -11544,6 +11701,8 @@
         }
         html += '</div>';
         list.innerHTML = html;
+        // Привязка обработчика к кнопке ✕ в бейдже фильтра
+        kipBindFilterBadge(list, 'cables', function() { cablesRenderGroup(); });
     }
 
     function cablesScrollToGroup(el) {
