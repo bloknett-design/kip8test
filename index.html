@@ -281,12 +281,16 @@
     }
     /* Состояние при прокрутке вниз: заголовок сжат */
     .page-content.scrolled .page-inline-header {
-        height: 40px;
-        padding: 0 16px 0 8px;
+        min-height: 44px;
+        grid-template-rows: 16px auto;
+        padding: 2px 36px 2px 4px;
         top: 0;
     }
     .page-content.scrolled .page-inline-header-title {
         font-size: 15px;
+    }
+    .page-content.scrolled .page-inline-header-chevron svg {
+        width: 12px; height: 12px;
     }
     .nav-btn {
         display: inline-flex; align-items: center; justify-content: center; gap: 5px;
@@ -1114,23 +1118,32 @@
         position: sticky; top: 0; z-index: 60;
         backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
         background: var(--header-bg);
-        border-bottom: 1px solid rgba(74, 143, 199, 0.15); height: 56px;
-        display: flex; align-items: center; gap: 6px;
-        padding: 0 20px 0 8px;
+        border-bottom: 1px solid rgba(74, 143, 199, 0.15);
+        min-height: 60px;
+        display: grid;
+        grid-template-rows: 24px auto;
+        grid-template-columns: auto 1fr;
+        gap: 2px 6px;
+        align-content: center;
+        align-items: center;
+        /* Правый padding 36px резервирует место под overlay-кнопку «Обновить»
+           (fixed .connection-indicator: 8px от края + 20px ширина + 8px зазор). */
+        padding: 4px 36px 4px 4px;
+        box-sizing: border-box;
         -webkit-transform: translateZ(0); transform: translateZ(0); will-change: transform;
     }
     .page-inline-header-chevron {
-        position: absolute;
-        top: 0; bottom: 0; left: 4px;
+        grid-row: 1; grid-column: 1;
+        justify-self: start;
+        align-self: center;
         display: flex; align-items: center;
         cursor: pointer;
         -webkit-user-select: none; user-select: none;
         -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
-        padding: 0 6px 0 8px;
+        padding: 0 6px 0 4px;
         border-radius: 6px;
         transition: background 0.15s;
-        z-index: 2;
     }
     .page-inline-header-chevron:active { background: rgba(74, 143, 199, 0.15); }
     .page-inline-header-chevron svg {
@@ -1142,21 +1155,17 @@
     [data-theme="light"] .page-inline-header-chevron svg {
         stroke: rgba(42, 93, 143, 0.7);
     }
+    /* Заголовок — на всю ширину бара, во второй строке (под кнопками Назад и Обновить).
+       padding-left 40px компенсирует асимметрию header padding (4px L vs 36px R),
+       чтобы text-align:center визуально центрировал текст по ширине viewport,
+       а не по ширине content area. */
     .page-inline-header-title {
+        grid-row: 2; grid-column: 1 / -1;
         font-size: 18px; font-weight: 700; color: #e0e0e0; letter-spacing: -0.3px;
         width: 100%; text-align: center;
-        padding: 0 40px; box-sizing: border-box;
+        padding: 0 8px 0 40px; box-sizing: border-box;
         min-width: 0;
         text-shadow: 0 0 6px rgba(186, 85, 211, 0.45), 0 0 14px rgba(186, 85, 211, 0.25), 0 0 22px rgba(186, 85, 211, 0.12);
-    }
-    /* Когда в баре есть поле поиска — дополнительный правый padding,
-       чтобы текст заголовка не «залезал» под search input overlay. */
-    .page-inline-header:has(.dev-header-search) .page-inline-header-title {
-        padding: 0 130px 0 40px;
-    }
-    /* В scrolled-состоянии search input уже (100px), padding меньше. */
-    .page-content.scrolled .page-inline-header:has(.dev-header-search) .page-inline-header-title {
-        padding: 0 110px 0 40px;
     }
     #page-dashboard ~ .app-header, body:has(#page-dashboard.active) .app-header { display: block; }
     body:has(.page-content.active:not(#page-dashboard)) .app-header { display: none; }
@@ -3515,10 +3524,9 @@
     /* ===== Приборы (КИП ИОС) ===== */
     /* Поле поиска в верхнем баре, справа от названия */
     .dev-header-search {
-        position: absolute;
-        top: 50%; right: 8px;
-        transform: translateY(-50%);
-        z-index: 2;
+        grid-row: 1; grid-column: 2;
+        justify-self: end;
+        align-self: center;
         width: 120px;
         max-width: 40vw;
         padding: 6px 10px 6px 30px;
@@ -3545,12 +3553,6 @@
         .dev-header-search {
             width: 100px;
             max-width: 35vw;
-        }
-        .page-inline-header:has(.dev-header-search) .page-inline-header-title {
-            padding: 0 110px 0 36px;
-        }
-        .page-content.scrolled .page-inline-header:has(.dev-header-search) .page-inline-header-title {
-            padding: 0 92px 0 36px;
         }
     }
     .page-content.scrolled .dev-header-search {
