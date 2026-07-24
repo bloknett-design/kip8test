@@ -1139,7 +1139,7 @@
     [data-theme="light"] .page-inline-header-chevron svg {
         stroke: rgba(42, 93, 143, 0.6);
     }
-    .page-inline-header-title { font-size: 18px; font-weight: 700; color: #e0e0e0; letter-spacing: -0.3px; flex: 1; text-shadow: 0 0 6px rgba(186, 85, 211, 0.45), 0 0 14px rgba(186, 85, 211, 0.25), 0 0 22px rgba(186, 85, 211, 0.12); }
+    .page-inline-header-title { font-size: 18px; font-weight: 700; color: #e0e0e0; letter-spacing: -0.3px; flex: 1; min-width: 0; text-shadow: 0 0 6px rgba(186, 85, 211, 0.45), 0 0 14px rgba(186, 85, 211, 0.25), 0 0 22px rgba(186, 85, 211, 0.12); }
     #page-dashboard ~ .app-header, body:has(#page-dashboard.active) .app-header { display: block; }
     body:has(.page-content.active:not(#page-dashboard)) .app-header { display: none; }
     .greek-gamma { font-family: Georgia, 'Times New Roman', serif; font-style: italic; text-transform: none; }
@@ -12687,6 +12687,18 @@
         }
         // Обновить количество стрелок шеврона в заголовке активной страницы
         updateChevronArrows();
+        // Адаптивная подгонка заголовка активной страницы (уменьшение шрифта
+        // или увеличение высоты бара, если текст не помещается).
+        if (typeof fitPageHeaderTitle === 'function') {
+            // Сразу после активации page-content, чтобы измерения были корректны.
+            fitPageHeaderTitle();
+            // Повтор через 2 RAF — layout успевает досчитаться полностью.
+            requestAnimationFrame(function() {
+                requestAnimationFrame(fitPageHeaderTitle);
+            });
+            // И финальный пересчёт после завершения плавного скролла наверх.
+            setTimeout(fitPageHeaderTitle, 350);
+        }
         isNavigating = false;
     }
     function updateBottomNavActive(page) {
@@ -13669,6 +13681,10 @@
                     // Кулдаун: блокируем обработку на время стабилизации layout
                     cooldown = true;
                     setTimeout(function() { cooldown = false; }, COOLDOWN_MS);
+                    // Пересчитать заголовок: в .scrolled размер шрифта и высота другие.
+                    if (typeof fitPageHeaderTitle === 'function') {
+                        requestAnimationFrame(fitPageHeaderTitle);
+                    }
                 } else if (isScrolled && scrollY < lastScrollY && scrollY <= restoreThreshold) {
                     // Прокрутка вверх и в пределах 10% — вернуть в исходное состояние
                     // Но не убираем scrolled, если открыт билет
@@ -13679,6 +13695,10 @@
                         lastScrollY = newScrollY;
                         cooldown = true;
                         setTimeout(function() { cooldown = false; }, COOLDOWN_MS);
+                        // Пересчитать заголовок: возврат к базовому размеру шрифта/высоты.
+                        if (typeof fitPageHeaderTitle === 'function') {
+                            requestAnimationFrame(fitPageHeaderTitle);
+                        }
                     } else {
                         lastScrollY = scrollY;
                     }
@@ -13689,6 +13709,120 @@
         }
 
         window.addEventListener('scroll', onScroll, { passive: true });
+    })();
+
+    // ======================== АДАПТИВНЫЕ ЗАГОЛОВКИ СТРАНИЦ ========================
+    // Если текст заголовка .page-inline-header-title не помещается в бар:
+    //   1) уменьшаем font-size с шагом 1px (от базового до 12px);
+    //   2) если и при 12px не помещается — разрешаем перенос строки и
+    //      увеличиваем высоту бара до тех пор, пока текст не поместится.
+    // Базовый размер и высота берутся из CSS (учитывая состояние .scrolled).
+    (function() {
+        const FIT_MIN_FONT = 12;     // минимальный размер шрифта перед переносом
+        const FIT_STEP = 1;          // шаг уменьшения (px)
+        const FIT_LINE_GAP = 6;      // запас по вертикали при переносе (px)
+
+        function _fitOneHeader(header) {
+            if (!header) return;
+            const title = header.querySelector('.page-inline-header-title');
+            if (!title) return;
+            // Пропускаем скрытые (display:none у родительской page-content)
+            if (!header.offsetParent) return;
+
+            // Сбрасываем ранее установленные inline-стили, чтобы измерять «чистый» baseline.
+            title.style.fontSize = '';
+            title.style.whiteSpace = '';
+            title.style.overflow = '';
+            title.style.lineHeight = '';
+            header.style.height = '';
+            header.style.minHeight = '';
+
+            // Базовый размер шрифта/высоты из CSS (зависит от .scrolled у page-content).
+            const titleStyle = getComputedStyle(title);
+            const headerStyle = getComputedStyle(header);
+            const baseFontSize = parseFloat(titleStyle.fontSize);
+            const baseHeight = parseFloat(headerStyle.height);
+            if (!isFinite(baseFontSize) || !isFinite(baseHeight)) return;
+
+            // Для измерения ширины одной строкой принудительно ставим nowrap + overflow:hidden.
+            // min-width:0 в CSS гарантирует, что flex-item не разрастается под контент.
+            title.style.whiteSpace = 'nowrap';
+            title.style.overflow = 'hidden';
+
+            // clientWidth — ширина, выделенная flex-алгоритмом.
+            // scrollWidth — фактическая ширина текста (с учётом overflow).
+            const fitsAtBase = title.scrollWidth <= title.clientWidth;
+
+            if (fitsAtBase) {
+                // Помещается при базовом размере — убираем измерительные стили.
+                title.style.whiteSpace = '';
+                title.style.overflow = '';
+                return;
+            }
+
+            // Этап 1: уменьшаем шрифт с шагом 1px, пока не поместится или не достигнем минимума.
+            let fontSize = baseFontSize;
+            while (fontSize > FIT_MIN_FONT) {
+                fontSize -= FIT_STEP;
+                title.style.fontSize = fontSize + 'px';
+                if (title.scrollWidth <= title.clientWidth) {
+                    // Поместилось при уменьшенном размере.
+                    title.style.whiteSpace = '';
+                    title.style.overflow = '';
+                    return;
+                }
+            }
+
+            // Этап 2: даже при минимальном шрифте не помещается в одну строку.
+            // Разрешаем перенос и подращиваем высоту бара под фактическое содержимое.
+            // ВАЖНО: overflow:hidden (не visible!) — иначе scrollHeight вернёт clientHeight
+            // и мы не увидим реальную контентную высоту многострочного текста.
+            title.style.whiteSpace = 'normal';
+            title.style.overflow = 'hidden';
+            title.style.lineHeight = '1.2';
+
+            // force reflow, чтобы браузер пересчитал layout с новыми white-space/overflow.
+            void title.offsetHeight;
+
+            // Теперь scrollHeight = реальная высота контента (включая невидимый overflow).
+            const titleHeight = title.scrollHeight;
+            const titlePadTop = parseFloat(titleStyle.paddingTop) || 0;
+            const titlePadBottom = parseFloat(titleStyle.paddingBottom) || 0;
+            const requiredTitleHeight = titleHeight + titlePadTop + titlePadBottom;
+
+            // Padding самого header (по вертикали) — вкладывается в baseHeight,
+            // поэтому новая высота = max(base, titleContent + verticalGap).
+            const newHeight = Math.max(baseHeight, requiredTitleHeight + FIT_LINE_GAP);
+            header.style.height = newHeight + 'px';
+            header.style.minHeight = newHeight + 'px';
+        }
+
+        function fitPageHeaderTitle() {
+            // Активная page-content содержит видимый заголовок.
+            const active = document.querySelector('.page-content.active');
+            if (!active) return;
+            const header = active.querySelector('.page-inline-header');
+            if (!header) return;
+            _fitOneHeader(header);
+        }
+
+        // Экспортируем в глобальную область для вызова из navigateTo и scroll-handler.
+        window.fitPageHeaderTitle = fitPageHeaderTitle;
+
+        // Хук на resize / orientationchange — пересчёт при изменении ширины вьюпорта.
+        let _fitResizeTimer = null;
+        function _onFitResize() {
+            clearTimeout(_fitResizeTimer);
+            _fitResizeTimer = setTimeout(fitPageHeaderTitle, 80);
+        }
+        window.addEventListener('resize', _onFitResize);
+        window.addEventListener('orientationchange', function() {
+            setTimeout(fitPageHeaderTitle, 250);
+        });
+        // Первичный запуск после полной загрузки.
+        window.addEventListener('load', function() {
+            setTimeout(fitPageHeaderTitle, 200);
+        });
     })();
 
     // ======================== МАСШТАБИРОВАНИЕ ТЕКСТА ЩИПКОМ ========================
