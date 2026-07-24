@@ -1984,7 +1984,7 @@
 
     /* КИП ИОС — общий блок с кнопками подразделов и датой последнего изменения */
     .kip-ios-block {
-        margin: 12px 8px;
+        margin: 12px 8px 6px;
         padding: 14px 14px 8px;
         background: var(--card-bg, rgba(255,255,255,0.04));
         backdrop-filter: blur(8px);
@@ -2033,6 +2033,20 @@
     }
     .kip-ios-block .menu-btn {
         margin-bottom: 0;
+    }
+    /* Стоящие отдельно кнопки под блоком (Проекты / Кабельный журнал /
+       План корпуса 114) — это прямые дочерние .menu-btn-row у #page-kip-ios.
+       Вложенная row ВНУТРИ .kip-ios-block сюда не попадает (селектор `>`).
+       Обнуляем вертикальные отступы, чтобы зазоры между всеми кнопками
+       секции совпадали с зазором 6px между кнопками внутри блока. */
+    #page-kip-ios > .menu-btn-row {
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+    /* Зазор между соседними отдельными кнопками = 6px = зазор внутри блока.
+       Block→row1 обеспечивается margin-bottom:6px самого .kip-ios-block. */
+    #page-kip-ios > .menu-btn-row + .menu-btn-row {
+        margin-top: 6px;
     }
 
     .pb-section {
@@ -7839,12 +7853,48 @@
     async function kipIOSUpdateLastChange() {
         const span = document.getElementById('kip-ios-last-update');
         if (!span) return;
-        if (typeof devLoad === 'function') {
-            try { await devLoad(); } catch (e) {}
+        let dateStr = '';
+        // Принудительно тянем свежий devices.json с cache-bust —
+        // devLoad() кэширует devData в памяти и не обновляет его,
+        // поэтому без прямого fetch дата «Последние изменения»
+        // (хранимая в строке ID=0, столбце «Тип» листа «Приборы_app»
+        // как Excel serial date) никогда не обновится в текущей сессии.
+        try {
+            const bust = '?v=' + Date.now();
+            const resp = await fetch('data/devices.json' + bust, { cache: 'no-store' });
+            if (resp.ok) {
+                const fresh = await resp.json();
+                if (fresh && Array.isArray(fresh.devices)) {
+                    // Найти строку с ID=0 (дата последнего изменения перечня)
+                    const row0 = fresh.devices.find(d => {
+                        const id = d['ID'];
+                        return id === 0 || id === '0' || String(id ?? '').trim() === '0';
+                    });
+                    if (row0 && row0['Тип']) {
+                        dateStr = (typeof devExcelDateToString === 'function')
+                            ? devExcelDateToString(row0['Тип'])
+                            : '';
+                    }
+                    // Обновляем кэш в памяти и localStorage, чтобы
+                    // другие разделы (Приборы и т.д.) тоже видели свежие данные.
+                    if (typeof devData !== 'undefined') {
+                        devData = fresh;
+                        devLoaded = true;
+                        try {
+                            localStorage.setItem('kip8test:' + DEV_CACHE_KEY, JSON.stringify(fresh));
+                        } catch (eLS) {}
+                    }
+                }
+            }
+        } catch (e) {
+            // Офлайн / ошибка сети — fallback на кэшированный devLoad()
+            if (typeof devLoad === 'function') {
+                try { await devLoad(); } catch (e2) {}
+            }
+            if (typeof devGetLastUpdateDate === 'function') {
+                dateStr = devGetLastUpdateDate();
+            }
         }
-        const dateStr = (typeof devGetLastUpdateDate === 'function')
-            ? devGetLastUpdateDate()
-            : '';
         span.textContent = dateStr || '—';
     }
 
