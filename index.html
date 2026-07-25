@@ -4764,9 +4764,9 @@
             <div id="regulatorGroupList"></div>
         </div>
 
-        <!-- ======================== ПРОЕКТЫ — ПО ГОДАМ (ДАТА УТВ.) ======================== -->
+        <!-- ======================== ПРОЕКТЫ — ПО ОТДЕЛЕНИЯМ ======================== -->
         <div id="page-projects-prod" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Проекты по годам</div><input type="search" id="projectProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="projectsRenderSorted('prod')"></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Проекты по отделениям</div><input type="search" id="projectProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="projectsRenderSorted('prod')"></div>
             <div id="projectProdInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
             <div id="projectProdList"></div>
         </div>
@@ -10225,13 +10225,19 @@
         const query = projectNorm((document.getElementById(id.search)?.value || '').trim());
         let filtered = projectData.projects || [];
 
-        // Сортировка: по «Дате утв.» (от старых к новым), затем по наименованию.
-        // Группировка далее идёт по году (см. projectYearKey).
+        // Сортировка: по «Отделению», внутри отделения — по «Дате утв.» (старые → новые).
+        const sortKey = 'Отделение';
         filtered.sort((a, b) => {
+            const va = (a[sortKey] || '').toString().toLowerCase();
+            const vb = (b[sortKey] || '').toString().toLowerCase();
+            if (va < vb) return -1;
+            if (va > vb) return 1;
+            // Внутри отделения — по дате утверждения (от старых к новым).
             const da = projectDateSortValue(a['Дата утв.']);
             const db = projectDateSortValue(b['Дата утв.']);
             if (da < db) return -1;
             if (da > db) return 1;
+            // Совпадающие даты (в т.ч. обе Infinity) — добиваем по наименованию.
             const na = (a['Наименование проекта'] || '').toString().toLowerCase();
             const nb = (b['Наименование проекта'] || '').toString().toLowerCase();
             if (na < nb) return -1;
@@ -10245,26 +10251,37 @@
             );
         }
 
-        // Группировка по подгруппам — по году из «Даты утв.».
-        // ('Без даты' для проектов с '00.00.00' / пустой датой.)
+        // Группировка верхнего уровня — по «Отделению».
         const groups = {};
         const groupOrder = [];
         for (const d of filtered) {
-            const g = projectYearKey(d['Дата утв.']);
+            const g = d[sortKey] || '(без отделения)';
             if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
             groups[g].push(d);
         }
 
-        // Сортировка подгрупп: по году (численно, от старых к новым),
-        // 'Без даты' — в конце.
+        // Сортировка самих подгрупп (отделений) по «Дате утв.» —
+        // подгруппа с самым старым проектом идёт первой; подгруппы, где все даты
+        // пустые/невалидные ('00.00.00'), уходят в конец. При совпадении «минимальной»
+        // даты добиваем по алфавиту (имя отделения).
         groupOrder.sort((a, b) => {
-            if (a === 'Без даты' && b === 'Без даты') return 0;
-            if (a === 'Без даты') return 1;
-            if (b === 'Без даты') return -1;
-            const na = parseInt(a, 10);
-            const nb = parseInt(b, 10);
-            if (na < nb) return -1;
-            if (na > nb) return 1;
+            const itemsA = groups[a];
+            const itemsB = groups[b];
+            let minA = Infinity, minB = Infinity;
+            for (const it of itemsA) {
+                const v = projectDateSortValue(it['Дата утв.']);
+                if (v < minA) minA = v;
+            }
+            for (const it of itemsB) {
+                const v = projectDateSortValue(it['Дата утв.']);
+                if (v < minB) minB = v;
+            }
+            if (minA < minB) return -1;
+            if (minA > minB) return 1;
+            const va = a.toString().toLowerCase();
+            const vb = b.toString().toLowerCase();
+            if (va < vb) return -1;
+            if (va > vb) return 1;
             return 0;
         });
 
@@ -10343,9 +10360,10 @@
             return;
         }
 
-        // Фильтр по подгруппе-году (см. projectsRenderSorted и projectYearKey).
+        // Фильтр по отделению (как было раньше).
+        const sortKey = 'Отделение';
         let items = (projectData.projects || []).filter(d => {
-            const g = projectYearKey(d['Дата утв.']);
+            const g = d[sortKey] || '(без отделения)';
             return g === group;
         });
         // Сортировка по «Дате утв.» (от старых к новым).
@@ -10368,29 +10386,62 @@
             return;
         }
 
-        // Плоский список проектов без подгрупп по «Наименованию проекта».
-        let html = '<div class="project-sorted-list">';
+        // Внутри отделения — подгруппы по ГОДУ из «Даты утв.» (без свёртывания).
+        // Используется класс .pb-section.static — тело всегда раскрыто,
+        // заголовок без кликабельного chevron. 'Без даты' идёт последней.
+        const yearGroups = {};
+        const yearOrder = [];
         for (const item of items) {
-            const itemId = String(item['ID'] ?? '');
-            const name = item['Наименование проекта'] || '(без названия)';
-            const num  = item['№ проекта'] || '';
-            const status = item['Статус проекта'] || '';
-            const statusCls = projectStatusClass(status);
+            const yk = projectYearKey(item['Дата утв.']);
+            if (!yearGroups[yk]) { yearGroups[yk] = []; yearOrder.push(yk); }
+            yearGroups[yk].push(item);
+        }
+        yearOrder.sort((a, b) => {
+            if (a === 'Без даты' && b === 'Без даты') return 0;
+            if (a === 'Без даты') return 1;
+            if (b === 'Без даты') return -1;
+            const na = parseInt(a, 10);
+            const nb = parseInt(b, 10);
+            if (na < nb) return -1;
+            if (na > nb) return 1;
+            return 0;
+        });
 
-            html += '<div class="project-card" data-project-id="' + projectEsc(itemId) + '" data-mode="' + mode + '">';
-            html += '<div class="project-card-header" onclick="projectOpenDetail(\'' + projectEsc(itemId) + '\')">';
-            html += '<div class="project-card-header-inner">';
-            html += '<div class="project-card-text">';
-            html += '<div class="project-card-title">' + projectEsc(name) + '</div>';
-            let subtitle = '';
-            if (num) subtitle += '№ ' + num;
-            if (subtitle) html += '<div class="project-card-subtitle">' + projectEsc(subtitle) + '</div>';
-            if (status) html += '<div class="project-card-status ' + statusCls + '">' + projectEsc(status) + '</div>';
+        let html = '<div class="project-sorted-list">';
+        for (const yk of yearOrder) {
+            const yItems = yearGroups[yk];
+            // Подгруппа-год — всегда раскрытая (static), без onclick.
+            html += '<div class="pb-section project-group project-subgroup static">';
+            html += '<div class="pb-section-title">';
+            html += '<span class="pb-section-title-text">' + projectEsc(yk) + '</span>';
+            html += '<span class="pb-section-title-count">' + yItems.length + '</span>';
+            html += '<span class="pb-section-arrow"></span>';
             html += '</div>';
-            html += '<span class="project-card-arrow"></span>';
-            html += '</div>';
-            html += '</div>';
-            html += '</div>';
+            html += '<div class="pb-section-body">';
+            for (const item of yItems) {
+                const itemId = String(item['ID'] ?? '');
+                const name = item['Наименование проекта'] || '(без названия)';
+                const num  = item['№ проекта'] || '';
+                const status = item['Статус проекта'] || '';
+                const statusCls = projectStatusClass(status);
+
+                html += '<div class="project-card" data-project-id="' + projectEsc(itemId) + '" data-mode="' + mode + '">';
+                html += '<div class="project-card-header" onclick="projectOpenDetail(\'' + projectEsc(itemId) + '\')">';
+                html += '<div class="project-card-header-inner">';
+                html += '<div class="project-card-text">';
+                html += '<div class="project-card-title">' + projectEsc(name) + '</div>';
+                let subtitle = '';
+                if (num) subtitle += '№ ' + num;
+                if (subtitle) html += '<div class="project-card-subtitle">' + projectEsc(subtitle) + '</div>';
+                if (status) html += '<div class="project-card-status ' + statusCls + '">' + projectEsc(status) + '</div>';
+                html += '</div>';
+                html += '<span class="project-card-arrow"></span>';
+                html += '</div>';
+                html += '</div>';
+                html += '</div>';
+            }
+            html += '</div>'; // pb-section-body
+            html += '</div>'; // pb-section
         }
         html += '</div>';
         list.innerHTML = html;
