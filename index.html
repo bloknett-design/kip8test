@@ -10283,10 +10283,11 @@
             const g = d[sortKey] || '(без отделения)';
             return g === group;
         });
-        // Сортировка по № проекта (строки), затем по наименованию
+        // Сортировка по № проекта (без подгрупп по наименованию —
+        // просто плоский список проектов с переходом в карточки).
         items.sort((a, b) => {
-            const na = (a['Наименование проекта'] || '').toString().toLowerCase();
-            const nb = (b['Наименование проекта'] || '').toString().toLowerCase();
+            const na = (a['№ проекта'] || '').toString().toLowerCase();
+            const nb = (b['№ проекта'] || '').toString().toLowerCase();
             if (na < nb) return -1;
             if (na > nb) return 1;
             return 0;
@@ -10297,58 +10298,29 @@
             return;
         }
 
-        // Сгруппировать проекты по «Наименованию проекта» — раскрытая группа без сворачивания.
-        // (Каждое наименование уникально, поэтому подгруппы обычно содержат 1 проект,
-        // но если есть одноимённые проекты — они соберутся вместе со счётчиком.)
-        const groups = {};
-        const groupOrder = [];
-        for (const item of items) {
-            const g = item['Наименование проекта'] || '(без названия)';
-            if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
-            groups[g].push(item);
-        }
-        groupOrder.sort((a, b) => {
-            const va = a.toString().toLowerCase();
-            const vb = b.toString().toLowerCase();
-            if (va < vb) return -1;
-            if (va > vb) return 1;
-            return 0;
-        });
-
+        // Плоский список проектов без подгрупп по «Наименованию проекта».
         let html = '<div class="project-sorted-list">';
-        for (const g of groupOrder) {
-            const gItems = groups[g];
-            html += '<div class="pb-section project-group project-subgroup static">';
-            html += '<div class="pb-section-title">';
-            html += '<span class="pb-section-title-text">' + projectEsc(g) + '</span>';
-            html += '<span class="pb-section-title-count">' + gItems.length + '</span>';
-            html += '<span class="pb-section-arrow"></span>';
-            html += '</div>';
-            html += '<div class="pb-section-body">';
-            for (const item of gItems) {
-                const itemId = String(item['ID'] ?? '');
-                const name = item['Наименование проекта'] || '(без названия)';
-                const num  = item['№ проекта'] || '';
-                const status = item['Статус проекта'] || '';
-                const statusCls = projectStatusClass(status);
+        for (const item of items) {
+            const itemId = String(item['ID'] ?? '');
+            const name = item['Наименование проекта'] || '(без названия)';
+            const num  = item['№ проекта'] || '';
+            const status = item['Статус проекта'] || '';
+            const statusCls = projectStatusClass(status);
 
-                html += '<div class="project-card" data-project-id="' + projectEsc(itemId) + '" data-mode="' + mode + '">';
-                html += '<div class="project-card-header" onclick="projectOpenDetail(\'' + projectEsc(itemId) + '\')">';
-                html += '<div class="project-card-header-inner">';
-                html += '<div class="project-card-text">';
-                html += '<div class="project-card-title">' + projectEsc(name) + '</div>';
-                let subtitle = '';
-                if (num) subtitle += '№ ' + num;
-                if (subtitle) html += '<div class="project-card-subtitle">' + projectEsc(subtitle) + '</div>';
-                if (status) html += '<div class="project-card-status ' + statusCls + '">' + projectEsc(status) + '</div>';
-                html += '</div>';
-                html += '<span class="project-card-arrow"></span>';
-                html += '</div>';
-                html += '</div>';
-                html += '</div>';
-            }
-            html += '</div>'; // pb-section-body
-            html += '</div>'; // pb-section
+            html += '<div class="project-card" data-project-id="' + projectEsc(itemId) + '" data-mode="' + mode + '">';
+            html += '<div class="project-card-header" onclick="projectOpenDetail(\'' + projectEsc(itemId) + '\')">';
+            html += '<div class="project-card-header-inner">';
+            html += '<div class="project-card-text">';
+            html += '<div class="project-card-title">' + projectEsc(name) + '</div>';
+            let subtitle = '';
+            if (num) subtitle += '№ ' + num;
+            if (subtitle) html += '<div class="project-card-subtitle">' + projectEsc(subtitle) + '</div>';
+            if (status) html += '<div class="project-card-status ' + statusCls + '">' + projectEsc(status) + '</div>';
+            html += '</div>';
+            html += '<span class="project-card-arrow"></span>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
         }
         html += '</div>';
         list.innerHTML = html;
