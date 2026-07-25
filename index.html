@@ -4764,9 +4764,9 @@
             <div id="regulatorGroupList"></div>
         </div>
 
-        <!-- ======================== ПРОЕКТЫ — ПО ОТДЕЛЕНИЯМ ======================== -->
+        <!-- ======================== ПРОЕКТЫ — ПО ГОДАМ (ДАТА УТВ.) ======================== -->
         <div id="page-projects-prod" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Проекты по отделениям</div><input type="search" id="projectProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="projectsRenderSorted('prod')"></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Проекты по годам</div><input type="search" id="projectProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="projectsRenderSorted('prod')"></div>
             <div id="projectProdInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
             <div id="projectProdList"></div>
         </div>
@@ -10169,6 +10169,16 @@
         return isNaN(t) ? Infinity : t;
     }
 
+    // Возвращает ключ года для группировки по «Дате утв.».
+    // Валидная дата → строка года ('2024'); невалидная / '00.00.00' / пусто → 'Без даты'.
+    // Используется для группировки списков проектов в подгруппы по годам.
+    function projectYearKey(dateVal) {
+        const t = projectDateSortValue(dateVal);
+        if (t === Infinity) return 'Без даты';
+        const d = new Date(t);
+        return String(d.getUTCFullYear());
+    }
+
     async function projectInitSorted(mode) {
         if (!projectLoaded || !projectData) {
             try {
@@ -10215,20 +10225,13 @@
         const query = projectNorm((document.getElementById(id.search)?.value || '').trim());
         let filtered = projectData.projects || [];
 
-        // Сортировка: по «Отделению», внутри отделения — по «Дате утв.» (старые → новые).
-        const sortKey = 'Отделение';
+        // Сортировка: по «Дате утв.» (от старых к новым), затем по наименованию.
+        // Группировка далее идёт по году (см. projectYearKey).
         filtered.sort((a, b) => {
-            const va = (a[sortKey] || '').toString().toLowerCase();
-            const vb = (b[sortKey] || '').toString().toLowerCase();
-            if (va < vb) return -1;
-            if (va > vb) return 1;
-            // Внутри отделения — по дате утверждения (от старых к новым).
-            // Проекты без даты ('00.00.00' / пусто) уходят в конец группы.
             const da = projectDateSortValue(a['Дата утв.']);
             const db = projectDateSortValue(b['Дата утв.']);
             if (da < db) return -1;
             if (da > db) return 1;
-            // Совпадающие даты (в т.ч. обе Infinity) — добиваем по наименованию.
             const na = (a['Наименование проекта'] || '').toString().toLowerCase();
             const nb = (b['Наименование проекта'] || '').toString().toLowerCase();
             if (na < nb) return -1;
@@ -10242,36 +10245,26 @@
             );
         }
 
+        // Группировка по подгруппам — по году из «Даты утв.».
+        // ('Без даты' для проектов с '00.00.00' / пустой датой.)
         const groups = {};
         const groupOrder = [];
         for (const d of filtered) {
-            const g = d[sortKey] || '(без отделения)';
+            const g = projectYearKey(d['Дата утв.']);
             if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
             groups[g].push(d);
         }
 
-        // Сортировка самих подгрупп (отделений) по «Дате утв.» —
-        // подгруппа с самым старым проектом идёт первой; подгруппы, где все даты
-        // пустые/невалидные ('00.00.00'), уходят в конец. При совпадении «минимальной»
-        // даты добиваем по алфавиту (имя отделения).
+        // Сортировка подгрупп: по году (численно, от старых к новым),
+        // 'Без даты' — в конце.
         groupOrder.sort((a, b) => {
-            const itemsA = groups[a];
-            const itemsB = groups[b];
-            let minA = Infinity, minB = Infinity;
-            for (const it of itemsA) {
-                const v = projectDateSortValue(it['Дата утв.']);
-                if (v < minA) minA = v;
-            }
-            for (const it of itemsB) {
-                const v = projectDateSortValue(it['Дата утв.']);
-                if (v < minB) minB = v;
-            }
-            if (minA < minB) return -1;
-            if (minA > minB) return 1;
-            const va = a.toString().toLowerCase();
-            const vb = b.toString().toLowerCase();
-            if (va < vb) return -1;
-            if (va > vb) return 1;
+            if (a === 'Без даты' && b === 'Без даты') return 0;
+            if (a === 'Без даты') return 1;
+            if (b === 'Без даты') return -1;
+            const na = parseInt(a, 10);
+            const nb = parseInt(b, 10);
+            if (na < nb) return -1;
+            if (na > nb) return 1;
             return 0;
         });
 
@@ -10350,9 +10343,9 @@
             return;
         }
 
-        const sortKey = 'Отделение';
+        // Фильтр по подгруппе-году (см. projectsRenderSorted и projectYearKey).
         let items = (projectData.projects || []).filter(d => {
-            const g = d[sortKey] || '(без отделения)';
+            const g = projectYearKey(d['Дата утв.']);
             return g === group;
         });
         // Сортировка по «Дате утв.» (от старых к новым).
