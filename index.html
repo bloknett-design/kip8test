@@ -1149,6 +1149,25 @@
         min-width: 0;
         text-shadow: 0 0 6px rgba(186, 85, 211, 0.45), 0 0 14px rgba(186, 85, 211, 0.25), 0 0 22px rgba(186, 85, 211, 0.12);
     }
+    /* Двухстрочный заголовок страницы деталей кабеля:
+       верхняя строка — Отделение, нижняя (мелким приглушённым текстом) — Назначение. */
+    .page-inline-header-title.cable-detail-title-two-line {
+        line-height: 1.15;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
+    .page-inline-header-title.cable-detail-title-two-line .cable-detail-title-sub {
+        display: block;
+        font-size: 12px;
+        font-weight: 500;
+        color: #b8b8b8;
+        letter-spacing: 0;
+        text-shadow: none;
+        margin-top: 1px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
     /* Когда в баре есть поле поиска — дополнительный правый padding,
        чтобы текст заголовка не «залезал» под search input overlay. */
     .page-inline-header:has(.dev-header-search) .page-inline-header-title {
@@ -1599,6 +1618,9 @@
     [data-theme="light"] .page-inline-header-title {
         color: #141413;
         text-shadow: 0 0 6px rgba(147, 51, 234, 0.25), 0 0 14px rgba(147, 51, 234, 0.12);
+    }
+    [data-theme="light"] .page-inline-header-title.cable-detail-title-two-line .cable-detail-title-sub {
+        color: #5a5a55;
     }
     [data-theme="light"] .menu-btn-arrow {
         color: rgba(0, 0, 0, 0.15);
@@ -2970,14 +2992,6 @@
         color: var(--text-primary);
         line-height: 1.3;
         margin-bottom: 2px;
-        word-wrap: break-word;
-    }
-    .cable-card-title-2 {
-        font-size: 13px;
-        font-weight: 500;
-        color: var(--text-secondary);
-        line-height: 1.3;
-        margin-bottom: 4px;
         word-wrap: break-word;
     }
     .cable-card-subtitle {
@@ -11892,8 +11906,10 @@
 
             for (const item of items) {
                 const itemId = String(item['№ п/п'] ?? '');
-                const dept   = item['Отделение, производство'] || '(без отделения)';
-                const purpose = item['Назначение кабеля'] || '';
+                // На странице списка (3-я страница) заголовок карточки = «Обозначение кабеля, провода».
+                // Отделение и Назначение здесь не показываем — они есть в заголовках подгрупп
+                // и в карточке детали (4-я страница).
+                const name  = item['Обозначение кабеля, провода'] || '(без обозначения)';
                 const start = item['Начало трассы'] || '';
                 const end   = item['Конец трассы'] || '';
 
@@ -11901,9 +11917,7 @@
                 html += '<div class="cable-card-header" onclick="cableOpenDetail(\x27' + cableEsc(itemId) + '\x27)">';
                 html += '<div class="cable-card-header-inner">';
                 html += '<div class="cable-card-text">';
-                // Заголовок: 1-я строка — Отделение, 2-я строка — Назначение (простым текстом, без бейджа).
-                html += '<div class="cable-card-title">' + cableMark(dept, query) + '</div>';
-                if (purpose) html += '<div class="cable-card-title-2">' + cableMark(purpose, query) + '</div>';
+                html += '<div class="cable-card-title">' + cableMark(name, query) + '</div>';
                 let subtitle = '';
                 if (start) subtitle += start;
                 if (end)   subtitle += (subtitle ? ' → ' : '') + end;
@@ -12014,8 +12028,10 @@
             html += '<div class="pb-section-body">';
             for (const item of gItems) {
                 const itemId = String(item['№ п/п'] ?? '');
-                const dept   = item['Отделение, производство'] || '(без отделения)';
-                const purpose = item['Назначение кабеля'] || '';
+                // На странице списка (3-я страница) заголовок карточки = «Обозначение кабеля, провода».
+                // Отделение и Назначение здесь не показываем — они есть в заголовках подгрупп
+                // и в карточке детали (4-я страница).
+                const name  = item['Обозначение кабеля, провода'] || '(без обозначения)';
                 const start = item['Начало трассы'] || '';
                 const end   = item['Конец трассы'] || '';
 
@@ -12023,9 +12039,7 @@
                 html += '<div class="cable-card-header" onclick="cableOpenDetail(\x27' + cableEsc(itemId) + '\x27)">';
                 html += '<div class="cable-card-header-inner">';
                 html += '<div class="cable-card-text">';
-                // Заголовок: 1-я строка — Отделение, 2-я строка — Назначение (простым текстом, без бейджа).
-                html += '<div class="cable-card-title">' + cableEsc(dept) + '</div>';
-                if (purpose) html += '<div class="cable-card-title-2">' + cableEsc(purpose) + '</div>';
+                html += '<div class="cable-card-title">' + cableEsc(name) + '</div>';
                 let subtitle = '';
                 if (start) subtitle += start;
                 if (end)   subtitle += (subtitle ? ' → ' : '') + end;
@@ -12071,11 +12085,16 @@
         const titleEl = document.getElementById('cableDetailTitle');
         const content = document.getElementById('cableDetailContent');
         if (!titleEl || !content) return;
-        // Заголовок страницы кабеля — Отделение + Назначение (как в карточке).
+        // Заголовок страницы кабеля (4-я страница) — из двух строк:
+        // верхняя — Отделение, нижняя — Назначение кабеля.
         const _dept = item['Отделение, производство'] || '(без отделения)';
         const _purpose = item['Назначение кабеля'] || '';
-        const detailTitle = _purpose ? (_dept + ' — ' + _purpose) : _dept;
-        titleEl.textContent = detailTitle;
+        titleEl.classList.add('cable-detail-title-two-line');
+        if (_purpose) {
+            titleEl.innerHTML = cableEsc(_dept) + '<span class="cable-detail-title-sub">' + cableEsc(_purpose) + '</span>';
+        } else {
+            titleEl.innerHTML = cableEsc(_dept);
+        }
 
         let html = '<div class="cable-detail-card">';
         html += '<div class="cable-detail-rows">';
