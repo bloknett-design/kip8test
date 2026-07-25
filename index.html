@@ -12009,8 +12009,7 @@
                 const name = item['Обозначение кабеля, провода'] || '(без обозначения)';
                 const start = item['Начало трассы'] || '';
                 const end   = item['Конец трассы'] || '';
-                const purpose = item['Назначение кабеля'] || '';
-                const purposeCls = cablePurposeClass(purpose);
+                // «Назначение кабеля» не выводим в карточке — оно уже в заголовке подгруппы.
 
                 html += '<div class="cable-card" data-cable-id="' + cableEsc(itemId) + '" data-mode="' + mode + '">';
                 html += '<div class="cable-card-header" onclick="cableOpenDetail(\x27' + cableEsc(itemId) + '\x27)">';
@@ -12021,7 +12020,6 @@
                 if (start) subtitle += start;
                 if (end)   subtitle += (subtitle ? ' → ' : '') + end;
                 if (subtitle) html += '<div class="cable-card-subtitle">' + cableEsc(subtitle) + '</div>';
-                if (purpose) html += '<div class="cable-card-purpose ' + purposeCls + '">' + cableEsc(purpose) + '</div>';
                 html += '</div>';
                 html += '<span class="cable-card-arrow"></span>';
                 html += '</div>';
