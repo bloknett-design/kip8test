@@ -107,3 +107,30 @@ Stage Summary:
 - После первой загрузки каждого плана (требует интернета) — план кэшируется и работает офлайн
 - Файлы также скопированы в /home/z/my-project/download/ для ручной установки
 - Замечание: картинки тяжёлые (ЩК-1: 200 КБ, отм.06/12/18: 11-13 МБ каждая, всего ~43 МБ). При первой загрузке всех 6 планов пользователь скачает ~43 МБ. Кэш хранится в IMAGE_CACHE_NAME, переживает обновления CACHE_VERSION.
+
+---
+Task ID: 4
+Agent: AI Assistant (GLM)
+Task: Скорректировать названия кнопок в разделе «План корпуса 114» (ЩК-1, ЩК-2, Отм. 0.0/6.0/12.0/18.0 м) и починить ошибку загрузки картинок «Не удалось загрузить план».
+
+Work Log:
+- Проверил фактические имена файлов на Яндекс.Диске через cloud-api.yandex.net/v1/disk/public/resources для всех 6 public_key. Подтвердилось: имена файлов — отм00м, отм06м, отм12м, отм18м → пользовательские правки корректны (в v180 было misreading: 06м→0.6 м, 12м→1.2 м, 18м→1.8 м).
+- В PLAN114_ITEMS (index.html) исправил 3 title: «Отм. 0.6 м» → «Отм. 6.0 м», «Отм. 1.2 м» → «Отм. 12.0 м», «Отм. 1.8 м» → «Отм. 18.0 м».
+- Диагностировал причину 403 при загрузке картинок: Яндекс.Диск отдаёт HTTP 403 на запросы к downloader.disk.yandex.ru, если в запросе есть Referer от стороннего домена (GitHub Pages). Это защита от хотлинкинга. curl с Origin + Referer → 403; curl с Origin без Referer → 302 → 200 OK (картинка скачивается).
+- Применил фикс referrerPolicy:'no-referrer' в трёх местах:
+  1. HTML: <img id="plan114Img" referrerpolicy="no-referrer" ...>
+  2. JS: img.referrerPolicy = 'no-referrer' в предзагрузчике new Image()
+  3. SW: fetch(request, { referrerPolicy: 'no-referrer' }) в обработчике downloader.disk.yandex.ru
+- Сопровождающие изменения:
+  - CACHE_VERSION: v180 → v181 (обновился SW)
+  - IMAGE_CACHE_VERSION: v1 → v2 (инвалидация кэша — могли остаться opaque-ответы с прежних 403, которые SW кэшировал как opaque и потом бесконечно перевыдавал)
+  - Добавил поясняющие комментарии в коде: почему no-referrer обязателен.
+- Проверил end-to-end curl-эмуляцией: API → 200,ORIGINAL → 302 → storage.yandex.net → 200, 198937 байт, PNG 1520x1080. Тесты: 207/207 ✓.
+- Git commit f29a6ce, push origin main успешно.
+
+Stage Summary:
+- Файлы: index.html, sw.js (commit f29a6ce)
+- 3 кнопки переименованы; 6/6 планов теперь должны открываться.
+- Корневая причина 403 — Referer-based hotlink protection Я.Диска; fix — no-referrer.
+- Версии: CACHE_VERSION=kipia-test-v181, IMAGE_CACHE_VERSION=kipia-images-test-v2.
+- Пользователю нужно обновить PWA (новая версия SW подхватится автоматически при следующей загрузке; старый IMAGE_CACHE v1 будет удалён при активации нового SW).
