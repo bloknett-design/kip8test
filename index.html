@@ -2969,6 +2969,14 @@
         font-weight: 600;
         color: var(--text-primary);
         line-height: 1.3;
+        margin-bottom: 2px;
+        word-wrap: break-word;
+    }
+    .cable-card-title-2 {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        line-height: 1.3;
         margin-bottom: 4px;
         word-wrap: break-word;
     }
@@ -11886,7 +11894,6 @@
                 const itemId = String(item['№ п/п'] ?? '');
                 const dept   = item['Отделение, производство'] || '(без отделения)';
                 const purpose = item['Назначение кабеля'] || '';
-                const purposeCls = cablePurposeClass(purpose);
                 const start = item['Начало трассы'] || '';
                 const end   = item['Конец трассы'] || '';
 
@@ -11894,9 +11901,9 @@
                 html += '<div class="cable-card-header" onclick="cableOpenDetail(\x27' + cableEsc(itemId) + '\x27)">';
                 html += '<div class="cable-card-header-inner">';
                 html += '<div class="cable-card-text">';
-                // Заголовок: 1-я строка — Отделение, 2-я строка — Назначение.
+                // Заголовок: 1-я строка — Отделение, 2-я строка — Назначение (простым текстом, без бейджа).
                 html += '<div class="cable-card-title">' + cableMark(dept, query) + '</div>';
-                if (purpose) html += '<div class="cable-card-purpose ' + purposeCls + '">' + cableMark(purpose, query) + '</div>';
+                if (purpose) html += '<div class="cable-card-title-2">' + cableMark(purpose, query) + '</div>';
                 let subtitle = '';
                 if (start) subtitle += start;
                 if (end)   subtitle += (subtitle ? ' → ' : '') + end;
@@ -12009,7 +12016,6 @@
                 const itemId = String(item['№ п/п'] ?? '');
                 const dept   = item['Отделение, производство'] || '(без отделения)';
                 const purpose = item['Назначение кабеля'] || '';
-                const purposeCls = cablePurposeClass(purpose);
                 const start = item['Начало трассы'] || '';
                 const end   = item['Конец трассы'] || '';
 
@@ -12017,9 +12023,9 @@
                 html += '<div class="cable-card-header" onclick="cableOpenDetail(\x27' + cableEsc(itemId) + '\x27)">';
                 html += '<div class="cable-card-header-inner">';
                 html += '<div class="cable-card-text">';
-                // Заголовок: 1-я строка — Отделение, 2-я строка — Назначение.
+                // Заголовок: 1-я строка — Отделение, 2-я строка — Назначение (простым текстом, без бейджа).
                 html += '<div class="cable-card-title">' + cableEsc(dept) + '</div>';
-                if (purpose) html += '<div class="cable-card-purpose ' + purposeCls + '">' + cableEsc(purpose) + '</div>';
+                if (purpose) html += '<div class="cable-card-title-2">' + cableEsc(purpose) + '</div>';
                 let subtitle = '';
                 if (start) subtitle += start;
                 if (end)   subtitle += (subtitle ? ' → ' : '') + end;
