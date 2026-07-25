@@ -11679,7 +11679,7 @@
     // Поля соответствуют листу "Кабельный журнал" файла Excel
     // https://disk.yandex.ru/i/wvleuW19NoQBPQ (файл «Кабельный журнал.xlsx»)
     const CABLE_FIELDS = [
-        { key: 'Обозначение кабеля, провода',        label: 'Обозначение',           group: 1, hiddenInCard: true },
+        { key: 'Обозначение кабеля, провода',        label: 'Обозначение',           group: 1 },
         { key: 'Начало трассы',                       label: 'Начало трассы',         group: 1 },
         { key: 'Конец трассы',                        label: 'Конец трассы',          group: 1 },
         { key: 'Участок трассы кабеля, провода',     label: 'Участок трассы',        group: 1 },
@@ -11884,22 +11884,23 @@
 
             for (const item of items) {
                 const itemId = String(item['№ п/п'] ?? '');
-                const name = item['Обозначение кабеля, провода'] || '(без обозначения)';
-                const start = item['Начало трассы'] || '';
-                const end   = item['Конец трассы'] || '';
+                const dept   = item['Отделение, производство'] || '(без отделения)';
                 const purpose = item['Назначение кабеля'] || '';
                 const purposeCls = cablePurposeClass(purpose);
+                const start = item['Начало трассы'] || '';
+                const end   = item['Конец трассы'] || '';
 
                 html += '<div class="cable-card" data-cable-id="' + cableEsc(itemId) + '" data-mode="' + mode + '">';
                 html += '<div class="cable-card-header" onclick="cableOpenDetail(\x27' + cableEsc(itemId) + '\x27)">';
                 html += '<div class="cable-card-header-inner">';
                 html += '<div class="cable-card-text">';
-                html += '<div class="cable-card-title">' + cableMark(name, query) + '</div>';
+                // Заголовок: 1-я строка — Отделение, 2-я строка — Назначение.
+                html += '<div class="cable-card-title">' + cableMark(dept, query) + '</div>';
+                if (purpose) html += '<div class="cable-card-purpose ' + purposeCls + '">' + cableMark(purpose, query) + '</div>';
                 let subtitle = '';
                 if (start) subtitle += start;
                 if (end)   subtitle += (subtitle ? ' → ' : '') + end;
                 if (subtitle) html += '<div class="cable-card-subtitle">' + cableMark(subtitle, query) + '</div>';
-                if (purpose) html += '<div class="cable-card-purpose ' + purposeCls + '">' + cableMark(purpose, query) + '</div>';
                 html += '</div>';
                 html += '<span class="cable-card-arrow"></span>';
                 html += '</div>';
@@ -12006,16 +12007,19 @@
             html += '<div class="pb-section-body">';
             for (const item of gItems) {
                 const itemId = String(item['№ п/п'] ?? '');
-                const name = item['Обозначение кабеля, провода'] || '(без обозначения)';
+                const dept   = item['Отделение, производство'] || '(без отделения)';
+                const purpose = item['Назначение кабеля'] || '';
+                const purposeCls = cablePurposeClass(purpose);
                 const start = item['Начало трассы'] || '';
                 const end   = item['Конец трассы'] || '';
-                // «Назначение кабеля» не выводим в карточке — оно уже в заголовке подгруппы.
 
                 html += '<div class="cable-card" data-cable-id="' + cableEsc(itemId) + '" data-mode="' + mode + '">';
                 html += '<div class="cable-card-header" onclick="cableOpenDetail(\x27' + cableEsc(itemId) + '\x27)">';
                 html += '<div class="cable-card-header-inner">';
                 html += '<div class="cable-card-text">';
-                html += '<div class="cable-card-title">' + cableEsc(name) + '</div>';
+                // Заголовок: 1-я строка — Отделение, 2-я строка — Назначение.
+                html += '<div class="cable-card-title">' + cableEsc(dept) + '</div>';
+                if (purpose) html += '<div class="cable-card-purpose ' + purposeCls + '">' + cableEsc(purpose) + '</div>';
                 let subtitle = '';
                 if (start) subtitle += start;
                 if (end)   subtitle += (subtitle ? ' → ' : '') + end;
@@ -12061,8 +12065,11 @@
         const titleEl = document.getElementById('cableDetailTitle');
         const content = document.getElementById('cableDetailContent');
         if (!titleEl || !content) return;
-        const name = item['Обозначение кабеля, провода'] || '(без обозначения)';
-        titleEl.textContent = name;
+        // Заголовок страницы кабеля — Отделение + Назначение (как в карточке).
+        const _dept = item['Отделение, производство'] || '(без отделения)';
+        const _purpose = item['Назначение кабеля'] || '';
+        const detailTitle = _purpose ? (_dept + ' — ' + _purpose) : _dept;
+        titleEl.textContent = detailTitle;
 
         let html = '<div class="cable-detail-card">';
         html += '<div class="cable-detail-rows">';
