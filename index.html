@@ -10128,6 +10128,47 @@
         return '';
     }
 
+    // Возвращает timestamp для сортировки по «Дате утв.».
+    // Поддерживаемые форматы:
+    //   • ISO:      'YYYY-MM-DD' (например '1994-05-16')
+    //   • Russian:  'DD.MM.YYYY' (например '16.05.1994')
+    //   • Excel serial: число > 30000 (дней с 30.12.1899)
+    //   • '00.00.00' / пусто / нераспознанное → Infinity (в конец списка).
+    // Это позволяет единообразно сортировать проекты от старых к новым,
+    // отправляя проекты без даты в конец каждой группы.
+    function projectDateSortValue(dateVal) {
+        if (dateVal === null || dateVal === undefined) return Infinity;
+        // Excel serial date
+        const num = parseFloat(dateVal);
+        if (!isNaN(num) && num > 30000) {
+            const epoch = Date.UTC(1899, 11, 30);
+            const t = epoch + num * 86400000;
+            return isNaN(t) ? Infinity : t;
+        }
+        const str = String(dateVal).trim();
+        if (!str) return Infinity;
+        // ISO YYYY-MM-DD
+        let m = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (m) {
+            const t = Date.UTC(+m[1], +m[2] - 1, +m[3]);
+            return isNaN(t) ? Infinity : t;
+        }
+        // DD.MM.YYYY (включая невалидные '00.00.00' → Infinity)
+        m = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/);
+        if (m) {
+            let year = +m[3];
+            if (year < 100) year += 2000;
+            const day = +m[1];
+            const month = +m[2];
+            if (day === 0 || month === 0 || year === 0) return Infinity;
+            const t = Date.UTC(year, month - 1, day);
+            return isNaN(t) ? Infinity : t;
+        }
+        // Последняя попытка — через Date.parse
+        const t = Date.parse(str);
+        return isNaN(t) ? Infinity : t;
+    }
+
     async function projectInitSorted(mode) {
         if (!projectLoaded || !projectData) {
             try {
@@ -10174,14 +10215,20 @@
         const query = projectNorm((document.getElementById(id.search)?.value || '').trim());
         let filtered = projectData.projects || [];
 
-        // Сортировка по столбцу «Отделение» (production-like)
+        // Сортировка: по «Отделению», внутри отделения — по «Дате утв.» (старые → новые).
         const sortKey = 'Отделение';
         filtered.sort((a, b) => {
             const va = (a[sortKey] || '').toString().toLowerCase();
             const vb = (b[sortKey] || '').toString().toLowerCase();
             if (va < vb) return -1;
             if (va > vb) return 1;
-            // Внутри отделения — по наименованию проекта
+            // Внутри отделения — по дате утверждения (от старых к новым).
+            // Проекты без даты ('00.00.00' / пусто) уходят в конец группы.
+            const da = projectDateSortValue(a['Дата утв.']);
+            const db = projectDateSortValue(b['Дата утв.']);
+            if (da < db) return -1;
+            if (da > db) return 1;
+            // Совпадающие даты (в т.ч. обе Infinity) — добиваем по наименованию.
             const na = (a['Наименование проекта'] || '').toString().toLowerCase();
             const nb = (b['Наименование проекта'] || '').toString().toLowerCase();
             if (na < nb) return -1;
@@ -10283,11 +10330,16 @@
             const g = d[sortKey] || '(без отделения)';
             return g === group;
         });
-        // Сортировка по № проекта (без подгрупп по наименованию —
-        // просто плоский список проектов с переходом в карточки).
+        // Сортировка по «Дате утв.» (от старых к новым).
+        // Проекты без даты ('00.00.00' / пусто) уходят в конец списка.
         items.sort((a, b) => {
-            const na = (a['№ проекта'] || '').toString().toLowerCase();
-            const nb = (b['№ проекта'] || '').toString().toLowerCase();
+            const da = projectDateSortValue(a['Дата утв.']);
+            const db = projectDateSortValue(b['Дата утв.']);
+            if (da < db) return -1;
+            if (da > db) return 1;
+            // Совпадающие даты (в т.ч. обе Infinity) — добиваем по наименованию.
+            const na = (a['Наименование проекта'] || '').toString().toLowerCase();
+            const nb = (b['Наименование проекта'] || '').toString().toLowerCase();
             if (na < nb) return -1;
             if (na > nb) return 1;
             return 0;
