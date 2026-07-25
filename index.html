@@ -10388,7 +10388,7 @@
 
         // Внутри отделения — подгруппы по ГОДУ из «Даты утв.» (без свёртывания).
         // Используется класс .pb-section.static — тело всегда раскрыто,
-        // заголовок без кликабельного chevron. 'Без даты' идёт последней.
+        // заголовок без кликабельного chevron. 'Без даты' идёт ПЕРВОЙ.
         const yearGroups = {};
         const yearOrder = [];
         for (const item of items) {
@@ -10398,8 +10398,8 @@
         }
         yearOrder.sort((a, b) => {
             if (a === 'Без даты' && b === 'Без даты') return 0;
-            if (a === 'Без даты') return 1;
-            if (b === 'Без даты') return -1;
+            if (a === 'Без даты') return -1;
+            if (b === 'Без даты') return 1;
             const na = parseInt(a, 10);
             const nb = parseInt(b, 10);
             if (na < nb) return -1;
