@@ -4857,7 +4857,7 @@
 
             <div id="plan114ImgContainer" style="padding: 12px; text-align: center;">
                 <div id="plan114Loading" style="padding: 40px 20px; text-align: center; color: rgba(255,255,255,0.5); font-size: 13px;">Загрузка плана…</div>
-                <img id="plan114Img" alt="" style="display:none; max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 16px rgba(0,0,0,0.35); background: rgba(255,255,255,0.03);" />
+                <img id="plan114Img" alt="" referrerpolicy="no-referrer" style="display:none; max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 16px rgba(0,0,0,0.35); background: rgba(255,255,255,0.03);" />
             </div>
 
             <a id="plan114OrigLink" href="#" target="_blank" rel="noopener" style="display:none; margin: 8px 16px 24px; padding: 12px 16px; text-align: center; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; color: #e8e8e8; text-decoration: none; font-size: 14px; font-weight: 600;">Открыть оригинал на Яндекс Диске</a>
@@ -12208,9 +12208,9 @@
         { id: 'shk1-cpu', title: 'ЩК-1 (ЦПУ)', yandexUrl: 'https://disk.yandex.ru/i/GGPl3ySAkvZPiw' },
         { id: 'shk2-rpa', title: 'ЩК-2 (РПА)', yandexUrl: 'https://disk.yandex.ru/i/MyxS4E5JPAEZRw' },
         { id: 'otm-00',   title: 'Отм. 0.0 м', yandexUrl: 'https://disk.yandex.ru/i/qo5r6pc5TTUPuQ' },
-        { id: 'otm-06',   title: 'Отм. 0.6 м', yandexUrl: 'https://disk.yandex.ru/i/KMJfAI6IA2w9LA' },
-        { id: 'otm-12',   title: 'Отм. 1.2 м', yandexUrl: 'https://disk.yandex.ru/i/IEIR4rx-Ky1sLg' },
-        { id: 'otm-18',   title: 'Отм. 1.8 м', yandexUrl: 'https://disk.yandex.ru/i/xaTilBnxdVWjcQ' }
+        { id: 'otm-06',   title: 'Отм. 6.0 м', yandexUrl: 'https://disk.yandex.ru/i/KMJfAI6IA2w9LA' },
+        { id: 'otm-12',   title: 'Отм. 12.0 м', yandexUrl: 'https://disk.yandex.ru/i/IEIR4rx-Ky1sLg' },
+        { id: 'otm-18',   title: 'Отм. 18.0 м', yandexUrl: 'https://disk.yandex.ru/i/xaTilBnxdVWjcQ' }
     ];
 
     // Инициализация кнопки входа «План корпуса 114» на странице КИП ИОС
@@ -12295,8 +12295,11 @@
             if (!imgUrl) throw new Error('No image URL in API response');
 
             // Шаг 3: предзагрузить картинку (await onload)
+            // referrerPolicy='no-referrer' обязателен: Яндекс.Диск отдаёт 403
+            // на картинки с Referer от сторонних доменов (GitHub Pages и т.п.).
             await new Promise(function(resolve, reject) {
                 const img = new Image();
+                img.referrerPolicy = 'no-referrer';
                 // Прерывание через 30 сек на случай зависания
                 const timer = setTimeout(function() { reject(new Error('Image load timeout')); }, 30000);
                 img.onload = function() { clearTimeout(timer); resolve(); };

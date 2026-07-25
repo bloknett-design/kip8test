@@ -11,7 +11,7 @@
 // свежие версии файлов из ASSETS.
 // ============================================================
 
-const CACHE_VERSION = 'kipia-test-v180';
+const CACHE_VERSION = 'kipia-test-v181';
 const CACHE_NAME = CACHE_VERSION;
 
 // Отдельный кэш для картинок Google Drive (превью + полные).
@@ -20,7 +20,7 @@ const CACHE_NAME = CACHE_VERSION;
 // заново скачивать все 26 картинок после каждого релиза.
 // Инкрементируйте IMAGE_CACHE_VERSION только если нужно принудительно сбросить
 // кэш картинок (например, если в Google Drive заменили файлы с тем же ID).
-const IMAGE_CACHE_VERSION = 'kipia-images-test-v1';
+const IMAGE_CACHE_VERSION = 'kipia-images-test-v2';
 const IMAGE_CACHE_NAME = IMAGE_CACHE_VERSION;
 
 // Файлы для пред-кэширования при установке SW.
@@ -244,6 +244,10 @@ self.addEventListener('fetch', event => {
     // pathname стабилен (содержит только путь к файлу на сервере Я.Диска),
     // query содержит временный токен — его отбрасываем.
     //
+    // ВАЖНО: referrerPolicy='no-referrer' обязателен. Яндекс.Диск отдаёт 403
+    // на картинки с Referer от сторонних доменов (GitHub Pages и т.п.) —
+    // это защита от хотлинкинга. Без no-referrer картинки молча не грузятся.
+    //
     // Стратегия: STALE-WHILE-REVALIDATE через IMAGE_CACHE_NAME
     // (переживает обновления CACHE_VERSION — пользователю не нужно
     // заново скачивать все 6 планов после каждого релиза).
@@ -255,8 +259,10 @@ self.addEventListener('fetch', event => {
       event.respondWith(
         caches.open(IMAGE_CACHE_NAME).then(cache => {
           return cache.match(cacheKey).then(cached => {
-            // Фоновое обновление в сети (не блокирует ответ)
-            const fetchPromise = fetch(request).then(response => {
+            // Фоновое обновление в сети (не блокирует ответ).
+            // referrerPolicy:'no-referrer' — без него Яндекс.Диск отдаёт 403
+            // для запросов с Referer от сторонних доменов.
+            const fetchPromise = fetch(request, { referrerPolicy: 'no-referrer' }).then(response => {
               if (response.ok || response.type === 'opaque') {
                 // Кэшируем по нормализованному ключу (без query)
                 cache.put(cacheKey, response.clone());
