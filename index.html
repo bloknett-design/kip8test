@@ -8203,11 +8203,14 @@
             return idv !== 0 && idv !== '0' && String(idv ?? '').trim() !== '0';
         });
 
-        // Сортировка
+        // Сортировка. Для вкладки «по производству» сортируем по наименованию —
+        // это задаёт порядок приборов внутри группы производства, что нужно для
+        // корректной подгруппировки по наименованию (см. ниже).
         const sortKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
+        const innerSortKey = mode === 'prod' ? 'Наименование' : sortKey;
         filtered.sort((a, b) => {
-            const va = (a[sortKey] || '').toString().toLowerCase();
-            const vb = (b[sortKey] || '').toString().toLowerCase();
+            const va = (a[innerSortKey] || '').toString().toLowerCase();
+            const vb = (b[innerSortKey] || '').toString().toLowerCase();
             if (va < vb) return -1;
             if (va > vb) return 1;
             return 0;
@@ -8304,39 +8307,98 @@
             html += '</div>';
             html += '<div class="pb-section-body">';
 
-            for (const dev of items) {
+            // Для вкладки «по производству»: внутри группы производства
+            // дополнительно сгруппировать приборы по наименованию. Имя прибора
+            // тогда выносится в заголовок подгруппы, и в карточке его можно
+            // не показывать (оно дублировало бы заголовок подгруппы).
+            if (mode === 'prod') {
+                const subgroups = {};
+                const subgroupOrder = [];
+                for (const dev of items) {
+                    const sg = dev['Наименование'] || '(без названия)';
+                    if (!subgroups[sg]) { subgroups[sg] = []; subgroupOrder.push(sg); }
+                    subgroups[sg].push(dev);
+                }
+                for (const sg of subgroupOrder) {
+                    const sgItems = subgroups[sg];
+                    html += '<div class="pb-section dev-group dev-subgroup static">';
+                    html += '<div class="pb-section-title">';
+                    html += '<span class="pb-section-title-text">' + devMark(sg, query) + '</span>';
+                    html += '<span class="pb-section-title-count">' + sgItems.length + '</span>';
+                    html += '<span class="pb-section-arrow"></span>';
+                    html += '</div>';
+                    html += '<div class="pb-section-body">';
+                    for (const dev of sgItems) {
+                        const devId = String(dev['ID'] ?? '');
+                        const name = dev['Наименование'] || '(без названия)';
+                        const type = dev['Тип'] || '';
+                        const number = dev['№ прибора'] || '';
+                        const place = dev['Место установки'] || '';
+                        const imgUrl = devGetImageUrl(dev);
 
-                const devId = String(dev['ID'] ?? '');
-                const name = dev['Наименование'] || '(без названия)';
-                const type = dev['Тип'] || '';
-                const number = dev['№ прибора'] || '';
-                const place = dev['Место установки'] || '';
-                const imgUrl = devGetImageUrl(dev);
+                        html += '<div class="dev-card" data-dev-id="' + devEsc(devId) + '" data-mode="' + mode + '">';
+                        html += '<div class="dev-card-header" onclick="devOpenDetail(\'' + devEsc(devId) + '\')">';
+                        html += '<div class="dev-card-header-inner">';
+                        html += '<div class="dev-card-image-wrap">';
+                        html += '<img class="dev-card-image" src="' + devEsc(imgUrl) + '" alt="' + devEsc(name) + '" loading="lazy">';
+                        // Имя прибора уже в заголовке подгруппы — overlay не нужен.
+                        html += '</div>';
+                        html += '<div class="dev-card-text">';
+                        // Имя прибора дублирует заголовок подгруппы — пропускаем .dev-card-title.
+                        let subtitle = '';
+                        if (type) subtitle += type;
+                        if (number) subtitle += (subtitle ? ' · №' : '№') + number;
+                        if (place) subtitle += (subtitle ? ' · ' : '') + place;
+                        if (subtitle) html += '<div class="dev-card-subtitle">' + devMark(subtitle, query) + '</div>';
+                        html += '</div>';
+                        html += '<div class="dev-card-info-block">';
+                        if (type) html += '<div class="dev-card-info-row">' + devMark(type, query) + '</div>';
+                        if (number) html += '<div class="dev-card-info-row" style="color:#6aa6e0;font-weight:600;">№ ' + devMark(number, query) + '</div>';
+                        if (place) html += '<div class="dev-card-info-row">' + devMark(place, query) + '</div>';
+                        html += '</div>';
+                        html += '<span class="dev-card-arrow"></span>';
+                        html += '</div>'; // header-inner
+                        html += '</div>'; // header
+                        html += '</div>'; // card
+                    }
+                    html += '</div>'; // pb-section-body (subgroup)
+                    html += '</div>'; // pb-section (subgroup)
+                }
+            } else {
+                for (const dev of items) {
 
-                html += '<div class="dev-card" data-dev-id="' + devEsc(devId) + '" data-mode="' + mode + '">';
-                html += '<div class="dev-card-header" onclick="devOpenDetail(\'' + devEsc(devId) + '\')">';
-                html += '<div class="dev-card-header-inner">';
-                html += '<div class="dev-card-image-wrap">';
-                html += '<img class="dev-card-image" src="' + devEsc(imgUrl) + '" alt="' + devEsc(name) + '" loading="lazy">';
-                html += '<div class="dev-card-name-overlay">' + devMark(name, query) + '</div>';
-                html += '</div>';
-                html += '<div class="dev-card-text">';
-                html += '<div class="dev-card-title">' + devMark(name, query) + '</div>';
-                let subtitle = '';
-                if (type) subtitle += type;
-                if (number) subtitle += (subtitle ? ' · №' : '№') + number;
-                if (place) subtitle += (subtitle ? ' · ' : '') + place;
-                if (subtitle) html += '<div class="dev-card-subtitle">' + devMark(subtitle, query) + '</div>';
-                html += '</div>';
-                html += '<div class="dev-card-info-block">';
-                if (type) html += '<div class="dev-card-info-row">' + devMark(type, query) + '</div>';
-                if (number) html += '<div class="dev-card-info-row" style="color:#6aa6e0;font-weight:600;">№ ' + devMark(number, query) + '</div>';
-                if (place) html += '<div class="dev-card-info-row">' + devMark(place, query) + '</div>';
-                html += '</div>';
-                html += '<span class="dev-card-arrow"></span>';
-                html += '</div>'; // header-inner
-                html += '</div>'; // header
-                html += '</div>'; // card
+                    const devId = String(dev['ID'] ?? '');
+                    const name = dev['Наименование'] || '(без названия)';
+                    const type = dev['Тип'] || '';
+                    const number = dev['№ прибора'] || '';
+                    const place = dev['Место установки'] || '';
+                    const imgUrl = devGetImageUrl(dev);
+
+                    html += '<div class="dev-card" data-dev-id="' + devEsc(devId) + '" data-mode="' + mode + '">';
+                    html += '<div class="dev-card-header" onclick="devOpenDetail(\'' + devEsc(devId) + '\')">';
+                    html += '<div class="dev-card-header-inner">';
+                    html += '<div class="dev-card-image-wrap">';
+                    html += '<img class="dev-card-image" src="' + devEsc(imgUrl) + '" alt="' + devEsc(name) + '" loading="lazy">';
+                    html += '<div class="dev-card-name-overlay">' + devMark(name, query) + '</div>';
+                    html += '</div>';
+                    html += '<div class="dev-card-text">';
+                    html += '<div class="dev-card-title">' + devMark(name, query) + '</div>';
+                    let subtitle = '';
+                    if (type) subtitle += type;
+                    if (number) subtitle += (subtitle ? ' · №' : '№') + number;
+                    if (place) subtitle += (subtitle ? ' · ' : '') + place;
+                    if (subtitle) html += '<div class="dev-card-subtitle">' + devMark(subtitle, query) + '</div>';
+                    html += '</div>';
+                    html += '<div class="dev-card-info-block">';
+                    if (type) html += '<div class="dev-card-info-row">' + devMark(type, query) + '</div>';
+                    if (number) html += '<div class="dev-card-info-row" style="color:#6aa6e0;font-weight:600;">№ ' + devMark(number, query) + '</div>';
+                    if (place) html += '<div class="dev-card-info-row">' + devMark(place, query) + '</div>';
+                    html += '</div>';
+                    html += '<span class="dev-card-arrow"></span>';
+                    html += '</div>'; // header-inner
+                    html += '</div>'; // header
+                    html += '</div>'; // card
+                }
             }
             html += '</div>'; // section-body
             html += '</div>'; // section
