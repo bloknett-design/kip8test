@@ -4704,7 +4704,7 @@
                 <div class="menu-btn" id="cablesEntryBtn" style="border-color:rgba(120,144,100,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#8aa070;">Кабельный журнал</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(120,144,100,0.4);">›</i></div>
             </div>
             <div class="menu-btn-row">
-                <div class="menu-btn" id="plan114EntryBtn" style="border-color:rgba(120,140,170,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#7896b0;">План корпуса 114</div><div class="menu-btn-sublabel">Раздел в разработке</div></div><i class="menu-btn-arrow" style="color:rgba(120,140,170,0.4);">›</i></div>
+                <div class="menu-btn" id="plan114EntryBtn" style="border-color:rgba(120,140,170,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#7896b0;">План корпуса 114</div><div class="menu-btn-sublabel">6 планов помещений</div></div><i class="menu-btn-arrow" style="color:rgba(120,140,170,0.4);">›</i></div>
             </div>
         </div>
 
@@ -4837,10 +4837,32 @@
             <div id="cableGroupList"></div>
         </div>
 
-        <!-- ======================== ПЛАН КОРПУСА 114 (заглушка) ======================== -->
+        <!-- ======================== ПЛАН КОРПУСА 114 (список планов) ======================== -->
         <div id="page-plan-114" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">План корпуса 114</div></div>
-            <div class="pb-empty" style="margin-top:32px;">Раздел в разработке.<br>Содержимое появится позже.</div>
+
+            <div class="content-header" style="padding: 14px 20px 10px;">
+                <h2 style="color: #e0e0e0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">Планы помещений</h2>
+                <p style="color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 5px;">Тапните по пункту, чтобы открыть план. Первая загрузка требует интернета.</p>
+            </div>
+
+            <div class="menu-btn-row" id="plan114List">
+                <!-- Кнопки добавляются динамически из PLAN114_ITEMS (см. JS) -->
+            </div>
+        </div>
+
+        <!-- ======================== ПЛАН КОРПУСА 114 — ПРОСМОТР КАРТИНКИ ======================== -->
+        <div id="page-plan-114-view" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="plan114ViewTitle">План</div></div>
+
+            <div id="plan114ImgContainer" style="padding: 12px; text-align: center;">
+                <div id="plan114Loading" style="padding: 40px 20px; text-align: center; color: rgba(255,255,255,0.5); font-size: 13px;">Загрузка плана…</div>
+                <img id="plan114Img" alt="" style="display:none; max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 16px rgba(0,0,0,0.35); background: rgba(255,255,255,0.03);" />
+            </div>
+
+            <a id="plan114OrigLink" href="#" target="_blank" rel="noopener" style="display:none; margin: 8px 16px 24px; padding: 12px 16px; text-align: center; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; color: #e8e8e8; text-decoration: none; font-size: 14px; font-weight: 600;">Открыть оригинал на Яндекс Диске</a>
+
+            <div id="plan114Error" style="display:none; padding: 40px 20px; text-align: center; color: rgba(255,255,255,0.5); font-size: 13px;">Не удалось загрузить план.<br>Проверьте подключение к интернету и попробуйте снова.</div>
         </div>
 
 
@@ -12175,7 +12197,23 @@
         sublabel.textContent = count + ' ' + cablePlural(count, ['кабель', 'кабеля', 'кабелей']) + ' в журнале';
     }
 
-    // ===== Кнопка «План корпуса 114» на странице КИП И ОС (заглушка) =====
+    // ===== Кнопка «План корпуса 114» на странице КИП И ОС + список планов + просмотр =====
+    // Реестр 6 планов помещений корпуса 114.
+    // yandexUrl — публичная ссылка вида https://disk.yandex.ru/i/<fileId>.
+    // Сами картинки НЕ хранятся в репозитории — они загружаются через
+    // Yandex Disk Public API по запросу при первом открытии пункта и
+    // кэшируются Service Worker'ом (downloader.disk.yandex.ru → IMAGE_CACHE_NAME,
+    // ключ кэша = pathname без query, чтобы временный токен не ломал кэш).
+    const PLAN114_ITEMS = [
+        { id: 'shk1-cpu', title: 'ЩК-1 (ЦПУ)', yandexUrl: 'https://disk.yandex.ru/i/GGPl3ySAkvZPiw' },
+        { id: 'shk2-rpa', title: 'ЩК-2 (РПА)', yandexUrl: 'https://disk.yandex.ru/i/MyxS4E5JPAEZRw' },
+        { id: 'otm-00',   title: 'Отм. 0.0 м', yandexUrl: 'https://disk.yandex.ru/i/qo5r6pc5TTUPuQ' },
+        { id: 'otm-06',   title: 'Отм. 0.6 м', yandexUrl: 'https://disk.yandex.ru/i/KMJfAI6IA2w9LA' },
+        { id: 'otm-12',   title: 'Отм. 1.2 м', yandexUrl: 'https://disk.yandex.ru/i/IEIR4rx-Ky1sLg' },
+        { id: 'otm-18',   title: 'Отм. 1.8 м', yandexUrl: 'https://disk.yandex.ru/i/xaTilBnxdVWjcQ' }
+    ];
+
+    // Инициализация кнопки входа «План корпуса 114» на странице КИП ИОС
     function plan114InitEntryButton() {
         const btn = document.getElementById('plan114EntryBtn');
         if (!btn || btn.dataset.initialized) return;
@@ -12184,6 +12222,105 @@
             if (navigator.vibrate) navigator.vibrate(15);
             navigateTo('plan-114');
         });
+    }
+
+    // Рендер списка планов на странице page-plan-114.
+    // Вызывается один раз при первом открытии страницы (флаг plan114ListRendered).
+    let plan114ListRendered = false;
+    function plan114RenderList() {
+        if (plan114ListRendered) return;
+        const list = document.getElementById('plan114List');
+        if (!list) return;
+        // Сине-стальная палитра раздела (см. Системный_промт...md, «Цветовая палитра КИП ИОС»)
+        const borderColor = 'rgba(120,140,170,0.35)';
+        const labelColor = '#7896b0';
+        const arrowColor = 'rgba(120,140,170,0.4)';
+        list.innerHTML = PLAN114_ITEMS.map(function(item) {
+            // Без подзаголовка — только название пункта (как выбрал пользователь)
+            return '<div class="menu-btn" style="border-color:' + borderColor + ';" onclick="plan114OpenView(\'' + item.id + '\')">' +
+                '<div class="menu-btn-text">' +
+                '<div class="menu-btn-label" style="color:' + labelColor + ';">' + item.title + '</div>' +
+                '</div>' +
+                '<i class="menu-btn-arrow" style="color:' + arrowColor + ';">›</i>' +
+                '</div>';
+        }).join('');
+        plan114ListRendered = true;
+    }
+
+    // Открытие страницы просмотра плана по id из PLAN114_ITEMS.
+    // Шаги:
+    //   1. Сменить страницу на page-plan-114-view через navigateTo().
+    //   2. Обновить заголовок страницы и ссылку «Открыть оригинал».
+    //   3. Показать индикатор «Загрузка…», скрыть старую картинку и ошибку.
+    //   4. Запросить Yandex Disk Public API → получить download_url (ORIGINAL).
+    //   5. Предзагрузить картинку через new Image() (чтобы избежать «дребезга» при смене src).
+    //   6. Отобразить картинку, скрыть индикатор.
+    //   7. При ошибке — показать блок plan114Error.
+    async function plan114OpenView(id) {
+        const item = PLAN114_ITEMS.find(function(x) { return x.id === id; });
+        if (!item) return;
+        if (navigator.vibrate) navigator.vibrate(15);
+
+        navigateTo('plan-114-view');
+
+        // Обновить заголовок страницы
+        const titleEl = document.getElementById('plan114ViewTitle');
+        if (titleEl) titleEl.textContent = item.title;
+
+        // Обновить ссылку «Открыть оригинал»
+        const origLink = document.getElementById('plan114OrigLink');
+        if (origLink) {
+            origLink.href = item.yandexUrl;
+            origLink.style.display = 'none'; // покажем после успешной загрузки
+        }
+
+        // Сбросить состояние UI
+        const loadingEl = document.getElementById('plan114Loading');
+        const imgEl = document.getElementById('plan114Img');
+        const errorEl = document.getElementById('plan114Error');
+        if (loadingEl) loadingEl.style.display = '';
+        if (imgEl) { imgEl.style.display = 'none'; imgEl.removeAttribute('src'); }
+        if (errorEl) errorEl.style.display = 'none';
+
+        try {
+            // Шаг 1: запрос к Yandex Disk Public API
+            const apiUrl = 'https://cloud-api.yandex.net/v1/disk/public/resources?public_key=' + encodeURIComponent(item.yandexUrl);
+            const resp = await fetch(apiUrl);
+            if (!resp.ok) throw new Error('API error: ' + resp.status);
+            const data = await resp.json();
+
+            // Шаг 2: найти URL оригинального изображения (размер ORIGINAL)
+            const orig = (data.sizes || []).find(function(s) { return s.name === 'ORIGINAL'; });
+            const imgUrl = orig ? orig.url : (data.preview || null);
+            if (!imgUrl) throw new Error('No image URL in API response');
+
+            // Шаг 3: предзагрузить картинку (await onload)
+            await new Promise(function(resolve, reject) {
+                const img = new Image();
+                // Прерывание через 30 сек на случай зависания
+                const timer = setTimeout(function() { reject(new Error('Image load timeout')); }, 30000);
+                img.onload = function() { clearTimeout(timer); resolve(); };
+                img.onerror = function() { clearTimeout(timer); reject(new Error('Image load failed')); };
+                img.src = imgUrl;
+            });
+
+            // Шаг 4: отобразить картинку
+            if (imgEl) {
+                imgEl.src = imgUrl;
+                imgEl.alt = item.title;
+                imgEl.style.display = '';
+            }
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (origLink) origLink.style.display = ''; // показать кнопку «Открыть оригинал»
+        } catch (err) {
+            // Офлайн или ошибка API/загрузки — показать ошибку
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (imgEl) imgEl.style.display = 'none';
+            if (origLink) origLink.style.display = 'none';
+            if (errorEl) errorEl.style.display = '';
+            // Лог в консоль для отладки (без токенов и персональных данных)
+            console.warn('[plan114] Не удалось загрузить план:', item.id, err && err.message);
+        }
     }
 
 
@@ -12889,6 +13026,7 @@
         if (page === 'kip-ios') { setTimeout(() => { if (typeof projectsInitEntryButton === 'function') projectsInitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof cablesInitEntryButton === 'function') cablesInitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof plan114InitEntryButton === 'function') plan114InitEntryButton(); }, 30); }
+        if (page === 'plan-114') { setTimeout(() => { if (typeof plan114RenderList === 'function') plan114RenderList(); }, 30); }
         if (TICKET_IDS.includes(page)) { setTimeout(() => initTicketsPage(page), 30); }
         if (page === 'exam-tickets') { setTimeout(() => loadTicketsData(), 30); }
         // Снять блокировку прокрутки и закрыть открытые билеты при уходе со страницы
@@ -13050,7 +13188,7 @@
         'devices':       { label: 'Приборы',                  sublabel: 'Перечень КИП ИОС — 1312 приборов',              target: 'devices',       category: 'docs' },
         'projects':      { label: 'Проекты',                  sublabel: 'Перечень проектов КИП пр-ва ИОС',               target: 'projects',      category: 'docs' },
         'cables':        { label: 'Кабельный журнал',        sublabel: 'Кабельный журнал КИП пр-ва ИОС',                 target: 'cables',        category: 'docs' },
-        'plan-114':      { label: 'План корпуса 114',        sublabel: 'Раздел в разработке',                            target: 'plan-114',      category: 'docs' }
+        'plan-114':      { label: 'План корпуса 114',        sublabel: '6 планов помещений',                             target: 'plan-114',      category: 'docs' }
     };
     const PINNED_STORAGE_KEY = 'pinnedSubsections';
     let currentPinKey = null; // ключ подраздела, для которого открыт sheet

@@ -11,7 +11,7 @@
 // свежие версии файлов из ASSETS.
 // ============================================================
 
-const CACHE_VERSION = 'kipia-test-v179';
+const CACHE_VERSION = 'kipia-test-v180';
 const CACHE_NAME = CACHE_VERSION;
 
 // Отдельный кэш для картинок Google Drive (превью + полные).
@@ -234,7 +234,45 @@ self.addEventListener('fetch', event => {
       return;
     }
 
-    // Прочие внешние ресурсы (шрифты Google, CDN) — network-first
+    // ===== Картинки с Яндекс Диска (downloader.disk.yandex.ru) =====
+    // Используются в разделе «План корпуса 114» — 6 планов помещений.
+    // URL картинок содержит временный токен (живёт ~1 час), поэтому
+    // использовать URL как ключ кэша напрямую нельзя — при следующем
+    // запросе к API будет получен новый URL, и кэш не найдётся.
+    //
+    // Решение: ключом кэша служит pathname (без query-параметров).
+    // pathname стабилен (содержит только путь к файлу на сервере Я.Диска),
+    // query содержит временный токен — его отбрасываем.
+    //
+    // Стратегия: STALE-WHILE-REVALIDATE через IMAGE_CACHE_NAME
+    // (переживает обновления CACHE_VERSION — пользователю не нужно
+    // заново скачивать все 6 планов после каждого релиза).
+    const isYandexDiskImage = url.hostname === 'downloader.disk.yandex.ru';
+
+    if (isYandexDiskImage) {
+      // Ключ кэша: URL БЕЗ query (отбрасываем временный токен).
+      const cacheKey = new Request(url.pathname, { method: 'GET' });
+      event.respondWith(
+        caches.open(IMAGE_CACHE_NAME).then(cache => {
+          return cache.match(cacheKey).then(cached => {
+            // Фоновое обновление в сети (не блокирует ответ)
+            const fetchPromise = fetch(request).then(response => {
+              if (response.ok || response.type === 'opaque') {
+                // Кэшируем по нормализованному ключу (без query)
+                cache.put(cacheKey, response.clone());
+              }
+              return response;
+            }).catch(() => null);
+            // Если есть кэш — отдаём сразу; сеть обновит кэш для следующего раза.
+            // Если кэша нет — ждём сеть.
+            return cached || fetchPromise;
+          });
+        })
+      );
+      return;
+    }
+
+    // Прочие внешние ресурсы (шрифты Google, CDN, cloud-api.yandex.net) — network-first
     event.respondWith(
       fetch(request)
         .then(response => {
