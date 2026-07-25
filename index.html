@@ -10250,6 +10250,31 @@
             groups[g].push(d);
         }
 
+        // Сортировка самих подгрупп (отделений) по «Дате утв.» —
+        // подгруппа с самым старым проектом идёт первой; подгруппы, где все даты
+        // пустые/невалидные ('00.00.00'), уходят в конец. При совпадении «минимальной»
+        // даты добиваем по алфавиту (имя отделения).
+        groupOrder.sort((a, b) => {
+            const itemsA = groups[a];
+            const itemsB = groups[b];
+            let minA = Infinity, minB = Infinity;
+            for (const it of itemsA) {
+                const v = projectDateSortValue(it['Дата утв.']);
+                if (v < minA) minA = v;
+            }
+            for (const it of itemsB) {
+                const v = projectDateSortValue(it['Дата утв.']);
+                if (v < minB) minB = v;
+            }
+            if (minA < minB) return -1;
+            if (minA > minB) return 1;
+            const va = a.toString().toLowerCase();
+            const vb = b.toString().toLowerCase();
+            if (va < vb) return -1;
+            if (va > vb) return 1;
+            return 0;
+        });
+
         info.textContent = '';
 
         if (filtered.length === 0) {
