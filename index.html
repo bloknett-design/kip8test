@@ -11868,7 +11868,7 @@
         if (kipIsProjectLinkFilterActive('cables')) {
             html += kipRenderFilterBadge('cables');
         }
-        html += '<div class="cable-sorted-list' + (query ? ' searching' : '') + '>';
+        html += '<div class="cable-sorted-list' + (query ? ' searching' : '') + '">';
         for (const g of groupOrder) {
             const items = groups[g];
             const groupKey = mode + '|' + g;
