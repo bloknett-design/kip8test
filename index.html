@@ -1296,6 +1296,16 @@
     .sidebar-group .sidebar-item-extra {
         padding-left: 32px;
     }
+    /* В раскрытой группе пункты-подразделы получают сплошной тёмный фон
+       (как в верхней части бокового меню), чтобы текст был читаем поверх
+       фоновой картинки Launch.png в нижней половине. Это касается только
+       тёмной темы — в светлой фон cream. */
+    .sidebar-group.expanded .sidebar-item-extra {
+        background: rgba(23, 33, 43, 0.92);
+    }
+    [data-theme="light"] .sidebar-group.expanded .sidebar-item-extra {
+        background: rgba(250, 249, 245, 0.92);
+    }
 
     /* Группа разделов с аккордеоном — по умолчанию только 3 первых пункта */
     .sidebar-item-extra { display: none; }
