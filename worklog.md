@@ -207,3 +207,31 @@ Stage Summary:
 - 14 картинок Яндекс.Диска в билетах теперь должны отображаться (после обновления PWA).
 - In-memory кэш разрешённых URL на 50 минут + SW-кэш картинок по pathname — работает офлайн после первой загрузки.
 - Версия: CACHE_VERSION=kipia-test-v184.
+
+---
+Task ID: 8
+Agent: AI Assistant (GLM)
+Task: В разделе «Библиотека КИП и А» убрать над кнопками текст «Разделы библиотеки», а текст «Ссылки на облачные папки с документацией на Яндекс Диске» переместить в верхний бар под названием страницы.
+
+Work Log:
+- Нашёл блок в index.html (строки ~5833-5836): <div class="content-header"> с <h2>Разделы библиотеки</h2> и <p>Ссылки на облачные папки с документацией на Яндекс Диске</p>.
+- Удалил весь блок content-header целиком.
+- Добавил подзаголовок в page-inline-header:
+    <div class="page-inline-header-title page-inline-header-title-with-sub">
+      Библиотека КИП и А
+      <span class="page-inline-header-subtitle">Ссылки на облачные папки с документацией на Яндекс Диске</span>
+    </div>
+- Добавил новый универсальный CSS-класс .page-inline-header-title-with-sub (по образцу существующего .cable-detail-title-two-line):
+    • .page-inline-header-title-with-sub — line-height: 1.15, padding-top/bottom: 2px
+    • .page-inline-header-subtitle — display:block, font-size:11px, color:rgba(255,255,255,0.45), text-overflow:ellipsis
+    • Светлая тема — color:rgba(20,20,19,0.5)
+    • .page-content.scrolled — подзаголовок скрывается (display:none), т.к. компактный бар 40px не вмещает 2 строки
+- Подтвердил: grep «Разделы библиотеки» в index.html = 0, «Ссылки на облачные папки...» = 1 (только в новом подзаголовке).
+- CACHE_VERSION: v184 → v185 (обновился index.html).
+- Тесты: 207/207 ✓.
+- Git commit bbac316, push origin main успешно.
+
+Stage Summary:
+- Файлы: index.html, sw.js (commit bbac316)
+- Над кнопками больше нет текстового блока. В верхнем баре теперь 2 строки: «Библиотека КИП и А» + подзаголовок мелким текстом.
+- Версия: CACHE_VERSION=kipia-test-v185.
