@@ -1181,6 +1181,35 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
+    /* Универсальный двухстрочный заголовок страницы: верхняя строка — название,
+       нижняя (мелким приглушённым текстом) — подзаголовок.
+       Используется, например, на странице «Библиотека КИП и А». */
+    .page-inline-header-title.page-inline-header-title-with-sub {
+        line-height: 1.15;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
+    .page-inline-header-title.page-inline-header-title-with-sub .page-inline-header-subtitle {
+        display: block;
+        font-size: 11px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.45);
+        letter-spacing: 0;
+        text-shadow: none;
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    /* В светлом варианте темы подзаголовок чуть темнее для контраста */
+    [data-theme="light"] .page-inline-header-title.page-inline-header-title-with-sub .page-inline-header-subtitle {
+        color: rgba(20, 20, 19, 0.5);
+    }
+    /* В сжатом состоянии (прокрутка вниз) подзаголовок скрывается —
+       компактный заголовок 40px не вмещает 2 строки. */
+    .page-content.scrolled .page-inline-header-title.page-inline-header-title-with-sub .page-inline-header-subtitle {
+        display: none;
+    }
     /* Когда в баре есть поле поиска — дополнительный правый padding,
        чтобы текст заголовка не «залезал» под search input overlay. */
     .page-inline-header:has(.dev-header-search) .page-inline-header-title {
@@ -5827,13 +5856,8 @@
 
         <!-- ======================== БИБЛИОТЕКА КИП И А (ВНУТРЕННЯЯ) ======================== -->
         <div id="page-library-internal" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Библиотека КИП и А</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title page-inline-header-title-with-sub">Библиотека КИП и А<span class="page-inline-header-subtitle">Ссылки на облачные папки с документацией на Яндекс Диске</span></div></div>
 
-
-            <div class="content-header" style="padding: 14px 20px 10px;">
-                <h2 style="color: #e0e0e0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">Разделы библиотеки</h2>
-                <p style="color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 5px;">Ссылки на облачные папки с документацией на Яндекс Диске</p>
-            </div>
 
             <div class="menu-btn-row">
                 <a href="https://disk.yandex.ru/d/JyIJWdDwGsPOSA" target="_blank" rel="noopener" class="menu-btn" style="text-decoration: none; color: inherit;">
