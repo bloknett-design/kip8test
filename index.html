@@ -10468,7 +10468,10 @@
         { key: 'Статус проекта',       label: 'Статус проекта',       group: 2 },
         { key: 'Данные статуса',       label: 'Данные статуса',       group: 2 },
         { key: 'Дата утв.',            label: 'Дата утв.',            group: 3 },
-        { key: 'Файл проекта',         label: 'Файл проекта',         group: 3 },
+        // «Файл проекта» скрыт в карточке — вместо отдельной строки
+        // № проекта делается кликабельной ссылкой, если в «Файл проекта»
+        // есть рабочая ссылка (http:// или https://). См. projectRenderDetail.
+        { key: 'Файл проекта',         label: 'Файл проекта',         group: 3, hiddenInCard: true },
         { key: 'Примечание',           label: 'Примечание',           group: 4 },
         { key: 'Жёлтым отмечены приоритетные проекты', label: 'Приоритетный', group: 4 },
     ];
@@ -12022,6 +12025,14 @@
         const name = item['Наименование проекта'] || '(без названия)';
         titleEl.textContent = name;
 
+        // Рабочая ссылка на файл проекта — это URL (http:// или https://),
+        // извлечённый из гиперссылки Excel sync-projects.py.
+        // Локальные пути «Проекты_Files\...» не считаются рабочими ссылками.
+        const projectFileRaw = String(item['Файл проекта'] || '').trim();
+        const projectFileUrl = (projectFileRaw.startsWith('http://') || projectFileRaw.startsWith('https://'))
+            ? projectFileRaw
+            : '';
+
         let html = '<div class="project-detail-card">';
         html += '<div class="project-detail-rows">';
         for (const f of PROJECT_FIELDS) {
@@ -12038,7 +12049,19 @@
             const grpCls = f.group ? ' project-row-group-' + f.group : '';
             html += '<div class="project-detail-row' + grpCls + '">';
             html += '<div class="project-detail-label">' + projectEsc(f.label) + '</div>';
-            html += '<div class="project-detail-value">' + projectEsc(String(val)) + '</div>';
+            // № проекта — кликабельная ссылка, если есть рабочая ссылка на файл проекта.
+            // Используем тот же стиль, что и .kip-project-link (синяя ссылка со стрелкой),
+            // чтобы визуально отличать от обычного текста.
+            if (f.key === '№ проекта' && projectFileUrl) {
+                html += '<div class="project-detail-value">';
+                html += '<a class="kip-project-link" href="' + projectEsc(projectFileUrl) + '" target="_blank" rel="noopener noreferrer">';
+                html += '<span>' + projectEsc(String(val)) + '</span>';
+                html += '<span class="kip-project-link-arrow">↗</span>';
+                html += '</a>';
+                html += '</div>';
+            } else {
+                html += '<div class="project-detail-value">' + projectEsc(String(val)) + '</div>';
+            }
             html += '</div>';
         }
         html += '</div>';

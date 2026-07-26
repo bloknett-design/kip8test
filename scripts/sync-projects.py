@@ -156,6 +156,18 @@ def parse_projects(xlsx_path, sheet_name):
                 val = re.sub(r'\s+', ' ', val).strip()
             else:
                 val = ''
+
+            # Для столбца «Файл проекта»: если у ячейки есть гиперссылка —
+            # использовать её target (URL) вместо текста. Это позволяет
+            # корректно извлекать рабочие URL, которые пользователь в Excel
+            # добавил как гиперссылку на файл проекта (например, на Яндекс.Диск).
+            # Локальные пути вида «Проекты_Files\...» (без гиперссылки) —
+            # сохраняем как есть; они не являются рабочими ссылками.
+            if val and headers_clean[col_idx - 1] == 'Файл проекта' and cell.hyperlink:
+                hl_target = cell.hyperlink.target
+                if hl_target and hl_target.strip():
+                    val = hl_target.strip()
+
             row_values.append(val)
 
         # Создаём словарь "заголовок → значение"
