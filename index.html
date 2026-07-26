@@ -4804,21 +4804,21 @@
 
         <!-- ======================== КЛАПАНЫ — ПО ТИПУ (свайп справа налево) ======================== -->
         <div id="page-valves-type" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Клапаны по типу</div><input type="search" id="valveTypeSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="valveRenderSorted('type')"></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Клапана по типу</div><input type="search" id="valveTypeSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="valveRenderSorted('type')"></div>
             <div class="pb-info" id="valveTypeInfo">Загрузка…</div>
             <div id="valveTypeList"></div>
         </div>
 
         <!-- ======================== КЛАПАНЫ — ПО DN (свайп слева направо) ======================== -->
         <div id="page-valves-name" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Клапаны по DN</div><input type="search" id="valveNameSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="valveRenderSorted('name')"></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Клапана по DN</div><input type="search" id="valveNameSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="valveRenderSorted('name')"></div>
             <div class="pb-info" id="valveNameInfo">Загрузка…</div>
             <div id="valveNameList"></div>
         </div>
 
         <!-- ======================== КЛАПАНЫ — ПО ПРОИЗВОДСТВАМ (тап) ======================== -->
         <div id="page-valves-prod" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Клапаны по производствам</div><input type="search" id="valveProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="valveRenderSorted('prod')"></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Клапана по производствам</div><input type="search" id="valveProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="valveRenderSorted('prod')"></div>
             <div id="valveProdInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
             <div id="valveProdList"></div>
         </div>
@@ -9454,23 +9454,34 @@
         const list = document.getElementById('valveGroupList');
         const titleEl = document.getElementById('valveGroupTitle');
         if (!list) return;
-        if (titleEl) titleEl.textContent = group || 'Клапаны';
+        // Динамический заголовок страницы группы:
+        //   • mode='name' (DN): «DN {значение} (мм)» — например «DN 50 (мм)»
+        //   • mode='type': название типа (группы) — например «Отс.»
+        //   • mode='prod': название производства
+        let pageTitle;
+        if (mode === 'name') {
+            pageTitle = group ? ('DN ' + group + ' (мм)') : 'Клапана';
+        } else {
+            pageTitle = group || 'Клапана';
+        }
+        if (titleEl) titleEl.textContent = pageTitle;
 
         if (!valveLoaded || !valveData) {
             list.innerHTML = '<div class="pb-empty">Загрузка…</div>';
             return;
         }
 
-        // sortKey — поле сортировки внутри группы (как в valveRenderSorted).
+        // sortKey — поле сортировки внутри группы (он же — поле подгруппировки).
         // groupKey — поле, по которому была выполнена группировка на предыдущей
         // странице. Нужно для корректного отбора клапанов в выбранную группу.
         //
         // По уточнению пользователя:
         //   • mode='type' (свайп ←): группировка по «Тип, пропускная характеристика»,
-        //     сортировка внутри — по «Тип запорной части. Материал затвора/ корпуса».
+        //     подгруппы внутри — по «Тип запорной части. Материал затвора/ корпуса».
         //   • mode='name' (свайп →): группировка по «DN (мм)»,
-        //     сортировка внутри — по «Тип запорной части. Материал затвора/ корпуса».
-        //   • mode='prod' (тап): группировка и сортировка по производствам.
+        //     подгруппы внутри — по «Тип запорной части. Материал затвора/ корпуса».
+        //   • mode='prod' (тап): группировка по производствам,
+        //     подгруппы внутри — по «Тип запорной части. Материал затвора/ корпуса».
         let sortKey, groupKey;
         if (mode === 'type') {
             groupKey = 'Тип, пропускная характеристика';
@@ -9479,8 +9490,8 @@
             groupKey = 'DN (мм)';
             sortKey = 'Тип запорной части. Материал затвора/ корпуса';
         } else {
-            sortKey = 'Производство';
             groupKey = 'Производство';
+            sortKey = 'Тип запорной части. Материал затвора/ корпуса';
         }
         let items = (valveData.valves || []).filter(d => {
             const g = d[groupKey] || '(без группы)';
@@ -9500,8 +9511,7 @@
             );
         }
         items.sort((a, b) => {
-            // Внутри группы сортировка идёт по sortKey (для обоих режимов —
-            // «Тип запорной части. Материал затвора/ корпуса», текстовое поле).
+            // Сортировка по sortKey («Тип запорной части. Материал затвора/ корпуса»).
             const va = (a[sortKey] || '').toString();
             const vb = (b[sortKey] || '').toString();
             const la = va.toLowerCase(), lb = vb.toLowerCase();
@@ -9517,13 +9527,13 @@
             let emptyHtml = '';
             if (kipIsProjectLinkFilterActive('valves')) {
                 emptyHtml += kipRenderFilterBadge('valves');
-                emptyHtml += '<div class="pb-empty">В группе «' + valveEsc(group) + '» по проекту №«' + valveEsc(kipProjectLinkFilter.projectNo) + '» клапанов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
+                emptyHtml += '<div class="pb-empty">В группе «' + valveEsc(pageTitle) + '» по проекту №«' + valveEsc(kipProjectLinkFilter.projectNo) + '» клапанов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
             } else if (kipIsSbsLinkFilterActive('valves')) {
                 emptyHtml += kipRenderSbsFilterBadge('valves');
-                emptyHtml += '<div class="pb-empty">В группе «' + valveEsc(group) + '» по СБС №«' + valveEsc(kipSbsLinkFilter.sbsNo) + '» клапанов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
+                emptyHtml += '<div class="pb-empty">В группе «' + valveEsc(pageTitle) + '» по СБС №«' + valveEsc(kipSbsLinkFilter.sbsNo) + '» клапанов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
             } else if (kipIsSarLinkFilterActive('valves')) {
                 emptyHtml += kipRenderSarFilterBadge('valves');
-                emptyHtml += '<div class="pb-empty">В группе «' + valveEsc(group) + '» по САР №«' + valveEsc(kipSarLinkFilter.sarNo) + '» клапанов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
+                emptyHtml += '<div class="pb-empty">В группе «' + valveEsc(pageTitle) + '» по САР №«' + valveEsc(kipSarLinkFilter.sarNo) + '» клапанов не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
             } else {
                 emptyHtml = '<div class="pb-empty">В группе нет клапанов.</div>';
             }
@@ -9534,11 +9544,17 @@
             return;
         }
 
-        // Плоский список клапанов в выбранной группе. Сортировка уже выполнена
-        // выше по sortKey («Тип запорной части. Материал затвора/ корпуса»).
-        // Раньше здесь делалась подгруппировка по «DN (мм)», но после уточнения
-        // пользователя (группировка по DN делается на родительской странице) —
-        // внутри группы просто плоский список.
+        // Подгруппировка по sortKey («Тип запорной части. Материал затвора/ корпуса»).
+        // Подгруппы всегда раскрыты (статичные, без сворачивания) — класс .static.
+        // Порядок подгрупп — по первому вхождению после сортировки выше.
+        const subgroups = {};
+        const subgroupOrder = [];
+        for (const item of items) {
+            const sg = item[sortKey] || '(без подгруппы)';
+            if (!subgroups[sg]) { subgroups[sg] = []; subgroupOrder.push(sg); }
+            subgroups[sg].push(item);
+        }
+
         let html = '';
         // Бейдж активного фильтра (проект / СБС / САР) вверху страницы группы
         if (kipIsProjectLinkFilterActive('valves')) {
@@ -9549,34 +9565,44 @@
             html += kipRenderSarFilterBadge('valves');
         }
         html += '<div class="valve-sorted-list">';
-        for (const item of items) {
-            const itemId = String(item['ID'] ?? '');
-            const name = item['Марка'] || item['Назначение арматуры (параметр)'] || '(без названия)';
-            const type = item['Тип, пропускная характеристика'] || '';
-            const place = item['Место расположения'] || '';
-            // Подзаголовок: «Тип запорной части…» (по этому полю шла сортировка)
-            // + DN + тип + место — чтобы было видно, почему карточка стоит здесь.
-            const shutOff = item['Тип запорной части. Материал затвора/ корпуса'] || '';
-            const dn = item['DN (мм)'] || '';
+        for (const sg of subgroupOrder) {
+            const sgItems = subgroups[sg];
+            // Статичная (всегда раскрытая) подгруппа по «Тип запорной части»
+            html += '<div class="pb-section valve-group valve-subgroup static">';
+            html += '<div class="pb-section-title">';
+            html += '<span class="pb-section-title-text">' + valveEsc(sg) + '</span>';
+            html += '<span class="pb-section-title-count">' + sgItems.length + '</span>';
+            html += '<span class="pb-section-arrow"></span>';
+            html += '</div>';
+            html += '<div class="pb-section-body">';
+            for (const item of sgItems) {
+                const itemId = String(item['ID'] ?? '');
+                const name = item['Марка'] || item['Назначение арматуры (параметр)'] || '(без названия)';
+                const type = item['Тип, пропускная характеристика'] || '';
+                const place = item['Место расположения'] || '';
+                const dn = item['DN (мм)'] || '';
 
-            html += '<div class="valve-card" data-valve-id="' + valveEsc(itemId) + '" data-mode="' + mode + '">';
-            html += '<div class="valve-card-header" onclick="valveOpenDetail(\'' + valveEsc(itemId) + '\')">';
-            html += '<div class="valve-card-header-inner">';
-            html += '<div class="valve-card-text">';
-            html += '<div class="valve-card-title">' + valveEsc(name) + '</div>';
-            let subtitleParts = [];
-            if (shutOff) subtitleParts.push(shutOff);
-            if (dn) subtitleParts.push('DN ' + valveEsc(dn));
-            if (type) subtitleParts.push(type);
-            if (place) subtitleParts.push(place);
-            if (subtitleParts.length) {
-                html += '<div class="valve-card-subtitle">' + valveEsc(subtitleParts.join(' · ')) + '</div>';
+                html += '<div class="valve-card" data-valve-id="' + valveEsc(itemId) + '" data-mode="' + mode + '">';
+                html += '<div class="valve-card-header" onclick="valveOpenDetail(\'' + valveEsc(itemId) + '\')">';
+                html += '<div class="valve-card-header-inner">';
+                html += '<div class="valve-card-text">';
+                html += '<div class="valve-card-title">' + valveEsc(name) + '</div>';
+                // Подзаголовок: DN + тип + место (без shutOff — он уже в заголовке подгруппы)
+                let subtitleParts = [];
+                if (dn) subtitleParts.push('DN ' + valveEsc(dn));
+                if (type) subtitleParts.push(type);
+                if (place) subtitleParts.push(place);
+                if (subtitleParts.length) {
+                    html += '<div class="valve-card-subtitle">' + valveEsc(subtitleParts.join(' · ')) + '</div>';
+                }
+                html += '</div>';
+                html += '<span class="valve-card-arrow"></span>';
+                html += '</div>';
+                html += '</div>';
+                html += '</div>';
             }
-            html += '</div>';
-            html += '<span class="valve-card-arrow"></span>';
-            html += '</div>';
-            html += '</div>';
-            html += '</div>';
+            html += '</div>'; // pb-section-body
+            html += '</div>'; // pb-section
         }
         html += '</div>';
         list.innerHTML = html;

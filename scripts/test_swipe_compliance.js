@@ -1,4 +1,4 @@
-// Полная проверка соответствия свайпов и группировки требованиям пользователя
+// Полная проверка соответствия свайпов, группировок и заголовков требованиям пользователя
 const fs = require('fs');
 const data = JSON.parse(fs.readFileSync('/home/z/my-project/kip8test/data/valves.json', 'utf8'));
 const valves = data.valves || [];
@@ -6,116 +6,97 @@ const valves = data.valves || [];
 const html = fs.readFileSync('/home/z/my-project/kip8test/index.html', 'utf8');
 
 console.log('═══════════════════════════════════════════════════════════════');
-console.log('  ПРОВЕРКА СООТВЕТСТВИЯ СВАЙПОВ И ГРУППИРОВОК ТРЕБОВАНИЯМ');
+console.log('  ПРОВЕРКА: СВАЙПЫ, ГРУППИРОВКИ, ЗАГОЛОВКИ, ПОДГРУППЫ');
 console.log('═══════════════════════════════════════════════════════════════\n');
 
-// 1. Проверка HTML подложек
-console.log('▌ ШАГ 1. Проверка HTML подложек кнопки «Клапана»');
-const btnHtmlMatch = html.match(/<div class="dev-swipe-cell valve-swipe-cell"[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/);
-const btnHtml = btnHtmlMatch ? btnHtmlMatch[0] : '';
-const bgLeftMatch = btnHtml.match(/<div class="dev-swipe-bg dev-swipe-bg-left valve-swipe-bg"><span>([^<]+)<\/span>/);
-const bgRightMatch = btnHtml.match(/<div class="dev-swipe-bg dev-swipe-bg-right valve-swipe-bg"><span>([^<]+)<\/span>/);
-console.log('  Левая подложка (видна при свайпе ←→ слева направо):', bgLeftMatch ? bgLeftMatch[1] : 'НЕ НАЙДЕНА');
-console.log('  Правая подложка (видна при свайпе →← справа налево):', bgRightMatch ? bgRightMatch[1] : 'НЕ НАЙДЕНА');
-
-const bgLeftOk = bgLeftMatch && bgLeftMatch[1].includes('DN');
-const bgRightOk = bgRightMatch && bgRightMatch[1].includes('тип');
-console.log('  ✓ Левая подложка должна говорить "По DN":', bgLeftOk ? 'OK' : 'НЕ СООТВЕТСТВУЕТ');
-console.log('  ✓ Правая подложка должна говорить "По типу":', bgRightOk ? 'OK' : 'НЕ СООТВЕТСТВУЕТ');
-console.log('');
-
-// 2. Проверка JS-логики свайпа (именно для клапанов, не для приборов)
-console.log('▌ ШАГ 2. Проверка JS-логики определения целевой страницы (для клапанов)');
-// Ищем секцию valveInitEntryButton и в ней — targetPage
-const valveSectionMatch = html.match(/function valveInitEntryButton[\s\S]*?function cleanupValveSwipe[\s\S]*?\n    \}/);
-const valveSection = valveSectionMatch ? valveSectionMatch[0] : '';
-const swipeJsMatch = valveSection.match(/const targetPage = isLeft \? '([^']+)' : '([^']+)'/);
-console.log('  isLeft=true  (dx < 0, свайп справа налево) →', swipeJsMatch ? swipeJsMatch[1] : 'НЕ НАЙДЕНО');
-console.log('  isLeft=false (dx > 0, свайп слева направо) →', swipeJsMatch ? swipeJsMatch[2] : 'НЕ НАЙДЕНО');
-
-const jsSwipeLeftOk = swipeJsMatch && swipeJsMatch[1] === 'valves-type';
-const jsSwipeRightOk = swipeJsMatch && swipeJsMatch[2] === 'valves-name';
-console.log('  ✓ Свайп справа налево → valves-type (Тип):', jsSwipeLeftOk ? 'OK' : 'НЕ СООТВЕТСТВУЕТ');
-console.log('  ✓ Свайп слева направо → valves-name (DN):', jsSwipeRightOk ? 'OK' : 'НЕ СООТВЕТСТВУЕТ');
-console.log('');
-
-// 3. Проверка группировки на странице valves-type (mode='type')
-console.log('▌ ШАГ 3. Проверка группировки на странице valves-type (mode="type")');
-const typeMatch = html.match(/if \(mode === 'type'\) \{\s*groupKey = '([^']+)';\s*sortKey = '([^']+)';\s*\}/);
-console.log('  groupKey (поле группировки):', typeMatch ? typeMatch[1] : 'НЕ НАЙДЕНО');
-console.log('  sortKey  (поле сортировки внутри групп):', typeMatch ? typeMatch[2] : 'НЕ НАЙДЕНО');
-
-const typeGroupOk = typeMatch && typeMatch[1] === 'Тип, пропускная характеристика';
-const typeSortOk = typeMatch && typeMatch[2] === 'Тип запорной части. Материал затвора/ корпуса';
-console.log('  ✓ Группировка по «Тип, пропускная характеристика»:', typeGroupOk ? 'OK' : 'НЕ СООТВЕТСТВУЕТ');
-console.log('  ✓ Сортировка внутри групп по «Тип запорной части. Материал затвора/ корпуса»:', typeSortOk ? 'OK' : 'НЕ СООТВЕТСТВУЕТ');
-
-// Фактическая симуляция
-const typeGroups = {};
-for (const v of valves) {
-    const g = v['Тип, пропускная характеристика'] || '(без группы)';
-    if (!typeGroups[g]) typeGroups[g] = 0;
-    typeGroups[g]++;
+let allOk = true;
+function check(name, ok, detail) {
+    console.log('  ' + (ok ? '✓' : '✗') + ' ' + name + (detail ? ': ' + detail : ''));
+    if (!ok) allOk = false;
 }
-console.log('  Фактическое количество групп:', Object.keys(typeGroups).length, '→', Object.keys(typeGroups).join(', '));
+
+// 1. Заголовки страниц valves-type/name/prod — должны быть «Клапана по …» (ед.ч.)
+console.log('▌ 1. Заголовки родительских страниц (должны быть «Клапана по …»)');
+const titleType = (html.match(/page-valves-type[\s\S]*?page-inline-header-title">([^<]+)</) || [])[1];
+const titleName = (html.match(/page-valves-name[\s\S]*?page-inline-header-title">([^<]+)</) || [])[1];
+const titleProd = (html.match(/page-valves-prod[\s\S]*?page-inline-header-title">([^<]+)</) || [])[1];
+check('Заголовок page-valves-type', titleType === 'Клапана по типу', titleType);
+check('Заголовок page-valves-name', titleName === 'Клапана по DN', titleName);
+check('Заголовок page-valves-prod', titleProd === 'Клапана по производствам', titleProd);
 console.log('');
 
-// 4. Проверка группировки на странице valves-name (mode='name')
-console.log('▌ ШАГ 4. Проверка группировки на странице valves-name (mode="name")');
-const nameMatch = html.match(/else if \(mode === 'name'\) \{\s*groupKey = '([^']+)';\s*sortKey = '([^']+)';\s*numericGroup = true;\s*\}/);
-console.log('  groupKey (поле группировки):', nameMatch ? nameMatch[1] : 'НЕ НАЙДЕНО');
-console.log('  sortKey  (поле сортировки внутри групп):', nameMatch ? nameMatch[2] : 'НЕ НАЙДЕНО');
-console.log('  numericGroup = true (числовая сортировка групп):', nameMatch ? 'OK' : 'НЕ НАЙДЕНО');
+// 2. Свайпы: ← → valves-type, → → valves-name
+console.log('▌ 2. JS-логика свайпов (для клапанов)');
+const valveSection = (html.match(/function valveInitEntryButton[\s\S]*?function cleanupValveSwipe[\s\S]*?\n    \}/) || [''])[0];
+const swipeMatch = valveSection.match(/const targetPage = isLeft \? '([^']+)' : '([^']+)'/);
+check('Свайп ← (справа налево) → valves-type', swipeMatch[1] === 'valves-type', swipeMatch[1]);
+check('Свайп → (слева направо) → valves-name', swipeMatch[2] === 'valves-name', swipeMatch[2]);
+console.log('');
 
-const nameGroupOk = nameMatch && nameMatch[1] === 'DN (мм)';
-const nameSortOk = nameMatch && nameMatch[2] === 'Тип запорной части. Материал затвора/ корпуса';
-console.log('  ✓ Группировка по «DN (мм)»:', nameGroupOk ? 'OK' : 'НЕ СООТВЕТСТВУЕТ');
-console.log('  ✓ Сортировка внутри групп по «Тип запорной части. Материал затвора/ корпуса»:', nameSortOk ? 'OK' : 'НЕ СООТВЕТСТВУЕТ');
+// 3. Группировка на родительских страницах (valveRenderSorted)
+console.log('▌ 3. Группировка на родительских страницах (valveRenderSorted)');
+const fnSorted = (html.match(/function valveRenderSorted\(mode\) \{[\s\S]*?\n    \}/) || [''])[0];
+const typeBranch = fnSorted.match(/if \(mode === 'type'\) \{\s*groupKey = '([^']+)';\s*sortKey = '([^']+)';\s*\}/);
+const nameBranch = fnSorted.match(/else if \(mode === 'name'\) \{\s*groupKey = '([^']+)';\s*sortKey = '([^']+)';\s*numericGroup = true;\s*\}/);
+check('mode=type: groupKey=«Тип, пропускная характеристика»', typeBranch[1] === 'Тип, пропускная характеристика', typeBranch[1]);
+check('mode=type: sortKey=«Тип запорной части…»', typeBranch[2] === 'Тип запорной части. Материал затвора/ корпуса', typeBranch[2]);
+check('mode=name: groupKey=«DN (мм)»', nameBranch[1] === 'DN (мм)', nameBranch[1]);
+check('mode=name: sortKey=«Тип запорной части…»', nameBranch[2] === 'Тип запорной части. Материал затвора/ корпуса', nameBranch[2]);
+console.log('');
 
-const nameGroups = {};
-for (const v of valves) {
-    const g = v['DN (мм)'] || '(без группы)';
-    if (!nameGroups[g]) nameGroups[g] = 0;
-    nameGroups[g]++;
+// 4. Страница группы (valveRenderGroup): заголовок и подгруппы
+console.log('▌ 4. Страница группы (valveRenderGroup)');
+const fnGroup = (html.match(/function valveRenderGroup\(\) \{[\s\S]*?\n    \}/) || [''])[0];
+
+// 4a. Динамический заголовок для mode='name' → «DN {group} (мм)»
+const titleNameLogic = fnGroup.match(/if \(mode === 'name'\) \{\s*pageTitle = group \? \('DN ' \+ group \+ ' \(мм\)'\) : 'Клапана';/);
+check('mode=name: заголовок «DN {значение} (мм)»', !!titleNameLogic, titleNameLogic ? 'OK' : 'НЕ НАЙДЕНО');
+
+// 4b. Подгруппировка по sortKey (статичные, всегда раскрытые)
+const hasStaticSubgroups = fnGroup.includes('pb-section valve-group valve-subgroup static');
+check('Подгруппы по «Тип запорной части» (класс .static)', hasStaticSubgroups, hasStaticSubgroups ? 'OK' : 'НЕ НАЙДЕНО');
+
+// 4c. Подгруппы используют sortKey в качестве поля подгруппировки
+const subgroupLoop = fnGroup.match(/const sg = item\[sortKey\] \|\| '\(без подгруппы\)'/);
+check('Подгруппировка идёт по sortKey', !!subgroupLoop, subgroupLoop ? 'OK' : 'НЕ НАЙДЕНО');
+
+// 4d. Для mode='prod' тоже используется sortKey = «Тип запорной части…»
+const prodBranch = fnGroup.match(/else \{\s*groupKey = 'Производство';\s*sortKey = 'Тип запорной части\. Материал затвора\/ корпуса';\s*\}/);
+check('mode=prod: подгруппы по «Тип запорной части…»', !!prodBranch, prodBranch ? 'OK' : 'НЕ НАЙДЕНО');
+console.log('');
+
+// 5. Симуляция: для DN 50 — какие подгруппы будут на странице группы?
+console.log('▌ 5. Симуляция для группы DN 50 (mode=name)');
+const dn50Items = valves.filter(v => String(v['DN (мм)'] || '') === '50');
+console.log('  Клапанов DN 50:', dn50Items.length);
+const dn50Subgroups = {};
+for (const v of dn50Items) {
+    const sg = v['Тип запорной части. Материал затвора/ корпуса'] || '(без подгруппы)';
+    if (!dn50Subgroups[sg]) dn50Subgroups[sg] = 0;
+    dn50Subgroups[sg]++;
 }
-console.log('  Фактическое количество групп:', Object.keys(nameGroups).length);
+console.log('  Подгрупп по «Тип запорной части»:', Object.keys(dn50Subgroups).length);
+Object.entries(dn50Subgroups).forEach(([sg, n]) => {
+    console.log('    • ' + sg + ' — ' + n + ' шт.');
+});
+console.log('  Ожидаемый заголовок страницы: «DN 50 (мм)»');
 console.log('');
 
-// 5. Проверка страницы группы (valveRenderGroup)
-console.log('▌ ШАГ 5. Проверка страницы внутри группы (valveRenderGroup)');
-const grpMatch = html.match(/function valveRenderGroup\(\) \{[\s\S]*?let sortKey, groupKey;[\s\S]*?if \(mode === 'type'\) \{\s*groupKey = '([^']+)';\s*sortKey = '([^']+)';\s*\} else if \(mode === 'name'\) \{\s*groupKey = '([^']+)';\s*sortKey = '([^']+)';\s*\}/);
-if (grpMatch) {
-    console.log('  mode="type": groupKey=', grpMatch[1], '| sortKey=', grpMatch[2]);
-    console.log('  mode="name": groupKey=', grpMatch[3], '| sortKey=', grpMatch[4]);
-    const grpTypeOk = grpMatch[1] === 'Тип, пропускная характеристика' && grpMatch[2] === 'Тип запорной части. Материал затвора/ корпуса';
-    const grpNameOk = grpMatch[3] === 'DN (мм)' && grpMatch[4] === 'Тип запорной части. Материал затвора/ корпуса';
-    console.log('  ✓ mode="type" — группировка и сортировка корректны:', grpTypeOk ? 'OK' : 'НЕ СООТВЕТСТВУЕТ');
-    console.log('  ✓ mode="name" — группировка и сортировка корректны:', grpNameOk ? 'OK' : 'НЕ СООТВЕТСТВУЕТ');
-} else {
-    console.log('  НЕ УДАЛОСЬ НАЙТИ КОНСТРУКЦИЮ В valveRenderGroup');
-}
+// 6. CSS для статичных подгрупп существует
+console.log('▌ 6. CSS для статичных подгрупп (.pb-section.static)');
+const cssStatic = html.includes('.pb-section.static .pb-section-body') &&
+                  html.includes('.pb-section.static .pb-section-arrow');
+check('CSS-правила для .pb-section.static присутствуют', cssStatic);
 console.log('');
 
-// 6. Проверка отсутствия подгруппировки по DN на странице группы
-console.log('▌ ШАГ 6. Проверка отсутствия подгруппировки по DN на странице группы');
-const hasOldDnSubgrouping = /valveRenderGroup[\s\S]{0,4000}_valveParseDn/.test(html);
-console.log('  ✓ Старая подгруппировка по DN удалена:', !hasOldDnSubgrouping ? 'OK' : 'ВСЁ ЕЩЁ ПРИСУТСТВУЕТ');
-console.log('');
-
-// 7. Проверка версии Service Worker
-console.log('▌ ШАГ 7. Проверка версии Service Worker (для принудительного сброса кэша)');
+// 7. Версия SW
+console.log('▌ 7. Версия Service Worker');
 const swContent = fs.readFileSync('/home/z/my-project/kip8test/sw.js', 'utf8');
-const swVerMatch = swContent.match(/CACHE_VERSION = '([^']+)'/);
-console.log('  Текущая версия SW:', swVerMatch ? swVerMatch[1] : 'НЕ НАЙДЕНА');
+const swVer = (swContent.match(/CACHE_VERSION = '([^']+)'/) || [])[1];
+check('SW версия актуальна (≥ v189)', swVer && parseInt(swVer.match(/v(\d+)/)[1]) >= 189, swVer);
 console.log('');
 
-// ИТОГ
 console.log('═══════════════════════════════════════════════════════════════');
-const allOk = bgLeftOk && bgRightOk && jsSwipeLeftOk && jsSwipeRightOk
-    && typeGroupOk && typeSortOk && nameGroupOk && nameSortOk;
-if (allOk) {
-    console.log('  ✓ ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ — код соответствует требованиям пользователя');
-} else {
-    console.log('  ✗ ЕСТЬ НЕСООТВЕТСТВИЯ — см. выше');
-}
+console.log(allOk ? '  ✓ ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ' : '  ✗ ЕСТЬ НЕСООТВЕТСТВИЯ');
 console.log('═══════════════════════════════════════════════════════════════');
+process.exit(allOk ? 0 : 1);
