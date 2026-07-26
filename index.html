@@ -2009,6 +2009,17 @@
     .dev-swipe-cell > #devicesEntryBtn.swipe-active {
         transition: none;
     }
+    /* Аналогичные правила для карточки «Клапана» (#valvesEntryBtn) */
+    .valve-swipe-cell > #valvesEntryBtn {
+        position: relative;
+        z-index: 1;
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        margin: 0;
+        touch-action: pan-y;
+    }
+    .valve-swipe-cell > #valvesEntryBtn.swipe-active {
+        transition: none;
+    }
     /* Подложки под карточкой — синий градиент в стиле приборов */
     .dev-swipe-bg {
         position: absolute;
@@ -2034,6 +2045,13 @@
     .dev-swipe-cell.swiping-left  .dev-swipe-bg-right { opacity: 1; }
     [data-theme="light"] .dev-swipe-bg {
         background: linear-gradient(135deg, rgba(50, 100, 150, 0.9), rgba(74, 143, 199, 0.8));
+    }
+    /* Подложка для карточки «Клапана» — сине-зелёная (морская) палитра */
+    .valve-swipe-bg {
+        background: linear-gradient(135deg, rgba(31, 78, 80, 0.95), rgba(74, 138, 140, 0.85));
+    }
+    [data-theme="light"] .valve-swipe-bg {
+        background: linear-gradient(135deg, rgba(40, 95, 97, 0.9), rgba(74, 138, 140, 0.8));
     }
 
     /* ===== Телефонный справочник ===== */
@@ -4721,7 +4739,11 @@
                         <div class="menu-btn" id="devicesEntryBtn"><div class="menu-btn-text"><div class="menu-btn-label">Приборы</div><div class="menu-btn-sublabel">1312 приборов КИП ИОС</div></div><i class="menu-btn-arrow">›</i></div>
                     </div>
                     <div class="menu-btn" id="lockoutsEntryBtn" style="border-color:rgba(184,90,122,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#b85a7a;">Блокировки</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(184,90,122,0.4);">›</i></div>
-                    <div class="menu-btn" id="valvesEntryBtn" style="border-color:rgba(74,138,140,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#4a8a8c;">Клапана</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(74,138,140,0.4);">›</i></div>
+                    <div class="dev-swipe-cell valve-swipe-cell" id="valveSwipeCell">
+                        <div class="dev-swipe-bg dev-swipe-bg-left valve-swipe-bg"><span>По DN</span></div>
+                        <div class="dev-swipe-bg dev-swipe-bg-right valve-swipe-bg"><span>По типу</span></div>
+                        <div class="menu-btn" id="valvesEntryBtn" style="border-color:rgba(74,138,140,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#4a8a8c;">Клапана</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(74,138,140,0.4);">›</i></div>
+                    </div>
                     <div class="menu-btn" id="regulatorsEntryBtn" style="border-color:rgba(126,90,184,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#7e5ab8;">Регуляторы</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(126,90,184,0.4);">›</i></div>
                 </div>
             </div>
@@ -4778,7 +4800,21 @@
             <div id="lockoutDetailContent"></div>
         </div>
 
-        <!-- ======================== КЛАПАНЫ — ПО ПРОИЗВОДСТВАМ ======================== -->
+        <!-- ======================== КЛАПАНЫ — ПО ТИПУ (свайп справа налево) ======================== -->
+        <div id="page-valves-type" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Клапаны по типу</div><input type="search" id="valveTypeSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="valveRenderSorted('type')"></div>
+            <div class="pb-info" id="valveTypeInfo">Загрузка…</div>
+            <div id="valveTypeList"></div>
+        </div>
+
+        <!-- ======================== КЛАПАНЫ — ПО DN (свайп слева направо) ======================== -->
+        <div id="page-valves-name" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Клапаны по DN</div><input type="search" id="valveNameSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="valveRenderSorted('name')"></div>
+            <div class="pb-info" id="valveNameInfo">Загрузка…</div>
+            <div id="valveNameList"></div>
+        </div>
+
+        <!-- ======================== КЛАПАНЫ — ПО ПРОИЗВОДСТВАМ (тап) ======================== -->
         <div id="page-valves-prod" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Клапаны по производствам</div><input type="search" id="valveProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="valveRenderSorted('prod')"></div>
             <div id="valveProdInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
@@ -9236,12 +9272,44 @@
         }
         let filtered = valveData.valves || [];
 
-        const sortKey = mode === 'type' ? 'Тип, пропускная характеристика' : mode === 'name' ? 'Марка' : 'Производство';
+        // sortKey — поле, по которому СОРТИРУЮТСЯ элементы внутри группы.
+        // groupKey — поле, по которому ГРУППИРУЮТСЯ элементы (заголовки секций).
+        // Для режимов type (свайп ←) и name/DN (свайп →) группировка идёт
+        // по «Тип запорной части. Материал затвора/ корпуса», как просил пользователь.
+        // Для режима prod (тап) сохраняется старое поведение — группировка по производствам.
+        // numericSort = true → числовая сортировка (для DN).
+        let sortKey, groupKey, numericSort = false;
+        if (mode === 'type') {
+            sortKey = 'Тип, пропускная характеристика';
+            groupKey = 'Тип запорной части. Материал затвора/ корпуса';
+        } else if (mode === 'name') {
+            sortKey = 'DN (мм)';
+            groupKey = 'Тип запорной части. Материал затвора/ корпуса';
+            numericSort = true;
+        } else {
+            sortKey = 'Производство';
+            groupKey = 'Производство';
+        }
         filtered.sort((a, b) => {
-            const va = (a[sortKey] || '').toString().toLowerCase();
-            const vb = (b[sortKey] || '').toString().toLowerCase();
-            if (va < vb) return -1;
-            if (va > vb) return 1;
+            const va = (a[sortKey] || '').toString();
+            const vb = (b[sortKey] || '').toString();
+            if (numericSort) {
+                // Числовая сортировка по DN: парсим первое число из значения.
+                // Если значение не числовое (пусто/текст) — попадает в конец.
+                const na = parseFloat(va.replace(',', '.'));
+                const nb = parseFloat(vb.replace(',', '.'));
+                if (isNaN(na) && isNaN(nb)) return va.toLowerCase().localeCompare(vb.toLowerCase());
+                if (isNaN(na)) return 1;
+                if (isNaN(nb)) return -1;
+                if (na !== nb) return na - nb;
+                // При равном DN — вторичная сортировка по марке
+                const ma = (a['Марка'] || '').toString().toLowerCase();
+                const mb = (b['Марка'] || '').toString().toLowerCase();
+                return ma.localeCompare(mb);
+            }
+            const la = va.toLowerCase(), lb = vb.toLowerCase();
+            if (la < lb) return -1;
+            if (la > lb) return 1;
             return 0;
         });
 
@@ -9264,10 +9332,12 @@
             );
         }
 
+        // Группировка по groupKey (а не по sortKey). Порядок групп определяется
+        // порядком первого вхождения после сортировки — то есть по sortKey внутри.
         const groups = {};
         const groupOrder = [];
         for (const d of filtered) {
-            const g = d[sortKey] || '(без группы)';
+            const g = d[groupKey] || '(без группы)';
             if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
             groups[g].push(d);
         }
@@ -9379,9 +9449,23 @@
             return;
         }
 
-        const sortKey = mode === 'type' ? 'Тип, пропускная характеристика' : mode === 'name' ? 'Марка' : 'Производство';
+        // sortKey — поле сортировки внутри группы (как в valveRenderSorted).
+        // groupKey — поле, по которому была выполнена группировка на предыдущей
+        // странице. Нужно для корректного отбора клапанов в выбранную группу.
+        let sortKey, groupKey, numericSort = false;
+        if (mode === 'type') {
+            sortKey = 'Тип, пропускная характеристика';
+            groupKey = 'Тип запорной части. Материал затвора/ корпуса';
+        } else if (mode === 'name') {
+            sortKey = 'DN (мм)';
+            groupKey = 'Тип запорной части. Материал затвора/ корпуса';
+            numericSort = true;
+        } else {
+            sortKey = 'Производство';
+            groupKey = 'Производство';
+        }
         let items = (valveData.valves || []).filter(d => {
-            const g = d[sortKey] || '(без группы)';
+            const g = d[groupKey] || '(без группы)';
             return g === group;
         });
         // Применить активный фильтр (проект / СБС / САР), если он установлен.
@@ -9398,10 +9482,20 @@
             );
         }
         items.sort((a, b) => {
-            const va = (a['Марка'] || a['Назначение арматуры (параметр)'] || '').toString().toLowerCase();
-            const vb = (b['Марка'] || b['Назначение арматуры (параметр)'] || '').toString().toLowerCase();
-            if (va < vb) return -1;
-            if (va > vb) return 1;
+            // Внутри группы сортировка идёт по тому же sortKey, что и в основном списке
+            const va = (a[sortKey] || '').toString();
+            const vb = (b[sortKey] || '').toString();
+            if (numericSort) {
+                const na = parseFloat(va.replace(',', '.'));
+                const nb = parseFloat(vb.replace(',', '.'));
+                if (isNaN(na) && isNaN(nb)) return va.toLowerCase().localeCompare(vb.toLowerCase());
+                if (isNaN(na)) return 1;
+                if (isNaN(nb)) return -1;
+                if (na !== nb) return na - nb;
+            }
+            const la = va.toLowerCase(), lb = vb.toLowerCase();
+            if (la < lb) return -1;
+            if (la > lb) return 1;
             return 0;
         });
 
@@ -9598,18 +9692,146 @@
         });
     }
 
-    // ===== Кнопка Клапаны на странице КИП И ОС: только tap =====
+    // ===== Кнопка «Клапана» на странице КИП И ОС: tap + свайпы =====
+    // Логика идентична кнопке «Приборы» (см. devInitEntryButton), но с другими
+    // целевыми страницами и цветом подложки.
+    // tap → по производствам (valves-prod)
+    // swipe ← (влево, справа налево) → по типу (valves-type)
+    // swipe → (вправо, слева направо) → по DN (valves-name, переиспользуем id типа 'name' для совместимости со старым роутингом)
+    const VALVE_SWIPE_THRESHOLD = 12;    // px до определения направления
+    const VALVE_SWIPE_NAV_RATIO = 0.3;   // доля ширины для перехода
+    let valveSwipeState = null;
+    let valveSwipeMoved = false;
+
     function valveInitEntryButton() {
         const btn = document.getElementById('valvesEntryBtn');
         if (!btn || btn.dataset.initialized) return;
         btn.dataset.initialized = '1';
+
+        btn.addEventListener('pointerdown', onValveSwipePointerDown);
+        // Тап без свайпа → по производствам
         btn.addEventListener('click', function() {
+            if (valveSwipeMoved) return;
             if (navigator.vibrate) navigator.vibrate(15);
             navigateTo('valves-prod');
         });
         // Обновить sublabel количеством клапанов
         valveUpdateEntrySublabel();
     }
+
+    function onValveSwipePointerDown(e) {
+        if (e.button !== undefined && e.button !== 0) return;
+        const el = e.currentTarget;
+        const cell = document.getElementById('valveSwipeCell');
+        if (!el || !cell) return;
+        const rect = el.getBoundingClientRect();
+        valveSwipeState = {
+            el: el,
+            cell: cell,
+            startX: e.clientX,
+            startY: e.clientY,
+            width: rect.width,
+            currentDx: 0,
+            active: false,
+            moved: false
+        };
+        window.addEventListener('pointermove', onValveSwipePointerMove);
+        window.addEventListener('pointerup', onValveSwipePointerUp);
+        window.addEventListener('pointercancel', onValveSwipePointerUp);
+    }
+
+    function onValveSwipePointerMove(e) {
+        if (!valveSwipeState) return;
+        const st = valveSwipeState;
+        const dx = e.clientX - st.startX;
+        const dy = e.clientY - st.startY;
+        if (!st.active) {
+            if (Math.abs(dx) > VALVE_SWIPE_THRESHOLD || Math.abs(dy) > VALVE_SWIPE_THRESHOLD) {
+                if (Math.abs(dx) > Math.abs(dy) * 1.5) {
+                    st.active = true;
+                    st.el.classList.add('swipe-active');
+                    st.el.style.pointerEvents = 'none';
+                    if (navigator.vibrate) navigator.vibrate(10);
+                } else {
+                    // Вертикальное — скролл, отменяем
+                    cleanupValveSwipe();
+                    return;
+                }
+            } else {
+                return;
+            }
+        }
+        e.preventDefault();
+        let effectiveDx = dx;
+        if (Math.abs(dx) > st.width) {
+            const overshoot = Math.abs(dx) - st.width;
+            effectiveDx = Math.sign(dx) * (st.width + overshoot * 0.3);
+        }
+        st.currentDx = effectiveDx;
+        st.el.style.transform = 'translateX(' + effectiveDx + 'px)';
+        st.cell.classList.toggle('swiping-left',  effectiveDx < 0);
+        st.cell.classList.toggle('swiping-right', effectiveDx > 0);
+    }
+
+    function onValveSwipePointerUp(e) {
+        if (!valveSwipeState) return;
+        const st = valveSwipeState;
+        const threshold = st.width * VALVE_SWIPE_NAV_RATIO;
+        const shouldNav = st.active && Math.abs(st.currentDx) > threshold;
+        const isLeft = st.currentDx < 0;
+
+        if (shouldNav) {
+            if (navigator.vibrate) navigator.vibrate(20);
+            st.el.classList.remove('swipe-active');
+            st.el.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';
+            st.el.style.transform = 'translateX(' + (isLeft ? '-100%' : '100%') + ')';
+            st.el.style.opacity = '0';
+            // swipe влево (dx < 0) → valves-type (по типу, пропускная характеристика)
+            // swipe вправо (dx > 0) → valves-name (по DN, мм)
+            const targetPage = isLeft ? 'valves-type' : 'valves-name';
+            setTimeout(function() {
+                navigateTo(targetPage);
+                setTimeout(function() {
+                    st.el.style.transition = '';
+                    st.el.style.opacity = '';
+                    st.el.style.transform = '';
+                    st.el.style.pointerEvents = '';
+                    st.cell.classList.remove('swiping-left', 'swiping-right');
+                }, 100);
+            }, 200);
+            valveSwipeState = null;
+            window.removeEventListener('pointermove', onValveSwipePointerMove);
+            window.removeEventListener('pointerup', onValveSwipePointerUp);
+            window.removeEventListener('pointercancel', onValveSwipePointerUp);
+        } else {
+            st.el.classList.remove('swipe-active');
+            st.el.style.transform = '';
+            st.el.style.pointerEvents = '';
+            st.cell.classList.remove('swiping-left', 'swiping-right');
+            st.moved = st.active;
+            cleanupValveSwipe();
+        }
+    }
+
+    function cleanupValveSwipe() {
+        if (!valveSwipeState) return;
+        const st = valveSwipeState;
+        st.el.classList.remove('swipe-active');
+        st.el.style.pointerEvents = '';
+        st.el.style.transform = '';
+        if (st.cell) {
+            st.cell.classList.remove('swiping-left', 'swiping-right');
+        }
+        if (st.active) {
+            valveSwipeMoved = true;
+            setTimeout(function() { valveSwipeMoved = false; }, 300);
+        }
+        valveSwipeState = null;
+        window.removeEventListener('pointermove', onValveSwipePointerMove);
+        window.removeEventListener('pointerup', onValveSwipePointerUp);
+        window.removeEventListener('pointercancel', onValveSwipePointerUp);
+    }
+
     async function valveUpdateEntrySublabel() {
         const btn = document.getElementById('valvesEntryBtn');
         if (!btn) return;
@@ -13154,6 +13376,8 @@
         if (page === 'lockouts-prod') { setTimeout(() => { if (typeof lockInitSorted === 'function') lockInitSorted('prod'); }, 30); }
         if (page === 'lockout-detail') { setTimeout(() => { if (typeof lockRenderDetail === 'function') lockRenderDetail(); }, 30); }
         if (page === 'valves-prod') { setTimeout(() => { if (typeof valveInitSorted === 'function') valveInitSorted('prod'); }, 30); }
+        if (page === 'valves-type') { setTimeout(() => { if (typeof valveInitSorted === 'function') valveInitSorted('type'); }, 30); }
+        if (page === 'valves-name') { setTimeout(() => { if (typeof valveInitSorted === 'function') valveInitSorted('name'); }, 30); }
         if (page === 'valve-detail') { setTimeout(() => { if (typeof valveRenderDetail === 'function') valveRenderDetail(); }, 30); }
         if (page === 'regulators-prod') { setTimeout(() => { if (typeof regulatorInitSorted === 'function') regulatorInitSorted('prod'); }, 30); }
         if (page === 'regulator-detail') { setTimeout(() => { if (typeof regulatorRenderDetail === 'function') regulatorRenderDetail(); }, 30); }
