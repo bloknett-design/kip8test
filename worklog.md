@@ -558,3 +558,63 @@ Stage Summary:
 - В тёмной теме раскрытые под-пункты групп в боковом меню теперь имеют тёмный фон (rgba(23,33,43,0.92)) — текст хорошо читаем поверх картинки Launch.png в нижней половине.
 - В светлой теме — cream-фон (rgba(250,249,245,0.92)).
 - Версия: CACHE_VERSION=kipia-test-v200.
+
+---
+Task ID: 21
+Agent: AI Assistant (GLM)
+Task: Перенести изменения из kip8test в основной репозиторий kip8 (пользователь дал PAT для kip8).
+
+Work Log:
+- Пользователь явно предоставил GitHub PAT для репо `bloknett-design/kip8` и попросил перенести туда все изменения из kip8test. Это явное разрешение на push в основной репо (см. системный промт, раздел «🔐 Автономная работа с GitHub», правило 3 — push в kip8 только с явного разрешения).
+- Клонировал kip8 в /home/z/my-project/kip8 через inline-форму `https://x-access-token:<TOKEN>@github.com/bloknett-design/kip8.git`. Токен НЕ сохранён в git config, файлах, worklog, коммитах или комментариях — только в оперативной памяти.
+- Прочитал системный промт — раздел «Перенос в kip8» содержит таблицу правил:
+    • index.html — скопировать, УДАЛИТЬ блок isolateLocalStorage()
+    • tests/, data/, images/, scripts/ — без изменений
+    • manifest.json — НЕ КОПИРОВАТЬ (в kip8 свои пути /kip8/)
+    • sw.js — скопировать, имена кэшей kipia-test-v* → kipia-v*, инкрементировать
+    • Системный_промт...md — НЕ КОПИРОВАТЬ
+- Состояние kip8 на момент клонирования: значительно позади kip8test.
+    • index.html: 9397 строк (kip8test: 18471) — отставание ~9000 строк, не хватало всех функций КИП ИОС, sidebar-фона, кликабельного № проекта, многих детальных карточек.
+    • sw.js: kipia-v13, IMAGE_CACHE_VERSION=kipia-images-v1, без кэширования Яндекс.Диска.
+    • data/: только exam-tickets.json (нет 7 других JSON-файлов).
+    • scripts/: только convert-exam-tickets.py (нет 6 sync-*.py и 2 test_*.js).
+    • images/: нет Launch.png.
+- Действия:
+    1. Скопировал data/*.json (8 файлов: cables, devices, lockouts, phonebook, projects, regulators, valves, exam-tickets — последний заменил существующий, т.к. в kip8test часть image_url переведена с Google Drive на Яндекс.Диск).
+    2. Скопировал scripts/* (8 файлов: sync-cables.py, sync-devices.py, sync-lockouts.py, sync-projects.py, sync-regulators.py, sync-valves.py, test_swipe_compliance.js, test_valve_grouping.js; convert-exam-tickets.py заменил существующий, т.к. версия kip8test новее).
+    3. Скопировал images/Launch.png (новый файл, отсутствовал в kip8).
+    4. Скопировал index.html, затем удалил блок isolateLocalStorage() (14 строк: комментарий + IIFE-обёртка, переопределяющая localStorage.getItem/setItem/removeItem с префиксом 'kip8test:').
+    5. Дополнительно: заменил 4 hardcoded 'kip8test:' префикса в index.html на обычные ключи (DEV_CACHE_KEY, phonebook_favorites, phonebook_notes, phonebook_cache, devices_cache) — без этого localStorage в kip8 искал бы ключи с префиксом 'kip8test:', которых там нет.
+    6. Скопировал sw.js, изменил:
+        • Шапка: «ТЕСТОВЫЙ РЕПОЗИТОРИЙ kip8test» → «стратегия network-first + App Shell» (стандартная шапка kip8).
+        • CACHE_VERSION: 'kipia-test-v200' → 'kipia-v14' (v13 → v14, инкремент с учётом major-обновления — почти полная пересборка приложения).
+        • IMAGE_CACHE_VERSION: 'kipia-images-test-v2' → 'kipia-images-v2' (новая мажорная версия, т.к. добавилось кэширование Яндекс.Диска с pathname-ключом — старый кэш v1 несовместим).
+        • ASSETS: уже содержал все 8 data/*.json + images/Launch.png после копирования.
+    7. manifest.json — НЕ трогал (в kip8 свои пути /kip8/, 7 shortcuts, 4 иконки).
+    8. .github/workflows/ — НЕ трогал (в kip8 свои workflows, по системному промту «Можно включить schedule: (если нужно)», но пользователь не просил).
+    9. Системный_промт_для_приложения_КИПиА.md — НЕ копировал (специфика kip8test).
+- Настроил git author: AI Assistant (kip8) <ai-assistant@kip8.local>.
+- Проверки (ОБЯЗАТЕЛЬНО):
+    • node tests/run-all.js → 207 passed, 0 failed ✓
+    • python3 -c "import json; json.load(open('manifest.json'))" → OK ✓
+    • python3: DIV-баланс 1939/1938 (как в kip8test, pre-existing) ✓
+    • node --check для всех 4 <script>-блоков → OK ✓
+    • node --check sw.js → OK ✓
+    • grep 'isolateLocalStorage' index.html → нет ✓
+    • grep 'kip8test:' index.html → нет (только в комментарии про URL-пример) ✓
+    • grep 'kipia-test-v' sw.js → нет ✓
+    • grep 'kip8test' sw.js → нет ✓
+- Git commit 5bcd7ab, push origin main успешно.
+- c4e6228..5bcd7ab main -> main
+
+Stage Summary:
+- Файлы в kip8 (commit 5bcd7ab):
+    • Изменённые: index.html (полная пересборка из kip8test без isolateLocalStorage), sw.js (kipia-v14, kipia-images-v2), data/exam-tickets.json (Yandex Disk URLs), scripts/convert-exam-tickets.py (новая версия).
+    • Новые: data/{cables,devices,lockouts,phonebook,projects,regulators,valves}.json, scripts/{sync-cables,sync-devices,sync-lockouts,sync-projects,sync-regulators,sync-valves,test_swipe_compliance,test_valve_grouping}.{py,js}, images/Launch.png.
+    • НЕ изменены: manifest.json (пути /kip8/), .github/workflows/, tests/.
+- Версия кэша в kip8: kipia-v14 (была kipia-v13).
+- Версия image-кэша в kip8: kipia-images-v2 (была kipia-images-v1 — старый кэш несовместим с новой логикой кэширования Яндекс.Диска по pathname-ключу, поэтому мажорный инкремент).
+- Все функции из kip8test (Tasks 1-20) теперь доступны в основном репо kip8: КИП ИОС (приборы/блокировки/клапаны/регуляторы/проекты/кабели), план корпуса 114, кликабельный № проекта (синий + ↗), Launch.png в боковом меню, почти непрозрачные фоны карточек, тёмный фон под раскрытыми подгруппами бокового меню.
+- GitHub Pages автоматически обновит боевой сайт https://bloknett-design.github.io/kip8/ через 1-2 минуты.
+- Пользователю нужно перезагрузить страницу 2 раза для активации нового Service Worker (v14).
+- Версия в kip8test НЕ менялась — осталась kipia-test-v200.
