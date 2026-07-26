@@ -9471,9 +9471,10 @@
             return;
         }
 
-        // sortKey — поле сортировки внутри группы (он же — поле подгруппировки).
-        // groupKey — поле, по которому была выполнена группировка на предыдущей
-        // странице. Нужно для корректного отбора клапанов в выбранную группу.
+        // groupKey — поле, по которому была выполнена группировка на родительской
+        // странице. Нужно для отбора клапанов в выбранную группу.
+        // subgroupKey — поле подгруппировки (всегда раскрытые подгруппы).
+        // sortKey — поле сортировки внутри подгрупп.
         //
         // По уточнению пользователя:
         //   • mode='type' (свайп ←): группировка по «Тип, пропускная характеристика»,
@@ -9481,17 +9482,22 @@
         //   • mode='name' (свайп →): группировка по «DN (мм)»,
         //     подгруппы внутри — по «Тип запорной части. Материал затвора/ корпуса».
         //   • mode='prod' (тап): группировка по производствам,
-        //     подгруппы внутри — по «Тип запорной части. Материал затвора/ корпуса».
-        let sortKey, groupKey;
+        //     подгруппы внутри — по «DN (мм)» (численно, по возрастанию).
+        let groupKey, subgroupKey, sortKey, numericSubgroups = false;
         if (mode === 'type') {
             groupKey = 'Тип, пропускная характеристика';
+            subgroupKey = 'Тип запорной части. Материал затвора/ корпуса';
             sortKey = 'Тип запорной части. Материал затвора/ корпуса';
         } else if (mode === 'name') {
             groupKey = 'DN (мм)';
+            subgroupKey = 'Тип запорной части. Материал затвора/ корпуса';
             sortKey = 'Тип запорной части. Материал затвора/ корпуса';
         } else {
+            // mode === 'prod'
             groupKey = 'Производство';
+            subgroupKey = 'DN (мм)';
             sortKey = 'Тип запорной части. Материал затвора/ корпуса';
+            numericSubgroups = true;
         }
         let items = (valveData.valves || []).filter(d => {
             const g = d[groupKey] || '(без группы)';
@@ -9511,13 +9517,32 @@
             );
         }
         items.sort((a, b) => {
-            // Сортировка по sortKey («Тип запорной части. Материал затвора/ корпуса»).
+            // Сортировка по subgroupKey (первичный ключ — чтобы подгруппы шли по порядку),
+            // затем по sortKey (внутри подгруппы), затем по марке.
+            const sa = (a[subgroupKey] || '').toString();
+            const sb = (b[subgroupKey] || '').toString();
+            if (numericSubgroups) {
+                const na = parseFloat(sa.replace(',', '.'));
+                const nb = parseFloat(sb.replace(',', '.'));
+                if (!isNaN(na) && !isNaN(nb)) {
+                    if (na !== nb) return na - nb;
+                } else if (isNaN(na) && !isNaN(nb)) {
+                    return 1;
+                } else if (!isNaN(na) && isNaN(nb)) {
+                    return -1;
+                }
+            } else {
+                const la = sa.toLowerCase(), lb = sb.toLowerCase();
+                if (la < lb) return -1;
+                if (la > lb) return 1;
+            }
+            // Внутри подгруппы — по sortKey
             const va = (a[sortKey] || '').toString();
             const vb = (b[sortKey] || '').toString();
-            const la = va.toLowerCase(), lb = vb.toLowerCase();
-            if (la < lb) return -1;
-            if (la > lb) return 1;
-            // При равном sortKey — вторичная сортировка по марке
+            const lva = va.toLowerCase(), lvb = vb.toLowerCase();
+            if (lva < lvb) return -1;
+            if (lva > lvb) return 1;
+            // При равном sortKey — по марке
             const ma = (a['Марка'] || '').toString().toLowerCase();
             const mb = (b['Марка'] || '').toString().toLowerCase();
             return ma.localeCompare(mb);
@@ -9544,15 +9569,26 @@
             return;
         }
 
-        // Подгруппировка по sortKey («Тип запорной части. Материал затвора/ корпуса»).
+        // Подгруппировка по subgroupKey.
+        //   • mode='type' / 'name' — по «Тип запорной части. Материал затвора/ корпуса»
+        //   • mode='prod' — по «DN (мм)» (численно, по возрастанию)
         // Подгруппы всегда раскрыты (статичные, без сворачивания) — класс .static.
         // Порядок подгрупп — по первому вхождению после сортировки выше.
         const subgroups = {};
         const subgroupOrder = [];
         for (const item of items) {
-            const sg = item[sortKey] || '(без подгруппы)';
-            if (!subgroups[sg]) { subgroups[sg] = []; subgroupOrder.push(sg); }
-            subgroups[sg].push(item);
+            const sgRaw = item[subgroupKey] || '(без подгруппы)';
+            // Для числовых подгрупп (DN) — нормализуем ключ, чтобы «50» и «50,0»
+            // не создавали разные подгруппы. Заголовок будет «DN {значение}».
+            let sgKey = sgRaw;
+            if (numericSubgroups && sgRaw !== '(без подгруппы)') {
+                const num = parseFloat(String(sgRaw).replace(',', '.'));
+                if (!isNaN(num)) {
+                    sgKey = Number.isInteger(num) ? String(num) : String(num).replace('.', ',');
+                }
+            }
+            if (!subgroups[sgKey]) { subgroups[sgKey] = []; subgroupOrder.push(sgKey); }
+            subgroups[sgKey].push(item);
         }
 
         let html = '';
@@ -9567,10 +9603,16 @@
         html += '<div class="valve-sorted-list">';
         for (const sg of subgroupOrder) {
             const sgItems = subgroups[sg];
-            // Статичная (всегда раскрытая) подгруппа по «Тип запорной части»
+            // Заголовок подгруппы:
+            //   • numericSubgroups → «DN {значение}» (например «DN 50»)
+            //   • иначе → само значение поля (например «Односедельный, плунжерный»)
+            const sgLabel = (numericSubgroups && sg !== '(без подгруппы)')
+                ? 'DN ' + sg
+                : sg;
+            // Статичная (всегда раскрытая) подгруппа
             html += '<div class="pb-section valve-group valve-subgroup static">';
             html += '<div class="pb-section-title">';
-            html += '<span class="pb-section-title-text">' + valveEsc(sg) + '</span>';
+            html += '<span class="pb-section-title-text">' + valveEsc(sgLabel) + '</span>';
             html += '<span class="pb-section-title-count">' + sgItems.length + '</span>';
             html += '<span class="pb-section-arrow"></span>';
             html += '</div>';
@@ -9581,15 +9623,24 @@
                 const type = item['Тип, пропускная характеристика'] || '';
                 const place = item['Место расположения'] || '';
                 const dn = item['DN (мм)'] || '';
+                const shutOff = item['Тип запорной части. Материал затвора/ корпуса'] || '';
 
                 html += '<div class="valve-card" data-valve-id="' + valveEsc(itemId) + '" data-mode="' + mode + '">';
                 html += '<div class="valve-card-header" onclick="valveOpenDetail(\'' + valveEsc(itemId) + '\')">';
                 html += '<div class="valve-card-header-inner">';
                 html += '<div class="valve-card-text">';
                 html += '<div class="valve-card-title">' + valveEsc(name) + '</div>';
-                // Подзаголовок: DN + тип + место (без shutOff — он уже в заголовке подгруппы)
+                // Подзаголовок зависит от режима:
+                //   • mode='prod' — DN в заголовке подгруппы, поэтому в подзаголовке
+                //     показываем «Тип запорной части» + «Тип, пропускная характеристика» + место
+                //   • mode='name' / 'type' — «Тип запорной части» в заголовке подгруппы,
+                //     поэтому в подзаголовке показываем DN + «Тип, пропускная характеристика» + место
                 let subtitleParts = [];
-                if (dn) subtitleParts.push('DN ' + valveEsc(dn));
+                if (mode === 'prod') {
+                    if (shutOff) subtitleParts.push(shutOff);
+                } else {
+                    if (dn) subtitleParts.push('DN ' + valveEsc(dn));
+                }
                 if (type) subtitleParts.push(type);
                 if (place) subtitleParts.push(place);
                 if (subtitleParts.length) {
