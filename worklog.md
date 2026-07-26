@@ -134,3 +134,21 @@ Stage Summary:
 - Корневая причина 403 — Referer-based hotlink protection Я.Диска; fix — no-referrer.
 - Версии: CACHE_VERSION=kipia-test-v181, IMAGE_CACHE_VERSION=kipia-images-test-v2.
 - Пользователю нужно обновить PWA (новая версия SW подхватится автоматически при следующей загрузке; старый IMAGE_CACHE v1 будет удалён при активации нового SW).
+
+---
+Task ID: 5
+Agent: AI Assistant (GLM)
+Task: На странице «План корпуса 114» убрать надписи над кнопками: «Планы помещений» и «Тапните по пункту, чтобы открыть план. Первая загрузка требует интернета.»
+
+Work Log:
+- Нашёл блок в index.html (строки 4844-4847): <div class="content-header"> с <h2>Планы помещений</h2> и <p>...</p>.
+- Удалил весь блок content-header целиком. Шапка page-inline-header с кнопкой «Назад» и заголовком «План корпуса 114» сохранена — под ней теперь сразу идёт список кнопок (div#plan114List).
+- CACHE_VERSION: v181 → v182 (обновился index.html, нужен новый SW).
+- IMAGE_CACHE_VERSION не трогал (картинки не менялись).
+- Тесты: 207/207 ✓. Подтверждено через grep: упоминаний «Планы помещений» / «Тапните по пункту» / «Первая загрузка требует» в index.html — 0.
+- Git commit bf69234, push origin main успешно.
+
+Stage Summary:
+- Файлы: index.html, sw.js (commit bf69234)
+- Изменение чисто косметическое: убран лишний текстовый блок, шапка сохранена.
+- Версия: CACHE_VERSION=kipia-test-v182.
