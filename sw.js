@@ -11,7 +11,7 @@
 // свежие версии файлов из ASSETS.
 // ============================================================
 
-const CACHE_VERSION = 'kipia-test-v197';
+const CACHE_VERSION = 'kipia-test-v198';
 const CACHE_NAME = CACHE_VERSION;
 
 // Отдельный кэш для картинок Google Drive (превью + полные).
@@ -34,6 +34,7 @@ const ASSETS = [
   './images/icon-192-maskable.png',
   './images/icon-512-maskable.png',
   './images/icon.png',
+  './images/Launch.png',
   './images/1000\u0412.png',
   './images/4\u0440.png',
   './images/5\u0440.png',

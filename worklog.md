@@ -480,3 +480,31 @@ Stage Summary:
 - Клик по синему № не открывает детальную карточку (event.stopPropagation) — открывает только файл проекта.
 - На текущих данных: 1 проект из 261 имеет синий кликабельный № в предварительной карточке (ID=261, №=551-114-1155-АТХ → https://disk.yandex.ru/i/s0yR9iKY8mhozQ).
 - Версия: CACHE_VERSION=kipia-test-v197.
+
+---
+Task ID: 18
+Agent: AI Assistant (GLM)
+Task: Сделать фоном в боковом меню на главной картинкой Launch.png из папки images в репозитории проекта на GitHub.
+
+Work Log:
+- Получил с GitHub новый файл images/Launch.png (commit 770f490 «Add files via upload», загрузил пользователь через web-интерфейс). Pull --rebase — fast-forward, без конфликтов.
+- Файл: JPEG 720×1280 (125 KB), расширение .png. Подходит как вертикальный фон для бокового меню (высота = full viewport height).
+- Идентифицировал CSS-правило .sidebar (стр. ~1237): ранее использовало background: var(--sidebar-bg) — полупрозрачный тёмно-сине-серый (rgba(23,33,43,0.98)) в тёмной теме и cream (rgba(250,249,245,0.98)) в светлой.
+- Изменил .sidebar на многослойный фон:
+    • Тёмная тема: linear-gradient(rgba(23,33,43,0.92), rgba(23,33,43,0.96)), url('./images/Launch.png') center/cover no-repeat, var(--sidebar-bg)
+    • Светлая тема ([data-theme="light"] .sidebar): linear-gradient(rgba(250,249,245,0.92), rgba(250,249,245,0.96)), url('./images/Launch.png') center/cover no-repeat, var(--sidebar-bg)
+- Логика слоёв CSS (сверху вниз):
+    1. linear-gradient — полупрозрачный overlay (92-96% непрозрачности) для читаемости текста пунктов меню. Цвета подобраны под существующую палитру (--sidebar-bg), чтобы не сломать визуальный стиль.
+    2. url('./images/Launch.png') — картинка, центрированная, cover (заполняет всю площадь с сохранением пропорций).
+    3. var(--sidebar-bg) — fallback, если картинка не загрузилась (например, первый запуск без кэша).
+- backdrop-filter: blur(20px) сохранён — дополнительно размывает картинку под overlay, создавая глубину.
+- background-size: cover + background-position: center — картинка всегда вписана в боковое меню (280px шириной), даже на landscape-ориентации мобильных.
+- Добавил './images/Launch.png' в ASSETS в sw.js (стр. 37) — для офлайн-кэширования. Service Worker пред-кэширует картинку при установке, чтобы она была доступна без интернета.
+- Тесты: 207/207 ✓. DIV-баланс: 1939/1938 (pre-existing).
+- CACHE_VERSION: v197 → v198.
+
+Stage Summary:
+- Файлы: index.html (CSS-правила для .sidebar с фоном из Launch.png в обеих темах), sw.js (Launch.png добавлен в ASSETS, CACHE_VERSION=v198).
+- Боковое меню на главной странице теперь имеет фоновую картинку Launch.png с полупрозрачным overlay (92-96%) поверх — текст пунктов меню остаётся читаемым, картинка видна как атмосфера/текстура.
+- Картинка кэшируется Service Worker для офлайн-режима.
+- Версия: CACHE_VERSION=kipia-test-v198.
