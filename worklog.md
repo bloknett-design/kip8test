@@ -235,3 +235,32 @@ Stage Summary:
 - Файлы: index.html, sw.js (commit bbac316)
 - Над кнопками больше нет текстового блока. В верхнем баре теперь 2 строки: «Библиотека КИП и А» + подзаголовок мелким текстом.
 - Версия: CACHE_VERSION=kipia-test-v185.
+
+---
+Task ID: 9
+Agent: AI Assistant (GLM)
+Task: В разделе КИП ИОС на кнопке «Клапана» сделать свайпы (как на «Приборах»): swipe слева направо → сортировка по DN (мм), swipe справа налево → сортировка по «Тип, пропускная характеристика». Группировка в обоих режимах — по «Тип запорной части. Материал затвора/ корпуса».
+
+Work Log:
+- Изучил реализацию свайпов на кнопке «Приборы» (devInitEntryButton, onDevSwipePointerDown/Move/Up, cleanupDevSwipe) — клонировал логику для клапанов с другими целевыми страницами.
+- HTML: добавил 2 новые страницы — page-valves-type («Клапаны по типу») и page-valves-name («Клапаны по DN»), с search input и list-контейнерами по образцу devices-type/name. Кнопку valvesEntryBtn обернул в .dev-swipe-cell (id=valveSwipeCell) с подложками «По DN» (слева) и «По типу» (справа).
+- CSS: добавил правила .valve-swipe-cell > #valvesEntryBtn (position/z-index/transition/touch-action), .valve-swipe-bg (сине-зелёная морская палитра — gradient rgba(31,78,80,0.95) → rgba(74,138,140,0.85)) и светлую тему.
+- JS: valveInitEntryButton() переписан с поддержкой pointer-свайпов. Добавлены функции onValveSwipePointerDown/Move/Up и cleanupValveSwipe() (полные аналоги dev-версий). Константы VALVE_SWIPE_THRESHOLD=12px, VALVE_SWIPE_NAV_RATIO=0.3.
+- valveRenderSorted(): вместо одного sortKey введены sortKey (поле сортировки) + groupKey (поле группировки) + numericSort (флаг числовой сортировки):
+    • mode='type': sortKey='Тип, пропускная характеристика', groupKey='Тип запорной части. Материал затвора/ корпуса'
+    • mode='name': sortKey='DN (мм)', groupKey='Тип запорной части. Материал затвора/ корпуса', numericSort=true
+    • mode='prod': sortKey=groupKey='Производство' (без изменений)
+  Для numericSort: parseFloat(DN), NaN → в конец, при равенстве DN — вторичная сортировка по марке. Это даёт правильный порядок 6, 9, 10, 15, 20, 25, ... а не строковый 10, 100, 15, 150, 20, 25.
+- valveRenderGroup(): синхронизирована логика sortKey/groupKey/numericSort для корректного отбора и сортировки клапанов внутри выбранной группы (раньше всегда фильтровала по sortKey, что после изменения groupKey в mode='type'/'name' ломало бы фильтрацию).
+- navigateTo(): добавлены ветки 'valves-type' → valveInitSorted('type') и 'valves-name' → valveInitSorted('name').
+- Проверено на данных valves.json (320 клапанов):
+    • mode='name' (DN): 70 групп, DN внутри групп сортируется по возрастанию (6, 9, 10, 15, 20, ...).
+    • mode='type': 70 групп, тип внутри групп сортируется по алфавиту (Запорно-рег. → Отс. → Рег. → Рег. (лин.)).
+- Тесты: 207/207 ✓. JS-синтаксис всех 4 <script>-блоков валиден.
+- CACHE_VERSION: v185 → v186.
+- Git commit cf26920, push origin main успешно.
+
+Stage Summary:
+- Файлы: index.html, sw.js (commit cf26920)
+- Кнопка «Клапана» теперь поддерживает свайпы: вправо → по DN, влево → по типу. Группировка в обоих режимах — по типу запорной части.
+- Версия: CACHE_VERSION=kipia-test-v186.
