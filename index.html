@@ -3976,6 +3976,10 @@
         font-feature-settings: "tnum";
     }
     [data-theme="light"] .kip-project-link { color: #1a4060; }
+    /* :visited — сохраняем синий цвет после клика (без этого браузер
+       перекрашивает посещённые <a> в фиолетовый по умолчанию). */
+    .kip-project-link:visited { color: #6aa6e0; }
+    [data-theme="light"] .kip-project-link:visited { color: #1a4060; }
     .kip-project-link:active { opacity: 0.55; }
     .kip-project-link-arrow {
         font-size: 18px;
@@ -3998,6 +4002,17 @@
     [data-theme="light"] .regulator-detail-value.kip-project-link,
     [data-theme="light"] .cable-detail-value.kip-project-link {
         color: #1a4060;
+    }
+    /* Детальная карточка проекта: № проекта как <a> внутри .project-detail-value.
+       Явные правила с !important — гарантируют синий цвет даже после :visited
+       и перекрывают возможное наследование от .project-detail-value (color: var(--text-primary)). */
+    .project-detail-value .kip-project-link,
+    .project-detail-value .kip-project-link:visited {
+        color: #6aa6e0 !important;
+    }
+    [data-theme="light"] .project-detail-value .kip-project-link,
+    [data-theme="light"] .project-detail-value .kip-project-link:visited {
+        color: #1a4060 !important;
     }
 
     /* ===== Единая кликабельная ссылка «№ СБС» в карточках КИП ИОС ===== */
