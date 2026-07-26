@@ -2153,12 +2153,13 @@
         margin: 6px 8px 8px;
         border: 1px solid rgba(255,255,255,0.07);
         border-radius: 12px;
-        background: rgba(255,255,255,0.015);
+        /* Почти непрозрачный фон, чтобы клетчатый паттерн body не просвечивал */
+        background: rgba(28, 34, 46, 0.94);
         overflow: hidden;
     }
     [data-theme="light"] .pb-section {
         border-color: rgba(20,20,19,0.1);
-        background: rgba(255,255,255,0.55);
+        background: rgba(255, 252, 245, 0.96);
     }
     .pb-section-title {
         padding: 12px 36px 12px 14px;
@@ -2286,12 +2287,12 @@
         margin: 0;
         border: none;
         border-radius: 0;
-        background: rgba(255,255,255,0.015);
+        background: rgba(28, 34, 46, 0.94);
         overflow: hidden;
     }
     [data-theme="light"] .dev-group {
         border: none;
-        background: rgba(255,255,255,0.55);
+        background: rgba(255, 252, 245, 0.96);
     }
 
     /* Спокойная сланцево-серая палитра заголовков групп — край в край, в 2 строки, без стрелки */
@@ -2376,12 +2377,12 @@
         margin: 0;
         border: none;
         border-radius: 0;
-        background: rgba(255,255,255,0.015);
+        background: rgba(32, 30, 33, 0.94);
         overflow: hidden;
     }
     [data-theme="light"] .lock-group {
         border: none;
-        background: rgba(255,255,255,0.55);
+        background: rgba(255, 250, 248, 0.96);
     }
 
     .lock-group .pb-section-title {
@@ -2426,9 +2427,12 @@
 
     .lock-card {
         border-bottom: 1px solid rgba(255,255,255,0.06);
+        /* Почти непрозрачный фон, чтобы клетчатый паттерн body не просвечивал */
+        background: rgba(45, 42, 46, 0.96);
         transition: background 0.15s;
     }
     [data-theme="light"] .lock-card {
+        background: rgba(248, 244, 246, 0.96);
         border-bottom-color: rgba(20,20,19,0.08);
     }
     .lock-card:last-child {
@@ -2603,12 +2607,12 @@
         margin: 0;
         border: none;
         border-radius: 0;
-        background: rgba(255,255,255,0.015);
+        background: rgba(28, 33, 32, 0.94);
         overflow: hidden;
     }
     [data-theme="light"] .valve-group {
         border: none;
-        background: rgba(255,255,255,0.55);
+        background: rgba(250, 252, 250, 0.96);
     }
 
     .valve-group .pb-section-title {
@@ -2653,9 +2657,12 @@
 
     .valve-card {
         border-bottom: 1px solid rgba(255,255,255,0.06);
+        /* Почти непрозрачный фон, чтобы клетчатый паттерн body не просвечивал */
+        background: rgba(40, 50, 48, 0.96);
         transition: background 0.15s;
     }
     [data-theme="light"] .valve-card {
+        background: rgba(245, 248, 246, 0.96);
         border-bottom-color: rgba(20,20,19,0.08);
     }
     .valve-card:last-child {
@@ -2791,12 +2798,12 @@
         margin: 0;
         border: none;
         border-radius: 0;
-        background: rgba(255,255,255,0.015);
+        background: rgba(32, 29, 24, 0.94);
         overflow: hidden;
     }
     [data-theme="light"] .project-group {
         border: none;
-        background: rgba(255,255,255,0.55);
+        background: rgba(255, 250, 242, 0.96);
     }
 
     /* Спокойная медно-янтарная палитра заголовков групп — край в край, в 2 строки, без стрелки */
@@ -2847,10 +2854,10 @@
     /* Карточка проекта в списке */
     .project-card {
         border-bottom: 1px solid rgba(255,255,255,0.05);
-        background: var(--card-bg, rgba(255,255,255,0.025));
+        background: var(--card-bg, rgba(50, 45, 38, 0.96));
     }
     [data-theme="light"] .project-card {
-        background: rgba(255,255,255,0.55);
+        background: rgba(255, 250, 242, 0.96);
         border-bottom-color: rgba(0,0,0,0.05);
     }
     .project-card-header {
@@ -2970,12 +2977,12 @@
         margin: 0;
         border: none;
         border-radius: 0;
-        background: rgba(255,255,255,0.015);
+        background: rgba(29, 33, 27, 0.94);
         overflow: hidden;
     }
     [data-theme="light"] .cable-group {
         border: none;
-        background: rgba(255,255,255,0.55);
+        background: rgba(250, 252, 245, 0.96);
     }
 
     /* Спокойная оливково-зелёная палитра заголовков групп — край в край, в 2 строки, без стрелки */
@@ -3026,10 +3033,10 @@
     /* Карточка кабеля в списке */
     .cable-card {
         border-bottom: 1px solid rgba(255,255,255,0.05);
-        background: var(--card-bg, rgba(255,255,255,0.025));
+        background: var(--card-bg, rgba(45, 50, 42, 0.96));
     }
     [data-theme="light"] .cable-card {
-        background: rgba(255,255,255,0.55);
+        background: rgba(250, 252, 245, 0.96);
         border-bottom-color: rgba(0,0,0,0.05);
     }
     .cable-card-header {
@@ -3136,12 +3143,12 @@
         margin: 0;
         border: none;
         border-radius: 0;
-        background: rgba(255,255,255,0.015);
+        background: rgba(31, 29, 35, 0.94);
         overflow: hidden;
     }
     [data-theme="light"] .regulator-group {
         border: none;
-        background: rgba(255,255,255,0.55);
+        background: rgba(252, 250, 252, 0.96);
     }
 
     .regulator-group .pb-section-title {
@@ -3450,18 +3457,19 @@
         cursor: default;
         transition: background 0.15s;
     }
-    /* Зебра-фон для зрительного разделения карточек */
+    /* Зебра-фон для зрительного разделения карточек.
+       Фон почти непрозрачный — клетчатый паттерн body не должен просвечивать под текстом. */
     .pb-card-even {
-        background: rgba(255,255,255,0.012);
+        background: rgba(40, 50, 65, 0.96);
     }
     .pb-card-odd {
-        background: rgba(255,255,255,0.035);
+        background: rgba(55, 68, 85, 0.96);
     }
     [data-theme="light"] .pb-card-even {
-        background: rgba(255,255,255,0.5);
+        background: rgba(252, 248, 240, 0.97);
     }
     [data-theme="light"] .pb-card-odd {
-        background: rgba(20,20,19,0.04);
+        background: rgba(220, 213, 200, 0.94);
     }
     [data-theme="light"] .pb-card { border-bottom-color: rgba(20,20,19,0.06); }
     .pb-card:last-child { border-bottom: none; }
@@ -3661,18 +3669,19 @@
     }
     [data-theme="light"] .dev-card { border-bottom-color: rgba(20, 20, 19, 0.08); }
     .dev-card:last-child { border-bottom: none; }
-    /* Зебра: тёмная тема — сине-серые тона, светлая тема — прежние молочные */
+    /* Зебра: тёмная тема — сине-серые тона, светлая тема — прежние молочные.
+       Альфа подняна до 0.96 чтобы клетчатый фон body не просвечивал под текстом. */
     .dev-card:nth-child(odd) {
-        background: rgba(40, 50, 65, 0.9);
+        background: rgba(40, 50, 65, 0.96);
     }
     .dev-card:nth-child(even) {
-        background: rgba(55, 68, 85, 0.9);
+        background: rgba(55, 68, 85, 0.96);
     }
     [data-theme="light"] .dev-card:nth-child(odd) {
-        background: rgba(220, 213, 200, 0.6);
+        background: rgba(220, 213, 200, 0.94);
     }
     [data-theme="light"] .dev-card:nth-child(even) {
-        background: rgba(252, 248, 240, 0.95);
+        background: rgba(252, 248, 240, 0.97);
     }
     .dev-card-header {
         padding: 0 14px 0 0;
