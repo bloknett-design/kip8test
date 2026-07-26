@@ -177,3 +177,33 @@ Stage Summary:
 - Файлы: index.html, sw.js (commit ff27308)
 - Добавлен 7-й пункт в боковое меню группы КИП ИОС.
 - Версия: CACHE_VERSION=kipia-test-v183.
+
+---
+Task ID: 7
+Agent: AI Assistant (GLM)
+Task: В экзаменационных билетах сделать так, чтобы картинки показывались.
+
+Work Log:
+- Проанализировал data/exam-tickets.json: из 348 строк у 14 есть image_url. Из них 14 — Яндекс.Диск share-ссылки (https://disk.yandex.ru/i/...), 1 — Google Drive.
+- Диагностировал причину: <img> пытался грузить https://disk.yandex.ru/i/<fileId> напрямую, но этот URL отдаёт HTML-страницу превью, а не картинку. <img> молча падал → показывался fallback «Открыть изображение».
+- Решение — аналог фикса Плана корпуса 114: разрешить share-ссылку через Yandex Disk Public API в прямой URL downloader.disk.yandex.ru/... и использовать его как src.
+- Добавил 3 новые функции в index.html (после gdriveShareToDirect):
+    • yandexShareToDirectSync(url) — синхронная, отдаёт из in-memory кэша (TTL 50 мин) или null.
+    • yandexShareToDirect(url) — async, при cache miss делает запрос к cloud-api.yandex.net/v1/disk/public/resources?public_key=... и кэширует { thumb (XXXL), full (ORIGINAL) }.
+    • precacheYandexImageUrls() — фоном после загрузки exam-tickets.json перебирает все rows и параллельно (3 worker'а) разрешает Яндекс.Диск share-ссылки.
+- Подключил precacheYandexImageUrls() в loadTicketsData() в обоих путях (из SW-кэша и из сети).
+- Изменил renderTickets():
+    • Добавил ветку yandexShareToDirectSync(imgSrc) после gdriveShareToDirect(). Если ссылка — Яндекс.Диск и уже разрешена в кэше, используем thumb/full.
+    • Добавил referrerpolicy="no-referrer" на <img class="ticket-a-img"> (Яндекс.Диск отдаёт 403 с Referer от сторонних доменов).
+    • Добавил referrerpolicy="no-referrer" на <img id="ticket-img-overlay-full"> в полноэкранном лайтбоксе.
+- Изменил precacheTicketImages(): добавил ветку yandex — если share-ссылка уже разрешена, добавляем thumb и full в очередь pre-cache. SW перехватит downloader.disk.yandex.ru и закэширует по pathname.
+- Проверил end-to-end: API отвечает 200 OK для всех 12 уникальных Яндекс.Диск URL из билетов (сх_термосопр, действ_элтока, заземление, перв_пом, пер_раб_до1000в, пуэ_табл7.3.11, пуэ_табл7.3.14, сиз_до1000в, техн_меропр, классы_защиты, взрыв_смеси, обозн_фаз).
+- Тесты: 207/207 ✓. JS-синтаксис всех 4 <script>-блоков валиден.
+- CACHE_VERSION: v183 → v184. IMAGE_CACHE_VERSION без изменений (v2) — кэш картинок переживёт обновление.
+- Git commit cc37405, push origin main успешно.
+
+Stage Summary:
+- Файлы: index.html, sw.js (commit cc37405)
+- 14 картинок Яндекс.Диска в билетах теперь должны отображаться (после обновления PWA).
+- In-memory кэш разрешённых URL на 50 минут + SW-кэш картинок по pathname — работает офлайн после первой загрузки.
+- Версия: CACHE_VERSION=kipia-test-v184.
