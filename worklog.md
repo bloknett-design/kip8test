@@ -739,3 +739,56 @@ Stage Summary:
 - Это может привести к уменьшению счётчиков в блоках "Связанные записи" — это ожидаемо, поскольку раньше они завышались за счёт ложных частичных совпадений
 - Если в исходных данных есть расхождения в формате записи номеров (например, "АН-603 551-114-1068-АТХ" в одном месте и "551-114-1068-АТХ" в другом) — такие записи теперь НЕ будут связаны, и их нужно привести к единому формату в исходных JSON-файлах
 - CACHE_VERSION: kipia-test-v204
+
+---
+Task ID: 26
+Agent: AI Assistant (GLM)
+Task: Перенос изменений Tasks 22-25 из kip8test в основной репозиторий kip8 (по запросу пользователя: «такие же изменения внеси в https://github.com/bloknett-design/kip8»).
+
+Work Log:
+- Пользователь явно дал ссылку на основной репо kip8 и попросил применить те же изменения. Это явное разрешение на push в kip8 (см. системный промт, правило 3 про push в kip8 только с явного разрешения).
+- Состояние kip8 на момент старта:
+    • Последний коммит: 5bcd7ab «Синхронизация с kip8test: КИП ИОС, fon карточек, проект кликабельный, Launch.png в боковом меню, isolation удалена (kipia-v14)» — соответствует kip8test v200.
+    • CACHE_VERSION = kipia-v14, IMAGE_CACHE_VERSION = kipia-images-v2.
+    • Нужно применить Tasks 22-25 (v201-v204).
+- Действия:
+    1. Скопировал kip8test/index.html → kip8/index.html (18431 → 18417 строк после правок).
+    2. Удалил блок isolateLocalStorage() (14 строк: комментарий + IIFE-обёртка с префиксом 'kip8test:').
+    3. Убрал 8 hardcoded 'kip8test:' / 'kip8test_' префиксов в index.html:
+        • PB_FAV_KEY = 'kip8test_phonebook_favorites' → 'phonebook_favorites'
+        • PB_NOTES_KEY = 'kip8test_phonebook_notes' → 'phonebook_notes'
+        • localStorage 'kip8test_phonebook_cache' (2 места) → 'phonebook_cache'
+        • DEV_CACHE_KEY = 'kip8test_devices_cache' → 'devices_cache'
+        • localStorage.setItem('kip8test:' + DEV_CACHE_KEY, ...) (3 места) → localStorage.setItem(DEV_CACHE_KEY, ...)
+    4. Скопировал kip8test/sw.js → kip8/sw.js, изменил:
+        • Шапка: «ТЕСТОВЫЙ РЕПОЗИТОРИЙ kip8test» → «стратегия network-first + App Shell» (стандартная шапка kip8).
+        • Удалены тест-специфичные комментарии про -test суффикс.
+        • CACHE_VERSION: 'kipia-test-v204' → 'kipia-v15' (v14 → v15, минорный инкремент — UI-правки + логика КИП ИОС).
+        • IMAGE_CACHE_VERSION: 'kipia-images-test-v2' → 'kipia-images-v2' (без изменений мажорной версии — логика кэширования картинок не менялась).
+    5. manifest.json НЕ трогал (в kip8 свои пути /kip8/, 7 shortcuts, 4 иконки).
+    6. .github/workflows/, data/, scripts/, images/, tests/ НЕ трогал (без изменений с Task 21).
+- Проверки (ОБЯЗАТЕЛЬНО):
+    • node tests/run-all.js → 207 passed, 0 failed ✓
+    • python3 -c "import json; json.load(open('manifest.json'))" → OK ✓
+    • python3: DIV-баланс 1938/1937 (как в kip8test, pre-existing ±1) ✓
+    • node --check для всех 4 <script>-блоков → OK ✓
+    • node --check sw.js → OK ✓
+    • grep 'isolateLocalStorage' index.html → нет ✓
+    • grep 'kip8test:' index.html → нет (только в комментарии про URL-пример /kip8test/#exam-tickets, оставлен как в Task 21) ✓
+    • grep 'kipia-test-v' sw.js → нет ✓
+    • grep 'kip8test' sw.js → нет ✓
+- git diff --stat HEAD index.html sw.js: 48 insertions, 89 deletions — соответствует объёму Tasks 22-25.
+- Git commit 374e7c3, push origin main успешно.
+- 5bcd7ab..374e7c3 main -> main
+
+Stage Summary:
+- В kip8 (commit 374e7c3) применены изменения Tasks 22-25 из kip8test:
+    • Task 22: Электробезопасность — заголовок «Правила и инструкции» убран, подпись «Документы открываются на Яндекс Диске» перемещена в бар заголовка страницы.
+    • Task 23: Заголовок страницы на всю ширину бара — text-align: left, padding 0 16px 0 40px (применяется ко всем внутренним страницам).
+    • Task 24: Подзаголовок «Библиотека КИП и А» сокращён с «Ссылки на облачные папки с документацией на Яндекс Диске» до «Документы открываются на Яндекс Диске» — единообразно с Электробезопасностью.
+    • Task 25: Соответствие связанных записей в КИП ИОС только по полному совпадению номеров — убраны 9 мест частичного совпадения (3 фильтра списка, 3 счётчика связанных записей, 3 функции поиска детали по клику на №).
+- CACHE_VERSION в kip8: kipia-v15 (была kipia-v14).
+- IMAGE_CACHE_VERSION в kip8: kipia-images-v2 (без изменений).
+- GitHub Pages автоматически обновит боевой сайт https://bloknett-design.github.io/kip8/ через 1-2 минуты.
+- Пользователю нужно перезагрузить страницу 2 раза для активации нового Service Worker (v15).
+- Версия в kip8test НЕ менялась — осталась kipia-test-v204.
