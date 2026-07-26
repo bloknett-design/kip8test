@@ -2326,6 +2326,8 @@
     #devNameInfo,
     #devProdInfo,
     #lockProdInfo,
+    #valveTypeInfo,
+    #valveNameInfo,
     #valveProdInfo,
     #regulatorProdInfo {
         display: none !important;
@@ -9274,43 +9276,37 @@
 
         // sortKey — поле, по которому СОРТИРУЮТСЯ элементы внутри группы.
         // groupKey — поле, по которому ГРУППИРУЮТСЯ элементы (заголовки секций).
-        // Для режимов type (свайп ←) и name/DN (свайп →) группировка идёт
-        // по «Тип запорной части. Материал затвора/ корпуса», как просил пользователь.
-        // Для режима prod (тап) сохраняется старое поведение — группировка по производствам.
-        // numericSort = true → числовая сортировка (для DN).
-        let sortKey, groupKey, numericSort = false;
+        // numericGroup = true → числовая сортировка самих групп (для DN).
+        //
+        // По уточнению пользователя:
+        //   • свайп → (слева направо, mode='name')  → группировка по «DN (мм)»
+        //   • свайп ← (справа налево, mode='type')  → группировка по «Тип, пропускная характеристика»
+        //   • сортировка внутри групп (для обоих режимов) — по «Тип запорной части. Материал затвора/ корпуса»
+        //   • режим prod (тап) — группировка и сортировка по производствам.
+        let sortKey, groupKey, numericGroup = false;
         if (mode === 'type') {
-            sortKey = 'Тип, пропускная характеристика';
-            groupKey = 'Тип запорной части. Материал затвора/ корпуса';
+            groupKey = 'Тип, пропускная характеристика';
+            sortKey = 'Тип запорной части. Материал затвора/ корпуса';
         } else if (mode === 'name') {
-            sortKey = 'DN (мм)';
-            groupKey = 'Тип запорной части. Материал затвора/ корпуса';
-            numericSort = true;
+            groupKey = 'DN (мм)';
+            sortKey = 'Тип запорной части. Материал затвора/ корпуса';
+            numericGroup = true;
         } else {
             sortKey = 'Производство';
             groupKey = 'Производство';
         }
         filtered.sort((a, b) => {
+            // Внутри группы сортировка идёт по sortKey (для обоих режимов —
+            // это «Тип запорной части. Материал затвора/ корпуса», текстовое поле).
             const va = (a[sortKey] || '').toString();
             const vb = (b[sortKey] || '').toString();
-            if (numericSort) {
-                // Числовая сортировка по DN: парсим первое число из значения.
-                // Если значение не числовое (пусто/текст) — попадает в конец.
-                const na = parseFloat(va.replace(',', '.'));
-                const nb = parseFloat(vb.replace(',', '.'));
-                if (isNaN(na) && isNaN(nb)) return va.toLowerCase().localeCompare(vb.toLowerCase());
-                if (isNaN(na)) return 1;
-                if (isNaN(nb)) return -1;
-                if (na !== nb) return na - nb;
-                // При равном DN — вторичная сортировка по марке
-                const ma = (a['Марка'] || '').toString().toLowerCase();
-                const mb = (b['Марка'] || '').toString().toLowerCase();
-                return ma.localeCompare(mb);
-            }
             const la = va.toLowerCase(), lb = vb.toLowerCase();
             if (la < lb) return -1;
             if (la > lb) return 1;
-            return 0;
+            // При равном sortKey — вторичная сортировка по марке
+            const ma = (a['Марка'] || '').toString().toLowerCase();
+            const mb = (b['Марка'] || '').toString().toLowerCase();
+            return ma.localeCompare(mb);
         });
 
         // Фильтр по «№ проекта» (из карточки проекта)
@@ -9332,14 +9328,30 @@
             );
         }
 
-        // Группировка по groupKey (а не по sortKey). Порядок групп определяется
-        // порядком первого вхождения после сортировки — то есть по sortKey внутри.
+        // Группировка по groupKey. Порядок групп по умолчанию — порядок первого
+        // вхождения после сортировки по sortKey. Для режима name (DN) дополнительно
+        // пересортируем группы численно (DN 50, DN 100, DN 200 …), чтобы не было
+        // алфавитного порядка (DN 100, DN 200, DN 50).
         const groups = {};
         const groupOrder = [];
         for (const d of filtered) {
             const g = d[groupKey] || '(без группы)';
             if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
             groups[g].push(d);
+        }
+        if (numericGroup) {
+            groupOrder.sort((a, b) => {
+                if (a === '(без группы)' && b === '(без группы)') return 0;
+                if (a === '(без группы)') return 1;
+                if (b === '(без группы)') return -1;
+                const na = parseFloat(a.replace(',', '.'));
+                const nb = parseFloat(b.replace(',', '.'));
+                if (isNaN(na) && isNaN(nb)) return a.toLowerCase().localeCompare(b.toLowerCase());
+                if (isNaN(na)) return 1;
+                if (isNaN(nb)) return -1;
+                if (na !== nb) return na - nb;
+                return 0;
+            });
         }
 
         info.textContent = '';
@@ -9452,14 +9464,20 @@
         // sortKey — поле сортировки внутри группы (как в valveRenderSorted).
         // groupKey — поле, по которому была выполнена группировка на предыдущей
         // странице. Нужно для корректного отбора клапанов в выбранную группу.
-        let sortKey, groupKey, numericSort = false;
+        //
+        // По уточнению пользователя:
+        //   • mode='type' (свайп ←): группировка по «Тип, пропускная характеристика»,
+        //     сортировка внутри — по «Тип запорной части. Материал затвора/ корпуса».
+        //   • mode='name' (свайп →): группировка по «DN (мм)»,
+        //     сортировка внутри — по «Тип запорной части. Материал затвора/ корпуса».
+        //   • mode='prod' (тап): группировка и сортировка по производствам.
+        let sortKey, groupKey;
         if (mode === 'type') {
-            sortKey = 'Тип, пропускная характеристика';
-            groupKey = 'Тип запорной части. Материал затвора/ корпуса';
+            groupKey = 'Тип, пропускная характеристика';
+            sortKey = 'Тип запорной части. Материал затвора/ корпуса';
         } else if (mode === 'name') {
-            sortKey = 'DN (мм)';
-            groupKey = 'Тип запорной части. Материал затвора/ корпуса';
-            numericSort = true;
+            groupKey = 'DN (мм)';
+            sortKey = 'Тип запорной части. Материал затвора/ корпуса';
         } else {
             sortKey = 'Производство';
             groupKey = 'Производство';
@@ -9482,21 +9500,17 @@
             );
         }
         items.sort((a, b) => {
-            // Внутри группы сортировка идёт по тому же sortKey, что и в основном списке
+            // Внутри группы сортировка идёт по sortKey (для обоих режимов —
+            // «Тип запорной части. Материал затвора/ корпуса», текстовое поле).
             const va = (a[sortKey] || '').toString();
             const vb = (b[sortKey] || '').toString();
-            if (numericSort) {
-                const na = parseFloat(va.replace(',', '.'));
-                const nb = parseFloat(vb.replace(',', '.'));
-                if (isNaN(na) && isNaN(nb)) return va.toLowerCase().localeCompare(vb.toLowerCase());
-                if (isNaN(na)) return 1;
-                if (isNaN(nb)) return -1;
-                if (na !== nb) return na - nb;
-            }
             const la = va.toLowerCase(), lb = vb.toLowerCase();
             if (la < lb) return -1;
             if (la > lb) return 1;
-            return 0;
+            // При равном sortKey — вторичная сортировка по марке
+            const ma = (a['Марка'] || '').toString().toLowerCase();
+            const mb = (b['Марка'] || '').toString().toLowerCase();
+            return ma.localeCompare(mb);
         });
 
         if (items.length === 0) {
@@ -9520,40 +9534,11 @@
             return;
         }
 
-        // Сгруппировать клапаны по столбцу «DN (мм)» — раскрытая группа без сворачивания.
-        // Извлекаем числовое DN из строки (например, "DN 50" → 50, "100" → 100).
-        function _valveParseDn(raw) {
-            if (raw === null || raw === undefined || raw === '') return null;
-            const s = String(raw).trim();
-            const m = s.match(/(\d+(?:[.,]\d+)?)/);
-            if (!m) return null;
-            return parseFloat(m[1].replace(',', '.'));
-        }
-        const groups = {};
-        const groupOrder = []; // [{ key, dn }]
-        for (const item of items) {
-            const dnRaw = item['DN (мм)'];
-            const dnNum = _valveParseDn(dnRaw);
-            const gKey = (dnRaw === null || dnRaw === undefined || String(dnRaw).trim() === '')
-                ? '(без DN)'
-                : String(dnRaw).trim();
-            if (!groups[gKey]) {
-                groups[gKey] = [];
-                groupOrder.push({ key: gKey, dn: dnNum });
-            }
-            groups[gKey].push(item);
-        }
-        // Сортировка: с DN по возрастанию, "(без DN)" — в конце.
-        groupOrder.sort((a, b) => {
-            if (a.dn === null && b.dn === null) {
-                return a.key.localeCompare(b.key, 'ru');
-            }
-            if (a.dn === null) return 1;
-            if (b.dn === null) return -1;
-            if (a.dn !== b.dn) return a.dn - b.dn;
-            return a.key.localeCompare(b.key, 'ru');
-        });
-
+        // Плоский список клапанов в выбранной группе. Сортировка уже выполнена
+        // выше по sortKey («Тип запорной части. Материал затвора/ корпуса»).
+        // Раньше здесь делалась подгруппировка по «DN (мм)», но после уточнения
+        // пользователя (группировка по DN делается на родительской странице) —
+        // внутри группы просто плоский список.
         let html = '';
         // Бейдж активного фильтра (проект / СБС / САР) вверху страницы группы
         if (kipIsProjectLinkFilterActive('valves')) {
@@ -9564,39 +9549,34 @@
             html += kipRenderSarFilterBadge('valves');
         }
         html += '<div class="valve-sorted-list">';
-        for (const g of groupOrder) {
-            const gItems = groups[g.key];
-            const label = (g.dn === null) ? g.key : ('DN ' + (Number.isInteger(g.dn) ? g.dn : g.dn.toString().replace('.', ',')));
-            html += '<div class="pb-section valve-group valve-subgroup static">';
-            html += '<div class="pb-section-title">';
-            html += '<span class="pb-section-title-text">' + valveEsc(label) + '</span>';
-            html += '<span class="pb-section-title-count">' + gItems.length + '</span>';
-            html += '<span class="pb-section-arrow"></span>';
-            html += '</div>';
-            html += '<div class="pb-section-body">';
-            for (const item of gItems) {
-                const itemId = String(item['ID'] ?? '');
-                const name = item['Марка'] || item['Назначение арматуры (параметр)'] || '(без названия)';
-                const type = item['Тип, пропускная характеристика'] || '';
-                const place = item['Место расположения'] || '';
+        for (const item of items) {
+            const itemId = String(item['ID'] ?? '');
+            const name = item['Марка'] || item['Назначение арматуры (параметр)'] || '(без названия)';
+            const type = item['Тип, пропускная характеристика'] || '';
+            const place = item['Место расположения'] || '';
+            // Подзаголовок: «Тип запорной части…» (по этому полю шла сортировка)
+            // + DN + тип + место — чтобы было видно, почему карточка стоит здесь.
+            const shutOff = item['Тип запорной части. Материал затвора/ корпуса'] || '';
+            const dn = item['DN (мм)'] || '';
 
-                html += '<div class="valve-card" data-valve-id="' + valveEsc(itemId) + '" data-mode="' + mode + '">';
-                html += '<div class="valve-card-header" onclick="valveOpenDetail(\'' + valveEsc(itemId) + '\')">';
-                html += '<div class="valve-card-header-inner">';
-                html += '<div class="valve-card-text">';
-                html += '<div class="valve-card-title">' + valveEsc(name) + '</div>';
-                let subtitle = '';
-                if (type) subtitle += type;
-                if (place) subtitle += (subtitle ? ' · ' : '') + place;
-                if (subtitle) html += '<div class="valve-card-subtitle">' + valveEsc(subtitle) + '</div>';
-                html += '</div>';
-                html += '<span class="valve-card-arrow"></span>';
-                html += '</div>';
-                html += '</div>';
-                html += '</div>';
+            html += '<div class="valve-card" data-valve-id="' + valveEsc(itemId) + '" data-mode="' + mode + '">';
+            html += '<div class="valve-card-header" onclick="valveOpenDetail(\'' + valveEsc(itemId) + '\')">';
+            html += '<div class="valve-card-header-inner">';
+            html += '<div class="valve-card-text">';
+            html += '<div class="valve-card-title">' + valveEsc(name) + '</div>';
+            let subtitleParts = [];
+            if (shutOff) subtitleParts.push(shutOff);
+            if (dn) subtitleParts.push('DN ' + valveEsc(dn));
+            if (type) subtitleParts.push(type);
+            if (place) subtitleParts.push(place);
+            if (subtitleParts.length) {
+                html += '<div class="valve-card-subtitle">' + valveEsc(subtitleParts.join(' · ')) + '</div>';
             }
-            html += '</div>'; // pb-section-body
-            html += '</div>'; // pb-section
+            html += '</div>';
+            html += '<span class="valve-card-arrow"></span>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
         }
         html += '</div>';
         list.innerHTML = html;
