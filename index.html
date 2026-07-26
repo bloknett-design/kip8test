@@ -4176,34 +4176,35 @@
         align-items: center;
         gap: 12px;
         padding: 12px 14px;
-        background: rgba(40, 50, 65, 0.96);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        /* Полностью непрозрачный фон, чтобы клетчатый паттерн body не просвечивал */
+        background: #283240;
+        border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 12px;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
         transition: background 0.15s ease, transform 0.05s ease;
     }
     [data-theme="light"] .kip-related-row {
-        background: rgba(252, 248, 240, 0.97);
-        border-color: rgba(0, 0, 0, 0.08);
+        background: #fcf8f0;
+        border-color: rgba(0, 0, 0, 0.10);
     }
     .kip-related-row:active {
-        background: rgba(106, 166, 224, 0.28);
+        background: #324258;
         transform: scale(0.985);
     }
     [data-theme="light"] .kip-related-row:active {
-        background: rgba(26, 64, 96, 0.18);
+        background: #ece4d0;
     }
     .kip-related-row.is-empty {
         cursor: default;
         opacity: 0.5;
     }
     .kip-related-row.is-empty:active {
-        background: rgba(40, 50, 65, 0.96);
+        background: #283240;
         transform: none;
     }
     [data-theme="light"] .kip-related-row.is-empty:active {
-        background: rgba(252, 248, 240, 0.97);
+        background: #fcf8f0;
     }
     .kip-related-row-icon {
         flex: 0 0 auto;
