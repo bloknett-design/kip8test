@@ -1236,22 +1236,38 @@
     .sidebar-overlay.active { opacity: 1; pointer-events: auto; }
     .sidebar {
         position: fixed; top: 0; left: 0; bottom: 0; width: 280px; max-width: 85vw;
-        /* Фон: картинка Launch.png + полупрозрачный тёмный overlay (92-96%)
-           для читаемости пунктов меню. backdrop-filter дополнительно размывает
-           фон под overlay на случай, если картинка не загрузилась. */
-        background: linear-gradient(rgba(23, 33, 43, 0.92), rgba(23, 33, 43, 0.96)),
-                    url('./images/Launch.png') center/cover no-repeat,
-                    var(--sidebar-bg);
+        /* Фон: картинка Launch.png только в НИЖНЕЙ половине бокового меню,
+           целиком (background-size: contain — не обрезается), по центру по горизонтали,
+           прижата к низу. Верхняя половина — сплошной цвет (--sidebar-bg).
+           Overlay-градиент обеспечивает читаемость пунктов меню поверх картинки.
+           В нижней половине overlay всего ~50% (картинка яркая), в верхней — 100% непрозрачный. */
+        background:
+            /* overlay-градиент сверху-вниз: 100% непрозрачный в верхней половине (50%),
+               плавный переход к 50% непрозрачности в нижней половине (картинка ярче) */
+            linear-gradient(to bottom,
+                rgba(23, 33, 43, 1.00) 0%,
+                rgba(23, 33, 43, 1.00) 45%,
+                rgba(23, 33, 43, 0.70) 55%,
+                rgba(23, 33, 43, 0.50) 100%),
+            /* картинка целиком, прижата к низу, по центру */
+            url('./images/Launch.png') bottom center / contain no-repeat,
+            /* fallback-цвет */
+            var(--sidebar-bg);
         backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
         border-right: 1px solid rgba(74, 143, 199, 0.15); z-index: 160;
         transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         display: flex; flex-direction: column; overflow: hidden;
     }
     [data-theme="light"] .sidebar {
-        /* Светлая тема: cream overlay поверх той же картинки. */
-        background: linear-gradient(rgba(250, 249, 245, 0.92), rgba(250, 249, 245, 0.96)),
-                    url('./images/Launch.png') center/cover no-repeat,
-                    var(--sidebar-bg);
+        /* Светлая тема: cream overlay в той же логике. */
+        background:
+            linear-gradient(to bottom,
+                rgba(250, 249, 245, 1.00) 0%,
+                rgba(250, 249, 245, 1.00) 45%,
+                rgba(250, 249, 245, 0.70) 55%,
+                rgba(250, 249, 245, 0.50) 100%),
+            url('./images/Launch.png') bottom center / contain no-repeat,
+            var(--sidebar-bg);
     }
     .sidebar.active { transform: translateX(0); }
     .sidebar-header {
