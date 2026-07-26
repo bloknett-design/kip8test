@@ -4018,6 +4018,22 @@
     [data-theme="light"] .project-detail-value .kip-project-link:visited {
         color: #1a4060 !important;
     }
+    /* Предварительная карточка проекта (список): № проекта как <a> внутри .project-card-subtitle.
+       Синий цвет + вес/размер как у обычного подзаголовка карточки (12px, не 14px как в ссылке),
+       чтобы ссылка визуально вписывалась в карточку. */
+    .project-card-subtitle .kip-project-link,
+    .project-card-subtitle .kip-project-link:visited {
+        color: #6aa6e0 !important;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    [data-theme="light"] .project-card-subtitle .kip-project-link,
+    [data-theme="light"] .project-card-subtitle .kip-project-link:visited {
+        color: #1a4060 !important;
+    }
+    .project-card-subtitle .kip-project-link-arrow {
+        font-size: 14px;
+    }
 
     /* ===== Единая кликабельная ссылка «№ СБС» в карточках КИП ИОС ===== */
     /* Применяется в разделах: приборы / клапаны / регуляторы.
@@ -10518,6 +10534,34 @@
         const after = t.substring(idx + q.length);
         return projectEsc(before) + '<mark>' + projectEsc(match) + '</mark>' + projectMark(after, query);
     }
+    // Рабочая ссылка на файл проекта — это URL (http:// или https://),
+    // извлечённый из гиперссылки Excel sync-projects.py.
+    // Локальные пути «Проекты_Files\...» не считаются рабочими ссылками.
+    // Возвращает '' если ссылки нет или она нерабочая.
+    function getProjectFileUrl(item) {
+        const raw = String(item && item['Файл проекта'] || '').trim();
+        return (raw.startsWith('http://') || raw.startsWith('https://')) ? raw : '';
+    }
+    // Сгенерировать HTML-строку для № проекта в предварительной карточке.
+    // Если есть рабочая ссылка на файл проекта — рендерится как кликабельная <a>
+    // с классом .kip-project-link (синий цвет, открытие в новой вкладке, stopPropagation).
+    // Иначе — обычный текст «№ {num}».
+    // query — текущий поисковый запрос для подсветки совпадений (через projectMark).
+    function projectRenderCardNumber(num, item, query) {
+        if (!num) return '';
+        const url = getProjectFileUrl(item);
+        if (url) {
+            // Подсветка не применяется внутри <a> (projectMark возвращает HTML,
+            // который может сломать структуру тегов). Поэтому для кликабельного
+            // № подсветку отключаем — простой экранированный текст.
+            return '<a class="kip-project-link project-card-num-link" href="' + projectEsc(url) + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">'
+                + '<span>№ ' + projectEsc(num) + '</span>'
+                + '<span class="kip-project-link-arrow">↗</span>'
+                + '</a>';
+        }
+        // Без ссылки — обычный текст с подсветкой.
+        return projectMark('№ ' + num, query);
+    }
     function projectPlural(n, forms) {
         const m = n % 100;
         const m1 = m % 10;
@@ -10751,9 +10795,10 @@
                 html += '<div class="project-card-header-inner">';
                 html += '<div class="project-card-text">';
                 html += '<div class="project-card-title">' + projectMark(name, query) + '</div>';
-                let subtitle = '';
-                if (num) subtitle += '№ ' + num;
-                if (subtitle) html += '<div class="project-card-subtitle">' + projectMark(subtitle, query) + '</div>';
+                // № проекта — кликабельная ссылка (синяя, со стрелкой ↗), если есть
+                // рабочая ссылка на файл проекта. Иначе — обычный текст «№ {num}».
+                const numHtml = projectRenderCardNumber(num, item, query);
+                if (numHtml) html += '<div class="project-card-subtitle">' + numHtml + '</div>';
                 if (status) html += '<div class="project-card-status ' + statusCls + '">' + projectMark(status, query) + '</div>';
                 html += '</div>';
                 html += '<span class="project-card-arrow"></span>';
@@ -10863,9 +10908,11 @@
                 html += '<div class="project-card-header-inner">';
                 html += '<div class="project-card-text">';
                 html += '<div class="project-card-title">' + projectEsc(name) + '</div>';
-                let subtitle = '';
-                if (num) subtitle += '№ ' + num;
-                if (subtitle) html += '<div class="project-card-subtitle">' + projectEsc(subtitle) + '</div>';
+                // № проекта — кликабельная ссылка (синяя, со стрелкой ↗), если есть
+                // рабочая ссылка на файл проекта. Иначе — обычный текст «№ {num}».
+                // В режиме группы (без поиска) query не передаётся — подсветка не нужна.
+                const numHtml = projectRenderCardNumber(num, item, '');
+                if (numHtml) html += '<div class="project-card-subtitle">' + numHtml + '</div>';
                 if (status) html += '<div class="project-card-status ' + statusCls + '">' + projectEsc(status) + '</div>';
                 html += '</div>';
                 html += '<span class="project-card-arrow"></span>';
@@ -12047,10 +12094,8 @@
         // Рабочая ссылка на файл проекта — это URL (http:// или https://),
         // извлечённый из гиперссылки Excel sync-projects.py.
         // Локальные пути «Проекты_Files\...» не считаются рабочими ссылками.
-        const projectFileRaw = String(item['Файл проекта'] || '').trim();
-        const projectFileUrl = (projectFileRaw.startsWith('http://') || projectFileRaw.startsWith('https://'))
-            ? projectFileRaw
-            : '';
+        // Используется общий helper getProjectFileUrl (см. выше).
+        const projectFileUrl = getProjectFileUrl(item);
 
         let html = '<div class="project-detail-card">';
         html += '<div class="project-detail-rows">';

@@ -444,3 +444,39 @@ Stage Summary:
 - Файлы: index.html (одно новое CSS-правило для .connection-indicator), sw.js (v196).
 - Значок состояния связи + кнопка обновления теперь отображается ТОЛЬКО на главной странице (#page-dashboard). На всех вложенных страницах он скрыт — больше не мешает в верхнем баре.
 - Версия: CACHE_VERSION=kipia-test-v196.
+
+---
+Task ID: 17
+Agent: AI Assistant (GLM)
+Task: Если проект кликабельный, с рабочей ссылкой сделать цвет номера проекта в предварительной карточке синим цветом.
+
+Work Log:
+- Идентифицировал два места рендеринга предварительных карточек проектов:
+    • projectsRenderSorted (стр. ~10777) — список с поиском/группировкой по «Отделению» (page-projects-prod, page-projects-name, page-projects-type).
+    • projectsRenderGroup (стр. ~10890) — страница отдельной группы (#page-projects-group) с подгруппами по году.
+- В обоих местах № проекта рендерился как обычный текст «№ {num}» внутри .project-card-subtitle (цвет var(--text-secondary) = серый/тёмный).
+- Создал две helper-функции (после projectMark, стр. ~10521):
+    • getProjectFileUrl(item) — извлекает рабочую ссылку (http:// или https://) из «Файл проекта». Возвращает '' для локальных путей и пустых значений. Тот же паттерн, что в projectRenderDetail (Task 14).
+    • projectRenderCardNumber(num, item, query) — возвращает HTML-строку для № проекта в предварительной карточке:
+        — Если есть рабочая ссылка: <a class="kip-project-link project-card-num-link" href="..." target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()"><span>№ {num}</span><span class="kip-project-link-arrow">↗</span></a>
+        — Иначе: projectMark('№ ' + num, query) — обычный текст с подсветкой поиска.
+    onclick="event.stopPropagation()" предотвращает всплытие клика на .project-card-header (которое открывает детальную карточку) — клик по синему № открывает файл проекта в новой вкладке, а не карточку деталей.
+- Заменил инлайн-логику в обоих местах рендеринга на вызов projectRenderCardNumber:
+    • В projectsRenderSorted: const numHtml = projectRenderCardNumber(num, item, query);
+    • В projectsRenderGroup: const numHtml = projectRenderCardNumber(num, item, '');
+- Рефакторинг: projectRenderDetail теперь использует общий helper getProjectFileUrl(item) вместо инлайн-проверки (Task 14). Логика идентична, убран дублирующийся код.
+- Добавил CSS-правила (после правил для .project-detail-value .kip-project-link, стр. ~4021):
+    • .project-card-subtitle .kip-project-link, .project-card-subtitle .kip-project-link:visited { color: #6aa6e0 !important; font-size: 12px; font-weight: 600; }
+    • [data-theme="light"] .project-card-subtitle .kip-project-link, …:visited { color: #1a4060 !important; }
+    • .project-card-subtitle .kip-project-link-arrow { font-size: 14px; } — стрелка ↗ меньше (14px вместо 18px) для визуального баланса с 12px текстом подзаголовка.
+    • font-size: 12px — чтобы ссылка вписывалась в карточку (как обычный .project-card-subtitle), а не выглядела крупной 14px ссылкой.
+- Стили согласованы с детальной карточкой (Task 14-15): тот же цвет #6aa6e0 / #1a4060, та же иконка ↗.
+- JS-синтаксис всех 4 <script>-блоков валиден (node --check ✓). Тесты: 207/207 ✓. DIV-баланс: 1939/1938 (pre-existing).
+- CACHE_VERSION: v196 → v197.
+
+Stage Summary:
+- Файлы: index.html (helper-функции getProjectFileUrl + projectRenderCardNumber, изменения в projectsRenderSorted/projectsRenderGroup/projectRenderDetail, новые CSS-правила для .project-card-subtitle .kip-project-link), sw.js (v197).
+- В предварительных карточках проектов № проекта теперь синего цвета (#6aa6e0 тёмная / #1a4060 светлая) и кликабелен (открывает файл проекта в новой вкладке, иконка ↗), если в «Файл проекта» есть рабочая ссылка.
+- Клик по синему № не открывает детальную карточку (event.stopPropagation) — открывает только файл проекта.
+- На текущих данных: 1 проект из 261 имеет синий кликабельный № в предварительной карточке (ID=261, №=551-114-1155-АТХ → https://disk.yandex.ru/i/s0yR9iKY8mhozQ).
+- Версия: CACHE_VERSION=kipia-test-v197.
