@@ -1221,6 +1221,10 @@
     }
     #page-dashboard ~ .app-header, body:has(#page-dashboard.active) .app-header { display: block; }
     body:has(.page-content.active:not(#page-dashboard)) .app-header { display: none; }
+    /* Значок состояния связи + кнопка обновления (#connectionIndicator) —
+       только на главной странице (#page-dashboard).
+       На всех вложенных страницах скрываем, чтобы не мешал в верхнем баре. */
+    body:has(.page-content.active:not(#page-dashboard)) .connection-indicator { display: none; }
     .greek-gamma { font-family: Georgia, 'Times New Roman', serif; font-style: italic; text-transform: none; }
     .greek-delta { font-family: Georgia, 'Times New Roman', serif; font-style: italic; text-transform: none; }
     /* Sidebar */
