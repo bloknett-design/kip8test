@@ -2321,7 +2321,9 @@
     }
 
     /* Скрываем информационные надписи «Всего: ... · групп: ... · обновлено: ...»
-       на страницах: Приборы (3 сортировки + основная), Блокировки, Клапаны, Регуляторы */
+       на страницах: Приборы (3 сортировки + основная), Блокировки, Клапаны,
+       Регуляторы, Проекты, Кабельный журнал — иначе info-bar создаёт лишний
+       отступ между верхним баром и списком группировок. */
     #devInfo,
     #devTypeInfo,
     #devNameInfo,
@@ -2330,7 +2332,9 @@
     #valveTypeInfo,
     #valveNameInfo,
     #valveProdInfo,
-    #regulatorProdInfo {
+    #regulatorProdInfo,
+    #projectProdInfo,
+    #cableProdInfo {
         display: none !important;
     }
 
@@ -2543,6 +2547,11 @@
     /* ===== Страница детального просмотра блокировки ===== */
     .lock-detail-card {
         padding: 12px 14px 24px;
+        /* Почти непрозрачный фон, чтобы клетчатый паттерн body не просвечивал */
+        background: rgba(45, 42, 46, 0.96);
+    }
+    [data-theme="light"] .lock-detail-card {
+        background: rgba(248, 244, 246, 0.96);
     }
     .lock-detail-rows {
         border-radius: 12px;
@@ -2560,16 +2569,16 @@
     }
     [data-theme="light"] .lock-detail-row { border-bottom-color: rgba(20, 20, 19, 0.06); }
     .lock-detail-row:last-child { border-bottom: none; }
-    .lock-detail-row.lock-row-group-1 { background: rgba(255,255,255,0.015); }
-    .lock-detail-row.lock-row-group-2 { background: rgba(255,255,255,0.055); }
-    .lock-detail-row.lock-row-group-3 { background: rgba(255,255,255,0.015); }
-    .lock-detail-row.lock-row-group-4 { background: rgba(255,255,255,0.055); }
-    .lock-detail-row.lock-row-group-5 { background: rgba(255,255,255,0.025); }
-    [data-theme="light"] .lock-detail-row.lock-row-group-1 { background: rgba(0,0,0,0.01); }
-    [data-theme="light"] .lock-detail-row.lock-row-group-2 { background: rgba(0,0,0,0.04); }
-    [data-theme="light"] .lock-detail-row.lock-row-group-3 { background: rgba(0,0,0,0.01); }
-    [data-theme="light"] .lock-detail-row.lock-row-group-4 { background: rgba(0,0,0,0.04); }
-    [data-theme="light"] .lock-detail-row.lock-row-group-5 { background: rgba(0,0,0,0.02); }
+    .lock-detail-row.lock-row-group-1 { background: rgba(55, 50, 54, 0.96); }
+    .lock-detail-row.lock-row-group-2 { background: rgba(70, 64, 70, 0.96); }
+    .lock-detail-row.lock-row-group-3 { background: rgba(55, 50, 54, 0.96); }
+    .lock-detail-row.lock-row-group-4 { background: rgba(70, 64, 70, 0.96); }
+    .lock-detail-row.lock-row-group-5 { background: rgba(62, 57, 62, 0.96); }
+    [data-theme="light"] .lock-detail-row.lock-row-group-1 { background: rgba(252, 248, 250, 0.97); }
+    [data-theme="light"] .lock-detail-row.lock-row-group-2 { background: rgba(225, 218, 222, 0.94); }
+    [data-theme="light"] .lock-detail-row.lock-row-group-3 { background: rgba(252, 248, 250, 0.97); }
+    [data-theme="light"] .lock-detail-row.lock-row-group-4 { background: rgba(225, 218, 222, 0.94); }
+    [data-theme="light"] .lock-detail-row.lock-row-group-5 { background: rgba(238, 233, 236, 0.96); }
     .lock-detail-label {
         font-size: 12px;
         color: rgba(180, 200, 220, 0.45);
@@ -2725,6 +2734,11 @@
     /* ===== Страница детального просмотра клапана ===== */
     .valve-detail-card {
         padding: 12px 14px 24px;
+        /* Почти непрозрачный фон, чтобы клетчатый паттерн body не просвечивал */
+        background: rgba(40, 50, 48, 0.96);
+    }
+    [data-theme="light"] .valve-detail-card {
+        background: rgba(245, 248, 246, 0.96);
     }
     .valve-detail-rows {
         border-radius: 12px;
@@ -2742,16 +2756,16 @@
     }
     [data-theme="light"] .valve-detail-row { border-bottom-color: rgba(20, 20, 19, 0.06); }
     .valve-detail-row:last-child { border-bottom: none; }
-    .valve-detail-row.valve-row-group-1 { background: rgba(255,255,255,0.015); }
-    .valve-detail-row.valve-row-group-2 { background: rgba(255,255,255,0.055); }
-    .valve-detail-row.valve-row-group-3 { background: rgba(255,255,255,0.015); }
-    .valve-detail-row.valve-row-group-4 { background: rgba(255,255,255,0.055); }
-    .valve-detail-row.valve-row-group-5 { background: rgba(255,255,255,0.025); }
-    [data-theme="light"] .valve-detail-row.valve-row-group-1 { background: rgba(0,0,0,0.01); }
-    [data-theme="light"] .valve-detail-row.valve-row-group-2 { background: rgba(0,0,0,0.04); }
-    [data-theme="light"] .valve-detail-row.valve-row-group-3 { background: rgba(0,0,0,0.01); }
-    [data-theme="light"] .valve-detail-row.valve-row-group-4 { background: rgba(0,0,0,0.04); }
-    [data-theme="light"] .valve-detail-row.valve-row-group-5 { background: rgba(0,0,0,0.02); }
+    .valve-detail-row.valve-row-group-1 { background: rgba(50, 60, 58, 0.96); }
+    .valve-detail-row.valve-row-group-2 { background: rgba(65, 76, 72, 0.96); }
+    .valve-detail-row.valve-row-group-3 { background: rgba(50, 60, 58, 0.96); }
+    .valve-detail-row.valve-row-group-4 { background: rgba(65, 76, 72, 0.96); }
+    .valve-detail-row.valve-row-group-5 { background: rgba(57, 67, 64, 0.96); }
+    [data-theme="light"] .valve-detail-row.valve-row-group-1 { background: rgba(250, 252, 250, 0.97); }
+    [data-theme="light"] .valve-detail-row.valve-row-group-2 { background: rgba(222, 230, 226, 0.94); }
+    [data-theme="light"] .valve-detail-row.valve-row-group-3 { background: rgba(250, 252, 250, 0.97); }
+    [data-theme="light"] .valve-detail-row.valve-row-group-4 { background: rgba(222, 230, 226, 0.94); }
+    [data-theme="light"] .valve-detail-row.valve-row-group-5 { background: rgba(236, 242, 240, 0.96); }
     .valve-detail-label {
         font-size: 12px;
         color: rgba(180, 200, 220, 0.45);
@@ -2917,11 +2931,11 @@
     /* Карточка деталей проекта */
     .project-detail-card {
         margin: 0;
-        background: var(--card-bg, rgba(255,255,255,0.025));
+        background: rgba(50, 45, 38, 0.96);
         border-bottom: 1px solid rgba(255,255,255,0.05);
     }
     [data-theme="light"] .project-detail-card {
-        background: rgba(255,255,255,0.55);
+        background: rgba(255, 250, 242, 0.96);
     }
     .project-detail-rows {
         padding: 8px 16px 16px;
@@ -2934,6 +2948,17 @@
         border-bottom: 1px solid rgba(255,255,255,0.04);
     }
     .project-detail-row:last-child { border-bottom: none; }
+    /* Зебра-фон для зрительного разделения строк (группы назначаются в JS). */
+    .project-detail-row.project-row-group-1 { background: rgba(60, 54, 46, 0.96); }
+    .project-detail-row.project-row-group-2 { background: rgba(75, 67, 56, 0.96); }
+    .project-detail-row.project-row-group-3 { background: rgba(60, 54, 46, 0.96); }
+    .project-detail-row.project-row-group-4 { background: rgba(75, 67, 56, 0.96); }
+    .project-detail-row.project-row-group-5 { background: rgba(67, 60, 51, 0.96); }
+    [data-theme="light"] .project-detail-row.project-row-group-1 { background: rgba(255, 250, 242, 0.97); }
+    [data-theme="light"] .project-detail-row.project-row-group-2 { background: rgba(228, 220, 205, 0.94); }
+    [data-theme="light"] .project-detail-row.project-row-group-3 { background: rgba(255, 250, 242, 0.97); }
+    [data-theme="light"] .project-detail-row.project-row-group-4 { background: rgba(228, 220, 205, 0.94); }
+    [data-theme="light"] .project-detail-row.project-row-group-5 { background: rgba(242, 236, 224, 0.96); }
     .project-detail-label {
         font-size: 11px;
         color: var(--text-secondary);
@@ -3102,11 +3127,11 @@
     /* Карточка деталей кабеля */
     .cable-detail-card {
         margin: 0;
-        background: var(--card-bg, rgba(255,255,255,0.025));
+        background: rgba(45, 50, 42, 0.96);
         border-bottom: 1px solid rgba(255,255,255,0.05);
     }
     [data-theme="light"] .cable-detail-card {
-        background: rgba(255,255,255,0.55);
+        background: rgba(250, 252, 245, 0.96);
     }
     .cable-detail-rows {
         padding: 8px 16px 16px;
@@ -3119,6 +3144,17 @@
         border-bottom: 1px solid rgba(255,255,255,0.04);
     }
     .cable-detail-row:last-child { border-bottom: none; }
+    /* Зебра-фон для зрительного разделения строк (группы назначаются в JS). */
+    .cable-detail-row.cable-row-group-1 { background: rgba(55, 60, 50, 0.96); }
+    .cable-detail-row.cable-row-group-2 { background: rgba(70, 76, 62, 0.96); }
+    .cable-detail-row.cable-row-group-3 { background: rgba(55, 60, 50, 0.96); }
+    .cable-detail-row.cable-row-group-4 { background: rgba(70, 76, 62, 0.96); }
+    .cable-detail-row.cable-row-group-5 { background: rgba(62, 67, 56, 0.96); }
+    [data-theme="light"] .cable-detail-row.cable-row-group-1 { background: rgba(250, 252, 245, 0.97); }
+    [data-theme="light"] .cable-detail-row.cable-row-group-2 { background: rgba(225, 230, 215, 0.94); }
+    [data-theme="light"] .cable-detail-row.cable-row-group-3 { background: rgba(250, 252, 245, 0.97); }
+    [data-theme="light"] .cable-detail-row.cable-row-group-4 { background: rgba(225, 230, 215, 0.94); }
+    [data-theme="light"] .cable-detail-row.cable-row-group-5 { background: rgba(238, 242, 230, 0.96); }
     .cable-detail-label {
         font-size: 11px;
         color: var(--text-secondary);
@@ -3258,6 +3294,11 @@
     /* ===== Страница детального просмотра регулятора ===== */
     .regulator-detail-card {
         padding: 12px 14px 24px;
+        /* Почти непрозрачный фон, чтобы клетчатый паттерн body не просвечивал */
+        background: rgba(48, 45, 54, 0.96);
+    }
+    [data-theme="light"] .regulator-detail-card {
+        background: rgba(250, 248, 250, 0.96);
     }
     .regulator-detail-rows {
         border-radius: 12px;
@@ -3275,16 +3316,16 @@
     }
     [data-theme="light"] .regulator-detail-row { border-bottom-color: rgba(20, 20, 19, 0.06); }
     .regulator-detail-row:last-child { border-bottom: none; }
-    .regulator-detail-row.regulator-row-group-1 { background: rgba(255,255,255,0.015); }
-    .regulator-detail-row.regulator-row-group-2 { background: rgba(255,255,255,0.055); }
-    .regulator-detail-row.regulator-row-group-3 { background: rgba(255,255,255,0.015); }
-    .regulator-detail-row.regulator-row-group-4 { background: rgba(255,255,255,0.055); }
-    .regulator-detail-row.regulator-row-group-5 { background: rgba(255,255,255,0.025); }
-    [data-theme="light"] .regulator-detail-row.regulator-row-group-1 { background: rgba(0,0,0,0.01); }
-    [data-theme="light"] .regulator-detail-row.regulator-row-group-2 { background: rgba(0,0,0,0.04); }
-    [data-theme="light"] .regulator-detail-row.regulator-row-group-3 { background: rgba(0,0,0,0.01); }
-    [data-theme="light"] .regulator-detail-row.regulator-row-group-4 { background: rgba(0,0,0,0.04); }
-    [data-theme="light"] .regulator-detail-row.regulator-row-group-5 { background: rgba(0,0,0,0.02); }
+    .regulator-detail-row.regulator-row-group-1 { background: rgba(58, 54, 66, 0.96); }
+    .regulator-detail-row.regulator-row-group-2 { background: rgba(72, 67, 82, 0.96); }
+    .regulator-detail-row.regulator-row-group-3 { background: rgba(58, 54, 66, 0.96); }
+    .regulator-detail-row.regulator-row-group-4 { background: rgba(72, 67, 82, 0.96); }
+    .regulator-detail-row.regulator-row-group-5 { background: rgba(64, 60, 73, 0.96); }
+    [data-theme="light"] .regulator-detail-row.regulator-row-group-1 { background: rgba(252, 250, 252, 0.97); }
+    [data-theme="light"] .regulator-detail-row.regulator-row-group-2 { background: rgba(225, 220, 230, 0.94); }
+    [data-theme="light"] .regulator-detail-row.regulator-row-group-3 { background: rgba(252, 250, 252, 0.97); }
+    [data-theme="light"] .regulator-detail-row.regulator-row-group-4 { background: rgba(225, 220, 230, 0.94); }
+    [data-theme="light"] .regulator-detail-row.regulator-row-group-5 { background: rgba(238, 235, 242, 0.96); }
     .regulator-detail-label {
         font-size: 12px;
         color: rgba(200, 190, 220, 0.45);
@@ -3877,14 +3918,14 @@
     .dev-card-row:last-child { border-bottom: none; }
     /* Толстые разделители */
     /* Группировка строк карточки по цвету */
-    .dev-card-row.dev-row-group-1 { background: rgba(255,255,255,0.015); }
-    .dev-card-row.dev-row-group-2 { background: rgba(255,255,255,0.055); }
-    .dev-card-row.dev-row-group-3 { background: rgba(255,255,255,0.015); }
-    .dev-card-row.dev-row-group-4 { background: rgba(255,255,255,0.055); }
-    [data-theme="light"] .dev-card-row.dev-row-group-1 { background: rgba(0,0,0,0.01); }
-    [data-theme="light"] .dev-card-row.dev-row-group-2 { background: rgba(0,0,0,0.04); }
-    [data-theme="light"] .dev-card-row.dev-row-group-3 { background: rgba(0,0,0,0.01); }
-    [data-theme="light"] .dev-card-row.dev-row-group-4 { background: rgba(0,0,0,0.04); }
+    .dev-card-row.dev-row-group-1 { background: rgba(40, 50, 65, 0.96); }
+    .dev-card-row.dev-row-group-2 { background: rgba(55, 68, 85, 0.96); }
+    .dev-card-row.dev-row-group-3 { background: rgba(40, 50, 65, 0.96); }
+    .dev-card-row.dev-row-group-4 { background: rgba(55, 68, 85, 0.96); }
+    [data-theme="light"] .dev-card-row.dev-row-group-1 { background: rgba(252, 248, 240, 0.97); }
+    [data-theme="light"] .dev-card-row.dev-row-group-2 { background: rgba(220, 213, 200, 0.94); }
+    [data-theme="light"] .dev-card-row.dev-row-group-3 { background: rgba(252, 248, 240, 0.97); }
+    [data-theme="light"] .dev-card-row.dev-row-group-4 { background: rgba(220, 213, 200, 0.94); }
     .dev-card-label {
         font-size: 12px;
         color: rgba(180, 200, 220, 0.45);
@@ -4135,7 +4176,7 @@
         align-items: center;
         gap: 12px;
         padding: 12px 14px;
-        background: rgba(255, 255, 255, 0.04);
+        background: rgba(40, 50, 65, 0.96);
         border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 12px;
         cursor: pointer;
@@ -4143,26 +4184,26 @@
         transition: background 0.15s ease, transform 0.05s ease;
     }
     [data-theme="light"] .kip-related-row {
-        background: rgba(0, 0, 0, 0.025);
+        background: rgba(252, 248, 240, 0.97);
         border-color: rgba(0, 0, 0, 0.08);
     }
     .kip-related-row:active {
-        background: rgba(106, 166, 224, 0.12);
+        background: rgba(106, 166, 224, 0.28);
         transform: scale(0.985);
     }
     [data-theme="light"] .kip-related-row:active {
-        background: rgba(26, 64, 96, 0.10);
+        background: rgba(26, 64, 96, 0.18);
     }
     .kip-related-row.is-empty {
         cursor: default;
         opacity: 0.5;
     }
     .kip-related-row.is-empty:active {
-        background: rgba(255, 255, 255, 0.04);
+        background: rgba(40, 50, 65, 0.96);
         transform: none;
     }
     [data-theme="light"] .kip-related-row.is-empty:active {
-        background: rgba(0, 0, 0, 0.025);
+        background: rgba(252, 248, 240, 0.97);
     }
     .kip-related-row-icon {
         flex: 0 0 auto;
@@ -4213,6 +4254,11 @@
     /* Карточка: картинка слева в левом краю + блок №/Место справа от неё */
     .dev-detail-card {
         padding: 12px 14px 24px;
+        /* Почти непрозрачный фон, чтобы клетчатый паттерн body не просвечивал */
+        background: rgba(28, 34, 46, 0.96);
+    }
+    [data-theme="light"] .dev-detail-card {
+        background: rgba(255, 252, 245, 0.96);
     }
     /* Верхний блок: flex-row — картинка слева + мета-блок справа */
     .dev-detail-top {
