@@ -11,7 +11,7 @@
 // свежие версии файлов из ASSETS.
 // ============================================================
 
-const CACHE_VERSION = 'kipia-test-v204';
+const CACHE_VERSION = 'kipia-test-v205';
 const CACHE_NAME = CACHE_VERSION;
 
 // Отдельный кэш для картинок Google Drive (превью + полные).
@@ -154,6 +154,17 @@ self.addEventListener('activate', event => {
 //      - При ошибке — отдаём из кэша по полному URL.
 self.addEventListener('fetch', event => {
   const request = event.request;
+
+  // ===== Bypass для Apps Script (система доступа КИПиА) =====
+  // Запросы к script.google.com (Apps Script Web App) и
+  // script.googleusercontent.com (куда Apps Script редиректит POST-ответы)
+  // НИКОГДА не кэшируем и не перехватываем — всегда идём напрямую в сеть.
+  // Это гарантирует, что OTP/heartbeat/logout всегда доходят до сервера.
+  const bypassUrl = new URL(request.url);
+  if (bypassUrl.hostname === 'script.google.com' ||
+      bypassUrl.hostname === 'script.googleusercontent.com') {
+    return; // не вызываем event.respondWith — браузер сам обработает запрос
+  }
 
   // Только GET-запросы кэшируем
   if (request.method !== 'GET') return;

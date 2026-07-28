@@ -4684,10 +4684,279 @@
     @media (max-width: 400px) {
         .kit-dev-form .cs-trigger { min-height: 34px !important; height: 34px !important; font-size: 11px !important; }
     }
+
+    /* ============================================================
+       СИСТЕМА ДОСТУПА: Login screen + sidebar user info + no-access
+       ============================================================ */
+
+    /* Login screen — fullscreen overlay */
+    .auth-login-screen {
+        position: fixed; inset: 0;
+        background: linear-gradient(135deg, #1a1f2e 0%, #0d1117 100%);
+        display: none;
+        align-items: center; justify-content: center;
+        z-index: 10000;
+        padding: 20px; box-sizing: border-box;
+        overflow-y: auto;
+    }
+    .auth-login-screen.active { display: flex; }
+    .auth-login-card {
+        background: rgba(30, 35, 50, 0.95);
+        border: 1px solid rgba(74, 143, 199, 0.3);
+        border-radius: 16px;
+        padding: 32px 24px;
+        width: 100%; max-width: 360px;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        margin: auto;
+    }
+    .auth-login-logo {
+        width: 60px; height: 60px;
+        margin: 0 auto 16px;
+        display: block;
+        border-radius: 14px;
+    }
+    .auth-login-title {
+        text-align: center; color: #e0e0e0;
+        font-size: 22px; font-weight: 700;
+        margin-bottom: 6px; letter-spacing: -0.3px;
+        text-shadow: 0 0 8px rgba(74,143,199,0.4);
+    }
+    .auth-login-subtitle {
+        text-align: center; color: rgba(255,255,255,0.5);
+        font-size: 13px; margin-bottom: 24px; line-height: 1.5;
+    }
+    .auth-field {
+        width: 100%; padding: 14px 16px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 10px;
+        color: #fff; font-size: 15px;
+        box-sizing: border-box; margin-bottom: 12px;
+        outline: none; transition: border-color 0.2s;
+        font-family: inherit;
+    }
+    .auth-field:focus { border-color: rgba(74,143,199,0.6); }
+    .auth-field::placeholder { color: rgba(255,255,255,0.3); }
+    .auth-btn {
+        width: 100%; padding: 14px 16px;
+        border: none; border-radius: 10px;
+        background: linear-gradient(135deg, #4a8fc7 0%, #6aa6e0 100%);
+        color: white; font-size: 15px; font-weight: 600;
+        cursor: pointer; transition: transform 0.1s, opacity 0.2s;
+        letter-spacing: 0.3px; font-family: inherit;
+    }
+    .auth-btn:active { transform: scale(0.98); }
+    .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .auth-btn-secondary {
+        background: transparent;
+        color: rgba(255,255,255,0.6);
+        border: 1px solid rgba(255,255,255,0.15);
+        margin-top: 8px;
+    }
+    .auth-error {
+        color: #ff6b6b; font-size: 13px;
+        text-align: center; margin: 12px 0;
+        min-height: 18px; line-height: 1.4;
+    }
+    .auth-info {
+        color: rgba(255,255,255,0.4);
+        font-size: 11px; text-align: center;
+        margin-top: 16px; line-height: 1.5;
+    }
+    .auth-otp-row {
+        display: flex; gap: 6px;
+        justify-content: center; margin: 16px 0;
+    }
+    .auth-otp-input {
+        width: 40px; height: 52px;
+        text-align: center; font-size: 22px; font-weight: 700;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 10px; color: #fff;
+        outline: none; transition: border-color 0.15s, background 0.15s;
+        font-family: inherit;
+    }
+    .auth-otp-input:focus { border-color: rgba(74,143,199,0.6); }
+    .auth-otp-input.filled {
+        background: rgba(74,143,199,0.15);
+        border-color: rgba(74,143,199,0.5);
+    }
+    .auth-resend {
+        text-align: center; color: rgba(255,255,255,0.5);
+        font-size: 12px; margin-top: 12px;
+    }
+    .auth-resend a {
+        color: #6aa6e0; text-decoration: underline;
+        cursor: pointer;
+    }
+    .auth-resend a.disabled {
+        color: rgba(255,255,255,0.3);
+        cursor: not-allowed; text-decoration: none;
+    }
+    .auth-loading {
+        display: inline-block;
+        width: 16px; height: 16px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: auth-spin 0.8s linear infinite;
+        vertical-align: middle; margin-right: 8px;
+    }
+    @keyframes auth-spin { to { transform: rotate(360deg); } }
+    .auth-step { display: none; }
+    .auth-step.active { display: block; }
+    .auth-email-display {
+        text-align: center; color: #6aa6e0;
+        font-size: 14px; margin: 8px 0 4px;
+        font-weight: 600; word-break: break-all;
+    }
+
+    /* Sidebar: user info section (above groups) */
+    .sidebar-user-info {
+        padding: 14px 18px 12px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        margin-bottom: 8px;
+        background: linear-gradient(135deg, rgba(74,143,199,0.08), rgba(74,143,199,0.02));
+    }
+    .sidebar-user-email {
+        font-size: 12px; color: rgba(255,255,255,0.75);
+        word-break: break-all; line-height: 1.3; font-weight: 600;
+    }
+    .sidebar-user-role {
+        font-size: 10px; color: rgba(74,143,199,0.9);
+        margin-top: 4px; text-transform: uppercase;
+        letter-spacing: 0.5px; font-weight: 700;
+    }
+    .sidebar-logout {
+        color: #ff6b6b !important;
+        font-weight: 600 !important;
+    }
+    .sidebar-logout:active { background: rgba(255,107,107,0.1) !important; }
+
+    /* No-access overlay (when user tries to access forbidden page) */
+    .no-access-screen {
+        text-align: center; padding: 40px 24px;
+        color: rgba(255,255,255,0.55);
+    }
+    .no-access-screen svg {
+        width: 56px; height: 56px;
+        stroke: rgba(255,107,107,0.6);
+        fill: none; stroke-width: 1.5;
+        margin-bottom: 16px;
+    }
+    .no-access-screen h3 {
+        color: rgba(255,255,255,0.85);
+        font-size: 18px; margin-bottom: 10px;
+        font-weight: 600;
+    }
+    .no-access-screen p {
+        font-size: 13px; line-height: 1.55;
+        margin-bottom: 22px;
+    }
+    .no-access-screen p b { color: #6aa6e0; }
+    .no-access-screen button {
+        padding: 10px 22px;
+        background: rgba(74,143,199,0.18);
+        border: 1px solid rgba(74,143,199,0.4);
+        color: #6aa6e0;
+        border-radius: 8px; font-size: 14px;
+        cursor: pointer; font-family: inherit;
+    }
+    .no-access-screen button:active { background: rgba(74,143,199,0.3); }
+
+    /* Light theme overrides */
+    [data-theme="light"] .auth-login-screen {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf2 100%);
+    }
+    [data-theme="light"] .auth-login-card {
+        background: rgba(255,255,255,0.97);
+        border-color: rgba(74,143,199,0.2);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+    }
+    [data-theme="light"] .auth-login-title { color: #1a1a1a; text-shadow: none; }
+    [data-theme="light"] .auth-login-subtitle { color: rgba(20,20,19,0.55); }
+    [data-theme="light"] .auth-field {
+        background: rgba(0,0,0,0.03);
+        border-color: rgba(0,0,0,0.1);
+        color: #1a1a1a;
+    }
+    [data-theme="light"] .auth-field::placeholder { color: rgba(20,20,19,0.35); }
+    [data-theme="light"] .auth-otp-input {
+        background: rgba(0,0,0,0.03);
+        border-color: rgba(0,0,0,0.1);
+        color: #1a1a1a;
+    }
+    [data-theme="light"] .auth-info { color: rgba(20,20,19,0.45); }
+    [data-theme="light"] .auth-resend { color: rgba(20,20,19,0.55); }
+    [data-theme="light"] .auth-email-display { color: #4a8fc7; }
+    [data-theme="light"] .sidebar-user-info {
+        border-bottom-color: rgba(20,20,19,0.08);
+        background: linear-gradient(135deg, rgba(74,143,199,0.06), rgba(74,143,199,0.01));
+    }
+    [data-theme="light"] .sidebar-user-email { color: rgba(20,20,19,0.75); }
+    [data-theme="light"] .sidebar-user-role { color: rgba(74,143,199,0.95); }
+    [data-theme="light"] .no-access-screen { color: rgba(20,20,19,0.5); }
+    [data-theme="light"] .no-access-screen h3 { color: rgba(20,20,19,0.85); }
+    [data-theme="light"] .no-access-screen p b { color: #4a8fc7; }
+    [data-theme="light"] .no-access-screen button {
+        background: rgba(74,143,199,0.1);
+        color: #4a8fc7;
+    }
 </style>
 <!-- base target removed: not needed for SPA, causes issues with in-page navigation -->
 </head>
 <body>
+
+<!-- ============================================================
+     АВТОРИЗАЦИЯ: Экран входа (email + OTP)
+     Показывается поверх приложения при отсутствии валидного токена.
+     ============================================================ -->
+<div id="loginScreen" class="auth-login-screen">
+    <div class="auth-login-card">
+        <img src="images/icon-192.png" alt="КИПиА" class="auth-login-logo" onerror="this.style.display='none'">
+        <div class="auth-login-title">КИПиА</div>
+        <div class="auth-login-subtitle">Система доступа</div>
+
+        <!-- Шаг 1: ввод email -->
+        <div id="authStep1" class="auth-step active">
+            <input type="email" id="authEmail" class="auth-field" placeholder="Ваш email" autocomplete="email" inputmode="email" autocapitalize="none">
+            <button type="button" class="auth-btn" id="authSendBtn" onclick="KipAuth.sendOTP()">
+                Отправить код
+            </button>
+            <div class="auth-info">
+                Код подтверждения будет отправлен на вашу почту.<br>
+                Если у вас нет доступа — обратитесь к администратору.
+            </div>
+        </div>
+
+        <!-- Шаг 2: ввод OTP-кода -->
+        <div id="authStep2" class="auth-step">
+            <div class="auth-login-subtitle">Код отправлен на</div>
+            <div id="authEmailDisplay" class="auth-email-display"></div>
+            <div class="auth-otp-row">
+                <input type="text" id="otp1" class="auth-otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
+                <input type="text" id="otp2" class="auth-otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" id="otp3" class="auth-otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" id="otp4" class="auth-otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" id="otp5" class="auth-otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" id="otp6" class="auth-otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]">
+            </div>
+            <button type="button" class="auth-btn" id="authVerifyBtn" onclick="KipAuth.verifyOTP()">
+                Войти
+            </button>
+            <button type="button" class="auth-btn auth-btn-secondary" onclick="KipAuth.backToStep1()">
+                ← Назад
+            </button>
+            <div class="auth-resend">
+                Не получили код? <a id="authResendLink" onclick="KipAuth.resendOTP()">Отправить повторно</a>
+            </div>
+        </div>
+
+        <div id="authError" class="auth-error"></div>
+    </div>
+</div>
 
 <div class="bg-network">
     <svg viewBox="0 0 1000 1000" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
@@ -13510,6 +13779,11 @@
     }
 
     function navigateTo(page, addToHistory=true) {
+        // Проверка доступа (если KipAuth инициализирован).
+        if (typeof KipAuth !== 'undefined' && KipAuth._cachedRole && !KipAuth.canAccess(page)) {
+            KipAuth._showNoAccess(page);
+            return;
+        }
         if (page === 'library') { navigateTo('library-internal'); return; }
         // Сброс активного фильтра «№ проекта» при уходе со страницы соответствующего раздела.
         // Карта: страница → раздел, к которому относится фильтр.
@@ -17937,6 +18211,608 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             });
         });
     })();
+
+    // ============================================================
+    // СИСТЕМА ДОСТУПА: KipAuth модуль
+    // ============================================================
+    // Интеграция с Apps Script Web App для OTP-авторизации.
+    // localStorage хранит только session_token (роль получается с сервера).
+    // Heartbeat каждые 5 минут продлевает сессию.
+    // При истечении сессии — автоматический logout + показ экрана входа.
+    // ============================================================
+
+    const KipAuth = {
+        // URL Apps Script Web App.
+        WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbztmOJb_QVnjRk1GnvKe4X1TWcDgPSFVvGJiumm3y5RaGwgEiJX15PBiJVUX9mKJiWHzA/exec',
+
+        // Ключ localStorage для session token.
+        TOKEN_KEY: 'kip8_session_token',
+
+        // Интервал heartbeat (5 минут = 300000 мс).
+        HEARTBEAT_INTERVAL: 5 * 60 * 1000,
+
+        // Кэш: роль текущего пользователя (обновляется через getCurrentUser).
+        _cachedRole: null,
+        _cachedEmail: null,
+        _cachedUserId: null,
+        _lastRoleFetch: 0,
+        ROLE_CACHE_TTL: 30 * 1000, // 30 секунд
+
+        // Состояние процесса входа.
+        _pendingEmail: null,
+        _resendCooldown: 0,
+        _resendTimer: null,
+        _heartbeatTimer: null,
+        _initializing: false,
+
+        // ============================================================
+        // Карта доступа: роль → список разрешённых страниц.
+        // ============================================================
+        // 'Запрет'     — нет доступа вообще (только login screen).
+        // 'Общий'      — инженерные калькуляторы + библиотека + билеты.
+        // 'КИП8'       — Общий + телефонный справочник.
+        // 'КИП_ИОС'    — только раздел КИП ИОС.
+        // 'КИП_ИОС+'   — Общий + КИП_ИОС.
+        // 'ИТР8'       — Общий + телефонный справочник.
+        // 'ИТР_ИОС'    — Общий + КИП_ИОС + телефонный справочник.
+        // 'Админ'      — полный доступ ['*'].
+
+        _PUBLIC_PAGES: ['dashboard', 'minesweeper'],
+        _CALC_PAGES: ['calculators', 'calc-kipa', 'calc-electro', 'calc-geometry',
+                      'converter', 'conv-temp', 'conv-pressure', 'conv-mass', 'conv-length',
+                      'conv-volume', 'conv-flow', 'conv-density', 'conv-time',
+                      'scale-signal',
+                      'error-select', 'error-generic', 'error-generic-circle',
+                      'error-generic-fraction', 'error-generic-number', 'error-generic-underline',
+                      'error-kit', 'error-temp-rtd', 'error-temp-tc',
+                      'error-flow', 'error-level', 'error-pressure', 'error-scale', 'error-temp',
+                      'buoy-select', 'buoy-calc', 'temp-sensors',
+                      'orifice-select', 'orifice-quick', 'orifice-dp', 'orifice-flow', 'orifice-diameter',
+                      'circuit-breaker',
+                      'geo-circle', 'geo-ring', 'geo-cylinder', 'geo-horiz', 'geo-sphere', 'geo-cone'],
+        _LIBRARY_PAGES: ['docs', 'library-internal', 'library-electro',
+                         'exam-tickets', 'tickets-4', 'tickets-5', 'tickets-6', 'tickets-1000v'],
+        _KIP_IOS_PAGES: ['kip-ios',
+                         'devices-prod', 'devices-type', 'devices-name', 'device-detail', 'dev-group',
+                         'lockouts-prod', 'lockout-detail', 'lock-group',
+                         'valves-prod', 'valves-type', 'valves-name', 'valve-detail', 'valve-group',
+                         'regulators-prod', 'regulator-detail', 'regulator-group',
+                         'projects-prod', 'project-detail', 'project-group',
+                         'cables-prod', 'cable-detail', 'cable-group',
+                         'plan-114', 'plan-114-view'],
+        _PHONEBOOK_PAGES: ['phonebook'],
+
+        ROLE_ACCESS: null,  // вычисляется в init()
+
+        // ============================================================
+        // Инициализация карты доступа (вызывается один раз).
+        // ============================================================
+        init: function() {
+            if (this.ROLE_ACCESS) return; // уже инициализирована
+            const OBSHCHIJ = [].concat(this._PUBLIC_PAGES, this._CALC_PAGES, this._LIBRARY_PAGES);
+            const KIP8 = [].concat(OBSHCHIJ, this._PHONEBOOK_PAGES);
+            const KIP_IOS = [].concat(this._PUBLIC_PAGES, this._KIP_IOS_PAGES);
+            const KIP_IOS_PLUS = [].concat(OBSHCHIJ, this._KIP_IOS_PAGES);
+            const ITR8 = [].concat(OBSHCHIJ, this._PHONEBOOK_PAGES);
+            const ITR_IOS = [].concat(OBSHCHIJ, this._KIP_IOS_PAGES, this._PHONEBOOK_PAGES);
+
+            this.ROLE_ACCESS = {
+                'Запрет': [],
+                'Общий': OBSHCHIJ,
+                'КИП8': KIP8,
+                'КИП_ИОС': KIP_IOS,
+                'КИП_ИОС+': KIP_IOS_PLUS,
+                'ИТР8': ITR8,
+                'ИТР_ИОС': ITR_IOS,
+                'Админ': ['*']
+            };
+        },
+
+        // ============================================================
+        // Работа с токеном.
+        // ============================================================
+        getToken: function() {
+            try { return localStorage.getItem(this.TOKEN_KEY) || ''; } catch (e) { return ''; }
+        },
+        setToken: function(token) {
+            try { localStorage.setItem(this.TOKEN_KEY, token); } catch (e) {}
+        },
+        clearToken: function() {
+            try { localStorage.removeItem(this.TOKEN_KEY); } catch (e) {}
+        },
+
+        // ============================================================
+        // API: вызов Apps Script.
+        // ============================================================
+        api: function(action, payload) {
+            const url = this.WEB_APP_URL + '?action=' + encodeURIComponent(action);
+            return fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload || {}),
+                redirect: 'follow'
+            }).then(r => r.json()).then(data => {
+                if (!data.ok) throw new Error(data.error || 'Неизвестная ошибка');
+                return data.data;
+            });
+        },
+
+        // ============================================================
+        // Флоу входа: отправить OTP.
+        // ============================================================
+        sendOTP: function() {
+            const emailRaw = document.getElementById('authEmail').value;
+            const email = (emailRaw || '').trim().toLowerCase();
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                this._showError('Введите корректный email');
+                return;
+            }
+
+            this._pendingEmail = email;
+            this._showError('');
+            const btn = document.getElementById('authSendBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="auth-loading"></span>Отправка…';
+
+            const self = this;
+            this.api('sendOTP', { email: email }).then(function() {
+                // Перейти на шаг 2 (ввод OTP).
+                document.getElementById('authEmailDisplay').textContent = email;
+                self._switchStep(2);
+                setTimeout(function() { document.getElementById('otp1').focus(); }, 100);
+                self._startResendCooldown(60);
+            }).catch(function(err) {
+                self._showError(err.message);
+            }).then(function() {
+                btn.disabled = false;
+                btn.innerHTML = 'Отправить код';
+            });
+        },
+
+        // ============================================================
+        // Флоу входа: повторный запрос OTP.
+        // ============================================================
+        resendOTP: function() {
+            if (this._resendCooldown > 0) return;
+            if (!this._pendingEmail) return;
+
+            this._showError('');
+            const self = this;
+            this.api('sendOTP', { email: this._pendingEmail }).then(function() {
+                self._showError('Новый код отправлен');
+                self._startResendCooldown(60);
+            }).catch(function(err) {
+                self._showError(err.message);
+            });
+        },
+
+        // ============================================================
+        // Cooldown для повторной отправки OTP.
+        // ============================================================
+        _startResendCooldown: function(seconds) {
+            this._resendCooldown = seconds;
+            const link = document.getElementById('authResendLink');
+            link.classList.add('disabled');
+            this._updateResendLink();
+            const self = this;
+            if (this._resendTimer) clearInterval(this._resendTimer);
+            this._resendTimer = setInterval(function() {
+                self._resendCooldown--;
+                self._updateResendLink();
+                if (self._resendCooldown <= 0) {
+                    clearInterval(self._resendTimer);
+                    link.classList.remove('disabled');
+                    link.textContent = 'Отправить повторно';
+                }
+            }, 1000);
+        },
+        _updateResendLink: function() {
+            const link = document.getElementById('authResendLink');
+            if (this._resendCooldown > 0) {
+                link.textContent = 'Отправить повторно через ' + this._resendCooldown + ' сек';
+            } else {
+                link.textContent = 'Отправить повторно';
+            }
+        },
+
+        // ============================================================
+        // Флоу входа: верифицировать OTP.
+        // ============================================================
+        verifyOTP: function() {
+            if (!this._pendingEmail) {
+                this._showError('Сессия истекла, начните заново');
+                this._switchStep(1);
+                return;
+            }
+
+            const code = ['otp1','otp2','otp3','otp4','otp5','otp6']
+                .map(function(id) { return document.getElementById(id).value; })
+                .join('');
+
+            if (!/^\d{6}$/.test(code)) {
+                this._showError('Введите 6-значный код');
+                return;
+            }
+
+            this._showError('');
+            const btn = document.getElementById('authVerifyBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="auth-loading"></span>Проверка…';
+
+            const self = this;
+            this.api('verifyOTP', { email: this._pendingEmail, code: code }).then(function(data) {
+                // data = { token, role, userId, email }
+                self.setToken(data.token);
+                self._cachedRole = data.role;
+                self._cachedEmail = data.email;
+                self._cachedUserId = data.userId;
+                self._lastRoleFetch = Date.now();
+
+                self._hideLoginScreen();
+                self._startHeartbeat();
+                self._updateSidebarUserInfo();
+                self._applyRoleToUI();
+
+                // Перейти на главную страницу.
+                if (typeof navigateTo === 'function') navigateTo('dashboard');
+            }).catch(function(err) {
+                self._showError(err.message);
+                // Очистить OTP поля.
+                ['otp1','otp2','otp3','otp4','otp5','otp6'].forEach(function(id) {
+                    const el = document.getElementById(id);
+                    el.value = '';
+                    el.classList.remove('filled');
+                });
+                document.getElementById('otp1').focus();
+            }).then(function() {
+                btn.disabled = false;
+                btn.innerHTML = 'Войти';
+            });
+        },
+
+        // ============================================================
+        // Возврат на шаг 1 (email).
+        // ============================================================
+        backToStep1: function() {
+            this._switchStep(1);
+            this._showError('');
+            ['otp1','otp2','otp3','otp4','otp5','otp6'].forEach(function(id) {
+                const el = document.getElementById(id);
+                el.value = '';
+                el.classList.remove('filled');
+            });
+        },
+
+        // ============================================================
+        // Переключение шагов.
+        // ============================================================
+        _switchStep: function(n) {
+            document.getElementById('authStep1').classList.toggle('active', n === 1);
+            document.getElementById('authStep2').classList.toggle('active', n === 2);
+        },
+
+        // ============================================================
+        // Показать/скрыть экран входа.
+        // ============================================================
+        _showLoginScreen: function() {
+            document.getElementById('loginScreen').classList.add('active');
+            this._switchStep(1);
+            document.getElementById('authEmail').value = '';
+            ['otp1','otp2','otp3','otp4','otp5','otp6'].forEach(function(id) {
+                const el = document.getElementById(id);
+                el.value = '';
+                el.classList.remove('filled');
+            });
+            this._showError('');
+            setTimeout(function() { document.getElementById('authEmail').focus(); }, 100);
+        },
+        _hideLoginScreen: function() {
+            document.getElementById('loginScreen').classList.remove('active');
+        },
+
+        // ============================================================
+        // Сообщение об ошибке.
+        // ============================================================
+        _showError: function(msg) {
+            document.getElementById('authError').textContent = msg || '';
+        },
+
+        // ============================================================
+        // Получить текущего пользователя (с кэшированием 30 сек).
+        // ============================================================
+        getCurrentUser: function() {
+            const token = this.getToken();
+            if (!token) return Promise.reject(new Error('no_session'));
+
+            if (this._cachedRole && (Date.now() - this._lastRoleFetch) < this.ROLE_CACHE_TTL) {
+                return Promise.resolve({
+                    userId: this._cachedUserId,
+                    email: this._cachedEmail,
+                    role: this._cachedRole
+                });
+            }
+
+            const self = this;
+            return this.api('getCurrentUser', { token: token }).then(function(data) {
+                self._cachedRole = data.role;
+                self._cachedEmail = data.email;
+                self._cachedUserId = data.userId;
+                self._lastRoleFetch = Date.now();
+                return data;
+            });
+        },
+
+        // ============================================================
+        // Heartbeat: каждые 5 минут продлеваем сессию.
+        // ============================================================
+        _startHeartbeat: function() {
+            if (this._heartbeatTimer) clearInterval(this._heartbeatTimer);
+            const self = this;
+            this._heartbeatTimer = setInterval(function() {
+                const token = self.getToken();
+                if (!token) {
+                    self.handleSessionExpired('Нет токена');
+                    return;
+                }
+                self.api('heartbeat', { token: token }).catch(function(err) {
+                    self.handleSessionExpired(err.message);
+                });
+            }, this.HEARTBEAT_INTERVAL);
+        },
+
+        // ============================================================
+        // Logout: ручной или принудительный.
+        // ============================================================
+        logout: function() {
+            const token = this.getToken();
+            if (token) {
+                // Отправить logout на сервер (не дожидаемся ответа).
+                this.api('logout', { token: token }).catch(function() {});
+            }
+            this.clearToken();
+            this._cachedRole = null;
+            this._cachedEmail = null;
+            this._cachedUserId = null;
+            if (this._heartbeatTimer) {
+                clearInterval(this._heartbeatTimer);
+                this._heartbeatTimer = null;
+            }
+            this._showLoginScreen();
+            // Закрыть sidebar если открыт.
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar && sidebar.classList.contains('active')) {
+                if (typeof toggleSidebar === 'function') toggleSidebar();
+            }
+        },
+
+        // ============================================================
+        // Сессия истекла: принудительный logout.
+        // ============================================================
+        handleSessionExpired: function(reason) {
+            console.log('Session expired:', reason);
+            this.clearToken();
+            this._cachedRole = null;
+            this._cachedEmail = null;
+            this._cachedUserId = null;
+            if (this._heartbeatTimer) {
+                clearInterval(this._heartbeatTimer);
+                this._heartbeatTimer = null;
+            }
+            this._showLoginScreen();
+            this._showError('Сессия истекла. Войдите снова.');
+        },
+
+        // ============================================================
+        // Проверка доступа к странице.
+        // ============================================================
+        canAccess: function(page) {
+            if (!this._cachedRole) return false;
+            const allowed = this.ROLE_ACCESS[this._cachedRole];
+            if (!allowed) return false;
+            if (allowed.indexOf('*') !== -1) return true;
+            return allowed.indexOf(page) !== -1;
+        },
+
+        // ============================================================
+        // Показать экран "нет доступа".
+        // ============================================================
+        _showNoAccess: function(page) {
+            let el = document.getElementById('noAccessScreen');
+            if (!el) {
+                el = document.createElement('div');
+                el.id = 'noAccessScreen';
+                el.style.cssText = 'position:fixed;inset:0;background:#0d1117;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
+                el.innerHTML =
+                    '<div class="no-access-screen">' +
+                    '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>' +
+                    '<h3>Нет доступа</h3>' +
+                    '<p>У вашей роли «<b id="noAccessRole"></b>» нет прав на раздел <b id="noAccessPage"></b>.</p>' +
+                    '<button onclick="KipAuth._closeNoAccess()">На главную</button>' +
+                    '</div>';
+                document.body.appendChild(el);
+            }
+            document.getElementById('noAccessRole').textContent = this._cachedRole || '—';
+            document.getElementById('noAccessPage').textContent = page;
+            el.style.display = 'flex';
+        },
+        _closeNoAccess: function() {
+            const el = document.getElementById('noAccessScreen');
+            if (el) el.style.display = 'none';
+            if (typeof navigateTo === 'function') navigateTo('dashboard');
+        },
+
+        // ============================================================
+        // Применить роль к UI: скрыть недоступные разделы в sidebar.
+        // ============================================================
+        _applyRoleToUI: function() {
+            if (!this._cachedRole) return;
+            const allowed = this.ROLE_ACCESS[this._cachedRole] || [];
+            const isAll = allowed.indexOf('*') !== -1;
+            const self = this;
+
+            // Sidebar items: извлечь page из onclick="navigateTo('xxx')".
+            document.querySelectorAll('.sidebar-item').forEach(function(item) {
+                const onclick = item.getAttribute('onclick') || '';
+                const m = onclick.match(/navigateTo\(['"]([^'"]+)['"]/);
+                if (!m) return; // нет navigateTo — внешняя ссылка или сервисная кнопка
+                const page = m[1];
+                const allowedForPage = isAll || allowed.indexOf(page) !== -1;
+                item.style.display = allowedForPage ? '' : 'none';
+            });
+
+            // Sidebar groups: скрыть целиком, если все .sidebar-item скрыты.
+            document.querySelectorAll('.sidebar-group').forEach(function(group) {
+                const items = group.querySelectorAll('.sidebar-item');
+                if (items.length === 0) return;
+                let anyVisible = false;
+                items.forEach(function(item) {
+                    if (item.style.display !== 'none') anyVisible = true;
+                });
+                group.style.display = anyVisible ? '' : 'none';
+            });
+
+            // Dashboard menu buttons: извлечь page из onclick.
+            document.querySelectorAll('.menu-btn').forEach(function(btn) {
+                const onclick = btn.getAttribute('onclick') || '';
+                const m = onclick.match(/navigateTo\(['"]([^'"]+)['"]/);
+                if (!m) return; // не навигационная кнопка
+                const page = m[1];
+                const allowedForPage = isAll || allowed.indexOf(page) !== -1;
+                btn.style.display = allowedForPage ? '' : 'none';
+            });
+
+            // Скрыть кнопки "Сапёр" и "Телефонный справочник" на главной,
+            // если нет доступа.
+            const minesweeperBtn = document.getElementById('minesweeperBtn');
+            if (minesweeperBtn) {
+                minesweeperBtn.style.display = (isAll || allowed.indexOf('minesweeper') !== -1) ? '' : 'none';
+            }
+            const phonebookBtn = document.getElementById('phonebookBtn');
+            if (phonebookBtn) {
+                phonebookBtn.style.display = (isAll || allowed.indexOf('phonebook') !== -1) ? '' : 'none';
+            }
+        },
+
+        // ============================================================
+        // Обновить информацию о пользователе в sidebar.
+        // ============================================================
+        _updateSidebarUserInfo: function() {
+            const el = document.getElementById('sidebarUserInfo');
+            if (!el) return;
+            el.innerHTML =
+                '<div class="sidebar-user-email">' + (this._cachedEmail || '—') + '</div>' +
+                '<div class="sidebar-user-role">' + (this._cachedRole || '—') + '</div>';
+        },
+
+        // ============================================================
+        // Bootstrap: вызывается при загрузке страницы.
+        // ============================================================
+        bootstrap: function() {
+            if (this._initializing) return;
+            this._initializing = true;
+
+            this.init();
+
+            const token = this.getToken();
+            if (!token) {
+                this._showLoginScreen();
+                this._initializing = false;
+                return;
+            }
+
+            const self = this;
+            this.api('getCurrentUser', { token: token }).then(function(data) {
+                self._cachedRole = data.role;
+                self._cachedEmail = data.email;
+                self._cachedUserId = data.userId;
+                self._lastRoleFetch = Date.now();
+                self._startHeartbeat();
+                self._updateSidebarUserInfo();
+                self._applyRoleToUI();
+                self._initializing = false;
+            }).catch(function(err) {
+                self.clearToken();
+                self._showLoginScreen();
+                if (err.message === 'session_expired' || err.message === 'no_session') {
+                    self._showError('Сессия истекла. Войдите снова.');
+                } else {
+                    self._showError('Ошибка авторизации: ' + err.message);
+                }
+                self._initializing = false;
+            });
+        }
+    };
+
+    // ============================================================
+    // Обработка OTP input: автопереход между полями + paste.
+    // ============================================================
+    (function setupOtpInputs() {
+        function setup() {
+            ['otp1','otp2','otp3','otp4','otp5','otp6'].forEach(function(id, i) {
+                const input = document.getElementById(id);
+                if (!input) return;
+                input.addEventListener('input', function(e) {
+                    const v = e.target.value.replace(/\D/g, '');
+                    e.target.value = v;
+                    if (v) {
+                        e.target.classList.add('filled');
+                        if (i < 5) document.getElementById('otp' + (i+2)).focus();
+                        else {
+                            // Последнее поле — автопроверка через 200 мс.
+                            setTimeout(function() { KipAuth.verifyOTP(); }, 200);
+                        }
+                    } else {
+                        e.target.classList.remove('filled');
+                    }
+                });
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Backspace' && !e.target.value && i > 0) {
+                        document.getElementById('otp' + i).focus();
+                    }
+                    if (e.key === 'Enter') {
+                        KipAuth.verifyOTP();
+                    }
+                });
+                input.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const text = (e.clipboardData || window.clipboardData).getData('text');
+                    const digits = text.replace(/\D/g, '').substring(0, 6);
+                    for (let j = 0; j < 6; j++) {
+                        const el = document.getElementById('otp' + (j+1));
+                        if (el) {
+                            el.value = digits[j] || '';
+                            if (digits[j]) el.classList.add('filled');
+                            else el.classList.remove('filled');
+                        }
+                    }
+                    if (digits.length === 6) {
+                        setTimeout(function() { KipAuth.verifyOTP(); }, 200);
+                    }
+                });
+            });
+
+            // Enter в поле email — отправить OTP.
+            const emailInput = document.getElementById('authEmail');
+            if (emailInput) {
+                emailInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') KipAuth.sendOTP();
+                });
+            }
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setup);
+        } else {
+            setup();
+        }
+    })();
+
+    // ============================================================
+    // Запуск авторизации при загрузке страницы.
+    // ============================================================
+    window.addEventListener('load', function() {
+        // Небольшая задержка, чтобы DOM полностью инициализировался.
+        setTimeout(function() { KipAuth.bootstrap(); }, 100);
+    });
 </script>
 
 <!-- Sidebar -->
@@ -17950,6 +18826,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         </div>
     </div>
     <div class="sidebar-content">
+        <!-- ===== Информация о текущем пользователе (заполняется KipAuth) ===== -->
+        <div id="sidebarUserInfo" class="sidebar-user-info"></div>
         <!-- ===== Группа: КИП и А (6 подразделов) ===== -->
         <div class="sidebar-group" data-group="kipa">
         <div class="sidebar-group-title" onclick="toggleSidebarGroup(this.parentElement)">
@@ -18103,6 +18981,10 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         </div>
         <div class="sidebar-item" onclick="showAboutModal(); toggleSidebar();">
             <span>О приложении</span>
+        </div>
+        <!-- ===== Выход из аккаунта (KipAuth.logout) ===== -->
+        <div class="sidebar-item sidebar-logout" onclick="KipAuth.logout()">
+            <span>Выйти</span>
         </div>
     </div>
 </div>
