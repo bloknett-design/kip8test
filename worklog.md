@@ -792,3 +792,107 @@ Stage Summary:
 - GitHub Pages автоматически обновит боевой сайт https://bloknett-design.github.io/kip8/ через 1-2 минуты.
 - Пользователю нужно перезагрузить страницу 2 раза для активации нового Service Worker (v15).
 - Версия в kip8test НЕ менялась — осталась kipia-test-v204.
+
+---
+Task ID: 27
+Agent: AI Assistant (GLM)
+Task: Реализовать систему доступа в PWA (Email + OTP через Apps Script + Google Sheets). ЭТАП 4.1 — изменения в kip8test.
+
+Work Log:
+- Предыдущие этапы:
+    • Task 21: перенос kip8test → kip8 (kipia-v14).
+    • Tasks 22-25: UI-правки + КИП ИОС точное совпадение номеров (v201-v204).
+    • ЭТАП 1: создан KIP8_Access.xlsx (5 листов: users, sessions, otp_codes, audit_log, config). Файл загружен на Google Drive, открыт как Google Sheets.
+    • ЭТАП 2: созданы 4 файла Apps Script (Code.gs, Auth.gs, Sessions.gs, Utils.gs) с полной логикой OTP, сессий, heartbeat, rate limiting, audit log, админ-функциями и hourly cleanup-триггером.
+    • Пользователь задеплоил Apps Script как Web App, предоставил URL.
+
+- URL Apps Script Web App (получен от пользователя):
+    https://script.google.com/macros/s/AKfycbztmOJb_QVnjRk1GnvKe4X1TWcDgPSFVvGJiumm3y5RaGwgEiJX15PBiJVUX9mKJiWHzA/exec
+
+- Изучил структуру kip8test/index.html:
+    • 18431 строка, 4 inline <script> блока
+    • navigateTo(page, addToHistory) — основная функция навигации (строка ~13512)
+    • sidebar HTML (строка ~17944) — содержит группы sidebar-group с sidebar-item
+    • page-content — паттерн всех страниц
+    • 68 уникальных id="page-*" (dashboard, converter, kip-ios, devices-prod, и т.д.)
+
+- Реализовал изменения в index.html (894 строки добавлено):
+    1. CSS (строки ~4688-4906): стили для login screen (auth-login-screen, auth-login-card, auth-field, auth-btn, auth-otp-row, auth-otp-input, auth-resend, auth-loading), sidebar-user-info, sidebar-logout, no-access-screen. Light theme overrides.
+    2. HTML (строки ~4912-4959): экран входа с 2 шагами — email input (шаг 1), OTP input 6 полей (шаг 2). Вставлен сразу после <body>.
+    3. JS — KipAuth модуль (строки ~18210-18810):
+       • WEB_APP_URL — URL Apps Script Web App
+       • TOKEN_KEY = 'kip8_session_token' (localStorage)
+       • HEARTBEAT_INTERVAL = 5 минут
+       • ROLE_CACHE_TTL = 30 секунд (кэш роли в памяти)
+       • Карта доступа: 8 ролей (Запрет, Общий, КИП8, КИП_ИОС, КИП_ИОС+, ИТР8, ИТР_ИОС, Админ)
+         - _PUBLIC_PAGES: dashboard, minesweeper
+         - _CALC_PAGES: 27 страниц (конвертеры, погрешности, буй, диафрагмы, геометрия, эл.защита)
+         - _LIBRARY_PAGES: 8 страниц (docs, library, exam-tickets, tickets-4/5/6/1000v)
+         - _KIP_IOS_PAGES: 25 страниц (devices, lockouts, valves, regulators, projects, cables, plan-114)
+         - _PHONEBOOK_PAGES: phonebook
+         - Общий = public + calc + library
+         - КИП8 = Общий + phonebook
+         - КИП_ИОС = public + kip-ios
+         - КИП_ИОС+ = Общий + kip-ios
+         - ИТР8 = Общий + phonebook
+         - ИТР_ИОС = Общий + kip-ios + phonebook
+         - Админ = ['*']
+       • API: api(action, payload) — POST fetch к Apps Script с JSON, redirect:'follow'
+       • sendOTP(email) — отправка кода, переход на шаг 2, cooldown 60 сек
+       • verifyOTP(email, code) — проверка кода, создание сессии, сохранение токена
+       • resendOTP() — повторный запрос с тем же email
+       • getCurrentUser() — кэшированный запрос роли (30 сек TTL)
+       • _startHeartbeat() — setInterval 5 минут, при ошибке → handleSessionExpired
+       • logout() — POST logout + clearToken + showLoginScreen
+       • handleSessionExpired(reason) — авто-logout при session_expired
+       • canAccess(page) — проверка по ROLE_ACCESS
+       • _showNoAccess(page) — экран «Нет доступа» с ролью и страницей
+       • _applyRoleToUI() — скрытие недоступных .sidebar-item и .menu-btn
+         (извлекает page из onclick="navigateTo('xxx')")
+       • _updateSidebarUserInfo() — заполнение #sidebarUserInfo (email + роль)
+       • bootstrap() — проверка токена при загрузке: если есть → getCurrentUser,
+         если нет → showLoginScreen
+    4. OTP input handlers: автопереход между полями, paste 6 цифр, Enter, Backspace
+    5. window.load → setTimeout(KipAuth.bootstrap, 100)
+    6. navigateTo: проверка KipAuth.canAccess в начале, если нет — _showNoAccess
+    7. Sidebar HTML:
+       - Вверху sidebar-content: <div id="sidebarUserInfo" class="sidebar-user-info"></div>
+       - Внизу (после "О приложении"): <div class="sidebar-item sidebar-logout" onclick="KipAuth.logout()"><span>Выйти</span></div>
+
+- Изменения в sw.js:
+    • Добавлен bypass для script.google.com и script.googleusercontent.com в начале fetch handler.
+      Запросы к Apps Script НИКОГДА не кэшируются, идут напрямую в сеть.
+      Это гарантирует, что OTP/heartbeat/logout всегда доходят до сервера.
+    • CACHE_VERSION: kipia-test-v204 → kipia-test-v205
+
+- Проверки:
+    • node --check sw.js → OK
+    • node --check для всех 4 inline <script> блоков → OK (647K + 1.8K + 6.9K + 0.2K chars)
+    • node tests/run-all.js → 207 passed, 0 failed
+    • python3: DIV-баланс 1955/1954 (diff=1, та же ±1 что была раньше)
+    • grep 'KipAuth' → 18 упоминаний (модуль + вызовы)
+    • grep 'loginScreen' → 1 (HTML элемент)
+    • grep 'sidebar-logout' → 3 (CSS + HTML классы)
+    • grep 'sidebarUserInfo' → 2 (HTML + JS)
+    • grep 'AKfycbztmOJb_...' → 1 (URL в KipAuth.WEB_APP_URL)
+    • grep 'script.google.com' sw.js → 2 (bypass хосты)
+    • grep 'kipia-test-v205' sw.js → 1, 'kipia-test-v204' → 0 (нет утечки старой версии)
+
+- Git commit ff3db84, push origin main успешно.
+- b3c7ab7..ff3db84 main -> main
+
+Stage Summary:
+- В kip8test (commit ff3db84) реализована полная клиентская часть системы доступа:
+    • Экран входа с Email + OTP (2 шага, автопереход между полями, paste 6 цифр)
+    • KipAuth модуль с heartbeat, авто-logout при истечении сессии
+    • Карта из 8 ролей с разным набором разделов
+    • Скрытие недоступных разделов в sidebar и на dashboard
+    • Кнопка «Выйти» в sidebar + блок с email/ролью текущего пользователя
+    • SW bypass для Apps Script — запросы всегда идут напрямую
+- CACHE_VERSION: kipia-test-v205
+- GitHub Pages обновит тестовый сайт https://bloknett-design.github.io/kip8test/ через 1-2 минуты
+- Пользователю нужно перезагрузить страницу 2 раза для активации нового SW (v205)
+- Серверная часть (Apps Script + Google Sheets) уже задеплоена пользователем
+- Для тестирования: внести свой email в лист users таблицы KIP8_Access с ролью "Админ",
+  открыть тестовый сайт, ввести email, получить OTP-код на почту, ввести код, войти.
+- После подтверждения работы — Task 28: перенос изменений в основной репо kip8
