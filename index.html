@@ -18326,14 +18326,45 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         // ============================================================
         api: function(action, payload) {
             const url = this.WEB_APP_URL + '?action=' + encodeURIComponent(action);
+            // ВАЖНО: используем Content-Type: text/plain;charset=utf-8, а НЕ application/json.
+            // Причина: application/json — это "non-simple" Content-Type, который заставляет
+            // браузер отправлять CORS-preflight (OPTIONS-запрос) перед POST. Apps Script
+            // НЕ определяет doOptions, возвращает 405 Method Not Allowed на preflight,
+            // браузер блокирует POST → пользователь видит "Failed to fetch".
+            // text/plain;charset=utf-8 — это "simple" Content-Type, preflight не отправляется,
+            // POST идёт сразу. Тело запроса остаётся JSON-строкой, Apps Script парсит его
+            // через e.postData.contents + JSON.parse (см. Code.gs doPost).
             return fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(payload || {}),
                 redirect: 'follow'
-            }).then(r => r.json()).then(data => {
-                if (!data.ok) throw new Error(data.error || 'Неизвестная ошибка');
+            }).then(function(r) {
+                // Если ответ не OK — пробуем прочитать тело для диагностики.
+                if (!r.ok) {
+                    return r.text().then(function(txt) {
+                        throw new Error('HTTP ' + r.status + ': ' + (txt || '').substring(0, 200));
+                    });
+                }
+                return r.json();
+            }).then(function(data) {
+                if (!data || typeof data !== 'object') {
+                    throw new Error('Некорректный ответ сервера');
+                }
+                if (!data.ok) throw new Error(data.error || 'Неизвестная ошибка сервера');
                 return data.data;
+            }).catch(function(err) {
+                // TypeError: Failed to fetch — браузер не смог выполнить запрос вообще
+                // (нет сети, CORS заблокирован, прерван и т.д.). Даём пользователю
+                // понятное сообщение вместо сырого "Failed to fetch".
+                if (err && (err.name === 'TypeError' || /Failed to fetch/i.test(err.message))) {
+                    throw new Error(
+                        'Не удалось связаться с сервером авторизации. ' +
+                        'Проверьте подключение к интернету и попробуйте обновить страницу. ' +
+                        'Если ошибка повторяется — обратитесь к администратору.'
+                    );
+                }
+                throw err;
             });
         },
 
