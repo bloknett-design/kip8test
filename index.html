@@ -18334,35 +18334,71 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             // text/plain;charset=utf-8 — это "simple" Content-Type, preflight не отправляется,
             // POST идёт сразу. Тело запроса остаётся JSON-строкой, Apps Script парсит его
             // через e.postData.contents + JSON.parse (см. Code.gs doPost).
-            return fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(payload || {}),
-                redirect: 'follow'
-            }).then(function(r) {
-                // Если ответ не OK — пробуем прочитать тело для диагностики.
-                if (!r.ok) {
+            const doFetch = function() {
+                return fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload || {}),
+                    redirect: 'follow'
+                }).then(function(r) {
+                    // Если ответ не OK — это серверная ошибка (5xx) или недоступность.
+                    if (!r.ok) {
+                        // Классифицируем как NETWORK_ERROR — bootstrap не должен сбрасывать токен.
+                        const err = new Error('NETWORK_ERROR: HTTP ' + r.status);
+                        err._kind = 'NETWORK';
+                        throw err;
+                    }
+                    // Получаем текст, потом парсим JSON — чтобы отличить HTML-ответ от JSON.
                     return r.text().then(function(txt) {
-                        throw new Error('HTTP ' + r.status + ': ' + (txt || '').substring(0, 200));
+                        let data;
+                        try {
+                            data = JSON.parse(txt);
+                        } catch (e) {
+                            // Google иногда отдаёт HTML (redirect page, error page) вместо JSON.
+                            // Классифицируем как NETWORK_ERROR — это не вина сессии.
+                            const err = new Error('NETWORK_ERROR: сервер вернул не JSON (возможно HTML)');
+                            err._kind = 'NETWORK';
+                            throw err;
+                        }
+                        if (!data || typeof data !== 'object') {
+                            const err = new Error('NETWORK_ERROR: некорректный ответ сервера');
+                            err._kind = 'NETWORK';
+                            throw err;
+                        }
+                        if (!data.ok) {
+                            // Сервер вернул корректный JSON с ошибкой.
+                            // Это может быть session_expired, no_session, или бизнес-ошибка.
+                            const err = new Error(data.error || 'Неизвестная ошибка сервера');
+                            err._kind = 'SERVER';
+                            throw err;
+                        }
+                        return data.data;
                     });
-                }
-                return r.json();
-            }).then(function(data) {
-                if (!data || typeof data !== 'object') {
-                    throw new Error('Некорректный ответ сервера');
-                }
-                if (!data.ok) throw new Error(data.error || 'Неизвестная ошибка сервера');
-                return data.data;
-            }).catch(function(err) {
-                // TypeError: Failed to fetch — браузер не смог выполнить запрос вообще
-                // (нет сети, CORS заблокирован, прерван и т.д.). Даём пользователю
-                // понятное сообщение вместо сырого "Failed to fetch".
-                if (err && (err.name === 'TypeError' || /Failed to fetch/i.test(err.message))) {
-                    throw new Error(
-                        'Не удалось связаться с сервером авторизации. ' +
-                        'Проверьте подключение к интернету и попробуйте обновить страницу. ' +
-                        'Если ошибка повторяется — обратитесь к администратору.'
-                    );
+                }).catch(function(err) {
+                    // TypeError: Failed to fetch — браузер не смог выполнить запрос вообще
+                    // (нет сети, CORS заблокирован, прерван и т.д.).
+                    if (err && (err.name === 'TypeError' || /Failed to fetch/i.test(err.message))) {
+                        const e = new Error('NETWORK_ERROR: Failed to fetch');
+                        e._kind = 'NETWORK';
+                        throw e;
+                    }
+                    // Если уже классифицировали — пробрасываем как есть.
+                    if (err && err._kind) throw err;
+                    // Неизвестная ошибка — считаем сетевой (безопасный вариант).
+                    const e = new Error('NETWORK_ERROR: ' + (err && err.message ? err.message : 'unknown'));
+                    e._kind = 'NETWORK';
+                    throw e;
+                });
+            };
+
+            // Retry для сетевых ошибок: 2 попытки с задержкой 1 сек.
+            // Серверные ошибки (session_expired и т.д.) НЕ ретраим —
+            // повторный запрос даст тот же результат.
+            return doFetch().catch(function(err) {
+                if (err && err._kind === 'NETWORK') {
+                    return new Promise(function(resolve) {
+                        setTimeout(resolve, 1000);
+                    }).then(doFetch);
                 }
                 throw err;
             });
@@ -18601,6 +18637,12 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 this.api('logout', { token: token }).catch(function() {});
             }
             this.clearToken();
+            // Очистить кэш роли.
+            try {
+                localStorage.removeItem('kip8_cached_role');
+                localStorage.removeItem('kip8_cached_email');
+                localStorage.removeItem('kip8_cached_user_id');
+            } catch (e) {}
             this._cachedRole = null;
             this._cachedEmail = null;
             this._cachedUserId = null;
@@ -18618,10 +18660,34 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
         // ============================================================
         // Сессия истекла: принудительный logout.
+        // ВАЖНО: вызывается из heartbeat при ошибке. Различаем:
+        //   - SERVER-ошибка session_expired/no_session → реальный logout
+        //   - NETWORK-ошибка → НЕ трогаем токен, оставляем пользователя в приложении
+        //     (heartbeat продолжит попытки, при восстановлении сети обновится)
         // ============================================================
         handleSessionExpired: function(reason) {
-            console.log('Session expired:', reason);
+            console.log('Session expired handler:', reason);
+            const msg = (reason && reason.message) || String(reason || '');
+            const kind = reason && reason._kind;
+            const isSessionInvalid =
+                (kind === 'SERVER') &&
+                (msg === 'session_expired' || msg === 'no_session');
+
+            if (!isSessionInvalid) {
+                // Сетевая ошибка — не выходим из аккаунта.
+                // Heartbeat продолжит работать, при восстановлении сети обновится.
+                console.warn('[KipAuth] Сетевая ошибка heartbeat, токен сохранён:', msg);
+                return;
+            }
+
+            // Реальный logout.
             this.clearToken();
+            // Очистить кэш роли.
+            try {
+                localStorage.removeItem('kip8_cached_role');
+                localStorage.removeItem('kip8_cached_email');
+                localStorage.removeItem('kip8_cached_user_id');
+            } catch (e) {}
             this._cachedRole = null;
             this._cachedEmail = null;
             this._cachedUserId = null;
@@ -18751,25 +18817,85 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 return;
             }
 
+            // Восстановить роль из кэша (если есть) — на случай сетевого сбоя.
+            // localStorage переживает reload, поэтому кэш будет доступен.
+            let cachedRole = null, cachedEmail = null, cachedUserId = null;
+            try {
+                cachedRole = localStorage.getItem('kip8_cached_role') || null;
+                cachedEmail = localStorage.getItem('kip8_cached_email') || null;
+                cachedUserId = localStorage.getItem('kip8_cached_user_id') || null;
+            } catch (e) {}
+
             const self = this;
             this.api('getCurrentUser', { token: token }).then(function(data) {
                 self._cachedRole = data.role;
                 self._cachedEmail = data.email;
                 self._cachedUserId = data.userId;
                 self._lastRoleFetch = Date.now();
+                // Сохранить роль в localStorage для восстановления при сетевом сбое.
+                try {
+                    localStorage.setItem('kip8_cached_role', data.role || '');
+                    localStorage.setItem('kip8_cached_email', data.email || '');
+                    localStorage.setItem('kip8_cached_user_id', String(data.userId || ''));
+                } catch (e) {}
                 self._startHeartbeat();
                 self._updateSidebarUserInfo();
                 self._applyRoleToUI();
                 self._initializing = false;
             }).catch(function(err) {
-                self.clearToken();
-                self._showLoginScreen();
-                if (err.message === 'session_expired' || err.message === 'no_session') {
+                self._initializing = false;
+                // Классификация ошибки:
+                //   - SERVER-ошибка с сообщением 'session_expired' или 'no_session':
+                //     сервер точно сказал, что сессии нет. Сбрасываем токен, показываем вход.
+                //   - Любая другая ошибка (NETWORK или неизвестная):
+                //     не трогаем токен, показываем приложение из кэша с прежней ролью.
+                //     Это критично для бессрочных сессий — пользователь не должен
+                //     "вылетать" из-за временной сетевой проблемы при reload.
+                const msg = (err && err.message) || '';
+                const kind = err && err._kind;
+                const isSessionInvalid =
+                    (kind === 'SERVER') &&
+                    (msg === 'session_expired' || msg === 'no_session');
+
+                if (isSessionInvalid) {
+                    self.clearToken();
+                    // Очистить кэш роли тоже.
+                    try {
+                        localStorage.removeItem('kip8_cached_role');
+                        localStorage.removeItem('kip8_cached_email');
+                        localStorage.removeItem('kip8_cached_user_id');
+                    } catch (e) {}
+                    self._cachedRole = null;
+                    self._cachedEmail = null;
+                    self._cachedUserId = null;
+                    self._showLoginScreen();
                     self._showError('Сессия истекла. Войдите снова.');
                 } else {
-                    self._showError('Ошибка авторизации: ' + err.message);
+                    // Сетевая ошибка или недоступность сервера — НЕ СБРАСЫВАЕМ ТОКЕН.
+                    // Восстанавливаем роль из кэша и показываем приложение.
+                    if (cachedRole) {
+                        self._cachedRole = cachedRole;
+                        self._cachedEmail = cachedEmail;
+                        self._cachedUserId = cachedUserId;
+                        self._lastRoleFetch = Date.now();
+                        self._startHeartbeat();
+                        self._updateSidebarUserInfo();
+                        self._applyRoleToUI();
+                        // Тихо показываем приложение. Если роль изменилась на сервере
+                        // пока не было сети — следующий heartbeat это обнаружит и
+                        // сделает logout при необходимости.
+                    } else {
+                        // Кэша нет — показываем вход. Но токен НЕ удаляем,
+                        // чтобы пользователь мог обновить страницу и попытаться снова.
+                        self._showLoginScreen();
+                        self._showError(
+                            'Не удалось связаться с сервером. ' +
+                            'Проверьте подключение к интернету и обновите страницу.'
+                        );
+                    }
+                    // Логируем для диагностики.
+                    console.warn('[KipAuth.bootstrap] Сетевая ошибка, токен сохранён:', msg);
                 }
-                self._initializing = false;
             });
         }
     };

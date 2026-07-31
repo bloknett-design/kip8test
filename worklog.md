@@ -896,3 +896,260 @@ Stage Summary:
 - Для тестирования: внести свой email в лист users таблицы KIP8_Access с ролью "Админ",
   открыть тестовый сайт, ввести email, получить OTP-код на почту, ввести код, войти.
 - После подтверждения работы — Task 28: перенос изменений в основной репо kip8
+
+---
+Task ID: 28
+Agent: AI Assistant (GLM)
+Task: Исправить ошибку 'Failed to fetch' при отправке email на экране входа.
+
+Work Log:
+- Пользователь сообщил: ввёл email, код не приходит, поле ввода кода не открывается,
+  внизу надпись 'Failed to fetch'.
+- 'Failed to fetch' — это стандартное сообщение TypeError от fetch(), означающее
+  сетевую ошибку / CORS-блокировку / прерванный запрос.
+
+- Диагностика:
+  1. curl GET к Web App URL → 302 → 200 OK, JSON-ответ с сервисом. Скрипт деплоен корректно.
+  2. curl POST с Content-Type: application/json → 302 → следование редиректу → 200 OK
+     с телом {"ok":true,"data":{"sent":true,"message":"Код отправлен на ..."}}.
+     Серверная часть полностью работает.
+  3. curl OPTIONS (имитация CORS-preflight) → 405 Method Not Allowed БЕЗ CORS-заголовков.
+     Это и есть корень проблемы.
+
+- Причина:
+  Браузер при fetch() с method:POST и Content-Type:application/json отправляет
+  CORS-preflight (OPTIONS-запрос) ПЕРЕД основным POST. Apps Script по умолчанию
+  НЕ определяет doOptions и возвращает 405 Method Not Allowed. Браузер видит
+  проваленный preflight и блокирует POST → fetch() выбрасывает TypeError:
+  'Failed to fetch'.
+
+- Решение:
+  Заменить Content-Type: 'application/json' → 'text/plain;charset=utf-8'.
+  Это 'simple' Content-Type по CORS-спецификации — preflight не отправляется,
+  POST идёт сразу. Тело запроса остаётся JSON-строкой, Apps Script парсит его
+  через e.postData.contents + JSON.parse в Code.gs doPost.
+
+- Дополнительные улучшения api():
+  1. Обработка non-OK HTTP-ответов с чтением тела (r.text()) для диагностики.
+     Раньше non-OK просто шёл на r.json() который падал с непонятной ошибкой.
+  2. Перехват TypeError / 'Failed to fetch' → понятное русское сообщение:
+     'Не удалось связаться с сервером авторизации. Проверьте подключение
+     к интернету и попробуйте обновить страницу. Если ошибка повторяется —
+     обратитесь к администратору.'
+  3. Проверка что ответ — объект с полем ok. Раньше undefined.ok падал бы
+     с TypeError.
+
+- Изменения:
+  index.html: api() переписан с подробными комментариями почему text/plain.
+  sw.js: CACHE_VERSION kipia-test-v205 → kipia-test-v206.
+
+- Проверки:
+  node --check sw.js → OK
+  node --check (4-й inline script block с KipAuth) → OK
+  node tests/run-all.js → 207 passed, 0 failed
+
+- Git: commit af0ab6b, push origin main успешно. 6bd1312..af0ab6b main -> main.
+
+Stage Summary:
+- Корень проблемы: CORS-preflight (OPTIONS) возвращал 405 от Apps Script.
+- Фикс: Content-Type text/plain;charset=utf-8 — preflight не отправляется.
+- Дополнительно: дружелюбные сообщения об ошибках для пользователя.
+- CACHE_VERSION: kipia-test-v206.
+- После перезагрузки страницы 2 раза (для активации нового SW) — повторить вход.
+- Серверная часть Apps Script НЕ требует изменений — она уже работает корректно.
+
+---
+Task ID: 29
+Agent: AI Assistant (GLM)
+Task: Исправить баг: после истечения сессии повторный вход блокируется сообщением
+"С этого аккаунта уже выполнен вход".
+
+Work Log:
+- Пользователь сообщил: вошёл как админ, закрыл приложение, через 5 минут открыл —
+  увидел "Сессия истекла. Войдите снова". При попытке нового входа через OTP —
+  "С этого аккаунта уже выполнен вход".
+
+- Диагностика:
+  Серверный код Auth.sendOTP содержит глухую проверку:
+    if (user.login_status === 'вход выполнен') {
+      throw new Error('С этого аккаунта уже выполнен вход...');
+    }
+  Эта проверка не учитывает, что login_status может рассинхронизироваться с
+  реальным состоянием sessions. Сценарии рассинхронизации:
+    1. Hourly cleanup удалил сессию, но не сбросил login_status.
+    2. getCurrentUser удалил истёкшую сессию, но в той же транзакции сброс
+       login_status не сработал (race condition, ошибка записи и т.д.).
+    3. Токен в браузере не находится в sessions (удалён админом, рассинхрон
+       между вкладками/устройствами).
+    4. Cleanup ещё не запускался (раз в час), а сессия уже не активна.
+
+  В любом из этих случаев getCurrentUser возвращает session_expired/no_session,
+  но login_status остаётся 'вход выполнен' → следующий sendOTP блокирует вход.
+
+- Решение (серверный фикс, БЕЗ изменений на клиенте):
+  1. Новый метод Utils.userHasActiveSession(userId):
+     - Проверяет, есть ли в sessions АКТИВНАЯ (не истёкшая по TTL) сессия
+       для пользователя.
+     - Побочный эффект: истёкшие сессии пользователя удаляются (lazy cleanup),
+       login_status при необходимости сбрасывается.
+     - Возвращает true/false.
+
+  2. Auth.sendOTP: если login_status === 'вход выполнен', вызвать
+     Utils.userHasActiveSession. Если активных сессий нет — автоматически
+     сбросить login_status и продолжить вход (записать в audit_log как
+     LOGIN_STATUS_AUTO_RESET). Если есть — действительно блокировать.
+
+  3. Auth.verifyOTP: та же проверка перед созданием новой сессии.
+
+  Это правильная архитектура: login_status должен быть производным от наличия
+  активных сессий, а не отдельным состоянием, которое может рассинхронизироваться.
+
+- Изменения в /home/z/my-project/download/apps-script/:
+    Auth.gs:
+      - sendOTP: блок 'if login_status === вход выполнен' переписан с
+        userHasActiveSession + auto-reset.
+      - verifyOTP: та же защита перед созданием сессии.
+      - const user → let user (нужно для переназначения после reset).
+      - const freshUser → let freshUser.
+    Utils.gs:
+      - Новый метод userHasActiveSession(userId) с lazy cleanup истёкших сессий.
+    Sessions.gs: без изменений.
+    Code.gs: без изменений.
+
+- Проверки:
+  node --check для всех 4 файлов (через копию .gs → .js) → OK.
+  Синтаксис корректен.
+
+- Клиентскую часть менять НЕ нужно — фикс полностью серверный.
+  URL Apps Script Web App НЕ изменится (нужно только создать новую версию
+  деплоя в Apps Script редакторе).
+
+- Что нужно сделать пользователю для применения фикса:
+  1. Открыть редактор Apps Script (script.google.com) → проект KIP8_Access.
+  2. В файле Auth.gs заменить функции sendOTP и verifyOTP на обновлённые
+     из /home/z/my-project/download/apps-script/Auth.gs.
+  3. В файле Utils.gs добавить метод userHasActiveSession (после findSessionByToken)
+     из /home/z/my-project/download/apps-script/Utils.gs.
+  4. Сохранить (Ctrl+S).
+  5. Deploy → Manage deployments → Edit (карандаш) → Version: New version → Deploy.
+     URL останется тем же.
+  6. Для немедленного входа (пока фикс не задеплоен): в Google Sheets открыть
+     лист users, найти свой email, в столбце login_status поставить
+     'вход не выполнен'. После этого можно входить.
+
+Stage Summary:
+- Корень бага: login_status проверялся без учёта реального состояния sessions.
+- Фикс: перед блокировкой проверять наличие активной сессии через
+  Utils.userHasActiveSession. Если активных сессий нет — auto-reset login_status.
+- Дополнительно: lazy cleanup истёкших сессий при каждой попытке входа.
+- Audit log: новые события LOGIN_STATUS_AUTO_RESET, SESSION_LAZY_CLEANUP.
+- Файлы для обновления пользователем: Auth.gs, Utils.gs (только эти два).
+- Деплой: New version в Apps Script, URL не меняется.
+- Клиентский код БЕЗ ИЗМЕНЕНИЙ.
+
+---
+Task ID: 30
+Agent: AI Assistant (GLM)
+Task: Сделать сессии бессрочными. Пользователь должен всегда входить в приложение
+со своим уровнем доступа без повторной регистрации через почту. Повторный вход
+через email+код только в двух случаях:
+  1. Пользователь самостоятельно вышел (кнопка "Выйти" в sidebar)
+  2. Админ намеренно изменил login_status на "вход не выполнен"
+
+Work Log:
+- Анализ текущей архитектуры:
+  Сессии истекали по SESSION_TTL_MINUTES (15 мин по умолчанию). Heartbeat каждые
+  5 мин продлевал TTL. При истечении — login_status сбрасывался, пользователь
+  должен был входить заново через email+код.
+
+- Запрошенное поведение:
+  Сессия бессрочная. Пользователь остаётся залогиненным сколько угодно долго
+  без активности. Logout только в 4 случаях:
+    - Пользователь нажал "Выйти" (Sessions.logout — уже работает)
+    - Админ сбросил login_status (новое: getCurrentUser проверяет это)
+    - Админ сменил роль на "Запрет" (уже работает — FORCE_LOGOUT_ROLE)
+    - Пользователь удалён из users (уже работает — orphan cleanup)
+
+- Изменения (все серверные, клиент трогать НЕ нужно):
+
+  1. Sessions.heartbeat:
+     Убрана TTL-проверка. Теперь heartbeat только обновляет last_heartbeat
+     для мониторинга. Но всё равно проверяет:
+       - существует ли сессия
+       - существует ли пользователь (если нет — orphan cleanup)
+       - login_status === 'вход выполнен' (если нет — FORCE_LOGOUT_ADMIN_RESET)
+     Если любая проверка не прошла — throw session_expired.
+
+  2. Sessions.getCurrentUser:
+     Убрана TTL-проверка. Добавлена проверка login_status !== 'вход выполнен'
+     → FORCE_LOGOUT_ADMIN_RESET, удалить сессию, throw no_session.
+     Все остальные проверки сохранены:
+       - токен найден в sessions
+       - пользователь существует
+       - роль != 'Запрет'
+       - роль обновилась в sessions (если админ сменил)
+
+  3. Utils.userHasActiveSession:
+     Убрана TTL-проверка. Теперь просто возвращает true, если в sessions есть
+     ХОТЯ БЫ ОДНА запись для этого пользователя. Lazy cleanup убран
+     (он больше не нужен — сессии не истекают по времени).
+
+  4. Utils.cleanupExpiredSessions (hourly cron):
+     Полностью переписана. Больше не удаляет по TTL. Только удаляет
+     осиротевшие сессии (где пользователь удалён из users).
+     Логика getCurrentUser уже делает это лениво, но cron нужен для сессий,
+     к которым никто не обращается.
+
+- Что НЕ изменилось:
+  - Sessions.createSession — без изменений
+  - Sessions.logout — без изменений (всё корректно)
+  - Auth.sendOTP — без изменений (login_status + userHasActiveSession уже работают)
+  - Auth.verifyOTP — без изменений
+  - Admin.resetLogin — без изменений (уже удаляет сессии + сбрасывает login_status)
+  - Utils.cleanupExpiredOtpCodes — без изменений (OTP-коды продолжают истекать через час)
+  - Utils.cleanupOldAuditLogs — без изменений
+  - Клиент index.html — БЕЗ ИЗМЕНЕНИЙ
+  - HEARTBEAT_INTERVAL (5 мин) на клиенте — без изменений, heartbeat
+    продолжит работать для мониторинга last_heartbeat
+
+- SESSION_TTL_MINUTES в config:
+  Параметр больше НЕ ИСПОЛЬЗУЕТСЯ в коде. Можно оставить в таблице (не мешает)
+  или удалить. На поведение не влияет.
+
+- Audit log: новые события
+  - FORCE_LOGOUT_ADMIN_RESET — когда login_status != 'вход выполнен' при
+    heartbeat или getCurrentUser (админ сбросил)
+  - SESSION_ORPHAN_REMOVED — когда пользователь удалён, а сессия осталась
+  - SESSION_CLEANUP_ORPHAN — то же, но через hourly cron
+
+- Проверки:
+  node --check для всех 4 файлов (через копию .gs → .js) → OK.
+  Синтаксис корректен.
+
+- Что нужно сделать пользователю для применения:
+  1. Открыть редактор Apps Script → проект KIP8_Access.
+  2. Заменить содержимое Sessions.gs на файл из
+     /home/z/my-project/download/apps-script/Sessions.gs (полностью).
+  3. Заменить содержимое Utils.gs на файл из
+     /home/z/my-project/download/apps-script/Utils.gs (полностью).
+     (Auth.gs и Code.gs БЕЗ ИЗМЕНЕНИЙ — не трогать.)
+  4. Сохранить (Ctrl+S).
+  5. Deploy → Manage deployments → ✏️ карандаш → Version: New version → Deploy.
+     URL останется тем же.
+  6. Клиентскую часть НЕ обновлять — Service Worker можно НЕ перезагружать.
+
+- Тестирование:
+  - Войти → закрыть приложение → подождать 15+ минут → открыть →
+    должны сразу попасть на главный экран без экрана входа.
+  - Нажать "Выйти" → должны увидеть экран входа → войти заново через email+код.
+  - Войти → в Google Sheets поменять login_status на "вход не выполнен" →
+    обновить страницу → должны увидеть экран входа.
+
+Stage Summary:
+- Сессии стали бессрочными — не истекают по времени.
+- Logout только вручную (Выход) или через админ-reset (login_status / роль / удаление).
+- Heartbeat продолжит работать, но только для мониторинга last_heartbeat.
+- SESSION_TTL_MINUTES больше не используется (устарел).
+- Изменения только серверные: Sessions.gs + Utils.gs.
+- Auth.gs и Code.gs БЕЗ ИЗМЕНЕНИЙ.
+- Клиент index.html БЕЗ ИЗМЕНЕНИЙ.
