@@ -4925,6 +4925,9 @@
             <button type="button" class="auth-btn" id="authSendBtn" onclick="KipAuth.sendOTP()">
                 Отправить код
             </button>
+            <button type="button" class="auth-btn auth-btn-secondary" onclick="KipAuth.cancelLogin()">
+                ← Назад
+            </button>
             <div class="auth-info">
                 Код подтверждения будет отправлен на вашу почту.<br>
                 Если у вас нет доступа — обратитесь к администратору.
@@ -18589,6 +18592,34 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         },
 
         // ============================================================
+        // Отмена входа: закрыть экран входа и вернуться в гостевой
+        // режим ("Общий доступ"). Токен при этом не трогается (его
+        // нет у гостя), heartbeat не запускается. Пользователь
+        // остаётся в приложении с доступом к калькуляторам.
+        // ============================================================
+        cancelLogin: function() {
+            this._hideLoginScreen();
+            // Гостевой режим (если ещё не установлен).
+            if (!this._cachedRole) {
+                this._cachedRole = 'Общий доступ';
+                this._cachedEmail = null;
+                this._cachedUserId = null;
+            }
+            this._updateSidebarUserInfo();
+            this._applyRoleToUI();
+            if (typeof navigateTo === 'function') navigateTo('dashboard');
+            // Очистить поля формы — на случай повторного открытия.
+            const emailEl = document.getElementById('authEmail');
+            if (emailEl) emailEl.value = '';
+            ['otp1','otp2','otp3','otp4','otp5','otp6'].forEach(function(id) {
+                const el = document.getElementById(id);
+                el.value = '';
+                el.classList.remove('filled');
+            });
+            this._showError('');
+        },
+
+        // ============================================================
         // Переключение шагов.
         // ============================================================
         _switchStep: function(n) {
@@ -18843,6 +18874,22 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             const phonebookBtn = document.getElementById('phonebookBtn');
             if (phonebookBtn) {
                 phonebookBtn.style.display = (isAll || allowed.indexOf('phonebook') !== -1) ? '' : 'none';
+            }
+
+            // ============================================================
+            // Нижний бар на главной (dashboardBottomBar):
+            //   - Кнопка "Инженерные калькуляторы" — видна всегда.
+            //   - Кнопка "Документация" — видна только ролям с доступом
+            //     к библиотеке/КИП ИОС (т.е. не "Общий доступ" и не "Запрет").
+            //     Для гостей оставляем только калькуляторы.
+            // ============================================================
+            const docsBottomBtn = document.querySelector('.dashboard-bottom-btn-docs');
+            if (docsBottomBtn) {
+                const hasDocsAccess = isAll
+                    || allowed.indexOf('docs') !== -1
+                    || allowed.indexOf('library') !== -1
+                    || allowed.indexOf('kip-ios') !== -1;
+                docsBottomBtn.style.display = hasDocsAccess ? '' : 'none';
             }
         },
 
