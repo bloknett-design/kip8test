@@ -18804,6 +18804,18 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         // ============================================================
         // Bootstrap: вызывается при загрузке страницы.
         // ============================================================
+        // Стратегия (Task 33):
+        //   1. Если токена нет → экран входа.
+        //   2. Если токен есть И есть кэшированная роль в localStorage →
+        //      НЕЗАМЕДЛИТЕЛЬНО показать приложение с кэшированной ролью.
+        //      Проверку сервера (getCurrentUser) сделать В ФОНЕ. Если сервер
+        //      подтвердит сессию — обновить кэш. Если скажет no_session /
+        //      session_expired — сделать logout. Если сеть недоступна —
+        //      оставить пользователя в приложении с кэшированной ролью.
+        //      Это решает проблему "вылет при reload из-за временной ошибки сети".
+        //   3. Если токен есть, но кэша нет (первый вход на этом устройстве) →
+        //      ждем ответа сервера синхронно (старое поведение).
+        // ============================================================
         bootstrap: function() {
             if (this._initializing) return;
             this._initializing = true;
@@ -18817,8 +18829,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 return;
             }
 
-            // Восстановить роль из кэша (если есть) — на случай сетевого сбоя.
-            // localStorage переживает reload, поэтому кэш будет доступен.
+            // Прочитать кэш роли из localStorage.
             let cachedRole = null, cachedEmail = null, cachedUserId = null;
             try {
                 cachedRole = localStorage.getItem('kip8_cached_role') || null;
@@ -18827,6 +18838,26 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             } catch (e) {}
 
             const self = this;
+
+            // ===== Быстрый путь: токен + кэш → показать приложение сразу =====
+            // Проверка сервера пойдёт в фоне (this._verifySessionInBackground).
+            // Если сервер скажет "no_session" — тогда logout. Если сеть упала —
+            // пользователь останется в приложении с кэшированной ролью.
+            if (cachedRole) {
+                self._cachedRole = cachedRole;
+                self._cachedEmail = cachedEmail;
+                self._cachedUserId = cachedUserId;
+                self._lastRoleFetch = Date.now();
+                self._startHeartbeat();
+                self._updateSidebarUserInfo();
+                self._applyRoleToUI();
+                self._initializing = false;
+                // Асинхронная проверка сервера в фоне.
+                self._verifySessionInBackground();
+                return;
+            }
+
+            // ===== Медленный путь: токен есть, кэша нет — ждём ответа сервера =====
             this.api('getCurrentUser', { token: token }).then(function(data) {
                 self._cachedRole = data.role;
                 self._cachedEmail = data.email;
@@ -18848,9 +18879,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 //   - SERVER-ошибка с сообщением 'session_expired' или 'no_session':
                 //     сервер точно сказал, что сессии нет. Сбрасываем токен, показываем вход.
                 //   - Любая другая ошибка (NETWORK или неизвестная):
-                //     не трогаем токен, показываем приложение из кэша с прежней ролью.
-                //     Это критично для бессрочных сессий — пользователь не должен
-                //     "вылетать" из-за временной сетевой проблемы при reload.
+                //     не трогаем токен, показываем экран входа с пояснением.
+                //     Кэша нет, поэтому показать приложение не из чего.
                 const msg = (err && err.message) || '';
                 const kind = err && err._kind;
                 const isSessionInvalid =
@@ -18859,7 +18889,6 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
                 if (isSessionInvalid) {
                     self.clearToken();
-                    // Очистить кэш роли тоже.
                     try {
                         localStorage.removeItem('kip8_cached_role');
                         localStorage.removeItem('kip8_cached_email');
@@ -18871,30 +18900,76 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     self._showLoginScreen();
                     self._showError('Сессия истекла. Войдите снова.');
                 } else {
-                    // Сетевая ошибка или недоступность сервера — НЕ СБРАСЫВАЕМ ТОКЕН.
-                    // Восстанавливаем роль из кэша и показываем приложение.
-                    if (cachedRole) {
-                        self._cachedRole = cachedRole;
-                        self._cachedEmail = cachedEmail;
-                        self._cachedUserId = cachedUserId;
-                        self._lastRoleFetch = Date.now();
-                        self._startHeartbeat();
-                        self._updateSidebarUserInfo();
-                        self._applyRoleToUI();
-                        // Тихо показываем приложение. Если роль изменилась на сервере
-                        // пока не было сети — следующий heartbeat это обнаружит и
-                        // сделает logout при необходимости.
-                    } else {
-                        // Кэша нет — показываем вход. Но токен НЕ удаляем,
-                        // чтобы пользователь мог обновить страницу и попытаться снова.
-                        self._showLoginScreen();
-                        self._showError(
-                            'Не удалось связаться с сервером. ' +
-                            'Проверьте подключение к интернету и обновите страницу.'
-                        );
-                    }
-                    // Логируем для диагностики.
+                    // Сетевая ошибка, но кэша нет — показать вход с пояснением.
+                    // Токен НЕ удаляем, чтобы пользователь мог обновить страницу.
+                    self._showLoginScreen();
+                    self._showError(
+                        'Не удалось связаться с сервером. ' +
+                        'Проверьте подключение к интернету и обновите страницу.'
+                    );
                     console.warn('[KipAuth.bootstrap] Сетевая ошибка, токен сохранён:', msg);
+                }
+            });
+        },
+
+        // ============================================================
+        // Фоновая проверка сессии после быстрого старта из кэша.
+        // ============================================================
+        // Вызывается из bootstrap() когда приложение уже показано с кэшированной
+        // ролью. Делает запрос getCurrentUser в фоне:
+        //   - Успех: обновить кэш (роль могла измениться на сервере) и пере-применить UI.
+        //   - SERVER-ошибка no_session/session_expired: реальный logout.
+        //   - NETWORK-ошибка: ничего не делаем, пользователь остаётся в приложении.
+        // ============================================================
+        _verifySessionInBackground: function() {
+            const self = this;
+            const token = this.getToken();
+            if (!token) return;
+
+            this.api('getCurrentUser', { token: token }).then(function(data) {
+                // Сервер подтвердил сессию. Обновить кэш.
+                self._cachedRole = data.role;
+                self._cachedEmail = data.email;
+                self._cachedUserId = data.userId;
+                self._lastRoleFetch = Date.now();
+                try {
+                    localStorage.setItem('kip8_cached_role', data.role || '');
+                    localStorage.setItem('kip8_cached_email', data.email || '');
+                    localStorage.setItem('kip8_cached_user_id', String(data.userId || ''));
+                } catch (e) {}
+                // Пере-применить роль к UI (на случай если изменилась).
+                self._updateSidebarUserInfo();
+                self._applyRoleToUI();
+                console.log('[KipAuth] Фоновая проверка сессии OK');
+            }).catch(function(err) {
+                const msg = (err && err.message) || '';
+                const kind = err && err._kind;
+                const isSessionInvalid =
+                    (kind === 'SERVER') &&
+                    (msg === 'session_expired' || msg === 'no_session');
+
+                if (isSessionInvalid) {
+                    // Реальный logout — сервер сказал, что сессии нет.
+                    self.clearToken();
+                    try {
+                        localStorage.removeItem('kip8_cached_role');
+                        localStorage.removeItem('kip8_cached_email');
+                        localStorage.removeItem('kip8_cached_user_id');
+                    } catch (e) {}
+                    self._cachedRole = null;
+                    self._cachedEmail = null;
+                    self._cachedUserId = null;
+                    if (self._heartbeatTimer) {
+                        clearInterval(self._heartbeatTimer);
+                        self._heartbeatTimer = null;
+                    }
+                    self._showLoginScreen();
+                    self._showError('Сессия истекла. Войдите снова.');
+                    console.warn('[KipAuth] Фоновая проверка: сессия недействительна');
+                } else {
+                    // Сетевая ошибка — пользователь остаётся в приложении.
+                    // Heartbeat продолжит попытки.
+                    console.warn('[KipAuth] Фоновая проверка: сетевая ошибка, токен сохранён:', msg);
                 }
             });
         }

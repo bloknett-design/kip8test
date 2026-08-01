@@ -1153,3 +1153,92 @@ Stage Summary:
 - Изменения только серверные: Sessions.gs + Utils.gs.
 - Auth.gs и Code.gs БЕЗ ИЗМЕНЕНИЙ.
 - Клиент index.html БЕЗ ИЗМЕНЕНИЙ.
+
+---
+Task ID: 31
+Agent: AI Assistant (GLM)
+Task: Исправить баг: при полном обновлении страницы (свайп на мобильном)
+происходит выход из аккаунта на страницу входа. Должно: сессия бессрочная,
+выход только через кнопку "Выйти" или сброс login_status админом.
+
+Work Log:
+- Анализ проблемы:
+  Пользователь сообщает: в PWA при reload страницы на мобильном (свайп)
+  происходит "выход из аккаунта" — показывается экран входа. Внутри
+  приложения (без reload) — не происходит.
+
+- Поиск корня:
+  В KipAuth.bootstrap() при ЛЮБОЙ ошибке getCurrentUser вызывалось:
+    self.clearToken();
+    self._showLoginScreen();
+
+  Это означает: любая сетевая ошибка (timeout, HTML вместо JSON, 5xx,
+  "Failed to fetch") приводила к:
+    1. Удалению токена из localStorage
+    2. Показу экрана входа
+
+  Сцерарий "вылета" при reload на мобильном:
+    1. Page reload → bootstrap() читает токен из localStorage (OK)
+    2. fetch к Apps Script → из-за слабой сети/timeout Google возвращает
+       промежуточный HTML (redirect page) вместо JSON
+    3. r.ok = true (HTML отдаётся с 200), но r.json() падает (HTML не JSON)
+    4. Catch → clearToken → showLoginScreen → пользователь "вылетел"
+
+  Это особенно критично после Task 30 (бессрочные сессии) — пользователь
+  не должен страдать из-за временной сетевой проблемы.
+
+- Решение (4 части, все в index.html):
+
+  1. api() — классификация ошибок по типу:
+     - NETWORK: TypeError 'Failed to fetch', non-2xx HTTP, HTML вместо JSON,
+       пустой ответ, неизвестная ошибка. Помечаем err._kind = 'NETWORK'.
+     - SERVER: корректный JSON с ok:false (session_expired, no_session,
+       бизнес-ошибка). Помечаем err._kind = 'SERVER'.
+     - Retry: NETWORK-ошибки ретраятся 1 раз через 1 сек. SERVER — нет.
+
+  2. bootstrap() — умная обработка ошибок:
+     - SERVER + session_expired/no_session → реальный logout (clearToken +
+       showLogin). Это единственный сценарий, когда токен удаляется.
+     - Любая другая ошибка → НЕ трогаем токен, восстанавливаем роль из
+       localStorage (kip8_cached_role/email/user_id) и показываем приложение.
+       Если кэша нет — показываем вход, но токен НЕ удаляем (чтобы можно
+       было обновить страницу и попробовать снова).
+     - При успехе — сохраняем роль в localStorage для будущего восстановления.
+
+  3. handleSessionExpired() — то же разделение:
+     - SERVER session_expired → logout
+     - NETWORK → ничего не делаем, heartbeat продолжит попытки
+
+  4. logout() — добавлена очистка кэша роли в localStorage (раньше не чистился).
+
+- Поведение после фикса:
+  - Reload со слабой сетью → приложение открывается с прежней ролью
+    (если кэш есть) или с экраном входа без удаления токена (если кэша нет)
+  - Сервер точно сказал "сессии нет" → корректный logout
+  - Heartbeat не падает при временной недоступности сервера
+  - Ручной выход → очищает всё (токен + кэш)
+
+- Изменения:
+  index.html: api() полностью переписан с классификацией и retry.
+              bootstrap() полностью переписан с восстановлением из кэша.
+              handleSessionExpired() переписан с разделением NETWORK/SERVER.
+              logout() добавлена очистка кэша.
+              Новые localStorage ключи: kip8_cached_role, kip8_cached_email,
+              kip8_cached_user_id.
+  sw.js: CACHE_VERSION kipia-test-v206 → kipia-test-v207.
+
+- Проверки:
+  node --check sw.js → OK
+  node --check (KipAuth inline block) → OK
+  node tests/run-all.js → 207 passed, 0 failed
+
+- Git: commit 2b90913, push origin main успешно (после rebase).
+
+Stage Summary:
+- Корень бага: bootstrap() удалял токен при любой ошибке, включая сетевые.
+- Фикс: классификация NETWORK vs SERVER, восстановление из localStorage.
+- Retry сетевых ошибок 1 раз через 1 сек.
+- Новые localStorage ключи для кэша роли.
+- CACHE_VERSION: kipia-test-v207.
+- Серверную часть трогать НЕ нужно — фикс полностью клиентский.
+- После перезагрузки страницы 2 раза (для активации SW v207) — тестировать.
