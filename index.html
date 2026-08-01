@@ -1412,6 +1412,313 @@
         background: rgba(20, 20, 19, 0.12);
     }
 
+    /* ============================================================
+       АДМИН-ПАНЕЛЬ — стили (Task 47).
+       Стиль консистентен с остальным приложением: тёмная тема,
+       карточки rgba(30,35,50,0.95), акцент #4a8fc7.
+       ============================================================ */
+
+    /* Сетка 4-х карточек на главной админ-странице */
+    .admin-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 12px 10px;
+    }
+    /* На широких экранах — 2 колонки */
+    @media (min-width: 600px) {
+        .admin-grid { grid-template-columns: 1fr 1fr; }
+    }
+    .admin-card {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 16px 18px;
+        background: rgba(30, 35, 50, 0.85);
+        border: 1px solid rgba(74, 143, 199, 0.22);
+        border-radius: 14px;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s, transform 0.1s;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .admin-card:active { transform: scale(0.98); }
+    .admin-card:hover { background: rgba(40, 50, 70, 0.95); border-color: rgba(74, 143, 199, 0.45); }
+    .admin-card svg { width: 28px; height: 28px; color: #4a8fc7; flex-shrink: 0; }
+    .admin-card-text { flex: 1; min-width: 0; }
+    .admin-card-label { font-size: 16px; font-weight: 600; color: #e0e0e0; }
+    .admin-card-sublabel { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+    .admin-card .menu-btn-arrow { color: rgba(74,143,199,0.5); font-size: 18px; }
+    /* Цветовые акценты карточек */
+    .admin-card-users { border-color: rgba(74,143,199,0.28); }
+    .admin-card-sessions { border-color: rgba(122, 224, 160, 0.28); }
+    .admin-card-sessions svg { color: #7ae0a0; }
+    .admin-card-logs { border-color: rgba(199,150,74,0.28); }
+    .admin-card-logs svg { color: #c7964a; }
+    .admin-card-stats { border-color: rgba(199,122,224,0.28); }
+    .admin-card-stats svg { color: #c77ae0; }
+    [data-theme="light"] .admin-card {
+        background: rgba(255,255,255,0.92);
+        border-color: rgba(74,143,199,0.25);
+    }
+    [data-theme="light"] .admin-card-label { color: #141413; }
+    [data-theme="light"] .admin-card-sublabel { color: rgba(20,20,19,0.55); }
+    [data-theme="light"] .admin-card:hover { background: #fff; }
+
+    .admin-footer {
+        padding: 8px 16px 20px;
+        text-align: center;
+    }
+
+    /* Тулбар (поиск + кнопка обновить) на подстраницах админки */
+    .admin-toolbar {
+        display: flex;
+        gap: 8px;
+        padding: 8px 12px 12px;
+        align-items: center;
+    }
+    .admin-search {
+        flex: 1;
+        padding: 10px 14px;
+        background: rgba(30, 35, 50, 0.6);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 10px;
+        color: #fff;
+        font-size: 14px;
+        font-family: inherit;
+        outline: none;
+        transition: border-color 0.15s;
+    }
+    .admin-search:focus { border-color: rgba(74,143,199,0.6); }
+    .admin-search::placeholder { color: rgba(255,255,255,0.35); }
+    .admin-select {
+        padding: 10px 14px;
+        background: rgba(30, 35, 50, 0.6);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 10px;
+        color: #fff;
+        font-size: 13px;
+        font-family: inherit;
+        outline: none;
+        cursor: pointer;
+        max-width: 50%;
+    }
+    .admin-select option { background: #1a1f2e; color: #fff; }
+    .admin-refresh-btn {
+        flex: none;
+        padding: 10px 16px;
+        background: rgba(74,143,199,0.18);
+        border: 1px solid rgba(74,143,199,0.35);
+        border-radius: 10px;
+        color: #4a8fc7;
+        font-size: 14px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: background 0.15s, transform 0.1s;
+    }
+    .admin-refresh-btn:active { transform: scale(0.96); }
+    .admin-refresh-btn:hover { background: rgba(74,143,199,0.28); }
+    [data-theme="light"] .admin-search,
+    [data-theme="light"] .admin-select {
+        background: rgba(0,0,0,0.03);
+        border-color: rgba(0,0,0,0.1);
+        color: #1a1a1a;
+    }
+    [data-theme="light"] .admin-search::placeholder { color: rgba(20,20,19,0.4); }
+    [data-theme="light"] .admin-refresh-btn {
+        background: rgba(74,143,199,0.1);
+        border-color: rgba(74,143,199,0.3);
+        color: #4a8fc7;
+    }
+
+    /* Список элементов (пользователи/сессии/логи) */
+    .admin-list {
+        padding: 0 12px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .admin-item {
+        background: rgba(30, 35, 50, 0.85);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        padding: 12px 14px;
+    }
+    [data-theme="light"] .admin-item {
+        background: rgba(255,255,255,0.92);
+        border-color: rgba(0,0,0,0.06);
+    }
+    .admin-item-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .admin-item-email {
+        font-size: 14px;
+        font-weight: 600;
+        color: #e0e0e0;
+        word-break: break-all;
+        flex: 1;
+        min-width: 0;
+    }
+    [data-theme="light"] .admin-item-email { color: #141413; }
+    .admin-item-meta {
+        font-size: 11px;
+        color: rgba(255,255,255,0.5);
+        margin-top: 6px;
+        line-height: 1.5;
+    }
+    [data-theme="light"] .admin-item-meta { color: rgba(20,20,19,0.55); }
+    .admin-item-actions {
+        display: flex;
+        gap: 6px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+
+    /* Бейджи статуса/роли */
+    .admin-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        white-space: nowrap;
+    }
+    .admin-badge-role {
+        background: rgba(74,143,199,0.18);
+        color: #6aa6e0;
+        border: 1px solid rgba(74,143,199,0.35);
+    }
+    .admin-badge-online {
+        background: rgba(122,224,160,0.15);
+        color: #7ae0a0;
+        border: 1px solid rgba(122,224,160,0.35);
+    }
+    .admin-badge-offline {
+        background: rgba(180,180,180,0.1);
+        color: rgba(180,180,180,0.7);
+        border: 1px solid rgba(180,180,180,0.2);
+    }
+    .admin-badge-action {
+        background: rgba(199,150,74,0.15);
+        color: #c7964a;
+        border: 1px solid rgba(199,150,74,0.35);
+    }
+    .admin-badge-danger {
+        background: rgba(255,107,107,0.15);
+        color: #ff8585;
+        border: 1px solid rgba(255,107,107,0.35);
+    }
+    [data-theme="light"] .admin-badge-role { background: rgba(74,143,199,0.1); color: #4a8fc7; }
+    [data-theme="light"] .admin-badge-online { background: rgba(60,180,100,0.1); color: #2a9d4a; }
+    [data-theme="light"] .admin-badge-offline { background: rgba(0,0,0,0.05); color: rgba(0,0,0,0.5); }
+    [data-theme="light"] .admin-badge-action { background: rgba(199,150,74,0.12); color: #8a651e; }
+    [data-theme="light"] .admin-badge-danger { background: rgba(220,70,70,0.1); color: #c53030; }
+
+    /* Select смены роли (компактный) */
+    .admin-role-select {
+        padding: 6px 10px;
+        background: rgba(74,143,199,0.1);
+        border: 1px solid rgba(74,143,199,0.3);
+        border-radius: 8px;
+        color: #4a8fc7;
+        font-size: 12px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        outline: none;
+    }
+    .admin-role-select option { background: #1a1f2e; color: #fff; }
+    [data-theme="light"] .admin-role-select {
+        background: rgba(74,143,199,0.08);
+        color: #4a8fc7;
+    }
+
+    /* Кнопка "Сбросить вход" (мини, красная) */
+    .admin-action-btn {
+        padding: 6px 12px;
+        background: rgba(255,107,107,0.1);
+        border: 1px solid rgba(255,107,107,0.3);
+        border-radius: 8px;
+        color: #ff8585;
+        font-size: 12px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: background 0.15s, transform 0.1s;
+    }
+    .admin-action-btn:active { transform: scale(0.96); }
+    .admin-action-btn:hover { background: rgba(255,107,107,0.18); }
+    [data-theme="light"] .admin-action-btn {
+        background: rgba(220,70,70,0.08);
+        color: #c53030;
+    }
+
+    /* Карточки статистики */
+    .admin-stats-container {
+        padding: 12px 10px 24px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .admin-stat-card {
+        background: rgba(30, 35, 50, 0.85);
+        border: 1px solid rgba(74,143,199,0.22);
+        border-radius: 12px;
+        padding: 14px 16px;
+        text-align: center;
+    }
+    .admin-stat-card.full-width { grid-column: 1 / -1; }
+    .admin-stat-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: #4a8fc7;
+        line-height: 1.1;
+    }
+    .admin-stat-label {
+        font-size: 11px;
+        color: rgba(255,255,255,0.55);
+        margin-top: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .admin-stat-breakdown {
+        margin-top: 8px;
+        font-size: 12px;
+        color: rgba(255,255,255,0.7);
+        line-height: 1.6;
+        text-align: left;
+    }
+    .admin-stat-breakdown div { display: flex; justify-content: space-between; padding: 2px 0; }
+    .admin-stat-breakdown span { color: #6aa6e0; font-weight: 600; }
+    [data-theme="light"] .admin-stat-card {
+        background: rgba(255,255,255,0.92);
+        border-color: rgba(74,143,199,0.25);
+    }
+    [data-theme="light"] .admin-stat-label { color: rgba(20,20,19,0.55); }
+    [data-theme="light"] .admin-stat-breakdown { color: rgba(20,20,19,0.7); }
+
+    /* Пустое состояние */
+    .admin-empty {
+        text-align: center;
+        padding: 40px 16px;
+        color: rgba(255,255,255,0.4);
+        font-size: 14px;
+    }
+    [data-theme="light"] .admin-empty { color: rgba(20,20,19,0.45); }
+
+    @media (max-width: 400px) {
+        .admin-grid { padding: 8px 6px; }
+        .admin-card { padding: 12px 14px; }
+        .admin-card-label { font-size: 14px; }
+        .admin-stats-container { grid-template-columns: 1fr 1fr; padding: 8px 6px; }
+    }
+
     @media (max-width: 400px) {
         .sidebar { width: 260px; }
         .sidebar-item { padding: 8px 16px; font-size: 13px; }
@@ -5450,6 +5757,100 @@
             </div>
             <div class="pb-info" id="pbInfo">Загрузка…</div>
             <div id="pbList" class="pb-list"></div>
+        </div>
+
+        <!-- ======================== АДМИН-ПАНЕЛЬ (только роль "Админ") ======================== -->
+        <!-- Главная страница админ-панели: 4 карточки-раздела. -->
+        <div id="page-admin" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Админ-панель</div></div>
+
+            <div class="admin-grid">
+                <div class="admin-card admin-card-users" onclick="navigateTo('admin-users')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <div class="admin-card-text">
+                        <div class="admin-card-label">Пользователи</div>
+                        <div class="admin-card-sublabel">Список, роли, сброс входа</div>
+                    </div>
+                    <i class="menu-btn-arrow">›</i>
+                </div>
+                <div class="admin-card admin-card-sessions" onclick="navigateTo('admin-sessions')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <div class="admin-card-text">
+                        <div class="admin-card-label">Сессии</div>
+                        <div class="admin-card-sublabel">Активные входы</div>
+                    </div>
+                    <i class="menu-btn-arrow">›</i>
+                </div>
+                <div class="admin-card admin-card-logs" onclick="navigateTo('admin-logs')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    <div class="admin-card-text">
+                        <div class="admin-card-label">Журнал</div>
+                        <div class="admin-card-sublabel">События и действия</div>
+                    </div>
+                    <i class="menu-btn-arrow">›</i>
+                </div>
+                <div class="admin-card admin-card-stats" onclick="navigateTo('admin-stats')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    <div class="admin-card-text">
+                        <div class="admin-card-label">Статистика</div>
+                        <div class="admin-card-sublabel">Сводка по системе</div>
+                    </div>
+                    <i class="menu-btn-arrow">›</i>
+                </div>
+            </div>
+            <div class="admin-footer">
+                <button type="button" class="admin-refresh-btn" onclick="KipAdmin.refreshAll()">Обновить данные</button>
+            </div>
+        </div>
+
+        <!-- ===== Админ: Пользователи ===== -->
+        <div id="page-admin-users" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Пользователи</div></div>
+            <div class="admin-toolbar">
+                <input type="search" id="adminUserSearch" class="admin-search" placeholder="Поиск по email…" autocomplete="off" enterkeyhint="search" oninput="KipAdmin.renderUsers()">
+                <button type="button" class="admin-refresh-btn" onclick="KipAdmin.loadUsers()">↻</button>
+            </div>
+            <div id="adminUsersList" class="admin-list">Загрузка…</div>
+        </div>
+
+        <!-- ===== Админ: Сессии ===== -->
+        <div id="page-admin-sessions" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Активные сессии</div></div>
+            <div class="admin-toolbar">
+                <input type="search" id="adminSessionSearch" class="admin-search" placeholder="Поиск по email…" autocomplete="off" enterkeyhint="search" oninput="KipAdmin.renderSessions()">
+                <button type="button" class="admin-refresh-btn" onclick="KipAdmin.loadSessions()">↻</button>
+            </div>
+            <div id="adminSessionsList" class="admin-list">Загрузка…</div>
+        </div>
+
+        <!-- ===== Админ: Журнал ===== -->
+        <div id="page-admin-logs" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Журнал событий</div></div>
+            <div class="admin-toolbar">
+                <input type="search" id="adminLogSearch" class="admin-search" placeholder="Поиск: email, action…" autocomplete="off" enterkeyhint="search" oninput="KipAdmin.renderLogs()">
+                <select id="adminLogFilter" class="admin-select" onchange="KipAdmin.renderLogs()">
+                    <option value="">Все действия</option>
+                    <option value="LOGIN_SUCCESS">Входы (успех)</option>
+                    <option value="LOGIN_FAILED">Входы (сбой)</option>
+                    <option value="LOGOUT">Выходы</option>
+                    <option value="OTP_REQUESTED">OTP запрошен</option>
+                    <option value="OTP_VERIFIED">OTP проверен</option>
+                    <option value="ADMIN_UPDATE_ROLE">Смена роли</option>
+                    <option value="ADMIN_RESET_LOGIN">Сброс входа</option>
+                    <option value="ADMIN_ACCESS_DENIED">Отказ в доступе</option>
+                </select>
+                <button type="button" class="admin-refresh-btn" onclick="KipAdmin.loadLogs()">↻</button>
+            </div>
+            <div id="adminLogsList" class="admin-list">Загрузка…</div>
+        </div>
+
+        <!-- ===== Админ: Статистика ===== -->
+        <div id="page-admin-stats" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Статистика</div></div>
+            <div class="admin-toolbar">
+                <button type="button" class="admin-refresh-btn" onclick="KipAdmin.loadStats()">↻ Обновить</button>
+            </div>
+            <div id="adminStatsContainer" class="admin-stats-container">Загрузка…</div>
         </div>
 
         <!-- ======================== ПРИБОРЫ (КИП ИОС) ======================== -->
@@ -13913,6 +14314,13 @@
         if (page === 'plan-114') { setTimeout(() => { if (typeof plan114RenderList === 'function') plan114RenderList(); }, 30); }
         if (TICKET_IDS.includes(page)) { setTimeout(() => initTicketsPage(page), 30); }
         if (page === 'exam-tickets') { setTimeout(() => loadTicketsData(), 30); }
+        // ============================================================
+        // Админ-панель: автоматическая загрузка данных при заходе на раздел.
+        // ============================================================
+        if (page === 'admin-users')    { setTimeout(() => { if (typeof KipAdmin !== 'undefined') KipAdmin.loadUsers();    }, 30); }
+        if (page === 'admin-sessions') { setTimeout(() => { if (typeof KipAdmin !== 'undefined') KipAdmin.loadSessions(); }, 30); }
+        if (page === 'admin-logs')     { setTimeout(() => { if (typeof KipAdmin !== 'undefined') KipAdmin.loadLogs();     }, 30); }
+        if (page === 'admin-stats')    { setTimeout(() => { if (typeof KipAdmin !== 'undefined') KipAdmin.loadStats();    }, 30); }
         // Снять блокировку прокрутки и закрыть открытые билеты при уходе со страницы
         if (document.body.classList.contains('ticket-open')) {
             document.body.classList.remove('ticket-open');
@@ -18844,6 +19252,17 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         // ============================================================
         canAccess: function(page) {
             if (!this._cachedRole) return false;
+            // ============================================================
+            // Защита admin-страниц: только роль "Админ".
+            // Это двойная защита — даже если ROLE_ACCESS случайно
+            // включит admin-страницу в список, доступ всё равно
+            // разрешён только Админу.
+            // ============================================================
+            if (page === 'admin' || page === 'admin-users' ||
+                page === 'admin-sessions' || page === 'admin-logs' ||
+                page === 'admin-stats') {
+                return this._cachedRole === 'Админ';
+            }
             const allowed = this.ROLE_ACCESS[this._cachedRole];
             if (!allowed) return false;
             if (allowed.indexOf('*') !== -1) return true;
@@ -18973,6 +19392,15 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             if (sidebarLogoutBtn) {
                 const isGuest = this._cachedRole === 'Общий доступ';
                 sidebarLogoutBtn.style.display = isGuest ? 'none' : '';
+            }
+
+            // ============================================================
+            // Кнопка "Админ-панель" в sidebar — видна ТОЛЬКО роли "Админ".
+            // ============================================================
+            const sidebarAdminBtn = document.getElementById('sidebarAdminBtn');
+            if (sidebarAdminBtn) {
+                const isAdmin = this._cachedRole === 'Админ';
+                sidebarAdminBtn.style.display = isAdmin ? '' : 'none';
             }
         },
 
@@ -19222,6 +19650,442 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
     };
 
     // ============================================================
+    // АДМИН-ПАНЕЛЬ (Task 47).
+    // Клиентская логика для разделов:
+    //   - Пользователи (список + смена роли + сброс входа)
+    //   - Сессии (активные входы)
+    //   - Журнал (audit_log)
+    //   - Статистика (сводка из users + sessions)
+    // Все серверные эндпоинты уже реализованы в Utils.gs (Admin-объект):
+    //   adminListUsers / adminUpdateRole / adminResetLogin
+    //   adminListSessions / adminListLogs
+    // ============================================================
+    const KipAdmin = {
+
+        // Кэш загруженных данных.
+        _users: null,
+        _sessions: null,
+        _logs: null,
+
+        // Список ролей для <select> (тот же, что в Utils.gs Admin.updateRole).
+        ROLES: [
+            'Запрет', 'Общий доступ',
+            'КИП8', 'КИП8 pro',
+            'КИП ИОС', 'КИП ИОС pro',
+            'ИТР8', 'ИТР8 pro',
+            'ИТР ИОС',
+            'Админ'
+        ],
+
+        // ============================================================
+        // Универсальный вызов админ-эндпоинта.
+        // ============================================================
+        _api: function(action, payload) {
+            const token = KipAuth.getToken();
+            if (!token) {
+                return Promise.reject(new Error('Нет токена — войдите как Админ'));
+            }
+            return KipAuth.api(action, Object.assign({ token: token }, payload || {}));
+        },
+
+        // ============================================================
+        // Загрузка данных.
+        // ============================================================
+        loadUsers: function() {
+            const el = document.getElementById('adminUsersList');
+            if (el) el.innerHTML = '<div class="admin-empty">Загрузка…</div>';
+            const self = this;
+            this._api('adminListUsers').then(function(users) {
+                self._users = users || [];
+                self.renderUsers();
+            }).catch(function(err) {
+                if (el) el.innerHTML = '<div class="admin-empty">Ошибка: ' + (err.message || err) + '</div>';
+            });
+        },
+
+        loadSessions: function() {
+            const el = document.getElementById('adminSessionsList');
+            if (el) el.innerHTML = '<div class="admin-empty">Загрузка…</div>';
+            const self = this;
+            this._api('adminListSessions').then(function(sessions) {
+                self._sessions = sessions || [];
+                self.renderSessions();
+            }).catch(function(err) {
+                if (el) el.innerHTML = '<div class="admin-empty">Ошибка: ' + (err.message || err) + '</div>';
+            });
+        },
+
+        loadLogs: function() {
+            const el = document.getElementById('adminLogsList');
+            if (el) el.innerHTML = '<div class="admin-empty">Загрузка…</div>';
+            const self = this;
+            this._api('adminListLogs', { limit: 200 }).then(function(logs) {
+                self._logs = logs || [];
+                self.renderLogs();
+            }).catch(function(err) {
+                if (el) el.innerHTML = '<div class="admin-empty">Ошибка: ' + (err.message || err) + '</div>';
+            });
+        },
+
+        loadStats: function() {
+            const el = document.getElementById('adminStatsContainer');
+            if (el) el.innerHTML = '<div class="admin-empty">Загрузка…</div>';
+            const self = this;
+            // Параллельно грузим users и sessions.
+            Promise.all([
+                this._api('adminListUsers'),
+                this._api('adminListSessions')
+            ]).then(function(results) {
+                self._users = results[0] || [];
+                self._sessions = results[1] || [];
+                self.renderStats();
+            }).catch(function(err) {
+                if (el) el.innerHTML = '<div class="admin-empty">Ошибка: ' + (err.message || err) + '</div>';
+            });
+        },
+
+        refreshAll: function() {
+            this._users = null;
+            this._sessions = null;
+            this._logs = null;
+            this.loadUsers();
+            this.loadSessions();
+            this.loadLogs();
+            if (typeof showToast === 'function') showToast('Данные обновляются…');
+        },
+
+        // ============================================================
+        // Рендер: Пользователи.
+        // ============================================================
+        renderUsers: function() {
+            const el = document.getElementById('adminUsersList');
+            if (!el) return;
+            if (!this._users) { el.innerHTML = '<div class="admin-empty">Загрузка…</div>'; return; }
+
+            const search = (document.getElementById('adminUserSearch').value || '').toLowerCase().trim();
+            let users = this._users.slice();
+            if (search) {
+                users = users.filter(function(u) {
+                    return (u.email || '').toLowerCase().indexOf(search) !== -1
+                        || (u.role || '').toLowerCase().indexOf(search) !== -1;
+                });
+            }
+            // Сортировка: сначала Админ, потом по email.
+            users.sort(function(a, b) {
+                if (a.role === 'Админ' && b.role !== 'Админ') return -1;
+                if (b.role === 'Админ' && a.role !== 'Админ') return 1;
+                return (a.email || '').localeCompare(b.email || '');
+            });
+
+            if (users.length === 0) {
+                el.innerHTML = '<div class="admin-empty">Пользователи не найдены</div>';
+                return;
+            }
+
+            const self = this;
+            el.innerHTML = users.map(function(u) {
+                const online = u.login_status === 'вход выполнен';
+                const statusBadge = online
+                    ? '<span class="admin-badge admin-badge-online">Вход выполнен</span>'
+                    : '<span class="admin-badge admin-badge-offline">Вход не выполнен</span>';
+                const last = u.last_login
+                    ? self._formatDate(u.last_login)
+                    : '—';
+                // Select смены роли.
+                const options = self.ROLES.map(function(r) {
+                    return '<option value="' + r + '"' + (r === u.role ? ' selected' : '') + '>' + r + '</option>';
+                }).join('');
+                const roleSelect = '<select class="admin-role-select" onchange="KipAdmin.changeRole(' + u.id + ', this.value)">' + options + '</select>';
+                // Кнопка "Сбросить вход" — только для залогиненных.
+                const resetBtn = online
+                    ? '<button type="button" class="admin-action-btn" onclick="KipAdmin.resetLogin(' + u.id + ', \'' + self._esc(u.email) + '\')">Сбросить вход</button>'
+                    : '';
+
+                return '' +
+                    '<div class="admin-item">' +
+                        '<div class="admin-item-row">' +
+                            '<div class="admin-item-email">' + self._esc(u.email) + '</div>' +
+                            statusBadge +
+                        '</div>' +
+                        '<div class="admin-item-meta">' +
+                            'ID: ' + u.id + ' · Последний вход: ' + last +
+                        '</div>' +
+                        '<div class="admin-item-actions">' +
+                            roleSelect +
+                            resetBtn +
+                        '</div>' +
+                    '</div>';
+            }).join('');
+        },
+
+        // ============================================================
+        // Рендер: Сессии.
+        // ============================================================
+        renderSessions: function() {
+            const el = document.getElementById('adminSessionsList');
+            if (!el) return;
+            if (!this._sessions) { el.innerHTML = '<div class="admin-empty">Загрузка…</div>'; return; }
+
+            const search = (document.getElementById('adminSessionSearch').value || '').toLowerCase().trim();
+            let sessions = this._sessions.slice();
+            if (search) {
+                sessions = sessions.filter(function(s) {
+                    return (s.email || '').toLowerCase().indexOf(search) !== -1
+                        || (s.role || '').toLowerCase().indexOf(search) !== -1;
+                });
+            }
+            // Сортировка: по убыванию last_heartbeat.
+            sessions.sort(function(a, b) {
+                const ta = a.last_heartbeat ? new Date(a.last_heartbeat).getTime() : 0;
+                const tb = b.last_heartbeat ? new Date(b.last_heartbeat).getTime() : 0;
+                return tb - ta;
+            });
+
+            if (sessions.length === 0) {
+                el.innerHTML = '<div class="admin-empty">Активных сессий нет</div>';
+                return;
+            }
+
+            const self = this;
+            el.innerHTML = sessions.map(function(s) {
+                const created = s.created_at ? self._formatDate(s.created_at) : '—';
+                const last = s.last_heartbeat ? self._formatDate(s.last_heartbeat) : '—';
+                return '' +
+                    '<div class="admin-item">' +
+                        '<div class="admin-item-row">' +
+                            '<div class="admin-item-email">' + self._esc(s.email) + '</div>' +
+                            '<span class="admin-badge admin-badge-role">' + self._esc(s.role || '—') + '</span>' +
+                        '</div>' +
+                        '<div class="admin-item-meta">' +
+                            'Создана: ' + created + '<br>' +
+                            'Активность: ' + last + '<br>' +
+                            'Токен: ' + self._esc(s.token || '—') +
+                        '</div>' +
+                    '</div>';
+            }).join('');
+        },
+
+        // ============================================================
+        // Рендер: Журнал.
+        // ============================================================
+        renderLogs: function() {
+            const el = document.getElementById('adminLogsList');
+            if (!el) return;
+            if (!this._logs) { el.innerHTML = '<div class="admin-empty">Загрузка…</div>'; return; }
+
+            const search = (document.getElementById('adminLogSearch').value || '').toLowerCase().trim();
+            const filter = (document.getElementById('adminLogFilter') || {}).value || '';
+            let logs = this._logs.slice();
+            if (search) {
+                logs = logs.filter(function(l) {
+                    return (l.email || '').toLowerCase().indexOf(search) !== -1
+                        || (l.action || '').toLowerCase().indexOf(search) !== -1
+                        || (l.details || '').toLowerCase().indexOf(search) !== -1;
+                });
+            }
+            if (filter) {
+                logs = logs.filter(function(l) { return l.action === filter; });
+            }
+
+            if (logs.length === 0) {
+                el.innerHTML = '<div class="admin-empty">Записей не найдено</div>';
+                return;
+            }
+
+            const self = this;
+            el.innerHTML = logs.map(function(l) {
+                const ts = l.timestamp ? self._formatDate(l.timestamp) : '—';
+                const actionClass = self._actionBadgeClass(l.action);
+                return '' +
+                    '<div class="admin-item">' +
+                        '<div class="admin-item-row">' +
+                            '<div class="admin-item-email">' + self._esc(l.email || '—') + '</div>' +
+                            '<span class="admin-badge ' + actionClass + '">' + self._esc(l.action || '—') + '</span>' +
+                        '</div>' +
+                        '<div class="admin-item-meta">' +
+                            ts + (l.ip ? ' · IP: ' + self._esc(l.ip) : '') +
+                            (l.details ? '<br>' + self._esc(l.details) : '') +
+                        '</div>' +
+                    '</div>';
+            }).join('');
+        },
+
+        // ============================================================
+        // Рендер: Статистика.
+        // ============================================================
+        renderStats: function() {
+            const el = document.getElementById('adminStatsContainer');
+            if (!el) return;
+            if (!this._users || !this._sessions) {
+                el.innerHTML = '<div class="admin-empty">Загрузка…</div>';
+                return;
+            }
+
+            const users = this._users;
+            const sessions = this._sessions;
+            const total = users.length;
+            const online = users.filter(function(u) { return u.login_status === 'вход выполнен'; }).length;
+            const activeSessions = sessions.length;
+            const admins = users.filter(function(u) { return u.role === 'Админ'; }).length;
+
+            // Входы за сегодня.
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            const todayLogins = users.filter(function(u) {
+                if (!u.last_login) return false;
+                return new Date(u.last_login) >= today;
+            }).length;
+
+            // Распределение по ролям.
+            const byRole = {};
+            users.forEach(function(u) {
+                const r = u.role || '—';
+                byRole[r] = (byRole[r] || 0) + 1;
+            });
+            const roleBreakdown = Object.keys(byRole)
+                .sort(function(a, b) { return byRole[b] - byRole[a]; })
+                .map(function(r) {
+                    return '<div><span>' + this._esc(r) + '</span><span>' + byRole[r] + '</span></div>';
+                }.bind(this))
+                .join('');
+
+            el.innerHTML = '' +
+                '<div class="admin-stat-card">' +
+                    '<div class="admin-stat-value">' + total + '</div>' +
+                    '<div class="admin-stat-label">Всего пользователей</div>' +
+                '</div>' +
+                '<div class="admin-stat-card">' +
+                    '<div class="admin-stat-value">' + online + '</div>' +
+                    '<div class="admin-stat-label">С входом выполнен</div>' +
+                '</div>' +
+                '<div class="admin-stat-card">' +
+                    '<div class="admin-stat-value">' + activeSessions + '</div>' +
+                    '<div class="admin-stat-label">Активных сессий</div>' +
+                '</div>' +
+                '<div class="admin-stat-card">' +
+                    '<div class="admin-stat-value">' + todayLogins + '</div>' +
+                    '<div class="admin-stat-label">Входов сегодня</div>' +
+                '</div>' +
+                '<div class="admin-stat-card full-width">' +
+                    '<div class="admin-stat-label">Распределение по ролям</div>' +
+                    '<div class="admin-stat-breakdown">' + roleBreakdown + '</div>' +
+                '</div>' +
+                '<div class="admin-stat-card full-width">' +
+                    '<div class="admin-stat-label">Админов в системе</div>' +
+                    '<div class="admin-stat-value" style="font-size:22px;margin-top:6px;">' + admins + '</div>' +
+                '</div>';
+        },
+
+        // ============================================================
+        // Действия.
+        // ============================================================
+
+        // Сменить роль пользователя.
+        // Согласно выбранной логике: сразу + reset сессий.
+        // Поэтому после updateRole вызываем resetLogin (если был вход выполнен).
+        changeRole: function(userId, newRole) {
+            const self = this;
+            const user = (this._users || []).find(function(u) { return Number(u.id) === Number(userId); });
+            const oldRole = user ? user.role : '?';
+            const email = user ? user.email : '';
+
+            // Найти текущий select, чтобы вернуть значение, если операция провалится.
+            const selects = document.querySelectorAll('.admin-role-select');
+            let targetSelect = null;
+            for (let i = 0; i < selects.length; i++) {
+                if (Number(selects[i].value) === Number(userId) || selects[i].value === newRole) {
+                    // Грубый поиск: по onchange мы знаем, что select только что изменился.
+                }
+            }
+
+            this._api('adminUpdateRole', { userId: userId, newRole: newRole }).then(function() {
+                // Если у пользователя был выполнен вход — сбрасываем его сессии,
+                // чтобы при следующем входе он получил новую роль.
+                if (user && user.login_status === 'вход выполнен') {
+                    return self._api('adminResetLogin', { userId: userId }).then(function() {
+                        if (typeof showToast === 'function') {
+                            showToast('Роль изменена: ' + oldRole + ' → ' + newRole + '. Сессии сброшены.');
+                        }
+                    });
+                }
+                if (typeof showToast === 'function') {
+                    showToast('Роль изменена: ' + oldRole + ' → ' + newRole);
+                }
+            }).then(function() {
+                // Перезагрузить списки пользователей и сессий.
+                self.loadUsers();
+                self.loadSessions();
+            }).catch(function(err) {
+                if (typeof showToast === 'function') {
+                    showToast('Ошибка: ' + (err.message || err));
+                }
+                // Вернуть select на старое значение.
+                if (user) {
+                    document.querySelectorAll('.admin-role-select').forEach(function(sel) {
+                        // Найти нужный select по id пользователя — но у нас нет data-attr.
+                        // Простой fallback: перерендерить весь список.
+                    });
+                }
+                self.renderUsers();
+            });
+        },
+
+        // Сбросить вход пользователя (force logout).
+        resetLogin: function(userId, email) {
+            const self = this;
+            this._api('adminResetLogin', { userId: userId }).then(function() {
+                if (typeof showToast === 'function') {
+                    showToast('Вход сброшен: ' + (email || ''));
+                }
+                self.loadUsers();
+                self.loadSessions();
+            }).catch(function(err) {
+                if (typeof showToast === 'function') {
+                    showToast('Ошибка: ' + (err.message || err));
+                }
+            });
+        },
+
+        // ============================================================
+        // Утилиты.
+        // ============================================================
+
+        // Экранирование HTML — защита от XSS при вставке email/details.
+        _esc: function(s) {
+            if (s === null || s === undefined) return '';
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        },
+
+        // Форматирование даты.
+        _formatDate: function(d) {
+            if (!d) return '—';
+            try {
+                const date = (d instanceof Date) ? d : new Date(d);
+                if (isNaN(date.getTime())) return '—';
+                const pad = function(n) { return (n < 10 ? '0' : '') + n; };
+                return pad(date.getDate()) + '.' + pad(date.getMonth() + 1) + '.' + date.getFullYear() +
+                    ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes());
+            } catch (e) {
+                return '—';
+            }
+        },
+
+        // Класс бейджа для типа действия в журнале.
+        _actionBadgeClass: function(action) {
+            if (!action) return 'admin-badge admin-badge-offline';
+            if (action.indexOf('ADMIN_') === 0) return 'admin-badge admin-badge-action';
+            if (action === 'LOGIN_SUCCESS' || action === 'OTP_VERIFIED') return 'admin-badge admin-badge-online';
+            if (action === 'LOGIN_FAILED' || action === 'ADMIN_ACCESS_DENIED') return 'admin-badge admin-badge-danger';
+            if (action === 'LOGOUT') return 'admin-badge admin-badge-offline';
+            return 'admin-badge admin-badge-role';
+        }
+    };
+
+    // ============================================================
     // Обработка OTP input: автопереход между полями + paste.
     // ============================================================
     (function setupOtpInputs() {
@@ -19461,6 +20325,12 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         <div id="sidebarUserInfo" class="sidebar-user-info"></div>
 
         <!-- ===== Сервисные кнопки (внизу шторки) ===== -->
+        <!-- id="sidebarAdminBtn" — виден только роли "Админ".
+             Скрывается в _applyRoleToUI(). -->
+        <div class="sidebar-item" id="sidebarAdminBtn" onclick="navigateTo('admin'); toggleSidebar();" style="display:none;">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:#c77ae0;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>Админ-панель</span>
+        </div>
         <div class="sidebar-item" onclick="refreshAppData(); toggleSidebar();">
             <span>Обновить</span>
         </div>
