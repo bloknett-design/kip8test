@@ -5102,6 +5102,19 @@
         color: rgba(255,255,255,0.3);
         cursor: not-allowed; text-decoration: none;
     }
+    /* Подсказка под «Отправить повторно»: куда смотреть, если код не пришёл. */
+    .auth-hint {
+        margin-top: 14px;
+        padding: 10px 12px;
+        background: rgba(199,150,74,0.08);
+        border: 1px solid rgba(199,150,74,0.22);
+        border-radius: 8px;
+        font-size: 11px;
+        line-height: 1.5;
+        color: rgba(255,255,255,0.65);
+        text-align: left;
+    }
+    .auth-hint b { color: rgba(255,255,255,0.9); font-weight: 600; }
     .auth-loading {
         display: inline-block;
         width: 16px; height: 16px;
@@ -5257,6 +5270,12 @@
     }
     [data-theme="light"] .auth-info { color: rgba(20,20,19,0.45); }
     [data-theme="light"] .auth-resend { color: rgba(20,20,19,0.55); }
+    [data-theme="light"] .auth-hint {
+        background: rgba(199,150,74,0.08);
+        border-color: rgba(199,150,74,0.28);
+        color: rgba(20,20,19,0.65);
+    }
+    [data-theme="light"] .auth-hint b { color: rgba(20,20,19,0.9); }
     [data-theme="light"] .auth-email-display { color: #4a8fc7; }
     [data-theme="light"] .sidebar-user-info {
         border-bottom-color: rgba(20,20,19,0.08);
@@ -5321,6 +5340,10 @@
             </button>
             <div class="auth-resend">
                 Не получили код? <a id="authResendLink" onclick="KipAuth.resendOTP()">Отправить повторно</a>
+            </div>
+            <div class="auth-hint">
+                Не пришёл код? Проверьте папку <b>«Спам»</b> и <b>«Промоакции»</b> (на Яндекс.Почте и Mail.ru письма от Apps Script часто туда попадают).<br>
+                Если кода нет и в спаме — возможно, ваш email ещё не зарегистрирован в системе. Обратитесь к администратору.
             </div>
         </div>
 
