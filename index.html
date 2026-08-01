@@ -1991,7 +1991,7 @@
         display: block;
         position: absolute;
         top: 50%;
-        right: 48px;  /* левее обоих кнопок (search-btn @ 48..80, add-btn @ 8..40) */
+        right: 88px;  /* левее кнопки-иконки (48..80) с gap 8px */
         transform: translateY(-50%);
         z-index: 4;
         width: 180px;
@@ -2042,7 +2042,7 @@
         top: 50%;
         right: 48px;  /* + кнопка на right:8..40, эта — на 40..72 */
         transform: translateY(-50%);
-        z-index: 3;
+        z-index: 5;  /* выше input (.cj-header-search.search-open z-index:4) */
         width: 32px;
         height: 32px;
         padding: 0;
@@ -2085,7 +2085,7 @@
         top: 50%;
         right: 8px;
         transform: translateY(-50%);
-        z-index: 3;
+        z-index: 5;  /* выше input (z-index:4) */
         width: 32px;
         height: 32px;
         padding: 0;
@@ -20120,6 +20120,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
         // ============================================================
         // Инициализация страницы добавления (вызывается из navigateTo)
+        // Кэш: если колонки уже загружены (в init/_restoreCache) — мгновенно
+        // рендерим форму, а фоном тихо обновляем options из сервера.
         // ============================================================
         initAddPage: function() {
             const self = this;
@@ -20130,7 +20132,6 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             // Сбросить состояние
             if (errEl) errEl.classList.remove('show');
             if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Добавить запись'; }
-            if (fieldsEl) fieldsEl.innerHTML = '<div class="admin-empty">Загрузка полей…</div>';
 
             // Проверка прав (на случай если пользователь открыл URL напрямую)
             if (!this._canEdit) {
@@ -20139,30 +20140,74 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 return;
             }
 
-            // Всегда перезагружаем колонки — чтобы получить свежие options
-            // (data validation могла измениться в Google Sheets).
+            // 1. Если колонки уже есть в памяти — мгновенно рендерим форму
+            //    из кэша, без показа «Загрузка полей…».
+            if (this._columns && this._columns.length) {
+                this._renderAddPage();
+            } else {
+                // Попытаться восстановить из localStorage (на случай если
+                // пользователь зашёл сразу на страницу добавления без
+                // посещения списка).
+                this._restoreColumnsOnly();
+                if (this._columns && this._columns.length) {
+                    this._renderAddPage();
+                } else if (fieldsEl) {
+                    fieldsEl.innerHTML = '<div class="admin-empty">Загрузка полей…</div>';
+                }
+            }
+
+            // 2. Фоном подгрузить свежие options (data validation могла
+            //    измениться в Google Sheets). Если ответ отличается —
+            //    перерисуем форму. Если ответ совпадает или сеть недоступна —
+            //    пользователь работает с кэшем.
             this._api('cableJournal.getColumns', {}).then(function(res) {
-                if (res && res.columns) {
-                    self._columns = res.columns;
-                    // canEdit: сначала доверяем серверу; если сервер не вернул
-                    // поле (старая версия CableJournal.gs) — вычисляем из
-                    // editRoles и кэшированной роли пользователя. Без этого
-                    // _canEdit сбрасывался в false и Админ не мог добавить запись.
-                    if (typeof res.canEdit === 'boolean') {
-                        self._canEdit = res.canEdit;
-                    } else if (res.editRoles) {
-                        self._canEdit = self._computeCanEdit(res.editRoles);
-                    }
+                if (!res || !res.columns) return;
+                // canEdit: сначала доверяем серверу; если сервер не вернул
+                // поле (старая версия CableJournal.gs) — вычисляем из
+                // editRoles и кэшированной роли пользователя.
+                if (typeof res.canEdit === 'boolean') {
+                    self._canEdit = res.canEdit;
+                } else if (res.editRoles) {
+                    self._canEdit = self._computeCanEdit(res.editRoles);
                 }
                 if (!self._canEdit) {
                     if (fieldsEl) fieldsEl.innerHTML = '<div class="admin-empty">У вас нет прав на добавление записей</div>';
                     if (submitBtn) submitBtn.disabled = true;
                     return;
                 }
+                self._columns = res.columns;
+                self._persistColumns(res);
                 self._renderAddPage();
             }).catch(function(err) {
-                if (fieldsEl) fieldsEl.innerHTML = '<div class="admin-empty">Ошибка загрузки полей: ' + (err.message || err) + '</div>';
+                // Если сеть недоступна, но кэш есть — пользователь продолжает
+                // работать с кэшированной схемой. Если кэша нет — показываем ошибку.
+                if (!self._columns || !self._columns.length) {
+                    if (fieldsEl) fieldsEl.innerHTML = '<div class="admin-empty">Ошибка загрузки полей: ' + (err.message || err) + '</div>';
+                }
             });
+        },
+
+        // ============================================================
+        // Восстановить только колонки из localStorage (без данных).
+        // Используется на странице добавления, если пользователь зашёл
+        // туда напрямую без посещения списка.
+        // ============================================================
+        _restoreColumnsOnly: function() {
+            if (this._columns && this._columns.length) return;
+            try {
+                const colsJson = localStorage.getItem(this._cacheColsKey);
+                if (colsJson) {
+                    const colsRes = JSON.parse(colsJson);
+                    if (colsRes && colsRes.columns) {
+                        this._columns = colsRes.columns;
+                        if (typeof colsRes.canEdit === 'boolean') {
+                            this._canEdit = colsRes.canEdit;
+                        } else if (colsRes.editRoles) {
+                            this._canEdit = this._computeCanEdit(colsRes.editRoles);
+                        }
+                    }
+                }
+            } catch (e) { /* ignore */ }
         },
 
         // ============================================================
@@ -20196,6 +20241,52 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 html += self._renderField(key);
             });
             fieldsEl.innerHTML = html;
+
+            // Восстановить черновик из localStorage (если он был).
+            self._restoreDraft();
+
+            // Сохранять черновик при каждом изменении поля.
+            const inputs = fieldsEl.querySelectorAll('[data-key]');
+            for (let i = 0; i < inputs.length; i++) {
+                inputs[i].addEventListener('input', function() { self._saveDraft(); });
+                inputs[i].addEventListener('change', function() { self._saveDraft(); });
+            }
+        },
+
+        // ============================================================
+        // Кэш черновика формы добавления (введённые значения).
+        // Позволяет не потерять данные при случайном уходе со страницы
+        // и сразу показать заполненные поля при возврате.
+        // ============================================================
+        _draftKey: 'kip8_cj_draft_v1',
+        _saveDraft: function() {
+            try {
+                const data = {};
+                const inputs = document.querySelectorAll('#cjAddFields [data-key]');
+                for (let i = 0; i < inputs.length; i++) {
+                    const k = inputs[i].getAttribute('data-key');
+                    if (k) data[k] = inputs[i].value;
+                }
+                localStorage.setItem(this._draftKey, JSON.stringify(data));
+            } catch (e) { /* ignore */ }
+        },
+        _restoreDraft: function() {
+            try {
+                const json = localStorage.getItem(this._draftKey);
+                if (!json) return;
+                const data = JSON.parse(json);
+                if (!data || typeof data !== 'object') return;
+                const inputs = document.querySelectorAll('#cjAddFields [data-key]');
+                for (let i = 0; i < inputs.length; i++) {
+                    const k = inputs[i].getAttribute('data-key');
+                    if (k && data[k] !== undefined && data[k] !== null) {
+                        inputs[i].value = data[k];
+                    }
+                }
+            } catch (e) { /* ignore */ }
+        },
+        _clearDraft: function() {
+            try { localStorage.removeItem(this._draftKey); } catch (e) { /* ignore */ }
         },
 
         // ============================================================
@@ -20237,6 +20328,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 }
                 saveBtn.disabled = false;
                 saveBtn.textContent = 'Добавить запись';
+                // Очистить черновик (успешное добавление — данные больше не нужны).
+                self._clearDraft();
                 // Вернуться к списку и обновить
                 navigateTo('cable-journal-edit');
                 setTimeout(function() {
