@@ -1972,7 +1972,8 @@
     /* ========== Кабельный журнал (редактирование) ==========
        Дизайн: список-зебра во всю ширину экрана, непрозрачный фон,
        сгруппированный по "Отделение, производство" (sticky-заголовки групп).
-       Карточки упрощены: без № п/п и без Отделения (оно в шапке группы). */
+       Каждая группа сворачиваемая (клик по шапке). Карточки упрощены:
+       только обозначение, трасса, проложен. */
     .cj-subtoolbar {
         display: flex;
         align-items: center;
@@ -1980,12 +1981,6 @@
         padding: 8px 12px;
         background: var(--bg-color, #14181f);
         border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.08));
-    }
-    .cj-subtoolbar .cj-dept-filter {
-        flex: 1 1 auto;
-        min-width: 0;
-        font-size: 13px;
-        padding: 7px 10px;
     }
     .cj-subtoolbar .cj-add-btn {
         flex: 0 0 auto;
@@ -2003,7 +1998,8 @@
         background: var(--bg-color, #14181f);
     }
     /* Заголовок группы "Отделение, производство" — sticky под шапкой страницы,
-       непрозрачный фон, чтобы карточки под ним не просвечивали при скролле. */
+       непрозрачный фон, чтобы карточки под ним не просвечивали при скролле.
+       Клик по заголовку сворачивает/разворачивает карточки группы. */
     .cj-group-header {
         position: sticky;
         top: 56px;  /* высота .page-inline-header */
@@ -2019,6 +2015,12 @@
         align-items: baseline;
         justify-content: space-between;
         gap: 8px;
+        cursor: pointer;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+    .cj-group-header:active {
+        background: rgba(199,150,74,0.22);
     }
     .page-content.scrolled .cj-group-header {
         top: 40px;  /* высота сжатого .page-inline-header при скролле */
@@ -2027,6 +2029,23 @@
         background: rgba(199,150,74,0.14);
         border-bottom-color: rgba(199,150,74,0.3);
         color: #8a6428;
+    }
+    .cj-group-caret {
+        flex: 0 0 auto;
+        font-size: 10px;
+        color: rgba(199,150,74,0.85);
+        transition: transform .15s ease;
+        display: inline-block;
+        transform: rotate(0deg);
+    }
+    [data-theme="light"] .cj-group-caret {
+        color: rgba(138,100,40,0.85);
+    }
+    .cj-group[data-collapsed="true"] .cj-group-caret {
+        transform: rotate(-90deg);
+    }
+    .cj-group[data-collapsed="true"] .cj-group-body {
+        display: none;
     }
     .cj-group-header-title {
         flex: 1; min-width: 0;
@@ -5873,11 +5892,9 @@
             </div>
 
             <div class="cj-subtoolbar">
-                <select id="cjDeptFilter" class="admin-select cj-dept-filter" onchange="KipCableJournal.load()"></select>
                 <button type="button" class="admin-add-btn cj-add-btn" id="cjAddBtn" onclick="KipCableJournal.openAdd()" style="display:none;">+ Добавить</button>
             </div>
 
-            <div id="cjInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
             <div id="cjList" class="cj-list"></div>
             <div id="cjPagination" class="cj-pagination"></div>
         </div>
@@ -19523,7 +19540,6 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         _page: 0,
         _pageSize: 50,
         _searchTimer: null,
-        _filters: null,     // { departments: [], purposes: [] }
         _editing: null,     // текущая редактируемая запись ({_row: N, ...}) или null (новая)
 
         // ============================================================
@@ -19562,49 +19578,28 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         init: function() {
             // Кнопка "Добавить" видна только если canEdit
             const self = this;
-            // Первичная загрузка: схема + фильтры + данные
-            Promise.all([
-                this._api('cableJournal.getColumns', {}).catch(e => { console.error('getColumns:', e); return null; }),
-                this._api('cableJournal.getFilters', {}).catch(e => { console.error('getFilters:', e); return null; })
-            ]).then(function(results) {
-                if (results[0]) {
-                    self._columns = results[0].columns;
-                    // canEdit: сначала доверяем серверу; если сервер не вернул
-                    // поле (старая версия CableJournal.gs) — вычисляем из
-                    // editRoles и кэшированной роли пользователя (KipAuth._cachedRole).
-                    if (typeof results[0].canEdit === 'boolean') {
-                        self._canEdit = results[0].canEdit;
-                    } else if (results[0].editRoles) {
-                        self._canEdit = self._computeCanEdit(results[0].editRoles);
+            // Первичная загрузка: схема + данные.
+            // Фильтр по отделениям убран из UI (Task 55), getFilters не нужен.
+            this._api('cableJournal.getColumns', {}).catch(e => { console.error('getColumns:', e); return null; })
+                .then(function(columnsRes) {
+                    if (columnsRes) {
+                        self._columns = columnsRes.columns;
+                        // canEdit: сначала доверяем серверу; если сервер не вернул
+                        // поле (старая версия CableJournal.gs) — вычисляем из
+                        // editRoles и кэшированной роли пользователя (KipAuth._cachedRole).
+                        if (typeof columnsRes.canEdit === 'boolean') {
+                            self._canEdit = columnsRes.canEdit;
+                        } else if (columnsRes.editRoles) {
+                            self._canEdit = self._computeCanEdit(columnsRes.editRoles);
+                        }
+                        document.getElementById('cjAddBtn').style.display = self._canEdit ? '' : 'none';
                     }
-                    document.getElementById('cjAddBtn').style.display = self._canEdit ? '' : 'none';
-                }
-                if (results[1]) {
-                    self._filters = results[1];
-                    self._populateFilters();
-                }
-                self.load();
-            }).catch(function(err) {
-                document.getElementById('cjInfo').textContent = 'Ошибка: ' + err.message;
-                document.getElementById('cjList').innerHTML = '';
-            });
-        },
-
-        // ============================================================
-        // Заполнить <select> фильтра по отделению
-        // (фильтр по назначению убран — см. Task 54)
-        // ============================================================
-        _populateFilters: function() {
-            const deptSel = document.getElementById('cjDeptFilter');
-            if (!deptSel) return;
-            deptSel.innerHTML = '<option value="">Все отделения</option>';
-            if (this._filters && Array.isArray(this._filters.departments)) {
-                this._filters.departments.forEach(function(d) {
-                    const opt = document.createElement('option');
-                    opt.value = d; opt.textContent = d;
-                    deptSel.appendChild(opt);
+                    self.load();
+                }).catch(function(err) {
+                    document.getElementById('cjList').innerHTML =
+                        '<div style="padding:32px;text-align:center;color:var(--text-secondary,rgba(255,255,255,0.5));font-size:13px;">Ошибка: ' +
+                        self._esc(err.message) + '</div>';
                 });
-            }
         },
 
         // ============================================================
@@ -19613,16 +19608,14 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         load: function() {
             const self = this;
             const search = (document.getElementById('cjSearchInput').value || '').trim();
-            const dept = document.getElementById('cjDeptFilter').value;
-            // Фильтр по назначению убран из UI (Task 54), в запросе не передаём.
+            // Фильтр по отделениям убран из UI (Task 55), в запросе не передаём.
 
-            document.getElementById('cjInfo').textContent = 'Загрузка…';
-            document.getElementById('cjList').innerHTML = '';
+            document.getElementById('cjList').innerHTML =
+                '<div style="padding:32px;text-align:center;color:var(--text-secondary,rgba(255,255,255,0.5));font-size:13px;">Загрузка…</div>';
 
             this._api('cableJournal.list', {
                 options: {
                     search: search,
-                    department: dept,
                     limit: this._pageSize,
                     offset: this._page * this._pageSize
                 }
@@ -19631,14 +19624,13 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 self._total = data.total || 0;
                 // Серверный list всегда возвращает canEdit (и в старой, и в новой
                 // версии CableJournal.gs), поэтому здесь простой !! достаточно.
-                // Fallback на editRoles нужен только в init/initAddPage, где
-                // используется getColumns (а он раньше не возвращал canEdit).
                 self._canEdit = !!data.canEdit;
                 document.getElementById('cjAddBtn').style.display = self._canEdit ? '' : 'none';
                 self._render();
             }).catch(function(err) {
-                document.getElementById('cjInfo').textContent = 'Ошибка: ' + err.message;
-                document.getElementById('cjList').innerHTML = '';
+                document.getElementById('cjList').innerHTML =
+                    '<div style="padding:32px;text-align:center;color:var(--text-secondary,rgba(255,255,255,0.5));font-size:13px;">Ошибка: ' +
+                    self._esc(err.message) + '</div>';
                 document.getElementById('cjPagination').innerHTML = '';
             });
         },
@@ -19647,16 +19639,11 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         // Отрисовать список
         // ============================================================
         _render: function() {
-            const info = document.getElementById('cjInfo');
             const list = document.getElementById('cjList');
             const pagination = document.getElementById('cjPagination');
 
             const total = this._total;
             const shown = this._rows.length;
-            const from = this._page * this._pageSize + 1;
-            const to = from + shown - 1;
-            info.textContent = 'Всего: ' + total + (shown > 0 ? ' · показаны ' + from + '–' + to : '') +
-                (this._canEdit ? ' · редактирование разрешено' : ' · только чтение');
 
             if (shown === 0) {
                 list.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-secondary,rgba(255,255,255,0.5));font-size:13px;">Записей нет</div>';
@@ -19686,50 +19673,37 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             let html = '';
             groupOrder.forEach(function(g) {
                 const items = groups[g];
-                // Заголовок группы — sticky, непрозрачный, с количеством
-                html += '<div class="cj-group-header">';
-                html += '  <span class="cj-group-header-title">' + self._esc(g) + '</span>';
-                html += '  <span class="cj-group-header-count">' + items.length + ' ' +
+                // Каждая группа — отдельный сворачиваемый блок.
+                // data-collapsed="false" — развёрнута по умолчанию.
+                // Заголовок-кнопка: клик toggles collapsed; sticky под шапкой.
+                html += '<div class="cj-group" data-collapsed="false">';
+                html += '  <div class="cj-group-header" onclick="KipCableJournal.toggleGroup(this)">';
+                html += '    <span class="cj-group-caret" aria-hidden="true">▼</span>';
+                html += '    <span class="cj-group-header-title">' + self._esc(g) + '</span>';
+                html += '    <span class="cj-group-header-count">' + items.length + ' ' +
                     self._plural(items.length, ['запись', 'записи', 'записей']) + '</span>';
-                html += '</div>';
+                html += '  </div>';
+                html += '  <div class="cj-group-body">';
 
-                // Строки-карточки. № п/п и Отделение НЕ показываем
-                // (№ — совсем убран, Отделение — в шапке группы выше).
+                // Карточки: только обозначение, трасса, проложен
+                // (Task 55 — упрощённый preview).
                 items.forEach(function(row) {
                     const designation = self._esc(row.designation || '(без обозначения)');
                     const start = self._esc(row.start || '');
                     const end = self._esc(row.end || '');
-                    const section = self._esc(row.section || '');
-                    const markProject = self._esc(row.mark_project || '');
-                    const coresProject = self._esc(row.cores_project || '');
-                    const lengthProject = row.length_project != null ? row.length_project : '';
                     const markActual = self._esc(row.mark_actual || '');
                     const coresActual = self._esc(row.cores_actual || '');
                     const lengthActual = row.length_actual != null ? row.length_actual : '';
-                    const purpose = self._esc(row.purpose || '');
-                    const projectNo = self._esc(row.project_no || '');
 
                     html += '<div class="cj-item" onclick="KipCableJournal.openEdit(' + row._row + ')">';
                     html += '  <div class="cj-item-header">';
-                    // num убран — показываем только обозначение
                     html += '    <span class="cj-item-designation">' + designation + '</span>';
                     html += '  </div>';
                     html += '  <div class="cj-item-meta">';
                     if (start || end) {
-                        html += '  <div><span class="cj-item-meta-label">трасса:</span> ' + start + (start && end ? ' → ' : '') + end + '</div>';
+                        html += '  <div class="cj-item-meta-row"><span class="cj-item-meta-label">трасса:</span> ' +
+                            start + (start && end ? ' → ' : '') + end + '</div>';
                     }
-                    if (section) {
-                        html += '  <div class="cj-item-meta-row"><span class="cj-item-meta-label">участок:</span> ' + section + '</div>';
-                    }
-                    // По проекту
-                    if (markProject || coresProject || lengthProject) {
-                        html += '  <div class="cj-item-meta-row"><span class="cj-item-meta-label">по проекту:</span> ' +
-                            markProject +
-                            (coresProject ? ' · ' + coresProject : '') +
-                            (lengthProject !== '' ? ' · ' + lengthProject + ' м' : '') +
-                            '</div>';
-                    }
-                    // Проложен
                     if (markActual || coresActual || lengthActual) {
                         html += '  <div class="cj-item-meta-row"><span class="cj-item-meta-label">проложен:</span> ' +
                             markActual +
@@ -19737,16 +19711,12 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                             (lengthActual !== '' ? ' · ' + lengthActual + ' м' : '') +
                             '</div>';
                     }
-                    // Назначение (отделение в шапке группы, не дублируем)
-                    if (purpose) {
-                        html += '  <div class="cj-item-meta-row"><span class="cj-item-meta-label">назначение:</span> ' + purpose + '</div>';
-                    }
-                    if (projectNo) {
-                        html += '  <div class="cj-item-meta-row"><span class="cj-item-meta-label">№ проекта:</span> ' + projectNo + '</div>';
-                    }
                     html += '  </div>';
                     html += '</div>';
                 });
+
+                html += '  </div>';  // .cj-group-body
+                html += '</div>';    // .cj-group
             });
             list.innerHTML = html;
 
@@ -19761,6 +19731,19 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 pHtml += '<button onclick="KipCableJournal.nextPage()" ' + (this._page >= totalPages - 1 ? 'disabled' : '') + '>Вперёд →</button>';
                 pagination.innerHTML = pHtml;
             }
+        },
+
+        // ============================================================
+        // Свернуть/развернуть группу карточек.
+        // headerEl — элемент .cj-group-header, по которому кликнули.
+        // Переключает data-collapsed у родительского .cj-group;
+        // CSS скрывает .cj-group-body и поворачивает caret.
+        // ============================================================
+        toggleGroup: function(headerEl) {
+            const groupEl = headerEl ? headerEl.parentElement : null;
+            if (!groupEl || !groupEl.classList.contains('cj-group')) return;
+            const collapsed = groupEl.getAttribute('data-collapsed') === 'true';
+            groupEl.setAttribute('data-collapsed', collapsed ? 'false' : 'true');
         },
 
         // Русская плюрализация для счётчика в шапке группы
