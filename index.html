@@ -2238,17 +2238,18 @@
 
     /* ===== Поля форм (используются на страницах добавления и просмотра) ===== */
     .cj-field-group {
-        display: flex; flex-direction: column; gap: 3px;
+        display: flex; flex-direction: column; gap: 4px;
     }
     .cj-field-label {
-        font-size: 11px; color: var(--text-secondary, rgba(255,255,255,0.55));
-        font-weight: 500;
+        font-size: 14px; color: var(--text-primary, rgba(255,255,255,0.85));
+        font-weight: 600;
+        letter-spacing: 0.1px;
     }
     .cj-field-input, .cj-field-textarea {
         background: var(--card-bg, rgba(255,255,255,0.04));
         border: 1px solid var(--border-color, rgba(255,255,255,0.08));
         border-radius: 8px;
-        padding: 8px 10px;
+        padding: 7px 10px;
         font-size: 13px;
         color: var(--text-primary, #fff);
         font-family: inherit;
@@ -2256,9 +2257,19 @@
         transition: border-color .15s;
         width: 100%;
         box-sizing: border-box;
+        min-height: 36px;  /* одинаковая узкая высота для пустых полей */
     }
     .cj-field-input:focus, .cj-field-textarea:focus { border-color: var(--accent-color, #6aa8e0); }
-    .cj-field-textarea { resize: vertical; min-height: 56px; font-family: inherit; }
+    /* Textarea: пустая — узкая (1 строка, min-height:36px), расширяется под
+       содержимое через JS auto-resize. resize:none чтобы пользователь не мог
+       вручную тянуть (только авто). */
+    .cj-field-textarea {
+        resize: none;
+        min-height: 36px;
+        font-family: inherit;
+        line-height: 1.4;
+        overflow: hidden;
+    }
     [data-theme="light"] .cj-field-input, [data-theme="light"] .cj-field-textarea { background: #f5f7fa; }
     .cj-field-row { display: flex; gap: 8px; }
     .cj-field-row > .cj-field-group { flex: 1; }
@@ -2297,7 +2308,7 @@
     .cj-add-fields {
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 16px;
     }
     /* Каждое поле — на отдельной строке, full-width.
        .cj-field-group уже объявлен выше (display:flex; flex-direction:column; gap:3px);
@@ -20073,7 +20084,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 'length_actual',
                 'department',
                 'purpose',
-                'project_no'
+                'project_no',
+                'added_at'
             ];
 
             let html = '';
@@ -20092,10 +20104,12 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             const val = this._viewing ? this._viewing[key] : '';
             const displayVal = (val === null || val === undefined || val === '') ? '' : String(val);
             const isEmpty = displayVal === '';
-            // Длина — добавляем единицу измерения
+            // Длина — добавляем единицу измерения; дата — форматируем локально.
             let valHtml = this._esc(displayVal);
             if (key === 'length_project' || key === 'length_actual') {
                 valHtml = this._esc(displayVal) + ' м';
+            } else if (key === 'added_at') {
+                valHtml = this._esc(this._formatDate(displayVal));
             }
             let html = '<div class="cj-field-group">';
             html += '<div class="cj-field-label">' + this._esc(col.label) + '</div>';
@@ -20218,8 +20232,9 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             const fieldsEl = document.getElementById('cjAddFields');
             if (!fieldsEl) return;
 
-            // Порядок полей — как в Google Sheets (без num и added_at,
-            // они проставляются автоматически при appendRow).
+            // Порядок полей — как в Google Sheets (без num — он авто-генерится
+            // сервером в appendRow). added_at теперь в форме: поле type=date
+            // с дефолтом «сегодня», сервер принимает значение или ставит now().
             const order = [
                 'designation',
                 'start',
@@ -20233,7 +20248,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 'length_actual',
                 'department',
                 'purpose',
-                'project_no'
+                'project_no',
+                'added_at'
             ];
 
             let html = '';
@@ -20250,6 +20266,20 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             for (let i = 0; i < inputs.length; i++) {
                 inputs[i].addEventListener('input', function() { self._saveDraft(); });
                 inputs[i].addEventListener('change', function() { self._saveDraft(); });
+            }
+
+            // Auto-resize для textarea: высота подстраивается под содержимое.
+            // Пустая textarea остаётся узкой (1 строка), при вводе — растёт.
+            const textareas = fieldsEl.querySelectorAll('textarea.cj-autoresize');
+            for (let i = 0; i < textareas.length; i++) {
+                const ta = textareas[i];
+                const resize = function() {
+                    ta.style.height = 'auto';
+                    ta.style.height = (ta.scrollHeight) + 'px';
+                };
+                ta.addEventListener('input', resize);
+                // Первичная подгонка под восстановленный черновик.
+                resize();
             }
         },
 
@@ -20310,7 +20340,9 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 const inp = inputs[i];
                 const key = inp.getAttribute('data-key');
                 const col = this._columns.find(function(c) { return c.key === key; });
-                if (!col || col.readOnly) continue;
+                // added_at помечен как readOnly в SCHEMA, но в форме добавления
+                // это поле type=date (с дефолтом «сегодня»). Разрешаем передачу.
+                if (!col || (col.readOnly && key !== 'added_at')) continue;
                 let v = inp.value.trim();
                 if (col.type === 'number' && v !== '') {
                     const n = parseFloat(v.replace(',', '.'));
@@ -20346,7 +20378,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         },
 
         // ============================================================
-        // Сгенерировать поле формы добавления (input/textarea/select).
+        // Сгенерировать поле формы добавления (input/textarea/select/date).
         // Используется только на странице добавления. Редактирование
         // сохранённых записей в приложении запрещено (Task 57).
         // ============================================================
@@ -20354,17 +20386,26 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             const self = this;
             const col = this._columns.find(function(c) { return c.key === key; });
             if (!col) return '';
-            // На странице добавления значение всегда пустое (новая запись).
-            const displayVal = '';
             const id = 'cjAddField_' + key;
             const hasOptions = Array.isArray(col.options) && col.options.length > 0;
 
             let html = '<div class="cj-field-group">';
             html += '<label class="cj-field-label" for="' + id + '">' + this._esc(col.label) + '</label>';
 
-            if (hasOptions) {
+            if (key === 'added_at') {
+                // Поле даты добавления: type=date с дефолтом «сегодня».
+                // Сервер в appendRow использует это значение, если передано;
+                // если поле пустое — сервер ставит текущую дату/время.
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                const todayStr = yyyy + '-' + mm + '-' + dd;
+                html += '<input id="' + id + '" type="date" class="cj-field-input cj-field-date" data-key="' + key + '" value="' + todayStr + '">';
+            } else if (hasOptions) {
                 // Поле с выпадающим списком: data validation Google Sheets
-                // (или fallback для department/purpose — уникальные значения из данных).
+                // или fallback (уникальные значения из данных для
+                // section/mark_*/cores_*/department/purpose/project_no).
                 html += '<select id="' + id + '" class="cj-field-input cj-field-select" data-key="' + key + '">';
                 html += '<option value="">— выберите —</option>';
                 col.options.forEach(function(v) {
@@ -20373,10 +20414,11 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 });
                 html += '</select>';
             } else {
-                // Длинные текстовые поля — textarea
+                // Длинные текстовые поля — textarea с auto-resize
+                // (расширяется под содержимое через JS-обработчик input).
                 const useTextarea = ['start', 'end', 'section', 'designation'].indexOf(key) !== -1;
                 if (useTextarea) {
-                    html += '<textarea id="' + id + '" class="cj-field-textarea" data-key="' + key + '"></textarea>';
+                    html += '<textarea id="' + id + '" class="cj-field-textarea cj-autoresize" data-key="' + key + '" rows="1"></textarea>';
                 } else {
                     const type = col.type === 'number' ? 'number' : 'text';
                     html += '<input id="' + id + '" type="' + type + '" class="cj-field-input" data-key="' + key + '" value="">';
