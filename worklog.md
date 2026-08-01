@@ -1242,3 +1242,148 @@ Stage Summary:
 - CACHE_VERSION: kipia-test-v207.
 - Серверную часть трогать НЕ нужно — фикс полностью клиентский.
 - После перезагрузки страницы 2 раза (для активации SW v207) — тестировать.
+
+---
+Task ID: 42
+Agent: AI Assistant (GLM)
+Task: Объединить разделы «Кабельный журнал» и «Кабельный журнал (ред.)» в один раздел с role-based edit/view.
+
+Work Log:
+- Изучил текущую структуру: существовали 2 отдельные страницы и 2 кнопки в sidebar:
+    * cables-prod (статичное зеркало из data/cables.json, только просмотр)
+    * cable-journal-edit (живой редактор к Google Sheets через Apps Script, уже поддерживает canEdit-флаг)
+- Установил, что серверная часть CableJournal.gs уже возвращает canEdit: bool в list/getColumns,
+  и _requireRead() разрешает чтение любому авторизованному пользователю. Дублирующая логика
+  на клиенте уже скрывала кнопку "+ Добавить" и рендерила поля readonly при canEdit=false.
+- Решение: сделать cable-journal-edit единой страницей для всех ролей с доступом к КИП ИОС,
+  убрав вторую кнопку из sidebar и перенацелить все точки входа на cable-journal-edit.
+
+Изменения в /home/z/my-project/kip8test/index.html:
+1. Sidebar (стр. ~21193): убран div#sidebarCableJournalEditBtn («Кабельный журнал (ред.)»),
+   onclick первой кнопки «Кабельный журнал» изменён с cables-prod → cable-journal-edit.
+   Счётчик группы остался "7" — теперь это валидное число (раньше было 8 пунктов с "7" в заголовке).
+2. Dashboard КИП ИОС (стр. 5800): sublabel у cablesEntryBtn изменён с «По производствам» на
+   «Журнал КИП пр-ва ИОС» (статическая подпись до асинхронной подгрузки счётчика).
+3. cablesInitEntryButton (стр. 13650): navigateTo('cables-prod') → navigateTo('cable-journal-edit').
+4. SUBSECTIONS['cables'].target (стр. 14814): 'cables' → 'cable-journal-edit'
+   (чтобы закреплённый на главной раздел тоже вёл на объединённую страницу).
+5. navigateTo (стр. 14555-14559): добавлен редирект 'cables' | 'cables-prod' → 'cable-journal-edit'
+   для обратной совместимости с любыми оставшимися диплинками и хэш-навигацией.
+6. _applyRoleToUI (стр. 19734-19740): удалён мёртвый блок управления видимостью
+   #sidebarCableJournalEditBtn; заменён комментарием-памяткой о том, что раздел объединён.
+
+Поведение после изменений:
+- Роли с правом записи (Админ, ИТР ИОС, КИП ИОС pro): видят кнопку "+ Добавить",
+  поля в модалке редактируемые, кнопка "Удалить" видна, info-bar показывает "редактирование разрешено".
+- Роли только-чтение (КИП ИОС, КИП8, КИП8 pro, ИТР8, ИТР8 pro): кнопка "+ Добавить" скрыта,
+  поля в модалке readonly, кнопка "Удалить" скрыта, info-bar показывает "только чтение".
+  Клик по карточке открывает модалку с деталями записи — это и есть "просмотр".
+- Гостевой режим (Общий доступ) — без изменений: страница в canAccess() недоступна,
+  как и раньше для cables-prod.
+
+Не тронуты (намеренно оставлены для обратной совместимости):
+- Разметка page-cables-prod и JS-функции cablesInitSorted/cablesRenderSorted —
+  недоступны из UI, но остаются в коде (если кто-то хранит старый URL с #cables-prod
+  в закладках — redirect в navigateTo перенаправит их на cable-journal-edit).
+- data/cables.json — продолжает использоваться cablesUpdateEntrySublabel() для
+  отображения счётчика "X кабелей в журнале" в sublabel кнопки на дашборде КИП ИОС.
+
+Stage Summary:
+- Sidebar КИП ИОС: 2 кнопки → 1 кнопка «Кабельный журнал».
+- Единая страница cable-journal-edit работает в двух режимах (edit/view) через флаг canEdit.
+- Серверная часть CableJournal.gs не менялась — уже поддерживает read-only.
+- Все точки входа (sidebar, дашборд КИП ИОС, pinned subsections, хэш-навигация)
+  теперь ведут на cable-journal-edit.
+- Файлы: изменён только /home/z/my-project/kip8test/index.html.
+- CACHE_VERSION в sw.js НЕ поднят — если потребуется пересобрать кэш у пользователей,
+  нужно будет вручную инкрементировать kipia-test-v207 → v208 и закоммитить.
+
+---
+Task ID: 43
+Agent: AI Assistant (GLM)
+Task: Убрать мёртвый код Кабельного журнала после объединения разделов (Task 42).
+
+Work Log:
+- Task 42 объединил 'cables-prod' и 'cable-journal-edit' в единую страницу, но оставил
+  старый статический рендерер (CABLE_FIELDS, cableData/cableLoaded, cablesInitSorted,
+  cablesRenderSorted, cablesRenderGroup, cableRenderDetail и т.д.) "для обратной
+  совместимости". В этом task'е весь мёртвый код удалён.
+
+Анализ зависимостей:
+- Truly dead (без вызывов после Task 42):
+  * HTML-страницы: page-cables-prod, page-cable-detail, page-cable-group
+  * JS-функции: CABLE_FIELDS, cableGroupExpanded, cableEsc, cableNorm, cableMark,
+    cableFormatDate, cableGetLastUpdateDate, cablePurposeClass,
+    cablesInitSorted, cablesForceRefresh, cablesRenderSorted,
+    cablesToggleGroup, cablesRenderGroup, cablesScrollToGroup,
+    cableOpenDetail, cableRenderDetail
+  * CSS: .cable-card-*, .cable-detail-*, .cable-group, .cable-sorted-list,
+    .cable-row-group-*, .cable-detail-title-two-line, #cableProdInfo
+  * Эндпоинты navigateTo: page === 'cables-prod' / 'cable-detail' / 'cable-group'
+  * Элементы _KIP_IOS_PAGES: 'cables-prod', 'cable-detail', 'cable-group'
+  * KIP_RELATED_SECTIONS: запись {section:'cables', ...} (после удаления
+    cables-prod фильтр-бейдж больше нигде не отображается, клик из «Связанные записи»
+    в карточке проекта вёл бы в никуда — поэтому запись убрана целиком)
+  * kipSectionLoaded/kipGetSectionItems/kipLoadSectionData: case 'cables'
+    (недостижим после удаления из KIP_RELATED_SECTIONS)
+  * kipUpdateRelatedBlock: plural forms map['cables']
+  * kipSetProjectLinkFilter: pages['cables'] и inputIds['cables']
+  * kipBindFilterBadge (через kipClearProjectLinkFilter): inputIds['cables']
+  * navigateTo: allowedPages map['cables']
+
+- KEEP (используются cablesUpdateEntrySublabel на дашборде КИП ИОС):
+  * let cableData, cableLoaded (глобальные переменные)
+  * function cablePlural (для плюрализации счётчика кабелей)
+  * function cablesInitEntryButton, cablesUpdateEntrySublabel
+  * data/cables.json (загружается cablesUpdateEntrySublabel)
+  * scripts/sync-cables.py (генератор cables.json)
+
+Изменения в /home/z/my-project/kip8test/index.html:
+1. Удалён HTML-блок page-cables-prod (стр. 5931-5936 оригинала).
+2. Удалён HTML-блок page-cable-detail (стр. 5938-5942 оригинала).
+3. Удалён HTML-блок page-cable-group (стр. 5966-5970 оригинала).
+4. Удалены CSS-правила .cable-detail-title-two-line и его light-вариант (2 блока).
+5. Удалён #cableProdInfo из общего CSS-списка info-bar.
+6. Удалён комментарий с упоминанием «Кабельный журнал» в info-bar comment.
+7. Удалён большой CSS-блок .cable-sorted-list ... .cable-detail-value
+   (186 строк, включая все .cable-card-*, .cable-detail-*, .cable-group, .cable-row-group-*,
+   .cable-sorted-list, .cable-card-purpose-*).
+8. Удалён .cable-detail-value.kip-project-link из 2 общих CSS-селекторов (dark + light).
+9. Удалён весь JS-блок «КАБЕЛЬНЫЙ ЖУРНАЛ (зеркало проектов)» (434 строки) —
+   заменён на компактный фрагмент (~22 строки) с только живыми объявлениями:
+   cableData, cableLoaded, cablePlural.
+10. KIP_RELATED_SECTIONS: убрана запись 'cables'.
+11. kipSectionLoaded: убран case 'cables'.
+12. kipGetSectionItems: убран case 'cables'.
+13. kipLoadSectionData: убраны case 'cables' (URL map + switch).
+14. kipUpdateRelatedBlock: убрана plural form cables:['кабель','кабеля','кабелей'].
+15. kipSetProjectLinkFilter: убраны pages.cables и inputIds.cables.
+16. kipBindFilterBadge (clear handler): убран inputIds.cables.
+17. navigateTo: убраны allowedPages.cables и 3 page handler'а
+    (cables-prod, cable-detail, cable-group).
+18. _KIP_IOS_PAGES: убраны 'cables-prod', 'cable-detail', 'cable-group'.
+
+Проверки:
+- /home/z/my-project/scripts/check_inline_js.py — node --check всех inline <script>
+  блоков: 4 блока, 13005 строк JS → "[OK] node --check passed. JS syntax is valid."
+- node tests/run-all.js → 207 passed, 0 failed
+- grep по всем мёртвым идентификаторам (CABLE_FIELDS, cable-*, cableProd*,
+  cableDetail*, cableGroup*, page-cables-prod, page-cable-detail, page-cable-group)
+  → No matches found
+
+Скрипты:
+- /home/z/my-project/scripts/strip_dead_cable_js.py — удалил мёртвый JS-блок (434 строки)
+- /home/z/my-project/scripts/check_inline_js.py — экстрактит inline <script> и проверяет синтаксис
+
+Stage Summary:
+- Удалено ~620 строк мёртвого кода (HTML + CSS + JS).
+- index.html: 21583 → 20919 строк (-664 строк, -3%).
+- Сохранены: cableData, cableLoaded, cablePlural, cablesInitEntryButton,
+  cablesUpdateEntrySublabel — для счётчика кабелей на дашборде КИП ИОС.
+- Сохранены: data/cables.json, scripts/sync-cables.py — для того же счётчика.
+- KIP_RELATED_SECTIONS: 5 → 4 записи (Приборы, Блокировки, Клапаны, Регуляторы).
+  Кабельный журнал больше не отображается в блоке «Связанные записи» карточки проекта
+  (раньше клик вёл на page-cables-prod, который теперь не существует).
+- Все 207 существующих тестов проходят.
+- CACHE_VERSION в sw.js НЕ поднят — если потребуется пересобрать кэш у пользователей,
+  нужно инкрементировать kipia-test-v207 → v208 и закоммитить.

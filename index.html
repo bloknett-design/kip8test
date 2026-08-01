@@ -1162,25 +1162,6 @@
         min-width: 0;
         text-shadow: 0 0 6px rgba(186, 85, 211, 0.45), 0 0 14px rgba(186, 85, 211, 0.25), 0 0 22px rgba(186, 85, 211, 0.12);
     }
-    /* Двухстрочный заголовок страницы деталей кабеля:
-       верхняя строка — Отделение, нижняя (мелким приглушённым текстом) — Назначение. */
-    .page-inline-header-title.cable-detail-title-two-line {
-        line-height: 1.15;
-        padding-top: 2px;
-        padding-bottom: 2px;
-    }
-    .page-inline-header-title.cable-detail-title-two-line .cable-detail-title-sub {
-        display: block;
-        font-size: 12px;
-        font-weight: 500;
-        color: #b8b8b8;
-        letter-spacing: 0;
-        text-shadow: none;
-        margin-top: 1px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
     /* Универсальный двухстрочный заголовок страницы: верхняя строка — название,
        нижняя (мелким приглушённым текстом) — подзаголовок.
        Используется, например, на странице «Библиотека КИП и А». */
@@ -2262,9 +2243,6 @@
         color: #141413;
         text-shadow: 0 0 6px rgba(147, 51, 234, 0.25), 0 0 14px rgba(147, 51, 234, 0.12);
     }
-    [data-theme="light"] .page-inline-header-title.cable-detail-title-two-line .cable-detail-title-sub {
-        color: #5a5a55;
-    }
     [data-theme="light"] .menu-btn-arrow {
         color: rgba(0, 0, 0, 0.15);
     }
@@ -2923,7 +2901,7 @@
 
     /* Скрываем информационные надписи «Всего: ... · групп: ... · обновлено: ...»
        на страницах: Приборы (3 сортировки + основная), Блокировки, Клапаны,
-       Регуляторы, Проекты, Кабельный журнал — иначе info-bar создаёт лишний
+       Регуляторы, Проекты — иначе info-bar создаёт лишний
        отступ между верхним баром и списком группировок. */
     #devInfo,
     #devTypeInfo,
@@ -2934,8 +2912,7 @@
     #valveNameInfo,
     #valveProdInfo,
     #regulatorProdInfo,
-    #projectProdInfo,
-    #cableProdInfo {
+    #projectProdInfo {
         display: none !important;
     }
 
@@ -3583,191 +3560,6 @@
         border-top-color: rgba(0,0,0,0.05);
     }
 
-    /* ===== КАБЕЛЬНЫЙ ЖУРНАЛ (зеркало проектов/регуляторов/клапанов/блокировок) ===== */
-    .cable-sorted-list {
-        margin: 0;
-    }
-    .cable-sorted-list.searching .pb-section.cable-group .pb-section-body {
-        max-height: 5000px;
-        transition: none;
-    }
-    .cable-sorted-list.searching .pb-section.cable-group .pb-section-arrow {
-        transform: translateY(-50%) rotate(45deg);
-        opacity: 0.3;
-    }
-    .cable-sorted-list.searching .pb-section.cable-group .pb-section-title {
-        cursor: default;
-    }
-
-    .cable-group {
-        margin: 0;
-        border: none;
-        border-radius: 0;
-        background: rgba(29, 33, 27, 0.94);
-        overflow: hidden;
-    }
-    [data-theme="light"] .cable-group {
-        border: none;
-        background: rgba(250, 252, 245, 0.96);
-    }
-
-    /* Спокойная оливково-зелёная палитра заголовков групп — край в край, в 2 строки, без стрелки */
-    .cable-group .pb-section-title {
-        background: #2a2e25;
-        color: #b8c4a4;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
-        padding: 14px 16px;
-        min-height: 64px;
-        align-items: center;
-        letter-spacing: 0.1px;
-    }
-    .cable-group .pb-section-title-text {
-        white-space: normal;
-        overflow: visible;
-        text-overflow: clip;
-        line-height: 1.25;
-    }
-    .cable-group .pb-section-title-count {
-        align-self: center;
-        color: rgba(184,196,164,0.55);
-    }
-    /* Прячем правую стрелку раскрытия у кнопок разделов Кабельный журнал */
-    .cable-group .pb-section-arrow {
-        display: none;
-    }
-    /* Активное состояние кнопок */
-    .cable-group .pb-section-title:active {
-        background: #313629;
-    }
-    [data-theme="light"] .cable-group .pb-section-title {
-        background: #eef1e8;
-        color: #4a5740;
-        border-bottom: 1px solid rgba(0,0,0,0.04);
-    }
-    [data-theme="light"] .cable-group .pb-section-title-count {
-        color: rgba(74,87,64,0.6);
-    }
-    [data-theme="light"] .cable-group .pb-section-title:active {
-        background: #e3e8da;
-    }
-
-    /* Карточки кабелей внутри группы */
-    .cable-group .pb-section-body {
-        padding: 0;
-    }
-
-    /* Карточка кабеля в списке */
-    .cable-card {
-        border-bottom: 1px solid rgba(255,255,255,0.05);
-        background: var(--card-bg, rgba(45, 50, 42, 0.96));
-    }
-    [data-theme="light"] .cable-card {
-        background: rgba(250, 252, 245, 0.96);
-        border-bottom-color: rgba(0,0,0,0.05);
-    }
-    .cable-card-header {
-        cursor: pointer;
-        padding: 12px 16px;
-        -webkit-tap-highlight-color: transparent;
-    }
-    .cable-card-header:active {
-        background: rgba(255,255,255,0.03);
-    }
-    .cable-card-header-inner {
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-    }
-    .cable-card-text {
-        flex: 1; min-width: 0;
-    }
-    .cable-card-title {
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--text-primary);
-        line-height: 1.3;
-        margin-bottom: 2px;
-        word-wrap: break-word;
-    }
-    .cable-card-subtitle {
-        font-size: 12px;
-        color: var(--text-secondary);
-        line-height: 1.35;
-    }
-    .cable-card-purpose {
-        display: inline-block;
-        font-size: 11px;
-        font-weight: 600;
-        padding: 2px 8px;
-        border-radius: 10px;
-        margin-top: 4px;
-        white-space: nowrap;
-    }
-    .cable-card-purpose-signal    { background: rgba(120,160,220,0.18); color: #9bbfe6; }
-    .cable-card-purpose-control   { background: rgba(100,180,160,0.18); color: #8fc8b6; }
-    .cable-card-purpose-jumper    { background: rgba(200,170,100,0.18); color: #d8c078; }
-    .cable-card-purpose-power     { background: rgba(220,150,90,0.18);  color: #e0a878; }
-    .cable-card-purpose-manage    { background: rgba(170,140,200,0.18); color: #bca0d4; }
-    .cable-card-purpose-reserve   { background: rgba(140,140,140,0.18); color: #aaaaaa; }
-    .cable-card-purpose-other     { background: rgba(160,160,160,0.18); color: #b0b0b0; }
-    [data-theme="light"] .cable-card-purpose-signal    { background: rgba(40,90,180,0.15);  color: #2a5ab0; }
-    [data-theme="light"] .cable-card-purpose-control   { background: rgba(20,110,90,0.15);  color: #1a6a55; }
-    [data-theme="light"] .cable-card-purpose-jumper    { background: rgba(150,110,20,0.15); color: #8a6020; }
-    [data-theme="light"] .cable-card-purpose-power     { background: rgba(180,90,30,0.15);  color: #9a5020; }
-    [data-theme="light"] .cable-card-purpose-manage    { background: rgba(100,60,160,0.15); color: #6a3aa0; }
-    [data-theme="light"] .cable-card-purpose-reserve   { background: rgba(110,110,110,0.15); color: #555; }
-    [data-theme="light"] .cable-card-purpose-other     { background: rgba(130,130,130,0.15); color: #555; }
-    .cable-card-arrow {
-        flex-shrink: 0;
-        color: var(--text-secondary);
-        font-size: 16px;
-        margin-top: 2px;
-    }
-    .cable-card-arrow::before { content: '›'; }
-
-    /* Карточка деталей кабеля */
-    .cable-detail-card {
-        margin: 0;
-        background: rgba(45, 50, 42, 0.96);
-        border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-    [data-theme="light"] .cable-detail-card {
-        background: rgba(250, 252, 245, 0.96);
-    }
-    .cable-detail-rows {
-        padding: 8px 16px 16px;
-    }
-    .cable-detail-row {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        padding: 10px 0;
-        border-bottom: 1px solid rgba(255,255,255,0.04);
-    }
-    .cable-detail-row:last-child { border-bottom: none; }
-    /* Зебра-фон для зрительного разделения строк (группы назначаются в JS). */
-    .cable-detail-row.cable-row-group-1 { background: rgba(55, 60, 50, 0.96); }
-    .cable-detail-row.cable-row-group-2 { background: rgba(70, 76, 62, 0.96); }
-    .cable-detail-row.cable-row-group-3 { background: rgba(55, 60, 50, 0.96); }
-    .cable-detail-row.cable-row-group-4 { background: rgba(70, 76, 62, 0.96); }
-    .cable-detail-row.cable-row-group-5 { background: rgba(62, 67, 56, 0.96); }
-    [data-theme="light"] .cable-detail-row.cable-row-group-1 { background: rgba(250, 252, 245, 0.97); }
-    [data-theme="light"] .cable-detail-row.cable-row-group-2 { background: rgba(225, 230, 215, 0.94); }
-    [data-theme="light"] .cable-detail-row.cable-row-group-3 { background: rgba(250, 252, 245, 0.97); }
-    [data-theme="light"] .cable-detail-row.cable-row-group-4 { background: rgba(225, 230, 215, 0.94); }
-    [data-theme="light"] .cable-detail-row.cable-row-group-5 { background: rgba(238, 242, 230, 0.96); }
-    .cable-detail-label {
-        font-size: 11px;
-        color: var(--text-secondary);
-        text-transform: uppercase;
-        letter-spacing: 0.4px;
-    }
-    .cable-detail-value {
-        font-size: 14px;
-        color: var(--text-primary);
-        line-height: 1.4;
-        word-wrap: break-word;
-    }
     .regulator-sorted-list.searching .pb-section.regulator-group .pb-section-arrow {
         transform: translateY(-50%) rotate(45deg);
         opacity: 0.3;
@@ -4593,15 +4385,13 @@
     .dev-detail-value.kip-project-link,
     .lock-detail-value.kip-project-link,
     .valve-detail-value.kip-project-link,
-    .regulator-detail-value.kip-project-link,
-    .cable-detail-value.kip-project-link {
+    .regulator-detail-value.kip-project-link {
         color: #6aa6e0;
     }
     [data-theme="light"] .dev-detail-value.kip-project-link,
     [data-theme="light"] .lock-detail-value.kip-project-link,
     [data-theme="light"] .valve-detail-value.kip-project-link,
-    [data-theme="light"] .regulator-detail-value.kip-project-link,
-    [data-theme="light"] .cable-detail-value.kip-project-link {
+    [data-theme="light"] .regulator-detail-value.kip-project-link {
         color: #1a4060;
     }
     /* Детальная карточка проекта: № проекта как <a> внутри .project-detail-value.
@@ -5797,7 +5587,7 @@
                 <div class="menu-btn" id="projectsEntryBtn" style="border-color:rgba(176,128,72,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#b08048;">Проекты</div><div class="menu-btn-sublabel">По отделениям</div></div><i class="menu-btn-arrow" style="color:rgba(176,128,72,0.4);">›</i></div>
             </div>
             <div class="menu-btn-row">
-                <div class="menu-btn" id="cablesEntryBtn" style="border-color:rgba(120,144,100,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#8aa070;">Кабельный журнал</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(120,144,100,0.4);">›</i></div>
+                <div class="menu-btn" id="cablesEntryBtn" style="border-color:rgba(120,144,100,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#8aa070;">Кабельный журнал</div><div class="menu-btn-sublabel">Журнал КИП пр-ва ИОС</div></div><i class="menu-btn-arrow" style="color:rgba(120,144,100,0.4);">›</i></div>
             </div>
             <div class="menu-btn-row">
                 <div class="menu-btn" id="plan114EntryBtn" style="border-color:rgba(120,140,170,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#7896b0;">План корпуса 114</div><div class="menu-btn-sublabel">6 планов помещений</div></div><i class="menu-btn-arrow" style="color:rgba(120,140,170,0.4);">›</i></div>
@@ -5928,19 +5718,6 @@
             <div id="projectGroupList"></div>
         </div>
 
-        <!-- ======================== КАБЕЛЬНЫЙ ЖУРНАЛ — ПО ПРОИЗВОДСТВАМ ======================== -->
-        <div id="page-cables-prod" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Кабельный журнал по производствам</div><input type="search" id="cableProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="cablesRenderSorted('prod')"></div>
-            <div id="cableProdInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
-            <div id="cableProdList"></div>
-        </div>
-
-        <!-- ======================== КАРТОЧКА КАБЕЛЯ ======================== -->
-        <div id="page-cable-detail" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="cableDetailTitle">Кабель</div></div>
-            <div id="cableDetailContent"></div>
-        </div>
-
         <!-- ======================== КАБЕЛЬНЫЙ ЖУРНАЛ (РЕДАКТИРОВАНИЕ) ========================
              Доступ: Админ, ИТР ИОС, КИП ИОС pro.
              Данные: напрямую из Google Sheets "Кабельный журнал" через Apps Script. -->
@@ -5961,12 +5738,6 @@
             <div id="cjInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
             <div id="cjList" class="cj-list"></div>
             <div id="cjPagination" class="cj-pagination"></div>
-        </div>
-
-        <!-- ======================== СПИСОК КАБЕЛЕЙ ВНУТРИ ГРУППЫ ======================== -->
-        <div id="page-cable-group" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="cableGroupTitle">Кабели</div></div>
-            <div id="cableGroupList"></div>
         </div>
 
         <!-- ======================== ПЛАН КОРПУСА 114 (список планов) ======================== -->
@@ -12204,7 +11975,6 @@
             lockouts: 'lockouts-prod',
             valves: 'valves-prod',
             regulators: 'regulators-prod',
-            cables: 'cables-prod',
         };
         const target = pages[section];
         if (!target) return;
@@ -12226,7 +11996,6 @@
             lockouts:   ['lockProdSearchInput'],
             valves:     ['valveProdSearchInput'],
             regulators: ['regulatorProdSearchInput'],
-            cables:     ['cableProdSearchInput'],
         }[section] || [];
         for (const iid of inputIds) {
             const inp = document.getElementById(iid);
@@ -12298,7 +12067,6 @@
                     lockouts:   ['lockProdSearchInput'],
                     valves:     ['valveProdSearchInput'],
                     regulators: ['regulatorProdSearchInput'],
-                    cables:     ['cableProdSearchInput'],
                 }[section] || [];
                 for (const iid of inputIds) {
                     const inp = document.getElementById(iid);
@@ -12916,7 +12684,6 @@
         { label: 'Блокировки',      section: 'lockouts',   icon: 'Б', color: '#b85a7a' },
         { label: 'Клапаны',         section: 'valves',     icon: 'К', color: '#4a8a8c' },
         { label: 'Регуляторы',      section: 'regulators', icon: 'Р', color: '#7e5ab8' },
-        { label: 'Кабельный журнал', section: 'cables',    icon: 'Ж', color: '#8aa070' },
     ];
 
     // Проверить, загружены ли данные раздела.
@@ -12926,7 +12693,6 @@
             case 'lockouts':   return !!(typeof lockLoaded !== 'undefined' && lockLoaded && lockData);
             case 'valves':     return !!(typeof valveLoaded !== 'undefined' && valveLoaded && valveData);
             case 'regulators': return !!(typeof regulatorLoaded !== 'undefined' && regulatorLoaded && regulatorData);
-            case 'cables':     return !!(typeof cableLoaded !== 'undefined' && cableLoaded && cableData);
         }
         return false;
     }
@@ -12938,7 +12704,6 @@
             case 'lockouts':   return lockData && lockData.lockouts ? lockData.lockouts : null;
             case 'valves':     return valveData && valveData.valves ? valveData.valves : null;
             case 'regulators': return regulatorData && regulatorData.regulators ? regulatorData.regulators : null;
-            case 'cables':     return cableData && cableData.cables ? cableData.cables : null;
         }
         return null;
     }
@@ -12952,8 +12717,7 @@
             section === 'devices' ? 'devices.json' :
             section === 'lockouts' ? 'lockouts.json' :
             section === 'valves' ? 'valves.json' :
-            section === 'regulators' ? 'regulators.json' :
-            section === 'cables' ? 'cables.json' : null
+            section === 'regulators' ? 'regulators.json' : null
         );
         if (!url) return false;
         try {
@@ -12977,10 +12741,6 @@
                 case 'regulators':
                     regulatorData = data; regulatorLoaded = true;
                     localStorage.setItem('regulatorsLastUpdate', new Date().toISOString());
-                    break;
-                case 'cables':
-                    cableData = data; cableLoaded = true;
-                    localStorage.setItem('cablesLastUpdate', new Date().toISOString());
                     break;
             }
             return true;
@@ -13066,7 +12826,6 @@
                 lockouts:   ['блокировка', 'блокировки', 'блокировок'],
                 valves:     ['клапан', 'клапана', 'клапанов'],
                 regulators: ['регулятор', 'регулятора', 'регуляторов'],
-                cables:     ['кабель', 'кабеля', 'кабелей'],
             }[sec] || ['запись', 'записи', 'записей'];
             const plural = kipRelatedPlural(count, forms);
             countEl.textContent = count + ' ' + plural;
@@ -13206,49 +12965,14 @@
         sublabel.textContent = count + ' ' + projectPlural(count, ['проект', 'проекта', 'проектов']) + ' КИП ИОС';
     }
 
-    // ===== КАБЕЛЬНЫЙ ЖУРНАЛ (зеркало проектов) =====
-    // Поля соответствуют листу "Кабельный журнал" файла Excel
-    // https://disk.yandex.ru/i/wvleuW19NoQBPQ (файл «Кабельный журнал.xlsx»)
-    const CABLE_FIELDS = [
-        { key: 'Обозначение кабеля, провода',        label: 'Обозначение',           group: 1 },
-        { key: 'Начало трассы',                       label: 'Начало трассы',         group: 1 },
-        { key: 'Конец трассы',                        label: 'Конец трассы',          group: 1 },
-        { key: 'Участок трассы кабеля, провода',     label: 'Участок трассы',        group: 1 },
-        { key: 'Отделение, производство',            label: 'Отделение',             group: 2 },
-        { key: 'Назначение кабеля',                  label: 'Назначение',            group: 2 },
-        { key: '№ проекта',                          label: '№ проекта',             group: 2 },
-        { key: 'Марка (по проекту)',                  label: 'Марка (по проекту)',     group: 3 },
-        { key: 'Число и сечение жил (по проекту)',   label: 'Сечение (по проекту)',   group: 3 },
-        { key: 'Длина, м (по проекту)',               label: 'Длина, м (по проекту)',  group: 3 },
-        { key: 'Марка (проложен)',                    label: 'Марка (проложен)',       group: 4 },
-        { key: 'Число и сечение жил (проложен)',     label: 'Сечение (проложен)',     group: 4 },
-        { key: 'Длина, м (проложен)',                 label: 'Длина, м (проложен)',    group: 4 },
-        { key: 'Дата добавления',                    label: 'Дата добавления',       group: 5 },
-    ];
+    // ===== КАБЕЛЬНЫЙ ЖУРНАЛ — общие данные для счётчика на дашборде =====
+    // cableData / cableLoaded используются cablesUpdateEntrySublabel()
+    // для отображения количества кабелей в подзаголовке кнопки на дашборде КИП ИОС.
+    // Сам список журнала (просмотр/редактирование) живёт на странице cable-journal-edit
+    // и работает напрямую с Google Sheets через Apps Script (см. KipCableJournal).
     let cableData = null;
     let cableLoaded = false;
-    let cableGroupExpanded = {};
 
-    function cableEsc(s) {
-        if (s == null) return '';
-        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-    function cableNorm(s) {
-        if (s == null) return '';
-        return String(s).toLowerCase().replace(/[ё]/g, 'е').replace(/[^a-zа-я0-9]/gi, '');
-    }
-    function cableMark(text, query) {
-        if (!query) return cableEsc(text);
-        const t = String(text);
-        const q = cableNorm(query);
-        if (!q) return cableEsc(t);
-        const idx = cableNorm(t).indexOf(q);
-        if (idx === -1) return cableEsc(t);
-        const before = t.substring(0, idx);
-        const match = t.substring(idx, idx + q.length);
-        const after = t.substring(idx + q.length);
-        return cableEsc(before) + '<mark>' + cableEsc(match) + '</mark>' + cableMark(after, query);
-    }
     function cablePlural(n, forms) {
         const m = n % 100;
         const m1 = m % 10;
@@ -13256,388 +12980,6 @@
         if (m1 === 1) return forms[0];
         if (m1 >= 2 && m1 <= 4) return forms[1];
         return forms[2];
-    }
-    function cableFormatDate(dateVal) {
-        if (!dateVal) return '';
-        const str = String(dateVal).trim();
-        const m = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
-        if (m) return m[3] + '.' + m[2] + '.' + m[1];
-        if (/^\d{2}\.\d{2}\.\d{4}$/.test(str)) return str;
-        // Excel serial date
-        const num = parseFloat(str);
-        if (!isNaN(num) && num > 30000) {
-            const epoch = new Date(1899, 11, 30);
-            const d = new Date(epoch.getTime() + num * 86400000);
-            const day = String(d.getDate()).padStart(2, '0');
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const year = d.getFullYear();
-            return day + '.' + month + '.' + year;
-        }
-        return str;
-    }
-    function cableGetLastUpdateDate() {
-        try {
-            const raw = localStorage.getItem('cablesLastUpdate');
-            if (!raw) return '';
-            const d = new Date(raw);
-            if (isNaN(d.getTime())) return '';
-            return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
-        } catch (e) { return ''; }
-    }
-    function cablePurposeClass(purpose) {
-        const s = String(purpose || '').toLowerCase().trim();
-        if (s === 'сигнальный' || s === 'сигнализация 220 в') return 'cable-card-purpose-signal';
-        if (s === 'контрольный')                                return 'cable-card-purpose-control';
-        if (s === 'перемычка')                                  return 'cable-card-purpose-jumper';
-        if (s === 'питание 220 в')                              return 'cable-card-purpose-power';
-        if (s === 'управление')                                return 'cable-card-purpose-manage';
-        if (s === 'резерв')                                    return 'cable-card-purpose-reserve';
-        return 'cable-card-purpose-other';
-    }
-
-    async function cablesInitSorted(mode) {
-        if (!cableLoaded || !cableData) {
-            try {
-                const bust = '?v=' + Date.now();
-                const resp = await fetch('data/cables.json' + bust, { cache: 'no-store' });
-                if (!resp.ok) throw new Error('HTTP ' + resp.status);
-                cableData = await resp.json();
-                cableLoaded = true;
-                localStorage.setItem('cablesLastUpdate', new Date().toISOString());
-            } catch (e) {
-                console.error('cablesInitSorted error:', e);
-                const ids = { prod: 'cableProdList' };
-                const el = document.getElementById(ids[mode]);
-                if (el) el.innerHTML = '<div class="pb-empty">Ошибка загрузки.<br>Проверьте соединение.</div>';
-                return;
-            }
-        }
-        cablesRenderSorted(mode);
-    }
-
-    function cablesForceRefresh(mode) {
-        cableData = null;
-        cableLoaded = false;
-        cablesInitSorted(mode);
-        if (navigator.vibrate) navigator.vibrate(40);
-    }
-
-    function cablesRenderSorted(mode) {
-        const ids = {
-            prod: { list: 'cableProdList', info: 'cableProdInfo', search: 'cableProdSearchInput', page: 'page-cables-prod' },
-        };
-        const id = ids[mode];
-        if (!id) return;
-        const list = document.getElementById(id.list);
-        const info = document.getElementById(id.info);
-        if (!list || !info) return;
-
-        if (!cableLoaded || !cableData) {
-            list.innerHTML = '';
-            info.textContent = 'Загрузка…';
-            return;
-        }
-
-        const query = cableNorm((document.getElementById(id.search)?.value || '').trim());
-        // Если пользователь вручную ввёл поисковый запрос — сбросить фильтр по проекту
-        if (query && kipIsProjectLinkFilterActive('cables')) {
-            kipClearProjectLinkFilter('cables');
-        }
-        let filtered = cableData.cables || [];
-
-        // Сортировка по столбцу «Отделение, производство»
-        const sortKey = 'Отделение, производство';
-        filtered.sort((a, b) => {
-            const va = (a[sortKey] || '').toString().toLowerCase();
-            const vb = (b[sortKey] || '').toString().toLowerCase();
-            if (va < vb) return -1;
-            if (va > vb) return 1;
-            // Внутри отделения — по обозначению кабеля
-            const na = (a['Обозначение кабеля, провода'] || '').toString().toLowerCase();
-            const nb = (b['Обозначение кабеля, провода'] || '').toString().toLowerCase();
-            if (na < nb) return -1;
-            if (na > nb) return 1;
-            return 0;
-        });
-
-        // Фильтр по «№ проекта» (из карточки проекта)
-        if (kipIsProjectLinkFilterActive('cables')) {
-            filtered = filtered.filter(d => kipMatchesProjectFilter(d, 'cables'));
-        }
-
-        if (query) {
-            filtered = filtered.filter(d =>
-                CABLE_FIELDS.some(f => cableNorm(d[f.key] || '').includes(query))
-            );
-        }
-
-        const groups = {};
-        const groupOrder = [];
-        for (const d of filtered) {
-            const g = d[sortKey] || '(без отделения)';
-            if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
-            groups[g].push(d);
-        }
-
-        info.textContent = '';
-
-        if (filtered.length === 0) {
-            let emptyHtml = '';
-            if (kipIsProjectLinkFilterActive('cables')) {
-                emptyHtml += kipRenderFilterBadge('cables');
-                emptyHtml += '<div class="pb-empty">По проекту №«' + cableEsc(kipProjectLinkFilter.projectNo) + '» кабелей не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
-            } else {
-                emptyHtml = '<div class="pb-empty">Ничего не найдено.<br>Попробуйте изменить запрос.</div>';
-            }
-            list.innerHTML = emptyHtml;
-            kipBindFilterBadge(list, 'cables', cablesRenderSorted);
-            return;
-        }
-
-        let html = '';
-        // Бейдж активного фильтра по проекту (вверху списка)
-        if (kipIsProjectLinkFilterActive('cables')) {
-            html += kipRenderFilterBadge('cables');
-        }
-        html += '<div class="cable-sorted-list' + (query ? ' searching' : '') + '">';
-        for (const g of groupOrder) {
-            const items = groups[g];
-            const groupKey = mode + '|' + g;
-            const isGroupExpanded = query ? true : (cableGroupExpanded[groupKey] === true);
-
-            html += '<div class="pb-section cable-group' + (isGroupExpanded ? ' expanded' : '') + '" data-group="' + cableEsc(g) + '" data-mode="' + mode + '">';
-            html += '<div class="pb-section-title cable-group-title" onclick="cablesToggleGroup(this)">';
-            html += '<span class="pb-section-title-text">' + cableMark(g, query) + '</span>';
-            html += '<span class="pb-section-title-count">' + items.length + '</span>';
-            html += '<span class="pb-section-arrow"></span>';
-            html += '</div>';
-            html += '<div class="pb-section-body">';
-
-            for (const item of items) {
-                const itemId = String(item['№ п/п'] ?? '');
-                // На странице списка (3-я страница) заголовок карточки = «Обозначение кабеля, провода».
-                // Отделение и Назначение здесь не показываем — они есть в заголовках подгрупп
-                // и в карточке детали (4-я страница).
-                const name  = item['Обозначение кабеля, провода'] || '(без обозначения)';
-                const start = item['Начало трассы'] || '';
-                const end   = item['Конец трассы'] || '';
-
-                html += '<div class="cable-card" data-cable-id="' + cableEsc(itemId) + '" data-mode="' + mode + '">';
-                html += '<div class="cable-card-header" onclick="cableOpenDetail(\x27' + cableEsc(itemId) + '\x27)">';
-                html += '<div class="cable-card-header-inner">';
-                html += '<div class="cable-card-text">';
-                html += '<div class="cable-card-title">' + cableMark(name, query) + '</div>';
-                let subtitle = '';
-                if (start) subtitle += start;
-                if (end)   subtitle += (subtitle ? ' → ' : '') + end;
-                if (subtitle) html += '<div class="cable-card-subtitle">' + cableMark(subtitle, query) + '</div>';
-                html += '</div>';
-                html += '<span class="cable-card-arrow"></span>';
-                html += '</div>';
-                html += '</div>';
-                html += '</div>';
-            }
-            html += '</div>';
-            html += '</div>';
-        }
-        html += '</div>';
-        list.innerHTML = html;
-        // Привязка обработчика к кнопке ✕ в бейдже фильтра
-        kipBindFilterBadge(list, 'cables', cablesRenderSorted);
-    }
-
-    function cablesToggleGroup(titleEl) {
-        const section = titleEl.closest('.pb-section');
-        if (!section) return;
-        const mode = section.getAttribute('data-mode') || 'prod';
-        const group = section.getAttribute('data-group');
-        if (!group) return;
-        if (navigator.vibrate) navigator.vibrate(25);
-        window._cableGroupCtx = { mode: mode, group: group };
-        navigateTo('cable-group');
-    }
-
-    function cablesRenderGroup() {
-        const ctx = window._cableGroupCtx || {};
-        const mode = ctx.mode || 'prod';
-        const group = ctx.group || '';
-        const list = document.getElementById('cableGroupList');
-        const titleEl = document.getElementById('cableGroupTitle');
-        if (!list) return;
-        if (titleEl) titleEl.textContent = group || 'Кабели';
-
-        if (!cableLoaded || !cableData) {
-            list.innerHTML = '<div class="pb-empty">Загрузка…</div>';
-            return;
-        }
-
-        const sortKey = 'Отделение, производство';
-        let items = (cableData.cables || []).filter(d => {
-            const g = d[sortKey] || '(без отделения)';
-            return g === group;
-        });
-        // Применить активный фильтр по «№ проекта», если он установлен.
-        // Без этого при клике на группу из отфильтрованного списка будет показан
-        // весь список кабелей этой группы, а не только относящиеся к проекту.
-        if (kipIsProjectLinkFilterActive('cables')) {
-            items = items.filter(d => kipMatchesProjectFilter(d, 'cables'));
-        }
-        // Сортировка по обозначению кабеля
-        items.sort((a, b) => {
-            const na = (a['Обозначение кабеля, провода'] || '').toString().toLowerCase();
-            const nb = (b['Обозначение кабеля, провода'] || '').toString().toLowerCase();
-            if (na < nb) return -1;
-            if (na > nb) return 1;
-            return 0;
-        });
-
-        if (items.length === 0) {
-            let emptyHtml = '';
-            if (kipIsProjectLinkFilterActive('cables')) {
-                emptyHtml += kipRenderFilterBadge('cables');
-                emptyHtml += '<div class="pb-empty">В группе «' + cableEsc(group) + '» по проекту №«' + cableEsc(kipProjectLinkFilter.projectNo) + '» кабелей не найдено.<br>Нажмите ✕ в бейдже, чтобы сбросить фильтр.</div>';
-            } else {
-                emptyHtml = '<div class="pb-empty">В группе нет кабелей.</div>';
-            }
-            list.innerHTML = emptyHtml;
-            kipBindFilterBadge(list, 'cables', function() { cablesRenderGroup(); });
-            return;
-        }
-
-        // Сгруппировать кабели по «Назначение кабеля» — раскрытая группа без сворачивания.
-        const groups = {};
-        const groupOrder = [];
-        for (const item of items) {
-            const g = item['Назначение кабеля'] || '(без назначения)';
-            if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
-            groups[g].push(item);
-        }
-        groupOrder.sort((a, b) => {
-            const va = a.toString().toLowerCase();
-            const vb = b.toString().toLowerCase();
-            if (va < vb) return -1;
-            if (va > vb) return 1;
-            return 0;
-        });
-
-        let html = '';
-        // Бейдж активного фильтра по «№ проекта» вверху страницы группы
-        if (kipIsProjectLinkFilterActive('cables')) {
-            html += kipRenderFilterBadge('cables');
-        }
-        html += '<div class="cable-sorted-list">';
-        for (const g of groupOrder) {
-            const gItems = groups[g];
-            html += '<div class="pb-section cable-group cable-subgroup static">';
-            html += '<div class="pb-section-title">';
-            html += '<span class="pb-section-title-text">' + cableEsc(g) + '</span>';
-            html += '<span class="pb-section-title-count">' + gItems.length + '</span>';
-            html += '<span class="pb-section-arrow"></span>';
-            html += '</div>';
-            html += '<div class="pb-section-body">';
-            for (const item of gItems) {
-                const itemId = String(item['№ п/п'] ?? '');
-                // На странице списка (3-я страница) заголовок карточки = «Обозначение кабеля, провода».
-                // Отделение и Назначение здесь не показываем — они есть в заголовках подгрупп
-                // и в карточке детали (4-я страница).
-                const name  = item['Обозначение кабеля, провода'] || '(без обозначения)';
-                const start = item['Начало трассы'] || '';
-                const end   = item['Конец трассы'] || '';
-
-                html += '<div class="cable-card" data-cable-id="' + cableEsc(itemId) + '" data-mode="' + mode + '">';
-                html += '<div class="cable-card-header" onclick="cableOpenDetail(\x27' + cableEsc(itemId) + '\x27)">';
-                html += '<div class="cable-card-header-inner">';
-                html += '<div class="cable-card-text">';
-                html += '<div class="cable-card-title">' + cableEsc(name) + '</div>';
-                let subtitle = '';
-                if (start) subtitle += start;
-                if (end)   subtitle += (subtitle ? ' → ' : '') + end;
-                if (subtitle) html += '<div class="cable-card-subtitle">' + cableEsc(subtitle) + '</div>';
-                html += '</div>';
-                html += '<span class="cable-card-arrow"></span>';
-                html += '</div>';
-                html += '</div>';
-                html += '</div>';
-            }
-            html += '</div>'; // pb-section-body
-            html += '</div>'; // pb-section
-        }
-        html += '</div>';
-        list.innerHTML = html;
-        // Привязка обработчика к кнопке ✕ в бейдже фильтра
-        kipBindFilterBadge(list, 'cables', function() { cablesRenderGroup(); });
-    }
-
-    function cablesScrollToGroup(el) {
-        if (!el) return;
-        const mode = el.getAttribute('data-mode') || 'prod';
-        const ph = document.querySelector('#page-cables-' + mode + ' .page-inline-header');
-        const stickyHeight = ph ? ph.offsetHeight : 56;
-        const rect = el.getBoundingClientRect();
-        const targetY = window.scrollY + rect.top - stickyHeight - 8;
-        window.scrollTo({ top: Math.max(0, targetY), behavior: 'auto' });
-    }
-
-    // ===== Открытие карточки кабеля (отдельная страница) =====
-    function cableOpenDetail(cableId) {
-        if (!cableId) return;
-        if (navigator.vibrate) navigator.vibrate(15);
-        window._cableDetailId = cableId;
-        navigateTo('cable-detail');
-    }
-
-    function cableRenderDetail() {
-        const cableId = window._cableDetailId;
-        if (!cableId || !cableLoaded || !cableData) return;
-        const item = cableData.cables.find(d => String(d['№ п/п'] ?? '') === String(cableId));
-        if (!item) return;
-        const titleEl = document.getElementById('cableDetailTitle');
-        const content = document.getElementById('cableDetailContent');
-        if (!titleEl || !content) return;
-        // Заголовок страницы кабеля (4-я страница) — из двух строк:
-        // верхняя — Отделение, нижняя — Назначение кабеля.
-        const _dept = item['Отделение, производство'] || '(без отделения)';
-        const _purpose = item['Назначение кабеля'] || '';
-        titleEl.classList.add('cable-detail-title-two-line');
-        if (_purpose) {
-            titleEl.innerHTML = cableEsc(_dept) + '<span class="cable-detail-title-sub">' + cableEsc(_purpose) + '</span>';
-        } else {
-            titleEl.innerHTML = cableEsc(_dept);
-        }
-
-        let html = '<div class="cable-detail-card">';
-        html += '<div class="cable-detail-rows">';
-        for (const f of CABLE_FIELDS) {
-            if (f.hiddenInCard) continue;
-            let val = item[f.key];
-            if (val === undefined || val === null || val === '') continue;
-            if (f.key === 'Дата добавления') val = cableFormatDate(val);
-            const grpCls = f.group ? ' cable-row-group-' + f.group : '';
-            html += '<div class="cable-detail-row' + grpCls + '">';
-            html += '<div class="cable-detail-label">' + cableEsc(f.label) + '</div>';
-            // Для поля «№ проекта» — кликабельная ссылка в карточку проекта
-            // (только если значение не пустое/«Нет данных»).
-            // Если значение содержит несколько номеров (через ',' или ';'),
-            // каждое число становится отдельной кликабельной ссылкой.
-            if (f.key === '№ проекта' && !kipIsEmptyProjectNo(val)) {
-                const parts = kipSplitProjectValues(val);
-                html += '<div class="cable-detail-value kip-link-group">';
-                html += kipRenderMultiLinks(parts, 'project', cableEsc);
-                html += '</div>';
-            } else {
-                html += '<div class="cable-detail-value">' + cableEsc(String(val)) + '</div>';
-            }
-            html += '</div>';
-        }
-        html += '</div>';
-        html += '</div>';
-        content.innerHTML = html;
-        // Привязка кликов по ссылкам «№ проекта» (безопасно: через data-атрибут)
-        content.querySelectorAll('[data-project-link]').forEach(function(el) {
-            el.addEventListener('click', function() {
-                projectOpenByProjectNo(this.getAttribute('data-project-link'));
-            });
-        });
     }
 
     // ===== Кнопка Кабельный журнал на странице КИП И ОС =====
@@ -13647,7 +12989,7 @@
         btn.dataset.initialized = '1';
         btn.addEventListener('click', function() {
             if (navigator.vibrate) navigator.vibrate(15);
-            navigateTo('cables-prod');
+            navigateTo('cable-journal-edit');
         });
         // Обновить sublabel количеством кабелей
         cablesUpdateEntrySublabel();
@@ -14552,6 +13894,11 @@
             return;
         }
         if (page === 'library') { navigateTo('library-internal'); return; }
+        // Раздел "Кабельный журнал" объединён с редакторской версией:
+        // единая страница — cable-journal-edit (роль с правом записи видит
+        // UI редактирования, остальные — только просмотр). Любой переход на
+        // устаревший идентификатор 'cables' или 'cables-prod' перенаправляется туда же.
+        if (page === 'cables' || page === 'cables-prod') { navigateTo('cable-journal-edit'); return; }
         // Сброс активного фильтра «№ проекта» при уходе со страницы соответствующего раздела.
         // Карта: страница → раздел, к которому относится фильтр.
         // Если пользователь уходит не на «свою» страницу раздела и не на детальную —
@@ -14565,7 +13912,6 @@
                 lockouts:   ['lockouts-prod', 'lockout-detail', 'lock-group'],
                 valves:     ['valves-prod', 'valve-detail', 'valve-group'],
                 regulators: ['regulators-prod', 'regulator-detail', 'regulator-group'],
-                cables:     ['cables-prod', 'cable-detail', 'cable-group'],
             }[sec] || [];
             if (allowedPages.indexOf(page) === -1) {
                 kipClearProjectLinkFilter(sec);
@@ -14626,9 +13972,6 @@
         if (page === 'projects-prod') { setTimeout(() => { if (typeof projectInitSorted === 'function') projectInitSorted('prod'); }, 30); }
         if (page === 'project-detail') { setTimeout(() => { if (typeof projectRenderDetail === 'function') projectRenderDetail(); }, 30); }
         if (page === 'project-group') { setTimeout(() => { if (typeof projectsRenderGroup === 'function') projectsRenderGroup(); }, 30); }
-        if (page === 'cables-prod') { setTimeout(() => { if (typeof cablesInitSorted === 'function') cablesInitSorted('prod'); }, 30); }
-        if (page === 'cable-detail') { setTimeout(() => { if (typeof cableRenderDetail === 'function') cableRenderDetail(); }, 30); }
-        if (page === 'cable-group') { setTimeout(() => { if (typeof cablesRenderGroup === 'function') cablesRenderGroup(); }, 30); }
         if (page === 'cable-journal-edit') { setTimeout(() => { if (typeof KipCableJournal !== 'undefined') KipCableJournal.init(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof devInitEntryButton === 'function') devInitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof kipIOSUpdateLastChange === 'function') kipIOSUpdateLastChange(); }, 30); }
@@ -14806,7 +14149,7 @@
         // ===== КИП ИОС — подразделы (страница page-kip-ios) =====
         'devices':       { label: 'Приборы',                  sublabel: 'Перечень КИП ИОС — 1312 приборов',              target: 'devices',       category: 'docs' },
         'projects':      { label: 'Проекты',                  sublabel: 'Перечень проектов КИП пр-ва ИОС',               target: 'projects',      category: 'docs' },
-        'cables':        { label: 'Кабельный журнал',        sublabel: 'Кабельный журнал КИП пр-ва ИОС',                 target: 'cables',        category: 'docs' },
+        'cables':        { label: 'Кабельный журнал',        sublabel: 'Кабельный журнал КИП пр-ва ИОС',                 target: 'cable-journal-edit', category: 'docs' },
         'plan-114':      { label: 'План корпуса 114',        sublabel: '6 планов помещений',                             target: 'plan-114',      category: 'docs' }
     };
     const PINNED_STORAGE_KEY = 'pinnedSubsections';
@@ -19075,7 +18418,6 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                          'valves-prod', 'valves-type', 'valves-name', 'valve-detail', 'valve-group',
                          'regulators-prod', 'regulator-detail', 'regulator-group',
                          'projects-prod', 'project-detail', 'project-group',
-                         'cables-prod', 'cable-detail', 'cable-group',
                          'cable-journal-edit',
                          'plan-114', 'plan-114-view'],
         _SECRET_PAGES: ['minesweeper', 'phonebook'],
@@ -19732,15 +19074,12 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             }
 
             // ============================================================
-            // Кнопка "Кабельный журнал (ред.)" — видна ролям с правом записи:
-            // Админ, ИТР ИОС, КИП ИОС pro.
+            // Примечание: раздел "Кабельный журнал" объединён с ред. версией.
+            // Кнопка в sidebar одна; видимость UI редактирования (кнопка
+            // "+ Добавить", поля в модалке) управляется флагом canEdit,
+            // который сервер возвращает в cableJournal.list / getColumns.
+            // Роли с правом записи: Админ, ИТР ИОС, КИП ИОС pro.
             // ============================================================
-            const cjEditBtn = document.getElementById('sidebarCableJournalEditBtn');
-            if (cjEditBtn) {
-                const editRoles = ['Админ', 'ИТР ИОС', 'КИП ИОС pro'];
-                const canEditCj = editRoles.indexOf(this._cachedRole) !== -1;
-                cjEditBtn.style.display = canEditCj ? '' : 'none';
-            }
         },
 
         // ============================================================
@@ -21188,11 +20527,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('projects-prod'); toggleSidebar();">
             <span style="color:rgba(176,128,72,0.9);">Проекты</span>
         </div>
-        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('cables-prod'); toggleSidebar();">
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('cable-journal-edit'); toggleSidebar();">
             <span style="color:rgba(120,144,100,0.9);">Кабельный журнал</span>
-        </div>
-        <div class="sidebar-item sidebar-item-extra" id="sidebarCableJournalEditBtn" onclick="navigateTo('cable-journal-edit'); toggleSidebar();" style="display:none;">
-            <span style="color:rgba(140,180,140,0.95);">Кабельный журнал (ред.)</span>
         </div>
         <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('plan-114'); toggleSidebar();">
             <span style="color:rgba(120,140,170,0.9);">План корпуса 114</span>
