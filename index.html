@@ -18940,8 +18940,11 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             const token = this.getToken();
             if (!token) return;
 
+            console.log('[KipAuth._verifySessionInBackground] Запрос getCurrentUser, token=' + token.substring(0, 8) + '...');
+
             this.api('getCurrentUser', { token: token }).then(function(data) {
                 // Сервер подтвердил сессию. Обновить кэш.
+                console.log('[KipAuth._verifySessionInBackground] УСПЕХ:', JSON.stringify(data));
                 self._cachedRole = data.role;
                 self._cachedEmail = data.email;
                 self._cachedUserId = data.userId;
@@ -18958,12 +18961,14 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             }).catch(function(err) {
                 const msg = (err && err.message) || '';
                 const kind = err && err._kind;
+                console.warn('[KipAuth._verifySessionInBackground] ОТВЕТ СЕРВЕРА С ОШИБКОЙ:', { kind: kind, message: msg, fullError: err });
                 const isSessionInvalid =
                     (kind === 'SERVER') &&
                     (msg === 'session_expired' || msg === 'no_session');
 
                 if (isSessionInvalid) {
                     // Реальный logout — сервер сказал, что сессии нет.
+                    console.warn('[KipAuth._verifySessionInBackground] → LOGOUT: сервер сказал "' + msg + '"');
                     self.clearToken();
                     try {
                         localStorage.removeItem('kip8_cached_role');
@@ -18979,11 +18984,9 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     }
                     self._showLoginScreen();
                     self._showError('Сессия истекла. Войдите снова.');
-                    console.warn('[KipAuth] Фоновая проверка: сессия недействительна');
                 } else {
                     // Сетевая ошибка — пользователь остаётся в приложении.
-                    // Heartbeat продолжит попытки.
-                    console.warn('[KipAuth] Фоновая проверка: сетевая ошибка, токен сохранён:', msg);
+                    console.warn('[KipAuth._verifySessionInBackground] Сетевая ошибка, токен сохранён');
                 }
             });
         }
