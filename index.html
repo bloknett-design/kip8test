@@ -2103,6 +2103,67 @@
     .cj-field-input option, .cj-field-textarea option { background: #1a1f2e; color: #fff; }
     [data-theme="light"] .cj-field-input option, [data-theme="light"] .cj-field-textarea option { background: #fff; color: #1a1a1a; }
 
+    /* ========== Кабельный журнал — страница добавления записи ==========
+       В отличие от модалки (cj-edit-overlay), эта страница открывается
+       как обычная page-content, поля идут вертикально по одному в строке
+       (полная ширина контейнера), без группировки по 2 в ряд. */
+    .cj-add-page-body {
+        padding: 14px 14px 36px;
+        max-width: 640px;
+        margin: 0 auto;
+    }
+    .cj-add-subtitle {
+        font-size: 11px;
+        color: var(--text-secondary, rgba(255,255,255,0.55));
+        margin-bottom: 16px;
+        line-height: 1.5;
+    }
+    .cj-add-fields {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+    /* Каждое поле — на отдельной строке, full-width.
+       .cj-field-group уже объявлен выше (display:flex; flex-direction:column; gap:3px);
+       здесь только страхуем, чтобы flex-basis был 100%. */
+    .cj-add-fields .cj-field-group {
+        width: 100%;
+        flex: 0 0 100%;
+    }
+    /* На странице добавления нет .cj-field-row — все поля в столбик.
+       Но на случай если _renderField решит сгруппировать — явно распускаем ряд. */
+    .cj-add-fields .cj-field-row {
+        flex-direction: column;
+        gap: 14px;
+    }
+    /* <select> внутри cj-add-fields использует те же стили, что и input */
+    .cj-add-fields .cj-field-select {
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: linear-gradient(45deg, transparent 50%, var(--text-secondary, rgba(255,255,255,0.45)) 50%),
+                          linear-gradient(135deg, var(--text-secondary, rgba(255,255,255,0.45)) 50%, transparent 50%);
+        background-position: calc(100% - 14px) 50%, calc(100% - 9px) 50%;
+        background-size: 5px 5px, 5px 5px;
+        background-repeat: no-repeat;
+        padding-right: 28px;
+    }
+    [data-theme="light"] .cj-add-fields .cj-field-select {
+        background-color: #f5f7fa;
+    }
+    .cj-cancel-btn {
+        width: 100%;
+        margin-top: 10px;
+        padding: 11px 16px;
+        background: transparent;
+        color: var(--text-secondary, rgba(255,255,255,0.65));
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    .cj-cancel-btn:active { opacity: 0.7; }
+
     /* ========== Экзаменационные билеты ========== */
     .ticket-cat-card { position: relative; border-radius: 14px; margin-bottom: 10px; cursor: pointer; transition: transform .15s; overflow: hidden; min-height: 120px; }
     .ticket-cat-card:active { transform: scale(0.97); }
@@ -5738,6 +5799,29 @@
             <div id="cjInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
             <div id="cjList" class="cj-list"></div>
             <div id="cjPagination" class="cj-pagination"></div>
+        </div>
+
+        <!-- ======================== КАБЕЛЬНЫЙ ЖУРНАЛ — ДОБАВЛЕНИЕ ЗАПИСИ ========================
+             Открывается из cable-journal-edit по кнопке "+ Добавить".
+             Доступ: Админ, ИТР ИОС, КИП ИОС pro (как и кнопка добавления).
+             Поля расположены вертикально (по одному в строке).
+             Поля с options (из data validation Google Sheets или fallback
+             для department/purpose) рендерятся как <select>. -->
+        <div id="page-cable-journal-add" class="page-content">
+            <div class="page-inline-header">
+                <div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div>
+                <div class="page-inline-header-title">Новая запись</div>
+            </div>
+
+            <div class="cj-add-page-body">
+                <div class="cj-add-subtitle">Заполните поля. № п/п и Дата добавления установятся автоматически.</div>
+                <div id="cjAddFields" class="cj-add-fields">
+                    <div class="admin-empty">Загрузка полей…</div>
+                </div>
+                <button type="button" id="cjAddSubmitBtn" class="cj-save-btn" onclick="KipCableJournal.submitAdd()">Добавить запись</button>
+                <button type="button" class="cj-cancel-btn" onclick="navigateTo('cable-journal-edit')">Отмена</button>
+                <div id="cjAddError" class="cj-edit-error"></div>
+            </div>
         </div>
 
         <!-- ======================== ПЛАН КОРПУСА 114 (список планов) ======================== -->
@@ -13973,6 +14057,7 @@
         if (page === 'project-detail') { setTimeout(() => { if (typeof projectRenderDetail === 'function') projectRenderDetail(); }, 30); }
         if (page === 'project-group') { setTimeout(() => { if (typeof projectsRenderGroup === 'function') projectsRenderGroup(); }, 30); }
         if (page === 'cable-journal-edit') { setTimeout(() => { if (typeof KipCableJournal !== 'undefined') KipCableJournal.init(); }, 30); }
+        if (page === 'cable-journal-add')  { setTimeout(() => { if (typeof KipCableJournal !== 'undefined') KipCableJournal.initAddPage(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof devInitEntryButton === 'function') devInitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof kipIOSUpdateLastChange === 'function') kipIOSUpdateLastChange(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof lockInitEntryButton === 'function') lockInitEntryButton(); }, 30); }
@@ -18419,6 +18504,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                          'regulators-prod', 'regulator-detail', 'regulator-group',
                          'projects-prod', 'project-detail', 'project-group',
                          'cable-journal-edit',
+                         'cable-journal-add',
                          'plan-114', 'plan-114-view'],
         _SECRET_PAGES: ['minesweeper', 'phonebook'],
 
@@ -19564,16 +19650,143 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         },
 
         // ============================================================
-        // Открыть модалку добавления записи
+        // Открыть страницу добавления записи
         // ============================================================
+        // Раньше добавление открывалось в модалке cjEditOverlay. Теперь —
+        // отдельная страница page-cable-journal-add с полями столбиком
+        // (по одному в строке) и <select> для полей с options.
         openAdd: function() {
             if (!this._canEdit) {
                 alert('У вас нет прав на добавление записей');
                 return;
             }
-            this._editing = null;  // null = новая запись
-            this._renderEditModal(true);
-            document.getElementById('cjEditOverlay').classList.add('active');
+            navigateTo('cable-journal-add');
+        },
+
+        // ============================================================
+        // Инициализация страницы добавления (вызывается из navigateTo)
+        // ============================================================
+        initAddPage: function() {
+            const self = this;
+            const fieldsEl = document.getElementById('cjAddFields');
+            const errEl = document.getElementById('cjAddError');
+            const submitBtn = document.getElementById('cjAddSubmitBtn');
+
+            // Сбросить состояние
+            if (errEl) errEl.classList.remove('show');
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Добавить запись'; }
+            if (fieldsEl) fieldsEl.innerHTML = '<div class="admin-empty">Загрузка полей…</div>';
+
+            // Проверка прав (на случай если пользователь открыл URL напрямую)
+            if (!this._canEdit) {
+                if (fieldsEl) fieldsEl.innerHTML = '<div class="admin-empty">У вас нет прав на добавление записей</div>';
+                if (submitBtn) submitBtn.disabled = true;
+                return;
+            }
+
+            // Всегда перезагружаем колонки — чтобы получить свежие options
+            // (data validation могла измениться в Google Sheets).
+            this._api('cableJournal.getColumns', {}).then(function(res) {
+                if (res && res.columns) {
+                    self._columns = res.columns;
+                    self._canEdit = !!res.canEdit;
+                }
+                if (!self._canEdit) {
+                    if (fieldsEl) fieldsEl.innerHTML = '<div class="admin-empty">У вас нет прав на добавление записей</div>';
+                    if (submitBtn) submitBtn.disabled = true;
+                    return;
+                }
+                self._renderAddPage();
+            }).catch(function(err) {
+                if (fieldsEl) fieldsEl.innerHTML = '<div class="admin-empty">Ошибка загрузки полей: ' + (err.message || err) + '</div>';
+            });
+        },
+
+        // ============================================================
+        // Отрисовать поля страницы добавления
+        // ============================================================
+        _renderAddPage: function() {
+            const self = this;
+            const fieldsEl = document.getElementById('cjAddFields');
+            if (!fieldsEl) return;
+
+            // Порядок полей — как в Google Sheets (без num и added_at,
+            // они проставляются автоматически при appendRow).
+            const order = [
+                'designation',
+                'start',
+                'end',
+                'section',
+                'mark_project',
+                'cores_project',
+                'length_project',
+                'mark_actual',
+                'cores_actual',
+                'length_actual',
+                'department',
+                'purpose',
+                'project_no'
+            ];
+
+            let html = '';
+            order.forEach(function(key) {
+                html += self._renderField(key, { forAdd: true });
+            });
+            fieldsEl.innerHTML = html;
+        },
+
+        // ============================================================
+        // Сохранить новую запись со страницы добавления
+        // ============================================================
+        submitAdd: function() {
+            const self = this;
+            const errEl = document.getElementById('cjAddError');
+            const saveBtn = document.getElementById('cjAddSubmitBtn');
+            if (errEl) errEl.classList.remove('show');
+
+            if (!this._canEdit) {
+                if (errEl) { errEl.textContent = 'У вас нет прав на добавление'; errEl.classList.add('show'); }
+                return;
+            }
+
+            // Собрать данные из полей
+            const data = {};
+            const inputs = document.querySelectorAll('#cjAddFields [data-key]');
+            for (let i = 0; i < inputs.length; i++) {
+                const inp = inputs[i];
+                const key = inp.getAttribute('data-key');
+                const col = this._columns.find(function(c) { return c.key === key; });
+                if (!col || col.readOnly) continue;
+                let v = inp.value.trim();
+                if (col.type === 'number' && v !== '') {
+                    const n = parseFloat(v.replace(',', '.'));
+                    v = isNaN(n) ? v : n;
+                }
+                data[key] = v;
+            }
+
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Добавление…';
+
+            this._api('cableJournal.appendRow', { data: data }).then(function(res) {
+                if (typeof KipToast !== 'undefined' && KipToast.show) {
+                    KipToast.show('Запись добавлена (№' + res.num + ')');
+                }
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Добавить запись';
+                // Вернуться к списку и обновить
+                navigateTo('cable-journal-edit');
+                setTimeout(function() {
+                    if (typeof KipCableJournal !== 'undefined') KipCableJournal.load();
+                }, 80);
+            }).catch(function(err) {
+                if (errEl) {
+                    errEl.textContent = err.message || err;
+                    errEl.classList.add('show');
+                }
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Добавить запись';
+            });
         },
 
         // ============================================================
@@ -19627,27 +19840,51 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             document.getElementById('cjEditError').classList.remove('show');
         },
 
-        _renderField: function(key) {
+        _renderField: function(key, opts) {
+            const self = this;
             const col = this._columns.find(function(c) { return c.key === key; });
             if (!col) return '';
             const val = this._editing ? this._editing[key] : '';
             const displayVal = (val === null || val === undefined) ? '' : String(val);
             const readOnly = col.readOnly || !this._canEdit;
-            const id = 'cjField_' + key;
+            const forAdd = !!(opts && opts.forAdd);
+            const id = (forAdd ? 'cjAddField_' : 'cjField_') + key;
+            const hasOptions = Array.isArray(col.options) && col.options.length > 0;
 
             let html = '<div class="cj-field-group">';
             html += '<label class="cj-field-label" for="' + id + '">' + this._esc(col.label) + '</label>';
 
-            // Длинные текстовые поля — textarea
-            const useTextarea = ['start', 'end', 'section', 'designation'].indexOf(key) !== -1;
-            if (useTextarea) {
-                html += '<textarea id="' + id + '" class="cj-field-textarea" data-key="' + key + '"' +
-                    (readOnly ? ' readonly' : '') + '>' + this._esc(displayVal) + '</textarea>';
+            if (hasOptions) {
+                // Поле с выпадающим списком: data validation Google Sheets
+                // (или fallback для department/purpose — уникальные значения из данных).
+                html += '<select id="' + id + '" class="cj-field-input cj-field-select" data-key="' + key + '"' +
+                    (readOnly ? ' disabled' : '') + '>';
+                html += '<option value="">' + (readOnly ? '—' : '— выберите —') + '</option>';
+                col.options.forEach(function(v) {
+                    const sv = String(v);
+                    const sel = (displayVal === sv) ? ' selected' : '';
+                    html += '<option value="' + self._esc(sv) + '"' + sel + '>' + self._esc(sv) + '</option>';
+                });
+                // Если текущего значения нет в списке (например, устаревшая запись),
+                // показываем его отдельной опцией, чтобы пользователь видел значение.
+                if (displayVal && col.options.indexOf(displayVal) === -1 &&
+                    col.options.map(String).indexOf(displayVal) === -1) {
+                    html += '<option value="' + self._esc(displayVal) + '" selected>' +
+                        self._esc(displayVal) + ' (нет в списке)</option>';
+                }
+                html += '</select>';
             } else {
-                const type = col.type === 'number' ? 'number' : 'text';
-                html += '<input id="' + id + '" type="' + type + '" class="cj-field-input" data-key="' + key + '"' +
-                    ' value="' + this._esc(displayVal) + '"' +
-                    (readOnly ? ' readonly' : '') + '>';
+                // Длинные текстовые поля — textarea
+                const useTextarea = ['start', 'end', 'section', 'designation'].indexOf(key) !== -1;
+                if (useTextarea) {
+                    html += '<textarea id="' + id + '" class="cj-field-textarea" data-key="' + key + '"' +
+                        (readOnly ? ' readonly' : '') + '>' + this._esc(displayVal) + '</textarea>';
+                } else {
+                    const type = col.type === 'number' ? 'number' : 'text';
+                    html += '<input id="' + id + '" type="' + type + '" class="cj-field-input" data-key="' + key + '"' +
+                        ' value="' + this._esc(displayVal) + '"' +
+                        (readOnly ? ' readonly' : '') + '>';
+                }
             }
             html += '</div>';
             return html;
