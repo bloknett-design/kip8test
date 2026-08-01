@@ -18944,6 +18944,17 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     || allowed.indexOf('kip-ios') !== -1;
                 docsBottomBtn.style.display = hasDocsAccess ? '' : 'none';
             }
+
+            // ============================================================
+            // Кнопка "Выйти" в sidebar — скрывается для гостевой роли
+            // "Общий доступ" (гостю не из чего выходить, он уже не
+            // залогинен). Для всех остальных ролей — видна как обычно.
+            // ============================================================
+            const sidebarLogoutBtn = document.getElementById('sidebarLogoutBtn');
+            if (sidebarLogoutBtn) {
+                const isGuest = this._cachedRole === 'Общий доступ';
+                sidebarLogoutBtn.style.display = isGuest ? 'none' : '';
+            }
         },
 
         // ============================================================
@@ -19415,8 +19426,10 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         <div class="sidebar-item" onclick="showAboutModal(); toggleSidebar();">
             <span>О приложении</span>
         </div>
-        <!-- ===== Выход из аккаунта (KipAuth.logout) ===== -->
-        <div class="sidebar-item sidebar-logout" onclick="KipAuth.logout()">
+        <!-- ===== Выход из аккаунта (KipAuth.logout) =====
+             id="sidebarLogoutBtn" — скрывается в _applyRoleToUI()
+             для гостевой роли "Общий доступ", т.к. гостю не из чего выходить. -->
+        <div class="sidebar-item sidebar-logout" id="sidebarLogoutBtn" onclick="KipAuth.logout()">
             <span>Выйти</span>
         </div>
     </div>
