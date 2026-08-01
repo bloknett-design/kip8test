@@ -18263,7 +18263,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         // Структура (всё хранится как массивы page-id):
         //   _BASE_PAGES  — главная страница (доступна всем, включая гостей).
         //   _CALC_PAGES  — инженерные калькуляторы.
-        //   _LIBRARY_PAGES — библиотека (билеты + библиотека КИПиА).
+        //   _LIBRARY_PAGES — библиотека: «Экзаменационные билеты» + «Библиотека КИП и А».
         //   _KIP_IOS_PAGES — раздел КИП ИОС.
         //   _SECRET_PAGES — секретные кнопки (сапёр + телефонный справочник).
         //
@@ -18292,7 +18292,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                       'orifice-select', 'orifice-quick', 'orifice-dp', 'orifice-flow', 'orifice-diameter',
                       'circuit-breaker',
                       'geo-circle', 'geo-ring', 'geo-cylinder', 'geo-horiz', 'geo-sphere', 'geo-cone'],
-        _LIBRARY_PAGES: ['docs', 'library-internal', 'library-electro',
+        _LIBRARY_PAGES: ['docs', 'library', 'library-internal', 'library-electro',
                          'exam-tickets', 'tickets-4', 'tickets-5', 'tickets-6', 'tickets-1000v'],
         _KIP_IOS_PAGES: ['kip-ios',
                          'devices-prod', 'devices-type', 'devices-name', 'device-detail', 'dev-group',
