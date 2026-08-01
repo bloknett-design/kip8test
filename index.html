@@ -4813,11 +4813,11 @@
         font-weight: 600; word-break: break-all;
     }
 
-    /* Sidebar: user info section (above groups) */
+    /* Sidebar: user info section.
+       Расположен ВНИЗУ sidebar, под .sidebar-divider и над кнопкой "Обновить".
+       border-bottom/margin-bottom убраны — разделитель сверху уже есть. */
     .sidebar-user-info {
         padding: 14px 18px 12px;
-        border-bottom: 1px solid rgba(255,255,255,0.08);
-        margin-bottom: 8px;
         background: linear-gradient(135deg, rgba(74,143,199,0.08), rgba(74,143,199,0.02));
     }
     /* Flex-раскладка: email/роль слева, кнопка "Выйти" справа.
@@ -19304,8 +19304,6 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         </div>
     </div>
     <div class="sidebar-content">
-        <!-- ===== Информация о текущем пользователе (заполняется KipAuth) ===== -->
-        <div id="sidebarUserInfo" class="sidebar-user-info"></div>
         <!-- ===== Группа: КИП и А (6 подразделов) ===== -->
         <div class="sidebar-group" data-group="kipa">
         <div class="sidebar-group-title" onclick="toggleSidebarGroup(this.parentElement)">
@@ -19456,6 +19454,12 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         <!-- ===== Тонкий разделитель ===== -->
         <div class="sidebar-divider"></div>
 
+        <!-- ===== Информация о текущем пользователе (заполняется KipAuth) =====
+             Расположен ПОД разделительной линией, НАД кнопкой "Обновить".
+             Для залогиненных — email + роль + кнопка "Выйти".
+             Для гостей — "Гость" + кнопка "Войти в аккаунт". -->
+        <div id="sidebarUserInfo" class="sidebar-user-info"></div>
+
         <!-- ===== Сервисные кнопки (внизу шторки) ===== -->
         <div class="sidebar-item" onclick="refreshAppData(); toggleSidebar();">
             <span>Обновить</span>
@@ -19466,11 +19470,6 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         <div class="sidebar-item" onclick="showAboutModal(); toggleSidebar();">
             <span>О приложении</span>
         </div>
-        <!-- ============================================================
-             Кнопка "Выйти" перенесена в блок #sidebarUserInfo (справа от
-             email/роли) — см. _updateSidebarUserInfo() и CSS .sidebar-logout-icon.
-             Старый отдельный пункт "Выйти" в конце списка удалён.
-             ============================================================ -->
     </div>
 </div>
 
