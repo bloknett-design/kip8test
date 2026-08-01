@@ -4700,37 +4700,6 @@
         overflow-y: auto;
     }
     .auth-login-screen.active { display: flex; }
-    /* Системная кнопка "← Назад" в верхнем левом углу экрана входа.
-       Позиционируется absolutely относительно .auth-login-screen,
-       не зависит от .auth-login-card. Видна на обоих шагах входа. */
-    .auth-back-btn {
-        position: absolute;
-        top: 16px;
-        left: 16px;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 14px 8px 10px;
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 10px;
-        color: rgba(255, 255, 255, 0.85);
-        font-size: 14px;
-        font-weight: 500;
-        font-family: inherit;
-        cursor: pointer;
-        transition: background 0.15s, border-color 0.15s, transform 0.1s;
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        z-index: 1;
-    }
-    .auth-back-btn:active { transform: scale(0.96); }
-    .auth-back-btn:hover { background: rgba(74, 143, 199, 0.18); border-color: rgba(74, 143, 199, 0.5); }
-    [data-theme="light"] .auth-back-btn {
-        background: rgba(0, 0, 0, 0.04);
-        border-color: rgba(0, 0, 0, 0.12);
-        color: rgba(0, 0, 0, 0.75);
-    }
     .auth-login-card {
         background: rgba(30, 35, 50, 0.95);
         border: 1px solid rgba(74, 143, 199, 0.3);
@@ -4945,15 +4914,6 @@
      Показывается поверх приложения при отсутствии валидного токена.
      ============================================================ -->
 <div id="loginScreen" class="auth-login-screen">
-    <!-- Системная кнопка "← Назад" в верхнем левом углу.
-         На шаге 1 (email) → cancelLogin(): закрыть экран, вернуться в гостевой режим.
-         На шаге 2 (OTP) → backToStep1(): вернуться на шаг 1. -->
-    <button type="button" id="authBackBtn" class="auth-back-btn" onclick="KipAuth.handleBackButton()" aria-label="Назад">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"></polyline>
-        </svg>
-        <span>Назад</span>
-    </button>
     <div class="auth-login-card">
         <img src="images/icon-192.png" alt="КИПиА" class="auth-login-logo" onerror="this.style.display='none'">
         <div class="auth-login-title">КИПиА</div>
@@ -4964,6 +4924,9 @@
             <input type="email" id="authEmail" class="auth-field" placeholder="Ваш email" autocomplete="email" inputmode="email" autocapitalize="none">
             <button type="button" class="auth-btn" id="authSendBtn" onclick="KipAuth.sendOTP()">
                 Отправить код
+            </button>
+            <button type="button" class="auth-btn auth-btn-secondary" onclick="KipAuth.cancelLogin()">
+                ← Назад
             </button>
             <div class="auth-info">
                 Код подтверждения будет отправлен на вашу почту.<br>
