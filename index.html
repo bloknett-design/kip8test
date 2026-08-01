@@ -2354,43 +2354,14 @@
     /* ========== Кабельный журнал — страница просмотра записи ==========
        Открывается по клику на карточку в списке. Read-only: данные
        показываются как текст, без возможности редактировать или удалить.
-       Поля идут вертикально по одному в строке. */
+       Оформлена в стиле детальной карточки блокировки (lock-detail-card). */
     .cj-view-page-body {
         padding: 14px 14px 36px;
         max-width: 640px;
         margin: 0 auto;
     }
     .cj-view-fields {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-    }
-    .cj-view-fields .cj-field-group {
-        width: 100%;
-        flex: 0 0 100%;
-    }
-    /* Значение поля — выглядит как readonly-инпут, но это просто div.
-       Сохраняет визуальную консистентность со страницей добавления. */
-    .cj-view-value {
-        background: var(--card-bg, rgba(255,255,255,0.04));
-        border: 1px solid var(--border-color, rgba(255,255,255,0.08));
-        border-radius: 8px;
-        padding: 8px 10px;
-        font-size: 13px;
-        color: var(--text-primary, #fff);
-        font-family: inherit;
-        line-height: 1.45;
-        word-break: break-word;
-        white-space: pre-wrap;
-        min-height: 36px;
-        box-sizing: border-box;
-    }
-    .cj-view-value.cj-view-value-empty {
-        color: var(--text-secondary, rgba(255,255,255,0.35));
-        font-style: italic;
-    }
-    [data-theme="light"] .cj-view-value {
-        background: #f5f7fa;
+        display: block;
     }
 
     /* ========== Экзаменационные билеты ========== */
@@ -20070,51 +20041,62 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             const fieldsEl = document.getElementById('cjViewFields');
             if (!fieldsEl || !this._viewing) return;
 
-            // Порядок полей — как в Google Sheets.
+            // Порядок полей — как в Google Sheets. Группа — для чередующегося
+            // фона строки (как в карточке блокировки: lock-row-group-N).
             const order = [
-                'designation',
-                'start',
-                'end',
-                'section',
-                'mark_project',
-                'cores_project',
-                'length_project',
-                'mark_actual',
-                'cores_actual',
-                'length_actual',
-                'department',
-                'purpose',
-                'project_no',
-                'added_at'
+                { key: 'designation',   group: 1 },
+                { key: 'start',         group: 1 },
+                { key: 'end',           group: 1 },
+                { key: 'section',       group: 1 },
+                { key: 'mark_project',  group: 2 },
+                { key: 'cores_project', group: 2 },
+                { key: 'length_project',group: 2 },
+                { key: 'mark_actual',   group: 3 },
+                { key: 'cores_actual',  group: 3 },
+                { key: 'length_actual', group: 3 },
+                { key: 'department',    group: 4 },
+                { key: 'purpose',       group: 4 },
+                { key: 'project_no',    group: 4 },
+                { key: 'added_at',      group: 4 }
             ];
 
-            let html = '';
-            order.forEach(function(key) {
-                html += self._renderViewField(key);
+            // Карточка в стиле детального просмотра блокировок:
+            // .lock-detail-card > .lock-detail-rows > .lock-detail-row.lock-row-group-N
+            // Пустые поля пропускаются (как в lockRenderDetail).
+            let rowsHtml = '';
+            order.forEach(function(item) {
+                rowsHtml += self._renderViewField(item.key, item.group);
             });
+            let html = '<div class="lock-detail-card">';
+            html += '<div class="lock-detail-rows">';
+            html += rowsHtml;
+            html += '</div>';
+            html += '</div>';
             fieldsEl.innerHTML = html;
         },
 
         // ============================================================
-        // Сгенерировать одно поле страницы просмотра (label + значение как текст)
+        // Сгенерировать одну строку карточки просмотра (label + значение)
         // ============================================================
-        _renderViewField: function(key) {
+        _renderViewField: function(key, group) {
             const col = this._columns.find(function(c) { return c.key === key; });
             if (!col) return '';
             const val = this._viewing ? this._viewing[key] : '';
-            const displayVal = (val === null || val === undefined || val === '') ? '' : String(val);
-            const isEmpty = displayVal === '';
+            const raw = (val === null || val === undefined || val === '') ? '' : String(val);
+            // Пустые поля пропускаем — карточка показывает только заполненные
+            // данные, как в детальной карточке блокировки.
+            if (raw === '') return '';
             // Длина — добавляем единицу измерения; дата — форматируем локально.
-            let valHtml = this._esc(displayVal);
+            let valHtml = this._esc(raw);
             if (key === 'length_project' || key === 'length_actual') {
-                valHtml = this._esc(displayVal) + ' м';
+                valHtml = this._esc(raw) + ' м';
             } else if (key === 'added_at') {
-                valHtml = this._esc(this._formatDate(displayVal));
+                valHtml = this._esc(this._formatDate(raw));
             }
-            let html = '<div class="cj-field-group">';
-            html += '<div class="cj-field-label">' + this._esc(col.label) + '</div>';
-            html += '<div class="cj-view-value' + (isEmpty ? ' cj-view-value-empty' : '') + '">' +
-                (isEmpty ? '—' : valHtml) + '</div>';
+            const grpCls = group ? ' lock-row-group-' + group : '';
+            let html = '<div class="lock-detail-row' + grpCls + '">';
+            html += '<div class="lock-detail-label">' + this._esc(col.label) + '</div>';
+            html += '<div class="lock-detail-value">' + valHtml + '</div>';
             html += '</div>';
             return html;
         },
@@ -20407,7 +20389,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 // или fallback (уникальные значения из данных для
                 // section/mark_*/cores_*/department/purpose/project_no).
                 html += '<select id="' + id + '" class="cj-field-input cj-field-select" data-key="' + key + '">';
-                html += '<option value="">— выберите —</option>';
+                html += '<option value="">- выберите -</option>';
                 col.options.forEach(function(v) {
                     const sv = String(v);
                     html += '<option value="' + self._esc(sv) + '">' + self._esc(sv) + '</option>';
