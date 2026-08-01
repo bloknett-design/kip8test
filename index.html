@@ -19458,6 +19458,24 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         },
 
         // ============================================================
+        // Вычислить canEdit: проверить роль пользователя vs editRoles.
+        // Используется как fallback, если серверный эндпоинт (например,
+        // getColumns в старой версии CableJournal.gs) не вернул canEdit
+        // — иначе _canEdit сбросится в false и Админ не сможет добавить запись.
+        // ============================================================
+        _computeCanEdit: function(editRoles) {
+            if (!Array.isArray(editRoles) || editRoles.length === 0) return false;
+            let role = null;
+            try {
+                if (typeof KipAuth !== 'undefined' && KipAuth._cachedRole) {
+                    role = KipAuth._cachedRole;
+                }
+            } catch (e) { /* ignore */ }
+            if (!role) return false;
+            return editRoles.indexOf(role) !== -1;
+        },
+
+        // ============================================================
         // Инициализация страницы
         // ============================================================
         init: function() {
@@ -19470,7 +19488,14 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             ]).then(function(results) {
                 if (results[0]) {
                     self._columns = results[0].columns;
-                    self._canEdit = !!results[0].canEdit;
+                    // canEdit: сначала доверяем серверу; если сервер не вернул
+                    // поле (старая версия CableJournal.gs) — вычисляем из
+                    // editRoles и кэшированной роли пользователя (KipAuth._cachedRole).
+                    if (typeof results[0].canEdit === 'boolean') {
+                        self._canEdit = results[0].canEdit;
+                    } else if (results[0].editRoles) {
+                        self._canEdit = self._computeCanEdit(results[0].editRoles);
+                    }
                     document.getElementById('cjAddBtn').style.display = self._canEdit ? '' : 'none';
                 }
                 if (results[1]) {
@@ -19529,6 +19554,10 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             }).then(function(data) {
                 self._rows = data.rows || [];
                 self._total = data.total || 0;
+                // Серверный list всегда возвращает canEdit (и в старой, и в новой
+                // версии CableJournal.gs), поэтому здесь простой !! достаточно.
+                // Fallback на editRoles нужен только в init/initAddPage, где
+                // используется getColumns (а он раньше не возвращал canEdit).
                 self._canEdit = !!data.canEdit;
                 document.getElementById('cjAddBtn').style.display = self._canEdit ? '' : 'none';
                 self._render();
@@ -19689,7 +19718,15 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             this._api('cableJournal.getColumns', {}).then(function(res) {
                 if (res && res.columns) {
                     self._columns = res.columns;
-                    self._canEdit = !!res.canEdit;
+                    // canEdit: сначала доверяем серверу; если сервер не вернул
+                    // поле (старая версия CableJournal.gs) — вычисляем из
+                    // editRoles и кэшированной роли пользователя. Без этого
+                    // _canEdit сбрасывался в false и Админ не мог добавить запись.
+                    if (typeof res.canEdit === 'boolean') {
+                        self._canEdit = res.canEdit;
+                    } else if (res.editRoles) {
+                        self._canEdit = self._computeCanEdit(res.editRoles);
+                    }
                 }
                 if (!self._canEdit) {
                     if (fieldsEl) fieldsEl.innerHTML = '<div class="admin-empty">У вас нет прав на добавление записей</div>';
