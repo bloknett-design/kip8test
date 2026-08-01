@@ -18257,7 +18257,29 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         // 'ИТР_ИОС'    — Общий + КИП_ИОС + телефонный справочник.
         // 'Админ'      — полный доступ ['*'].
 
-        _PUBLIC_PAGES: ['dashboard', 'minesweeper'],
+        // ============================================================
+        // Карта доступа (Task 38, на основе "Карта ролей.xlsx" от пользователя).
+        // ============================================================
+        // Структура (всё хранится как массивы page-id):
+        //   _BASE_PAGES  — главная страница (доступна всем, включая гостей).
+        //   _CALC_PAGES  — инженерные калькуляторы.
+        //   _LIBRARY_PAGES — библиотека (билеты + библиотека КИПиА).
+        //   _KIP_IOS_PAGES — раздел КИП ИОС.
+        //   _SECRET_PAGES — секретные кнопки (сапёр + телефонный справочник).
+        //
+        // Карта ролей (из Excel):
+        //   Запрет         — нет доступа (только dashboard).
+        //   Общий доступ   — только калькуляторы. НЕ требует входа — гостевой режим.
+        //   КИП8           — калькуляторы + библиотека + секретные кнопки.
+        //   КИП8 pro       — то же, что КИП8.
+        //   КИП ИОС        — калькуляторы + библиотека + КИП ИОС + секретные.
+        //   КИП ИОС pro    — то же, что КИП ИОС.
+        //   ИТР8           — то же, что КИП ИОС.
+        //   ИТР8 pro       — то же, что КИП ИОС.
+        //   ИТР ИОС        — то же, что КИП ИОС.
+        //   Админ          — полный доступ ['*'] + админ-панель.
+        // ============================================================
+        _BASE_PAGES: ['dashboard'],
         _CALC_PAGES: ['calculators', 'calc-kipa', 'calc-electro', 'calc-geometry',
                       'converter', 'conv-temp', 'conv-pressure', 'conv-mass', 'conv-length',
                       'conv-volume', 'conv-flow', 'conv-density', 'conv-time',
@@ -18280,7 +18302,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                          'projects-prod', 'project-detail', 'project-group',
                          'cables-prod', 'cable-detail', 'cable-group',
                          'plan-114', 'plan-114-view'],
-        _PHONEBOOK_PAGES: ['phonebook'],
+        _SECRET_PAGES: ['minesweeper', 'phonebook'],
 
         ROLE_ACCESS: null,  // вычисляется в init()
 
@@ -18289,21 +18311,27 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         // ============================================================
         init: function() {
             if (this.ROLE_ACCESS) return; // уже инициализирована
-            const OBSHCHIJ = [].concat(this._PUBLIC_PAGES, this._CALC_PAGES, this._LIBRARY_PAGES);
-            const KIP8 = [].concat(OBSHCHIJ, this._PHONEBOOK_PAGES);
-            const KIP_IOS = [].concat(this._PUBLIC_PAGES, this._KIP_IOS_PAGES);
-            const KIP_IOS_PLUS = [].concat(OBSHCHIJ, this._KIP_IOS_PAGES);
-            const ITR8 = [].concat(OBSHCHIJ, this._PHONEBOOK_PAGES);
-            const ITR_IOS = [].concat(OBSHCHIJ, this._KIP_IOS_PAGES, this._PHONEBOOK_PAGES);
+            const BASE = this._BASE_PAGES;
+            const CALC = this._CALC_PAGES;
+            const LIB = this._LIBRARY_PAGES;
+            const KIP_IOS = this._KIP_IOS_PAGES;
+            const SECRET = this._SECRET_PAGES;
+
+            // Уровни доступа (по карте ролей):
+            const LVL_OBSHCHIJ = [].concat(BASE, CALC);
+            const LVL_KIP8 = [].concat(BASE, CALC, LIB, SECRET);
+            const LVL_KIP_IOS = [].concat(BASE, CALC, LIB, KIP_IOS, SECRET);
 
             this.ROLE_ACCESS = {
-                'Запрет': [],
-                'Общий': OBSHCHIJ,
-                'КИП8': KIP8,
-                'КИП_ИОС': KIP_IOS,
-                'КИП_ИОС+': KIP_IOS_PLUS,
-                'ИТР8': ITR8,
-                'ИТР_ИОС': ITR_IOS,
+                'Запрет': BASE,                // только главная
+                'Общий доступ': LVL_OBSHCHIJ,  // только калькуляторы (гостевой режим)
+                'КИП8': LVL_KIP8,
+                'КИП8 pro': LVL_KIP8,
+                'КИП ИОС': LVL_KIP_IOS,
+                'КИП ИОС pro': LVL_KIP_IOS,
+                'ИТР8': LVL_KIP_IOS,
+                'ИТР8 pro': LVL_KIP_IOS,
+                'ИТР ИОС': LVL_KIP_IOS,
                 'Админ': ['*']
             };
         },
@@ -18660,7 +18688,20 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 clearInterval(this._heartbeatTimer);
                 this._heartbeatTimer = null;
             }
-            this._showLoginScreen();
+            // ============================================================
+            // После выхода — гостевой режим (Task 38).
+            // ============================================================
+            // Не показываем экран входа принудительно — пользователь
+            // автоматически переходит в гостевой режим "Общий доступ"
+            // и может пользоваться калькуляторами. Кнопка "Войти" в sidebar
+            // позволит ему снова войти при необходимости.
+            // ============================================================
+            this._cachedRole = 'Общий доступ';
+            this._cachedEmail = null;
+            this._cachedUserId = null;
+            this._updateSidebarUserInfo();
+            this._applyRoleToUI();
+            if (typeof navigateTo === 'function') navigateTo('dashboard');
             // Закрыть sidebar если открыт.
             const sidebar = document.getElementById('sidebar');
             if (sidebar && sidebar.classList.contains('active')) {
@@ -18690,7 +18731,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 return;
             }
 
-            // Реальный logout.
+            // Реальный logout → переход в гостевой режим (Task 38).
             this.clearToken();
             // Очистить кэш роли.
             try {
@@ -18698,15 +18739,20 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 localStorage.removeItem('kip8_cached_email');
                 localStorage.removeItem('kip8_cached_user_id');
             } catch (e) {}
-            this._cachedRole = null;
-            this._cachedEmail = null;
-            this._cachedUserId = null;
             if (this._heartbeatTimer) {
                 clearInterval(this._heartbeatTimer);
                 this._heartbeatTimer = null;
             }
-            this._showLoginScreen();
-            this._showError('Сессия истекла. Войдите снова.');
+            // Гостевой режим вместо экрана входа.
+            this._cachedRole = 'Общий доступ';
+            this._cachedEmail = null;
+            this._cachedUserId = null;
+            this._updateSidebarUserInfo();
+            this._applyRoleToUI();
+            if (typeof navigateTo === 'function') navigateTo('dashboard');
+            // Тихое уведомление в консоль (не показываем ошибку пользователю,
+            // т.к. приложение остаётся доступным в гостевом режиме).
+            console.warn('[KipAuth] Сессия истекла → переход в гостевой режим');
         },
 
         // ============================================================
@@ -18803,12 +18849,32 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         // ============================================================
         // Обновить информацию о пользователе в sidebar.
         // ============================================================
+        // Для гостей (нет токена) — показываем "Гость" + кнопку "Войти".
+        // Для залогиненных — email + роль.
         _updateSidebarUserInfo: function() {
             const el = document.getElementById('sidebarUserInfo');
             if (!el) return;
-            el.innerHTML =
-                '<div class="sidebar-user-email">' + (this._cachedEmail || '—') + '</div>' +
-                '<div class="sidebar-user-role">' + (this._cachedRole || '—') + '</div>';
+            const token = this.getToken();
+            if (!token) {
+                // Гостевой режим.
+                el.innerHTML =
+                    '<div class="sidebar-user-email">Гость</div>' +
+                    '<div class="sidebar-user-role">Общий доступ</div>' +
+                    '<button type="button" id="guestLoginBtn" ' +
+                    'style="margin-top:8px;padding:8px 12px;background:#4a8fc7;color:#fff;border:none;' +
+                    'border-radius:6px;cursor:pointer;font-size:13px;width:100%;">' +
+                    'Войти в аккаунт</button>';
+                const btn = document.getElementById('guestLoginBtn');
+                if (btn) {
+                    btn.addEventListener('click', function() {
+                        KipAuth._showLoginScreen();
+                    });
+                }
+            } else {
+                el.innerHTML =
+                    '<div class="sidebar-user-email">' + (this._cachedEmail || '—') + '</div>' +
+                    '<div class="sidebar-user-role">' + (this._cachedRole || '—') + '</div>';
+            }
         },
 
         // ============================================================
@@ -18834,8 +18900,22 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
             const token = this.getToken();
             if (!token) {
-                console.log('[KipAuth.bootstrap] Нет токена → экран входа');
-                this._showLoginScreen();
+                // ============================================================
+                // ГОСТЕВОЙ РЕЖИМ (Task 38)
+                // ============================================================
+                // По карте ролей: "Общий доступ" не требует входа через почту и код.
+                // Любой, кто открыл приложение, получает доступ к инженерным
+                // калькуляторам как гость. Для доступа к библиотеке, КИП ИОС,
+                // секретным кнопкам и админ-панели нужно войти через email+OTP.
+                // ============================================================
+                console.log('[KipAuth.bootstrap] Гостевой режим: нет токена → роль "Общий доступ"');
+                this._cachedRole = 'Общий доступ';
+                this._cachedEmail = null;
+                this._cachedUserId = null;
+                this._lastRoleFetch = Date.now();
+                // НЕ запускаем heartbeat — у гостя нет сессии.
+                this._updateSidebarUserInfo();
+                this._applyRoleToUI();
                 this._initializing = false;
                 return;
             }
@@ -18902,17 +18982,20 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     (msg === 'session_expired' || msg === 'no_session');
 
                 if (isSessionInvalid) {
+                    // Сервер сказал, что сессии нет → гостевой режим (Task 38).
                     self.clearToken();
                     try {
                         localStorage.removeItem('kip8_cached_role');
                         localStorage.removeItem('kip8_cached_email');
                         localStorage.removeItem('kip8_cached_user_id');
                     } catch (e) {}
-                    self._cachedRole = null;
+                    self._cachedRole = 'Общий доступ';
                     self._cachedEmail = null;
                     self._cachedUserId = null;
-                    self._showLoginScreen();
-                    self._showError('Сессия истекла. Войдите снова.');
+                    self._updateSidebarUserInfo();
+                    self._applyRoleToUI();
+                    if (typeof navigateTo === 'function') navigateTo('dashboard');
+                    console.warn('[KipAuth.bootstrap] Сессия недействительна → гостевой режим');
                 } else {
                     // Сетевая ошибка, но кэша нет — показать вход с пояснением.
                     // Токен НЕ удаляем, чтобы пользователь мог обновить страницу.
@@ -18967,23 +19050,24 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     (msg === 'session_expired' || msg === 'no_session');
 
                 if (isSessionInvalid) {
-                    // Реальный logout — сервер сказал, что сессии нет.
-                    console.warn('[KipAuth._verifySessionInBackground] → LOGOUT: сервер сказал "' + msg + '"');
+                    // Реальный logout → переход в гостевой режим (Task 38).
+                    console.warn('[KipAuth._verifySessionInBackground] → ГОСТЕВОЙ РЕЖИМ: сервер сказал "' + msg + '"');
                     self.clearToken();
                     try {
                         localStorage.removeItem('kip8_cached_role');
                         localStorage.removeItem('kip8_cached_email');
                         localStorage.removeItem('kip8_cached_user_id');
                     } catch (e) {}
-                    self._cachedRole = null;
-                    self._cachedEmail = null;
-                    self._cachedUserId = null;
                     if (self._heartbeatTimer) {
                         clearInterval(self._heartbeatTimer);
                         self._heartbeatTimer = null;
                     }
-                    self._showLoginScreen();
-                    self._showError('Сессия истекла. Войдите снова.');
+                    self._cachedRole = 'Общий доступ';
+                    self._cachedEmail = null;
+                    self._cachedUserId = null;
+                    self._updateSidebarUserInfo();
+                    self._applyRoleToUI();
+                    if (typeof navigateTo === 'function') navigateTo('dashboard');
                 } else {
                     // Сетевая ошибка — пользователь остаётся в приложении.
                     console.warn('[KipAuth._verifySessionInBackground] Сетевая ошибка, токен сохранён');
