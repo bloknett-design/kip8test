@@ -1972,24 +1972,72 @@
     /* ========== Кабельный журнал (редактирование) ==========
        Дизайн: список-зебра во всю ширину экрана, непрозрачный фон,
        сгруппированный по "Отделение, производство" (sticky-заголовки групп).
-       Каждая группа сворачиваемая (клик по шапке). Карточки упрощены:
-       только обозначение, трасса, проложен. */
-    .cj-subtoolbar {
+       Каждая группа сворачиваемая (клик по шапке), по умолчанию свёрнута.
+       Карточки упрощены: только обозначение, трасса, проложен.
+       Кнопка '+' — в page-inline-header справа от поля поиска. */
+    /* Поле поиска в шапке Кабельного журнала — смещено влево, чтобы
+       освободить место под кнопку '+' справа. */
+    .cj-header-search {
+        right: 48px;  /* было 8px — уступаем 40px под + кнопку */
+    }
+    /* Заголовок страницы — увеличенный правый padding, чтобы текст не
+       залезал под + кнопку и search input. */
+    .page-inline-header:has(.cj-header-search) .page-inline-header-title {
+        padding: 0 176px 0 40px;  /* 8 + 32 + 8 + 120 + 8 = 176 */
+    }
+    .page-content.scrolled .page-inline-header:has(.cj-header-search) .page-inline-header-title {
+        padding: 0 156px 0 40px;  /* в scrolled: + 32 + 8 + 100 + 8 = 156 */
+    }
+    /* В сжатом состоянии (прокрутка вниз) search уже (100px), но + кнопка
+       остаётся того же размера. */
+    .page-content.scrolled .cj-header-search {
+        right: 48px;
+    }
+    @media (max-width: 359px) {
+        .cj-header-search { right: 44px; }
+        .page-inline-header:has(.cj-header-search) .page-inline-header-title {
+            padding: 0 152px 0 36px;  /* 8 + 28 + 8 + 100 + 8 = 152 */
+        }
+        .page-content.scrolled .page-inline-header:has(.cj-header-search) .page-inline-header-title {
+            padding: 0 140px 0 36px;
+        }
+    }
+
+    /* Кнопка '+' в шапке — маленькая квадратная, акцентного цвета. */
+    .cj-add-btn-inline {
+        position: absolute;
+        top: 50%;
+        right: 8px;
+        transform: translateY(-50%);
+        z-index: 3;
+        width: 32px;
+        height: 32px;
+        padding: 0;
         display: flex;
         align-items: center;
-        gap: 8px;
-        padding: 8px 12px;
-        background: var(--bg-color, #14181f);
-        border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.08));
+        justify-content: center;
+        background: rgba(199,150,74,0.18);
+        border: 1px solid rgba(199,150,74,0.45);
+        border-radius: 8px;
+        color: #c7964a;
+        font-size: 20px;
+        font-weight: 700;
+        line-height: 1;
+        font-family: inherit;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        transition: background 0.15s, transform 0.1s;
     }
-    .cj-subtoolbar .cj-add-btn {
-        flex: 0 0 auto;
-        margin-top: 0;  /* override .admin-add-btn margin-top: 8px */
+    .cj-add-btn-inline:active {
+        transform: translateY(-50%) scale(0.94);
+        background: rgba(199,150,74,0.32);
     }
-    /* Заголовок страницы соседствует с inline-search (как dev-* страницы).
-       Это правило нужно, чтобы текст заголовка не залезал под search input
-       (page-inline-header:has(.dev-header-search) padding уже задаёт 130px —
-       это работает, дополнительной настройки не требуется). */
+    [data-theme="light"] .cj-add-btn-inline {
+        background: rgba(199,150,74,0.14);
+        border-color: rgba(199,150,74,0.4);
+        color: #8a6428;
+    }
 
     /* Список во всю ширину, без padding-ов по бокам */
     .cj-list {
@@ -2108,14 +2156,6 @@
     }
     .cj-item-meta-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; }
     .cj-item-meta-label { color: var(--text-secondary, rgba(255,255,255,0.4)); }
-    .cj-pagination { display: flex; justify-content: center; gap: 8px; padding: 12px; }
-    .cj-pagination button {
-        background: var(--card-bg, #1a2233); color: var(--text-primary, #fff);
-        border: 1px solid var(--border-color, rgba(255,255,255,0.08));
-        border-radius: 8px; padding: 6px 14px; font-size: 12px; cursor: pointer;
-    }
-    .cj-pagination button:disabled { opacity: 0.4; cursor: default; }
-    .cj-pagination .cj-page-info { font-size: 11px; color: var(--text-secondary); align-self: center; }
 
     /* ========== Модалка редактирования записи ========== */
     .cj-edit-overlay {
@@ -5889,14 +5929,10 @@
                 <div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div>
                 <div class="page-inline-header-title">Кабельный журнал</div>
                 <input type="search" id="cjSearchInput" class="dev-header-search cj-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="KipCableJournal.handleSearchInput()">
-            </div>
-
-            <div class="cj-subtoolbar">
-                <button type="button" class="admin-add-btn cj-add-btn" id="cjAddBtn" onclick="KipCableJournal.openAdd()" style="display:none;">+ Добавить</button>
+                <button type="button" class="cj-add-btn-inline" id="cjAddBtn" onclick="KipCableJournal.openAdd()" style="display:none;" aria-label="Добавить запись">+</button>
             </div>
 
             <div id="cjList" class="cj-list"></div>
-            <div id="cjPagination" class="cj-pagination"></div>
         </div>
 
         <!-- ======================== КАБЕЛЬНЫЙ ЖУРНАЛ — ДОБАВЛЕНИЕ ЗАПИСИ ========================
@@ -19537,8 +19573,6 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         _rows: [],          // текущие загруженные записи
         _total: 0,
         _canEdit: false,
-        _page: 0,
-        _pageSize: 50,
         _searchTimer: null,
         _editing: null,     // текущая редактируемая запись ({_row: N, ...}) или null (новая)
 
@@ -19604,11 +19638,11 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
         // ============================================================
         // Загрузить список записей
+        // (все записи на одной странице — пагинация убрана, Task 56)
         // ============================================================
         load: function() {
             const self = this;
             const search = (document.getElementById('cjSearchInput').value || '').trim();
-            // Фильтр по отделениям убран из UI (Task 55), в запросе не передаём.
 
             document.getElementById('cjList').innerHTML =
                 '<div style="padding:32px;text-align:center;color:var(--text-secondary,rgba(255,255,255,0.5));font-size:13px;">Загрузка…</div>';
@@ -19616,14 +19650,11 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             this._api('cableJournal.list', {
                 options: {
                     search: search,
-                    limit: this._pageSize,
-                    offset: this._page * this._pageSize
+                    limit: 1000  // максимум на стороне сервера (см. CableJournal.gs)
                 }
             }).then(function(data) {
                 self._rows = data.rows || [];
                 self._total = data.total || 0;
-                // Серверный list всегда возвращает canEdit (и в старой, и в новой
-                // версии CableJournal.gs), поэтому здесь простой !! достаточно.
                 self._canEdit = !!data.canEdit;
                 document.getElementById('cjAddBtn').style.display = self._canEdit ? '' : 'none';
                 self._render();
@@ -19631,23 +19662,18 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 document.getElementById('cjList').innerHTML =
                     '<div style="padding:32px;text-align:center;color:var(--text-secondary,rgba(255,255,255,0.5));font-size:13px;">Ошибка: ' +
                     self._esc(err.message) + '</div>';
-                document.getElementById('cjPagination').innerHTML = '';
             });
         },
 
         // ============================================================
         // Отрисовать список
+        // (все записи на одной странице, группы свёрнуты по умолчанию — Task 56)
         // ============================================================
         _render: function() {
             const list = document.getElementById('cjList');
-            const pagination = document.getElementById('cjPagination');
 
-            const total = this._total;
-            const shown = this._rows.length;
-
-            if (shown === 0) {
+            if (this._rows.length === 0) {
                 list.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-secondary,rgba(255,255,255,0.5));font-size:13px;">Записей нет</div>';
-                pagination.innerHTML = '';
                 return;
             }
 
@@ -19674,9 +19700,10 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             groupOrder.forEach(function(g) {
                 const items = groups[g];
                 // Каждая группа — отдельный сворачиваемый блок.
-                // data-collapsed="false" — развёрнута по умолчанию.
-                // Заголовок-кнопка: клик toggles collapsed; sticky под шапкой.
-                html += '<div class="cj-group" data-collapsed="false">';
+                // data-collapsed="true" — свёрнута по умолчанию (Task 56).
+                // Клик по шапке toggle'ит состояние; CSS скрывает body и
+                // поворачивает caret.
+                html += '<div class="cj-group" data-collapsed="true">';
                 html += '  <div class="cj-group-header" onclick="KipCableJournal.toggleGroup(this)">';
                 html += '    <span class="cj-group-caret" aria-hidden="true">▼</span>';
                 html += '    <span class="cj-group-header-title">' + self._esc(g) + '</span>';
@@ -19719,18 +19746,6 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 html += '</div>';    // .cj-group
             });
             list.innerHTML = html;
-
-            // Пагинация
-            const totalPages = Math.ceil(total / this._pageSize);
-            if (totalPages <= 1) {
-                pagination.innerHTML = '';
-            } else {
-                let pHtml = '';
-                pHtml += '<button onclick="KipCableJournal.prevPage()" ' + (this._page === 0 ? 'disabled' : '') + '>← Назад</button>';
-                pHtml += '<span class="cj-page-info">' + (this._page + 1) + ' / ' + totalPages + '</span>';
-                pHtml += '<button onclick="KipCableJournal.nextPage()" ' + (this._page >= totalPages - 1 ? 'disabled' : '') + '>Вперёд →</button>';
-                pagination.innerHTML = pHtml;
-            }
         },
 
         // ============================================================
@@ -19757,30 +19772,12 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         },
 
         // ============================================================
-        // Пагинация
-        // ============================================================
-        prevPage: function() {
-            if (this._page > 0) {
-                this._page--;
-                this.load();
-            }
-        },
-        nextPage: function() {
-            const totalPages = Math.ceil(this._total / this._pageSize);
-            if (this._page < totalPages - 1) {
-                this._page++;
-                this.load();
-            }
-        },
-
-        // ============================================================
         // Поиск с debounce
         // ============================================================
         handleSearchInput: function() {
             const self = this;
             if (this._searchTimer) clearTimeout(this._searchTimer);
             this._searchTimer = setTimeout(function() {
-                self._page = 0;
                 self.load();
             }, 350);
         },
