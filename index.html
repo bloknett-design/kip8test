@@ -1979,32 +1979,104 @@
        редактирование и удаление записей в приложении запрещены).
        Кнопка '+' — в page-inline-header справа от поля поиска (только для
        ролей с правом добавления). */
-    /* Поле поиска в шапке Кабельного журнала — смещено влево, чтобы
-       освободить место под кнопку '+' справа. */
+    /* Поле поиска в шапке Кабельного журнала — compact toggle button
+       (.cj-icon-btn-inline) + раскрывающееся поле (.cj-header-search).
+       По умолчанию поле скрыто (hidden + CSS), при .search-open — показывается
+       поверх заголовка как overlay слева от кнопок. */
     .cj-header-search {
-        right: 56px;  /* + кнопка занимает right:8..40 (32px+border), gap 16px */
+        right: 48px;  /* + кнопка 8..40 (32px+border), search-кнопка 40..72? нет — кнопки рядом */
+        display: none;
     }
+    .cj-header-search.search-open {
+        display: block;
+        position: absolute;
+        top: 50%;
+        right: 48px;  /* левее обоих кнопок (search-btn @ 48..80, add-btn @ 8..40) */
+        transform: translateY(-50%);
+        z-index: 4;
+        width: 180px;
+        max-width: calc(100vw - 120px);
+        padding: 6px 10px;
+        border: 1px solid rgba(199,150,74,0.45);
+        border-radius: 8px;
+        background: #1a2233;
+        color: #e0e0e0;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        outline: none;
+        transition: none;
+    }
+    [data-theme="light"] .cj-header-search.search-open {
+        background: #fbf6ea;
+        border-color: rgba(199,150,74,0.5);
+        color: #1a1a1a;
+    }
+    .cj-header-search.search-open::placeholder { color: rgba(255,255,255,0.4); }
+    [data-theme="light"] .cj-header-search.search-open::placeholder { color: rgba(20,20,19,0.4); }
     /* Заголовок страницы — увеличенный правый padding, чтобы текст не
-       залезал под + кнопку и search input. */
-    .page-inline-header:has(.cj-header-search) .page-inline-header-title {
-        padding: 0 184px 0 40px;  /* 8 + 34 + 16 + 120 + 6 = 184 */
+       залезал под + кнопку и search-кнопку. */
+    .page-inline-header:has(.cj-icon-btn-inline) .page-inline-header-title {
+        padding: 0 92px 0 40px;  /* 2 кнопки по 32px + gap 8px + margins = 92 */
     }
-    .page-content.scrolled .page-inline-header:has(.cj-header-search) .page-inline-header-title {
-        padding: 0 164px 0 40px;  /* в scrolled: + 34 + 16 + 100 + 6 = 164 */
-    }
-    /* В сжатом состоянии (прокрутка вниз) search уже (100px), но + кнопка
-       остаётся того же размера. */
-    .page-content.scrolled .cj-header-search {
-        right: 56px;
+    .page-content.scrolled .page-inline-header:has(.cj-icon-btn-inline) .page-inline-header-title {
+        padding: 0 92px 0 40px;
     }
     @media (max-width: 359px) {
-        .cj-header-search { right: 52px; }
-        .page-inline-header:has(.cj-header-search) .page-inline-header-title {
-            padding: 0 160px 0 36px;  /* 8 + 30 + 14 + 100 + 8 = 160 */
+        .page-inline-header:has(.cj-icon-btn-inline) .page-inline-header-title {
+            padding: 0 84px 0 36px;
         }
-        .page-content.scrolled .page-inline-header:has(.cj-header-search) .page-inline-header-title {
-            padding: 0 148px 0 36px;
+        .page-content.scrolled .page-inline-header:has(.cj-icon-btn-inline) .page-inline-header-title {
+            padding: 0 84px 0 36px;
         }
+    }
+    /* Когда поиск раскрыт — title прячем, чтобы не было наложения. */
+    .page-inline-header:has(.cj-header-search.search-open) .page-inline-header-title {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    /* Кнопка-иконка поиска в шапке — компактная квадратная 32×32,
+       как кнопка '+'. Расположена левее '+' кнопки. */
+    .cj-icon-btn-inline {
+        position: absolute;
+        top: 50%;
+        right: 48px;  /* + кнопка на right:8..40, эта — на 40..72 */
+        transform: translateY(-50%);
+        z-index: 3;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 8px;
+        color: rgba(255,255,255,0.7);
+        line-height: 1;
+        font-family: inherit;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        transition: background 0.15s, transform 0.1s, color 0.15s;
+    }
+    .cj-icon-btn-inline:active {
+        transform: translateY(-50%) scale(0.94);
+    }
+    .cj-icon-btn-inline.active {
+        background: rgba(199,150,74,0.32);
+        border-color: rgba(199,150,74,0.7);
+        color: #d4a55a;
+    }
+    [data-theme="light"] .cj-icon-btn-inline {
+        background: transparent;
+        border-color: rgba(20,20,19,0.18);
+        color: rgba(20,20,19,0.7);
+    }
+    [data-theme="light"] .cj-icon-btn-inline.active {
+        background: rgba(199,150,74,0.22);
+        border-color: rgba(199,150,74,0.6);
+        color: #8a6428;
     }
 
     /* Кнопка '+' в шапке — маленькая квадратная, акцентного цвета. */
@@ -2222,12 +2294,6 @@
         max-width: 640px;
         margin: 0 auto;
     }
-    .cj-add-subtitle {
-        font-size: 11px;
-        color: var(--text-secondary, rgba(255,255,255,0.55));
-        margin-bottom: 16px;
-        line-height: 1.5;
-    }
     .cj-add-fields {
         display: flex;
         flex-direction: column;
@@ -2283,12 +2349,6 @@
         max-width: 640px;
         margin: 0 auto;
     }
-    .cj-view-subtitle {
-        font-size: 11px;
-        color: var(--text-secondary, rgba(255,255,255,0.55));
-        margin-bottom: 16px;
-        line-height: 1.5;
-    }
     .cj-view-fields {
         display: flex;
         flex-direction: column;
@@ -2321,20 +2381,6 @@
     [data-theme="light"] .cj-view-value {
         background: #f5f7fa;
     }
-    .cj-view-back-btn {
-        width: 100%;
-        margin-top: 14px;
-        padding: 11px 16px;
-        background: var(--accent-color, #4a8fc7);
-        color: #fff;
-        border: none;
-        border-radius: 10px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        font-family: inherit;
-    }
-    .cj-view-back-btn:active { opacity: 0.85; }
 
     /* ========== Экзаменационные билеты ========== */
     .ticket-cat-card { position: relative; border-radius: 14px; margin-bottom: 10px; cursor: pointer; transition: transform .15s; overflow: hidden; min-height: 120px; }
@@ -5958,7 +6004,10 @@
             <div class="page-inline-header">
                 <div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div>
                 <div class="page-inline-header-title">Кабельный журнал</div>
-                <input type="search" id="cjSearchInput" class="dev-header-search cj-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="KipCableJournal.handleSearchInput()">
+                <input type="search" id="cjSearchInput" class="dev-header-search cj-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="KipCableJournal.handleSearchInput()" hidden>
+                <button type="button" id="cjSearchToggleBtn" class="cj-icon-btn-inline" aria-label="Поиск" onclick="KipCableJournal.toggleSearch()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </button>
                 <button type="button" class="cj-add-btn-inline" id="cjAddBtn" onclick="KipCableJournal.openAdd()" style="display:none;" aria-label="Добавить запись">+</button>
             </div>
 
@@ -5978,7 +6027,6 @@
             </div>
 
             <div class="cj-add-page-body">
-                <div class="cj-add-subtitle">Заполните поля. № п/п и Дата добавления установятся автоматически.</div>
                 <div id="cjAddFields" class="cj-add-fields">
                     <div class="admin-empty">Загрузка полей…</div>
                 </div>
@@ -6000,11 +6048,9 @@
             </div>
 
             <div class="cj-view-page-body">
-                <div class="cj-view-subtitle" id="cjViewSubtitle"></div>
                 <div id="cjViewFields" class="cj-view-fields">
                     <div class="admin-empty">Загрузка…</div>
                 </div>
-                <button type="button" class="cj-view-back-btn" onclick="navigateTo('cable-journal-edit')">К списку</button>
             </div>
         </div>
 
@@ -19615,9 +19661,10 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
     // KipCableJournal — Кабельный журнал (редактирование из Google Sheets)
     // ============================================================
     // Серверные эндпоинты (CableJournal.gs):
-    //   cableJournal.list / getColumns / getFilters
-    //   cableJournal.appendRow / updateCell / deleteRow
-    // Доступ: чтение — всем авторизованным, запись — Админ, ИТР ИОС, КИП ИОС pro.
+    //   cableJournal.list / getColumns / getFilters / appendRow
+    // Редактирование и удаление существующих записей НЕ поддерживаются
+    // (сохранённые кабели только для чтения).
+    // Доступ: чтение — всем авторизованным, добавление — Админ, ИТР ИОС, КИП ИОС pro.
     // ============================================================
     const KipCableJournal = {
 
@@ -19627,6 +19674,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         _canEdit: false,
         _searchTimer: null,
         _viewing: null,     // текущая просматриваемая запись ({_row: N, ...}) или null
+        _cacheKey: 'kip8_cj_cache_v1',  // localStorage-ключ для кэша списка
+        _cacheColsKey: 'kip8_cj_cols_v1',  // localStorage-ключ для кэша колонок
 
         // ============================================================
         // API вызовы
@@ -19664,15 +19713,15 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         init: function() {
             // Кнопка "Добавить" видна только если canEdit
             const self = this;
-            // Первичная загрузка: схема + данные.
-            // Фильтр по отделениям убран из UI (Task 55), getFilters не нужен.
+            // 1. Мгновенно восстановить кэш колонок и данных — чтобы
+            //    пользователь не смотрел на "Загрузка…" при каждом открытии.
+            this._restoreCache();
+            // 2. Фоново подгрузить свежую схему + данные.
             this._api('cableJournal.getColumns', {}).catch(e => { console.error('getColumns:', e); return null; })
                 .then(function(columnsRes) {
                     if (columnsRes) {
                         self._columns = columnsRes.columns;
-                        // canEdit: сначала доверяем серверу; если сервер не вернул
-                        // поле (старая версия CableJournal.gs) — вычисляем из
-                        // editRoles и кэшированной роли пользователя (KipAuth._cachedRole).
+                        self._persistColumns(columnsRes);
                         if (typeof columnsRes.canEdit === 'boolean') {
                             self._canEdit = columnsRes.canEdit;
                         } else if (columnsRes.editRoles) {
@@ -19689,15 +19738,77 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         },
 
         // ============================================================
+        // Восстановить кэш из localStorage (мгновенный рендер).
+        // ============================================================
+        _restoreCache: function() {
+            try {
+                const colsJson = localStorage.getItem(this._cacheColsKey);
+                if (colsJson && !this._columns) {
+                    const colsRes = JSON.parse(colsJson);
+                    if (colsRes && colsRes.columns) {
+                        this._columns = colsRes.columns;
+                        if (typeof colsRes.canEdit === 'boolean') {
+                            this._canEdit = colsRes.canEdit;
+                        } else if (colsRes.editRoles) {
+                            this._canEdit = this._computeCanEdit(colsRes.editRoles);
+                        }
+                        const btn = document.getElementById('cjAddBtn');
+                        if (btn) btn.style.display = this._canEdit ? '' : 'none';
+                    }
+                }
+            } catch (e) { /* ignore parse errors */ }
+            try {
+                const dataJson = localStorage.getItem(this._cacheKey);
+                if (dataJson) {
+                    const cached = JSON.parse(dataJson);
+                    if (cached && Array.isArray(cached.rows)) {
+                        this._rows = cached.rows;
+                        this._total = cached.total || cached.rows.length;
+                        this._render();
+                    }
+                }
+            } catch (e) { /* ignore */ }
+        },
+
+        // ============================================================
+        // Сохранить колонки в localStorage.
+        // ============================================================
+        _persistColumns: function(colsRes) {
+            try {
+                localStorage.setItem(this._cacheColsKey, JSON.stringify(colsRes));
+            } catch (e) { /* quota or disabled */ }
+        },
+
+        // ============================================================
+        // Сохранить данные в localStorage.
+        // ============================================================
+        _persistData: function(rows, total) {
+            try {
+                localStorage.setItem(this._cacheKey, JSON.stringify({ rows: rows, total: total, ts: Date.now() }));
+            } catch (e) { /* quota or disabled */ }
+        },
+
+        // ============================================================
         // Загрузить список записей
         // (все записи на одной странице — пагинация убрана, Task 56)
+        // Если уже есть кэш — рендерим его немедленно и тихо обновляем
+        // в фоне (Task 58 — кэш в памяти приложения).
         // ============================================================
         load: function() {
             const self = this;
             const search = (document.getElementById('cjSearchInput').value || '').trim();
 
-            document.getElementById('cjList').innerHTML =
-                '<div style="padding:32px;text-align:center;color:var(--text-secondary,rgba(255,255,255,0.5));font-size:13px;">Загрузка…</div>';
+            // Если есть кэш и это не поисковый запрос — рендерим сразу.
+            const hasCache = this._rows && this._rows.length > 0;
+            const isSearch = !!search;
+            if (!hasCache && !isSearch) {
+                document.getElementById('cjList').innerHTML =
+                    '<div style="padding:32px;text-align:center;color:var(--text-secondary,rgba(255,255,255,0.5));font-size:13px;">Загрузка…</div>';
+            } else if (isSearch) {
+                // При поиске показываем loading (результаты могут отличаться от кэша)
+                document.getElementById('cjList').innerHTML =
+                    '<div style="padding:32px;text-align:center;color:var(--text-secondary,rgba(255,255,255,0.5));font-size:13px;">Поиск…</div>';
+            }
 
             this._api('cableJournal.list', {
                 options: {
@@ -19709,11 +19820,19 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 self._total = data.total || 0;
                 self._canEdit = !!data.canEdit;
                 document.getElementById('cjAddBtn').style.display = self._canEdit ? '' : 'none';
+                // Сохраняем в кэш только полный список (без поискового фильтра),
+                // чтобы при следующем открытии пользователь видел все записи.
+                if (!isSearch) {
+                    self._persistData(self._rows, self._total);
+                }
                 self._render();
             }).catch(function(err) {
-                document.getElementById('cjList').innerHTML =
-                    '<div style="padding:32px;text-align:center;color:var(--text-secondary,rgba(255,255,255,0.5));font-size:13px;">Ошибка: ' +
-                    self._esc(err.message) + '</div>';
+                // При ошибке — если кэш есть, оставляем его; иначе показываем ошибку.
+                if (!hasCache) {
+                    document.getElementById('cjList').innerHTML =
+                        '<div style="padding:32px;text-align:center;color:var(--text-secondary,rgba(255,255,255,0.5));font-size:13px;">Ошибка: ' +
+                        self._esc(err.message) + '</div>';
+                }
             });
         },
 
@@ -19805,12 +19924,28 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         // headerEl — элемент .cj-group-header, по которому кликнули.
         // Переключает data-collapsed у родительского .cj-group;
         // CSS скрывает .cj-group-body и поворачивает caret.
+        //
+        // Аккордеон (Task 58): при разворачивании текущей группы —
+        // все остальные открытые группы сворачиваются. Только одна
+        // группа может быть открыта одновременно.
         // ============================================================
         toggleGroup: function(headerEl) {
             const groupEl = headerEl ? headerEl.parentElement : null;
             if (!groupEl || !groupEl.classList.contains('cj-group')) return;
-            const collapsed = groupEl.getAttribute('data-collapsed') === 'true';
-            groupEl.setAttribute('data-collapsed', collapsed ? 'false' : 'true');
+            const willCollapse = groupEl.getAttribute('data-collapsed') === 'true' ? false : true;
+            // Если собираемся открыть (willCollapse=false) — закрыть все остальные.
+            if (!willCollapse) {
+                const list = document.getElementById('cjList');
+                if (list) {
+                    const others = list.querySelectorAll('.cj-group[data-collapsed="false"]');
+                    for (let i = 0; i < others.length; i++) {
+                        if (others[i] !== groupEl) {
+                            others[i].setAttribute('data-collapsed', 'true');
+                        }
+                    }
+                }
+            }
+            groupEl.setAttribute('data-collapsed', willCollapse ? 'true' : 'false');
         },
 
         // Русская плюрализация для счётчика в шапке группы
@@ -19832,6 +19967,34 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             this._searchTimer = setTimeout(function() {
                 self.load();
             }, 350);
+        },
+
+        // ============================================================
+        // Toggle компактного поиска в шапке.
+        // Кнопка-иконка переключает видимость поля ввода.
+        // При раскрытии — фокус на поле; при скрытии — очистка + reload.
+        // ============================================================
+        toggleSearch: function() {
+            const input = document.getElementById('cjSearchInput');
+            const btn = document.getElementById('cjSearchToggleBtn');
+            if (!input || !btn) return;
+            const isOpen = input.classList.contains('search-open');
+            if (isOpen) {
+                // Закрыть
+                input.classList.remove('search-open');
+                input.removeAttribute('open');
+                btn.classList.remove('active');
+                if (input.value) {
+                    input.value = '';
+                    this.load();
+                }
+            } else {
+                // Открыть
+                input.classList.add('search-open');
+                input.setAttribute('open', '');
+                btn.classList.add('active');
+                setTimeout(function() { try { input.focus(); } catch (e) {} }, 30);
+            }
         },
 
         // ============================================================
@@ -19859,13 +20022,11 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             const self = this;
             const fieldsEl = document.getElementById('cjViewFields');
             const titleEl = document.getElementById('cjViewTitle');
-            const subtitleEl = document.getElementById('cjViewSubtitle');
 
             // Если запись не выбрана — показываем ошибку
             if (!this._viewing) {
                 if (fieldsEl) fieldsEl.innerHTML = '<div class="admin-empty">Запись не выбрана. Вернитесь к списку.</div>';
                 if (titleEl) titleEl.textContent = 'Запись';
-                if (subtitleEl) subtitleEl.textContent = '';
                 return;
             }
 
@@ -19874,12 +20035,6 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             // Заголовок — обозначение кабеля (или № записи как fallback)
             if (titleEl) {
                 titleEl.textContent = row.designation || ('Запись №' + (row.num || '?'));
-            }
-            if (subtitleEl) {
-                const parts = [];
-                if (row.num) parts.push('№ ' + row.num);
-                if (row.added_at) parts.push('добавлена: ' + this._formatDate(row.added_at));
-                subtitleEl.textContent = parts.join(' · ');
             }
 
             // Если колонки ещё не загружены — подтянем их
