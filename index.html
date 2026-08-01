@@ -1988,6 +1988,140 @@
     .create-user-field option { background: #1a1f2e; color: #fff; }
     [data-theme="light"] .create-user-field option { background: #fff; color: #1a1a1a; }
 
+    /* ========== Кабельный журнал (редактирование) ========== */
+    .cable-journal-toolbar { flex-wrap: wrap; gap: 6px; }
+    .cable-journal-toolbar .admin-search { flex: 1 1 100%; min-width: 0; }
+    .cable-journal-toolbar .admin-select { flex: 1 1 calc(50% - 6px); min-width: 0; font-size: 12px; padding: 6px 8px; }
+    .cable-journal-toolbar .admin-add-btn { flex: 0 0 auto; }
+    .cable-journal-toolbar .admin-refresh-btn { flex: 0 0 auto; }
+    .cj-list { padding: 8px 12px; }
+    .cj-item {
+        background: var(--card-bg, #1a2233);
+        border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+        border-radius: 10px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: background .15s, border-color .15s;
+    }
+    .cj-item:active { background: rgba(120,160,200,0.12); }
+    [data-theme="light"] .cj-item { background: #fff; border-color: rgba(0,0,0,0.08); }
+    [data-theme="light"] .cj-item:active { background: rgba(120,160,200,0.08); }
+    .cj-item-header {
+        display: flex; justify-content: space-between; align-items: baseline;
+        margin-bottom: 4px; gap: 8px;
+    }
+    .cj-item-num {
+        font-weight: 600; font-size: 11px; color: var(--accent-color, #6aa8e0);
+        white-space: nowrap;
+    }
+    .cj-item-designation {
+        font-size: 13px; font-weight: 500; color: var(--text-primary, #fff);
+        flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .cj-item-meta {
+        font-size: 11px; color: var(--text-secondary, rgba(255,255,255,0.55));
+        line-height: 1.5;
+    }
+    .cj-item-meta-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; }
+    .cj-item-meta-label { color: var(--text-secondary, rgba(255,255,255,0.4)); }
+    .cj-pagination { display: flex; justify-content: center; gap: 8px; padding: 12px; }
+    .cj-pagination button {
+        background: var(--card-bg, #1a2233); color: var(--text-primary, #fff);
+        border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+        border-radius: 8px; padding: 6px 14px; font-size: 12px; cursor: pointer;
+    }
+    .cj-pagination button:disabled { opacity: 0.4; cursor: default; }
+    .cj-pagination .cj-page-info { font-size: 11px; color: var(--text-secondary); align-self: center; }
+
+    /* ========== Модалка редактирования записи ========== */
+    .cj-edit-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+        backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+        display: flex; align-items: flex-end; justify-content: center;
+        z-index: 1000; opacity: 0; pointer-events: none;
+        transition: opacity .2s;
+    }
+    .cj-edit-overlay.active { opacity: 1; pointer-events: auto; }
+    .cj-edit-modal {
+        background: var(--bg-color, #14181f);
+        border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+        border-radius: 14px 14px 0 0;
+        padding: 18px 16px 24px;
+        width: 100%; max-width: 540px;
+        max-height: 90vh; overflow-y: auto;
+        position: relative;
+        transform: translateY(100%);
+        transition: transform .25s ease-out;
+    }
+    .cj-edit-overlay.active .cj-edit-modal { transform: translateY(0); }
+    [data-theme="light"] .cj-edit-modal { background: #fff; }
+    .cj-edit-close {
+        position: absolute; top: 10px; right: 10px;
+        width: 28px; height: 28px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; background: rgba(255,255,255,0.05);
+    }
+    [data-theme="light"] .cj-edit-close { background: rgba(0,0,0,0.05); }
+    .cj-edit-title { font-size: 17px; font-weight: 600; color: var(--text-primary, #fff); margin-bottom: 4px; padding-right: 36px; }
+    .cj-edit-subtitle { font-size: 11px; color: var(--text-secondary, rgba(255,255,255,0.5)); margin-bottom: 14px; }
+    .cj-edit-fields { display: flex; flex-direction: column; gap: 10px; }
+    .cj-field-group {
+        display: flex; flex-direction: column; gap: 3px;
+    }
+    .cj-field-label {
+        font-size: 11px; color: var(--text-secondary, rgba(255,255,255,0.55));
+        font-weight: 500;
+    }
+    .cj-field-input, .cj-field-textarea {
+        background: var(--card-bg, rgba(255,255,255,0.04));
+        border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 13px;
+        color: var(--text-primary, #fff);
+        font-family: inherit;
+        outline: none;
+        transition: border-color .15s;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .cj-field-input:focus, .cj-field-textarea:focus { border-color: var(--accent-color, #6aa8e0); }
+    .cj-field-textarea { resize: vertical; min-height: 56px; font-family: inherit; }
+    .cj-field-input:read-only { opacity: 0.55; }
+    [data-theme="light"] .cj-field-input, [data-theme="light"] .cj-field-textarea { background: #f5f7fa; }
+    .cj-field-row { display: flex; gap: 8px; }
+    .cj-field-row > .cj-field-group { flex: 1; }
+    .cj-save-btn {
+        width: 100%; margin-top: 14px;
+        padding: 11px 16px;
+        background: var(--accent-color, #4a8fc7); color: #fff;
+        border: none; border-radius: 10px;
+        font-size: 14px; font-weight: 600;
+        cursor: pointer;
+    }
+    .cj-save-btn:active { opacity: 0.85; }
+    .cj-delete-btn {
+        width: 100%; margin-top: 8px;
+        padding: 10px 16px;
+        background: transparent; color: #d64545;
+        border: 1px solid rgba(214,69,69,0.4); border-radius: 10px;
+        font-size: 13px; font-weight: 500;
+        cursor: pointer;
+    }
+    .cj-delete-btn:active { background: rgba(214,69,69,0.1); }
+    .cj-edit-error {
+        margin-top: 10px; padding: 8px 10px;
+        background: rgba(214,69,69,0.1);
+        border: 1px solid rgba(214,69,69,0.3);
+        border-radius: 8px;
+        font-size: 12px; color: #d64545;
+        display: none;
+    }
+    .cj-edit-error.show { display: block; }
+    .cj-field-input option, .cj-field-textarea option { background: #1a1f2e; color: #fff; }
+    [data-theme="light"] .cj-field-input option, [data-theme="light"] .cj-field-textarea option { background: #fff; color: #1a1a1a; }
+
     /* ========== Экзаменационные билеты ========== */
     .ticket-cat-card { position: relative; border-radius: 14px; margin-bottom: 10px; cursor: pointer; transition: transform .15s; overflow: hidden; min-height: 120px; }
     .ticket-cat-card:active { transform: scale(0.97); }
@@ -5807,6 +5941,28 @@
             <div id="cableDetailContent"></div>
         </div>
 
+        <!-- ======================== КАБЕЛЬНЫЙ ЖУРНАЛ (РЕДАКТИРОВАНИЕ) ========================
+             Доступ: Админ, ИТР ИОС, КИП ИОС pro.
+             Данные: напрямую из Google Sheets "Кабельный журнал" через Apps Script. -->
+        <div id="page-cable-journal-edit" class="page-content">
+            <div class="page-inline-header">
+                <div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div>
+                <div class="page-inline-header-title">Кабельный журнал</div>
+            </div>
+
+            <div class="admin-toolbar cable-journal-toolbar">
+                <input type="search" id="cjSearchInput" class="admin-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="KipCableJournal.handleSearchInput()">
+                <select id="cjDeptFilter" class="admin-select" onchange="KipCableJournal.load()"></select>
+                <select id="cjPurposeFilter" class="admin-select" onchange="KipCableJournal.load()"></select>
+                <button type="button" class="admin-add-btn" id="cjAddBtn" onclick="KipCableJournal.openAdd()">+ Добавить</button>
+                <button type="button" class="admin-refresh-btn" onclick="KipCableJournal.load()">↻</button>
+            </div>
+
+            <div id="cjInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
+            <div id="cjList" class="cj-list"></div>
+            <div id="cjPagination" class="cj-pagination"></div>
+        </div>
+
         <!-- ======================== СПИСОК КАБЕЛЕЙ ВНУТРИ ГРУППЫ ======================== -->
         <div id="page-cable-group" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="cableGroupTitle">Кабели</div></div>
@@ -6004,6 +6160,10 @@
                     <option value="ADMIN_RESET_LOGIN">Сброс входа</option>
                     <option value="ADMIN_CREATE_USER">Создание пользователя</option>
                     <option value="ADMIN_ACCESS_DENIED">Отказ в доступе</option>
+                    <option value="CABLE_JOURNAL_APPEND">Каб. журнал: добавление</option>
+                    <option value="CABLE_JOURNAL_UPDATE">Каб. журнал: изменение</option>
+                    <option value="CABLE_JOURNAL_DELETE">Каб. журнал: удаление</option>
+                    <option value="CABLE_JOURNAL_ACCESS_DENIED">Каб. журнал: отказ в доступе</option>
                 </select>
                 <button type="button" class="admin-refresh-btn" onclick="KipAdmin.loadLogs()">↻</button>
             </div>
@@ -14469,6 +14629,7 @@
         if (page === 'cables-prod') { setTimeout(() => { if (typeof cablesInitSorted === 'function') cablesInitSorted('prod'); }, 30); }
         if (page === 'cable-detail') { setTimeout(() => { if (typeof cableRenderDetail === 'function') cableRenderDetail(); }, 30); }
         if (page === 'cable-group') { setTimeout(() => { if (typeof cablesRenderGroup === 'function') cablesRenderGroup(); }, 30); }
+        if (page === 'cable-journal-edit') { setTimeout(() => { if (typeof KipCableJournal !== 'undefined') KipCableJournal.init(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof devInitEntryButton === 'function') devInitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof kipIOSUpdateLastChange === 'function') kipIOSUpdateLastChange(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof lockInitEntryButton === 'function') lockInitEntryButton(); }, 30); }
@@ -18915,6 +19076,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                          'regulators-prod', 'regulator-detail', 'regulator-group',
                          'projects-prod', 'project-detail', 'project-group',
                          'cables-prod', 'cable-detail', 'cable-group',
+                         'cable-journal-edit',
                          'plan-114', 'plan-114-view'],
         _SECRET_PAGES: ['minesweeper', 'phonebook'],
 
@@ -19568,6 +19730,17 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 const isAdmin = this._cachedRole === 'Админ';
                 sidebarAdminBtn.style.display = isAdmin ? '' : 'none';
             }
+
+            // ============================================================
+            // Кнопка "Кабельный журнал (ред.)" — видна ролям с правом записи:
+            // Админ, ИТР ИОС, КИП ИОС pro.
+            // ============================================================
+            const cjEditBtn = document.getElementById('sidebarCableJournalEditBtn');
+            if (cjEditBtn) {
+                const editRoles = ['Админ', 'ИТР ИОС', 'КИП ИОС pro'];
+                const canEditCj = editRoles.indexOf(this._cachedRole) !== -1;
+                cjEditBtn.style.display = canEditCj ? '' : 'none';
+            }
         },
 
         // ============================================================
@@ -19825,6 +19998,468 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
     // Все серверные эндпоинты уже реализованы в Utils.gs (Admin-объект):
     //   adminListUsers / adminUpdateRole / adminResetLogin
     //   adminListSessions / adminListLogs
+    // ============================================================
+
+    // ============================================================
+    // KipCableJournal — Кабельный журнал (редактирование из Google Sheets)
+    // ============================================================
+    // Серверные эндпоинты (CableJournal.gs):
+    //   cableJournal.list / getColumns / getFilters
+    //   cableJournal.appendRow / updateCell / deleteRow
+    // Доступ: чтение — всем авторизованным, запись — Админ, ИТР ИОС, КИП ИОС pro.
+    // ============================================================
+    const KipCableJournal = {
+
+        _columns: null,    // схема колонок
+        _rows: [],          // текущие загруженные записи
+        _total: 0,
+        _canEdit: false,
+        _page: 0,
+        _pageSize: 50,
+        _searchTimer: null,
+        _filters: null,     // { departments: [], purposes: [] }
+        _editing: null,     // текущая редактируемая запись ({_row: N, ...}) или null (новая)
+
+        // ============================================================
+        // API вызовы
+        // ============================================================
+        _api: function(action, payload) {
+            const token = KipAuth.getToken();
+            if (!token) return Promise.reject(new Error('Нет токена — войдите в аккаунт'));
+            // Используем KipAuth.api() — он корректно обрабатывает
+            // Content-Type: text/plain (без CORS-preflight), ошибки сети,
+            // и возвращает уже data.data (не весь объект ответа).
+            return KipAuth.api(action, Object.assign({ token: token }, payload || {}));
+        },
+
+        // ============================================================
+        // Инициализация страницы
+        // ============================================================
+        init: function() {
+            // Кнопка "Добавить" видна только если canEdit
+            const self = this;
+            // Первичная загрузка: схема + фильтры + данные
+            Promise.all([
+                this._api('cableJournal.getColumns', {}).catch(e => { console.error('getColumns:', e); return null; }),
+                this._api('cableJournal.getFilters', {}).catch(e => { console.error('getFilters:', e); return null; })
+            ]).then(function(results) {
+                if (results[0]) {
+                    self._columns = results[0].columns;
+                    self._canEdit = !!results[0].canEdit;
+                    document.getElementById('cjAddBtn').style.display = self._canEdit ? '' : 'none';
+                }
+                if (results[1]) {
+                    self._filters = results[1];
+                    self._populateFilters();
+                }
+                self.load();
+            }).catch(function(err) {
+                document.getElementById('cjInfo').textContent = 'Ошибка: ' + err.message;
+                document.getElementById('cjList').innerHTML = '';
+            });
+        },
+
+        // ============================================================
+        // Заполнить <select> фильтров
+        // ============================================================
+        _populateFilters: function() {
+            const deptSel = document.getElementById('cjDeptFilter');
+            const purposeSel = document.getElementById('cjPurposeFilter');
+            deptSel.innerHTML = '<option value="">Все отделения</option>';
+            purposeSel.innerHTML = '<option value="">Все назначения</option>';
+            if (this._filters) {
+                this._filters.departments.forEach(function(d) {
+                    const opt = document.createElement('option');
+                    opt.value = d; opt.textContent = d;
+                    deptSel.appendChild(opt);
+                });
+                this._filters.purposes.forEach(function(p) {
+                    const opt = document.createElement('option');
+                    opt.value = p; opt.textContent = p;
+                    purposeSel.appendChild(opt);
+                });
+            }
+        },
+
+        // ============================================================
+        // Загрузить список записей
+        // ============================================================
+        load: function() {
+            const self = this;
+            const search = (document.getElementById('cjSearchInput').value || '').trim();
+            const dept = document.getElementById('cjDeptFilter').value;
+            const purpose = document.getElementById('cjPurposeFilter').value;
+
+            document.getElementById('cjInfo').textContent = 'Загрузка…';
+            document.getElementById('cjList').innerHTML = '';
+
+            this._api('cableJournal.list', {
+                options: {
+                    search: search,
+                    department: dept,
+                    purpose: purpose,
+                    limit: this._pageSize,
+                    offset: this._page * this._pageSize
+                }
+            }).then(function(data) {
+                self._rows = data.rows || [];
+                self._total = data.total || 0;
+                self._canEdit = !!data.canEdit;
+                document.getElementById('cjAddBtn').style.display = self._canEdit ? '' : 'none';
+                self._render();
+            }).catch(function(err) {
+                document.getElementById('cjInfo').textContent = 'Ошибка: ' + err.message;
+                document.getElementById('cjList').innerHTML = '';
+                document.getElementById('cjPagination').innerHTML = '';
+            });
+        },
+
+        // ============================================================
+        // Отрисовать список
+        // ============================================================
+        _render: function() {
+            const info = document.getElementById('cjInfo');
+            const list = document.getElementById('cjList');
+            const pagination = document.getElementById('cjPagination');
+
+            const total = this._total;
+            const shown = this._rows.length;
+            const from = this._page * this._pageSize + 1;
+            const to = from + shown - 1;
+            info.textContent = 'Всего: ' + total + (shown > 0 ? ' · показаны ' + from + '–' + to : '') +
+                (this._canEdit ? ' · редактирование разрешено' : ' · только чтение');
+
+            if (shown === 0) {
+                list.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-secondary,rgba(255,255,255,0.5));font-size:13px;">Записей нет</div>';
+                pagination.innerHTML = '';
+                return;
+            }
+
+            const self = this;
+            let html = '';
+            this._rows.forEach(function(row) {
+                const num = row.num || '?';
+                const designation = self._esc(row.designation || '(без обозначения)');
+                const start = self._esc(row.start || '');
+                const end = self._esc(row.end || '');
+                const markActual = self._esc(row.mark_actual || '');
+                const lengthActual = row.length_actual != null ? row.length_actual : '';
+                const department = self._esc(row.department || '');
+                const purpose = self._esc(row.purpose || '');
+
+                html += '<div class="cj-item" onclick="KipCableJournal.openEdit(' + row._row + ')">';
+                html += '  <div class="cj-item-header">';
+                html += '    <span class="cj-item-num">№' + num + '</span>';
+                html += '    <span class="cj-item-designation">' + designation + '</span>';
+                html += '  </div>';
+                html += '  <div class="cj-item-meta">';
+                if (start || end) {
+                    html += '  <div><span class="cj-item-meta-label">трасса:</span> ' + start + ' → ' + end + '</div>';
+                }
+                if (markActual || lengthActual) {
+                    html += '  <div class="cj-item-meta-row"><span class="cj-item-meta-label">проложен:</span> ' + markActual + (lengthActual ? ' · ' + lengthActual + ' м' : '') + '</div>';
+                }
+                if (department || purpose) {
+                    html += '  <div class="cj-item-meta-row"><span class="cj-item-meta-label">отдел/назн:</span> ' + department + (department && purpose ? ' · ' : '') + purpose + '</div>';
+                }
+                html += '  </div>';
+                html += '</div>';
+            });
+            list.innerHTML = html;
+
+            // Пагинация
+            const totalPages = Math.ceil(total / this._pageSize);
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+            } else {
+                let pHtml = '';
+                pHtml += '<button onclick="KipCableJournal.prevPage()" ' + (this._page === 0 ? 'disabled' : '') + '>← Назад</button>';
+                pHtml += '<span class="cj-page-info">' + (this._page + 1) + ' / ' + totalPages + '</span>';
+                pHtml += '<button onclick="KipCableJournal.nextPage()" ' + (this._page >= totalPages - 1 ? 'disabled' : '') + '>Вперёд →</button>';
+                pagination.innerHTML = pHtml;
+            }
+        },
+
+        // ============================================================
+        // Пагинация
+        // ============================================================
+        prevPage: function() {
+            if (this._page > 0) {
+                this._page--;
+                this.load();
+            }
+        },
+        nextPage: function() {
+            const totalPages = Math.ceil(this._total / this._pageSize);
+            if (this._page < totalPages - 1) {
+                this._page++;
+                this.load();
+            }
+        },
+
+        // ============================================================
+        // Поиск с debounce
+        // ============================================================
+        handleSearchInput: function() {
+            const self = this;
+            if (this._searchTimer) clearTimeout(this._searchTimer);
+            this._searchTimer = setTimeout(function() {
+                self._page = 0;
+                self.load();
+            }, 350);
+        },
+
+        // ============================================================
+        // Открыть модалку редактирования записи
+        // ============================================================
+        openEdit: function(rowNum) {
+            // Найти запись в _rows по _row
+            const row = this._rows.find(function(r) { return r._row === rowNum; });
+            if (!row) {
+                alert('Запись не найдена');
+                return;
+            }
+            this._editing = row;
+            this._renderEditModal(false);
+            document.getElementById('cjEditOverlay').classList.add('active');
+        },
+
+        // ============================================================
+        // Открыть модалку добавления записи
+        // ============================================================
+        openAdd: function() {
+            if (!this._canEdit) {
+                alert('У вас нет прав на добавление записей');
+                return;
+            }
+            this._editing = null;  // null = новая запись
+            this._renderEditModal(true);
+            document.getElementById('cjEditOverlay').classList.add('active');
+        },
+
+        // ============================================================
+        // Сгенерировать поля модалки
+        // ============================================================
+        _renderEditModal: function(isNew) {
+            const self = this;
+            const titleEl = document.getElementById('cjEditTitle');
+            const subtitleEl = document.getElementById('cjEditSubtitle');
+            const fieldsEl = document.getElementById('cjEditFields');
+            const deleteBtn = document.getElementById('cjDeleteBtn');
+
+            titleEl.textContent = isNew ? 'Новая запись' : 'Запись №' + (this._editing.num || '?');
+            subtitleEl.textContent = isNew
+                ? 'Заполните поля. Дата добавления установится автоматически.'
+                : (this._editing.added_at ? 'Добавлена: ' + this._formatDate(this._editing.added_at) : '');
+
+            deleteBtn.style.display = (!isNew && this._canEdit) ? '' : 'none';
+
+            // Сгруппировать поля для красивой раскладки
+            // Пары: (mark_project, cores_project), (length_project), (mark_actual, cores_actual), (length_actual)
+            // (department, purpose)
+            const pairs = [
+                ['designation'],
+                ['start'],
+                ['end'],
+                ['section'],
+                ['mark_project', 'cores_project'],
+                ['length_project'],
+                ['mark_actual', 'cores_actual'],
+                ['length_actual'],
+                ['department', 'purpose'],
+                ['project_no']
+            ];
+
+            let html = '';
+            pairs.forEach(function(group) {
+                if (group.length === 1) {
+                    html += self._renderField(group[0]);
+                } else {
+                    html += '<div class="cj-field-row">';
+                    group.forEach(function(key) {
+                        html += self._renderField(key);
+                    });
+                    html += '</div>';
+                }
+            });
+            fieldsEl.innerHTML = html;
+
+            // Скрыть ошибку
+            document.getElementById('cjEditError').classList.remove('show');
+        },
+
+        _renderField: function(key) {
+            const col = this._columns.find(function(c) { return c.key === key; });
+            if (!col) return '';
+            const val = this._editing ? this._editing[key] : '';
+            const displayVal = (val === null || val === undefined) ? '' : String(val);
+            const readOnly = col.readOnly || !this._canEdit;
+            const id = 'cjField_' + key;
+
+            let html = '<div class="cj-field-group">';
+            html += '<label class="cj-field-label" for="' + id + '">' + this._esc(col.label) + '</label>';
+
+            // Длинные текстовые поля — textarea
+            const useTextarea = ['start', 'end', 'section', 'designation'].indexOf(key) !== -1;
+            if (useTextarea) {
+                html += '<textarea id="' + id + '" class="cj-field-textarea" data-key="' + key + '"' +
+                    (readOnly ? ' readonly' : '') + '>' + this._esc(displayVal) + '</textarea>';
+            } else {
+                const type = col.type === 'number' ? 'number' : 'text';
+                html += '<input id="' + id + '" type="' + type + '" class="cj-field-input" data-key="' + key + '"' +
+                    ' value="' + this._esc(displayVal) + '"' +
+                    (readOnly ? ' readonly' : '') + '>';
+            }
+            html += '</div>';
+            return html;
+        },
+
+        // ============================================================
+        // Закрыть модалку
+        // ============================================================
+        closeEdit: function() {
+            document.getElementById('cjEditOverlay').classList.remove('active');
+            this._editing = null;
+        },
+
+        // ============================================================
+        // Сохранить запись (новую или существующую)
+        // ============================================================
+        save: function() {
+            const self = this;
+            const errEl = document.getElementById('cjEditError');
+            errEl.classList.remove('show');
+
+            if (!this._canEdit) {
+                errEl.textContent = 'У вас нет прав на редактирование';
+                errEl.classList.add('show');
+                return;
+            }
+
+            // Собрать данные из полей
+            const data = {};
+            const inputs = document.querySelectorAll('#cjEditFields [data-key]');
+            for (let i = 0; i < inputs.length; i++) {
+                const inp = inputs[i];
+                const key = inp.getAttribute('data-key');
+                const col = this._columns.find(function(c) { return c.key === key; });
+                if (!col || col.readOnly) continue;
+                let v = inp.value.trim();
+                if (col.type === 'number' && v !== '') {
+                    const n = parseFloat(v.replace(',', '.'));
+                    v = isNaN(n) ? v : n;
+                }
+                data[key] = v;
+            }
+
+            const saveBtn = document.getElementById('cjSaveBtn');
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Сохранение…';
+
+            if (this._editing) {
+                // Существующая запись: обновить только изменённые поля через updateCell
+                const promises = [];
+                const self2 = this;
+                Object.keys(data).forEach(function(key) {
+                    const newVal = data[key];
+                    const oldVal = self2._editing[key];
+                    // Сравнение: привести к строке
+                    if (String(oldVal || '') !== String(newVal || '')) {
+                        promises.push(self2._api('cableJournal.updateCell', {
+                            row: self2._editing._row,
+                            key: key,
+                            value: newVal
+                        }));
+                    }
+                });
+
+                if (promises.length === 0) {
+                    // Ничего не изменено
+                    self.closeEdit();
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Сохранить';
+                    return;
+                }
+
+                Promise.all(promises).then(function() {
+                    if (typeof KipToast !== 'undefined' && KipToast.show) {
+                        KipToast.show('Сохранено');
+                    }
+                    self.closeEdit();
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Сохранить';
+                    self.load();
+                }).catch(function(err) {
+                    errEl.textContent = err.message;
+                    errEl.classList.add('show');
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Сохранить';
+                });
+            } else {
+                // Новая запись: appendRow
+                this._api('cableJournal.appendRow', { data: data }).then(function(res) {
+                    if (typeof KipToast !== 'undefined' && KipToast.show) {
+                        KipToast.show('Запись добавлена (№' + res.num + ')');
+                    }
+                    self.closeEdit();
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Сохранить';
+                    self.load();
+                }).catch(function(err) {
+                    errEl.textContent = err.message;
+                    errEl.classList.add('show');
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Сохранить';
+                });
+            }
+        },
+
+        // ============================================================
+        // Подтверждение удаления
+        // ============================================================
+        confirmDelete: function() {
+            if (!this._editing) return;
+            if (!confirm('Удалить запись №' + (this._editing.num || '?') + '? Действие необратимо.')) return;
+            const self = this;
+            const errEl = document.getElementById('cjEditError');
+            errEl.classList.remove('show');
+
+            this._api('cableJournal.deleteRow', { row: this._editing._row }).then(function() {
+                if (typeof KipToast !== 'undefined' && KipToast.show) {
+                    KipToast.show('Запись удалена');
+                }
+                self.closeEdit();
+                self.load();
+            }).catch(function(err) {
+                errEl.textContent = err.message;
+                errEl.classList.add('show');
+            });
+        },
+
+        // ============================================================
+        // Утилиты
+        // ============================================================
+        _esc: function(s) {
+            if (s === null || s === undefined) return '';
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        },
+
+        _formatDate: function(s) {
+            if (!s) return '';
+            try {
+                const d = new Date(s);
+                return d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            } catch (e) { return s; }
+        }
+    };
+
+    // ============================================================
+    // KipAdmin — Админ-панель (старый код ниже)
     // ============================================================
     const KipAdmin = {
 
@@ -20556,6 +21191,9 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('cables-prod'); toggleSidebar();">
             <span style="color:rgba(120,144,100,0.9);">Кабельный журнал</span>
         </div>
+        <div class="sidebar-item sidebar-item-extra" id="sidebarCableJournalEditBtn" onclick="navigateTo('cable-journal-edit'); toggleSidebar();" style="display:none;">
+            <span style="color:rgba(140,180,140,0.95);">Кабельный журнал (ред.)</span>
+        </div>
         <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('plan-114'); toggleSidebar();">
             <span style="color:rgba(120,140,170,0.9);">План корпуса 114</span>
         </div>
@@ -20926,6 +21564,21 @@ function closeAboutModal() {
     document.getElementById('aboutModalOverlay').classList.remove('active');
 }
 </script>
+
+<!-- Cable Journal Edit Modal (Кабельный журнал: редактирование/добавление записи) -->
+<div class="cj-edit-overlay" id="cjEditOverlay" onclick="KipCableJournal.closeEdit()">
+    <div class="cj-edit-modal" onclick="event.stopPropagation()">
+        <div class="cj-edit-close" onclick="KipCableJournal.closeEdit()">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke-width:2;stroke-linecap:round;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+        <div class="cj-edit-title" id="cjEditTitle">Запись</div>
+        <div class="cj-edit-subtitle" id="cjEditSubtitle"></div>
+        <div id="cjEditFields" class="cj-edit-fields"></div>
+        <button type="button" id="cjSaveBtn" class="cj-save-btn" onclick="KipCableJournal.save()">Сохранить</button>
+        <button type="button" id="cjDeleteBtn" class="cj-delete-btn" onclick="KipCableJournal.confirmDelete()" style="display:none;">Удалить запись</button>
+        <div id="cjEditError" class="cj-edit-error"></div>
+    </div>
+</div>
 
 </body>
 </html>
