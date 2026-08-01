@@ -1971,35 +1971,39 @@
 
     /* ========== Кабельный журнал (редактирование) ==========
        Дизайн: список-зебра во всю ширину экрана, непрозрачный фон,
-       сгруппированный по "Отделение, производство" (sticky-заголовки групп).
+       сгруппированный по "Отделение, производство" (sticky-заголовки групп,
+       непрозрачный тёплый фон).
        Каждая группа сворачиваемая (клик по шапке), по умолчанию свёрнута.
        Карточки упрощены: только обозначение, трасса, проложен.
-       Кнопка '+' — в page-inline-header справа от поля поиска. */
+       Клик по карточке открывает отдельную страницу просмотра (read-only —
+       редактирование и удаление записей в приложении запрещены).
+       Кнопка '+' — в page-inline-header справа от поля поиска (только для
+       ролей с правом добавления). */
     /* Поле поиска в шапке Кабельного журнала — смещено влево, чтобы
        освободить место под кнопку '+' справа. */
     .cj-header-search {
-        right: 48px;  /* было 8px — уступаем 40px под + кнопку */
+        right: 56px;  /* + кнопка занимает right:8..40 (32px+border), gap 16px */
     }
     /* Заголовок страницы — увеличенный правый padding, чтобы текст не
        залезал под + кнопку и search input. */
     .page-inline-header:has(.cj-header-search) .page-inline-header-title {
-        padding: 0 176px 0 40px;  /* 8 + 32 + 8 + 120 + 8 = 176 */
+        padding: 0 184px 0 40px;  /* 8 + 34 + 16 + 120 + 6 = 184 */
     }
     .page-content.scrolled .page-inline-header:has(.cj-header-search) .page-inline-header-title {
-        padding: 0 156px 0 40px;  /* в scrolled: + 32 + 8 + 100 + 8 = 156 */
+        padding: 0 164px 0 40px;  /* в scrolled: + 34 + 16 + 100 + 6 = 164 */
     }
     /* В сжатом состоянии (прокрутка вниз) search уже (100px), но + кнопка
        остаётся того же размера. */
     .page-content.scrolled .cj-header-search {
-        right: 48px;
+        right: 56px;
     }
     @media (max-width: 359px) {
-        .cj-header-search { right: 44px; }
+        .cj-header-search { right: 52px; }
         .page-inline-header:has(.cj-header-search) .page-inline-header-title {
-            padding: 0 152px 0 36px;  /* 8 + 28 + 8 + 100 + 8 = 152 */
+            padding: 0 160px 0 36px;  /* 8 + 30 + 14 + 100 + 8 = 160 */
         }
         .page-content.scrolled .page-inline-header:has(.cj-header-search) .page-inline-header-title {
-            padding: 0 140px 0 36px;
+            padding: 0 148px 0 36px;
         }
     }
 
@@ -2046,18 +2050,18 @@
         background: var(--bg-color, #14181f);
     }
     /* Заголовок группы "Отделение, производство" — sticky под шапкой страницы,
-       непрозрачный фон, чтобы карточки под ним не просвечивали при скролле.
+       НЕпрозрачный фон (чтобы карточки под ним не просвечивали при скролле).
        Клик по заголовку сворачивает/разворачивает карточки группы. */
     .cj-group-header {
         position: sticky;
         top: 56px;  /* высота .page-inline-header */
         z-index: 20;
         padding: 8px 14px;
-        background: rgba(199,150,74,0.12);
-        border-bottom: 1px solid rgba(199,150,74,0.25);
+        background: #3a2d1c;  /* непрозрачный тёплый коричнево-золотой */
+        border-bottom: 1px solid rgba(199,150,74,0.45);
         font-size: 13px;
         font-weight: 700;
-        color: #c7964a;
+        color: #d4a55a;
         letter-spacing: 0.2px;
         display: flex;
         align-items: baseline;
@@ -2068,26 +2072,29 @@
         -webkit-user-select: none;
     }
     .cj-group-header:active {
-        background: rgba(199,150,74,0.22);
+        background: #4a3a26;  /* чуть светлее при нажатии */
     }
     .page-content.scrolled .cj-group-header {
         top: 40px;  /* высота сжатого .page-inline-header при скролле */
     }
     [data-theme="light"] .cj-group-header {
-        background: rgba(199,150,74,0.14);
-        border-bottom-color: rgba(199,150,74,0.3);
-        color: #8a6428;
+        background: #f0e4ca;  /* непрозрачный кремово-золотой */
+        border-bottom-color: rgba(199,150,74,0.5);
+        color: #6e4f1f;
+    }
+    [data-theme="light"] .cj-group-header:active {
+        background: #e8dab8;
     }
     .cj-group-caret {
         flex: 0 0 auto;
         font-size: 10px;
-        color: rgba(199,150,74,0.85);
+        color: #d4a55a;
         transition: transform .15s ease;
         display: inline-block;
         transform: rotate(0deg);
     }
     [data-theme="light"] .cj-group-caret {
-        color: rgba(138,100,40,0.85);
+        color: #8a6428;
     }
     .cj-group[data-collapsed="true"] .cj-group-caret {
         transform: rotate(-90deg);
@@ -2102,12 +2109,12 @@
     .cj-group-header-count {
         font-size: 11px;
         font-weight: 500;
-        color: rgba(199,150,74,0.7);
+        color: rgba(212,165,90,0.85);
         font-feature-settings: "tnum";
         flex-shrink: 0;
     }
     [data-theme="light"] .cj-group-header-count {
-        color: rgba(138,100,40,0.7);
+        color: rgba(110,79,31,0.85);
     }
 
     /* Строки-карточки во всю ширину, без боковых отступов и border-radius.
@@ -2157,38 +2164,7 @@
     .cj-item-meta-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; }
     .cj-item-meta-label { color: var(--text-secondary, rgba(255,255,255,0.4)); }
 
-    /* ========== Модалка редактирования записи ========== */
-    .cj-edit-overlay {
-        position: fixed; inset: 0; background: rgba(0,0,0,0.65);
-        backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-        display: flex; align-items: flex-end; justify-content: center;
-        z-index: 1000; opacity: 0; pointer-events: none;
-        transition: opacity .2s;
-    }
-    .cj-edit-overlay.active { opacity: 1; pointer-events: auto; }
-    .cj-edit-modal {
-        background: var(--bg-color, #14181f);
-        border: 1px solid var(--border-color, rgba(255,255,255,0.08));
-        border-radius: 14px 14px 0 0;
-        padding: 18px 16px 24px;
-        width: 100%; max-width: 540px;
-        max-height: 90vh; overflow-y: auto;
-        position: relative;
-        transform: translateY(100%);
-        transition: transform .25s ease-out;
-    }
-    .cj-edit-overlay.active .cj-edit-modal { transform: translateY(0); }
-    [data-theme="light"] .cj-edit-modal { background: #fff; }
-    .cj-edit-close {
-        position: absolute; top: 10px; right: 10px;
-        width: 28px; height: 28px; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        cursor: pointer; background: rgba(255,255,255,0.05);
-    }
-    [data-theme="light"] .cj-edit-close { background: rgba(0,0,0,0.05); }
-    .cj-edit-title { font-size: 17px; font-weight: 600; color: var(--text-primary, #fff); margin-bottom: 4px; padding-right: 36px; }
-    .cj-edit-subtitle { font-size: 11px; color: var(--text-secondary, rgba(255,255,255,0.5)); margin-bottom: 14px; }
-    .cj-edit-fields { display: flex; flex-direction: column; gap: 10px; }
+    /* ===== Поля форм (используются на страницах добавления и просмотра) ===== */
     .cj-field-group {
         display: flex; flex-direction: column; gap: 3px;
     }
@@ -2211,7 +2187,6 @@
     }
     .cj-field-input:focus, .cj-field-textarea:focus { border-color: var(--accent-color, #6aa8e0); }
     .cj-field-textarea { resize: vertical; min-height: 56px; font-family: inherit; }
-    .cj-field-input:read-only { opacity: 0.55; }
     [data-theme="light"] .cj-field-input, [data-theme="light"] .cj-field-textarea { background: #f5f7fa; }
     .cj-field-row { display: flex; gap: 8px; }
     .cj-field-row > .cj-field-group { flex: 1; }
@@ -2222,17 +2197,10 @@
         border: none; border-radius: 10px;
         font-size: 14px; font-weight: 600;
         cursor: pointer;
+        font-family: inherit;
     }
     .cj-save-btn:active { opacity: 0.85; }
-    .cj-delete-btn {
-        width: 100%; margin-top: 8px;
-        padding: 10px 16px;
-        background: transparent; color: #d64545;
-        border: 1px solid rgba(214,69,69,0.4); border-radius: 10px;
-        font-size: 13px; font-weight: 500;
-        cursor: pointer;
-    }
-    .cj-delete-btn:active { background: rgba(214,69,69,0.1); }
+    .cj-save-btn:disabled { opacity: 0.5; cursor: default; }
     .cj-edit-error {
         margin-top: 10px; padding: 8px 10px;
         background: rgba(214,69,69,0.1);
@@ -2246,9 +2214,9 @@
     [data-theme="light"] .cj-field-input option, [data-theme="light"] .cj-field-textarea option { background: #fff; color: #1a1a1a; }
 
     /* ========== Кабельный журнал — страница добавления записи ==========
-       В отличие от модалки (cj-edit-overlay), эта страница открывается
-       как обычная page-content, поля идут вертикально по одному в строке
-       (полная ширина контейнера), без группировки по 2 в ряд. */
+       Открывается как обычная page-content из cable-journal-edit по кнопке '+'.
+       Поля идут вертикально по одному в строке (полная ширина контейнера),
+       без группировки по 2 в ряд. Поля с options рендерятся как <select>. */
     .cj-add-page-body {
         padding: 14px 14px 36px;
         max-width: 640px;
@@ -2305,6 +2273,68 @@
         cursor: pointer;
     }
     .cj-cancel-btn:active { opacity: 0.7; }
+
+    /* ========== Кабельный журнал — страница просмотра записи ==========
+       Открывается по клику на карточку в списке. Read-only: данные
+       показываются как текст, без возможности редактировать или удалить.
+       Поля идут вертикально по одному в строке. */
+    .cj-view-page-body {
+        padding: 14px 14px 36px;
+        max-width: 640px;
+        margin: 0 auto;
+    }
+    .cj-view-subtitle {
+        font-size: 11px;
+        color: var(--text-secondary, rgba(255,255,255,0.55));
+        margin-bottom: 16px;
+        line-height: 1.5;
+    }
+    .cj-view-fields {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+    .cj-view-fields .cj-field-group {
+        width: 100%;
+        flex: 0 0 100%;
+    }
+    /* Значение поля — выглядит как readonly-инпут, но это просто div.
+       Сохраняет визуальную консистентность со страницей добавления. */
+    .cj-view-value {
+        background: var(--card-bg, rgba(255,255,255,0.04));
+        border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 13px;
+        color: var(--text-primary, #fff);
+        font-family: inherit;
+        line-height: 1.45;
+        word-break: break-word;
+        white-space: pre-wrap;
+        min-height: 36px;
+        box-sizing: border-box;
+    }
+    .cj-view-value.cj-view-value-empty {
+        color: var(--text-secondary, rgba(255,255,255,0.35));
+        font-style: italic;
+    }
+    [data-theme="light"] .cj-view-value {
+        background: #f5f7fa;
+    }
+    .cj-view-back-btn {
+        width: 100%;
+        margin-top: 14px;
+        padding: 11px 16px;
+        background: var(--accent-color, #4a8fc7);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+    }
+    .cj-view-back-btn:active { opacity: 0.85; }
 
     /* ========== Экзаменационные билеты ========== */
     .ticket-cat-card { position: relative; border-radius: 14px; margin-bottom: 10px; cursor: pointer; transition: transform .15s; overflow: hidden; min-height: 120px; }
@@ -5955,6 +5985,26 @@
                 <button type="button" id="cjAddSubmitBtn" class="cj-save-btn" onclick="KipCableJournal.submitAdd()">Добавить запись</button>
                 <button type="button" class="cj-cancel-btn" onclick="navigateTo('cable-journal-edit')">Отмена</button>
                 <div id="cjAddError" class="cj-edit-error"></div>
+            </div>
+        </div>
+
+        <!-- ======================== КАБЕЛЬНЫЙ ЖУРНАЛ — ПРОСМОТР ЗАПИСИ ========================
+             Открывается из cable-journal-edit по клику на карточку кабеля.
+             Доступ: всем авторизованным (только чтение).
+             Поля расположены вертикально (по одному в строке) как текстовые
+             значения — редактирование и удаление записей в приложении запрещены. -->
+        <div id="page-cable-journal-view" class="page-content">
+            <div class="page-inline-header">
+                <div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div>
+                <div class="page-inline-header-title" id="cjViewTitle">Запись</div>
+            </div>
+
+            <div class="cj-view-page-body">
+                <div class="cj-view-subtitle" id="cjViewSubtitle"></div>
+                <div id="cjViewFields" class="cj-view-fields">
+                    <div class="admin-empty">Загрузка…</div>
+                </div>
+                <button type="button" class="cj-view-back-btn" onclick="navigateTo('cable-journal-edit')">К списку</button>
             </div>
         </div>
 
@@ -14192,6 +14242,7 @@
         if (page === 'project-group') { setTimeout(() => { if (typeof projectsRenderGroup === 'function') projectsRenderGroup(); }, 30); }
         if (page === 'cable-journal-edit') { setTimeout(() => { if (typeof KipCableJournal !== 'undefined') KipCableJournal.init(); }, 30); }
         if (page === 'cable-journal-add')  { setTimeout(() => { if (typeof KipCableJournal !== 'undefined') KipCableJournal.initAddPage(); }, 30); }
+        if (page === 'cable-journal-view') { setTimeout(() => { if (typeof KipCableJournal !== 'undefined') KipCableJournal.initViewPage(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof devInitEntryButton === 'function') devInitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof kipIOSUpdateLastChange === 'function') kipIOSUpdateLastChange(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof lockInitEntryButton === 'function') lockInitEntryButton(); }, 30); }
@@ -18639,6 +18690,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                          'projects-prod', 'project-detail', 'project-group',
                          'cable-journal-edit',
                          'cable-journal-add',
+                         'cable-journal-view',
                          'plan-114', 'plan-114-view'],
         _SECRET_PAGES: ['minesweeper', 'phonebook'],
 
@@ -19574,7 +19626,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         _total: 0,
         _canEdit: false,
         _searchTimer: null,
-        _editing: null,     // текущая редактируемая запись ({_row: N, ...}) или null (новая)
+        _viewing: null,     // текущая просматриваемая запись ({_row: N, ...}) или null
 
         // ============================================================
         // API вызовы
@@ -19722,7 +19774,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     const coresActual = self._esc(row.cores_actual || '');
                     const lengthActual = row.length_actual != null ? row.length_actual : '';
 
-                    html += '<div class="cj-item" onclick="KipCableJournal.openEdit(' + row._row + ')">';
+                    html += '<div class="cj-item" onclick="KipCableJournal.openView(' + row._row + ')">';
                     html += '  <div class="cj-item-header">';
                     html += '    <span class="cj-item-designation">' + designation + '</span>';
                     html += '  </div>';
@@ -19783,29 +19835,129 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         },
 
         // ============================================================
-        // Открыть модалку редактирования записи
+        // Открыть страницу просмотра записи (read-only).
+        // Редактирование и удаление сохранённых записей в приложении
+        // запрещены (Task 57) — клик по карточке ведёт на отдельную
+        // страницу page-cable-journal-view, где поля показаны как текст.
         // ============================================================
-        openEdit: function(rowNum) {
-            // Найти запись в _rows по _row
+        openView: function(rowNum) {
             const row = this._rows.find(function(r) { return r._row === rowNum; });
             if (!row) {
-                alert('Запись не найдена');
+                if (typeof KipToast !== 'undefined' && KipToast.show) {
+                    KipToast.show('Запись не найдена');
+                }
                 return;
             }
-            this._editing = row;
-            this._renderEditModal(false);
-            document.getElementById('cjEditOverlay').classList.add('active');
+            this._viewing = row;
+            navigateTo('cable-journal-view');
+        },
+
+        // ============================================================
+        // Инициализация страницы просмотра (вызывается из navigateTo)
+        // ============================================================
+        initViewPage: function() {
+            const self = this;
+            const fieldsEl = document.getElementById('cjViewFields');
+            const titleEl = document.getElementById('cjViewTitle');
+            const subtitleEl = document.getElementById('cjViewSubtitle');
+
+            // Если запись не выбрана — показываем ошибку
+            if (!this._viewing) {
+                if (fieldsEl) fieldsEl.innerHTML = '<div class="admin-empty">Запись не выбрана. Вернитесь к списку.</div>';
+                if (titleEl) titleEl.textContent = 'Запись';
+                if (subtitleEl) subtitleEl.textContent = '';
+                return;
+            }
+
+            const row = this._viewing;
+
+            // Заголовок — обозначение кабеля (или № записи как fallback)
+            if (titleEl) {
+                titleEl.textContent = row.designation || ('Запись №' + (row.num || '?'));
+            }
+            if (subtitleEl) {
+                const parts = [];
+                if (row.num) parts.push('№ ' + row.num);
+                if (row.added_at) parts.push('добавлена: ' + this._formatDate(row.added_at));
+                subtitleEl.textContent = parts.join(' · ');
+            }
+
+            // Если колонки ещё не загружены — подтянем их
+            if (!this._columns) {
+                if (fieldsEl) fieldsEl.innerHTML = '<div class="admin-empty">Загрузка полей…</div>';
+                this._api('cableJournal.getColumns', {}).then(function(res) {
+                    if (res && res.columns) self._columns = res.columns;
+                    self._renderViewPage();
+                }).catch(function(err) {
+                    if (fieldsEl) fieldsEl.innerHTML = '<div class="admin-empty">Ошибка загрузки полей: ' + (err.message || err) + '</div>';
+                });
+            } else {
+                this._renderViewPage();
+            }
+        },
+
+        // ============================================================
+        // Отрисовать поля страницы просмотра (read-only текст)
+        // ============================================================
+        _renderViewPage: function() {
+            const self = this;
+            const fieldsEl = document.getElementById('cjViewFields');
+            if (!fieldsEl || !this._viewing) return;
+
+            // Порядок полей — как в Google Sheets.
+            const order = [
+                'designation',
+                'start',
+                'end',
+                'section',
+                'mark_project',
+                'cores_project',
+                'length_project',
+                'mark_actual',
+                'cores_actual',
+                'length_actual',
+                'department',
+                'purpose',
+                'project_no'
+            ];
+
+            let html = '';
+            order.forEach(function(key) {
+                html += self._renderViewField(key);
+            });
+            fieldsEl.innerHTML = html;
+        },
+
+        // ============================================================
+        // Сгенерировать одно поле страницы просмотра (label + значение как текст)
+        // ============================================================
+        _renderViewField: function(key) {
+            const col = this._columns.find(function(c) { return c.key === key; });
+            if (!col) return '';
+            const val = this._viewing ? this._viewing[key] : '';
+            const displayVal = (val === null || val === undefined || val === '') ? '' : String(val);
+            const isEmpty = displayVal === '';
+            // Длина — добавляем единицу измерения
+            let valHtml = this._esc(displayVal);
+            if (key === 'length_project' || key === 'length_actual') {
+                valHtml = this._esc(displayVal) + ' м';
+            }
+            let html = '<div class="cj-field-group">';
+            html += '<div class="cj-field-label">' + this._esc(col.label) + '</div>';
+            html += '<div class="cj-view-value' + (isEmpty ? ' cj-view-value-empty' : '') + '">' +
+                (isEmpty ? '—' : valHtml) + '</div>';
+            html += '</div>';
+            return html;
         },
 
         // ============================================================
         // Открыть страницу добавления записи
         // ============================================================
-        // Раньше добавление открывалось в модалке cjEditOverlay. Теперь —
-        // отдельная страница page-cable-journal-add с полями столбиком
-        // (по одному в строке) и <select> для полей с options.
         openAdd: function() {
             if (!this._canEdit) {
-                alert('У вас нет прав на добавление записей');
+                if (typeof KipToast !== 'undefined' && KipToast.show) {
+                    KipToast.show('У вас нет прав на добавление записей');
+                }
                 return;
             }
             navigateTo('cable-journal-add');
@@ -19886,7 +20038,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
             let html = '';
             order.forEach(function(key) {
-                html += self._renderField(key, { forAdd: true });
+                html += self._renderField(key);
             });
             fieldsEl.innerHTML = html;
         },
@@ -19946,65 +20098,17 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         },
 
         // ============================================================
-        // Сгенерировать поля модалки
+        // Сгенерировать поле формы добавления (input/textarea/select).
+        // Используется только на странице добавления. Редактирование
+        // сохранённых записей в приложении запрещено (Task 57).
         // ============================================================
-        _renderEditModal: function(isNew) {
-            const self = this;
-            const titleEl = document.getElementById('cjEditTitle');
-            const subtitleEl = document.getElementById('cjEditSubtitle');
-            const fieldsEl = document.getElementById('cjEditFields');
-            const deleteBtn = document.getElementById('cjDeleteBtn');
-
-            titleEl.textContent = isNew ? 'Новая запись' : 'Запись №' + (this._editing.num || '?');
-            subtitleEl.textContent = isNew
-                ? 'Заполните поля. Дата добавления установится автоматически.'
-                : (this._editing.added_at ? 'Добавлена: ' + this._formatDate(this._editing.added_at) : '');
-
-            deleteBtn.style.display = (!isNew && this._canEdit) ? '' : 'none';
-
-            // Сгруппировать поля для красивой раскладки
-            // Пары: (mark_project, cores_project), (length_project), (mark_actual, cores_actual), (length_actual)
-            // (department, purpose)
-            const pairs = [
-                ['designation'],
-                ['start'],
-                ['end'],
-                ['section'],
-                ['mark_project', 'cores_project'],
-                ['length_project'],
-                ['mark_actual', 'cores_actual'],
-                ['length_actual'],
-                ['department', 'purpose'],
-                ['project_no']
-            ];
-
-            let html = '';
-            pairs.forEach(function(group) {
-                if (group.length === 1) {
-                    html += self._renderField(group[0]);
-                } else {
-                    html += '<div class="cj-field-row">';
-                    group.forEach(function(key) {
-                        html += self._renderField(key);
-                    });
-                    html += '</div>';
-                }
-            });
-            fieldsEl.innerHTML = html;
-
-            // Скрыть ошибку
-            document.getElementById('cjEditError').classList.remove('show');
-        },
-
         _renderField: function(key, opts) {
             const self = this;
             const col = this._columns.find(function(c) { return c.key === key; });
             if (!col) return '';
-            const val = this._editing ? this._editing[key] : '';
-            const displayVal = (val === null || val === undefined) ? '' : String(val);
-            const readOnly = col.readOnly || !this._canEdit;
-            const forAdd = !!(opts && opts.forAdd);
-            const id = (forAdd ? 'cjAddField_' : 'cjField_') + key;
+            // На странице добавления значение всегда пустое (новая запись).
+            const displayVal = '';
+            const id = 'cjAddField_' + key;
             const hasOptions = Array.isArray(col.options) && col.options.length > 0;
 
             let html = '<div class="cj-field-group">';
@@ -20013,159 +20117,25 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             if (hasOptions) {
                 // Поле с выпадающим списком: data validation Google Sheets
                 // (или fallback для department/purpose — уникальные значения из данных).
-                html += '<select id="' + id + '" class="cj-field-input cj-field-select" data-key="' + key + '"' +
-                    (readOnly ? ' disabled' : '') + '>';
-                html += '<option value="">' + (readOnly ? '—' : '— выберите —') + '</option>';
+                html += '<select id="' + id + '" class="cj-field-input cj-field-select" data-key="' + key + '">';
+                html += '<option value="">— выберите —</option>';
                 col.options.forEach(function(v) {
                     const sv = String(v);
-                    const sel = (displayVal === sv) ? ' selected' : '';
-                    html += '<option value="' + self._esc(sv) + '"' + sel + '>' + self._esc(sv) + '</option>';
+                    html += '<option value="' + self._esc(sv) + '">' + self._esc(sv) + '</option>';
                 });
-                // Если текущего значения нет в списке (например, устаревшая запись),
-                // показываем его отдельной опцией, чтобы пользователь видел значение.
-                if (displayVal && col.options.indexOf(displayVal) === -1 &&
-                    col.options.map(String).indexOf(displayVal) === -1) {
-                    html += '<option value="' + self._esc(displayVal) + '" selected>' +
-                        self._esc(displayVal) + ' (нет в списке)</option>';
-                }
                 html += '</select>';
             } else {
                 // Длинные текстовые поля — textarea
                 const useTextarea = ['start', 'end', 'section', 'designation'].indexOf(key) !== -1;
                 if (useTextarea) {
-                    html += '<textarea id="' + id + '" class="cj-field-textarea" data-key="' + key + '"' +
-                        (readOnly ? ' readonly' : '') + '>' + this._esc(displayVal) + '</textarea>';
+                    html += '<textarea id="' + id + '" class="cj-field-textarea" data-key="' + key + '"></textarea>';
                 } else {
                     const type = col.type === 'number' ? 'number' : 'text';
-                    html += '<input id="' + id + '" type="' + type + '" class="cj-field-input" data-key="' + key + '"' +
-                        ' value="' + this._esc(displayVal) + '"' +
-                        (readOnly ? ' readonly' : '') + '>';
+                    html += '<input id="' + id + '" type="' + type + '" class="cj-field-input" data-key="' + key + '" value="">';
                 }
             }
             html += '</div>';
             return html;
-        },
-
-        // ============================================================
-        // Закрыть модалку
-        // ============================================================
-        closeEdit: function() {
-            document.getElementById('cjEditOverlay').classList.remove('active');
-            this._editing = null;
-        },
-
-        // ============================================================
-        // Сохранить запись (новую или существующую)
-        // ============================================================
-        save: function() {
-            const self = this;
-            const errEl = document.getElementById('cjEditError');
-            errEl.classList.remove('show');
-
-            if (!this._canEdit) {
-                errEl.textContent = 'У вас нет прав на редактирование';
-                errEl.classList.add('show');
-                return;
-            }
-
-            // Собрать данные из полей
-            const data = {};
-            const inputs = document.querySelectorAll('#cjEditFields [data-key]');
-            for (let i = 0; i < inputs.length; i++) {
-                const inp = inputs[i];
-                const key = inp.getAttribute('data-key');
-                const col = this._columns.find(function(c) { return c.key === key; });
-                if (!col || col.readOnly) continue;
-                let v = inp.value.trim();
-                if (col.type === 'number' && v !== '') {
-                    const n = parseFloat(v.replace(',', '.'));
-                    v = isNaN(n) ? v : n;
-                }
-                data[key] = v;
-            }
-
-            const saveBtn = document.getElementById('cjSaveBtn');
-            saveBtn.disabled = true;
-            saveBtn.textContent = 'Сохранение…';
-
-            if (this._editing) {
-                // Существующая запись: обновить только изменённые поля через updateCell
-                const promises = [];
-                const self2 = this;
-                Object.keys(data).forEach(function(key) {
-                    const newVal = data[key];
-                    const oldVal = self2._editing[key];
-                    // Сравнение: привести к строке
-                    if (String(oldVal || '') !== String(newVal || '')) {
-                        promises.push(self2._api('cableJournal.updateCell', {
-                            row: self2._editing._row,
-                            key: key,
-                            value: newVal
-                        }));
-                    }
-                });
-
-                if (promises.length === 0) {
-                    // Ничего не изменено
-                    self.closeEdit();
-                    saveBtn.disabled = false;
-                    saveBtn.textContent = 'Сохранить';
-                    return;
-                }
-
-                Promise.all(promises).then(function() {
-                    if (typeof KipToast !== 'undefined' && KipToast.show) {
-                        KipToast.show('Сохранено');
-                    }
-                    self.closeEdit();
-                    saveBtn.disabled = false;
-                    saveBtn.textContent = 'Сохранить';
-                    self.load();
-                }).catch(function(err) {
-                    errEl.textContent = err.message;
-                    errEl.classList.add('show');
-                    saveBtn.disabled = false;
-                    saveBtn.textContent = 'Сохранить';
-                });
-            } else {
-                // Новая запись: appendRow
-                this._api('cableJournal.appendRow', { data: data }).then(function(res) {
-                    if (typeof KipToast !== 'undefined' && KipToast.show) {
-                        KipToast.show('Запись добавлена (№' + res.num + ')');
-                    }
-                    self.closeEdit();
-                    saveBtn.disabled = false;
-                    saveBtn.textContent = 'Сохранить';
-                    self.load();
-                }).catch(function(err) {
-                    errEl.textContent = err.message;
-                    errEl.classList.add('show');
-                    saveBtn.disabled = false;
-                    saveBtn.textContent = 'Сохранить';
-                });
-            }
-        },
-
-        // ============================================================
-        // Подтверждение удаления
-        // ============================================================
-        confirmDelete: function() {
-            if (!this._editing) return;
-            if (!confirm('Удалить запись №' + (this._editing.num || '?') + '? Действие необратимо.')) return;
-            const self = this;
-            const errEl = document.getElementById('cjEditError');
-            errEl.classList.remove('show');
-
-            this._api('cableJournal.deleteRow', { row: this._editing._row }).then(function() {
-                if (typeof KipToast !== 'undefined' && KipToast.show) {
-                    KipToast.show('Запись удалена');
-                }
-                self.closeEdit();
-                self.load();
-            }).catch(function(err) {
-                errEl.textContent = err.message;
-                errEl.classList.add('show');
-            });
         },
 
         // ============================================================
@@ -21294,20 +21264,9 @@ function closeAboutModal() {
 }
 </script>
 
-<!-- Cable Journal Edit Modal (Кабельный журнал: редактирование/добавление записи) -->
-<div class="cj-edit-overlay" id="cjEditOverlay" onclick="KipCableJournal.closeEdit()">
-    <div class="cj-edit-modal" onclick="event.stopPropagation()">
-        <div class="cj-edit-close" onclick="KipCableJournal.closeEdit()">
-            <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke-width:2;stroke-linecap:round;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </div>
-        <div class="cj-edit-title" id="cjEditTitle">Запись</div>
-        <div class="cj-edit-subtitle" id="cjEditSubtitle"></div>
-        <div id="cjEditFields" class="cj-edit-fields"></div>
-        <button type="button" id="cjSaveBtn" class="cj-save-btn" onclick="KipCableJournal.save()">Сохранить</button>
-        <button type="button" id="cjDeleteBtn" class="cj-delete-btn" onclick="KipCableJournal.confirmDelete()" style="display:none;">Удалить запись</button>
-        <div id="cjEditError" class="cj-edit-error"></div>
-    </div>
-</div>
+<!-- Cable Journal: модалка редактирования удалена (Task 57).
+     Просмотр записей теперь ведёт на отдельную страницу page-cable-journal-view.
+     Редактирование и удаление сохранённых записей в приложении запрещены. -->
 
 </body>
 </html>
