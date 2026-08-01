@@ -18515,6 +18515,16 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 self._cachedUserId = data.userId;
                 self._lastRoleFetch = Date.now();
 
+                // ВАЖНО (Task 33): сохранить кэш роли в localStorage.
+                // Без этого при reload браузера bootstrap() не найдёт кэш,
+                // пойдёт по медленному пути (синхронный запрос сервера),
+                // и при любой сетевой ошибке покажет экран входа.
+                try {
+                    localStorage.setItem('kip8_cached_role', data.role || '');
+                    localStorage.setItem('kip8_cached_email', data.email || '');
+                    localStorage.setItem('kip8_cached_user_id', String(data.userId || ''));
+                } catch (e) {}
+
                 self._hideLoginScreen();
                 self._startHeartbeat();
                 self._updateSidebarUserInfo();
@@ -18824,6 +18834,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
             const token = this.getToken();
             if (!token) {
+                console.log('[KipAuth.bootstrap] Нет токена → экран входа');
                 this._showLoginScreen();
                 this._initializing = false;
                 return;
@@ -18844,6 +18855,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             // Если сервер скажет "no_session" — тогда logout. Если сеть упала —
             // пользователь останется в приложении с кэшированной ролью.
             if (cachedRole) {
+                console.log('[KipAuth.bootstrap] Быстрый путь: token + cachedRole="' + cachedRole + '" → показать приложение, проверка в фоне');
                 self._cachedRole = cachedRole;
                 self._cachedEmail = cachedEmail;
                 self._cachedUserId = cachedUserId;
@@ -18856,6 +18868,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 self._verifySessionInBackground();
                 return;
             }
+
+            console.log('[KipAuth.bootstrap] Медленный путь: token есть, но кэша роли нет → синхронный запрос сервера');
 
             // ===== Медленный путь: токен есть, кэша нет — ждём ответа сервера =====
             this.api('getCurrentUser', { token: token }).then(function(data) {
