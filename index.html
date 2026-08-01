@@ -18898,7 +18898,26 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             });
 
             // Sidebar groups: скрыть целиком, если все .sidebar-item скрыты.
+            // ВАЖНО: отдельная проверка по data-requires="library" / "kip-ios".
+            // Если у группы есть data-requires и роль не имеет доступа к этой
+            // странице — скрыть ВСЮ группу целиком, включая внешние ссылки <a>
+            // (которые не имеют navigateTo и поэтому не обрабатываются выше).
             document.querySelectorAll('.sidebar-group').forEach(function(group) {
+                // Сначала проверим data-requires (если есть).
+                const requires = group.getAttribute('data-requires');
+                if (requires) {
+                    const reqAllowed = isAll || allowed.indexOf(requires) !== -1;
+                    if (!reqAllowed) {
+                        // Скрыть всю группу + все её дочерние элементы.
+                        group.style.display = 'none';
+                        group.querySelectorAll('.sidebar-item').forEach(function(item) {
+                            item.style.display = 'none';
+                        });
+                        return; // дальше не идём — группа уже скрыта.
+                    }
+                }
+                // Иначе — старая логика: скрыть группу, если все её
+                // sidebar-item скрыты.
                 const items = group.querySelectorAll('.sidebar-item');
                 if (items.length === 0) return;
                 let anyVisible = false;
@@ -19338,8 +19357,9 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         </div>
         </div>
 
-        <!-- ===== Группа: Экзаменационные билеты (4 подраздела) ===== -->
-        <div class="sidebar-group" data-group="exam-tickets">
+        <!-- ===== Группа: Экзаменационные билеты (4 подраздела) =====
+             data-requires="library" — группа видна только ролям с доступом к библиотеке. -->
+        <div class="sidebar-group" data-group="exam-tickets" data-requires="library">
         <div class="sidebar-group-title sidebar-group-title-docs" onclick="toggleSidebarGroup(this.parentElement)">
             <span class="sidebar-group-title-text">Экзаменационные билеты</span>
             <span class="sidebar-group-title-count">4</span>
@@ -19359,8 +19379,12 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         </div>
         </div>
 
-        <!-- ===== Группа: Библиотека КИП и А (5 подразделов) ===== -->
-        <div class="sidebar-group" data-group="library">
+        <!-- ===== Группа: Библиотека КИП и А (5 подразделов) =====
+             data-requires="library" — группа видна только ролям с доступом к библиотеке.
+             Важно: внутри группы есть внешние ссылки <a>, у которых нет navigateTo,
+             поэтому проверка по data-requires обязательна (иначе внешние ссылки
+             оставались бы видимыми и вся группа не скрывалась для гостя). -->
+        <div class="sidebar-group" data-group="library" data-requires="library">
         <div class="sidebar-group-title sidebar-group-title-docs" onclick="toggleSidebarGroup(this.parentElement)">
             <span class="sidebar-group-title-text">Библиотека КИП и А</span>
             <span class="sidebar-group-title-count">5</span>
@@ -19383,8 +19407,9 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         </a>
         </div>
 
-        <!-- ===== Группа: КИП ИОС (7 подразделов) ===== -->
-        <div class="sidebar-group" data-group="kip-ios">
+        <!-- ===== Группа: КИП ИОС (7 подразделов) =====
+             data-requires="kip-ios" — группа видна только ролям с доступом к КИП ИОС. -->
+        <div class="sidebar-group" data-group="kip-ios" data-requires="kip-ios">
         <div class="sidebar-group-title sidebar-group-title-docs" onclick="toggleSidebarGroup(this.parentElement)">
             <span class="sidebar-group-title-text">КИП ИОС</span>
             <span class="sidebar-group-title-count">7</span>
