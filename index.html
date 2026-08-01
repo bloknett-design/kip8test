@@ -1518,6 +1518,28 @@
     }
     .admin-refresh-btn:active { transform: scale(0.96); }
     .admin-refresh-btn:hover { background: rgba(74,143,199,0.28); }
+    /* Кнопка «+ Добавить» (создать пользователя) — зелёный акцент. */
+    .admin-add-btn {
+        flex: none;
+        padding: 10px 14px;
+        background: rgba(74,199,113,0.18);
+        border: 1px solid rgba(74,199,113,0.4);
+        border-radius: 10px;
+        color: #4ac771;
+        font-size: 13px;
+        font-weight: 700;
+        font-family: inherit;
+        cursor: pointer;
+        transition: background 0.15s, transform 0.1s;
+        white-space: nowrap;
+    }
+    .admin-add-btn:active { transform: scale(0.96); }
+    .admin-add-btn:hover { background: rgba(74,199,113,0.28); }
+    [data-theme="light"] .admin-add-btn {
+        background: rgba(74,199,113,0.12);
+        border-color: rgba(74,199,113,0.35);
+        color: #2e9e54;
+    }
     [data-theme="light"] .admin-search,
     [data-theme="light"] .admin-select {
         background: rgba(0,0,0,0.03);
@@ -1869,6 +1891,102 @@
     [data-theme="light"] .about-modal-row-value { color: rgba(0,0,0,0.8); }
     [data-theme="light"] .about-modal-desc { color: rgba(0,0,0,0.4); border-top-color: rgba(0,0,0,0.08); }
     [data-theme="light"] .about-modal-close svg { stroke: rgba(0,0,0,0.5); }
+
+    /* ====== Admin: модалка создания пользователя ====== */
+    .create-user-overlay {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.6); z-index: 1000;
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0; pointer-events: none; transition: opacity 0.25s;
+        backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    }
+    .create-user-overlay.active { opacity: 1; pointer-events: auto; }
+    .create-user-modal {
+        background: rgba(26, 34, 51, 0.98);
+        border: 1px solid rgba(74, 143, 199, 0.25);
+        border-radius: 16px; padding: 28px 24px 22px; max-width: 360px; width: 90%;
+        box-shadow: 0 16px 48px rgba(0,0,0,0.4); position: relative;
+    }
+    [data-theme="light"] .create-user-modal {
+        background: rgba(250, 249, 245, 0.98);
+        border-color: rgba(20, 20, 19, 0.12);
+        box-shadow: 0 16px 48px rgba(0,0,0,0.15);
+    }
+    .create-user-close {
+        position: absolute; top: 12px; right: 12px; width: 28px; height: 28px;
+        border-radius: 8px; display: flex; align-items: center; justify-content: center;
+        cursor: pointer; background: transparent; border: none;
+        -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+    }
+    .create-user-close:active { background: rgba(74, 143, 199, 0.15); }
+    .create-user-close svg { stroke: rgba(140,170,200,0.7); }
+    [data-theme="light"] .create-user-close svg { stroke: rgba(0,0,0,0.5); }
+    .create-user-title {
+        text-align: center; font-size: 18px; font-weight: 700; color: #e0e0e0;
+        letter-spacing: -0.3px; margin-bottom: 6px;
+    }
+    [data-theme="light"] .create-user-title { color: #1a1a1a; }
+    .create-user-subtitle {
+        text-align: center; font-size: 12px; color: rgba(255,255,255,0.4);
+        margin-bottom: 20px;
+    }
+    [data-theme="light"] .create-user-subtitle { color: rgba(0,0,0,0.4); }
+    .create-user-field {
+        width: 100%; padding: 12px 14px;
+        background: rgba(30, 35, 50, 0.6);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 10px;
+        color: #fff; font-size: 14px;
+        font-family: inherit; outline: none;
+        transition: border-color 0.15s;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+    }
+    .create-user-field:focus { border-color: rgba(74,143,199,0.6); }
+    .create-user-field::placeholder { color: rgba(255,255,255,0.35); }
+    [data-theme="light"] .create-user-field {
+        background: rgba(0,0,0,0.03);
+        border-color: rgba(0,0,0,0.1);
+        color: #1a1a1a;
+    }
+    [data-theme="light"] .create-user-field::placeholder { color: rgba(20,20,19,0.4); }
+    .create-user-label {
+        display: block; font-size: 11px; text-transform: uppercase;
+        letter-spacing: 0.5px; color: rgba(255,255,255,0.5);
+        margin: 4px 2px 6px;
+    }
+    [data-theme="light"] .create-user-label { color: rgba(20,20,19,0.55); }
+    .create-user-btn {
+        width: 100%; padding: 12px;
+        background: rgba(74,199,113,0.18);
+        border: 1px solid rgba(74,199,113,0.4);
+        border-radius: 10px;
+        color: #4ac771; font-size: 14px; font-weight: 700;
+        font-family: inherit; cursor: pointer;
+        transition: background 0.15s, transform 0.1s;
+        margin-top: 8px;
+    }
+    .create-user-btn:active { transform: scale(0.97); }
+    .create-user-btn:hover { background: rgba(74,199,113,0.28); }
+    .create-user-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    [data-theme="light"] .create-user-btn {
+        background: rgba(74,199,113,0.12);
+        border-color: rgba(74,199,113,0.35);
+        color: #2e9e54;
+    }
+    .create-user-error {
+        font-size: 12px; color: #ff6b6b; text-align: center;
+        margin-top: 10px; min-height: 16px; line-height: 1.4;
+    }
+    [data-theme="light"] .create-user-error { color: #d64545; }
+    .create-user-hint {
+        font-size: 11px; color: rgba(255,255,255,0.4);
+        margin-top: 12px; line-height: 1.5; text-align: center;
+    }
+    [data-theme="light"] .create-user-hint { color: rgba(20,20,19,0.45); }
+    /* select опции — тёмный фон для dropdown */
+    .create-user-field option { background: #1a1f2e; color: #fff; }
+    [data-theme="light"] .create-user-field option { background: #fff; color: #1a1a1a; }
 
     /* ========== Экзаменационные билеты ========== */
     .ticket-cat-card { position: relative; border-radius: 14px; margin-bottom: 10px; cursor: pointer; transition: transform .15s; overflow: hidden; min-height: 120px; }
@@ -5854,6 +5972,7 @@
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Пользователи</div></div>
             <div class="admin-toolbar">
                 <input type="search" id="adminUserSearch" class="admin-search" placeholder="Поиск по email…" autocomplete="off" enterkeyhint="search" oninput="KipAdmin.renderUsers()">
+                <button type="button" class="admin-add-btn" onclick="KipAdmin.openCreateUser()">+ Добавить</button>
                 <button type="button" class="admin-refresh-btn" onclick="KipAdmin.loadUsers()">↻</button>
             </div>
             <div id="adminUsersList" class="admin-list">Загрузка…</div>
@@ -5883,6 +6002,7 @@
                     <option value="OTP_VERIFIED">OTP проверен</option>
                     <option value="ADMIN_UPDATE_ROLE">Смена роли</option>
                     <option value="ADMIN_RESET_LOGIN">Сброс входа</option>
+                    <option value="ADMIN_CREATE_USER">Создание пользователя</option>
                     <option value="ADMIN_ACCESS_DENIED">Отказ в доступе</option>
                 </select>
                 <button type="button" class="admin-refresh-btn" onclick="KipAdmin.loadLogs()">↻</button>
@@ -20092,6 +20212,78 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         },
 
         // ============================================================
+        // Создание нового пользователя.
+        // ============================================================
+
+        // Открыть модалку создания пользователя.
+        // Заполняет <select> ролями и ставит «Общий доступ» по умолчанию.
+        openCreateUser: function() {
+            const overlay = document.getElementById('createUserOverlay');
+            if (!overlay) return;
+
+            // Заполнить select ролями.
+            const sel = document.getElementById('createUserRole');
+            if (sel) {
+                sel.innerHTML = this.ROLES.map(function(r) {
+                    return '<option value="' + r + '">' + r + '</option>';
+                }).join('');
+                // По умолчанию — «Общий доступ» (минимальные права).
+                sel.value = 'Общий доступ';
+            }
+            // Очистить поля.
+            const emailInput = document.getElementById('createUserEmail');
+            if (emailInput) emailInput.value = '';
+            const errEl = document.getElementById('createUserError');
+            if (errEl) errEl.textContent = '';
+            const btn = document.getElementById('createUserBtn');
+            if (btn) { btn.disabled = false; btn.textContent = 'Создать пользователя'; }
+
+            overlay.classList.add('active');
+            // Фокус на поле email после анимации.
+            setTimeout(function() { if (emailInput) emailInput.focus(); }, 150);
+        },
+
+        // Закрыть модалку создания пользователя.
+        closeCreateUser: function() {
+            const overlay = document.getElementById('createUserOverlay');
+            if (overlay) overlay.classList.remove('active');
+        },
+
+        // Отправить запрос на создание пользователя.
+        createUser: function() {
+            const emailInput = document.getElementById('createUserEmail');
+            const roleSel = document.getElementById('createUserRole');
+            const errEl = document.getElementById('createUserError');
+            const btn = document.getElementById('createUserBtn');
+            if (!emailInput || !roleSel) return;
+
+            const email = (emailInput.value || '').trim().toLowerCase();
+            const role = roleSel.value;
+
+            // Клиентская валидация email (двойная: сервер тоже проверит).
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                if (errEl) errEl.textContent = 'Введите корректный email';
+                return;
+            }
+
+            if (errEl) errEl.textContent = '';
+            if (btn) { btn.disabled = true; btn.textContent = 'Создание…'; }
+
+            const self = this;
+            this._api('adminCreateUser', { email: email, role: role }).then(function() {
+                if (typeof showToast === 'function') {
+                    showToast('Пользователь создан: ' + email + ' (' + role + ')');
+                }
+                self.closeCreateUser();
+                // Перезагрузить список, чтобы новый пользователь появился.
+                self.loadUsers();
+            }).catch(function(err) {
+                if (errEl) errEl.textContent = err.message || String(err);
+                if (btn) { btn.disabled = false; btn.textContent = 'Создать пользователя'; }
+            });
+        },
+
+        // ============================================================
         // Утилиты.
         // ============================================================
 
@@ -20184,6 +20376,14 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             if (emailInput) {
                 emailInput.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter') KipAuth.sendOTP();
+                });
+            }
+
+            // Enter в поле email модалки создания пользователя — создать.
+            const createUserEmail = document.getElementById('createUserEmail');
+            if (createUserEmail) {
+                createUserEmail.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') KipAdmin.createUser();
                 });
             }
         }
@@ -20697,6 +20897,24 @@ window.addEventListener('load', function() {
         <div class="about-modal-row"><span class="about-modal-row-label">Платформа</span><span class="about-modal-row-value">PWA / TWA</span></div>
         <div class="about-modal-row"><span class="about-modal-row-label">Движок</span><span class="about-modal-row-value">Chromium WebView</span></div>
         <div class="about-modal-row"><span class="about-modal-row-label">Разработчик</span><span class="about-modal-row-value">bloknett-design</span></div>
+    </div>
+</div>
+
+<!-- Create User Modal (Админ: добавить пользователя) -->
+<div class="create-user-overlay" id="createUserOverlay" onclick="KipAdmin.closeCreateUser()">
+    <div class="create-user-modal" onclick="event.stopPropagation()">
+        <div class="create-user-close" onclick="KipAdmin.closeCreateUser()">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke-width:2;stroke-linecap:round;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+        <div class="create-user-title">Новый пользователь</div>
+        <div class="create-user-subtitle">После создания пользователь сможет запросить код входа на свой email</div>
+        <label class="create-user-label" for="createUserEmail">Email</label>
+        <input type="email" id="createUserEmail" class="create-user-field" placeholder="user@example.com" autocomplete="off" enterkeyhint="next">
+        <label class="create-user-label" for="createUserRole">Роль</label>
+        <select id="createUserRole" class="create-user-field"></select>
+        <button type="button" id="createUserBtn" class="create-user-btn" onclick="KipAdmin.createUser()">Создать пользователя</button>
+        <div id="createUserError" class="create-user-error"></div>
+        <div class="create-user-hint">Пользователь добавится с состоянием «вход не выполнен». После первого входа он появится в списке сессий.</div>
     </div>
 </div>
 
