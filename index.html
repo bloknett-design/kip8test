@@ -2686,6 +2686,42 @@
         stroke: rgba(0, 0, 0, 0.15) !important;
     }
 
+    /* ========== Библиотека — просмотрщик PDF (Google Drive embed) ==========
+       Страница page-library-viewer. iframe с встроенным просмотрщиком
+       Google Drive (/file/d/ID/preview) занимает всё пространство под
+       шапкой, без отступов — документ выглядит как часть PWA. */
+    .library-viewer-body {
+        position: absolute;
+        top: 56px;            /* под шапкой .page-inline-header */
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--bg-color, #1a1f2e);
+    }
+    .library-viewer-body iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        display: block;
+        background: #fff;
+    }
+    .library-viewer-error {
+        position: absolute;
+        top: 56px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 24px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: var(--text-secondary, rgba(255,255,255,0.6));
+        font-size: 14px;
+        line-height: 1.5;
+        background: var(--bg-color, #1a1f2e);
+    }
+
     /* Converter result items */
     [data-theme="light"] .converter-result-item {
         background: rgba(232, 230, 220, 0.55);
@@ -7126,25 +7162,25 @@
 
         <!-- ======================== БИБЛИОТЕКА КИП И А (ВНУТРЕННЯЯ) ======================== -->
         <div id="page-library-internal" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title page-inline-header-title-with-sub">Библиотека КИП и А<span class="page-inline-header-subtitle">Документы открываются на Яндекс Диске</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title page-inline-header-title-with-sub">Библиотека КИП и А<span class="page-inline-header-subtitle">Документы открываются на Google Drive</span></div></div>
 
 
             <div class="menu-btn-row">
-                <a href="https://disk.yandex.ru/d/JyIJWdDwGsPOSA" target="_blank" rel="noopener" class="menu-btn" style="text-decoration: none; color: inherit;">
+                <a href="https://drive.google.com/drive/folders/1M0V72jL6QRnyr2pJSWX_zmTSiwBWyl_q?usp=sharing" target="_blank" rel="noopener" class="menu-btn" style="text-decoration: none; color: inherit;">
                     <div class="menu-btn-text">
                         <div class="menu-btn-label">Метрология</div>
                         <div class="menu-btn-sublabel">Стандарты, поверка, эталоны</div>
                     </div>
                     <svg class="menu-btn-arrow" viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: rgba(255,255,255,0.12); fill: none; stroke-width: 2; stroke-linecap: round;"><polyline points="9 18 15 12 9 6"/></svg>
                 </a>
-                <a href="https://disk.yandex.ru/d/2DPQAftytDKDAQ" target="_blank" rel="noopener" class="menu-btn" style="text-decoration: none; color: inherit;">
+                <a href="https://drive.google.com/drive/folders/1I9F6KdQih4vVqfcyhiH6awqL1oVMCTkN?usp=sharing" target="_blank" rel="noopener" class="menu-btn" style="text-decoration: none; color: inherit;">
                     <div class="menu-btn-text">
                         <div class="menu-btn-label">ОТ и ПБ, пожарная безопасность</div>
                         <div class="menu-btn-sublabel">Охрана труда, промышленная безопасность</div>
                     </div>
                     <svg class="menu-btn-arrow" viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: rgba(255,255,255,0.12); fill: none; stroke-width: 2; stroke-linecap: round;"><polyline points="9 18 15 12 9 6"/></svg>
                 </a>
-                <a href="https://disk.yandex.ru/d/0DnXLISSam_oiw" target="_blank" rel="noopener" class="menu-btn" style="text-decoration: none; color: inherit;">
+                <a href="https://drive.google.com/drive/folders/19jdJDFf77-IMenPStilX4q4Z2D50Sk1G?usp=sharing" target="_blank" rel="noopener" class="menu-btn" style="text-decoration: none; color: inherit;">
                     <div class="menu-btn-text">
                         <div class="menu-btn-label">Приборы</div>
                         <div class="menu-btn-sublabel">Документация, паспорта, руководства</div>
@@ -7158,7 +7194,7 @@
                     </div>
                     <svg class="menu-btn-arrow" viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: rgba(255,255,255,0.12); fill: none; stroke-width: 2; stroke-linecap: round;"><polyline points="9 18 15 12 9 6"/></svg>
                 </div>
-                <a href="https://disk.yandex.ru/d/Bc2ASBGtPUxABA" target="_blank" rel="noopener" class="menu-btn" style="text-decoration: none; color: inherit;">
+                <a href="https://drive.google.com/drive/folders/1Sorstaz3tkPWMb5mAQI-phgi0M4V6E61?usp=sharing" target="_blank" rel="noopener" class="menu-btn" style="text-decoration: none; color: inherit;">
                     <div class="menu-btn-text">
                         <div class="menu-btn-label">Справочник</div>
                         <div class="menu-btn-sublabel">Таблицы, коэффициенты, формулы</div>
@@ -7170,45 +7206,69 @@
 
         <!-- ======================== БИБЛИОТЕКА — ЭЛЕКТРОБЕЗОПАСНОСТЬ ======================== -->
         <div id="page-library-electro" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title page-inline-header-title-with-sub">Электробезопасность<span class="page-inline-header-subtitle">Документы открываются на Яндекс Диске</span></div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title page-inline-header-title-with-sub">Электробезопасность<span class="page-inline-header-subtitle">Документы открываются на Google Drive</span></div></div>
 
 
             <div class="menu-btn-row">
-                <a href="https://disk.yandex.ru/i/069ikLnVi2KIeA" target="_blank" rel="noopener" class="menu-btn" style="text-decoration: none; color: inherit;">
+                <div class="menu-btn" onclick="openLibraryViewer('1a__ejD0uov--Y8rnA63a52GPkZ3DPDpB', 'ПУЭ 6 и 7')" style="cursor: pointer;">
                     <div class="menu-btn-text">
                         <div class="menu-btn-label">ПУЭ 6 и 7</div>
                         <div class="menu-btn-sublabel">Правила устройства электроустановок</div>
                     </div>
                     <svg class="menu-btn-arrow" viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: rgba(255,255,255,0.12); fill: none; stroke-width: 2; stroke-linecap: round;"><polyline points="9 18 15 12 9 6"/></svg>
-                </a>
-                <a href="https://disk.yandex.ru/i/dcQNNB-SIvynVQ" target="_blank" rel="noopener" class="menu-btn" style="text-decoration: none; color: inherit;">
+                </div>
+                <div class="menu-btn" onclick="openLibraryViewer('1ZStRnI0u0bL2szSmysAuMCKN3naNanvZ', 'ПТЭЭП 2003')" style="cursor: pointer;">
                     <div class="menu-btn-text">
                         <div class="menu-btn-label">ПТЭЭП 2003</div>
                         <div class="menu-btn-sublabel">Правила технической эксплуатации электроустановок потребителей</div>
                     </div>
                     <svg class="menu-btn-arrow" viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: rgba(255,255,255,0.12); fill: none; stroke-width: 2; stroke-linecap: round;"><polyline points="9 18 15 12 9 6"/></svg>
-                </a>
-                <a href="https://disk.yandex.ru/i/oZET14L_sgOJMQ" target="_blank" rel="noopener" class="menu-btn" style="text-decoration: none; color: inherit;">
+                </div>
+                <div class="menu-btn" onclick="openLibraryViewer('1sEggyOxc2jRoZLKavk43fSrgSfuLF8WU', 'ПОТЭЭ 2022')" style="cursor: pointer;">
                     <div class="menu-btn-text">
                         <div class="menu-btn-label">ПОТЭЭ 2022</div>
                         <div class="menu-btn-sublabel">Правила по охране труда в электроустановках</div>
                     </div>
                     <svg class="menu-btn-arrow" viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: rgba(255,255,255,0.12); fill: none; stroke-width: 2; stroke-linecap: round;"><polyline points="9 18 15 12 9 6"/></svg>
-                </a>
-                <a href="https://disk.yandex.ru/i/WsuOdwB94AHr4Q" target="_blank" rel="noopener" class="menu-btn" style="text-decoration: none; color: inherit;">
+                </div>
+                <div class="menu-btn" onclick="openLibraryViewer('1Q8kne-DyfxkkPZp0uxROAm6BC9rPZeq4', 'Инструкция СО 153-34.03.603-2003')" style="cursor: pointer;">
                     <div class="menu-btn-text">
                         <div class="menu-btn-label">Инструкция СО 153-34.03.603-2003</div>
                         <div class="menu-btn-sublabel">Применение и испытание средств защиты, используемых в электроустановках</div>
                     </div>
                     <svg class="menu-btn-arrow" viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: rgba(255,255,255,0.12); fill: none; stroke-width: 2; stroke-linecap: round;"><polyline points="9 18 15 12 9 6"/></svg>
-                </a>
-                <a href="https://disk.yandex.ru/d/S2Q3NdqhdgLQcg" target="_blank" rel="noopener" class="menu-btn" style="text-decoration: none; color: inherit;">
+                </div>
+                <a href="https://drive.google.com/drive/folders/1oRCzQYFzg4NBQj6cG0-K6p1R0Bo3oAeW?usp=sharing" target="_blank" rel="noopener" class="menu-btn" style="text-decoration: none; color: inherit;">
                     <div class="menu-btn-text">
                         <div class="menu-btn-label">Дополнительно</div>
                         <div class="menu-btn-sublabel">Дополнительные материалы по электробезопасности</div>
                     </div>
                     <svg class="menu-btn-arrow" viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: rgba(255,255,255,0.12); fill: none; stroke-width: 2; stroke-linecap: round;"><polyline points="9 18 15 12 9 6"/></svg>
                 </a>
+            </div>
+        </div>
+
+        <!-- ======================== БИБЛИОТЕКА — ПРОСМОТРЩИК PDF ========================
+             Открывается из разделов «Библиотека КИП и А» / «Электробезопасность»
+             по клику на отдельный PDF-файл. Документ Google Drive встраивается
+             через <iframe src="https://drive.google.com/file/d/FILE_ID/preview">.
+             Пользователь остаётся внутри PWA, шапка сохраняется, кнопка «Назад»
+             работает штатно через chevronTap(). -->
+        <div id="page-library-viewer" class="page-content">
+            <div class="page-inline-header">
+                <div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div>
+                <div class="page-inline-header-title" id="libraryViewerTitle">Документ</div>
+            </div>
+            <div class="library-viewer-body">
+                <iframe id="libraryViewerFrame"
+                    src="about:blank"
+                    allow="autoplay; fullscreen"
+                    referrerpolicy="no-referrer"
+                    loading="lazy"></iframe>
+            </div>
+            <div id="libraryViewerError" class="library-viewer-error" hidden>
+                Документ недоступен.<br>
+                Проверьте подключение к интернету или откройте файл напрямую на Google Drive.
             </div>
         </div>
 
@@ -14390,6 +14450,33 @@
         }
     }
 
+    // ===== Просмотрщик PDF из Google Drive (раздел «Библиотека») =====
+    // Открывает страницу page-library-viewer, устанавливает заголовок и
+    // src iframe на https://drive.google.com/file/d/FILE_ID/preview.
+    // fileId — ID файла Google Drive (из share-ссылки /file/d/ID/view).
+    // title  — заголовок в шапке PWA.
+    function openLibraryViewer(fileId, title) {
+        if (!fileId) return;
+        if (navigator.vibrate) navigator.vibrate(10);
+        navigateTo('library-viewer');
+        // navigateTo синхронна — страница уже в DOM и активна.
+        const titleEl = document.getElementById('libraryViewerTitle');
+        const frameEl = document.getElementById('libraryViewerFrame');
+        const errEl = document.getElementById('libraryViewerError');
+        if (titleEl) titleEl.textContent = title || 'Документ';
+        if (errEl) errEl.hidden = true;
+        if (frameEl) {
+            // about:blank при уходе со страницы — чтобы iframe перестал
+            // грузить тяжёлый PDF в фоне и освободил память.
+            frameEl.src = 'about:blank';
+            // Небольшая задержка — даём браузеру закрыть прошлый документ,
+            // затем подставляем новый URL просмотрщика Google Drive.
+            setTimeout(function() {
+                frameEl.src = 'https://drive.google.com/file/d/' + encodeURIComponent(fileId) + '/preview';
+            }, 50);
+        }
+    }
+
     // ===== Динамическое количество стрелок шеврона "Назад" =====
     // Глубина навигации = pageHistory.length (число переходов назад до главной).
     // На странице с глубиной 1 — одна стрелка, 2 — две, 3 — три, 4+ — четыре (кап).
@@ -18708,7 +18795,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                       'orifice-select', 'orifice-quick', 'orifice-dp', 'orifice-flow', 'orifice-diameter',
                       'circuit-breaker',
                       'geo-circle', 'geo-ring', 'geo-cylinder', 'geo-horiz', 'geo-sphere', 'geo-cone'],
-        _LIBRARY_PAGES: ['docs', 'library', 'library-internal', 'library-electro',
+        _LIBRARY_PAGES: ['docs', 'library', 'library-internal', 'library-electro', 'library-viewer',
                          'exam-tickets', 'tickets-4', 'tickets-5', 'tickets-6', 'tickets-1000v'],
         _KIP_IOS_PAGES: ['kip-ios',
                          'devices-prod', 'devices-type', 'devices-name', 'device-detail', 'dev-group',
