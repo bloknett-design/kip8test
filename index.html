@@ -5685,6 +5685,15 @@
         .desktop-only { display: flex !important; }
     }
 
+    /* --- Detail Panel: скрыт на мобильном по умолчанию --- */
+    #detailPanel {
+        display: none;
+    }
+    /* --- Sidebar toggle button: скрыт на мобильном --- */
+    #sidebarToggleBtn {
+        display: none;
+    }
+
     @media (min-width: 1024px) {
         /* --- Основной лейаут: sidebar + main + detail --- */
         #mainApp {
@@ -5712,6 +5721,52 @@
         /* Кнопка закрытия sidebar — скрыта на десктопе */
         #sidebar .header-btn {
             display: none;
+        }
+        /* Кнопка сворачивания sidebar — видна на десктопе */
+        #sidebarToggleBtn {
+            display: flex;
+            position: fixed;
+            top: 8px;
+            left: 8px;
+            z-index: 60;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: var(--header-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color, rgba(74, 143, 199, 0.15));
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s;
+        }
+        #sidebarToggleBtn:hover {
+            background: rgba(74, 143, 199, 0.15);
+        }
+        #sidebarToggleBtn svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--accent-blue, #4a8fc7);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            transition: transform 0.3s;
+        }
+        /* Sidebar свёрнут */
+        body.sidebar-collapsed #sidebar {
+            transform: translateX(-100%) !important;
+            position: fixed;
+        }
+        body.sidebar-collapsed #sidebarToggleBtn {
+            left: 8px;
+        }
+        body.sidebar-collapsed #sidebarToggleBtn svg {
+            transform: rotate(180deg);
+        }
+        /* Sidebar развёрнут */
+        body:not(.sidebar-collapsed) #sidebarToggleBtn {
+            left: 288px;
         }
 
         /* Шапка приложения — скрыта на десктопе (sidebar заменяет) */
@@ -14500,6 +14555,11 @@
     window.matchMedia('(min-width: 1024px)').addEventListener('change', function(e) {
         if (!e.matches) {
             closeDetailPanel();
+            // Переход на мобильный: убрать sidebar-collapsed, показать sidebar как overlay
+            document.body.classList.remove('sidebar-collapsed');
+        } else {
+            // Переход на десктоп: восстановить сохранённое состояние sidebar
+            initDesktopSidebar();
         }
         // Обновить sidebar состояние
         const sidebar = document.getElementById('sidebar');
@@ -16396,6 +16456,30 @@
     sidebar.classList.toggle('active');
     overlay.classList.toggle('active');
 }
+
+    /** Десктоп: сворачивание/разворачивание sidebar */
+    function toggleDesktopSidebar() {
+        document.body.classList.toggle('sidebar-collapsed');
+        // Сохраняем состояние в localStorage
+        try {
+            const key = 'kip8test:sidebar_collapsed';
+            if (document.body.classList.contains('sidebar-collapsed')) {
+                localStorage.setItem(key, '1');
+            } else {
+                localStorage.removeItem(key);
+            }
+        } catch(e) {}
+    }
+
+    /** Восстановление состояния sidebar при загрузке на десктопе */
+    function initDesktopSidebar() {
+        if (!isDesktop()) return;
+        try {
+            if (localStorage.getItem('kip8test:sidebar_collapsed') === '1') {
+                document.body.classList.add('sidebar-collapsed');
+            }
+        } catch(e) {}
+    }
 
 // Аккордеон в боковом меню: при разворачивании группы — сворачиваем ранее раскрытую.
 // Заголовок группы (title + count + arrow) сам является тогглером.
@@ -21487,10 +21571,15 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
     window.addEventListener('load', function() {
         // Небольшая задержка, чтобы DOM полностью инициализировался.
         setTimeout(function() { KipAuth.bootstrap(); }, 100);
+        // Инициализация десктопного sidebar (сворачивание по умолчанию)
+        if (typeof initDesktopSidebar === 'function') initDesktopSidebar();
     });
 </script>
 
 <!-- Sidebar -->
+<button type="button" id="sidebarToggleBtn" onclick="toggleDesktopSidebar()" aria-label="Свернуть/развернуть меню">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+</button>
 <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
 <div id="sidebar" class="sidebar">
     <div class="sidebar-header">
