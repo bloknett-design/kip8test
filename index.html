@@ -2380,22 +2380,22 @@
         border-bottom: none;
     }
     /* Чередование групп фоном (4 группы → зебра по группам).
-       Альфа понижена — подложку едва видно, текст читается чисто. */
+       Фон НЕПРОЗРАЧНЫЙ стально-синий — чтобы скрыть клетчатый паттерн body. */
     .cj-view-fields .cj-view-row.cj-view-group-1,
     .cj-view-fields .cj-view-row.cj-view-group-3 {
-        background: rgba(106,141,181,0.02);
+        background: #1a2233;  /* непрозрачный базовый стальной */
     }
     .cj-view-fields .cj-view-row.cj-view-group-2,
     .cj-view-fields .cj-view-row.cj-view-group-4 {
-        background: rgba(106,141,181,0.04);
+        background: #161d2b;  /* чуть темнее — зебра */
     }
     [data-theme="light"] .cj-view-fields .cj-view-row.cj-view-group-1,
     [data-theme="light"] .cj-view-fields .cj-view-row.cj-view-group-3 {
-        background: rgba(74,108,148,0.025);
+        background: #ffffff;
     }
     [data-theme="light"] .cj-view-fields .cj-view-row.cj-view-group-2,
     [data-theme="light"] .cj-view-fields .cj-view-row.cj-view-group-4 {
-        background: rgba(74,108,148,0.05);
+        background: #eef2f8;  /* бледно-стальной */
     }
     .cj-view-fields .cj-view-label {
         font-size: 12px;
