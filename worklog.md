@@ -1456,3 +1456,26 @@ Stage Summary:
   - `deb2386` Worklog: Task 81
 - Кэш остался v255 (без изменений кода в этом пуше)
 - Живая страница https://bloknett-design.github.io/kip8test/ обновится автоматически через GitHub Pages (обычно 1–2 мин)
+
+---
+Task ID: 83
+Agent: main (Super Z)
+Task: Заменить logo_black.png в тёмной теме на загруженную пользователем картинку
+
+Work Log:
+- Прочитан загруженный файл `/home/z/my-project/upload/logo_black.png` (2048×2048, 8-bit RGBA, 1.7 MB)
+- Скопирован в `/home/z/my-project/kip8test/images/logo_black.png` (перезаписан старый 1024×1024 295 KB)
+- Скопирован в `/home/z/my-project/download/logo_black.png`
+- Проверены ссылки: `index.html` строка 18168 — `logo.src = isLight ? 'images/logo.png' : 'images/logo_black.png'`, начальный `src="images/logo_black.png"` на строке 21030 — корректно
+- Инкрементированы версии кэшей в `sw.js`:
+  - `CACHE_VERSION: kipia-test-v255 -> kipia-test-v256`
+  - `IMAGE_CACHE_VERSION: kipia-images-test-v2 -> kipia-images-test-v3` (логотип тоже попадает в image cache)
+- Тесты: `node tests/run-all.js` → 207 passed, 0 failed
+- Коммит `22e6989` от kip-bot, запушен в main: `3e755be..22e6989  main -> main`
+- Верифицировано через GitHub API: sha `22e6989`, msg «Style: заменить logo_black.png на загруженную версию (v256)»
+
+Stage Summary:
+- Логотип в тёмной теме заменён на пользовательский (большая версия 2048×2048, 1.7 MB)
+- Кэш v255 → v256 (главный), image cache v2 → v3
+- Живая страница https://bloknett-design.github.io/kip8test/ обновится автоматически через 1–2 минуты
+- Пользователю: перезагрузить страницу дважды для применения нового SW
