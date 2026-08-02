@@ -2759,67 +2759,6 @@
         stroke: rgba(0, 0, 0, 0.15) !important;
     }
 
-    /* ========== Библиотека — просмотрщик PDF (Google Drive embed) ==========
-       Страница page-library-viewer. iframe с встроенным просмотрщиком
-       Google Drive (/file/d/ID/preview) занимает всё пространство под
-       шапкой, без отступов — документ выглядит как часть PWA. */
-    .library-viewer-body {
-        position: absolute;
-        top: 56px;            /* под шапкой .page-inline-header */
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: #525659;  /* нейтральный серый — как у Google Docs Viewer, обе темы */
-    }
-    .library-viewer-body iframe {
-        width: 100%;
-        height: 100%;
-        border: 0;
-        display: block;
-        background: #fff;
-    }
-    .library-viewer-error {
-        position: absolute;
-        top: 56px;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        padding: 24px 16px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        color: rgba(255, 255, 255, 0.85);   /* светлый текст — читается на тёмном фоне */
-        font-size: 14px;
-        line-height: 1.5;
-        background: #2a2d31;                /* тёмный фон — обе темы, как у Google Docs Viewer */
-        gap: 14px;
-    }
-    /* В светлой теме сохраняем тот же тёмный фон + светлый текст —
-       так контраст гарантирован независимо от темы PWA. */
-    [data-theme="light"] .library-viewer-error {
-        color: rgba(255, 255, 255, 0.9);
-        background: #2a2d31;
-    }
-    .library-viewer-error-text {
-        max-width: 320px;
-    }
-    .library-viewer-error-link {
-        display: inline-block;
-        padding: 10px 18px;
-        background: rgba(255, 255, 255, 0.12);
-        color: #fff;
-        text-decoration: none;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: 500;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    .library-viewer-error-link:active {
-        background: rgba(255, 255, 255, 0.2);
-    }
-
     /* Converter result items */
     [data-theme="light"] .converter-result-item {
         background: rgba(232, 230, 220, 0.55);
@@ -7308,34 +7247,34 @@
 
 
             <div class="menu-btn-row">
-                <div class="menu-btn" onclick="openLibraryViewer('1a__ejD0uov--Y8rnA63a52GPkZ3DPDpB', 'ПУЭ 6 и 7')" style="cursor: pointer;">
+                <a href="https://drive.google.com/file/d/1a__ejD0uov--Y8rnA63a52GPkZ3DPDpB/view" target="_blank" rel="noopener" class="menu-btn" style="text-decoration: none; color: inherit;">
                     <div class="menu-btn-text">
                         <div class="menu-btn-label">ПУЭ 6 и 7</div>
                         <div class="menu-btn-sublabel">Правила устройства электроустановок</div>
                     </div>
                     <svg class="menu-btn-arrow" viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: rgba(255,255,255,0.12); fill: none; stroke-width: 2; stroke-linecap: round;"><polyline points="9 18 15 12 9 6"/></svg>
-                </div>
-                <div class="menu-btn" onclick="openLibraryViewer('1ZStRnI0u0bL2szSmysAuMCKN3naNanvZ', 'ПТЭЭП 2003')" style="cursor: pointer;">
+                </a>
+                <a href="https://drive.google.com/file/d/1ZStRnI0u0bL2szSmysAuMCKN3naNanvZ/view" target="_blank" rel="noopener" class="menu-btn" style="text-decoration: none; color: inherit;">
                     <div class="menu-btn-text">
                         <div class="menu-btn-label">ПТЭЭП 2003</div>
                         <div class="menu-btn-sublabel">Правила технической эксплуатации электроустановок потребителей</div>
                     </div>
                     <svg class="menu-btn-arrow" viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: rgba(255,255,255,0.12); fill: none; stroke-width: 2; stroke-linecap: round;"><polyline points="9 18 15 12 9 6"/></svg>
-                </div>
-                <div class="menu-btn" onclick="openLibraryViewer('1sEggyOxc2jRoZLKavk43fSrgSfuLF8WU', 'ПОТЭЭ 2022')" style="cursor: pointer;">
+                </a>
+                <a href="https://drive.google.com/file/d/1sEggyOxc2jRoZLKavk43fSrgSfuLF8WU/view" target="_blank" rel="noopener" class="menu-btn" style="text-decoration: none; color: inherit;">
                     <div class="menu-btn-text">
                         <div class="menu-btn-label">ПОТЭЭ 2022</div>
                         <div class="menu-btn-sublabel">Правила по охране труда в электроустановках</div>
                     </div>
                     <svg class="menu-btn-arrow" viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: rgba(255,255,255,0.12); fill: none; stroke-width: 2; stroke-linecap: round;"><polyline points="9 18 15 12 9 6"/></svg>
-                </div>
-                <div class="menu-btn" onclick="openLibraryViewer('1Q8kne-DyfxkkPZp0uxROAm6BC9rPZeq4', 'Инструкция СО 153-34.03.603-2003')" style="cursor: pointer;">
+                </a>
+                <a href="https://drive.google.com/file/d/1Q8kne-DyfxkkPZp0uxROAm6BC9rPZeq4/view" target="_blank" rel="noopener" class="menu-btn" style="text-decoration: none; color: inherit;">
                     <div class="menu-btn-text">
                         <div class="menu-btn-label">Инструкция СО 153-34.03.603-2003</div>
                         <div class="menu-btn-sublabel">Применение и испытание средств защиты, используемых в электроустановках</div>
                     </div>
                     <svg class="menu-btn-arrow" viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: rgba(255,255,255,0.12); fill: none; stroke-width: 2; stroke-linecap: round;"><polyline points="9 18 15 12 9 6"/></svg>
-                </div>
+                </a>
                 <a href="https://drive.google.com/drive/folders/1oRCzQYFzg4NBQj6cG0-K6p1R0Bo3oAeW?usp=sharing" target="_blank" rel="noopener" class="menu-btn" style="text-decoration: none; color: inherit;">
                     <div class="menu-btn-text">
                         <div class="menu-btn-label">Дополнительно</div>
@@ -7343,33 +7282,6 @@
                     </div>
                     <svg class="menu-btn-arrow" viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: rgba(255,255,255,0.12); fill: none; stroke-width: 2; stroke-linecap: round;"><polyline points="9 18 15 12 9 6"/></svg>
                 </a>
-            </div>
-        </div>
-
-        <!-- ======================== БИБЛИОТЕКА — ПРОСМОТРЩИК PDF ========================
-             Открывается из разделов «Библиотека КИП и А» / «Электробезопасность»
-             по клику на отдельный PDF-файл. Документ Google Drive встраивается
-             через <iframe src="https://drive.google.com/file/d/FILE_ID/preview">.
-             Пользователь остаётся внутри PWA, шапка сохраняется, кнопка «Назад»
-             работает штатно через chevronTap(). -->
-        <div id="page-library-viewer" class="page-content">
-            <div class="page-inline-header">
-                <div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div>
-                <div class="page-inline-header-title" id="libraryViewerTitle">Документ</div>
-            </div>
-            <div class="library-viewer-body">
-                <iframe id="libraryViewerFrame"
-                    src="about:blank"
-                    allow="autoplay; fullscreen"
-                    referrerpolicy="no-referrer-when-downgrade"
-                    loading="eager"></iframe>
-            </div>
-            <div id="libraryViewerError" class="library-viewer-error" hidden>
-                <div class="library-viewer-error-text">
-                    Документ недоступен.<br>
-                    Проверьте подключение к интернету или откройте файл напрямую на Google Drive.
-                </div>
-                <a id="libraryViewerDriveLink" class="library-viewer-error-link" href="#" target="_blank" rel="noopener">Открыть на Google Drive</a>
             </div>
         </div>
 
@@ -14551,64 +14463,19 @@
         }
     }
 
-    // ===== Просмотрщик PDF из Google Drive (раздел «Библиотека») =====
-    // Открывает страницу page-library-viewer, устанавливает заголовок и
-    // src iframe на https://drive.google.com/file/d/FILE_ID/preview.
-    // fileId — ID файла Google Drive (из share-ссылки /file/d/ID/view).
-    // title  — заголовок в шапке PWA.
+    // ===== Просмотр PDF из Google Drive (раздел «Библиотека») =====
+    // Внутренний просмотрщик удалён (Task 67) — все PDF-карточки в разделах
+    // «Библиотека КИП и А» / «Электробезопасность» теперь открываются прямыми
+    // ссылками <a href="https://drive.google.com/file/d/FILE_ID/view" target="_blank">
+    // в новой вкладке браузера. Эта функция оставлена как заглушка-редирект —
+    // на случай, если где-то остался вызов openLibraryViewer() (например, в
+    // закэшированной старой версии страницы). При вызове открывает файл
+    // напрямую в новой вкладке.
     function openLibraryViewer(fileId, title) {
         if (!fileId) return;
         if (navigator.vibrate) navigator.vibrate(10);
-        navigateTo('library-viewer');
-        // navigateTo синхронна — страница уже в DOM и активна.
-        const titleEl = document.getElementById('libraryViewerTitle');
-        const frameEl = document.getElementById('libraryViewerFrame');
-        const errEl = document.getElementById('libraryViewerError');
-        const linkEl = document.getElementById('libraryViewerDriveLink');
-        if (titleEl) titleEl.textContent = title || 'Документ';
-        if (errEl) errEl.hidden = true;
-
-        // Прямая ссылка на Google Drive (для fallback-кнопки в сообщении об ошибке).
-        // Используем /view — открывает страницу файла с кнопкой «Скачать».
-        const driveUrl = 'https://drive.google.com/file/d/' + encodeURIComponent(fileId) + '/view';
-        if (linkEl) linkEl.href = driveUrl;
-
-        if (frameEl) {
-            // about:blank при уходе со страницы — чтобы iframe перестал
-            // грузить тяжёлый PDF в фоне и освободил память.
-            frameEl.src = 'about:blank';
-            // Небольшая задержка — даём браузеру закрыть прошлый документ,
-            // затем подставляем новый URL просмотрщика Google Drive.
-            const previewUrl = 'https://drive.google.com/file/d/' + encodeURIComponent(fileId) + '/preview';
-            setTimeout(function() {
-                frameEl.src = previewUrl;
-            }, 50);
-
-            // Fallback-таймер: если iframe не загрузился за 12 секунд —
-            // показываем сообщение об ошибке с кнопкой «Открыть на Google Drive».
-            // Google Drive preview обычно грузится за 2-5 сек; 12 сек — запас
-            // для медленного интернета. Если iframe загрузится позже —
-            // сообщение останется скрытым (load-событие уже прошло).
-            if (window._libraryViewerTimer) {
-                clearTimeout(window._libraryViewerTimer);
-            }
-            window._libraryViewerTimer = setTimeout(function() {
-                const e = document.getElementById('libraryViewerError');
-                if (e && !e.hidden) return; // уже показано
-                // Проверяем — если iframe действительно пустой (about:blank или не загрузился)
-                try {
-                    if (frameEl.contentDocument &&
-                        frameEl.contentDocument.body &&
-                        frameEl.contentDocument.body.children.length === 0) {
-                        if (e) e.hidden = false;
-                    }
-                } catch (err) {
-                    // cross-origin — contentDocument недоступен. Это нормально:
-                    // значит, iframe загрузил чужой контент (Google Drive), всё OK.
-                    // Не показываем ошибку.
-                }
-            }, 12000);
-        }
+        const url = 'https://drive.google.com/file/d/' + encodeURIComponent(fileId) + '/view';
+        window.open(url, '_blank', 'noopener');
     }
 
     // ===== Динамическое количество стрелок шеврона "Назад" =====
@@ -18929,7 +18796,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                       'orifice-select', 'orifice-quick', 'orifice-dp', 'orifice-flow', 'orifice-diameter',
                       'circuit-breaker',
                       'geo-circle', 'geo-ring', 'geo-cylinder', 'geo-horiz', 'geo-sphere', 'geo-cone'],
-        _LIBRARY_PAGES: ['docs', 'library', 'library-internal', 'library-electro', 'library-viewer',
+        _LIBRARY_PAGES: ['docs', 'library', 'library-internal', 'library-electro',
                          'exam-tickets', 'tickets-4', 'tickets-5', 'tickets-6', 'tickets-1000v'],
         _KIP_IOS_PAGES: ['kip-ios',
                          'devices-prod', 'devices-type', 'devices-name', 'device-detail', 'dev-group',

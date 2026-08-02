@@ -11,7 +11,7 @@
 // свежие версии файлов из ASSETS.
 // ============================================================
 
-const CACHE_VERSION = 'kipia-test-v241';
+const CACHE_VERSION = 'kipia-test-v242';
 const CACHE_NAME = CACHE_VERSION;
 
 // Отдельный кэш для картинок Google Drive (превью + полные).
@@ -164,16 +164,6 @@ self.addEventListener('fetch', event => {
   if (bypassUrl.hostname === 'script.google.com' ||
       bypassUrl.hostname === 'script.googleusercontent.com') {
     return; // не вызываем event.respondWith — браузер сам обработает запрос
-  }
-
-  // ===== Bypass для Google Drive PDF preview (iframe в library-viewer) =====
-  // Запросы вида https://drive.google.com/file/d/FILE_ID/preview — это
-  // встроенный просмотрщик PDF, который сам по себе делает под-запросы
-  // (fonts, images, AJAX). Если SW начнёт их перехватывать и кэшировать —
-  // iframe ломается. Поэтому /preview запросы пропускаем напрямую в сеть.
-  if (bypassUrl.hostname === 'drive.google.com' &&
-      bypassUrl.pathname.indexOf('/preview') !== -1) {
-    return;
   }
 
   // Только GET-запросы кэшируем
