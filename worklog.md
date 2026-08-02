@@ -1479,3 +1479,45 @@ Stage Summary:
 - Кэш v255 → v256 (главный), image cache v2 → v3
 - Живая страница https://bloknett-design.github.io/kip8test/ обновится автоматически через 1–2 минуты
 - Пользователю: перезагрузить страницу дважды для применения нового SW
+
+---
+Task ID: 84
+Agent: main (Super Z)
+Task: Полная синхронизация kip8test → kip8 (Tasks 26-83)
+
+Work Log:
+- Пользователь передал PAT для kip8: `ghp_o7O2…0duxR` → /home/z/.kip_pat
+- Клонирован/обновлён `/home/z/my-project/kip8/` (git pull origin main → 677e9e4)
+- Состояние до: index.html 18416 строк, sw.js kipia-v15, нет auth/cable/admin/миграции на Google Sheets
+- Скопированы из kip8test в kip8:
+  - index.html (21555 → 21540 строк после удаления isolateLocalStorage)
+  - data/*.json (8 файлов)
+  - images/* (включая новый logo_black.png)
+  - scripts/*.py (7 sync-скриптов с datetime_to_serial)
+  - tests/* (11 файлов)
+  - .github/workflows/*.yml (8 файлов, включая 6 новых sync-*)
+- index.html: удалён блок isolateLocalStorage() (15 строк)
+- index.html: заменены все kip8test: → kip8: в ключах localStorage:
+  - kip8test_phonebook_favorites → kip8_phonebook_favorites
+  - kip8test_phonebook_notes → kip8_phonebook_notes
+  - kip8test_phonebook_cache → kip8_phonebook_cache
+  - kip8test_devices_cache → kip8_devices_cache
+  - 'kip8test:' + DEV_CACHE_KEY → DEV_CACHE_KEY (3 места)
+- index.html: /kip8test/ → /kip8/ в комментарии
+- WEB_APP_URL остался тем же (Apps Script общий для kip8 и kip8test)
+- sw.js: kipia-test-v256 → kipia-v16, kipia-images-test-v3 → kipia-images-v2
+- sw.js: заголовок комментария «ТЕСТОВЫЙ РЕПОЗИТОРИЙ kip8test» → «ОСНОВНОЙ РЕПОЗИТОРИЙ kip8»
+- .github/workflows/*.yml: kip8test → kip8, (TEST) → (PROD), «тестовый репозиторий» → «основной репозиторий»
+- manifest.json: НЕ ТРОГАЛ (пути /kip8/ уже корректные)
+- Тесты: node tests/run-all.js → 207 passed, 0 failed
+- Коммит `a7f7582` от kip-bot
+- Push: `677e9e4..a7f7582  main -> main`
+- Верифицировано через GitHub API: sha `a7f7582`, msg «Полная синхронизация с kip8test: Tasks 26-83 (kipia-v16)»
+
+Stage Summary:
+- kip8 полностью синхронизирован с kip8test
+- Все 84 страницы, auth Email+OTP, роли, админ-панель, кабельный журнал, миграция на Google Sheets
+- Кэш kip8: v15 → v16 (image cache v1 → v2)
+- 6 новых workflow добавлены (sync-devices/lockouts/valves/regulators/projects/cables.yml)
+- Живая страница: https://bloknett-design.github.io/kip8/ (обновится через 1-2 мин)
+- ВНИМАНИЕ: пользователь должен перезагрузить страницу дважды для применения нового SW
