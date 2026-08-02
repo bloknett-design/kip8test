@@ -1431,3 +1431,28 @@ Stage Summary:
 - Кэш НЕ менялся (kipia-test-v255) — изменения только в документации.
 - Локальный коммит: cab5969. 5 локальных коммитов опережают origin/main на 5 (4 из предыдущей сессии + этот).
 - Для push в GitHub нужно предоставить PAT заново (файл /home/z/.kip_pat отсутствует).
+
+---
+Task ID: 82
+Agent: main (Super Z)
+Task: Запушить все последние изменения в kip8test с новым GitHub PAT
+
+Work Log:
+- Пользователь передал новый PAT `ghp_cxree…v2XMCwE`
+- Записан в `/home/z/.kip_pat` (chmod 600)
+- Проверён локальный статус: `git log origin/main..HEAD` = 6 коммитов (от `80dd0c9` «two-level grouping for devices» до `deb2386` «Worklog: Task 81»)
+- `git push https://bloknett-design:<TOKEN>@github.com/bloknett-design/kip8test.git main`
+- Push вывод: `d6784c0..deb2386  main -> main`
+- Верификация через GitHub API: `GET /repos/.../commits/main` → sha `deb2386`, msg «Worklog: Task 81 — обновление системного промта rev. 4»
+- Файлы скопированы в `/home/z/my-project/download/` (index.html, sw.js, logo_black.png, Системный_промт…rev.4)
+
+Stage Summary:
+- Все 6 коммитов из локальной очереди запушены в `bloknett-design/kip8test` main:
+  - `80dd0c9` Feat: two-level grouping for devices (Task 79)
+  - `c63f993` Style: recolor logo for dark theme (Task 80, iter 1)
+  - `fd8e485` Style: darken logo to match sidebar #17212b (Task 80, iter 2)
+  - `d6784c0` Docs: системный промт rev.3 (v179→v255)
+  - `cab5969` Docs: системный промт rev.4 — подробно расписан весь функционал
+  - `deb2386` Worklog: Task 81
+- Кэш остался v255 (без изменений кода в этом пуше)
+- Живая страница https://bloknett-design.github.io/kip8test/ обновится автоматически через GitHub Pages (обычно 1–2 мин)
