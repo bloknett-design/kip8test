@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 """
-Синхронизация проектов с публичной ссылкой Яндекс Диска.
+Синхронизация проектов с Google Sheets.
 
-Источник: https://disk.yandex.ru/i/hfIfJ3EaHMWp9A
-          (файл «Перечень проектов КИП пр-ва ИОС.xlsx»)
+Источник: https://docs.google.com/spreadsheets/d/1IQq8S4-Qao1eJKli3zgMvTpA2exkGYg0/edit
+          (файл «Перечень проектов КИП пр-ва ИОС»)
 Лист: "Проекты"
 
-Скрипт работает по тому же принципу, что и scripts/sync-valves.py
-(раздел «Клапаны»):
-
-  1. Через Yandex Disk Public API (https://cloud-api.yandex.net/v1/disk/public/resources)
-     получает download_url по публичной ссылке.
-  2. Скачивает XLSX-файл напрямую с Яндекс Диска.
-  3. Парсит лист "Проекты" — заголовки в 1-й строке, данные со 2-й.
+Скрипт:
+  1. Скачивает XLSX напрямую из Google Sheets через export?format=xlsx.
+     Google отдаёт файл без OAuth, если таблица доступна «у кого есть ссылка».
+  2. Парсит лист "Проекты" — заголовки в 1-й строке, данные со 2-й.
      Примечание: заголовок «Отделение » в исходном файле имеет trailing space,
      нормализуем все заголовки (strip) — итоговый ключ «Отделение».
-  4. Сохраняет результат в data/projects.json.
+  3. Сохраняет результат в data/projects.json.
 
 Переменные окружения:
-  PROJECTS_PUBLIC_KEY — публичная ссылка
-      (по умолчанию https://disk.yandex.ru/i/hfIfJ3EaHMWp9A)
+  PROJECTS_SPREADSHEET_ID — ID Google Sheets
+      (по умолчанию 1IQq8S4-Qao1eJKli3zgMvTpA2exkGYg0)
   PROJECTS_SHEET_NAME — имя листа (по умолчанию "Проекты")
+  PROJECTS_GID — numeric ID листа (опционально; если задан, экспортирует
+      конкретный лист через &gid=...). Если не задан — экспортируется первый
+      лист таблицы.
 
 Если нет интернета или API недоступен — используется уже существующий
 data/projects.json как заглушка (PWA продолжает работать с последними
@@ -39,10 +39,9 @@ import openpyxl
 
 
 # ============================================================
-# Настройки Яндекс Диска
+# Настройки Google Sheets
 # ============================================================
-YANDEX_PUBLIC_API = 'https://cloud-api.yandex.net/v1/disk/public/resources'
-DEFAULT_PUBLIC_KEY = 'https://disk.yandex.ru/i/hfIfJ3EaHMWp9A'
+DEFAULT_SPREADSHEET_ID = '1IQq8S4-Qao1eJKli3zgMvTpA2exkGYg0'
 DEFAULT_SHEET_NAME = 'Проекты'
 
 DOWNLOAD_DIR = Path('/tmp/projects_download')
@@ -57,46 +56,40 @@ def log(msg):
 
 
 # ============================================================
-# Скачивание через Yandex Disk Public API
+# Скачивание XLSX напрямую из Google Sheets
 # ============================================================
-def get_download_url(public_key):
-    """Получает download_url для публичного файла через Yandex Disk Public API."""
-    log(f'Запрос метаданных публичного файла: {public_key}')
-    params = {'public_key': public_key}
-    resp = requests.get(YANDEX_PUBLIC_API, params=params, timeout=30)
-    if resp.status_code != 200:
-        raise RuntimeError(f'Ошибка API: HTTP {resp.status_code} — {resp.text[:200]}')
-    data = resp.json()
-    download_url = data.get('file')
-    if not download_url:
-        raise RuntimeError(
-            f'Не удалось получить download_url: {json.dumps(data, ensure_ascii=False)[:500]}'
-        )
-    name = data.get('name', 'projects.xlsx')
-    log(f'Имя файла на Яндекс Диске: {name}')
-    return download_url, name
+def download_file(spreadsheet_id, gid=None):
+    """
+    Скачивает XLSX-экспорт Google Sheets.
 
+    URL: https://docs.google.com/spreadsheets/d/<ID>/export?format=xlsx[&gid=<GID>]
+    Если gid не задан — экспортируется вся книга (все листы).
+    """
+    url = f'https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=xlsx'
+    if gid:
+        url += f'&gid={gid}'
 
-def download_file(url, filename):
-    """Скачивает файл по URL."""
-    local_path = DOWNLOAD_DIR / filename
-    log(f'Скачивание: {url[:80]}...')
+    log(f'Скачивание: {url[:100]}...')
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
     }
-    resp = requests.get(url, headers=headers, timeout=120)
+    resp = requests.get(url, headers=headers, timeout=120, allow_redirects=True)
     if resp.status_code != 200:
-        raise RuntimeError(f'Ошибка скачивания: HTTP {resp.status_code}')
-    local_path.write_bytes(resp.content)
-    file_size = local_path.stat().st_size
-    log(f'Файл скачан: {local_path} ({file_size} байт)')
+        raise RuntimeError(f'Ошибка скачивания: HTTP {resp.status_code} — {resp.text[:200]}')
 
     # Проверяем, что это xlsx (ZIP, начинается с PK)
     if resp.content[:2] != b'PK':
         raise RuntimeError(
             f'Скачанный файл не является xlsx (не ZIP). '
-            f'Первые байты: {resp.content[:4]!r}'
+            f'Первые байты: {resp.content[:4]!r}. '
+            f'Возможно, таблица не опубликована или нет доступа.'
         )
+
+    filename = 'projects.xlsx'
+    local_path = DOWNLOAD_DIR / filename
+    local_path.write_bytes(resp.content)
+    file_size = local_path.stat().st_size
+    log(f'Файл скачан: {local_path} ({file_size} байт)')
     return local_path
 
 
@@ -160,7 +153,7 @@ def parse_projects(xlsx_path, sheet_name):
             # Для столбца «Файл проекта»: если у ячейки есть гиперссылка —
             # использовать её target (URL) вместо текста. Это позволяет
             # корректно извлекать рабочие URL, которые пользователь в Excel
-            # добавил как гиперссылку на файл проекта (например, на Яндекс.Диск).
+            # добавил как гиперссылку на файл проекта.
             # Локальные пути вида «Проекты_Files\...» (без гиперссылки) —
             # сохраняем как есть; они не являются рабочими ссылками.
             if val and headers_clean[col_idx - 1] == 'Файл проекта' and cell.hyperlink:
@@ -194,23 +187,21 @@ def parse_projects(xlsx_path, sheet_name):
 
 
 def main():
-    public_key = os.environ.get('PROJECTS_PUBLIC_KEY', '').strip() or DEFAULT_PUBLIC_KEY
+    spreadsheet_id = os.environ.get('PROJECTS_SPREADSHEET_ID', '').strip() or DEFAULT_SPREADSHEET_ID
     sheet_name = os.environ.get('PROJECTS_SHEET_NAME', '').strip() or DEFAULT_SHEET_NAME
+    gid = os.environ.get('PROJECTS_GID', '').strip() or None
 
     try:
-        # 1. Получить download_url
-        download_url, filename = get_download_url(public_key)
+        # 1. Скачать XLSX из Google Sheets
+        local_file = download_file(spreadsheet_id, gid=gid)
 
-        # 2. Скачать файл
-        local_file = download_file(download_url, filename)
-
-        # 3. Распарсить лист
+        # 2. Распарсить лист
         projects, headers = parse_projects(local_file, sheet_name)
 
-        # 4. Сохранить JSON
+        # 3. Сохранить JSON
         out = {
             'title': 'Проекты КИП пр-ва ИОС',
-            'source': f'Yandex Disk (public): {public_key}',
+            'source': f'Google Sheets: https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit',
             'sheet': sheet_name,
             'total_projects': len(projects),
             'headers': headers,
