@@ -5698,6 +5698,12 @@
         /* --- Основной лейаут: top bar + main + detail --- */
         /* (определён в блоке .desktop-top-bar ниже) */
 
+        /* Отключить прокрутку body на десктопе — всё прокручивается внутри панелей */
+        html, body {
+            overflow: hidden;
+            height: 100%;
+        }
+
         /* Шапка приложения — скрыта на десктопе (top bar заменяет) */
         .app-header {
             display: none !important;
@@ -6041,7 +6047,8 @@
         #mainApp {
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden;
         }
         #contentArea {
             flex: 1;
@@ -6054,7 +6061,7 @@
             flex: 1;
             overflow-y: auto;
             min-width: 0;
-            height: 0; /* заставляет flex-item уважать overflow-y: auto */
+            min-height: 0;
         }
     }
 
