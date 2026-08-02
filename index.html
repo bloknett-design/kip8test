@@ -1997,19 +1997,19 @@
         width: 180px;
         max-width: calc(100vw - 120px);
         padding: 6px 10px;
-        border: 1px solid rgba(199,150,74,0.45);
+        border: 1px solid rgba(106,141,181,0.55);
         border-radius: 8px;
         background: #1a2233;
-        color: #e0e0e0;
+        color: #e0e6f0;
         font-size: 13px;
         font-family: 'Inter', sans-serif;
         outline: none;
         transition: none;
     }
     [data-theme="light"] .cj-header-search.search-open {
-        background: #fbf6ea;
-        border-color: rgba(199,150,74,0.5);
-        color: #1a1a1a;
+        background: #eef2f8;
+        border-color: rgba(74,108,148,0.55);
+        color: #1a2233;
     }
     .cj-header-search.search-open::placeholder { color: rgba(255,255,255,0.4); }
     [data-theme="light"] .cj-header-search.search-open::placeholder { color: rgba(20,20,19,0.4); }
@@ -2064,9 +2064,9 @@
         transform: translateY(-50%) scale(0.94);
     }
     .cj-icon-btn-inline.active {
-        background: rgba(199,150,74,0.32);
-        border-color: rgba(199,150,74,0.7);
-        color: #d4a55a;
+        background: rgba(106,141,181,0.32);
+        border-color: rgba(106,141,181,0.7);
+        color: #9bb8d9;
     }
     [data-theme="light"] .cj-icon-btn-inline {
         background: transparent;
@@ -2074,12 +2074,12 @@
         color: rgba(20,20,19,0.7);
     }
     [data-theme="light"] .cj-icon-btn-inline.active {
-        background: rgba(199,150,74,0.22);
-        border-color: rgba(199,150,74,0.6);
-        color: #8a6428;
+        background: rgba(74,108,148,0.22);
+        border-color: rgba(74,108,148,0.6);
+        color: #345582;
     }
 
-    /* Кнопка '+' в шапке — маленькая квадратная, акцентного цвета. */
+    /* Кнопка '+' в шапке — маленькая квадратная, стально-синего акцента. */
     .cj-add-btn-inline {
         position: absolute;
         top: 50%;
@@ -2092,10 +2092,10 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(199,150,74,0.18);
-        border: 1px solid rgba(199,150,74,0.45);
+        background: rgba(106,141,181,0.18);
+        border: 1px solid rgba(106,141,181,0.45);
         border-radius: 8px;
-        color: #c7964a;
+        color: #9bb8d9;
         font-size: 20px;
         font-weight: 700;
         line-height: 1;
@@ -2107,12 +2107,12 @@
     }
     .cj-add-btn-inline:active {
         transform: translateY(-50%) scale(0.94);
-        background: rgba(199,150,74,0.32);
+        background: rgba(106,141,181,0.32);
     }
     [data-theme="light"] .cj-add-btn-inline {
-        background: rgba(199,150,74,0.14);
-        border-color: rgba(199,150,74,0.4);
-        color: #8a6428;
+        background: rgba(74,108,148,0.14);
+        border-color: rgba(74,108,148,0.4);
+        color: #345582;
     }
 
     /* Список во всю ширину, без padding-ов по бокам */
@@ -2123,17 +2123,18 @@
     }
     /* Заголовок группы "Отделение, производство" — sticky под шапкой страницы,
        НЕпрозрачный фон (чтобы карточки под ним не просвечивали при скролле).
-       Клик по заголовку сворачивает/разворачивает карточки группы. */
+       Клик по заголовку сворачивает/разворачивает карточки группы.
+       Стально-синяя палитра. */
     .cj-group-header {
         position: sticky;
         top: 56px;  /* высота .page-inline-header */
         z-index: 20;
         padding: 8px 14px;
-        background: #3a2d1c;  /* непрозрачный тёплый коричнево-золотой */
-        border-bottom: 1px solid rgba(199,150,74,0.45);
+        background: #1f2a3d;  /* непрозрачный тёмно-сине-стальной */
+        border-bottom: 1px solid rgba(106,141,181,0.45);
         font-size: 13px;
         font-weight: 700;
-        color: #d4a55a;
+        color: #9bb8d9;
         letter-spacing: 0.2px;
         display: flex;
         align-items: baseline;
@@ -2144,29 +2145,29 @@
         -webkit-user-select: none;
     }
     .cj-group-header:active {
-        background: #4a3a26;  /* чуть светлее при нажатии */
+        background: #28374d;  /* чуть светлее при нажатии */
     }
     .page-content.scrolled .cj-group-header {
         top: 40px;  /* высота сжатого .page-inline-header при скролле */
     }
     [data-theme="light"] .cj-group-header {
-        background: #f0e4ca;  /* непрозрачный кремово-золотой */
-        border-bottom-color: rgba(199,150,74,0.5);
-        color: #6e4f1f;
+        background: #e8eef5;  /* непрозрачный бледно-стальной */
+        border-bottom-color: rgba(74,108,148,0.5);
+        color: #345582;
     }
     [data-theme="light"] .cj-group-header:active {
-        background: #e8dab8;
+        background: #d8e2ed;
     }
     .cj-group-caret {
         flex: 0 0 auto;
         font-size: 10px;
-        color: #d4a55a;
+        color: #9bb8d9;
         transition: transform .15s ease;
         display: inline-block;
         transform: rotate(0deg);
     }
     [data-theme="light"] .cj-group-caret {
-        color: #8a6428;
+        color: #345582;
     }
     .cj-group[data-collapsed="true"] .cj-group-caret {
         transform: rotate(-90deg);
@@ -2181,20 +2182,20 @@
     .cj-group-header-count {
         font-size: 11px;
         font-weight: 500;
-        color: rgba(212,165,90,0.85);
+        color: rgba(155,184,217,0.85);
         font-feature-settings: "tnum";
         flex-shrink: 0;
     }
     [data-theme="light"] .cj-group-header-count {
-        color: rgba(110,79,31,0.85);
+        color: rgba(52,85,130,0.85);
     }
 
     /* Строки-карточки во всю ширину, без боковых отступов и border-radius.
-       Зебра: нечётные — светлее, чётные — темнее. Непрозрачный фон. */
+       Зебра: нечётные — светлее, чётные — темнее. Непрозрачный сине-стальной фон. */
     .cj-item {
-        background: #1a2233;  /* непрозрачный, базовый (odd) */
+        background: #1a2233;  /* непрозрачный, базовый (odd) — стальной */
         border: none;
-        border-bottom: 1px solid rgba(255,255,255,0.04);
+        border-bottom: 1px solid rgba(106,141,181,0.08);
         border-radius: 0;
         padding: 10px 14px;
         margin-bottom: 0;
@@ -2205,17 +2206,17 @@
         background: #161d2b;  /* чуть темнее — зебра */
     }
     .cj-item:active {
-        background: rgba(120,160,200,0.18) !important;
+        background: rgba(106,141,181,0.22) !important;
     }
     [data-theme="light"] .cj-item {
         background: #ffffff;
-        border-bottom-color: rgba(0,0,0,0.05);
+        border-bottom-color: rgba(74,108,148,0.10);
     }
     [data-theme="light"] .cj-item:nth-child(even) {
-        background: #f5f7fa;
+        background: #eef2f8;  /* бледно-стальной зебра */
     }
     [data-theme="light"] .cj-item:active {
-        background: rgba(120,160,200,0.12) !important;
+        background: rgba(74,108,148,0.15) !important;
     }
     /* Шапка карточки: только обозначение (без № п/п) */
     .cj-item-header {
@@ -2354,14 +2355,65 @@
     /* ========== Кабельный журнал — страница просмотра записи ==========
        Открывается по клику на карточку в списке. Read-only: данные
        показываются как текст, без возможности редактировать или удалить.
-       Оформлена в стиле детальной карточки блокировки (lock-detail-card). */
+       Без фоновой подложки — строки идут прямо по странице, во всю ширину
+       экрана. Сине-стальная палитра. */
     .cj-view-page-body {
-        padding: 14px 14px 36px;
-        max-width: 640px;
-        margin: 0 auto;
+        padding: 0 0 36px 0;
+        margin: 0;
+        max-width: none;  /* во всю ширину экрана */
     }
     .cj-view-fields {
         display: block;
+    }
+    .cj-view-fields .cj-view-row {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 10px 14px;
+        border-bottom: 1px solid rgba(106,141,181,0.10);
+        background: transparent;  /* без подложки */
+    }
+    [data-theme="light"] .cj-view-fields .cj-view-row {
+        border-bottom-color: rgba(74,108,148,0.10);
+    }
+    .cj-view-fields .cj-view-row:last-child {
+        border-bottom: none;
+    }
+    /* Чередование групп фоном (4 группы → зебра по группам) */
+    .cj-view-fields .cj-view-row.cj-view-group-1,
+    .cj-view-fields .cj-view-row.cj-view-group-3 {
+        background: rgba(106,141,181,0.04);
+    }
+    .cj-view-fields .cj-view-row.cj-view-group-2,
+    .cj-view-fields .cj-view-row.cj-view-group-4 {
+        background: rgba(106,141,181,0.08);
+    }
+    [data-theme="light"] .cj-view-fields .cj-view-row.cj-view-group-1,
+    [data-theme="light"] .cj-view-fields .cj-view-row.cj-view-group-3 {
+        background: rgba(74,108,148,0.04);
+    }
+    [data-theme="light"] .cj-view-fields .cj-view-row.cj-view-group-2,
+    [data-theme="light"] .cj-view-fields .cj-view-row.cj-view-group-4 {
+        background: rgba(74,108,148,0.08);
+    }
+    .cj-view-fields .cj-view-label {
+        font-size: 12px;
+        color: rgba(155,184,217,0.55);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    [data-theme="light"] .cj-view-fields .cj-view-label {
+        color: rgba(52,85,130,0.55);
+    }
+    .cj-view-fields .cj-view-value {
+        font-size: 15px;
+        color: var(--text-primary, #e0e6f0);
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        line-height: 1.45;
+    }
+    [data-theme="light"] .cj-view-fields .cj-view-value {
+        color: #1a2233;
     }
 
     /* ========== Экзаменационные билеты ========== */
@@ -20147,19 +20199,15 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 { key: 'added_at',      group: 4 }
             ];
 
-            // Карточка в стиле детального просмотра блокировок:
-            // .lock-detail-card > .lock-detail-rows > .lock-detail-row.lock-row-group-N
+            // Карточка в стиле «строки во всю ширину, без подложки»:
+            // .cj-view-fields > .cj-view-row.cj-view-group-N
+            //   > .cj-view-label + .cj-view-value
             // Пустые поля пропускаются (как в lockRenderDetail).
             let rowsHtml = '';
             order.forEach(function(item) {
                 rowsHtml += self._renderViewField(item.key, item.group);
             });
-            let html = '<div class="lock-detail-card">';
-            html += '<div class="lock-detail-rows">';
-            html += rowsHtml;
-            html += '</div>';
-            html += '</div>';
-            fieldsEl.innerHTML = html;
+            fieldsEl.innerHTML = rowsHtml;
         },
 
         // ============================================================
@@ -20171,7 +20219,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             const val = this._viewing ? this._viewing[key] : '';
             const raw = (val === null || val === undefined || val === '') ? '' : String(val);
             // Пустые поля пропускаем — карточка показывает только заполненные
-            // данные, как в детальной карточке блокировки.
+            // данные.
             if (raw === '') return '';
             // Длина — добавляем единицу измерения; дата — форматируем локально.
             let valHtml = this._esc(raw);
@@ -20180,10 +20228,10 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             } else if (key === 'added_at') {
                 valHtml = this._esc(this._formatDate(raw));
             }
-            const grpCls = group ? ' lock-row-group-' + group : '';
-            let html = '<div class="lock-detail-row' + grpCls + '">';
-            html += '<div class="lock-detail-label">' + this._esc(col.label) + '</div>';
-            html += '<div class="lock-detail-value">' + valHtml + '</div>';
+            const grpCls = group ? ' cj-view-group-' + group : '';
+            let html = '<div class="cj-view-row' + grpCls + '">';
+            html += '<div class="cj-view-label">' + this._esc(col.label) + '</div>';
+            html += '<div class="cj-view-value">' + valHtml + '</div>';
             html += '</div>';
             return html;
         },
