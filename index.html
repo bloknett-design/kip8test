@@ -9627,16 +9627,29 @@
             return idv !== 0 && idv !== '0' && String(idv ?? '').trim() !== '0';
         });
 
-        // Сортировка. Для вкладки «по производству» сортируем по наименованию —
-        // это задаёт порядок приборов внутри группы производства, что нужно для
-        // корректной подгруппировки по наименованию (см. ниже).
+        // Сортировка. Главная цель — обеспечить корректный порядок внутри
+        // подгруппы (которая формируется ниже). Поэтому сортируем по полю
+        // подгруппировки: для prod — по Наименованию, для name/type — по
+        // Производству. Внутри подгруппы приборы получатся отсортированными
+        // по Наименованию (как вторичная сортировка не делается, но это
+        // приемлемо: одинаковые значения subgroupFieldKey уже рядом).
         const sortKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
-        const innerSortKey = mode === 'prod' ? 'Наименование' : sortKey;
+        // Внутренняя сортировка для правильной группировки внутри основной группы.
+        // Для prod — по Наименованию (нужно для подгруппировки), для name/type —
+        // по Производству (также для подгруппировки). Дополнительно делаем
+        // вторичную сортировку по «Наименованию», чтобы внутри подгруппы приборы
+        // шли в алфавитном порядке.
+        const subgroupFieldKeyForSort = mode === 'prod' ? 'Наименование' : 'Производство';
         filtered.sort((a, b) => {
-            const va = (a[innerSortKey] || '').toString().toLowerCase();
-            const vb = (b[innerSortKey] || '').toString().toLowerCase();
+            const va = (a[subgroupFieldKeyForSort] || '').toString().toLowerCase();
+            const vb = (b[subgroupFieldKeyForSort] || '').toString().toLowerCase();
             if (va < vb) return -1;
             if (va > vb) return 1;
+            // Вторичная сортировка — по Наименованию внутри подгруппы.
+            const na = (a['Наименование'] || '').toString().toLowerCase();
+            const nb = (b['Наименование'] || '').toString().toLowerCase();
+            if (na < nb) return -1;
+            if (na > nb) return 1;
             return 0;
         });
         // Фильтр по «№ проекта» (из карточки проекта)
@@ -9663,11 +9676,16 @@
             );
         }
 
-        // Группировка всегда по производству: в режимах «по типу» и «по наименованию»
-        // список делится на группы по полю «Производство», внутри каждой группы
-        // приборы отсортированы по типу/наименованию соответственно. В режиме
-        // «по производству» это эквивалентно прежнему поведению (sortKey === groupFieldKey).
-        const groupFieldKey = 'Производство';
+        // Группировка. Для вкладки «по производству» группируем по полю
+        // «Производство» (как и раньше), а внутри — подгруппировка по
+        // «Наименованию». Для вкладок «по типу» и «по наименованию» —
+        // основная группировка по выбранному полю (Тип / Наименование),
+        // внутри — подгруппировка по производствам. Клик по заголовку
+        // основной группы открывает отдельную страницу (dev-group) с
+        // приборами этой группы, сгруппированными по производствам.
+        const groupFieldKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
+        // Подгруппировка: для prod — по Наименованию, для name/type — по Производству.
+        const subgroupFieldKey = mode === 'prod' ? 'Наименование' : 'Производство';
         const groups = {};
         const groupOrder = [];
         for (const d of filtered) {
@@ -9731,66 +9749,40 @@
             html += '</div>';
             html += '<div class="pb-section-body">';
 
-            // Для вкладки «по производству»: внутри группы производства
-            // дополнительно сгруппировать приборы по наименованию. Имя прибора
-            // тогда выносится в заголовок подгруппы, и в карточке его можно
-            // не показывать (оно дублировало бы заголовок подгруппы).
-            if (mode === 'prod') {
-                const subgroups = {};
-                const subgroupOrder = [];
-                for (const dev of items) {
-                    const sg = dev['Наименование'] || '(без названия)';
-                    if (!subgroups[sg]) { subgroups[sg] = []; subgroupOrder.push(sg); }
-                    subgroups[sg].push(dev);
-                }
-                for (const sg of subgroupOrder) {
-                    const sgItems = subgroups[sg];
-                    html += '<div class="pb-section dev-group dev-subgroup static">';
-                    html += '<div class="pb-section-title">';
-                    html += '<span class="pb-section-title-text">' + devMark(sg, query) + '</span>';
-                    html += '<span class="pb-section-title-count">' + sgItems.length + '</span>';
-                    html += '<span class="pb-section-arrow"></span>';
-                    html += '</div>';
-                    html += '<div class="pb-section-body">';
-                    for (const dev of sgItems) {
-                        const devId = String(dev['ID'] ?? '');
-                        const name = dev['Наименование'] || '(без названия)';
-                        const type = dev['Тип'] || '';
-                        const number = dev['№ прибора'] || '';
-                        const place = dev['Место установки'] || '';
-                        const imgUrl = devGetImageUrl(dev);
-
-                        html += '<div class="dev-card" data-dev-id="' + devEsc(devId) + '" data-mode="' + mode + '">';
-                        html += '<div class="dev-card-header" onclick="devOpenDetail(\'' + devEsc(devId) + '\')">';
-                        html += '<div class="dev-card-header-inner">';
-                        html += '<div class="dev-card-image-wrap">';
-                        html += '<img class="dev-card-image" src="' + devEsc(imgUrl) + '" alt="' + devEsc(name) + '" loading="lazy">';
-                        // Имя прибора уже в заголовке подгруппы — overlay не нужен.
-                        html += '</div>';
-                        html += '<div class="dev-card-text">';
-                        // Имя прибора дублирует заголовок подгруппы — пропускаем .dev-card-title.
-                        let subtitle = '';
-                        if (type) subtitle += type;
-                        if (number) subtitle += (subtitle ? ' · №' : '№') + number;
-                        if (place) subtitle += (subtitle ? ' · ' : '') + place;
-                        if (subtitle) html += '<div class="dev-card-subtitle">' + devMark(subtitle, query) + '</div>';
-                        html += '</div>';
-                        html += '<div class="dev-card-info-block">';
-                        if (type) html += '<div class="dev-card-info-row">' + devMark(type, query) + '</div>';
-                        if (number) html += '<div class="dev-card-info-row" style="color:#6aa6e0;font-weight:600;">№ ' + devMark(number, query) + '</div>';
-                        if (place) html += '<div class="dev-card-info-row">' + devMark(place, query) + '</div>';
-                        html += '</div>';
-                        html += '<span class="dev-card-arrow"></span>';
-                        html += '</div>'; // header-inner
-                        html += '</div>'; // header
-                        html += '</div>'; // card
-                    }
-                    html += '</div>'; // pb-section-body (subgroup)
-                    html += '</div>'; // pb-section (subgroup)
-                }
-            } else {
-                for (const dev of items) {
-
+            // Внутри основной группы всегда делаем подгруппировку:
+            // - для mode='prod'   — по «Наименованию»
+            // - для mode='name'   — по «Производству»
+            // - для mode='type'   — по «Производству»
+            // Заголовок подгруппы = значение subgroupFieldKey. Если это
+            // «Наименование» — имя прибора дублирует заголовок подгруппы, и
+            // в карточке его можно не показывать. Если это «Производство» —
+            // имя прибора показываем в карточке как обычно.
+            const hideNameInCard = (subgroupFieldKey === 'Наименование');
+            const subgroups = {};
+            const subgroupOrder = [];
+            for (const dev of items) {
+                const sg = dev[subgroupFieldKey] || (subgroupFieldKey === 'Наименование' ? '(без названия)' : '(без группы)');
+                if (!subgroups[sg]) { subgroups[sg] = []; subgroupOrder.push(sg); }
+                subgroups[sg].push(dev);
+            }
+            // Сортируем подгруппы алфавитно (по тексту)
+            subgroupOrder.sort((a, b) => {
+                const va = a.toString().toLowerCase();
+                const vb = b.toString().toLowerCase();
+                if (va < vb) return -1;
+                if (va > vb) return 1;
+                return 0;
+            });
+            for (const sg of subgroupOrder) {
+                const sgItems = subgroups[sg];
+                html += '<div class="pb-section dev-group dev-subgroup static">';
+                html += '<div class="pb-section-title">';
+                html += '<span class="pb-section-title-text">' + devMark(sg, query) + '</span>';
+                html += '<span class="pb-section-title-count">' + sgItems.length + '</span>';
+                html += '<span class="pb-section-arrow"></span>';
+                html += '</div>';
+                html += '<div class="pb-section-body">';
+                for (const dev of sgItems) {
                     const devId = String(dev['ID'] ?? '');
                     const name = dev['Наименование'] || '(без названия)';
                     const type = dev['Тип'] || '';
@@ -9803,10 +9795,16 @@
                     html += '<div class="dev-card-header-inner">';
                     html += '<div class="dev-card-image-wrap">';
                     html += '<img class="dev-card-image" src="' + devEsc(imgUrl) + '" alt="' + devEsc(name) + '" loading="lazy">';
-                    html += '<div class="dev-card-name-overlay">' + devMark(name, query) + '</div>';
+                    // Если имя прибора уже в заголовке подгруппы — overlay не нужен.
+                    if (!hideNameInCard) {
+                        html += '<div class="dev-card-name-overlay">' + devMark(name, query) + '</div>';
+                    }
                     html += '</div>';
                     html += '<div class="dev-card-text">';
-                    html += '<div class="dev-card-title">' + devMark(name, query) + '</div>';
+                    // Имя показываем в карточке только если оно не дублирует заголовок подгруппы.
+                    if (!hideNameInCard) {
+                        html += '<div class="dev-card-title">' + devMark(name, query) + '</div>';
+                    }
                     let subtitle = '';
                     if (type) subtitle += type;
                     if (number) subtitle += (subtitle ? ' · №' : '№') + number;
@@ -9823,6 +9821,8 @@
                     html += '</div>'; // header
                     html += '</div>'; // card
                 }
+                html += '</div>'; // pb-section-body (subgroup)
+                html += '</div>'; // pb-section (subgroup)
             }
             html += '</div>'; // section-body
             html += '</div>'; // section
@@ -9866,8 +9866,13 @@
         }
 
         const sortKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
-        // Группа всегда определяется по производству (см. devRenderSorted).
-        const groupFieldKey = 'Производство';
+        // Группа определяется по полю, по которому шла основная группировка
+        // на родительской странице (Тип / Наименование / Производство).
+        // Клик по заголовку группы открывает эту страницу.
+        const groupFieldKey = mode === 'type' ? 'Тип' : mode === 'name' ? 'Наименование' : 'Производство';
+        // На странице группы — подгруппировка по другому полю:
+        // для prod — по Наименованию, для name/type — по Производству.
+        const subgroupFieldKey = mode === 'prod' ? 'Наименование' : 'Производство';
         // Фильтруем приборы: ID != 0 и принадлежат выбранной группе
         let items = devData.devices.filter(d => {
             const idv = d['ID'];
@@ -9917,11 +9922,15 @@
             return;
         }
 
-        // Сгруппировать приборы по «Наименованию» — раскрытая группа без сворачивания.
+        // Сгруппировать приборы по subgroupFieldKey — раскрытая группа без сворачивания.
+        // - mode='prod'  → subgroupFieldKey = 'Наименование' (как раньше)
+        // - mode='name'  → subgroupFieldKey = 'Производство'
+        // - mode='type'  → subgroupFieldKey = 'Производство'
+        const hideNameInCard = (subgroupFieldKey === 'Наименование');
         const groups = {};
         const groupOrder = [];
         for (const dev of items) {
-            const g = dev['Наименование'] || '(без названия)';
+            const g = dev[subgroupFieldKey] || (subgroupFieldKey === 'Наименование' ? '(без названия)' : '(без группы)');
             if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
             groups[g].push(dev);
         }
@@ -9966,12 +9975,16 @@
                 html += '<div class="dev-card-header-inner">';
                 html += '<div class="dev-card-image-wrap">';
                 html += '<img class="dev-card-image" src="' + devEsc(imgUrl) + '" alt="' + devEsc(name) + '" loading="lazy">';
-                // На странице группы (по производству) приборы внутри уже
-                // сгруппированы по «Наименованию», и имя показано как заголовок
-                // подгруппы выше — поэтому overlay с именем на картинке не нужен.
+                // Если имя уже в заголовке подгруппы (mode='prod') — overlay не нужен.
+                if (!hideNameInCard) {
+                    html += '<div class="dev-card-name-overlay">' + devEsc(name) + '</div>';
+                }
                 html += '</div>';
                 html += '<div class="dev-card-text">';
-                // Имя прибора дублирует заголовок подгруппы — пропускаем .dev-card-title.
+                // Имя показываем в карточке только если оно не дублирует заголовок подгруппы.
+                if (!hideNameInCard) {
+                    html += '<div class="dev-card-title">' + devEsc(name) + '</div>';
+                }
                 let subtitle = '';
                 if (type) subtitle += type;
                 if (number) subtitle += (subtitle ? ' · №' : '№') + number;
