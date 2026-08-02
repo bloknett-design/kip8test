@@ -5695,103 +5695,12 @@
     }
 
     @media (min-width: 1024px) {
-        /* --- Основной лейаут: sidebar + main + detail --- */
-        #mainApp {
-            display: flex;
-            min-height: 100vh;
-        }
+        /* --- Основной лейаут: top bar + main + detail --- */
+        /* (определён в блоке .desktop-top-bar ниже) */
 
-        /* Sidebar — всегда виден на десктопе */
-        #sidebar {
-            position: sticky;
-            top: 0;
-            left: 0;
-            transform: none !important;
-            width: 280px;
-            min-width: 280px;
-            max-width: 280px;
-            height: 100vh;
-            overflow-y: auto;
-            z-index: 50;
-            flex-shrink: 0;
-        }
-        #sidebarOverlay {
-            display: none !important;
-        }
-        /* Кнопка закрытия sidebar — скрыта на десктопе */
-        #sidebar .header-btn {
-            display: none;
-        }
-        /* Кнопка сворачивания sidebar — видна на десктопе */
-        #sidebarToggleBtn {
-            display: flex;
-            position: fixed;
-            top: 8px;
-            left: 8px;
-            z-index: 60;
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            background: var(--header-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-color, rgba(74, 143, 199, 0.15));
-            cursor: pointer;
-            align-items: center;
-            justify-content: center;
-            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s;
-        }
-        #sidebarToggleBtn:hover {
-            background: rgba(74, 143, 199, 0.15);
-        }
-        #sidebarToggleBtn svg {
-            width: 18px;
-            height: 18px;
-            stroke: var(--accent-blue, #4a8fc7);
-            fill: none;
-            stroke-width: 2;
-            stroke-linecap: round;
-            transition: transform 0.3s;
-        }
-        /* Sidebar свёрнут */
-        body.sidebar-collapsed #sidebar {
-            transform: translateX(-100%) !important;
-            position: fixed;
-        }
-        body.sidebar-collapsed #sidebarToggleBtn {
-            left: 8px;
-        }
-        body.sidebar-collapsed #sidebarToggleBtn svg {
-            transform: rotate(180deg);
-        }
-        /* Sidebar развёрнут */
-        body:not(.sidebar-collapsed) #sidebarToggleBtn {
-            left: 288px;
-        }
-
-        /* Шапка приложения — скрыта на десктопе (sidebar заменяет) */
+        /* Шапка приложения — скрыта на десктопе (top bar заменяет) */
         .app-header {
             display: none !important;
-        }
-        .connection-indicator {
-            top: 8px;
-            right: 8px;
-            z-index: 100;
-        }
-
-        /* Основная область контента + detail-panel */
-        #contentArea {
-            flex: 1;
-            display: flex;
-            min-height: 100vh;
-            overflow: hidden;
-        }
-
-        /* Мобильное поведение: page-content.active занимает всю ширину */
-        #contentArea > .page-content.active {
-            flex: 1;
-            overflow-y: auto;
-            min-width: 0;
         }
 
         /* --- Detail Panel (правая панель) --- */
@@ -5977,6 +5886,199 @@
         border-color: var(--accent-blue, #4a8fc7) !important;
         box-shadow: 0 0 0 2px rgba(74, 143, 199, 0.3) !important;
     }
+
+    /* ===== Десктопный верхний бар (mobile: hidden) ===== */
+    .desktop-top-bar {
+        display: none;
+    }
+
+    @media (min-width: 1024px) {
+        /* --- Верхний бар --- */
+        .desktop-top-bar {
+            display: flex;
+            position: sticky;
+            top: 0;
+            z-index: 70;
+            height: 56px;
+            align-items: center;
+            background: var(--header-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color, rgba(74, 143, 199, 0.15));
+            padding: 0 16px;
+            gap: 16px;
+            flex-shrink: 0;
+        }
+        .desktop-top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        #desktopBurgerBtn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: transparent;
+            border: 1px solid var(--border-color, rgba(74, 143, 199, 0.15));
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-blue, #4a8fc7);
+            transition: background 0.2s, border-color 0.2s;
+        }
+        #desktopBurgerBtn:hover {
+            background: rgba(74, 143, 199, 0.12);
+            border-color: rgba(74, 143, 199, 0.3);
+        }
+        .desktop-top-bar-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .desktop-top-bar-title {
+            font-family: 'Jura', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent-blue, #4a8fc7);
+            letter-spacing: 1px;
+        }
+        .desktop-top-bar-center {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex: 1;
+            justify-content: center;
+        }
+        .desktop-top-bar-tab {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-secondary, rgba(255, 255, 255, 0.55));
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .desktop-top-bar-tab:hover {
+            background: rgba(74, 143, 199, 0.08);
+            color: var(--text-primary);
+        }
+        .desktop-top-bar-tab.active {
+            background: rgba(74, 143, 199, 0.12);
+            border-color: rgba(74, 143, 199, 0.25);
+            color: var(--accent-blue, #4a8fc7);
+        }
+        .desktop-top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            min-width: 44px;
+        }
+        /* Connection indicator — в десктопном баре */
+        .connection-indicator {
+            position: static !important;
+            z-index: auto !important;
+        }
+        /* Move connection indicator into top bar on desktop */
+        .desktop-top-bar-right .connection-indicator {
+            position: static !important;
+        }
+
+        /* --- Sidebar: скрыт по умолчанию на десктопе --- */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            transform: translateX(-100%) !important;
+            width: 280px;
+            min-width: 280px;
+            max-width: 280px;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 150;
+            flex-shrink: 0;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        /* Sidebar развёрнут (через класс .active) */
+        #sidebar.desktop-open {
+            transform: translateX(0) !important;
+        }
+        #sidebarOverlay.desktop-active {
+            display: block !important;
+            opacity: 1;
+        }
+        /* Убрать старый sidebar-collapsed / sidebarToggleBtn */
+        #sidebarToggleBtn {
+            display: none !important;
+        }
+        body.sidebar-collapsed #sidebar {
+            /* больше не используется — sidebar управляется через .desktop-open */
+        }
+        body.sidebar-collapsed #sidebarToggleBtn {
+            /* больше не используется */
+        }
+        body:not(.sidebar-collapsed) #sidebarToggleBtn {
+            /* больше не используется */
+        }
+
+        /* --- Основной лейаут: top bar + main + detail --- */
+        #mainApp {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        #contentArea {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+            overflow: hidden;
+        }
+        /* Мобильное поведение: page-content.active занимает всю ширину */
+        #contentArea > .page-content.active {
+            flex: 1;
+            overflow-y: auto;
+            min-width: 0;
+        }
+    }
+
+
+    @media (min-width: 1024px) {
+        .connection-indicator {
+            position: static !important;
+            top: auto !important;
+            right: auto !important;
+            z-index: auto !important;
+            margin: 0;
+        }
+    }
+
+
+    @media (min-width: 1024px) {
+        #sidebarOverlay.desktop-active {
+            display: block !important;
+            opacity: 1 !important;
+        }
+    }
+
+
+    @media (min-width: 1024px) {
+        /* Кнопка закрытия sidebar — видна на десктопе */
+        #sidebar .sidebar-header .header-btn {
+            display: flex !important;
+        }
+    }
+
 </style>
 <!-- base target removed: not needed for SPA, causes issues with in-page navigation -->
 </head>
@@ -6162,6 +6264,33 @@
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/>
             <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/>
         </svg>
+    </div>
+
+    
+    <!-- ===== Десктопный верхний бар ===== -->
+    <div id="desktopTopBar" class="desktop-top-bar">
+        <div class="desktop-top-bar-left">
+            <button type="button" id="desktopBurgerBtn" onclick="toggleDesktopSidebar()" aria-label="Меню">
+                <svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <div class="desktop-top-bar-brand" onclick="navigateTo('dashboard')">
+                <img src="images/logo_black.png" alt="КИПиА" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">
+                <span class="desktop-top-bar-title">КИПиА</span>
+            </div>
+        </div>
+        <div class="desktop-top-bar-center">
+            <button type="button" class="desktop-top-bar-tab" data-page="calculators" onclick="navigateTo('calculators')">
+                <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/></svg>
+                <span>Инженерные калькуляторы</span>
+            </button>
+            <button type="button" class="desktop-top-bar-tab" data-page="docs" onclick="navigateTo('docs')">
+                <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <span>Документация</span>
+            </button>
+        </div>
+        <div class="desktop-top-bar-right">
+            <!-- connection indicator перемещается сюда через CSS -->
+        </div>
     </div>
 
     <div id="contentArea">
@@ -14553,21 +14682,24 @@
 
     // Слушатель изменения размера окна — закрыть detail-panel при переходе на мобильный
     window.matchMedia('(min-width: 1024px)').addEventListener('change', function(e) {
-        if (!e.matches) {
-            closeDetailPanel();
-            // Переход на мобильный: убрать sidebar-collapsed, показать sidebar как overlay
-            document.body.classList.remove('sidebar-collapsed');
-        } else {
-            // Переход на десктоп: восстановить сохранённое состояние sidebar
-            initDesktopSidebar();
-        }
-        // Обновить sidebar состояние
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebarOverlay');
-        if (e.matches && sidebar) {
-            // Десктоп: убрать класс active (sidebar виден через CSS)
-            sidebar.classList.remove('active');
+        const ci = document.getElementById('connectionIndicator');
+        if (!e.matches) {
+            // Переход на мобильный
+            closeDetailPanel();
+            // Убрать десктопные классы sidebar
+            if (sidebar) sidebar.classList.remove('desktop-open');
+            if (overlay) overlay.classList.remove('desktop-active');
+            // Вернуть connection indicator в body (мобильная позиция — fixed)
+            if (ci && ci.parentElement && ci.parentElement.classList.contains('desktop-top-bar-right')) {
+                document.body.appendChild(ci);
+            }
+        } else {
+            // Переход на десктоп: sidebar скрыт по умолчанию
+            if (sidebar) sidebar.classList.remove('active');
             if (overlay) overlay.classList.remove('active');
+            initDesktopSidebar();
         }
     });
 
@@ -14705,6 +14837,8 @@
         document.querySelectorAll('.page-content.scrolled').forEach(el => el.classList.remove('scrolled'));
         let target = document.getElementById('page-' + page);
         if (target) { target.classList.add('active'); requestAnimationFrame(() => { requestAnimationFrame(() => target.classList.add('visible')); }); }
+        // Обновить активную вкладку в десктопном верхнем баре
+        if (typeof updateDesktopTopBarTabs === 'function') updateDesktopTopBarTabs();
         window.scrollTo({ top: 0, behavior: 'smooth' });
         if (page === 'buoy-calc') { updateBuoyCalcTitle(); setCalibMethodOnForm(); }
         // Обернуть карточки подразделов для swipe-to-add на страницах меню подразделов
@@ -16453,32 +16587,85 @@
     function toggleSidebar() {
     let sidebar = document.getElementById('sidebar');
     let overlay = document.getElementById('sidebarOverlay');
-    sidebar.classList.toggle('active');
-    overlay.classList.toggle('active');
+    if (isDesktop()) {
+        // На десктопе: закрываем sidebar (toggle)
+        if (sidebar.classList.contains('desktop-open')) {
+            sidebar.classList.remove('desktop-open');
+            if (overlay) overlay.classList.remove('desktop-active');
+        } else {
+            sidebar.classList.add('desktop-open');
+            if (overlay) overlay.classList.add('desktop-active');
+        }
+    } else {
+        // На мобильном: стандартное поведение
+        sidebar.classList.toggle('active');
+        overlay.classList.toggle('active');
+    }
 }
 
     /** Десктоп: сворачивание/разворачивание sidebar */
     function toggleDesktopSidebar() {
-        document.body.classList.toggle('sidebar-collapsed');
-        // Сохраняем состояние в localStorage
-        try {
-            const key = 'kip8test:sidebar_collapsed';
-            if (document.body.classList.contains('sidebar-collapsed')) {
-                localStorage.setItem(key, '1');
-            } else {
-                localStorage.removeItem(key);
-            }
-        } catch(e) {}
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        if (!sidebar) return;
+        const isOpen = sidebar.classList.contains('desktop-open');
+        if (isOpen) {
+            sidebar.classList.remove('desktop-open');
+            if (overlay) overlay.classList.remove('desktop-active');
+        } else {
+            sidebar.classList.add('desktop-open');
+            if (overlay) overlay.classList.add('desktop-active');
+        }
+        // Закрытие sidebar при клике на overlay
+        if (!isOpen && overlay) {
+            overlay.onclick = function() {
+                sidebar.classList.remove('desktop-open');
+                overlay.classList.remove('desktop-active');
+            };
+        }
     }
 
-    /** Восстановление состояния sidebar при загрузке на десктопе */
+    /** Инициализация десктопного sidebar — по умолчанию скрыт */
     function initDesktopSidebar() {
         if (!isDesktop()) return;
-        try {
-            if (localStorage.getItem('kip8test:sidebar_collapsed') === '1') {
-                document.body.classList.add('sidebar-collapsed');
+        // Sidebar скрыт по умолчанию — ничего не делаем
+        // Обновляем активную вкладку в top bar
+        updateDesktopTopBarTabs();
+        // Переместить connection indicator в десктопный бар
+        const ci = document.getElementById('connectionIndicator');
+        const barRight = document.querySelector('.desktop-top-bar-right');
+        if (ci && barRight && !barRight.contains(ci)) {
+            barRight.appendChild(ci);
+        }
+    }
+
+    /** Обновление активной вкладки в десктопном верхнем баре */
+    function updateDesktopTopBarTabs() {
+        const activePage = document.querySelector('.page-content.active');
+        const currentPage = activePage ? activePage.id.replace('page-', '') : '';
+        document.querySelectorAll('.desktop-top-bar-tab').forEach(tab => {
+            const tabPage = tab.getAttribute('data-page');
+            // Проверяем, является ли текущая страница подразделом этой вкладки
+            let isActive = false;
+            if (tabPage === 'calculators') {
+                isActive = ['calculators', 'calc-kipa', 'calc-electro', 'calc-geometry',
+                    'converter', 'scale-signal', 'error-select', 'buoy-select',
+                    'temp-sensors', 'orifice-select', 'circuit-breaker',
+                    'geo-circle', 'geo-ring', 'geo-cylinder', 'geo-horiz',
+                    'geo-sphere', 'geo-cone'].includes(currentPage);
+            } else if (tabPage === 'docs') {
+                isActive = ['docs', 'devices-prod', 'devices-type', 'devices-name',
+                    'device-detail', 'dev-group', 'lockouts-prod', 'lockout-detail',
+                    'lock-group', 'valves-prod', 'valve-detail', 'valve-group',
+                    'regulators-prod', 'regulator-detail', 'regulator-group',
+                    'projects-prod', 'project-detail', 'project-group',
+                    'cable-journal-edit', 'cable-journal-add', 'cable-journal-view',
+                    'kip-ios', 'library-internal', 'library-electro',
+                    'plan-114', 'exam-tickets', 'admin-users', 'admin-sessions',
+                    'admin-logs', 'admin-stats'].includes(currentPage);
             }
-        } catch(e) {}
+            tab.classList.toggle('active', isActive);
+        });
     }
 
 // Аккордеон в боковом меню: при разворачивании группы — сворачиваем ранее раскрытую.
