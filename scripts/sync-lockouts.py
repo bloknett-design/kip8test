@@ -35,7 +35,7 @@ import sys
 import json
 import re
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, time as dtime, date as ddate
 
 import requests
 import openpyxl
@@ -56,6 +56,38 @@ JSON_OUT = PROJECT_ROOT / 'data' / 'lockouts.json'
 
 def log(msg):
     print(f'[lockouts] {msg}', flush=True)
+
+
+# ============================================================
+# Восстановление числового значения из «даты/времени»
+# ============================================================
+# В Google Sheets числовые колонки иногда имеют формат Date/Time.
+# openpyxl с data_only=True возвращает datetime/time вместо числа.
+# Решение: конвертируем datetime/time обратно в Excel serial number.
+# Эпоха 1899-12-30 = 1900 date system (как в Google Sheets и Excel).
+DATE_EPOCH = datetime(1899, 12, 30)
+
+def datetime_to_serial(val):
+    """Конвертирует datetime/time/date в Excel serial number (float).
+    Возвращает None, если конвертация неприменима.
+    """
+    if isinstance(val, datetime):
+        delta = val - DATE_EPOCH
+        return round(delta.total_seconds() / 86400.0, 6)
+    if isinstance(val, dtime):
+        secs = val.hour * 3600 + val.minute * 60 + val.second + val.microsecond / 1e6
+        return round(secs / 86400.0, 6)
+    if isinstance(val, ddate):
+        delta = datetime(val.year, val.month, val.day) - DATE_EPOCH
+        return round(delta.total_seconds() / 86400.0, 6)
+    return None
+
+
+def format_serial_as_string(serial):
+    """Форматирует serial number: int если целое, иначе trimmed float."""
+    if abs(serial - round(serial)) < 1e-9:
+        return str(int(round(serial)))
+    return f'{serial:.4f}'.rstrip('0').rstrip('.')
 
 
 # ============================================================
@@ -124,6 +156,30 @@ def parse_lockouts(xlsx_path, sheet_name):
     log(f'Заголовки ({len(headers)}): {headers}')
 
     # Читаем данные
+    # Определяем, какие колонки должны быть числами (по заголовку).
+    # В Google Sheets эти колонки иногда имеют формат Date/Time по ошибке,
+    # и openpyxl возвращает datetime/time вместо числа. В таком случае
+    # конвертируем datetime/time обратно в Excel serial number.
+    # Внимание: «Дата проверки» сюда НЕ входит — это настоящая дата.
+    NUMERIC_HEADERS_HINTS = ('ID', 'Уставка', 'Значение сигнала', '№ СБС',
+                             '№ проекта')
+
+    def is_numeric_header(h):
+        if not h:
+            return False
+        for hint in NUMERIC_HEADERS_HINTS:
+            if hint in h:
+                return True
+        return False
+
+    numeric_cols = set()
+    for idx, h in enumerate(headers, 1):
+        if is_numeric_header(h):
+            numeric_cols.add(idx)
+    if numeric_cols:
+        log(f'Числовые колонки (по заголовку): {sorted(numeric_cols)} '
+            f'→ {[headers[i-1] for i in sorted(numeric_cols)]}')
+
     lockouts = []
     skipped = 0
     for row_idx in range(2, ws.max_row + 1):
@@ -131,7 +187,17 @@ def parse_lockouts(xlsx_path, sheet_name):
         for col_idx in range(1, len(headers) + 1):
             cell = ws.cell(row=row_idx, column=col_idx)
             val = cell.value
-            # Обработка дат (например, "Дата проверки")
+
+            # Если колонка должна быть числовой, но значение — datetime/time,
+            # восстанавливаем исходное число (Excel serial number).
+            if col_idx in numeric_cols and val is not None:
+                serial = datetime_to_serial(val)
+                if serial is not None:
+                    val = format_serial_as_string(serial)
+                    row_values.append(val)
+                    continue
+
+            # Обработка дат для НЕчисловых колонок (например, «Дата проверки»)
             if isinstance(val, datetime):
                 val = val.strftime('%Y-%m-%d')
             elif val is not None:

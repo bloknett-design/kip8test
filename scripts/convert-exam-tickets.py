@@ -34,6 +34,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from datetime import datetime, time as dtime, date as ddate
 
 import requests
 import openpyxl
@@ -90,6 +91,44 @@ FIELD_NAME_MAP = {
 
 def log(msg):
     print(f'[exam-tickets] {msg}', flush=True)
+
+
+# ============================================================
+# Восстановление числового значения из «даты/времени»
+# ============================================================
+# В Google Sheets числовые колонки иногда имеют формат Date/Time.
+# openpyxl с data_only=True возвращает datetime/time вместо числа.
+# Решение: конвертируем datetime/time обратно в Excel serial number.
+# Эпоха 1899-12-30 = 1900 date system (как в Google Sheets и Excel).
+DATE_EPOCH = datetime(1899, 12, 30)
+
+def datetime_to_serial(val):
+    """Конвертирует datetime/time/date в Excel serial number (float).
+    Возвращает None, если конвертация неприменима.
+    """
+    if isinstance(val, datetime):
+        delta = val - DATE_EPOCH
+        return round(delta.total_seconds() / 86400.0, 6)
+    if isinstance(val, dtime):
+        secs = val.hour * 3600 + val.minute * 60 + val.second + val.microsecond / 1e6
+        return round(secs / 86400.0, 6)
+    if isinstance(val, ddate):
+        delta = datetime(val.year, val.month, val.day) - DATE_EPOCH
+        return round(delta.total_seconds() / 86400.0, 6)
+    return None
+
+
+def format_serial_as_string(serial):
+    """Форматирует serial number: int если целое, иначе trimmed float."""
+    if abs(serial - round(serial)) < 1e-9:
+        return str(int(round(serial)))
+    return f'{serial:.4f}'.rstrip('0').rstrip('.')
+
+
+# Числовые поля в таблице билетов (после нормализации имён).
+# Если в Google Sheets эти колонки имеют формат Date/Time,
+# конвертируем datetime/time обратно в serial number.
+NUMERIC_FIELD_NAMES = {'id', 'ticket_number', 'question_number'}
 
 
 def _normalize_field_name(raw_name: str) -> str:
@@ -228,6 +267,16 @@ def convert_xlsx_to_json(xlsx_path, json_path):
             for i, val in enumerate(row):
                 if i < len(normalized_headers):
                     field_name = normalized_headers[i]
+
+                    # Для числовых полей: если значение — datetime/time
+                    # (бывает при формате Date/Time в Google Sheets),
+                    # восстанавливаем исходное число (Excel serial number).
+                    if field_name in NUMERIC_FIELD_NAMES and val is not None:
+                        serial = datetime_to_serial(val)
+                        if serial is not None:
+                            obj[field_name] = format_serial_as_string(serial)
+                            continue
+
                     cell_val = str(val) if val is not None else ""
                     # Единый принцип: только HTTP/HTTPS-ссылки.
                     if field_name == "image_url":
