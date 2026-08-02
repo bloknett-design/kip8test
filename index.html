@@ -6127,7 +6127,7 @@
                 <img id="plan114Img" alt="" referrerpolicy="no-referrer" style="display:none; max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 16px rgba(0,0,0,0.35); background: rgba(255,255,255,0.03);" />
             </div>
 
-            <a id="plan114OrigLink" href="#" target="_blank" rel="noopener" style="display:none; margin: 8px 16px 24px; padding: 12px 16px; text-align: center; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; color: #e8e8e8; text-decoration: none; font-size: 14px; font-weight: 600;">Открыть оригинал на Яндекс Диске</a>
+            <a id="plan114OrigLink" href="#" target="_blank" rel="noopener" style="display:none; margin: 8px 16px 24px; padding: 12px 16px; text-align: center; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; color: #e8e8e8; text-decoration: none; font-size: 14px; font-weight: 600;">Открыть оригинал на Google Drive</a>
 
             <div id="plan114Error" style="display:none; padding: 40px 20px; text-align: center; color: rgba(255,255,255,0.5); font-size: 13px;">Не удалось загрузить план.<br>Проверьте подключение к интернету и попробуйте снова.</div>
         </div>
@@ -13384,18 +13384,19 @@
 
     // ===== Кнопка «План корпуса 114» на странице КИП И ОС + список планов + просмотр =====
     // Реестр 6 планов помещений корпуса 114.
-    // yandexUrl — публичная ссылка вида https://disk.yandex.ru/i/<fileId>.
-    // Сами картинки НЕ хранятся в репозитории — они загружаются через
-    // Yandex Disk Public API по запросу при первом открытии пункта и
-    // кэшируются Service Worker'ом (downloader.disk.yandex.ru → IMAGE_CACHE_NAME,
-    // ключ кэша = pathname без query, чтобы временный токен не ломал кэш).
+    // driveId — ID файла Google Drive (из share-ссылки /file/d/ID/view).
+    // Картинка грузится напрямую через lh3.googleusercontent.com/d/ID=w10000
+    // (Google отдаёт исходное изображение как image/png, без OAuth).
+    // Service Worker кэширует эти запросы через IMAGE_CACHE_NAME
+    // (stale-while-revalidate) — после первой загрузки планы доступны офлайн.
+    // Оригинал открывается в новой вкладке через /file/d/ID/view.
     const PLAN114_ITEMS = [
-        { id: 'shk1-cpu', title: 'ЩК-1 (ЦПУ)', yandexUrl: 'https://disk.yandex.ru/i/GGPl3ySAkvZPiw' },
-        { id: 'shk2-rpa', title: 'ЩК-2 (РПА)', yandexUrl: 'https://disk.yandex.ru/i/MyxS4E5JPAEZRw' },
-        { id: 'otm-00',   title: 'Отм. 0.0 м', yandexUrl: 'https://disk.yandex.ru/i/qo5r6pc5TTUPuQ' },
-        { id: 'otm-06',   title: 'Отм. 6.0 м', yandexUrl: 'https://disk.yandex.ru/i/KMJfAI6IA2w9LA' },
-        { id: 'otm-12',   title: 'Отм. 12.0 м', yandexUrl: 'https://disk.yandex.ru/i/IEIR4rx-Ky1sLg' },
-        { id: 'otm-18',   title: 'Отм. 18.0 м', yandexUrl: 'https://disk.yandex.ru/i/xaTilBnxdVWjcQ' }
+        { id: 'shk1-cpu', title: 'ЩК-1 (ЦПУ)', driveId: '1NbS0JUWCbLVuKz39XIT2J8adJ5VeP8yQ' },
+        { id: 'shk2-rpa', title: 'ЩК-2 (РПА)', driveId: '1Ycdn-HFdu15AOA73W7ctV-oEKr4n02zn' },
+        { id: 'otm-00',   title: 'Отм. 0.0 м', driveId: '1yE1gCe47Jc3qjQKkXFRfKKfQ1TCcWlrp' },
+        { id: 'otm-06',   title: 'Отм. 6.0 м', driveId: '1WBH6oF1k6TjCCc9nOnoS9Sy-gI2BRSQL' },
+        { id: 'otm-12',   title: 'Отм. 12.0 м', driveId: '1p73Aswuyho87yuxz8zriaO8NlLQH5oMp' },
+        { id: 'otm-18',   title: 'Отм. 18.0 м', driveId: '1L-CehKcYKT-W9VOzkV0obqfT0FzuVIsY' }
     ];
 
     // Инициализация кнопки входа «План корпуса 114» на странице КИП ИОС
@@ -13437,10 +13438,11 @@
     //   1. Сменить страницу на page-plan-114-view через navigateTo().
     //   2. Обновить заголовок страницы и ссылку «Открыть оригинал».
     //   3. Показать индикатор «Загрузка…», скрыть старую картинку и ошибку.
-    //   4. Запросить Yandex Disk Public API → получить download_url (ORIGINAL).
-    //   5. Предзагрузить картинку через new Image() (чтобы избежать «дребезга» при смене src).
-    //   6. Отобразить картинку, скрыть индикатор.
-    //   7. При ошибке — показать блок plan114Error.
+    //   4. Предзагрузить картинку через new Image() (чтобы избежать «дребезга» при смене src).
+    //      URL = https://lh3.googleusercontent.com/d/ID=w10000 — Google отдаёт
+    //      исходный PNG напрямую, без OAuth и без iframe.
+    //   5. Отобразить картинку, скрыть индикатор.
+    //   6. При ошибке — показать блок plan114Error.
     async function plan114OpenView(id) {
         const item = PLAN114_ITEMS.find(function(x) { return x.id === id; });
         if (!item) return;
@@ -13452,10 +13454,11 @@
         const titleEl = document.getElementById('plan114ViewTitle');
         if (titleEl) titleEl.textContent = item.title;
 
-        // Обновить ссылку «Открыть оригинал»
+        // Обновить ссылку «Открыть оригинал» — ведёт на страницу файла Google Drive
         const origLink = document.getElementById('plan114OrigLink');
         if (origLink) {
-            origLink.href = item.yandexUrl;
+            origLink.href = 'https://drive.google.com/file/d/' + encodeURIComponent(item.driveId) + '/view';
+            origLink.textContent = 'Открыть оригинал на Google Drive';
             origLink.style.display = 'none'; // покажем после успешной загрузки
         }
 
@@ -13468,31 +13471,23 @@
         if (errorEl) errorEl.style.display = 'none';
 
         try {
-            // Шаг 1: запрос к Yandex Disk Public API
-            const apiUrl = 'https://cloud-api.yandex.net/v1/disk/public/resources?public_key=' + encodeURIComponent(item.yandexUrl);
-            const resp = await fetch(apiUrl);
-            if (!resp.ok) throw new Error('API error: ' + resp.status);
-            const data = await resp.json();
+            // Прямой URL картинки Google Drive.
+            // w10000 — запросить изображение шириной до 10000px (по сути, оригинал).
+            // lh3.googleusercontent.com отдаёт image/png без CORS-ограничений для <img>.
+            const imgUrl = 'https://lh3.googleusercontent.com/d/' + encodeURIComponent(item.driveId) + '=w10000';
 
-            // Шаг 2: найти URL оригинального изображения (размер ORIGINAL)
-            const orig = (data.sizes || []).find(function(s) { return s.name === 'ORIGINAL'; });
-            const imgUrl = orig ? orig.url : (data.preview || null);
-            if (!imgUrl) throw new Error('No image URL in API response');
-
-            // Шаг 3: предзагрузить картинку (await onload)
-            // referrerPolicy='no-referrer' обязателен: Яндекс.Диск отдаёт 403
-            // на картинки с Referer от сторонних доменов (GitHub Pages и т.п.).
+            // Предзагрузить картинку (await onload) — избегаем «дребезга» при смене src.
+            // Прерывание через 30 сек на случай зависания.
             await new Promise(function(resolve, reject) {
                 const img = new Image();
                 img.referrerPolicy = 'no-referrer';
-                // Прерывание через 30 сек на случай зависания
                 const timer = setTimeout(function() { reject(new Error('Image load timeout')); }, 30000);
                 img.onload = function() { clearTimeout(timer); resolve(); };
                 img.onerror = function() { clearTimeout(timer); reject(new Error('Image load failed')); };
                 img.src = imgUrl;
             });
 
-            // Шаг 4: отобразить картинку
+            // Отобразить картинку
             if (imgEl) {
                 imgEl.src = imgUrl;
                 imgEl.alt = item.title;
@@ -13501,12 +13496,11 @@
             if (loadingEl) loadingEl.style.display = 'none';
             if (origLink) origLink.style.display = ''; // показать кнопку «Открыть оригинал»
         } catch (err) {
-            // Офлайн или ошибка API/загрузки — показать ошибку
+            // Офлайн или ошибка загрузки — показать ошибку
             if (loadingEl) loadingEl.style.display = 'none';
             if (imgEl) imgEl.style.display = 'none';
-            if (origLink) origLink.style.display = 'none';
+            if (origLink) origLink.style.display = '';
             if (errorEl) errorEl.style.display = '';
-            // Лог в консоль для отладки (без токенов и персональных данных)
             console.warn('[plan114] Не удалось загрузить план:', item.id, err && err.message);
         }
     }
