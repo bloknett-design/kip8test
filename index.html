@@ -3840,37 +3840,28 @@
     }
     .project-card-arrow::before { content: '›'; }
 
-    /* Карточка деталей проекта */
+    /* Карточка деталей проекта — без подложки фона, строки на всю ширину экрана.
+       Боковой отступ вынесен с контейнера (.project-detail-rows) на сами строки
+       (.project-detail-row), чтобы разделители строк и текст занимали всю ширину,
+       но при этом текст не упирался в края экрана. */
     .project-detail-card {
         margin: 0;
-        background: rgba(50, 45, 38, 0.96);
-        border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-    [data-theme="light"] .project-detail-card {
-        background: rgba(255, 250, 242, 0.96);
+        background: transparent;
     }
     .project-detail-rows {
-        padding: 8px 16px 16px;
+        padding: 8px 0 16px;
     }
     .project-detail-row {
         display: flex;
         flex-direction: column;
         gap: 2px;
-        padding: 10px 0;
+        padding: 10px 16px;
         border-bottom: 1px solid rgba(255,255,255,0.04);
     }
+    [data-theme="light"] .project-detail-row {
+        border-bottom-color: rgba(0,0,0,0.06);
+    }
     .project-detail-row:last-child { border-bottom: none; }
-    /* Зебра-фон для зрительного разделения строк (группы назначаются в JS). */
-    .project-detail-row.project-row-group-1 { background: rgba(60, 54, 46, 0.96); }
-    .project-detail-row.project-row-group-2 { background: rgba(75, 67, 56, 0.96); }
-    .project-detail-row.project-row-group-3 { background: rgba(60, 54, 46, 0.96); }
-    .project-detail-row.project-row-group-4 { background: rgba(75, 67, 56, 0.96); }
-    .project-detail-row.project-row-group-5 { background: rgba(67, 60, 51, 0.96); }
-    [data-theme="light"] .project-detail-row.project-row-group-1 { background: rgba(255, 250, 242, 0.97); }
-    [data-theme="light"] .project-detail-row.project-row-group-2 { background: rgba(228, 220, 205, 0.94); }
-    [data-theme="light"] .project-detail-row.project-row-group-3 { background: rgba(255, 250, 242, 0.97); }
-    [data-theme="light"] .project-detail-row.project-row-group-4 { background: rgba(228, 220, 205, 0.94); }
-    [data-theme="light"] .project-detail-row.project-row-group-5 { background: rgba(242, 236, 224, 0.96); }
     .project-detail-label {
         font-size: 11px;
         color: var(--text-secondary);
