@@ -20055,8 +20055,9 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             const val = this._viewing ? this._viewing[key] : '';
             const raw = (val === null || val === undefined || val === '') ? '' : String(val);
             // Пустые поля пропускаем — карточка показывает только заполненные
-            // данные.
-            if (raw === '') return '';
+            // данные. Также пропускаем текстовые заглушки «Нет данных»,
+            // которые Google Sheets хранит в колонке «Дата добавления».
+            if (raw === '' || raw === 'Нет данных') return '';
             // Длина — добавляем единицу измерения; дата — форматируем локально.
             let valHtml = this._esc(raw);
             if (key === 'length_project' || key === 'length_actual') {
@@ -20419,8 +20420,11 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
         _formatDate: function(s) {
             if (!s) return '';
+            // Если значение — не дата (например, текст "Нет данных"),
+            // new Date() вернёт Invalid Date. Возвращаем оригинальную строку.
+            const d = new Date(s);
+            if (isNaN(d.getTime())) return String(s);
             try {
-                const d = new Date(s);
                 return d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
             } catch (e) { return s; }
         }
