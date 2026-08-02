@@ -35,7 +35,7 @@ import sys
 import json
 import re
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, time as dtime, date as ddate
 
 import requests
 import openpyxl
@@ -56,6 +56,56 @@ JSON_OUT = PROJECT_ROOT / 'data' / 'valves.json'
 
 def log(msg):
     print(f'[valves] {msg}', flush=True)
+
+
+# ============================================================
+# Восстановление числового значения из «даты/времени»
+# ============================================================
+# Проблема: в Google Sheets колонки, которые должны содержать числа
+# (Kvy (м3/ч), PN (кгс/см2), t рабочей среды (°С) и т.д.), иногда имеют
+# формат Date/Time (например «mm/yyyy»). В таком случае openpyxl с
+# data_only=True возвращает datetime/time вместо исходного числа:
+#   число 1   → datetime(1900, 1, 1)        (1900-01-01 = serial 1)
+#   число 0.6 → time(14, 24)                (60% суток = 14:24)
+#   число 62  → datetime(1900, 3, 3)        (62-й день от 1900-01-01)
+# В JSON попадает бессмысленная строка '03:50:24' или '1900-01-01'.
+#
+# Решение: если значение — datetime/time, конвертируем его обратно
+# в Excel serial number (float). Формула:
+#   serial = (value - datetime(1899, 12, 30)).total_seconds() / 86400
+# (1899-12-30 — эпоха Excel 1900 date system: 1900-01-01 = serial 1)
+# ВНИМАНИЕ: используется 1900 date system (как в Google Sheets и Excel).
+DATE_EPOCH = datetime(1899, 12, 30)
+
+def datetime_to_serial(val):
+    """Конвертирует datetime/time/date в Excel serial number (float).
+
+    Возвращает None, если конвертация неприменима.
+    """
+    if isinstance(val, datetime):
+        delta = val - DATE_EPOCH
+        return round(delta.total_seconds() / 86400.0, 6)
+    if isinstance(val, dtime):
+        # Только время, без даты — считаем как долю суток
+        secs = val.hour * 3600 + val.minute * 60 + val.second + val.microsecond / 1e6
+        return round(secs / 86400.0, 6)
+    if isinstance(val, ddate):
+        delta = datetime(val.year, val.month, val.day) - DATE_EPOCH
+        return round(delta.total_seconds() / 86400.0, 6)
+    return None
+
+
+def format_kvy_value(serial):
+    """Форматирует serial number в читаемое значение Kvy.
+
+    Если значение целочисленное — возвращаем int (без точки).
+    Иначе — float с разумной точностью.
+    """
+    if abs(serial - round(serial)) < 1e-9:
+        return str(int(round(serial)))
+    # Округляем до 4 знаков, убираем trailing нули
+    s = f'{serial:.4f}'.rstrip('0').rstrip('.')
+    return s
 
 
 # ============================================================
@@ -124,6 +174,29 @@ def parse_valves(xlsx_path, sheet_name):
     log(f'Заголовки ({len(headers)}): {headers}')
 
     # Читаем данные
+    # Определяем, какие колонки должны быть числами (по заголовку).
+    # В Google Sheets эти колонки иногда имеют формат Date/Time по ошибке,
+    # и openpyxl возвращает datetime/time вместо числа. В таком случае
+    # конвертируем datetime/time обратно в Excel serial number (см.
+    # datetime_to_serial выше).
+    NUMERIC_HEADERS_HINTS = ('Kvy', 'DN', 'PN', 't рабочей', 'Размер', 'Межосевое',
+                             'Год выпуска', '№ п/п', '№ проекта')
+
+    def is_numeric_header(h):
+        if not h:
+            return False
+        for hint in NUMERIC_HEADERS_HINTS:
+            if hint in h:
+                return True
+        return False
+
+    numeric_cols = set()
+    for idx, h in enumerate(headers, 1):
+        if is_numeric_header(h):
+            numeric_cols.add(idx)
+    log(f'Числовые колонки (по заголовку): {sorted(numeric_cols)} '
+        f'→ {[headers[i-1] for i in sorted(numeric_cols)]}')
+
     valves = []
     skipped = 0
     for row_idx in range(2, ws.max_row + 1):
@@ -131,7 +204,24 @@ def parse_valves(xlsx_path, sheet_name):
         for col_idx in range(1, len(headers) + 1):
             cell = ws.cell(row=row_idx, column=col_idx)
             val = cell.value
-            # Обработка дат
+
+            # Если колонка должна быть числовой, но значение — datetime/time,
+            # восстанавливаем исходное число (Excel serial number).
+            if col_idx in numeric_cols and val is not None:
+                serial = datetime_to_serial(val)
+                if serial is not None:
+                    # Числовое значение: форматируем кратко (без trailing нулей)
+                    if abs(serial - round(serial)) < 1e-9:
+                        val = str(int(round(serial)))
+                    else:
+                        s = f'{serial:.4f}'.rstrip('0').rstrip('.')
+                        val = s
+                    row_values.append(val)
+                    continue
+                # Если val не datetime/time (а строка типа 'Нет', '?' и т.д.) —
+                # сохраняем как строку, см. ниже.
+
+            # Обработка дат для НЕчисловых колонок
             if isinstance(val, datetime):
                 val = val.strftime('%Y-%m-%d')
             elif val is not None:
