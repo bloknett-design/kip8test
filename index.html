@@ -2338,6 +2338,26 @@
     [data-theme="light"] .cj-add-fields .cj-field-select {
         background-color: #f5f7fa;
     }
+    /* Гибридное поле (input + datalist): тот же вид, что и у select,
+       но нативную стрелку браузера скрываем — рисуем свою, как у select. */
+    .cj-add-fields .cj-field-combo {
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: linear-gradient(45deg, transparent 50%, var(--text-secondary, rgba(255,255,255,0.45)) 50%),
+                          linear-gradient(135deg, var(--text-secondary, rgba(255,255,255,0.45)) 50%, transparent 50%);
+        background-position: calc(100% - 14px) 50%, calc(100% - 9px) 50%;
+        background-size: 5px 5px, 5px 5px;
+        background-repeat: no-repeat;
+        padding-right: 28px;
+    }
+    [data-theme="light"] .cj-add-fields .cj-field-combo {
+        background-color: #f5f7fa;
+    }
+    /* Скрыть нативный индикатор datalist в WebKit (Chrome/Safari/Android) */
+    .cj-add-fields .cj-field-combo::-webkit-calendar-picker-indicator {
+        display: none !important;
+        -webkit-appearance: none !important;
+    }
     .cj-cancel-btn {
         width: 100%;
         margin-top: 10px;
@@ -20500,12 +20520,22 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         // Используется только на странице добавления. Редактирование
         // сохранённых записей в приложении запрещено (Task 57).
         // ============================================================
+        // Поля, где ввод своего значения ЗАПРЕЩЁН — только выбор из списка.
+        // Пользователь явно попросил оставить их обычными <select>:
+        //   section    → «Участок трассы»
+        //   department → «Отделение, производство»
+        //   purpose    → «Назначение кабеля»
+        // Остальные поля с options — гибрид (input + datalist): можно
+        // выбрать из списка или ввести своё значение.
+        _selectOnlyKeys: ['section', 'department', 'purpose'],
+
         _renderField: function(key, opts) {
             const self = this;
             const col = this._columns.find(function(c) { return c.key === key; });
             if (!col) return '';
             const id = 'cjAddField_' + key;
             const hasOptions = Array.isArray(col.options) && col.options.length > 0;
+            const isSelectOnly = this._selectOnlyKeys.indexOf(key) !== -1;
 
             let html = '<div class="cj-field-group">';
             html += '<label class="cj-field-label" for="' + id + '">' + this._esc(col.label) + '</label>';
@@ -20520,10 +20550,10 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 const dd = String(today.getDate()).padStart(2, '0');
                 const todayStr = yyyy + '-' + mm + '-' + dd;
                 html += '<input id="' + id + '" type="date" class="cj-field-input cj-field-date" data-key="' + key + '" value="' + todayStr + '">';
-            } else if (hasOptions) {
-                // Поле с выпадающим списком: data validation Google Sheets
-                // или fallback (уникальные значения из данных для
-                // section/mark_*/cores_*/department/purpose/project_no).
+            } else if (hasOptions && isSelectOnly) {
+                // Поле с выпадающим списком БЕЗ возможности ввести своё
+                // значение: data validation Google Sheets или fallback
+                // (уникальные значения из данных).
                 html += '<select id="' + id + '" class="cj-field-input cj-field-select" data-key="' + key + '">';
                 html += '<option value="">- выберите -</option>';
                 col.options.forEach(function(v) {
@@ -20531,6 +20561,19 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     html += '<option value="' + self._esc(sv) + '">' + self._esc(sv) + '</option>';
                 });
                 html += '</select>';
+            } else if (hasOptions) {
+                // Гибридное поле: <input list> + <datalist>. Можно выбрать
+                // из списка существующих значений или ввести своё. Применяется
+                // ко всем полям с options, кроме явно запрещённых
+                // (section / department / purpose).
+                const listId = 'cjAddDatalist_' + key;
+                html += '<input id="' + id + '" type="text" class="cj-field-input cj-field-combo" list="' + listId + '" data-key="' + key + '" placeholder="выберите или введите" autocomplete="off">';
+                html += '<datalist id="' + listId + '">';
+                col.options.forEach(function(v) {
+                    const sv = String(v);
+                    html += '<option value="' + self._esc(sv) + '"></option>';
+                });
+                html += '</datalist>';
             } else {
                 // Длинные текстовые поля — textarea с auto-resize
                 // (расширяется под содержимое через JS-обработчик input).
