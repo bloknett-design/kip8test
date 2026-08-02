@@ -5706,9 +5706,9 @@
         /* --- Detail Panel (правая панель) --- */
         #detailPanel {
             display: none;
-            width: 420px;
-            min-width: 420px;
-            max-width: 420px;
+            width: 45%;
+            min-width: 380px;
+            max-width: 560px;
             border-left: 1px solid var(--border-color, rgba(74, 143, 199, 0.15));
             background: var(--bg-primary);
             overflow-y: auto;
@@ -5716,7 +5716,9 @@
             flex-shrink: 0;
         }
         #detailPanel.active {
-            display: block;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
         }
         #detailPanel .detail-panel-header {
             position: sticky;
@@ -5758,6 +5760,9 @@
         }
         #detailPanel .detail-panel-body {
             padding: 16px;
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
         }
 
         /* --- Дашборд: сетка кнопок --- */
@@ -6049,6 +6054,7 @@
             flex: 1;
             overflow-y: auto;
             min-width: 0;
+            height: 0; /* заставляет flex-item уважать overflow-y: auto */
         }
     }
 
@@ -6076,6 +6082,62 @@
         /* Кнопка закрытия sidebar — видна на десктопе */
         #sidebar .sidebar-header .header-btn {
             display: flex !important;
+        }
+    }
+
+
+    @media (min-width: 1024px) {
+        /* Карточки в detail-panel — адаптация для десктопа */
+        #detailPanel .dev-detail-card {
+            max-width: 100%;
+        }
+        #detailPanel .dev-detail-image {
+            max-height: 200px;
+            object-fit: contain;
+        }
+        #detailPanel .dev-detail-top {
+            flex-direction: column;
+        }
+        #detailPanel .dev-detail-image-wrap {
+            width: 100%;
+            max-height: 200px;
+        }
+        /* Inline-заголовок страницы скрываем на десктопе (есть top bar) */
+        #contentArea > .page-content.active > .page-inline-header {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            background: var(--header-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    }
+
+
+    @media (min-width: 1024px) {
+        /* Карточки в detail-panel — адаптация для десктопа */
+        #detailPanel .dev-detail-card {
+            max-width: 100%;
+        }
+        #detailPanel .dev-detail-image {
+            max-height: 200px;
+            object-fit: contain;
+        }
+        #detailPanel .dev-detail-top {
+            flex-direction: column;
+        }
+        #detailPanel .dev-detail-image-wrap {
+            width: 100%;
+            max-height: 200px;
+        }
+        /* Inline-заголовок страницы скрываем на десктопе (есть top bar) */
+        #contentArea > .page-content.active > .page-inline-header {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            background: var(--header-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
         }
     }
 
@@ -14790,7 +14852,14 @@
         if (page === 'project-group') { setTimeout(() => { if (typeof projectsRenderGroup === 'function') projectsRenderGroup(); }, 30); }
         if (page === 'cable-journal-edit') { setTimeout(() => { if (typeof KipCableJournal !== 'undefined') KipCableJournal.init(); }, 30); }
         if (page === 'cable-journal-add')  { setTimeout(() => { if (typeof KipCableJournal !== 'undefined') KipCableJournal.initAddPage(); }, 30); }
-        if (page === 'cable-journal-view') { setTimeout(() => { if (typeof KipCableJournal !== 'undefined') KipCableJournal.initViewPage(); }, 30); }
+        if (page === 'cable-journal-view') {
+            if (isDesktop()) {
+                // На десктопе: рендерим в detail-panel вместо перехода
+                cableRenderDetailInPanel();
+            } else {
+                setTimeout(() => { if (typeof KipCableJournal !== 'undefined') KipCableJournal.initViewPage(); }, 30);
+            }
+        }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof devInitEntryButton === 'function') devInitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof kipIOSUpdateLastChange === 'function') kipIOSUpdateLastChange(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof lockInitEntryButton === 'function') lockInitEntryButton(); }, 30); }
@@ -14825,11 +14894,19 @@
         if (active && addToHistory) { if (currentPageId !== page) pageHistory.push(currentPageId); }
         // === Десктоп: detail-страницы -> detail-panel вместо перехода ===
         if (isDesktop() && DESKTOP_DETAIL_PAGES.has(page)) {
-            // На десктопе: не переключаем страницу, а открываем detail-panel
-            const panel = document.getElementById('detailPanel');
-            if (panel) panel.classList.add('active');
-            // Не скрываем текущую страницу-список (master)
-            // Вызов рендера произойдёт ниже в setTimeout
+            // На десктопе: не переключаем страницу, а рендерим в detail-panel
+            // Вызываем соответствующий InPanel-рендерер
+            if (page === 'device-detail') { setTimeout(() => devRenderDetailInPanel(), 30); }
+            else if (page === 'lockout-detail') { setTimeout(() => lockRenderDetailInPanel(), 30); }
+            else if (page === 'valve-detail') { setTimeout(() => valveRenderDetailInPanel(), 30); }
+            else if (page === 'regulator-detail') { setTimeout(() => regulatorRenderDetailInPanel(), 30); }
+            else if (page === 'project-detail') { setTimeout(() => projectRenderDetailInPanel(), 30); }
+            else if (page === 'cable-journal-view') { setTimeout(() => cableRenderDetailInPanel(), 30); }
+            else {
+                // Для неизвестных detail-страниц — просто открываем пустую панель
+                const panel = document.getElementById('detailPanel');
+                if (panel) panel.classList.add('active');
+            }
             return;
         }
         document.querySelectorAll('.page-content').forEach(el => { el.classList.remove('active', 'visible'); });
@@ -16580,6 +16657,43 @@
         origContent.id = 'projectDetailContent';
         const title = origTitle ? origTitle.textContent : 'Проект';
         titleEl.textContent = title;
+        const panel = document.getElementById('detailPanel');
+        if (panel) panel.classList.add('active');
+    }
+
+    function cableRenderDetailInPanel() {
+        if (typeof KipCableJournal === 'undefined' || !KipCableJournal._viewing) return;
+        const row = KipCableJournal._viewing;
+        const titleEl = document.getElementById('detailPanelTitle');
+        const bodyEl = document.getElementById('detailPanelBody');
+        if (!titleEl || !bodyEl) return;
+        const rowNum = row['№ п/п'] || row['Номер'] || '';
+        titleEl.textContent = 'Кабель' + (rowNum ? ' №' + rowNum : '');
+        // Рендерим поля кабельной записи в detail-panel
+        let html = '<div class="dev-detail-card">';
+        const fields = [
+            { key: '№ п/п', label: '№ п/п' },
+            { key: 'Номер', label: 'Номер' },
+            { key: 'Марка', label: 'Марка' },
+            { key: 'Сечение', label: 'Сечение' },
+            { key: 'Начало', label: 'Начало' },
+            { key: 'Конец', label: 'Конец' },
+            { key: 'Длина, м', label: 'Длина, м' },
+            { key: 'Назначение', label: 'Назначение' },
+            { key: '№ проекта', label: '№ проекта' },
+            { key: 'Примечание', label: 'Примечание' },
+        ];
+        for (const f of fields) {
+            const val = row[f.key];
+            if (val === undefined || val === null || val === '') continue;
+            html += '<div class="dev-card-row">';
+            html += '<div class="dev-card-label">' + devEsc(f.label) + '</div>';
+            html += '<div class="dev-card-value">' + devEsc(String(val)) + '</div>';
+            html += '</div>';
+        }
+        html += '</div>';
+        bodyEl.innerHTML = html;
+        // Открываем панель
         const panel = document.getElementById('detailPanel');
         if (panel) panel.classList.add('active');
     }
