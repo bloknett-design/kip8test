@@ -1,21 +1,22 @@
 name: Update Exam Tickets (TEST)
 
 # ВНИМАНИЕ: это тестовый репозиторий kip8test.
-# Автоматический cron ОТКЛЮЧЁН, чтобы не дублировать запросы к Яндекс Диску
+# Автоматический cron ОТКЛЮЧЁН, чтобы не дублировать запросы к Google Sheets
 # с основным репозиторием kip8. Запуск только вручную через workflow_dispatch.
 # При необходимости можно временно включить schedule, раскомментировав блок ниже.
 #
 # КАК НАСТРОИТЬ:
-# По умолчанию используется публичная ссылка:
-#   https://disk.yandex.ru/i/oAuOyVb4OkmNtA
-#   файл: «Экзаминационные билеты_app.xlsx»
+# По умолчанию используется Google Sheets:
+#   https://docs.google.com/spreadsheets/d/1D8ElnUF3_ucNCpl0kF3PcVGltF08uoJK/edit
+#   файл: «Экзаменационные билеты_app.xlsx» (импортирован в Google Sheets)
 #   листы: «4 разряд», «5 разряд», «6 разряд», «До 1000 В»
-# Можно переопределить через переменную окружения в шаге "Sync":
-#   EXAM_TICKETS_PUBLIC_KEY
+# Можно переопределить через переменные окружения в шаге "Sync":
+#   EXAM_TICKETS_SPREADSHEET_ID, EXAM_TICKETS_GID (опц.)
 #
-# Источник независим от основного репозитория kip8 —
-# файлы билетов больше не тянутся с OneDrive,
-# используется тот же подход, что и для приборов (sync-devices.py).
+# Секреты НЕ требуются — таблица доступна «у кого есть ссылка»,
+# Google отдаёт XLSX через export?format=xlsx без OAuth.
+#
+# История источников: OneDrive (legacy) → Yandex Disk → Google Sheets (текущий).
 
 on:
   # Ручной запуск — всегда доступен
@@ -42,7 +43,7 @@ jobs:
       - name: Install dependencies
         run: pip install openpyxl requests
 
-      - name: Sync from Yandex Disk and convert to JSON
+      - name: Sync from Google Sheets and convert to JSON
         run: python scripts/convert-exam-tickets.py
 
       - name: Check for changes
@@ -56,7 +57,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/exam-tickets.json
-          git commit -m "auto: update exam tickets data from Yandex Disk (test repo)"
+          git commit -m "auto: update exam tickets data from Google Sheets (test repo)"
           git push
 
       - name: Summary
@@ -77,6 +78,6 @@ jobs:
           print(n)
           ")
             echo "**Всего строк (суммарно):** $TOTAL" >> $GITHUB_STEP_SUMMARY
-            echo "**Источник:** Yandex Disk (public)" >> $GITHUB_STEP_SUMMARY
+            echo "**Источник:** Google Sheets" >> $GITHUB_STEP_SUMMARY
             echo "**Листы:** 4 разряд, 5 разряд, 6 разряд, До 1000 В" >> $GITHUB_STEP_SUMMARY
           fi

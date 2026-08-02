@@ -1,35 +1,37 @@
 #!/usr/bin/env python3
 """
-Синхронизация экзаменационных билетов с публичной ссылкой Яндекс Диска.
+Синхронизация экзаменационных билетов с Google Sheets.
 
-Источник: https://disk.yandex.ru/i/oAuOyVb4OkmNtA
-          (файл «Экзаминационные билеты_app.xlsx»)
+Источник: https://docs.google.com/spreadsheets/d/1D8ElnUF3_ucNCpl0kF3PcVGltF08uoJK/edit
+          (файл «Экзаменационные билеты_app.xlsx», импортированный в Google Sheets)
 
-Скрипт работает по тому же принципу, что и scripts/sync-devices.py
-(раздел «Приборы»):
+Скрипт работает по тому же принципу, что и scripts/sync-projects.py
+(раздел «Проекты»):
 
-  1. Через Yandex Disk Public API (https://cloud-api.yandex.net/v1/disk/public/resources)
-     получает download_url по публичной ссылке.
-  2. Скачивает XLSX-файл напрямую с Яндекс Диска.
-  3. Парсит 4 листа («4 разряд», «5 разряд», «6 разряд», «До 1000 В»).
-  4. Сохраняет результат в data/exam-tickets.json.
+  1. Скачивает XLSX-экспорт напрямую из Google Sheets через export?format=xlsx.
+     Google отдаёт файл без OAuth, если таблица доступна «у кого есть ссылка».
+  2. Парсит 4 листа («4 разряд», «5 разряд», «6 разряд», «До 1000 В»).
+  3. Сохраняет результат в data/exam-tickets.json.
 
 Переменные окружения:
-  EXAM_TICKETS_PUBLIC_KEY — публичная ссылка
-      (по умолчанию https://disk.yandex.ru/i/oAuOyVb4OkmNtA)
+  EXAM_TICKETS_SPREADSHEET_ID — ID Google Sheets
+      (по умолчанию 1D8ElnUF3_ucNCpl0kF3PcVGltF08uoJK)
+  EXAM_TICKETS_GID — numeric ID листа (опционально; если задан, экспортирует
+      конкретный лист через &gid=...). Если не задан — экспортируется вся книга.
 
-Если нет интернета или API недоступен — использует уже существующий
-data/exam-tickets.json как заглушку (PWA продолжает работать с последними
+Секреты НЕ требуются — таблица доступна «у кого есть ссылка»,
+Google отдаёт XLSX через export?format=xlsx без OAuth.
+
+Если нет интернета или API недоступен — используется уже существующий
+data/exam-tickets.json как заглушка (PWA продолжает работать с последними
 закоммиченными данными).
 
-Полностью заменяет прежнюю реализацию на OneDrive-ссылке, которая тянула
-файл из основного репозитория kip8. Теперь источник независимый и хостится
-на Яндекс Диске — так же, как и приборы.
+История источников:
+- OneDrive (legacy) → Yandex Disk → Google Sheets (текущий)
 """
 
 import json
 import os
-import re
 import sys
 from pathlib import Path
 
@@ -38,10 +40,9 @@ import openpyxl
 
 
 # ============================================================
-# Настройки Яндекс Диска
+# Настройки Google Sheets
 # ============================================================
-YANDEX_PUBLIC_API = 'https://cloud-api.yandex.net/v1/disk/public/resources'
-DEFAULT_PUBLIC_KEY = 'https://disk.yandex.ru/i/oAuOyVb4OkmNtA'
+DEFAULT_SPREADSHEET_ID = '1D8ElnUF3_ucNCpl0kF3PcVGltF08uoJK'
 
 DOWNLOAD_DIR = Path('/tmp/exam_tickets_download')
 DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -145,47 +146,41 @@ def _normalize_file_field(raw_value: str) -> str:
 
 
 # ============================================================
-# Скачивание через Yandex Disk Public API
-# (по образцу scripts/sync-devices.py)
+# Скачивание XLSX напрямую из Google Sheets
+# (по образцу scripts/sync-projects.py)
 # ============================================================
-def get_download_url(public_key):
-    """Получает download_url для публичного файла через Yandex Disk Public API."""
-    log(f'Запрос метаданных публичного файла: {public_key}')
-    params = {'public_key': public_key}
-    resp = requests.get(YANDEX_PUBLIC_API, params=params, timeout=30)
-    if resp.status_code != 200:
-        raise RuntimeError(f'Ошибка API: HTTP {resp.status_code} — {resp.text[:200]}')
-    data = resp.json()
-    download_url = data.get('file')
-    if not download_url:
-        raise RuntimeError(
-            f'Не удалось получить download_url: {json.dumps(data, ensure_ascii=False)[:500]}'
-        )
-    name = data.get('name', 'exam-tickets.xlsx')
-    log(f'Имя файла на Яндекс Диске: {name}')
-    return download_url, name
+def download_file(spreadsheet_id, gid=None):
+    """
+    Скачивает XLSX-экспорт Google Sheets.
 
+    URL: https://docs.google.com/spreadsheets/d/<ID>/export?format=xlsx[&gid=<GID>]
+    Если gid не задан — экспортируется вся книга (все листы).
+    """
+    url = f'https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=xlsx'
+    if gid:
+        url += f'&gid={gid}'
 
-def download_file(url, filename):
-    """Скачивает файл по URL."""
-    local_path = DOWNLOAD_DIR / filename
-    log(f'Скачивание: {url[:80]}...')
+    log(f'Скачивание: {url[:100]}...')
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
     }
-    resp = requests.get(url, headers=headers, timeout=120)
+    resp = requests.get(url, headers=headers, timeout=120, allow_redirects=True)
     if resp.status_code != 200:
-        raise RuntimeError(f'Ошибка скачивания: HTTP {resp.status_code}')
-    local_path.write_bytes(resp.content)
-    file_size = local_path.stat().st_size
-    log(f'Файл скачан: {local_path} ({file_size} байт)')
+        raise RuntimeError(f'Ошибка скачивания: HTTP {resp.status_code} — {resp.text[:200]}')
 
     # Проверяем, что это xlsx (ZIP, начинается с PK)
     if resp.content[:2] != b'PK':
         raise RuntimeError(
             f'Скачанный файл не является xlsx (не ZIP). '
-            f'Первые байты: {resp.content[:4]!r}'
+            f'Первые байты: {resp.content[:4]!r}. '
+            f'Возможно, таблица не опубликована или нет доступа.'
         )
+
+    filename = 'exam-tickets.xlsx'
+    local_path = DOWNLOAD_DIR / filename
+    local_path.write_bytes(resp.content)
+    file_size = local_path.stat().st_size
+    log(f'Файл скачан: {local_path} ({file_size} байт)')
     return local_path
 
 
@@ -260,16 +255,14 @@ def convert_xlsx_to_json(xlsx_path, json_path):
 
 
 def main():
-    public_key = os.environ.get('EXAM_TICKETS_PUBLIC_KEY', '').strip() or DEFAULT_PUBLIC_KEY
+    spreadsheet_id = os.environ.get('EXAM_TICKETS_SPREADSHEET_ID', '').strip() or DEFAULT_SPREADSHEET_ID
+    gid = os.environ.get('EXAM_TICKETS_GID', '').strip() or None
 
     try:
-        # 1. Получить download_url
-        download_url, filename = get_download_url(public_key)
+        # 1. Скачать XLSX из Google Sheets
+        local_file = download_file(spreadsheet_id, gid=gid)
 
-        # 2. Скачать файл
-        local_file = download_file(download_url, filename)
-
-        # 3. Конвертировать в JSON
+        # 2. Конвертировать в JSON
         if not convert_xlsx_to_json(local_file, JSON_OUT):
             return 1
         return 0
