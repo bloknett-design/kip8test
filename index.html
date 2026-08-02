@@ -5669,6 +5669,259 @@
         background: rgba(74,143,199,0.1);
         color: #4a8fc7;
     }
+
+    /* ============================================================
+       ДЕСКТОПНЫЙ ЛЕЙАУТ (min-width: 1024px)
+       Вариант 4: sidebar + master-detail panel
+       ============================================================ */
+
+    /* Утилита: скрыть элемент на десктопе */
+    @media (min-width: 1024px) {
+        .desktop-hide { display: none !important; }
+    }
+    /* Утилита: показать элемент только на десктопе */
+    .desktop-only { display: none !important; }
+    @media (min-width: 1024px) {
+        .desktop-only { display: flex !important; }
+    }
+
+    @media (min-width: 1024px) {
+        /* --- Основной лейаут: sidebar + main + detail --- */
+        #mainApp {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar — всегда виден на десктопе */
+        #sidebar {
+            position: sticky;
+            top: 0;
+            left: 0;
+            transform: none !important;
+            width: 280px;
+            min-width: 280px;
+            max-width: 280px;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 50;
+            flex-shrink: 0;
+        }
+        #sidebarOverlay {
+            display: none !important;
+        }
+        /* Кнопка закрытия sidebar — скрыта на десктопе */
+        #sidebar .header-btn {
+            display: none;
+        }
+
+        /* Шапка приложения — скрыта на десктопе (sidebar заменяет) */
+        .app-header {
+            display: none !important;
+        }
+        .connection-indicator {
+            top: 8px;
+            right: 8px;
+            z-index: 100;
+        }
+
+        /* Основная область контента + detail-panel */
+        #contentArea {
+            flex: 1;
+            display: flex;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Мобильное поведение: page-content.active занимает всю ширину */
+        #contentArea > .page-content.active {
+            flex: 1;
+            overflow-y: auto;
+            min-width: 0;
+        }
+
+        /* --- Detail Panel (правая панель) --- */
+        #detailPanel {
+            display: none;
+            width: 420px;
+            min-width: 420px;
+            max-width: 420px;
+            border-left: 1px solid var(--border-color, rgba(74, 143, 199, 0.15));
+            background: var(--bg-primary);
+            overflow-y: auto;
+            position: relative;
+            flex-shrink: 0;
+        }
+        #detailPanel.active {
+            display: block;
+        }
+        #detailPanel .detail-panel-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: var(--header-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color, rgba(74, 143, 199, 0.15));
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 56px;
+        }
+        #detailPanel .detail-panel-title {
+            flex: 1;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #detailPanel .detail-panel-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        #detailPanel .detail-panel-close:hover {
+            background: rgba(74, 143, 199, 0.15);
+        }
+        #detailPanel .detail-panel-body {
+            padding: 16px;
+        }
+
+        /* --- Дашборд: сетка кнопок --- */
+        #page-dashboard .menu-btn-row {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            padding: 12px 16px;
+            max-width: 100%;
+        }
+        #page-dashboard .menu-btn {
+            max-width: none;
+        }
+        #page-dashboard .pinned-items-container {
+            max-width: 100%;
+        }
+
+        /* --- Калькуляторы / Документация: 2-3 колонки --- */
+        #page-calculators .menu-btn-row,
+        #page-calc-kipa .menu-btn-row,
+        #page-calc-electro .menu-btn-row,
+        #page-calc-geometry .menu-btn-row,
+        #page-docs .menu-btn-row {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            padding: 12px 16px;
+        }
+        #page-calculators .menu-btn,
+        #page-calc-kipa .menu-btn,
+        #page-calc-electro .menu-btn,
+        #page-calc-geometry .menu-btn,
+        #page-docs .menu-btn {
+            max-width: none;
+        }
+
+        /* --- КИП ИОС: 2 колонки для кнопок --- */
+        #page-kip-ios .kip-ios-block .menu-btn-row {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        #page-kip-ios .kip-ios-block .menu-btn {
+            max-width: none;
+        }
+
+        /* --- Библиотека: 2 колонки --- */
+        #page-library-internal .menu-btn-row,
+        #page-library-electro .menu-btn-row {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        /* --- Группы в списках каталогов: 2 колонки карточек --- */
+        .dev-group-body {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+
+        /* --- Секретные кнопки: в одну строку --- */
+        .menu-btn-row-secret-pair {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px;
+        }
+
+        /* --- Нижний бар дашборда: скрыт на десктопе --- */
+        .dashboard-bottom-bar {
+            display: none !important;
+        }
+        /* Убрать отступ для нижнего бара */
+        body:has(#page-dashboard.active) #contentArea {
+            padding-bottom: 0;
+        }
+        #page-dashboard.active {
+            padding-bottom: 16px !important;
+        }
+
+        /* --- Контент страниц: ограничение ширины --- */
+        .page-content {
+            max-width: 100%;
+        }
+
+        /* --- Админ-панель: 4 колонки вместо 2 --- */
+        .admin-grid {
+            grid-template-columns: repeat(4, 1fr) !important;
+        }
+
+        /* --- Админ-списки: сетка --- */
+        .admin-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 12px;
+        }
+    }
+
+    /* Tablet: 768-1023px — частичная адаптация */
+    @media (min-width: 768px) and (max-width: 1023px) {
+        #page-dashboard .menu-btn-row {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        #page-dashboard .menu-btn {
+            max-width: none;
+        }
+        #page-calculators .menu-btn-row,
+        #page-calc-kipa .menu-btn-row,
+        #page-calc-electro .menu-btn-row,
+        #page-calc-geometry .menu-btn-row,
+        #page-docs .menu-btn-row {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        #page-calculators .menu-btn,
+        #page-calc-kipa .menu-btn,
+        #page-calc-electro .menu-btn,
+        #page-calc-geometry .menu-btn,
+        #page-docs .menu-btn {
+            max-width: none;
+        }
+        .menu-btn-row-secret-pair {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px;
+        }
+    }
+
+    /* Подсветка активной карточки при открытом detail-panel */
+    .dev-card.detail-highlight {
+        border-color: var(--accent-blue, #4a8fc7) !important;
+        box-shadow: 0 0 0 2px rgba(74, 143, 199, 0.3) !important;
+    }
 </style>
 <!-- base target removed: not needed for SPA, causes issues with in-page navigation -->
 </head>
@@ -7957,6 +8210,17 @@
             <div style="margin:14px 0 10px;padding:14px 16px;background:var(--card-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--card-border);border-radius:14px;position:relative;z-index:2;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span style="font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:-0.2px;">Справочная информация</span></div><div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6;"><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Принцип действия:</b> Основан на законе Архимеда: F = ρ · g · V, где V — объём погружённой части буйка. По мере повышения уровня растёт выталкивающая сила, уменьшающая натяжение подвеса. Преобразователь (тензо/механический) переводит силу в выходной сигнал.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Метод «С буйком» (компенсационный):</b> m_гиры = m_выт + m_подвеса, где m_выт = ρ · V_погр — выталкивающая масса, эквивалентная погружённой части буйка. Буёк остаётся в жидкости, гири компенсируют изменение архимедовой силы на каждой отметке шкалы.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Метод «Без буйка» (имитация):</b> m_гиры = m_буйка − m_выт + m_подвеса. Буёк демонтирован, гири полностью воспроизводят натяжение подвеса при 100% уровне: масса буйка минус максимальная выталкивающая сила. Точнее компенсационного — нет трения буйка о стенки.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Калибровочная таблица:</b> 11 точек: 0%, 10%, 20%, ..., 100% шкалы — стандартная градуировка с шагом 10%. На каждой отметке: уровень (мм или %), масса гирь (г), выходной сигнал (мА / В / кПа). Дополнительно — расчёт произвольных значений через интерполяцию.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Плотности сред (20 °C):</b> Вода 998; дивинилбензол 926; диэтилбензол 860; стирол 906; дихлорэтан 1253; этиловый спирт 789; этиленгликоль 1112; едкий натр 2130; олеум 1890; серная кислота 96% 1834; перекись водорода 1450 кг/м³.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Типовые параметры:</b> Диаметр буйка 30–100 мм; длина 200–3000 мм; материал — нержавеющая сталь 12Х18Н10Т (для агрессивных сред — ХН78Т, титан ВТ1-0). Класс точности 0,5–1,5; рабочее давление до 16 МПа.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Нормативный документ:</b> ГОСТ 13045-81 «Уровнемеры буйковые. Общие технические условия»; РД 50-213-80 «Правила измерения уровня»; МИ 198-77 «Методика поверки буйковых уровнемеров»; ГОСТ 8.285-2012 (поверочная схема).</div></div></div>
         </div>
     </div>
+
+        <!-- ===== Десктоп: правая панель деталей (master-detail) ===== -->
+        <div id="detailPanel">
+            <div class="detail-panel-header">
+                <div class="detail-panel-title" id="detailPanelTitle">Детали</div>
+                <button type="button" class="detail-panel-close" onclick="closeDetailPanel()" aria-label="Закрыть панель">
+                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:rgba(74,143,199,0.9);fill:none;stroke-width:2;stroke-linecap:round;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="detail-panel-body" id="detailPanelBody"></div>
+        </div>
 </div>
 
 <div id="toast" class="toast"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg><span id="toastMessage"></span></div>
@@ -9130,7 +9394,11 @@
         if (!devId) return;
         if (navigator.vibrate) navigator.vibrate(15);
         window._devDetailId = devId;
-        navigateTo('device-detail');
+        if (isDesktop()) {
+            devRenderDetailInPanel();
+        } else {
+            navigateTo('device-detail');
+        }
     }
 
     function devRenderDetail() {
@@ -10382,7 +10650,11 @@
         if (!lockId) return;
         if (navigator.vibrate) navigator.vibrate(15);
         window._lockDetailId = lockId;
-        navigateTo('lockout-detail');
+        if (isDesktop()) {
+            lockRenderDetailInPanel();
+        } else {
+            navigateTo('lockout-detail');
+        }
     }
 
     function lockRenderDetail() {
@@ -11001,7 +11273,11 @@
         if (!valveId) return;
         if (navigator.vibrate) navigator.vibrate(15);
         window._valveDetailId = valveId;
-        navigateTo('valve-detail');
+        if (isDesktop()) {
+            valveRenderDetailInPanel();
+        } else {
+            navigateTo('valve-detail');
+        }
     }
 
     function valveRenderDetail() {
@@ -11622,7 +11898,11 @@
         if (!regulatorId) return;
         if (navigator.vibrate) navigator.vibrate(15);
         window._regulatorDetailId = regulatorId;
-        navigateTo('regulator-detail');
+        if (isDesktop()) {
+            regulatorRenderDetailInPanel();
+        } else {
+            navigateTo('regulator-detail');
+        }
     }
 
     function regulatorRenderDetail() {
@@ -12175,7 +12455,11 @@
         if (!projectId) return;
         if (navigator.vibrate) navigator.vibrate(15);
         window._projectDetailId = projectId;
-        navigateTo('project-detail');
+        if (isDesktop()) {
+            projectRenderDetailInPanel();
+        } else {
+            navigateTo('project-detail');
+        }
     }
 
     // ===== Открытие карточки проекта по внешнему «№ проекта» =====
@@ -14156,6 +14440,77 @@
         }
     }
 
+
+    // ============================================================
+    // ДЕСКТОПНЫЙ ЛЕЙАУТ: утилиты и master-detail
+    // ============================================================
+
+    /** Определяет, работает ли приложение в десктопном режиме */
+    function isDesktop() {
+        return window.matchMedia('(min-width: 1024px)').matches;
+    }
+
+    /** Определяет, работает ли приложение в планшетном режиме */
+    function isTablet() {
+        return window.matchMedia('(min-width: 768px) and (max-width: 1023px)').matches;
+    }
+
+    /** Страницы, которые на десктопе открывают detail-panel вместо перехода */
+    const DESKTOP_DETAIL_PAGES = new Set([
+        'device-detail', 'lockout-detail', 'valve-detail',
+        'regulator-detail', 'project-detail', 'cable-journal-view'
+    ]);
+
+    /** Страницы-списки (master), при клике в которых открывается detail */
+    const DESKTOP_MASTER_PAGES = new Set([
+        'devices-prod', 'devices-type', 'devices-name',
+        'dev-group',
+        'lockouts-prod', 'lock-group',
+        'valves-prod', 'valves-type', 'valves-name',
+        'valve-group',
+        'regulators-prod', 'regulator-group',
+        'projects-prod', 'project-group',
+        'cable-journal-edit'
+    ]);
+
+    /** Открывает detail-panel с содержимым */
+    function openDetailPanel(title, contentHtml) {
+        if (!isDesktop()) return;
+        const panel = document.getElementById('detailPanel');
+        const titleEl = document.getElementById('detailPanelTitle');
+        const bodyEl = document.getElementById('detailPanelBody');
+        if (!panel || !titleEl || !bodyEl) return;
+        titleEl.textContent = title || 'Детали';
+        bodyEl.innerHTML = contentHtml || '';
+        panel.classList.add('active');
+        // Подсветка активной карточки в списке
+        document.querySelectorAll('.dev-card.detail-highlight').forEach(el => el.classList.remove('detail-highlight'));
+    }
+
+    /** Закрывает detail-panel */
+    function closeDetailPanel() {
+        const panel = document.getElementById('detailPanel');
+        if (!panel) return;
+        panel.classList.remove('active');
+        document.getElementById('detailPanelBody').innerHTML = '';
+        document.querySelectorAll('.dev-card.detail-highlight').forEach(el => el.classList.remove('detail-highlight'));
+    }
+
+    // Слушатель изменения размера окна — закрыть detail-panel при переходе на мобильный
+    window.matchMedia('(min-width: 1024px)').addEventListener('change', function(e) {
+        if (!e.matches) {
+            closeDetailPanel();
+        }
+        // Обновить sidebar состояние
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        if (e.matches && sidebar) {
+            // Десктоп: убрать класс active (sidebar виден через CSS)
+            sidebar.classList.remove('active');
+            if (overlay) overlay.classList.remove('active');
+        }
+    });
+
     function navigateTo(page, addToHistory=true) {
         // Проверка доступа (если KipAuth инициализирован).
         if (typeof KipAuth !== 'undefined' && KipAuth._cachedRole && !KipAuth.canAccess(page)) {
@@ -14276,6 +14631,15 @@
         let active = document.querySelector('.page-content.active');
         let currentPageId = active ? active.id.replace('page-', '') : 'dashboard';
         if (active && addToHistory) { if (currentPageId !== page) pageHistory.push(currentPageId); }
+        // === Десктоп: detail-страницы -> detail-panel вместо перехода ===
+        if (isDesktop() && DESKTOP_DETAIL_PAGES.has(page)) {
+            // На десктопе: не переключаем страницу, а открываем detail-panel
+            const panel = document.getElementById('detailPanel');
+            if (panel) panel.classList.add('active');
+            // Не скрываем текущую страницу-список (master)
+            // Вызов рендера произойдёт ниже в setTimeout
+            return;
+        }
         document.querySelectorAll('.page-content').forEach(el => { el.classList.remove('active', 'visible'); });
         // Сбросить состояние прокрутки при переходе на новую страницу
         document.querySelectorAll('.page-content.scrolled').forEach(el => el.classList.remove('scrolled'));
@@ -15923,6 +16287,109 @@
             el.blur();
         }
     });
+
+    // ============================================================
+    // ДЕСКТОП: RenderDetail-InPanel — рендер в detail-panel
+    // ============================================================
+
+    function devRenderDetailInPanel() {
+        const devId = window._devDetailId;
+        if (!devId || !devLoaded || !devData) return;
+        const dev = devData.devices.find(d => String(d['ID'] ?? '') === String(devId));
+        if (!dev) return;
+        const titleEl = document.getElementById('detailPanelTitle');
+        const bodyEl = document.getElementById('detailPanelBody');
+        const origContent = document.getElementById('deviceDetailContent');
+        if (!titleEl || !bodyEl || !origContent) return;
+        const name = dev['Наименование'] || '(без названия)';
+        titleEl.textContent = name;
+        // Временно подменяем целевой контейнер для рендера
+        origContent.id = 'deviceDetailContent_orig';
+        bodyEl.id = 'deviceDetailContent';
+        devRenderDetail();
+        bodyEl.id = 'detailPanelBody';
+        origContent.id = 'deviceDetailContent';
+        // Открываем панель
+        const panel = document.getElementById('detailPanel');
+        if (panel) panel.classList.add('active');
+    }
+
+    function lockRenderDetailInPanel() {
+        const lockId = window._lockDetailId;
+        if (!lockId) return;
+        const origContent = document.getElementById('lockoutDetailContent');
+        const origTitle = document.getElementById('lockoutDetailTitle');
+        const bodyEl = document.getElementById('detailPanelBody');
+        const titleEl = document.getElementById('detailPanelTitle');
+        if (!origContent || !bodyEl || !titleEl) return;
+        origContent.id = 'lockoutDetailContent_orig';
+        bodyEl.id = 'lockoutDetailContent';
+        lockRenderDetail();
+        bodyEl.id = 'detailPanelBody';
+        origContent.id = 'lockoutDetailContent';
+        const title = origTitle ? origTitle.textContent : 'Блокировка';
+        titleEl.textContent = title;
+        const panel = document.getElementById('detailPanel');
+        if (panel) panel.classList.add('active');
+    }
+
+    function valveRenderDetailInPanel() {
+        const valveId = window._valveDetailId;
+        if (!valveId) return;
+        const origContent = document.getElementById('valveDetailContent');
+        const origTitle = document.getElementById('valveDetailTitle');
+        const bodyEl = document.getElementById('detailPanelBody');
+        const titleEl = document.getElementById('detailPanelTitle');
+        if (!origContent || !bodyEl || !titleEl) return;
+        origContent.id = 'valveDetailContent_orig';
+        bodyEl.id = 'valveDetailContent';
+        valveRenderDetail();
+        bodyEl.id = 'detailPanelBody';
+        origContent.id = 'valveDetailContent';
+        const title = origTitle ? origTitle.textContent : 'Клапан';
+        titleEl.textContent = title;
+        const panel = document.getElementById('detailPanel');
+        if (panel) panel.classList.add('active');
+    }
+
+    function regulatorRenderDetailInPanel() {
+        const regulatorId = window._regulatorDetailId;
+        if (!regulatorId) return;
+        const origContent = document.getElementById('regulatorDetailContent');
+        const origTitle = document.getElementById('regulatorDetailTitle');
+        const bodyEl = document.getElementById('detailPanelBody');
+        const titleEl = document.getElementById('detailPanelTitle');
+        if (!origContent || !bodyEl || !titleEl) return;
+        origContent.id = 'regulatorDetailContent_orig';
+        bodyEl.id = 'regulatorDetailContent';
+        regulatorRenderDetail();
+        bodyEl.id = 'detailPanelBody';
+        origContent.id = 'regulatorDetailContent';
+        const title = origTitle ? origTitle.textContent : 'Регулятор';
+        titleEl.textContent = title;
+        const panel = document.getElementById('detailPanel');
+        if (panel) panel.classList.add('active');
+    }
+
+    function projectRenderDetailInPanel() {
+        const projectId = window._projectDetailId;
+        if (!projectId) return;
+        const origContent = document.getElementById('projectDetailContent');
+        const origTitle = document.getElementById('projectDetailTitle');
+        const bodyEl = document.getElementById('detailPanelBody');
+        const titleEl = document.getElementById('detailPanelTitle');
+        if (!origContent || !bodyEl || !titleEl) return;
+        origContent.id = 'projectDetailContent_orig';
+        bodyEl.id = 'projectDetailContent';
+        projectRenderDetail();
+        bodyEl.id = 'detailPanelBody';
+        origContent.id = 'projectDetailContent';
+        const title = origTitle ? origTitle.textContent : 'Проект';
+        titleEl.textContent = title;
+        const panel = document.getElementById('detailPanel');
+        if (panel) panel.classList.add('active');
+    }
+
     function toggleSidebar() {
     let sidebar = document.getElementById('sidebar');
     let overlay = document.getElementById('sidebarOverlay');
