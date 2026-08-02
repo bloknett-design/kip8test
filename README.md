@@ -59,13 +59,15 @@
 
 Автоматическое ежедневное обновление билетов **отключено** (закомментирован блок `schedule:`). Запуск только вручную через GitHub Actions UI (`workflow_dispatch`).
 
-**Источник данных:** публичная ссылка Яндекс Диска
-`https://disk.yandex.ru/i/oAuOyVb4OkmNtA`
-(файл «Экзаминационные билеты_app.xlsx»). Скрипт `scripts/convert-exam-tickets.py`
-тянет файл через Yandex Disk Public API — так же, как и приборы
-(`scripts/sync-devices.py`). Зависимости от OneDrive и от основного репо kip8 нет.
+**Источник данных:** Google Sheets
+`https://docs.google.com/spreadsheets/d/1D8ElnUF3_ucNCpl0kF3PcVGltF08uoJK/edit`
+(файл «Экзаменационные билеты_app.xlsx», импортированный в Google Sheets).
+Скрипт `scripts/convert-exam-tickets.py` тянет XLSX-экспорт напрямую через
+`export?format=xlsx` — так же, как и приборы (`scripts/sync-devices.py`).
+Зависимости от OneDrive и от основного репо kip8 нет.
 
-**Почему cron отключён:** иначе оба репо будут каждый день дёргать Яндекс Диск — дублирование работы и риск rate-limit.
+**Почему cron отключён:** иначе оба репо будут каждый день дёргать Google Sheets —
+дублирование работы и риск rate-limit.
 
 ### 5. `.github/workflows/ci.yml` — без изменений
 
@@ -158,8 +160,8 @@ git push origin main
 
 ### 7. Картинки приборов
 - [ ] Открыть раздел «Приборы»
-- [ ] В карточках приборов с заполненным полем «Изображение» (share-ссылка из Excel → base64 в `devices.json`) должна отображаться картинка
-- [ ] Если для прибора в Excel ещё не указана share-ссылка `https://disk.yandex.ru/i/...` — показывается SVG-заставка с надписью «КИП»
+- [ ] В карточках приборов с заполненным полем «Изображение» (Google Drive share-ссылка из таблицы) должна отображаться картинка
+- [ ] Если для прибора в Google Sheets ещё не указана ссылка на Google Drive — показывается SVG-заставка с надписью «КИП»
 
 ---
 
@@ -220,14 +222,14 @@ git push origin main
 | `.github/workflows/sync-valves.yml` | ✅ Cron закомментирован | **Не копировать** — в kip8 cron нужен |
 | `.github/workflows/sync-regulators.yml` | ✅ Cron закомментирован | **Не копировать** — в kip8 cron нужен |
 | `tests/` | ❌ Без изменений | Можно копировать |
-| `scripts/convert-exam-tickets.py` | ✅ Переведён с OneDrive на Яндекс Диск (Public API) | Можно копировать |
-| `scripts/sync-devices.py` | ✅ Обновлена ссылка Яндекс Диска | Можно копировать |
+| `scripts/convert-exam-tickets.py` | ✅ Переведён с OneDrive на Google Sheets (xlsx-экспорт) | Можно копировать |
+| `scripts/sync-devices.py` | ✅ Обновлён на Google Sheets (без разрешения картинок — URL проходят как есть) | Можно копировать |
 | `scripts/sync-lockouts.py` | ✅ Добавлен скрипт | Можно копировать |
 | `scripts/sync-valves.py` | ✅ Адаптирован под лист «Клапана_app» | Можно копировать |
 | `scripts/sync-regulators.py` | ✅ Адаптирован под лист «Регуляторы_app» | Можно копировать |
 | `images/` | ❌ Без изменений | Можно копировать |
 | `data/exam-tickets.json` | ❌ Без изменений | Можно копировать |
-| `data/devices.json` | ❌ Без изменений (включая base64-картинки, разрешённые из share-ссылок) | Можно копировать |
+| `data/devices.json` | ❌ Без изменений (включая URL картинок Google Drive) | Можно копировать |
 | `data/lockouts.json` | ❌ Без изменений | Можно копировать |
 | `data/valves.json` | ❌ Без изменений | Можно копировать |
 | `data/regulators.json` | ❌ Без изменений | Можно копировать |
@@ -254,7 +256,7 @@ grep 'CACHE_VERSION\|IMAGE_CACHE_VERSION' sw.js
 # Проверка префикса localStorage в index.html
 grep 'PREFIX' index.html
 
-# Ручной запуск sync-devices.py (приборы + разрешение share-ссылок → base64)
+# Ручной запуск sync-devices.py (приборы — скачивание Google Sheets → JSON)
 python3 scripts/sync-devices.py
 ```
 
@@ -264,7 +266,7 @@ python3 scripts/sync-devices.py
 
 1. **НЕ собирать APK через Bubblewrap.** TWA-манифест в основном репозитории настроен на `kip8`, а не на `kip8test`. Сборка APK здесь приведёт к конфликтам `packageId` и `assetlinks.json`.
 
-2. **НЕ включать cron в `update-exam-tickets.yml` без необходимости.** Это создаст параллельные ежедневные запросы к Яндекс Диску вместе с основным репо. Если нужно протестировать обновление — используйте ручной запуск `workflow_dispatch`.
+2. **НЕ включать cron в `update-exam-tickets.yml` без необходимости.** Это создаст параллельные ежедневные запросы к Google Sheets вместе с основным репо. Если нужно протестировать обновление — используйте ручной запуск `workflow_dispatch`.
 
 3. **НЕ копировать `manifest.json` из kip8test в kip8 как есть.** Пути `/kip8test/` сломают установку PWA в основном репозитории.
 
@@ -298,7 +300,7 @@ data/phonebook.json (закоммичен в репо)
 Пользователь видит список организаций → карточки контактов
 ```
 
-**Обновление данных — вручную.** Автоматической синхронизации с Яндекс Диском нет: файл `data/phonebook.json` редактируется и коммитится в репозиторий вручную при изменении контактных данных. Ранее в репозитории присутствовали `scripts/sync-phonebook.py` и `.github/workflows/sync-phonebook.yml`, но они были удалены как неиспользуемые; если автоматическая синхронизация потребуется — скрипт и workflow нужно восстановить из основного репозитория `kip8` (там они активны).
+**Обновление данных — вручную.** Автоматической синхронизации с Google Sheets нет: файл `data/phonebook.json` редактируется и коммитится в репозиторий вручную при изменении контактных данных. Ранее в репозитории присутствовали `scripts/sync-phonebook.py` и `.github/workflows/sync-phonebook.yml`, но они были удалены как неиспользуемые; если автоматическая синхронизация потребуется — скрипт и workflow нужно восстановить из основного репозитория `kip8` (там они активны).
 
 ### Файлы
 
@@ -314,61 +316,64 @@ data/phonebook.json (закоммичен в репо)
 
 ## 🖼 Картинки приборов (preview в карточках)
 
-В карточках приборов (раздел «Приборы») отображаются preview-изображения, если для прибора в Excel-таблице «Перечень КИП ИОС рабочий.xlsx» (лист «Приборы_app», колонка «Изображение») указана индивидуальная публичная ссылка Яндекс Диска вида `https://disk.yandex.ru/i/...`.
+В карточках приборов (раздел «Приборы») отображаются preview-изображения, если для прибора в таблице Google Sheets «Перечень КИП ИОС рабочий.xlsx» (лист «Приборы_app», колонка «Изображение») указана ссылка на Google Drive вида `https://drive.google.com/file/d/FILE_ID/view?usp=sharing`.
 
 ### Архитектура
 
 ```
-Excel-таблица «Перечень КИП ИОС рабочий.xlsx», лист «Приборы_app», колонка «Изображение»
-    → содержит индивидуальные публичные share-ссылки https://disk.yandex.ru/i/<ID>
+Google Sheets «Перечень КИП ИОС рабочий.xlsx», лист «Приборы_app», колонка «Изображение»
+    → содержит Google Drive share-ссылки https://drive.google.com/file/d/FILE_ID/view?usp=...
     ↓ (GitHub Actions: workflow_dispatch «Update Devices (TEST)»)
-scripts/sync-devices.py → resolve_share_link_images()
-    ↓ (Yandex Disk Public API: share-ссылка → file URL → бинарные данные → base64 data URI)
-data/devices.json (поле «Изображение» содержит base64 data URI)
-    ↓ (PWA: fetch devices.json → devGetImageUrl())
-Карточка прибора: <img src="data:image/jpeg;base64,...">
+scripts/sync-devices.py (парсит xlsx-экспорт, URL проходят как есть)
+    ↓ (без обращения к внешним API — просто сохраняем в JSON)
+data/devices.json (поле «Изображение» содержит Google Drive share-ссылку как есть)
+    ↓ (PWA: fetch devices.json → devGetImageUrl() → gdriveShareToDirect())
+Карточка прибора: <img src="https://drive.google.com/thumbnail?id=FILE_ID&sz=w800">
 ```
 
-**Ключевое:** доступ к общей папке `/СИ_Images` на Яндекс Диске **не нужен**. Каждая картинка загружается по своей индивидуальной публичной ссылке, прописанной в Excel-таблице. Это означает, что:
-- добавление/удаление картинки = правка одной ячейки в Excel + повторный запуск `sync-devices.py`;
+**Ключевое:** никаких обращений к Яндекс.Диску в рантайме нет. Картинка прибора отображается через Google Drive Thumbnail API (`drive.google.com/thumbnail?id=...&sz=w800`) — фронтенд PWA сам конвертирует share-ссылку в URL превью. Это означает, что:
+- добавление/удаление картинки = правка одной ячейки в Google Sheets + повторный запуск `sync-devices.py`;
 - нет отдельного скрипта `sync-devices-images.py` и файла `data/devices-images.json` — эта инфраструктура удалена как избыточная;
-- base64 встраивается прямо в `devices.json`, поэтому картинки доступны офлайн (кэшируются вместе с `devices.json` в Service Worker).
+- URL картинки кэшируются Service Worker-ом (через `drive.google.com/thumbnail` и `lh3.googleusercontent.com`) и доступны офлайн.
 
 ### Логика `devGetImageUrl(dev)`
 
 Приоритет выбора URL для картинки в карточке прибора:
 
-1. **base64 data URI** в поле `Изображение` (`data:image/...`) — возвращается как есть. Это основной путь: `sync-devices.py` заранее разрешает все share-ссылки и встраивает base64 в `devices.json`.
-2. **Прямая ссылка** `http(s)://...` в поле `Изображение` — возвращается как есть. Если по какой-то причине `sync-devices.py` не смог разрешить share-ссылку, она остаётся в поле как URL и PWA попробует загрузить её напрямую.
-3. **Иначе** — SVG-заставка с надписью «КИП». Это касается приборов, у которых в Excel колонка «Изображение» пуста или содержит устаревший путь вида `кип_app\СИ_Images\...` (такие пути не обрабатываются и должны быть заменены на share-ссылки).
+1. **base64 data URI** в поле `Изображение` (`data:image/...`) — возвращается как есть. Это legacy-формат из старых JSON.
+2. **Google Drive share-ссылка** (`https://drive.google.com/file/d/FILE_ID/view?usp=...`) — конвертируется через `gdriveShareToDirect()` в URL превью (`drive.google.com/thumbnail?id=FILE_ID&sz=w800`).
+3. **Прямой HTTPS-URL** картинки — возвращается как есть.
+4. **Иначе** — SVG-заставка с надписью «КИП». Это касается приборов, у которых в Google Sheets колонка «Изображение» пуста.
 
 ### Если картинка не отображается
 
-1. Проверить, что в Excel в колонке «Изображение» для нужного прибора стоит именно `https://disk.yandex.ru/i/...` (а не путь вида `кип_app\СИ_Images\...`).
-2. Запустить workflow «Update Devices (TEST)» в GitHub Actions (или локально `python3 scripts/sync-devices.py`) — скрипт скачает Excel, разрешит share-ссылки и пересоберёт `data/devices.json`.
+1. Проверить, что в Google Sheets в колонке «Изображение» для нужного прибора стоит корректная Google Drive share-ссылка вида `https://drive.google.com/file/d/FILE_ID/view?usp=sharing`, и что файл на Google Drive доступен «у кого есть ссылка».
+2. Запустить workflow «Update Devices (TEST)» в GitHub Actions (или локально `python3 scripts/sync-devices.py`) — скрипт скачает xlsx-экспорт и пересоберёт `data/devices.json`.
 3. Инкрементировать `CACHE_VERSION` в `sw.js`, закоммитить обновлённые `data/devices.json` и `sw.js`, запушить.
 4. В PWA (после обновления Service Worker) карточка прибора покажет картинку.
 
 ### Ограничения
 
-- `sync-devices.py` использует библиотеку **Pillow** для уменьшения картинок до 150×150 px. Если Pillow не установлен в окружении запуска — share-ссылки не разрешаются и в `devices.json` остаются как текст (картинки не отобразятся). В GitHub Actions Pillow устанавливается по умолчанию.
-- Дублирующиеся share-ссылки (одно и то же изображение у нескольких приборов) скачиваются один раз и переиспользуются — это оптимизация в `resolve_share_link_images()`.
+- `sync-devices.py` не обращается к внешним API для разрешения картинок — он просто сохраняет URL как есть. Конвертация Google Drive share-ссылки в прямой URL картинки выполняется фронтендом PWA в `gdriveShareToDirect()`.
+- Для offline-режима Service Worker кэширует ответы от `drive.google.com/thumbnail` и `lh3.googleusercontent.com` (см. ветку IMAGE_CACHE в `sw.js`).
 
 ---
 
 ## 🔄 Синхронизация данных (приборы, блокировки, клапаны, регуляторы, билеты)
 
-Все 5 sync-скриптов используют один и тот же подход: Yandex Disk Public API + публичная ссылка на файл `https://disk.yandex.ru/i/B8-c9XnMZlgTkw` (файл «Перечень КИП ИОС рабочий.xlsx»). Секреты НЕ требуются.
+Все 5 sync-скриптов используют один и тот же подход: Google Sheets xlsx-экспорт через `export?format=xlsx`. Секреты НЕ требуются — таблицы доступны «у кого есть ссылка».
 
-| Скрипт | Лист Excel | Выходной JSON | Записей |
-|--------|------------|---------------|---------|
-| `scripts/sync-devices.py` | `Приборы_app` | `data/devices.json` | 1312 |
-| `scripts/sync-lockouts.py` | `Блокировки_app` | `data/lockouts.json` | 526 |
-| `scripts/sync-valves.py` | `Клапана_app` | `data/valves.json` | 320 |
-| `scripts/sync-regulators.py` | `Регуляторы_app` | `data/regulators.json` | 268 |
-| `scripts/convert-exam-tickets.py` | `4 разряд`, `5 разряд`, `6 разряд`, `До 1000 В` (отдельный файл) | `data/exam-tickets.json` | — |
+| Скрипт | Источник (Google Sheets) | Лист | Выходной JSON | Записей |
+|--------|--------------------------|------|---------------|---------|
+| `scripts/sync-devices.py` | `1eUUwwulUvKUGWTgQ__XP-y7z1aEkt5Wy` | `Приборы_app` | `data/devices.json` | 1312 |
+| `scripts/sync-lockouts.py` | `1eUUwwulUvKUGWTgQ__XP-y7z1aEkt5Wy` | `Блокировки_app` | `data/lockouts.json` | 526 |
+| `scripts/sync-valves.py` | `1eUUwwulUvKUGWTgQ__XP-y7z1aEkt5Wy` | `Клапана_app` | `data/valves.json` | 320 |
+| `scripts/sync-regulators.py` | `1eUUwwulUvKUGWTgQ__XP-y7z1aEkt5Wy` | `Регуляторы_app` | `data/regulators.json` | 268 |
+| `scripts/convert-exam-tickets.py` | `1D8ElnUF3_ucNCpl0kF3PcVGltF08uoJK` | `4 разряд`, `5 разряд`, `6 разряд`, `До 1000 В` | `data/exam-tickets.json` | — |
+| `scripts/sync-projects.py` | `1IQq8S4-Qao1eJKli3zgMvTpA2exkGYg0` | `Проекты` | `data/projects.json` | — |
+| `scripts/sync-cables.py` | `1XsmoyE4CpIcrNqmeFXIuNzi7vuOzxwZix109YlXkv8Y` | `Кабельный журнал` | `data/cables.json` | — |
 
-Все соответствующие workflow (`.github/workflows/sync-*.yml`) имеют **отключённый cron** — только ручной запуск через `workflow_dispatch`. Это сделано для изоляции от основного репозитория kip8, чтобы не дублировать ежедневные запросы к Яндекс Диску.
+Все соответствующие workflow (`.github/workflows/sync-*.yml`) имеют **отключённый cron** — только ручной запуск через `workflow_dispatch`. Это сделано для изоляции от основного репозитория kip8, чтобы не дублировать ежедневные запросы к Google Sheets.
 
 ### Ручной запуск любого sync-workflow
 

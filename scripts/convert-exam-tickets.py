@@ -27,7 +27,7 @@ data/exam-tickets.json как заглушка (PWA продолжает раб�
 закоммиченными данными).
 
 История источников:
-- OneDrive (legacy) → Yandex Disk → Google Sheets (текущий)
+- OneDrive (legacy) → Google Sheets (текущий)
 """
 
 import json

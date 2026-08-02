@@ -16,7 +16,7 @@ name: Update Exam Tickets (TEST)
 # Секреты НЕ требуются — таблица доступна «у кого есть ссылка»,
 # Google отдаёт XLSX через export?format=xlsx без OAuth.
 #
-# История источников: OneDrive (legacy) → Yandex Disk → Google Sheets (текущий).
+# История источников: OneDrive (legacy) → Google Sheets (текущий).
 
 on:
   # Ручной запуск — всегда доступен

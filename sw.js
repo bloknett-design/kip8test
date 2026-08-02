@@ -11,7 +11,7 @@
 // свежие версии файлов из ASSETS.
 // ============================================================
 
-const CACHE_VERSION = 'kipia-test-v247';
+const CACHE_VERSION = 'kipia-test-v248';
 const CACHE_NAME = CACHE_VERSION;
 
 // Отдельный кэш для картинок Google Drive (превью + полные).
@@ -246,51 +246,8 @@ self.addEventListener('fetch', event => {
       return;
     }
 
-    // ===== Картинки с Яндекс Диска (downloader.disk.yandex.ru) =====
-    // Используются в разделе «План корпуса 114» — 6 планов помещений.
-    // URL картинок содержит временный токен (живёт ~1 час), поэтому
-    // использовать URL как ключ кэша напрямую нельзя — при следующем
-    // запросе к API будет получен новый URL, и кэш не найдётся.
-    //
-    // Решение: ключом кэша служит pathname (без query-параметров).
-    // pathname стабилен (содержит только путь к файлу на сервере Я.Диска),
-    // query содержит временный токен — его отбрасываем.
-    //
-    // ВАЖНО: referrerPolicy='no-referrer' обязателен. Яндекс.Диск отдаёт 403
-    // на картинки с Referer от сторонних доменов (GitHub Pages и т.п.) —
-    // это защита от хотлинкинга. Без no-referrer картинки молча не грузятся.
-    //
-    // Стратегия: STALE-WHILE-REVALIDATE через IMAGE_CACHE_NAME
-    // (переживает обновления CACHE_VERSION — пользователю не нужно
-    // заново скачивать все 6 планов после каждого релиза).
-    const isYandexDiskImage = url.hostname === 'downloader.disk.yandex.ru';
-
-    if (isYandexDiskImage) {
-      // Ключ кэша: URL БЕЗ query (отбрасываем временный токен).
-      const cacheKey = new Request(url.pathname, { method: 'GET' });
-      event.respondWith(
-        caches.open(IMAGE_CACHE_NAME).then(cache => {
-          return cache.match(cacheKey).then(cached => {
-            // Фоновое обновление в сети (не блокирует ответ).
-            // referrerPolicy:'no-referrer' — без него Яндекс.Диск отдаёт 403
-            // для запросов с Referer от сторонних доменов.
-            const fetchPromise = fetch(request, { referrerPolicy: 'no-referrer' }).then(response => {
-              if (response.ok || response.type === 'opaque') {
-                // Кэшируем по нормализованному ключу (без query)
-                cache.put(cacheKey, response.clone());
-              }
-              return response;
-            }).catch(() => null);
-            // Если есть кэш — отдаём сразу; сеть обновит кэш для следующего раза.
-            // Если кэша нет — ждём сеть.
-            return cached || fetchPromise;
-          });
-        })
-      );
-      return;
-    }
-
-    // Прочие внешние ресурсы (шрифты Google, CDN, cloud-api.yandex.net) — network-first
+    // ===== Прочие внешние ресурсы (шрифты Google, CDN) =====
+    // network-first: пытаемся загрузить из сети, при ошибке отдаём из кэша.
     event.respondWith(
       fetch(request)
         .then(response => {

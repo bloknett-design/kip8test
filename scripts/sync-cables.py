@@ -167,9 +167,8 @@ def parse_cables(xlsx_path, sheet_name):
             continue
 
         # Если № п/п — число, преобразуем.
-        # В Google Sheets xlsx-экспорте числа хранятся как float ("53.0"),
-        # в исходном Yandex Disk xlsx — как int. Нормализуем к int,
-        # если значение целочисленное.
+        # В Google Sheets xlsx-экспорте числа хранятся как float ("53.0").
+        # Нормализуем к int, если значение целочисленное.
         if isinstance(id_val, str) and id_val.strip():
             try:
                 f = float(id_val)
