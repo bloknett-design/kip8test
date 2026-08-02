@@ -1521,3 +1521,33 @@ Stage Summary:
 - 6 новых workflow добавлены (sync-devices/lockouts/valves/regulators/projects/cables.yml)
 - Живая страница: https://bloknett-design.github.io/kip8/ (обновится через 1-2 мин)
 - ВНИМАНИЕ: пользователь должен перезагрузить страницу дважды для применения нового SW
+
+---
+Task ID: 81
+Agent: AI Assistant (GLM)
+Task: Добавить десктопный лейаут (вариант 4: sidebar + master-detail panel)
+
+Work Log:
+- Изучил текущую архитектуру: navigateTo(), OpenDetail-функции, sidebar, HTML-структура
+- Добавил CSS-медиа-запросы для десктопа (1024px+) и планшета (768-1023px)
+- Sidebar: на десктопе всегда виден (position: sticky, transform: none), overlay скрыт
+- Шапка приложения: скрыта на десктопе (sidebar заменяет навигацию)
+- Добавлен HTML-контейнер #detailPanel внутри contentArea
+- JS-утилиты: isDesktop(), isTablet(), openDetailPanel(), closeDetailPanel()
+- Константы: DESKTOP_DETAIL_PAGES, DESKTOP_MASTER_PAGES
+- navigateTo() модифицирован: detail-страницы открывают панель вместо перехода
+- OpenDetail-функции (dev/lock/valve/regulator/project) перенаправляют в detail-panel
+- InPanel-рендер: 5 функций (devRenderDetailInPanel и т.д.) через подмену id контейнера
+- Сетки: дашборд/калькуляторы/КИП ИОС — 2 колонки, админ — 4 колонки
+- Нижний бар дашборда скрыт на десктопе
+- Слушатель resize для закрытия detail-panel при переходе на мобильный
+- Инкрементирован кэш: kipia-test-v257 -> kipia-test-v258
+- Тесты: 207 passed, 0 failed
+- Коммит 3ad445b запушен в main
+
+Stage Summary:
+- Реализован десктопный лейаут варианта 4 (master-detail)
+- На десктопе: sidebar всегда виден, при клике на карточку каталога — справа открывается detail-panel
+- На мобильном: поведение не изменилось
+- Файлы: index.html (+473 строки), sw.js (v258)
+- Кэш: kipia-test-v258
