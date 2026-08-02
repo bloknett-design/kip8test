@@ -1,19 +1,20 @@
 name: Update Cables (TEST)
 
 # ВНИМАНИЕ: это тестовый репозиторий kip8test.
-# Автоматический cron ОТКЛЮЧЁН, чтобы не дублировать запросы к Яндекс Диску
+# Автоматический cron ОТКЛЮЧЁН, чтобы не дублировать запросы к Google Sheets
 # с основным репозиторием kip8. Запуск только вручную через workflow_dispatch.
 # При необходимости можно временно включить schedule, раскомментировав блок ниже.
 #
 # КАК НАСТРОИТЬ:
-# По умолчанию используется публичная ссылка:
-#   https://disk.yandex.ru/i/wvleuW19NoQBPQ
+# По умолчанию используется Google Sheets:
+#   https://docs.google.com/spreadsheets/d/1XsmoyE4CpIcrNqmeFXIuNzi7vuOzxwZix109YlXkv8Y/edit
 #   лист: Кабельный журнал
-#   (файл «Кабельный журнал.xlsx»)
+#   (файл «Кабельный журнал.xlsx», импортированный в Google Sheets)
 # Можно переопределить через переменные окружения в шаге "Sync":
-#   CABLES_PUBLIC_KEY, CABLES_SHEET_NAME
+#   CABLES_SPREADSHEET_ID, CABLES_SHEET_NAME, CABLES_GID (опц.)
 #
-# Секреты НЕ требуются — публичная ссылка вшита в DEFAULT_PUBLIC_KEY.
+# Секреты НЕ требуются — таблица доступна «у кого есть ссылка»,
+# Google отдаёт XLSX через export?format=xlsx без OAuth.
 
 on:
   workflow_dispatch:
@@ -38,7 +39,7 @@ jobs:
       - name: Install dependencies
         run: pip install openpyxl requests
 
-      - name: Sync from Yandex Disk and convert to JSON
+      - name: Sync from Google Sheets and convert to JSON
         run: python scripts/sync-cables.py
 
       - name: Check for changes
@@ -52,7 +53,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/cables.json
-          git commit -m "auto: update cables data from Yandex Disk (test repo)"
+          git commit -m "auto: update cables data from Google Sheets (test repo)"
           git push
 
       - name: Summary
@@ -68,6 +69,6 @@ jobs:
           if [ -f data/cables.json ]; then
             COUNT=$(python3 -c "import json; d=json.load(open('data/cables.json')); print(d.get('total_cables', 'N/A'))")
             echo "**Всего кабелей:** $COUNT" >> $GITHUB_STEP_SUMMARY
-            echo "**Источник:** Yandex Disk (public)" >> $GITHUB_STEP_SUMMARY
+            echo "**Источник:** Google Sheets" >> $GITHUB_STEP_SUMMARY
             echo "**Лист:** Кабельный журнал" >> $GITHUB_STEP_SUMMARY
           fi

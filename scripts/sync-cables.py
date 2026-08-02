@@ -1,27 +1,31 @@
 #!/usr/bin/env python3
 """
-Синхронизация кабельного журнала с публичной ссылкой Яндекс Диска.
+Синхронизация кабельного журнала с Google Sheets.
 
-Источник: https://disk.yandex.ru/i/wvleuW19NoQBPQ
-          (файл «Кабельный журнал.xlsx»)
+Источник: https://docs.google.com/spreadsheets/d/1XsmoyE4CpIcrNqmeFXIuNzi7vuOzxwZix109YlXkv8Y/edit
+          (файл «Кабельный журнал.xlsx», импортированный в Google Sheets)
 Лист: "Кабельный журнал"
 
 Скрипт работает по тому же принципу, что и scripts/sync-projects.py
 (раздел «Проекты»):
 
-  1. Через Yandex Disk Public API (https://cloud-api.yandex.net/v1/disk/public/resources)
-     получает download_url по публичной ссылке.
-  2. Скачивает XLSX-файл напрямую с Яндекс Диска.
-  3. Парсит лист "Кабельный журнал" — заголовки в 1-й строке, данные со 2-й.
+  1. Скачивает XLSX-экспорт напрямую из Google Sheets через export?format=xlsx.
+     Google отдаёт файл без OAuth, если таблица доступна «у кого есть ссылка».
+  2. Парсит лист "Кабельный журнал" — заголовки в 1-й строке, данные со 2-й.
      Все заголовки нормализуются (strip), чтобы убрать trailing space
      (в исходном файле «Отделение, производство» имеет пробел в конце
       у некоторых значений — нормализуем на уровне значений).
-  4. Сохраняет результат в data/cables.json.
+  3. Сохраняет результат в data/cables.json.
 
 Переменные окружения:
-  CABLES_PUBLIC_KEY — публичная ссылка
-      (по умолчанию https://disk.yandex.ru/i/wvleuW19NoQBPQ)
+  CABLES_SPREADSHEET_ID — ID Google Sheets
+      (по умолчанию 1XsmoyE4CpIcrNqmeFXIuNzi7vuOzxwZix109YlXkv8Y)
   CABLES_SHEET_NAME — имя листа (по умолчанию "Кабельный журнал")
+  CABLES_GID — numeric ID листа (опционально; если задан, экспортирует
+      конкретный лист через &gid=...). Если не задан — экспортируется вся книга.
+
+Секреты НЕ требуются — таблица доступна «у кого есть ссылка»,
+Google отдаёт XLSX через export?format=xlsx без OAuth.
 
 Если нет интернета или API недоступен — используется уже существующий
 data/cables.json как заглушка (PWA продолжает работать с последними
@@ -40,10 +44,9 @@ import openpyxl
 
 
 # ============================================================
-# Настройки Яндекс Диска
+# Настройки Google Sheets
 # ============================================================
-YANDEX_PUBLIC_API = 'https://cloud-api.yandex.net/v1/disk/public/resources'
-DEFAULT_PUBLIC_KEY = 'https://disk.yandex.ru/i/wvleuW19NoQBPQ'
+DEFAULT_SPREADSHEET_ID = '1XsmoyE4CpIcrNqmeFXIuNzi7vuOzxwZix109YlXkv8Y'
 DEFAULT_SHEET_NAME = 'Кабельный журнал'
 
 DOWNLOAD_DIR = Path('/tmp/cables_download')
@@ -58,46 +61,41 @@ def log(msg):
 
 
 # ============================================================
-# Скачивание через Yandex Disk Public API
+# Скачивание XLSX напрямую из Google Sheets
+# (по образцу scripts/sync-projects.py)
 # ============================================================
-def get_download_url(public_key):
-    """Получает download_url для публичного файла через Yandex Disk Public API."""
-    log(f'Запрос метаданных публичного файла: {public_key}')
-    params = {'public_key': public_key}
-    resp = requests.get(YANDEX_PUBLIC_API, params=params, timeout=30)
-    if resp.status_code != 200:
-        raise RuntimeError(f'Ошибка API: HTTP {resp.status_code} — {resp.text[:200]}')
-    data = resp.json()
-    download_url = data.get('file')
-    if not download_url:
-        raise RuntimeError(
-            f'Не удалось получить download_url: {json.dumps(data, ensure_ascii=False)[:500]}'
-        )
-    name = data.get('name', 'cables.xlsx')
-    log(f'Имя файла на Яндекс Диске: {name}')
-    return download_url, name
+def download_file(spreadsheet_id, gid=None):
+    """
+    Скачивает XLSX-экспорт Google Sheets.
 
+    URL: https://docs.google.com/spreadsheets/d/<ID>/export?format=xlsx[&gid=<GID>]
+    Если gid не задан — экспортируется вся книга (все листы).
+    """
+    url = f'https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=xlsx'
+    if gid:
+        url += f'&gid={gid}'
 
-def download_file(url, filename):
-    """Скачивает файл по URL."""
-    local_path = DOWNLOAD_DIR / filename
-    log(f'Скачивание: {url[:80]}...')
+    log(f'Скачивание: {url[:100]}...')
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
     }
-    resp = requests.get(url, headers=headers, timeout=120)
+    resp = requests.get(url, headers=headers, timeout=120, allow_redirects=True)
     if resp.status_code != 200:
-        raise RuntimeError(f'Ошибка скачивания: HTTP {resp.status_code}')
-    local_path.write_bytes(resp.content)
-    file_size = local_path.stat().st_size
-    log(f'Файл скачан: {local_path} ({file_size} байт)')
+        raise RuntimeError(f'Ошибка скачивания: HTTP {resp.status_code} — {resp.text[:200]}')
 
     # Проверяем, что это xlsx (ZIP, начинается с PK)
     if resp.content[:2] != b'PK':
         raise RuntimeError(
             f'Скачанный файл не является xlsx (не ZIP). '
-            f'Первые байты: {resp.content[:4]!r}'
+            f'Первые байты: {resp.content[:4]!r}. '
+            f'Возможно, таблица не опубликована или нет доступа.'
         )
+
+    filename = 'cables.xlsx'
+    local_path = DOWNLOAD_DIR / filename
+    local_path.write_bytes(resp.content)
+    file_size = local_path.stat().st_size
+    log(f'Файл скачан: {local_path} ({file_size} байт)')
     return local_path
 
 
@@ -168,9 +166,19 @@ def parse_cables(xlsx_path, sheet_name):
             skipped += 1
             continue
 
-        # Если № п/п — число, преобразуем
-        if isinstance(id_val, str) and id_val.isdigit():
-            record['№ п/п'] = int(id_val)
+        # Если № п/п — число, преобразуем.
+        # В Google Sheets xlsx-экспорте числа хранятся как float ("53.0"),
+        # в исходном Yandex Disk xlsx — как int. Нормализуем к int,
+        # если значение целочисленное.
+        if isinstance(id_val, str) and id_val.strip():
+            try:
+                f = float(id_val)
+                if f == int(f):
+                    record['№ п/п'] = int(f)
+                else:
+                    record['№ п/п'] = f
+            except ValueError:
+                pass  # оставляем строку
 
         # Числовые поля: Длина, м (по проекту) и Длина, м (проложен)
         for k in ('Длина, м (по проекту)', 'Длина, м (проложен)'):
@@ -191,23 +199,21 @@ def parse_cables(xlsx_path, sheet_name):
 
 
 def main():
-    public_key = os.environ.get('CABLES_PUBLIC_KEY', '').strip() or DEFAULT_PUBLIC_KEY
+    spreadsheet_id = os.environ.get('CABLES_SPREADSHEET_ID', '').strip() or DEFAULT_SPREADSHEET_ID
     sheet_name = os.environ.get('CABLES_SHEET_NAME', '').strip() or DEFAULT_SHEET_NAME
+    gid = os.environ.get('CABLES_GID', '').strip() or None
 
     try:
-        # 1. Получить download_url
-        download_url, filename = get_download_url(public_key)
+        # 1. Скачать XLSX из Google Sheets
+        local_file = download_file(spreadsheet_id, gid=gid)
 
-        # 2. Скачать файл
-        local_file = download_file(download_url, filename)
-
-        # 3. Распарсить лист
+        # 2. Распарсить лист
         cables, headers = parse_cables(local_file, sheet_name)
 
-        # 4. Сохранить JSON
+        # 3. Сохранить JSON
         out = {
             'title': 'Кабельный журнал КИП пр-ва ИОС',
-            'source': f'Yandex Disk (public): {public_key}',
+            'source': f'Google Sheets: https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit',
             'sheet': sheet_name,
             'total_cables': len(cables),
             'headers': headers,
