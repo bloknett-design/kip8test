@@ -1551,3 +1551,22 @@ Stage Summary:
 - На мобильном: поведение не изменилось
 - Файлы: index.html (+473 строки), sw.js (v258)
 - Кэш: kipia-test-v258
+
+---
+Task ID: 82
+Agent: AI Assistant (GLM)
+Task: Десктопный верхний бар с бургером и кнопками разделов, sidebar скрыт по умолчанию
+
+Work Log:
+- Добавлен #desktopTopBar с фирменным названием «КИПиА» (логотип + текст Jura) и двумя кнопками разделов: «Инженерные калькуляторы» и «Документация»
+- Кнопка-бургер (#desktopBurgerBtn) в левом верхнем углу для открытия sidebar
+- Sidebar скрыт по умолчанию на десктопе, открывается как overlay через класс .desktop-open
+- Активная вкладка в top bar подсвечивается в зависимости от текущей страницы (updateDesktopTopBarTabs)
+- Connection indicator перемещается в десктопный бар через JS (initDesktopSidebar)
+- Убраны старые правила sidebar-collapsed / sidebarToggleBtn, заменены на новую логику
+- Обновлён resize listener для корректной работы при переходе мобильный ↔ десктоп
+- SW cache: v259 → v260
+
+Stage Summary:
+- Новый десктопный UI: верхний бар + бургер + скрытый sidebar
+- Коммит: 4bd6726, запушен в origin/main
