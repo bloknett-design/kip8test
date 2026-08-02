@@ -419,3 +419,27 @@ data/devices.json (поле «Изображение» содержит Google D
 5. Service Worker: `CACHE_VERSION` v121 → v122 → v123; в `ASSETS` добавлены `data/lockouts.json`, `data/regulators.json`.
 
 6. Тесты: все 207 тестов проходят (0 failed).
+
+### 2026-08-02 — полное удаление зависимостей от Yandex Disk
+
+**Контекст:** пользователь перенёс все файлы (картинки приборов, экзаменационные билеты, документы библиотеки) с Yandex Disk на Google Drive и обновил ссылки в Google Sheets. Цель — убрать из репозитория все связи с Yandex Disk.
+
+**Что изменилось:**
+
+1. `index.html` (sidebar «Библиотека КИП и А»): 4 ссылки на общие папки Yandex Disk (`disk.yandex.ru/d/...`) заменены на Google Drive:
+   - Метрология → `drive.google.com/drive/folders/1M0V72jL6QRnyr2pJSWX_zmTSiwBWyl_q`
+   - ОТ и ПБ, пожарная безопасность → `drive.google.com/drive/folders/1I9F6KdQih4vVqfcyhiH6awqL1oVMCTkN`
+   - Приборы → `drive.google.com/drive/folders/19jdJDFf77-IMenPStilX4q4Z2D50Sk1G`
+   - Справочник → `drive.google.com/drive/folders/1Sorstaz3tkPWMb5mAQI-phgi0M4V6E61`
+
+2. `data/projects.json`: перегенерирован из Google Sheets — у проекта 262 поле «Файл проекта» теперь содержит Google Drive ссылку (`drive.google.com/file/d/1l_Ujy-XwXObG_HyRo_KZvsOkfxtjGOZb/view`) вместо старой Yandex Disk ссылки.
+
+3. `sw.js`: `CACHE_VERSION` v248 → v249.
+
+**Аудит остальных файлов:**
+- Все `scripts/sync-*.py` и `scripts/convert-exam-tickets.py` уже переведены на Google Sheets в предыдущих сессиях — упоминаний Yandex Disk в коде нет.
+- Все `.github/workflows/sync-*.yml` и `update-exam-tickets.yml` настроены на Google Sheets.
+- `sw.js`: упоминаний Yandex Disk нет.
+- `index.html`: упоминаний Yandex Disk нет (проверено через `grep -n "disk.yandex"`).
+- `data/projects.json`: упоминаний Yandex Disk нет.
+- В этом `README.md` остались только исторические упоминания Yandex Disk в разделах «История обновлений» (записи за 2026-07-22) — они описывают предыдущую архитектуру и оставлены как историческая справка. Активного кода, зависящего от Yandex Disk, в репозитории больше нет.
