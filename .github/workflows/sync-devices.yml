@@ -1,16 +1,20 @@
 name: Update Devices (TEST)
 
 # ВНИМАНИЕ: это тестовый репозиторий kip8test.
-# Автоматический cron ОТКЛЮЧЁН, чтобы не дублировать запросы к Яндекс Диску
+# Автоматический cron ОТКЛЮЧЁН, чтобы не дублировать запросы к Google Sheets
 # с основным репозиторием kip8. Запуск только вручную через workflow_dispatch.
 # При необходимости можно временно включить schedule, раскомментировав блок ниже.
 #
 # КАК НАСТРОИТЬ:
-# По умолчанию используется публичная ссылка:
-#   https://disk.yandex.ru/i/B8-c9XnMZlgTkw
+# По умолчанию используется Google Sheets:
+#   https://docs.google.com/spreadsheets/d/1eUUwwulUvKUGWTgQ__XP-y7z1aEkt5Wy/edit
 #   лист: Приборы_app
+#   (файл «Перечень КИП ИОС рабочий.xlsx», импортированный в Google Sheets)
 # Можно переопределить через переменные окружения в шаге "Download and parse":
-#   DEVICES_PUBLIC_KEY, DEVICES_SHEET_NAME
+#   DEVICES_SPREADSHEET_ID, DEVICES_SHEET_NAME, DEVICES_GID (опц.)
+#
+# Секреты НЕ требуются — таблица доступна «у кого есть ссылка»,
+# Google отдаёт XLSX через export?format=xlsx без OAuth.
 
 on:
   workflow_dispatch:
@@ -35,7 +39,7 @@ jobs:
       - name: Install dependencies
         run: pip install openpyxl requests Pillow
 
-      - name: Download from Yandex Disk and convert to JSON
+      - name: Download from Google Sheets and convert to JSON
         run: python scripts/sync-devices.py
 
       - name: Check for changes
@@ -49,7 +53,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/devices.json
-          git commit -m "auto: update devices data from Yandex Disk (test repo)"
+          git commit -m "auto: update devices data from Google Sheets (test repo)"
           git push
 
       - name: Summary
@@ -65,6 +69,6 @@ jobs:
           if [ -f data/devices.json ]; then
             COUNT=$(python3 -c "import json; d=json.load(open('data/devices.json')); print(d.get('total_devices', 'N/A'))")
             echo "**Приборов:** $COUNT" >> $GITHUB_STEP_SUMMARY
-            echo "**Источник:** Yandex Disk (public)" >> $GITHUB_STEP_SUMMARY
+            echo "**Источник:** Google Sheets" >> $GITHUB_STEP_SUMMARY
             echo "**Лист:** Приборы_app" >> $GITHUB_STEP_SUMMARY
           fi

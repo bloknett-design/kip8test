@@ -1,21 +1,27 @@
 #!/usr/bin/env python3
 """
-Синхронизация перечня приборов КИП ИОС с публичной ссылкой Яндекс Диска.
+Синхронизация перечня приборов КИП ИОС с Google Sheets.
 
-Источник: https://disk.yandex.ru/i/B8-c9XnMZlgTkw (файл "Перечень КИП ИОС рабочий.xlsx")
+Источник: https://docs.google.com/spreadsheets/d/1eUUwwulUvKUGWTgQ__XP-y7z1aEkt5Wy/edit
+          (файл «Перечень КИП ИОС рабочий.xlsx», импортированный в Google Sheets)
 Лист: "Приборы_app"
 
 Скрипт:
-1. Через Yandex Disk Public API получает download_url по публичной ссылке.
-2. Скачивает XLSX-файл.
-3. Парсит лист "Приборы_app" — заголовки в 1-й строке, данные со 2-й.
+1. Скачивает XLSX-экспорт напрямую из Google Sheets через export?format=xlsx.
+   Google отдаёт файл без OAuth, если таблица доступна «у кого есть ссылка».
+2. Парсит лист "Приборы_app" — заголовки в 1-й строке, данные со 2-й.
+3. Для записей с Yandex Disk share-ссылками в поле «Изображение» — разрешает
+   их через Yandex Disk Public API и заменяет на base64 data URI.
 4. Сохраняет результат в data/devices.json.
 
 Переменные окружения:
-  DEVICES_PUBLIC_KEY — публичная ссылка (по умолчанию https://disk.yandex.ru/i/B8-c9XnMZlgTkw)
+  DEVICES_SPREADSHEET_ID — ID Google Sheets
+      (по умолчанию 1eUUwwulUvKUGWTgQ__XP-y7z1aEkt5Wy)
   DEVICES_SHEET_NAME — имя листа (по умолчанию "Приборы_app")
+  DEVICES_GID — numeric ID листа (опционально; если задан, экспортирует
+      конкретный лист через &gid=...). Если не задан — экспортируется вся книга.
 
-Если нет интернета — использует уже существующий data/devices.json как заглушку.
+Если нет интернета — используется уже существующий data/devices.json как заглушка.
 """
 import os
 import sys
@@ -36,10 +42,17 @@ except ImportError:
     HAS_PILLOW = False
 
 
-# === Настройки ===
-YANDEX_PUBLIC_API = 'https://cloud-api.yandex.net/v1/disk/public/resources'
-DEFAULT_PUBLIC_KEY = 'https://disk.yandex.ru/i/B8-c9XnMZlgTkw'
+# ============================================================
+# Настройки Google Sheets
+# ============================================================
+DEFAULT_SPREADSHEET_ID = '1eUUwwulUvKUGWTgQ__XP-y7z1aEkt5Wy'
 DEFAULT_SHEET_NAME = 'Приборы_app'
+
+# Yandex Disk Public API — используется только для разрешения share-ссылок
+# на картинки в поле «Изображение» (значения ячеек сохранены при импорте
+# исходного xlsx в Google Sheets).
+YANDEX_PUBLIC_API = 'https://cloud-api.yandex.net/v1/disk/public/resources'
+
 DOWNLOAD_DIR = Path('/tmp/devices_download')
 DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -51,28 +64,38 @@ def log(msg):
     print(f'[devices] {msg}', flush=True)
 
 
-def get_download_url(public_key):
-    """Получает download_url для публичного файла через Yandex Disk Public API."""
-    log(f'Запрос метаданных публичного файла: {public_key}')
-    params = {'public_key': public_key}
-    resp = requests.get(YANDEX_PUBLIC_API, params=params, timeout=30)
+# ============================================================
+# Скачивание XLSX напрямую из Google Sheets
+# ============================================================
+def download_file(spreadsheet_id, gid=None):
+    """
+    Скачивает XLSX-экспорт Google Sheets.
+
+    URL: https://docs.google.com/spreadsheets/d/<ID>/export?format=xlsx[&gid=<GID>]
+    Если gid не задан — экспортируется вся книга (все листы).
+    """
+    url = f'https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=xlsx'
+    if gid:
+        url += f'&gid={gid}'
+
+    log(f'Скачивание: {url[:100]}...')
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    }
+    resp = requests.get(url, headers=headers, timeout=120, allow_redirects=True)
     if resp.status_code != 200:
-        raise RuntimeError(f'Ошибка API: HTTP {resp.status_code} — {resp.text[:200]}')
-    data = resp.json()
-    download_url = data.get('file')
-    if not download_url:
-        raise RuntimeError(f'Не удалось получить download_url: {json.dumps(data, ensure_ascii=False)[:500]}')
-    name = data.get('name', 'devices.xlsx')
-    return download_url, name
+        raise RuntimeError(f'Ошибка скачивания: HTTP {resp.status_code} — {resp.text[:200]}')
 
+    # Проверяем, что это xlsx (ZIP, начинается с PK)
+    if resp.content[:2] != b'PK':
+        raise RuntimeError(
+            f'Скачанный файл не является xlsx (не ZIP). '
+            f'Первые байты: {resp.content[:4]!r}. '
+            f'Возможно, таблица не опубликована или нет доступа.'
+        )
 
-def download_file(url, filename):
-    """Скачивает файл по URL."""
+    filename = 'devices.xlsx'
     local_path = DOWNLOAD_DIR / filename
-    log(f'Скачивание: {url[:80]}...')
-    resp = requests.get(url, timeout=120)
-    if resp.status_code != 200:
-        raise RuntimeError(f'Ошибка скачивания: HTTP {resp.status_code}')
     local_path.write_bytes(resp.content)
     file_size = local_path.stat().st_size
     log(f'Файл скачан: {local_path} ({file_size} байт)')
@@ -89,17 +112,17 @@ def parse_devices(xlsx_path, sheet_name):
     wb = openpyxl.load_workbook(xlsx_path, data_only=True)
     if sheet_name not in wb.sheetnames:
         raise RuntimeError(f'Лист "{sheet_name}" не найден. Доступные листы: {wb.sheetnames}')
-    
+
     ws = wb[sheet_name]
     log(f'Размер листа: {ws.max_row} строк × {ws.max_column} колонок')
-    
+
     # Читаем заголовки из 1-й строки
     headers = []
     for cell in ws[1]:
         val = str(cell.value).strip() if cell.value is not None else ''
         headers.append(val)
     log(f'Заголовки ({len(headers)}): {headers}')
-    
+
     # Читаем данные
     devices = []
     skipped = 0
@@ -119,26 +142,26 @@ def parse_devices(xlsx_path, sheet_name):
             else:
                 val = ''
             row_values.append(val)
-        
+
         # Создаём словарь "заголовок → значение"
         record = {}
         for h, v in zip(headers, row_values):
             if h:  # пропускаем пустые заголовки
                 record[h] = v
-        
+
         # Пропускаем строки без ID или без Наименования
         id_val = record.get('ID', '').strip()
         name_val = record.get('Наименование', '').strip()
         if not id_val and not name_val:
             skipped += 1
             continue
-        
+
         # Если ID — число, преобразуем
         if id_val and id_val.isdigit():
             record['ID'] = int(id_val)
-        
+
         devices.append(record)
-    
+
     log(f'Распарсено записей: {len(devices)}, пропущено: {skipped}')
     return devices, headers
 
@@ -150,13 +173,17 @@ def resolve_share_link_images(devices, max_size=(150, 150)):
     2. Скачивает картинку
     3. Уменьшает до max_size
     4. Заменяет share-ссылку на base64 data URI в поле 'Изображение'
-    
+
     Записи с локальными путями или без картинки — не трогаются.
+
+    Примечание: при импорте исходного xlsx в Google Sheets значения ячеек
+    (включая Yandex share-ссылки) сохраняются, поэтому эта логика продолжает
+    работать после переноса источника с Yandex Disk на Google Sheets.
     """
     if not HAS_PILLOW:
         log('Pillow не установлен — пропуск загрузки картинок')
         return devices
-    
+
     # Соберём уникальные share-ссылки
     share_links = {}  # { shareLink: base64dataUri }
     for d in devices:
@@ -164,14 +191,14 @@ def resolve_share_link_images(devices, max_size=(150, 150)):
         if img.startswith('https://disk.yandex.ru/i/'):
             if img not in share_links:
                 share_links[img] = None
-    
+
     if not share_links:
         log('Share-ссылок не найдено — картинки не загружаются')
         return devices
-    
+
     log(f'Найдено уникальных share-ссылок: {len(share_links)}')
     session = requests.Session()
-    
+
     for i, link in enumerate(share_links.keys()):
         try:
             # 1. Получаем file URL через API
@@ -186,13 +213,13 @@ def resolve_share_link_images(devices, max_size=(150, 150)):
             if not file_url:
                 log(f'    ✗ Нет file URL в ответе')
                 continue
-            
+
             # 2. Скачиваем картинку (в той же сессии — cookies сохраняются)
             img_resp = session.get(file_url, timeout=60)
             if img_resp.status_code != 200:
                 log(f'    ✗ Download HTTP {img_resp.status_code}')
                 continue
-            
+
             # 3. Уменьшаем и конвертируем в base64
             img = Image.open(io.BytesIO(img_resp.content))
             img.thumbnail(max_size, Image.Resampling.LANCZOS)
@@ -208,11 +235,11 @@ def resolve_share_link_images(devices, max_size=(150, 150)):
             data_uri = f'data:{mime};base64,{b64}'
             share_links[link] = data_uri
             log(f'    ✓ {len(b64)/1024:.1f}KB')
-            
+
         except Exception as e:
             log(f'    ✗ Ошибка: {e}')
         time.sleep(0.3)
-    
+
     # Заменяем share-ссылки на base64 в записях
     replaced = 0
     for d in devices:
@@ -220,32 +247,30 @@ def resolve_share_link_images(devices, max_size=(150, 150)):
         if img in share_links and share_links[img]:
             d['Изображение'] = share_links[img]
             replaced += 1
-    
+
     log(f'Заменено ссылок на base64: {replaced}')
     return devices
 
 
 def main():
-    public_key = os.environ.get('DEVICES_PUBLIC_KEY', '').strip() or DEFAULT_PUBLIC_KEY
+    spreadsheet_id = os.environ.get('DEVICES_SPREADSHEET_ID', '').strip() or DEFAULT_SPREADSHEET_ID
     sheet_name = os.environ.get('DEVICES_SHEET_NAME', '').strip() or DEFAULT_SHEET_NAME
-    
+    gid = os.environ.get('DEVICES_GID', '').strip() or None
+
     try:
-        # 1. Получить download_url
-        download_url, filename = get_download_url(public_key)
-        
-        # 2. Скачать файл
-        local_file = download_file(download_url, filename)
-        
-        # 3. Распарсить лист
+        # 1. Скачать XLSX из Google Sheets
+        local_file = download_file(spreadsheet_id, gid=gid)
+
+        # 2. Распарсить лист
         devices, headers = parse_devices(local_file, sheet_name)
-        
-        # 3.5. Разрешить share-ссылки на картинки → base64
+
+        # 3. Разрешить share-ссылки на картинки → base64
         devices = resolve_share_link_images(devices)
-        
+
         # 4. Сохранить JSON
         out = {
             'title': 'Перечень приборов КИП ИОС',
-            'source': f'Yandex Disk (public): {public_key}',
+            'source': f'Google Sheets: https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit',
             'sheet': sheet_name,
             'total_devices': len(devices),
             'headers': headers,
@@ -256,9 +281,9 @@ def main():
             json.dump(out, f, ensure_ascii=False, indent=2)
         log(f'JSON сохранён: {JSON_OUT}')
         log(f'Всего приборов: {len(devices)}')
-        
+
         return 0
-    
+
     except Exception as e:
         log(f'ОШИБКА: {e}')
         import traceback

@@ -1,24 +1,29 @@
 #!/usr/bin/env python3
 """
-Синхронизация блокировок с публичной ссылкой Яндекс Диска.
+Синхронизация блокировок с Google Sheets.
 
-Источник: https://disk.yandex.ru/i/B8-c9XnMZlgTkw
-          (файл «Перечень КИП ИОС рабочий.xlsx», тот же что и для приборов)
+Источник: https://docs.google.com/spreadsheets/d/1eUUwwulUvKUGWTgQ__XP-y7z1aEkt5Wy/edit
+          (файл «Перечень КИП ИОС рабочий.xlsx», импортированный в Google Sheets,
+           тот же что и для приборов)
 Лист: "Блокировки_app"
 
 Скрипт работает по тому же принципу, что и scripts/sync-devices.py
 (раздел «Приборы»):
 
-  1. Через Yandex Disk Public API (https://cloud-api.yandex.net/v1/disk/public/resources)
-     получает download_url по публичной ссылке.
-  2. Скачивает XLSX-файл напрямую с Яндекс Диска.
-  3. Парсит лист "Блокировки_app" — заголовки в 1-й строке, данные со 2-й.
-  4. Сохраняет результат в data/lockouts.json.
+  1. Скачивает XLSX-экспорт напрямую из Google Sheets через export?format=xlsx.
+     Google отдаёт файл без OAuth, если таблица доступна «у кого есть ссылка».
+  2. Парсит лист "Блокировки_app" — заголовки в 1-й строке, данные со 2-й.
+  3. Сохраняет результат в data/lockouts.json.
 
 Переменные окружения:
-  LOCKOUTS_PUBLIC_KEY — публичная ссылка
-      (по умолчанию https://disk.yandex.ru/i/B8-c9XnMZlgTkw)
+  LOCKOUTS_SPREADSHEET_ID — ID Google Sheets
+      (по умолчанию 1eUUwwulUvKUGWTgQ__XP-y7z1aEkt5Wy)
   LOCKOUTS_SHEET_NAME — имя листа (по умолчанию "Блокировки_app")
+  LOCKOUTS_GID — numeric ID листа (опционально; если задан, экспортирует
+      конкретный лист через &gid=...). Если не задан — экспортируется вся книга.
+
+Секреты НЕ требуются — таблица доступна «у кого есть ссылка»,
+Google отдаёт XLSX через export?format=xlsx без OAuth.
 
 Если нет интернета или API недоступен — используется уже существующий
 data/lockouts.json как заглушка (PWA продолжает работать с последними
@@ -37,10 +42,9 @@ import openpyxl
 
 
 # ============================================================
-# Настройки Яндекс Диска
+# Настройки Google Sheets
 # ============================================================
-YANDEX_PUBLIC_API = 'https://cloud-api.yandex.net/v1/disk/public/resources'
-DEFAULT_PUBLIC_KEY = 'https://disk.yandex.ru/i/B8-c9XnMZlgTkw'
+DEFAULT_SPREADSHEET_ID = '1eUUwwulUvKUGWTgQ__XP-y7z1aEkt5Wy'
 DEFAULT_SHEET_NAME = 'Блокировки_app'
 
 DOWNLOAD_DIR = Path('/tmp/lockouts_download')
@@ -55,47 +59,41 @@ def log(msg):
 
 
 # ============================================================
-# Скачивание через Yandex Disk Public API
-# (по образцу scripts/sync-devices.py)
+# Скачивание XLSX напрямую из Google Sheets
+# (по образцу scripts/sync-devices.py / sync-projects.py)
 # ============================================================
-def get_download_url(public_key):
-    """Получает download_url для публичного файла через Yandex Disk Public API."""
-    log(f'Запрос метаданных публичного файла: {public_key}')
-    params = {'public_key': public_key}
-    resp = requests.get(YANDEX_PUBLIC_API, params=params, timeout=30)
-    if resp.status_code != 200:
-        raise RuntimeError(f'Ошибка API: HTTP {resp.status_code} — {resp.text[:200]}')
-    data = resp.json()
-    download_url = data.get('file')
-    if not download_url:
-        raise RuntimeError(
-            f'Не удалось получить download_url: {json.dumps(data, ensure_ascii=False)[:500]}'
-        )
-    name = data.get('name', 'devices.xlsx')
-    log(f'Имя файла на Яндекс Диске: {name}')
-    return download_url, name
+def download_file(spreadsheet_id, gid=None):
+    """
+    Скачивает XLSX-экспорт Google Sheets.
 
+    URL: https://docs.google.com/spreadsheets/d/<ID>/export?format=xlsx[&gid=<GID>]
+    Если gid не задан — экспортируется вся книга (все листы).
+    """
+    url = f'https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=xlsx'
+    if gid:
+        url += f'&gid={gid}'
 
-def download_file(url, filename):
-    """Скачивает файл по URL."""
-    local_path = DOWNLOAD_DIR / filename
-    log(f'Скачивание: {url[:80]}...')
+    log(f'Скачивание: {url[:100]}...')
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
     }
-    resp = requests.get(url, headers=headers, timeout=120)
+    resp = requests.get(url, headers=headers, timeout=120, allow_redirects=True)
     if resp.status_code != 200:
-        raise RuntimeError(f'Ошибка скачивания: HTTP {resp.status_code}')
-    local_path.write_bytes(resp.content)
-    file_size = local_path.stat().st_size
-    log(f'Файл скачан: {local_path} ({file_size} байт)')
+        raise RuntimeError(f'Ошибка скачивания: HTTP {resp.status_code} — {resp.text[:200]}')
 
     # Проверяем, что это xlsx (ZIP, начинается с PK)
     if resp.content[:2] != b'PK':
         raise RuntimeError(
             f'Скачанный файл не является xlsx (не ZIP). '
-            f'Первые байты: {resp.content[:4]!r}'
+            f'Первые байты: {resp.content[:4]!r}. '
+            f'Возможно, таблица не опубликована или нет доступа.'
         )
+
+    filename = 'lockouts.xlsx'
+    local_path = DOWNLOAD_DIR / filename
+    local_path.write_bytes(resp.content)
+    file_size = local_path.stat().st_size
+    log(f'Файл скачан: {local_path} ({file_size} байт)')
     return local_path
 
 
@@ -169,23 +167,21 @@ def parse_lockouts(xlsx_path, sheet_name):
 
 
 def main():
-    public_key = os.environ.get('LOCKOUTS_PUBLIC_KEY', '').strip() or DEFAULT_PUBLIC_KEY
+    spreadsheet_id = os.environ.get('LOCKOUTS_SPREADSHEET_ID', '').strip() or DEFAULT_SPREADSHEET_ID
     sheet_name = os.environ.get('LOCKOUTS_SHEET_NAME', '').strip() or DEFAULT_SHEET_NAME
+    gid = os.environ.get('LOCKOUTS_GID', '').strip() or None
 
     try:
-        # 1. Получить download_url
-        download_url, filename = get_download_url(public_key)
+        # 1. Скачать XLSX из Google Sheets
+        local_file = download_file(spreadsheet_id, gid=gid)
 
-        # 2. Скачать файл
-        local_file = download_file(download_url, filename)
-
-        # 3. Распарсить лист
+        # 2. Распарсить лист
         lockouts, headers = parse_lockouts(local_file, sheet_name)
 
-        # 4. Сохранить JSON
+        # 3. Сохранить JSON
         out = {
             'title': 'Блокировки по производствам',
-            'source': f'Yandex Disk (public): {public_key}',
+            'source': f'Google Sheets: https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit',
             'sheet': sheet_name,
             'total_lockouts': len(lockouts),
             'headers': headers,
