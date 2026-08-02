@@ -3840,7 +3840,7 @@
     }
     .project-card-arrow::before { content: '›'; }
 
-    /* Карточка деталей проекта — без подложки фона, строки на всю ширину экрана.
+    /* Карточка деталей проекта — без общей подложки, но с контрастной зеброй строк.
        Боковой отступ вынесен с контейнера (.project-detail-rows) на сами строки
        (.project-detail-row), чтобы разделители строк и текст занимали всю ширину,
        но при этом текст не упирался в края экрана. */
@@ -3856,12 +3856,24 @@
         flex-direction: column;
         gap: 2px;
         padding: 10px 16px;
-        border-bottom: 1px solid rgba(255,255,255,0.04);
+        border-bottom: 1px solid rgba(255,255,255,0.08);
     }
     [data-theme="light"] .project-detail-row {
-        border-bottom-color: rgba(0,0,0,0.06);
+        border-bottom-color: rgba(0,0,0,0.10);
     }
     .project-detail-row:last-child { border-bottom: none; }
+    /* Контрастная зебра для зрительного разделения строк (группы назначаются в JS).
+       alpha = 1.0, чтобы сетка фона body не просвечивала. */
+    .project-detail-row.project-row-group-1 { background: #26221d; }
+    .project-detail-row.project-row-group-2 { background: #3a342d; }
+    .project-detail-row.project-row-group-3 { background: #26221d; }
+    .project-detail-row.project-row-group-4 { background: #3a342d; }
+    .project-detail-row.project-row-group-5 { background: #26221d; }
+    [data-theme="light"] .project-detail-row.project-row-group-1 { background: #fcf8f0; }
+    [data-theme="light"] .project-detail-row.project-row-group-2 { background: #e8e0d0; }
+    [data-theme="light"] .project-detail-row.project-row-group-3 { background: #fcf8f0; }
+    [data-theme="light"] .project-detail-row.project-row-group-4 { background: #e8e0d0; }
+    [data-theme="light"] .project-detail-row.project-row-group-5 { background: #fcf8f0; }
     .project-detail-label {
         font-size: 11px;
         color: var(--text-secondary);
