@@ -1,6 +1,6 @@
 {
   "name": "kipia-desktop",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "КИПиА — справочник инженера (десктопное приложение)",
   "main": "electron/main.js",
   "scripts": {
@@ -44,7 +44,7 @@
         }
       ],
       "icon": "images/icon-512.png",
-      "artifactName": "КИПиА-Setup-${version}.${ext}"
+      "artifactName": "KIPiA-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -64,7 +64,7 @@
       ],
       "icon": "images/icon-512.png",
       "category": "Utility",
-      "artifactName": "КИПиА-${version}.${ext}"
+      "artifactName": "KIPiA-${version}.${ext}"
     },
     "mac": {
       "target": [
