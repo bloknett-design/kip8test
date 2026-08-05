@@ -36,9 +36,6 @@ node_modules/
 # === Electron build output ===
 dist/
 
-# === npm lockfile ===
-package-lock.json
-
 # === IDE и редакторы ===
 .vscode/
 .idea/

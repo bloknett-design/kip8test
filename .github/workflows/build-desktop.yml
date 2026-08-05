@@ -1,0 +1,144 @@
+name: Build Desktop App
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'index.html'
+      - 'electron/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'data/**'
+      - 'images/**'
+      - '.github/workflows/build-desktop.yml'
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+jobs:
+  # ─── Linux ──────────────────────────────────────────────
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Linux (AppImage + deb)
+        run: npx electron-builder --linux --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: КИПиА-linux-AppImage
+          path: dist/*.AppImage
+
+      - name: Upload deb
+        uses: actions/upload-artifact@v4
+        with:
+          name: КИПиА-linux-deb
+          path: dist/*.deb
+
+  # ─── Windows ────────────────────────────────────────────
+  build-win:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Windows (NSIS)
+        run: npx electron-builder --win --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: КИПиА-win-setup
+          path: dist/*.exe
+
+  # ─── macOS ──────────────────────────────────────────────
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build macOS (dmg)
+        run: npx electron-builder --mac --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload macOS dmg
+        uses: actions/upload-artifact@v4
+        with:
+          name: КИПиА-mac-dmg
+          path: dist/*.dmg
+
+  # ─── Release (создаётся при пуше тега v*) ──────────────
+  release:
+    needs: [ build-linux, build-win, build-mac ]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+          merge-multiple: true
+
+      - name: List release files
+        run: ls -lhR release-artifacts/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: 'КИПиА ${{ github.ref_name }}'
+          body: |
+            ## Десктопное приложение КИПиА ${{ github.ref_name }}
+
+            ### Установка
+            - **Windows** — скачайте `КИПиА-Setup-*.exe`, запустите установщик (на русском языке)
+            - **Linux** — скачайте `КИПиА-*.AppImage` (портативный, без установки) или `КИПиА-*.deb` (`sudo dpkg -i`)
+            - **macOS** — скачайте `КИПиА-*.dmg`, перетащите в Applications
+          draft: false
+          prerelease: false
+          files: |
+            release-artifacts/**/*.exe
+            release-artifacts/**/*.AppImage
+            release-artifacts/**/*.deb
+            release-artifacts/**/*.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
