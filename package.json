@@ -63,16 +63,14 @@
         { "target": "deb", "arch": ["x64"] }
       ],
       "icon": "images/icon-512.png",
-      "category": "Utility;Education;Science",
-      "desktopName": "com.bloknett.kipia.desktop",
+      "category": "Utility",
       "artifactName": "КИПиА-${version}.${ext}"
     },
     "mac": {
       "target": [
-        { "target": "dmg", "arch": ["x64", "arm64"] }
+        { "target": "dmg", "arch": ["x64"] }
       ],
-      "icon": "images/icon-512.png",
-      "artifactName": "КИПиА-${version}.${ext}"
+      "icon": "images/icon-512.png"
     }
   }
 }
