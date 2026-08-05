@@ -9089,6 +9089,16 @@
                 }
                 groupedByGroup[g].push(item);
             }
+            // Сортируем группы по алфавиту (null — в конце)
+            groupOrder.sort((a, b) => {
+                if (a === null) return 1;
+                if (b === null) return -1;
+                const va = a.toString().toLowerCase();
+                const vb = b.toString().toLowerCase();
+                if (va < vb) return -1;
+                if (va > vb) return 1;
+                return 0;
+            });
 
             // Показываем подзаголовки групп, если есть хотя бы одна именованная группа
             const hasAnyNamedGroup = groupOrder.some(g => g !== null);
@@ -10214,6 +10224,14 @@
             if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
             groups[g].push(d);
         }
+        // Сортируем основные группы по алфавиту
+        groupOrder.sort((a, b) => {
+            const va = a.toString().toLowerCase();
+            const vb = b.toString().toLowerCase();
+            if (va < vb) return -1;
+            if (va > vb) return 1;
+            return 0;
+        });
 
         // Инфо
         info.textContent = '';
@@ -10704,6 +10722,14 @@
             if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
             groups[g].push(d);
         }
+        // Сортируем основные группы по алфавиту
+        groupOrder.sort((a, b) => {
+            const va = a.toString().toLowerCase();
+            const vb = b.toString().toLowerCase();
+            if (va < vb) return -1;
+            if (va > vb) return 1;
+            return 0;
+        });
 
         info.textContent = '';
 
@@ -11438,6 +11464,23 @@
             if (!subgroups[sgKey]) { subgroups[sgKey] = []; subgroupOrder.push(sgKey); }
             subgroups[sgKey].push(item);
         }
+        // Сортируем подгруппы по алфавиту (или численно для DN)
+        if (numericSubgroups) {
+            subgroupOrder.sort((a, b) => {
+                const na = parseFloat(String(a).replace(',', '.'));
+                const nb = parseFloat(String(b).replace(',', '.'));
+                if (!isNaN(na) && !isNaN(nb)) return na - nb;
+                return a.toString().toLowerCase().localeCompare(b.toString().toLowerCase());
+            });
+        } else {
+            subgroupOrder.sort((a, b) => {
+                const va = a.toString().toLowerCase();
+                const vb = b.toString().toLowerCase();
+                if (va < vb) return -1;
+                if (va > vb) return 1;
+                return 0;
+            });
+        }
 
         let html = '';
         // Бейдж активного фильтра (проект / СБС / САР) вверху страницы группы
@@ -11931,6 +11974,14 @@
             if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
             groups[g].push(d);
         }
+        // Сортируем основные группы по алфавиту
+        groupOrder.sort((a, b) => {
+            const va = a.toString().toLowerCase();
+            const vb = b.toString().toLowerCase();
+            if (va < vb) return -1;
+            if (va > vb) return 1;
+            return 0;
+        });
 
         info.textContent = '';
 
@@ -20693,6 +20744,14 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     groupOrder.push(g);
                 }
                 groups[g].push(row);
+            });
+            // Сортируем группы по алфавиту
+            groupOrder.sort((a, b) => {
+                const va = a.toString().toLowerCase();
+                const vb = b.toString().toLowerCase();
+                if (va < vb) return -1;
+                if (va > vb) return 1;
+                return 0;
             });
 
             const self = this;
