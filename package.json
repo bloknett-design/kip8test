@@ -70,7 +70,8 @@
       "target": [
         { "target": "dmg", "arch": ["x64"] }
       ],
-      "icon": "images/icon-512.png"
+      "icon": "images/icon-512.png",
+      "artifactName": "KIPiA-${version}.${ext}"
     }
   }
 }
