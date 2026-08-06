@@ -16809,6 +16809,19 @@
         if (ci && barRight && !barRight.contains(ci)) {
             barRight.appendChild(ci);
         }
+        // Клик по рабочей области (contentArea) закрывает sidebar
+        const contentArea = document.getElementById('contentArea');
+        if (contentArea && !contentArea._desktopSidebarCloseHandler) {
+            contentArea._desktopSidebarCloseHandler = true; // флаг, чтобы не вешать дважды
+            contentArea.addEventListener('click', function(e) {
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar && sidebar.classList.contains('desktop-open')) {
+                    sidebar.classList.remove('desktop-open');
+                    const overlay = document.getElementById('sidebarOverlay');
+                    if (overlay) overlay.classList.remove('desktop-active');
+                }
+            });
+        }
     }
 
     /** Обновление активной вкладки в десктопном верхнем баре */
