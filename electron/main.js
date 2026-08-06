@@ -1,6 +1,7 @@
 const { app, BrowserWindow, Menu, shell, dialog, protocol } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { autoUpdater } = require('electron-updater');
 
 let mainWindow = null;
 
@@ -8,14 +9,13 @@ let mainWindow = null;
 const APP_ROOT = path.join(__dirname, '..');
 
 // ⚠️ ВАЖНО: регистрируем схему как привилегированную ДО app.whenReady()
-// Это позволяет fetch(), Service Worker, CSS и JS работать через app://
 protocol.registerSchemesAsPrivileged([
   {
     scheme: 'app',
     privileges: {
-      standard: true,       // работает как http/https
-      secure: true,         // TLS-подобная схема
-      bypassCSP: true,      // обходит CSP
+      standard: true,
+      secure: true,
+      bypassCSP: true,
       allowServiceWorkers: true,
       supportFetchAPI: true,
       corsEnabled: true,
@@ -24,18 +24,89 @@ protocol.registerSchemesAsPrivileged([
   }
 ]);
 
-// Обработчик протокола app:// — обслуживает файлы из APP_ROOT
+// ============================================================
+// АВТООБНОВЛЕНИЕ
+// ============================================================
+// electron-updater проверяет GitHub Releases на наличие новой версии.
+// Для Windows NSIS: скачивает .exe и запускает установщик после закрытия приложения.
+// Для macOS: скачивает .zip и заменяет приложение.
+// Для Linux AppImage: скачивает новый .AppImage.
+
+autoUpdater.autoDownload = false; // не скачивать автоматически — спросим пользователя
+autoUpdater.autoInstallOnAppQuit = true; // установить при закрытии
+
+autoUpdater.on('update-available', (info) => {
+  // Новая версия найдена — спрашиваем пользователя
+  if (!mainWindow) return;
+  dialog.showMessageBox(mainWindow, {
+    type: 'info',
+    title: 'Доступно обновление',
+    message: `Доступна новая версия: ${info.version}`,
+    detail: `Текущая версия: ${app.getVersion()}\n\nСкачать и установить обновление? Приложение будет перезапущено после загрузки.`,
+    buttons: ['Скачать', 'Позже'],
+    defaultId: 0,
+    cancelId: 1
+  }).then((result) => {
+    if (result.response === 0) {
+      autoUpdater.downloadUpdate();
+    }
+  });
+});
+
+autoUpdater.on('download-progress', (progressObj) => {
+  // Можно показать прогресс в заголовке окна
+  if (mainWindow) {
+    mainWindow.setProgressBar(progressObj.percent / 100);
+  }
+});
+
+autoUpdater.on('update-downloaded', (info) => {
+  // Обновление скачано — предлагаем установить
+  if (mainWindow) {
+    mainWindow.setProgressBar(-1); // сбросить прогресс
+  }
+  dialog.showMessageBox(mainWindow, {
+    type: 'info',
+    title: 'Обновление загружено',
+    message: `Версия ${info.version} загружена`,
+    detail: 'Установить сейчас? Приложение перезапустится.',
+    buttons: ['Установить', 'Позже'],
+    defaultId: 0,
+    cancelId: 1
+  }).then((result) => {
+    if (result.response === 0) {
+      autoUpdater.quitAndInstall();
+    }
+  });
+});
+
+autoUpdater.on('error', (err) => {
+  // Ошибка обновления — не показываем пользователю (не критично)
+  console.log('[autoUpdater] Ошибка:', err.message);
+});
+
+// Функция проверки обновлений
+function checkForUpdates() {
+  try {
+    autoUpdater.checkForUpdates().catch(() => {});
+  } catch (e) {
+    // Не критично — обновления не обязательны
+  }
+}
+
+// ============================================================
+// ПРОТОКОЛ app://
+// ============================================================
+
 function registerProtocolHandler() {
   protocol.handle('app', (request) => {
     const url = new URL(request.url);
     let filePath = path.normalize(path.join(APP_ROOT, url.pathname));
 
-    // Безопасность: path traversal protection
     if (!filePath.startsWith(APP_ROOT)) {
       return new Response('Forbidden', { status: 403 });
     }
 
-    // MIME-типы
     const ext = path.extname(filePath).toLowerCase();
     const mimeTypes = {
       '.html':  'text/html; charset=utf-8',
@@ -70,6 +141,10 @@ function registerProtocolHandler() {
   });
 }
 
+// ============================================================
+// ОКНО
+// ============================================================
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -78,32 +153,28 @@ function createWindow() {
     minHeight: 600,
     icon: path.join(APP_ROOT, 'images', 'icon-512.png'),
     title: 'КИПиА — справочник инженера',
-    backgroundColor: '#1a2233', // цвет фона при загрузке (как в PWA)
+    backgroundColor: '#1a2233',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      sandbox: false,   // нужен для кастомного протокола
-      devTools: false   // установите true для отладки
+      sandbox: false,
+      devTools: false
     },
     autoHideMenuBar: true,
     show: false
   });
 
-  // Загружаем через кастомный протокол
   mainWindow.loadURL('app://localhost/index.html');
 
-  // Показываем окно когда контент загружен
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
   });
 
-  // Внешние ссылки → системный браузер
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: 'deny' };
   });
 
-  // Навигация только по нашему протоколу
   mainWindow.webContents.on('will-navigate', (event, url) => {
     if (!url.startsWith('app://localhost')) {
       event.preventDefault();
@@ -115,13 +186,15 @@ function createWindow() {
     mainWindow = null;
   });
 
-  // Отключаем стандартное контекстное меню
   mainWindow.webContents.on('context-menu', (e) => {
     e.preventDefault();
   });
 }
 
-// Меню приложения
+// ============================================================
+// МЕНЮ
+// ============================================================
+
 function createMenu() {
   const template = [
     {
@@ -134,7 +207,21 @@ function createMenu() {
               type: 'info',
               title: 'КИПиА',
               message: 'КИПиА — справочник инженера',
-              detail: `Версия: ${app.getVersion()}\n\nСправочник и калькулятор контрольно-измерительных приборов и автоматики.\n\nПриборы, блокировки, клапаны, регуляторы, кабельный журнал, проекты, калькуляторы, конвертер единиц, экзаменационные билеты.`,
+              detail: `Версия: ${app.getVersion()}\n\nСправочник и калькулятор КИП и А.\n\nПриборы, блокировки, клапаны, регуляторы, кабельный журнал, проекты, калькуляторы, конвертер единиц, экзаменационные билеты.`,
+              buttons: ['OK']
+            });
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Проверить обновления',
+          click: () => {
+            checkForUpdates();
+            dialog.showMessageBox(mainWindow, {
+              type: 'info',
+              title: 'Обновления',
+              message: 'Проверка обновлений…',
+              detail: 'Если доступна новая версия, появится предложение её загрузить.',
               buttons: ['OK']
             });
           }
@@ -156,13 +243,19 @@ function createMenu() {
   Menu.setApplicationMenu(menu);
 }
 
-// Запуск приложения
+// ============================================================
+// ЗАПУСК
+// ============================================================
+
 app.whenReady().then(() => {
   registerProtocolHandler();
   createMenu();
   createWindow();
 
-  // macOS: пересоздать окно при клике на док-иконку
+  // Проверяем обновления через 5 секунд после запуска
+  // (не блокируем загрузку приложения)
+  setTimeout(checkForUpdates, 5000);
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
@@ -170,12 +263,10 @@ app.whenReady().then(() => {
   });
 });
 
-// Закрыть приложение когда все окна закрыты
 app.on('window-all-closed', () => {
   app.quit();
 });
 
-// Блокируем создание дополнительных окон
 app.on('web-contents-created', (event, contents) => {
   contents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);

@@ -32,20 +32,20 @@ jobs:
         run: npm ci
 
       - name: Build Linux (AppImage + deb)
-        run: npx electron-builder --linux --publish never
+        run: npx electron-builder --linux --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload AppImage
         uses: actions/upload-artifact@v4
         with:
-          name: КИПиА-linux-AppImage
+          name: KIPiA-linux-AppImage
           path: dist/*.AppImage
 
       - name: Upload deb
         uses: actions/upload-artifact@v4
         with:
-          name: КИПиА-linux-deb
+          name: KIPiA-linux-deb
           path: dist/*.deb
 
   # ─── Windows ────────────────────────────────────────────
@@ -64,16 +64,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Windows (NSIS)
-        run: npx electron-builder --win --publish never
+      - name: Build Windows (NSIS) + publish update metadata
+        run: npx electron-builder --win --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4
         with:
-          name: КИПиА-win-setup
+          name: KIPiA-win-setup
           path: dist/*.exe
+
+      - name: Upload update metadata (latest.yml)
+        uses: actions/upload-artifact@v4
+        with:
+          name: KIPiA-win-update-metadata
+          path: dist/latest*.yml
 
   # ─── macOS ──────────────────────────────────────────────
   build-mac:
@@ -91,15 +97,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build macOS (dmg)
-        run: npx electron-builder --mac --publish never
+      - name: Build macOS (dmg) + publish update metadata
+        run: npx electron-builder --mac --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload macOS dmg
         uses: actions/upload-artifact@v4
         with:
-          name: КИПиА-mac-dmg
+          name: KIPiA-mac-dmg
           path: dist/*.dmg
 
   # ─── Release (создаётся при пуше тега v*) ──────────────
@@ -130,9 +136,12 @@ jobs:
             ## Десктопное приложение КИПиА ${{ github.ref_name }}
 
             ### Установка
-            - **Windows** — скачайте `КИПиА-Setup-*.exe`, запустите установщик (на русском языке)
-            - **Linux** — скачайте `КИПиА-*.AppImage` (портативный, без установки) или `КИПиА-*.deb` (`sudo dpkg -i`)
-            - **macOS** — скачайте `КИПиА-*.dmg`, перетащите в Applications
+            - **Windows** — скачайте `KIPiA-Setup-*.exe`, запустите установщик (на русском языке)
+            - **Linux** — скачайте `KIPiA-*.AppImage` (портативный, без установки) или `KIPiA-*.deb` (`sudo dpkg -i`)
+            - **macOS** — скачайте `KIPiA-*.dmg`, перетащите в Applications
+
+            ### Автообновление
+            Начиная с версии 1.0.2, приложение автоматически проверяет обновления при запуске. При наличии новой версии появится предложение скачать и установить её.
           draft: false
           prerelease: false
           files: |
@@ -140,5 +149,6 @@ jobs:
             release-artifacts/**/*.AppImage
             release-artifacts/**/*.deb
             release-artifacts/**/*.dmg
+            release-artifacts/**/latest*.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
