@@ -5709,47 +5709,34 @@
             display: none !important;
         }
 
-        /* --- Detail Panel (правая панель) --- */
-        #detailPanel {
+        /* --- Detail Breadcrumb Bar (полноэкранная строка пути) --- */
+        #detailBreadcrumbBar {
             display: none;
-            width: 45%;
-            min-width: 380px;
-            max-width: 560px;
-            border-left: 1px solid var(--border-color, rgba(74, 143, 199, 0.15));
-            background: var(--bg-primary);
-            overflow-y: auto;
-            position: relative;
-            flex-shrink: 0;
-        }
-        #detailPanel.active {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-        #detailPanel .detail-panel-header {
             position: sticky;
             top: 0;
-            z-index: 10;
+            z-index: 25;
             background: var(--header-bg);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border-color, rgba(74, 143, 199, 0.15));
-            padding: 12px 16px;
-            display: flex;
+            padding: 10px 20px;
             align-items: center;
-            gap: 12px;
-            min-height: 56px;
+            gap: 10px;
+            min-height: 44px;
+            width: 100%;
         }
-        #detailPanel .detail-panel-title {
+        #detailBreadcrumbBar.active {
+            display: flex;
+        }
+        #detailBreadcrumbContent {
             flex: 1;
-            font-size: 16px;
-            font-weight: 700;
+            font-size: 13px;
+            font-weight: 500;
             color: var(--text-primary);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            white-space: normal;
+            line-height: 1.5;
         }
-        #detailPanel .detail-panel-close {
+        .detail-breadcrumb-close {
             width: 32px;
             height: 32px;
             border-radius: 8px;
@@ -5761,8 +5748,30 @@
             justify-content: center;
             flex-shrink: 0;
         }
-        #detailPanel .detail-panel-close:hover {
+        .detail-breadcrumb-close:hover {
             background: rgba(74, 143, 199, 0.15);
+        }
+
+        /* --- Detail Panel (правая панель) --- */
+        #detailPanel {
+            display: none;
+            width: 45%;
+            min-width: 380px;
+            max-width: 560px;
+            border-left: 1px solid var(--border-color, rgba(74, 143, 199, 0.15));
+            background: var(--bg-primary);
+            overflow: visible;
+            position: relative;
+            flex-shrink: 0;
+        }
+        #detailPanel.active {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        /* Header внутри detailPanel скрыт — breadcrumbs теперь в #detailBreadcrumbBar */
+        #detailPanel .detail-panel-header {
+            display: none;
         }
         #detailPanel .detail-panel-body {
             padding: 16px;
@@ -6517,6 +6526,14 @@
         <div class="desktop-top-bar-right">
             <!-- connection indicator перемещается сюда через CSS -->
         </div>
+    </div>
+
+    <!-- ===== Десктоп: полноэкранная строка breadcrumbs для detail-панели ===== -->
+    <div id="detailBreadcrumbBar">
+        <div id="detailBreadcrumbContent"></div>
+        <button type="button" class="detail-breadcrumb-close" onclick="closeDetailPanel()" aria-label="Закрыть панель">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:rgba(74,143,199,0.9);fill:none;stroke-width:2;stroke-linecap:round;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
     </div>
 
     <div id="contentArea">
@@ -14938,12 +14955,13 @@
     function openDetailPanel(title, contentHtml) {
         if (!isDesktop()) return;
         const panel = document.getElementById('detailPanel');
-        const titleEl = document.getElementById('detailPanelTitle');
         const bodyEl = document.getElementById('detailPanelBody');
-        if (!panel || !titleEl || !bodyEl) return;
-        titleEl.textContent = title || 'Детали';
+        if (!panel || !bodyEl) return;
         bodyEl.innerHTML = contentHtml || '';
         panel.classList.add('active');
+        // Показываем полноэкранную строку breadcrumbs
+        const bcBar = document.getElementById('detailBreadcrumbBar');
+        if (bcBar) bcBar.classList.add('active');
         // Подсветка активной карточки в списке
         document.querySelectorAll('.dev-card.detail-highlight').forEach(el => el.classList.remove('detail-highlight'));
     }
@@ -14954,6 +14972,13 @@
         if (!panel) return;
         panel.classList.remove('active');
         document.getElementById('detailPanelBody').innerHTML = '';
+        // Скрываем полноэкранную строку breadcrumbs
+        const bcBar = document.getElementById('detailBreadcrumbBar');
+        if (bcBar) {
+            bcBar.classList.remove('active');
+            const bcContent = document.getElementById('detailBreadcrumbContent');
+            if (bcContent) bcContent.innerHTML = '';
+        }
         document.querySelectorAll('.dev-card.detail-highlight').forEach(el => el.classList.remove('detail-highlight'));
         // Восстанавливаем breadcrumbs без виртуальной detail-страницы
         updateDesktopBreadcrumb();
@@ -17061,15 +17086,20 @@
     // Устанавливает breadcrumbs в заголовке detail-панели.
     // pageType — тип detail-страницы ('device-detail', 'lockout-detail' и т.д.)
     // itemName — название конкретного прибора/блокировки/клапана и т.д.
-    // Строит полный путь: «Главная / Документация / КИП ИОС / Приборы / Корпус / Прибор»
-    function setDetailBreadcrumb(pageType, itemName) {
-        const titleEl = document.getElementById('detailPanelTitle');
-        if (!titleEl) return;
+    // groupName — название группы (например «Корпус 114. Общее»), вставляется
+    //   перед itemName как предпоследний сегмент пути.
+    //   groupNavPage — страница для навигации при клике на groupName
+    //     (например 'dev-group' для приборов, 'lock-group' для блокировок).
+    // Строит полный путь: «Главная / Документация / КИП ИОС / Приборы по пр-вам / Корпус 114. Общее / Прибор»
+    function setDetailBreadcrumb(pageType, itemName, groupName, groupNavPage) {
+        const bar = document.getElementById('detailBreadcrumbContent');
+        const bcBar = document.getElementById('detailBreadcrumbBar');
+        if (!bar) return;
 
         // Строим иерархический путь по дереву PAGE_PARENTS
         const path = buildBreadcrumbPath(pageType);
 
-        // Строим HTML: «Главная / ... / Родительский список / Название карточки»
+        // Строим HTML: «Главная / ... / Родительский список / Группа / Название карточки»
         let html = '<span class="breadcrumb-link" style="font-size:13px;" onclick="navigateTo(\'dashboard\', false)">Главная</span>';
 
         for (let i = 0; i < path.length; i++) {
@@ -17081,13 +17111,25 @@
             html += '<span class="breadcrumb-link" style="font-size:13px;" onclick="closeDetailPanel(); navigateTo(\'' + pageId + '\', false)">' + label + '</span>';
         }
 
+        // Название группы (например «Корпус 114. Общее») — кликабельно, если задана groupNavPage
+        if (groupName) {
+            html += '<span class="breadcrumb-sep"> / </span>';
+            if (groupNavPage) {
+                html += '<span class="breadcrumb-link" style="font-size:13px;" onclick="closeDetailPanel(); navigateTo(\'' + groupNavPage + '\', false)">' + groupName + '</span>';
+            } else {
+                html += '<span class="breadcrumb-current" style="font-size:13px;">' + groupName + '</span>';
+            }
+        }
+
         // Последний сегмент — название карточки (жирный, не кликабелен)
         if (itemName) {
             html += '<span class="breadcrumb-sep"> / </span>';
             html += '<span class="breadcrumb-current" style="font-size:13px;">' + itemName + '</span>';
         }
 
-        titleEl.innerHTML = html;
+        bar.innerHTML = html;
+        // Показываем полноэкранную строку breadcrumbs
+        if (bcBar) bcBar.classList.add('active');
     }
 
     function devRenderDetailInPanel() {
@@ -17109,7 +17151,9 @@
         const panel = document.getElementById('detailPanel');
         if (panel) panel.classList.add('active');
         // Breadcrumbs в заголовке detail-панели
-        setDetailBreadcrumb('device-detail', name);
+        const devGroupCtx = window._devGroupCtx || {};
+        const devGroupName = devGroupCtx.group || '';
+        setDetailBreadcrumb('device-detail', name, devGroupName, 'dev-group');
     }
 
     function lockRenderDetailInPanel() {
@@ -17127,7 +17171,9 @@
         const title = origTitle ? origTitle.textContent : 'Блокировка';
         const panel = document.getElementById('detailPanel');
         if (panel) panel.classList.add('active');
-        setDetailBreadcrumb('lockout-detail', title);
+        const lockGroupCtx = window._lockGroupCtx || {};
+        const lockGroupName = lockGroupCtx.group || '';
+        setDetailBreadcrumb('lockout-detail', title, lockGroupName, 'lock-group');
     }
 
     function valveRenderDetailInPanel() {
@@ -17145,7 +17191,9 @@
         const title = origTitle ? origTitle.textContent : 'Клапан';
         const panel = document.getElementById('detailPanel');
         if (panel) panel.classList.add('active');
-        setDetailBreadcrumb('valve-detail', title);
+        const valveGroupCtx = window._valveGroupCtx || {};
+        const valveGroupName = valveGroupCtx.group || '';
+        setDetailBreadcrumb('valve-detail', title, valveGroupName, 'valve-group');
     }
 
     function regulatorRenderDetailInPanel() {
@@ -17163,7 +17211,9 @@
         const title = origTitle ? origTitle.textContent : 'Регулятор';
         const panel = document.getElementById('detailPanel');
         if (panel) panel.classList.add('active');
-        setDetailBreadcrumb('regulator-detail', title);
+        const regulatorGroupCtx = window._regulatorGroupCtx || {};
+        const regulatorGroupName = regulatorGroupCtx.group || '';
+        setDetailBreadcrumb('regulator-detail', title, regulatorGroupName, 'regulator-group');
     }
 
     function projectRenderDetailInPanel() {
@@ -17181,7 +17231,9 @@
         const title = origTitle ? origTitle.textContent : 'Проект';
         const panel = document.getElementById('detailPanel');
         if (panel) panel.classList.add('active');
-        setDetailBreadcrumb('project-detail', title);
+        const projectGroupCtx = window._projectGroupCtx || {};
+        const projectGroupName = projectGroupCtx.group || '';
+        setDetailBreadcrumb('project-detail', title, projectGroupName, 'project-group');
     }
 
     function cableRenderDetailInPanel() {
@@ -17218,8 +17270,8 @@
         // Открываем панель
         const panel = document.getElementById('detailPanel');
         if (panel) panel.classList.add('active');
-        // Breadcrumbs в заголовке detail-панели
-        setDetailBreadcrumb('cable-journal-view', cableTitle);
+        // Breadcrumbs в заголовке detail-панели (кабели не имеют групп — groupName пустая)
+        setDetailBreadcrumb('cable-journal-view', cableTitle, '', '');
     }
 
     function toggleSidebar() {
