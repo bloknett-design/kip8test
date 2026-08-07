@@ -166,6 +166,11 @@ function createWindow() {
 
   mainWindow.loadURL('app://localhost/index.html');
 
+  // Устанавливаем флаг, чтобы рендерер знал, что он работает в Electron
+  mainWindow.webContents.on('dom-ready', () => {
+    mainWindow.webContents.executeJavaScript('window.__isElectron = true;');
+  });
+
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
   });
@@ -233,7 +238,28 @@ function createMenu() {
     {
       label: 'Вид',
       submenu: [
-        { label: 'Обновить', accelerator: 'CmdOrCtrl+R', click: () => mainWindow.reload() },
+        {
+          label: 'Обновить',
+          accelerator: 'CmdOrCtrl+R',
+          click: () => {
+            // Принудительное обновление: очищаем кэш SW и перезагружаем
+            mainWindow.webContents.executeJavaScript(`
+              (async function() {
+                try {
+                  if ('caches' in window) {
+                    const names = await caches.keys();
+                    await Promise.all(names.map(n => caches.delete(n)));
+                  }
+                  if ('serviceWorker' in navigator) {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(regs.map(r => r.unregister()));
+                  }
+                } catch(e) {}
+                window.location.reload(true);
+              })();
+            `);
+          }
+        },
         { label: 'Полный экран', accelerator: 'F11', click: () => mainWindow.setFullScreen(!mainWindow.isFullScreen()) }
       ]
     }

@@ -5803,21 +5803,7 @@
             max-width: none;
         }
 
-        /* --- КИП ИОС: 2 колонки для кнопок --- */
-        #page-kip-ios .kip-ios-block .menu-btn-row {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-        }
-        #page-kip-ios .kip-ios-block .menu-btn {
-            max-width: none;
-        }
-
-        /* --- Библиотека: 2 колонки --- */
-        #page-library-internal .menu-btn-row,
-        #page-library-electro .menu-btn-row {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-        }
+        /* --- КИП ИОС / Библиотека: стили заданы выше (3 колонки, прямоугольные кнопки) --- */
 
         /* --- Группы в списках каталогов: 2 колонки карточек --- */
         .dev-group-body {
@@ -5830,6 +5816,130 @@
         .menu-btn-row-secret-pair {
             grid-template-columns: repeat(2, 1fr) !important;
             gap: 8px;
+        }
+
+        /* --- Кнопки разделов: прямоугольные (квадраты), сетка слева направо, сверху вниз --- */
+        #page-calculators .menu-btn-row,
+        #page-docs .menu-btn-row {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 12px 16px;
+        }
+        #page-calculators .menu-btn,
+        #page-docs .menu-btn {
+            max-width: none;
+            border-radius: 4px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 100px;
+            padding: 16px 12px;
+        }
+        #page-calculators .menu-btn-text,
+        #page-docs .menu-btn-text {
+            text-align: center;
+            flex: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #page-calculators .menu-btn-arrow,
+        #page-docs .menu-btn-arrow {
+            display: none;
+        }
+
+        /* --- Подразделы внутри разделов: 3 колонки, прямоугольные кнопки --- */
+        #page-calc-kipa .menu-btn-row,
+        #page-calc-electro .menu-btn-row,
+        #page-calc-geometry .menu-btn-row,
+        #page-kip-ios .kip-ios-block .menu-btn-row,
+        #page-library-internal .menu-btn-row,
+        #page-library-electro .menu-btn-row {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        #page-calc-kipa .menu-btn,
+        #page-calc-electro .menu-btn,
+        #page-calc-geometry .menu-btn,
+        #page-kip-ios .kip-ios-block .menu-btn,
+        #page-library-internal .menu-btn,
+        #page-library-electro .menu-btn {
+            max-width: none;
+            border-radius: 4px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 100px;
+            padding: 16px 12px;
+        }
+        #page-calc-kipa .menu-btn-text,
+        #page-calc-electro .menu-btn-text,
+        #page-calc-geometry .menu-btn-text,
+        #page-kip-ios .kip-ios-block .menu-btn-text,
+        #page-library-internal .menu-btn-text,
+        #page-library-electro .menu-btn-text {
+            text-align: center;
+            flex: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #page-calc-kipa .menu-btn-arrow,
+        #page-calc-electro .menu-btn-arrow,
+        #page-calc-geometry .menu-btn-arrow,
+        #page-kip-ios .kip-ios-block .menu-btn-arrow,
+        #page-library-internal .menu-btn-arrow,
+        #page-library-electro .menu-btn-arrow {
+            display: none;
+        }
+
+        /* --- КИП ИОС: отдельные кнопки под блоком (Проекты, Кабельный журнал, План) --- */
+        #page-kip-ios > .menu-btn-row {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 0 16px;
+        }
+        #page-kip-ios > .menu-btn-row .menu-btn {
+            max-width: none;
+            border-radius: 4px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 80px;
+            padding: 14px 12px;
+        }
+        #page-kip-ios > .menu-btn-row .menu-btn-text {
+            text-align: center;
+            flex: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #page-kip-ios > .menu-btn-row .menu-btn-arrow {
+            display: none;
+        }
+
+        /* --- Кнопка переполнения (три точки) в квадратных кнопках --- */
+        #page-calculators .menu-btn-overflow,
+        #page-docs .menu-btn-overflow,
+        #page-calc-kipa .menu-btn-overflow,
+        #page-calc-electro .menu-btn-overflow,
+        #page-calc-geometry .menu-btn-overflow,
+        #page-kip-ios .menu-btn-overflow,
+        #page-library-internal .menu-btn-overflow,
+        #page-library-electro .menu-btn-overflow {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+        }
+
+        /* --- dev-swipe-cell: прямоугольная форма на десктопе --- */
+        #page-kip-ios .kip-ios-block .dev-swipe-cell {
+            border-radius: 4px;
+            margin-bottom: 0;
         }
 
         /* --- Нижний бар дашборда: скрыт на десктопе --- */
@@ -5923,7 +6033,7 @@
         .desktop-top-bar-left {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 0;
             flex-shrink: 0;
         }
         #desktopBurgerBtn {
@@ -5938,6 +6048,7 @@
             justify-content: center;
             color: var(--accent-blue, #4a8fc7);
             transition: background 0.2s, border-color 0.2s;
+            margin-right: 8px;
         }
         #desktopBurgerBtn:hover {
             background: rgba(74, 143, 199, 0.12);
@@ -5949,6 +6060,7 @@
             gap: 8px;
             cursor: pointer;
             user-select: none;
+            margin-right: 8px;
         }
         .desktop-top-bar-title {
             font-family: 'Jura', sans-serif;
@@ -5958,22 +6070,27 @@
             letter-spacing: 1px;
         }
         .desktop-top-bar-center {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            flex: 1;
-            justify-content: center;
+            display: none; /* табы перемещены в desktop-top-bar-left */
+        }
+        .desktop-top-bar-divider {
+            display: inline-block;
+            width: 1px;
+            height: 24px;
+            background: var(--border-color, rgba(74, 143, 199, 0.25));
+            margin: 0 6px;
+            flex-shrink: 0;
+            align-self: center;
         }
         .desktop-top-bar-tab {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 20px;
-            border-radius: 10px;
-            border: 1px solid transparent;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
             background: transparent;
             color: var(--text-secondary, rgba(255, 255, 255, 0.55));
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             font-family: 'Inter', sans-serif;
             cursor: pointer;
@@ -5986,13 +6103,14 @@
         }
         .desktop-top-bar-tab.active {
             background: rgba(74, 143, 199, 0.12);
-            border-color: rgba(74, 143, 199, 0.25);
             color: var(--accent-blue, #4a8fc7);
         }
         .desktop-top-bar-right {
             display: flex;
             align-items: center;
             gap: 8px;
+            flex: 1;
+            justify-content: flex-end;
             flex-shrink: 0;
             min-width: 44px;
         }
@@ -6346,12 +6464,12 @@
                 <img src="images/logo_black.png" alt="КИПиА" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">
                 <span class="desktop-top-bar-title">КИПиА</span>
             </div>
-        </div>
-        <div class="desktop-top-bar-center">
+            <span class="desktop-top-bar-divider"></span>
             <button type="button" class="desktop-top-bar-tab" data-page="calculators" onclick="navigateTo('calculators')">
                 <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/></svg>
                 <span>Инженерные калькуляторы</span>
             </button>
+            <span class="desktop-top-bar-divider"></span>
             <button type="button" class="desktop-top-bar-tab" data-page="docs" onclick="navigateTo('docs')">
                 <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                 <span>Документация</span>
@@ -22288,9 +22406,25 @@ function updateConnectionIndicator() {
 }
 
 // Главная функция обновления данных приложения.
+// В десктопной версии (Electron) выполняет принудительное обновление:
+// очищает кэш Service Worker, unregister SW и перезагружает страницу.
+// В мобильной версии — мягкое обновление данных (как раньше).
 async function refreshAppData() {
     const el = document.getElementById('connectionIndicator');
     if (!el) return;
+
+    // Десктоп (Electron): принудительное обновление — очистка кэша + жёсткая перезагрузка
+    if (typeof process !== 'undefined' && process.type === 'renderer') {
+        // Electron renderer
+        forceDesktopRefresh();
+        return;
+    }
+
+    // Также определяем десктоп через matchMedia (надёжнее для PWA в Electron)
+    if (window.matchMedia('(min-width: 1024px)').matches && window.__isElectron) {
+        forceDesktopRefresh();
+        return;
+    }
 
     if (!navigator.onLine) {
         showToast('Нет подключения к интернету');
@@ -22342,6 +22476,42 @@ async function refreshAppData() {
             showCloudBriefly();
         }, remaining);
     }
+}
+
+// Принудительное обновление десктопного приложения:
+// 1. Очищает все кэши Service Worker (Cache Storage API)
+// 2. Отменяет регистрацию Service Worker
+// 3. Перезагружает страницу (загрузит свежие файлы из bundled app)
+async function forceDesktopRefresh() {
+    const el = document.getElementById('connectionIndicator');
+    if (el) {
+        el.classList.add('refreshing');
+        el.title = 'Принудительное обновление…';
+    }
+    showToast('Принудительное обновление…');
+
+    try {
+        // 1. Очищаем все кэши Cache Storage
+        if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(name => caches.delete(name)));
+        }
+
+        // 2. Отменяем регистрацию Service Worker
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations.map(reg => reg.unregister()));
+        }
+    } catch (e) {
+        // Не критично — продолжаем перезагрузку даже при ошибке
+        console.log('[forceDesktopRefresh] Ошибка очистки кэша:', e);
+    }
+
+    // 3. Небольшая задержка, чтобы toast успел появиться
+    setTimeout(() => {
+        // Жёсткая перезагрузка: обходим кэш браузера
+        window.location.reload(true);
+    }, 300);
 }
 
 // Слушаем события online/offline
