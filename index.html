@@ -6299,6 +6299,44 @@
         }
     }
 
+    @media (min-width: 1024px) {
+        /* --- Хлебные крошки (breadcrumb) в заголовке страницы --- */
+        .breadcrumb-sep {
+            color: rgba(140, 170, 200, 0.45);
+            font-weight: 400;
+            margin: 0 3px;
+            font-size: 14px;
+        }
+        .breadcrumb-link {
+            color: rgba(140, 170, 200, 0.8);
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 0.15s;
+            text-shadow: none;
+            font-size: 14px;
+        }
+        .breadcrumb-link:hover {
+            color: var(--accent-blue, #4a8fc7);
+        }
+        .breadcrumb-current {
+            color: #e0e0e0;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        [data-theme="light"] .breadcrumb-sep {
+            color: rgba(42, 93, 143, 0.35);
+        }
+        [data-theme="light"] .breadcrumb-link {
+            color: rgba(42, 93, 143, 0.65);
+        }
+        [data-theme="light"] .breadcrumb-link:hover {
+            color: var(--accent-blue, #4a8fc7);
+        }
+        [data-theme="light"] .breadcrumb-current {
+            color: #1a1a1a;
+        }
+    }
+
 </style>
 <!-- base target removed: not needed for SPA, causes issues with in-page navigation -->
 </head>
@@ -15395,6 +15433,270 @@
         } catch (e) {
             // Тихо игнорируем — обновление шеврона не должно ломать навигацию.
         }
+    }
+
+    // ============================================================
+    // ХЛЕБНЫЕ КРОШКИ (breadcrumb) — десктопная версия
+    // ============================================================
+    // Иерархическая навигация: каждая страница знает своего родителя.
+    // Путь строится снизу вверх: текущая → родитель → ... → корень.
+    // При переходе в другой раздел автоматически начинается новая ветка.
+
+    // Карта: страница → её родитель в иерархии
+    const PAGE_PARENTS = {
+        // Верхний уровень (корневые разделы)
+        'calculators':      'dashboard',
+        'docs':             'dashboard',
+        'phonebook':        'dashboard',
+        'admin':            'dashboard',
+        // Инженерные калькуляторы
+        'calc-kipa':        'calculators',
+        'calc-electro':     'calculators',
+        'calc-geometry':    'calculators',
+        'minesweeper':      'calculators',
+        // КИП и А — подразделы
+        'converter':        'calc-kipa',
+        'scale-signal':     'calc-kipa',
+        'error-select':     'calc-kipa',
+        'buoy-select':      'calc-kipa',
+        'temp-sensors':     'calc-kipa',
+        'orifice-select':   'calc-kipa',
+        // Конвертер единиц — категории
+        'conv-pressure':    'converter',
+        'conv-flow':        'converter',
+        'conv-mass':        'converter',
+        'conv-temp':        'converter',
+        'conv-length':      'converter',
+        'conv-density':     'converter',
+        'conv-time':        'converter',
+        'conv-volume':      'converter',
+        // Расчёт погрешности — подразделы
+        'error-pressure':       'error-select',
+        'error-temp-rtd':       'error-select',
+        'error-temp-tc':        'error-select',
+        'error-flow':           'error-select',
+        'error-level':          'error-select',
+        'error-scale':          'error-select',
+        'error-generic':        'error-select',
+        'error-kit':            'error-select',
+        // Погрешность по классу точности
+        'error-generic-number':     'error-generic',
+        'error-generic-underline':  'error-generic',
+        'error-generic-circle':     'error-generic',
+        'error-generic-fraction':   'error-generic',
+        // Буйковый уровнемер
+        'buoy-calc':            'buoy-select',
+        // Сужающее устройство
+        'orifice-quick':        'orifice-select',
+        'orifice-dp':           'orifice-select',
+        'orifice-flow':         'orifice-select',
+        'orifice-diameter':     'orifice-select',
+        // Электротехника
+        'circuit-breaker':      'calc-electro',
+        // Геометрия
+        'geo-circle':       'calc-geometry',
+        'geo-ring':         'calc-geometry',
+        'geo-cylinder':     'calc-geometry',
+        'geo-horiz':        'calc-geometry',
+        'geo-sphere':       'calc-geometry',
+        'geo-cone':         'calc-geometry',
+        // Документация — подразделы
+        'exam-tickets':     'docs',
+        'library':          'docs',
+        'library-internal': 'docs',
+        'library-electro':  'library-internal',
+        'kip-ios':          'docs',
+        // Экзаменационные билеты
+        'tickets-1000v':    'exam-tickets',
+        'tickets-4':        'exam-tickets',
+        'tickets-5':        'exam-tickets',
+        'tickets-6':        'exam-tickets',
+        // КИП ИОС — подразделы
+        'devices-type':     'kip-ios',
+        'devices-name':     'kip-ios',
+        'devices-prod':     'kip-ios',
+        'devices':          'kip-ios',
+        'device-detail':    'devices-prod',
+        'dev-group':        'devices-prod',
+        'lockouts-prod':    'kip-ios',
+        'lockout-detail':   'lockouts-prod',
+        'lock-group':       'lockouts-prod',
+        'valves-type':      'kip-ios',
+        'valves-name':      'kip-ios',
+        'valves-prod':      'kip-ios',
+        'valve-detail':     'valves-prod',
+        'valve-group':      'valves-prod',
+        'regulators-prod':  'kip-ios',
+        'regulator-detail': 'regulators-prod',
+        'regulator-group':  'regulators-prod',
+        'projects-prod':    'kip-ios',
+        'project-detail':   'projects-prod',
+        'project-group':    'projects-prod',
+        'cable-journal-edit':   'kip-ios',
+        'cable-journal-add':    'cable-journal-edit',
+        'cable-journal-view':   'cable-journal-edit',
+        'plan-114':         'kip-ios',
+        'plan-114-view':    'plan-114',
+        // Админ-панель
+        'admin-users':      'admin',
+        'admin-sessions':   'admin',
+        'admin-logs':       'admin',
+        'admin-stats':      'admin'
+    };
+
+    // Карта: идентификатор → читаемое название для breadcrumbs
+    const PAGE_LABELS = {
+        'dashboard':        'Главная',
+        'calculators':      'Инженерные калькуляторы',
+        'docs':             'Документация',
+        'calc-kipa':        'КИП и А',
+        'calc-electro':     'Электротехника',
+        'calc-geometry':    'Геометрия',
+        'kip-ios':          'КИП ИОС',
+        'exam-tickets':     'Экзаменационные билеты',
+        'tickets-1000v':    'Билеты до 1000 В',
+        'tickets-4':        'Билеты на 4 разряд',
+        'tickets-5':        'Билеты на 5 разряд',
+        'tickets-6':        'Билеты на 6 разряд',
+        'library':          'Библиотека КИП и А',
+        'library-internal': 'Библиотека КИП и А',
+        'library-electro':  'Электробезопасность',
+        'devices':          'Приборы',
+        'devices-type':     'Приборы по типу',
+        'devices-name':     'Приборы по наименованию',
+        'devices-prod':     'Приборы по производствам',
+        'device-detail':    'Прибор',
+        'dev-group':        'Группа приборов',
+        'lockouts-prod':    'Блокировки',
+        'lockout-detail':   'Блокировка',
+        'lock-group':       'Группа блокировок',
+        'valves-type':      'Клапана по типу',
+        'valves-name':      'Клапана по DN',
+        'valves-prod':      'Клапана по производствам',
+        'valve-detail':     'Клапан',
+        'valve-group':      'Группа клапанов',
+        'regulators-prod':  'Регуляторы',
+        'regulator-detail': 'Регулятор',
+        'regulator-group':  'Группа регуляторов',
+        'projects-prod':    'Проекты',
+        'project-detail':   'Проект',
+        'project-group':    'Группа проектов',
+        'cable-journal-edit':   'Кабельный журнал',
+        'cable-journal-add':    'Новая запись',
+        'cable-journal-view':   'Запись',
+        'plan-114':         'План корпуса 114',
+        'plan-114-view':    'План',
+        'converter':        'Конвертер единиц',
+        'conv-pressure':    'Давление',
+        'conv-flow':        'Расход',
+        'conv-mass':        'Вес и масса',
+        'conv-temp':        'Температура',
+        'conv-length':      'Длина и расстояние',
+        'conv-density':     'Плотность',
+        'conv-time':        'Время',
+        'conv-volume':      'Объём',
+        'scale-signal':     'Шкала-сигнал',
+        'circuit-breaker':  'Автоматический выключатель',
+        'geo-circle':       'Круг',
+        'geo-ring':         'Кольцо',
+        'geo-cylinder':     'Цилиндр вертикальный',
+        'geo-horiz':        'Цилиндр горизонтальный',
+        'geo-sphere':       'Сфера',
+        'geo-cone':         'Конус',
+        'orifice-select':   'Сужающее устройство',
+        'orifice-quick':    'Быстрый расчёт диафрагмы',
+        'orifice-dp':       'Перепад давления Δp',
+        'orifice-flow':     'Расход среды Q',
+        'orifice-diameter': 'Сужающее устройство',
+        'error-select':     'Расчёт погрешности',
+        'error-pressure':   'Датчики давления',
+        'error-temp-rtd':   'Термопреобразователи',
+        'error-temp-tc':    'Термопары',
+        'error-flow':       'Расходомеры',
+        'error-level':      'Уровнемеры',
+        'error-scale':      'Весы',
+        'error-generic':    'По классу точности',
+        'error-generic-number':    'Приведённая γ — число',
+        'error-generic-underline': 'Приведённая γ — число с подчёркиванием',
+        'error-generic-circle':    'Относительная δ — число в кружке',
+        'error-generic-fraction':  'Относительная δ — дробь c/d',
+        'error-kit':        'Комплект приборов',
+        'buoy-select':      'Буйковый уровнемер',
+        'buoy-calc':        'Буйковый уровнемер',
+        'temp-sensors':     'Датчики температуры',
+        'minesweeper':      'Сапёр',
+        'phonebook':        'Телефонный справочник',
+        'admin':            'Админ-панель',
+        'admin-users':      'Пользователи',
+        'admin-sessions':   'Активные сессии',
+        'admin-logs':       'Журнал событий',
+        'admin-stats':      'Статистика'
+    };
+
+    // Строит иерархический путь от корня до текущей страницы.
+    // Использует PAGE_PARENTS: поднимается от текущей страницы до корня,
+    // затем разворачивает путь сверху вниз.
+    // Формат: «Главная / Инженерные калькуляторы / КИП и А / Конвертер единиц»
+    function buildBreadcrumbPath(pageId) {
+        if (pageId === 'dashboard') return [];
+
+        const path = [];
+        let current = pageId;
+        const visited = new Set(); // защита от циклов
+
+        while (current && current !== 'dashboard' && !visited.has(current)) {
+            visited.add(current);
+            path.unshift(current); // добавляем в начало
+            current = PAGE_PARENTS[current] || null;
+        }
+
+        return path; // порядок: от корневого раздела до текущей страницы
+    }
+
+    // Обновляет хлебные крошки в заголовке страницы (только десктоп).
+    // Каждый сегмент, кроме последнего, кликабелен и ведёт на соответствующую страницу.
+    function updateDesktopBreadcrumb() {
+        if (!window.matchMedia('(min-width: 1024px)').matches) return;
+
+        const active = document.querySelector('.page-content.active');
+        if (!active) return;
+
+        const currentPage = active.id.replace('page-', '');
+        if (currentPage === 'dashboard') return; // на главной крошки не нужны
+
+        const titleEl = active.querySelector('.page-inline-header-title');
+        if (!titleEl) return;
+
+        // Сохраняем подзаголовок (если есть — например, у «Библиотека КИП и А»)
+        const subEl = titleEl.querySelector('.page-inline-header-subtitle');
+        const subHtml = subEl ? subEl.outerHTML : '';
+
+        // Строим иерархический путь по дереву PAGE_PARENTS
+        const path = buildBreadcrumbPath(currentPage);
+
+        // Строим HTML крошек: «Главная / Раздел / ... / Текущая»
+        let html = '<span class="breadcrumb-link" onclick="navigateTo(\'dashboard\', false)">Главная</span>';
+
+        for (let i = 0; i < path.length; i++) {
+            const pageId = path[i];
+            const label = PAGE_LABELS[pageId] || pageId;
+            html += '<span class="breadcrumb-sep"> / </span>';
+
+            if (i < path.length - 1) {
+                // Кликабельный сегмент — ведёт на страницу
+                html += '<span class="breadcrumb-link" onclick="navigateTo(\'' + pageId + '\', false)">' + label + '</span>';
+            } else {
+                // Текущая страница — не кликабельна, жирный шрифт
+                html += '<span class="breadcrumb-current">' + label + '</span>';
+            }
+        }
+
+        // Если есть подзаголовок — сохраняем его
+        if (subHtml) {
+            html += subHtml;
+        }
+
+        titleEl.innerHTML = html;
     }
 
     // ============================================================
