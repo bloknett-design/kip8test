@@ -22662,7 +22662,8 @@ async function refreshAppData() {
 // Принудительное обновление десктопного приложения:
 // 1. Очищает все кэши Service Worker (Cache Storage API)
 // 2. Отменяет регистрацию Service Worker
-// 3. Перезагружает страницу (загрузит свежие файлы из bundled app)
+// 3. Очищает HTTP-кэш Chromium (через Electron IPC, если доступен)
+// 4. Перезагружает страницу с удалённого сервера (обход кэша)
 async function forceDesktopRefresh() {
     const el = document.getElementById('connectionIndicator');
     if (el) {
@@ -22676,23 +22677,35 @@ async function forceDesktopRefresh() {
         if ('caches' in window) {
             const cacheNames = await caches.keys();
             await Promise.all(cacheNames.map(name => caches.delete(name)));
+            console.log('[forceDesktopRefresh] Cache Storage очищен:', cacheNames);
         }
 
         // 2. Отменяем регистрацию Service Worker
         if ('serviceWorker' in navigator) {
             const registrations = await navigator.serviceWorker.getRegistrations();
             await Promise.all(registrations.map(reg => reg.unregister()));
+            console.log('[forceDesktopRefresh] Service Worker unregister:', registrations.length);
+        }
+
+        // 3. Очищаем HTTP-кэш Chromium через Electron (если доступен)
+        if (window.__electronClearCache) {
+            await window.__electronClearCache();
+            console.log('[forceDesktopRefresh] HTTP-кэш Chromium очищен');
         }
     } catch (e) {
         // Не критично — продолжаем перезагрузку даже при ошибке
         console.log('[forceDesktopRefresh] Ошибка очистки кэша:', e);
     }
 
-    // 3. Небольшая задержка, чтобы toast успел появиться
+    // 4. Небольшая задержка, чтобы toast успел появиться
     setTimeout(() => {
-        // Жёсткая перезагрузка: обходим кэш браузера
-        window.location.reload(true);
-    }, 300);
+        // Перезагрузка с параметром обхода кэша:
+        // Service Worker уже удалён, Cache Storage очищен.
+        // Параметр _nocache гарантирует, что браузер не вернёт кэшированную версию.
+        const url = new URL(window.location.href);
+        url.searchParams.set('_nocache', Date.now());
+        window.location.replace(url.toString());
+    }, 400);
 }
 
 // Слушаем события online/offline

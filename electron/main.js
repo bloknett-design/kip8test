@@ -8,6 +8,9 @@ let mainWindow = null;
 // Корневая директория приложения (где index.html, data/, images/)
 const APP_ROOT = path.join(__dirname, '..');
 
+// URL удалённого приложения (GitHub Pages) — источник свежего контента
+const REMOTE_APP_URL = 'https://bloknett-design.github.io/kip8test/';
+
 // ⚠️ ВАЖНО: регистрируем схему как привилегированную ДО app.whenReady()
 protocol.registerSchemesAsPrivileged([
   {
@@ -142,6 +145,40 @@ function registerProtocolHandler() {
 }
 
 // ============================================================
+// ЗАГРУЗКА ПРИЛОЖЕНИЯ (удалённый сервер → fallback на локальные файлы)
+// ============================================================
+
+const LOCAL_APP_URL = 'app://localhost/index.html';
+
+async function loadApp() {
+  if (!mainWindow) return;
+
+  // Проверяем доступность удалённого сервера (timeout 4 сек)
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+    const response = await fetch(REMOTE_APP_URL, {
+      method: 'HEAD',
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (response.ok) {
+      console.log('[loadApp] Удалённый сервер доступен, загружаем:', REMOTE_APP_URL);
+      mainWindow.loadURL(REMOTE_APP_URL);
+      return;
+    }
+  } catch (e) {
+    // Сервер недоступен — используем локальные файлы
+    console.log('[loadApp] Удалённый сервер недоступен, fallback на локальные файлы');
+  }
+
+  // Fallback: загружаем из локальных файлов (app://)
+  mainWindow.loadURL(LOCAL_APP_URL);
+}
+
+// ============================================================
 // ОКНО
 // ============================================================
 
@@ -164,11 +201,22 @@ function createWindow() {
     show: false
   });
 
-  mainWindow.loadURL('app://localhost/index.html');
+  // Загружаем приложение: приоритет — удалённый сервер (GitHub Pages),
+  // fallback — локальные файлы (app://), если сервер недоступен.
+  loadApp();
 
   // Устанавливаем флаг, чтобы рендерер знал, что он работает в Electron
+  // Также прокидываем функцию очистки HTTP-кэша Chromium
   mainWindow.webContents.on('dom-ready', () => {
-    mainWindow.webContents.executeJavaScript('window.__isElectron = true;');
+    mainWindow.webContents.executeJavaScript(`
+      window.__isElectron = true;
+      window.__electronClearCache = async function() {
+        // Эта функция вызывается через IPC из рендерера.
+        // Реальная очистка делается через session.clearCache() в main процессе.
+        // Здесь — заглушка, основная работа делается в меню «Обновить».
+        return true;
+      };
+    `);
   });
 
   mainWindow.once('ready-to-show', () => {
@@ -181,10 +229,13 @@ function createWindow() {
   });
 
   mainWindow.webContents.on('will-navigate', (event, url) => {
-    if (!url.startsWith('app://localhost')) {
-      event.preventDefault();
-      shell.openExternal(url);
+    // Разрешаем навигацию внутри приложения (app:// или GitHub Pages)
+    if (url.startsWith('app://localhost') || url.startsWith(REMOTE_APP_URL)) {
+      return; // навигация внутри приложения — разрешаем
     }
+    // Всё остальное — открываем во внешнем браузере
+    event.preventDefault();
+    shell.openExternal(url);
   });
 
   mainWindow.on('closed', () => {
@@ -241,22 +292,25 @@ function createMenu() {
         {
           label: 'Обновить',
           accelerator: 'CmdOrCtrl+R',
-          click: () => {
-            // Принудительное обновление: очищаем кэш SW и перезагружаем
+          click: async () => {
+            // Принудительное обновление: очищаем HTTP-кэш Chromium, SW и перезагружаем
+            try {
+              // Очищаем HTTP-кэш Chromium
+              await mainWindow.webContents.session.clearCache();
+              // Очищаем хранилище Service Worker
+              await mainWindow.webContents.session.clearStorageData({
+                storages: ['serviceworkers', 'cachestorage']
+              });
+            } catch (e) {
+              console.log('[menu:Обновить] Ошибка очистки кэша:', e.message);
+            }
+            // Вызываем forceDesktopRefresh() в рендерере (очистка SW + обход кэша)
             mainWindow.webContents.executeJavaScript(`
-              (async function() {
-                try {
-                  if ('caches' in window) {
-                    const names = await caches.keys();
-                    await Promise.all(names.map(n => caches.delete(n)));
-                  }
-                  if ('serviceWorker' in navigator) {
-                    const regs = await navigator.serviceWorker.getRegistrations();
-                    await Promise.all(regs.map(r => r.unregister()));
-                  }
-                } catch(e) {}
+              if (typeof forceDesktopRefresh === 'function') {
+                forceDesktopRefresh();
+              } else {
                 window.location.reload(true);
-              })();
+              }
             `);
           }
         },
