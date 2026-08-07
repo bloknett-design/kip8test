@@ -17058,17 +17058,47 @@
     // ДЕСКТОП: RenderDetail-InPanel — рендер в detail-panel
     // ============================================================
 
+    // Устанавливает breadcrumbs в заголовке detail-панели.
+    // pageType — тип detail-страницы ('device-detail', 'lockout-detail' и т.д.)
+    // itemName — название конкретного прибора/блокировки/клапана и т.д.
+    // Строит полный путь: «Главная / Документация / КИП ИОС / Приборы / Корпус / Прибор»
+    function setDetailBreadcrumb(pageType, itemName) {
+        const titleEl = document.getElementById('detailPanelTitle');
+        if (!titleEl) return;
+
+        // Строим иерархический путь по дереву PAGE_PARENTS
+        const path = buildBreadcrumbPath(pageType);
+
+        // Строим HTML: «Главная / ... / Родительский список / Название карточки»
+        let html = '<span class="breadcrumb-link" style="font-size:13px;" onclick="navigateTo(\'dashboard\', false)">Главная</span>';
+
+        for (let i = 0; i < path.length; i++) {
+            const pageId = path[i];
+            const label = PAGE_LABELS[pageId] || pageId;
+            html += '<span class="breadcrumb-sep"> / </span>';
+
+            // Все сегменты кликабельны — клик закрывает detail-панель и переходит
+            html += '<span class="breadcrumb-link" style="font-size:13px;" onclick="closeDetailPanel(); navigateTo(\'' + pageId + '\', false)">' + label + '</span>';
+        }
+
+        // Последний сегмент — название карточки (жирный, не кликабелен)
+        if (itemName) {
+            html += '<span class="breadcrumb-sep"> / </span>';
+            html += '<span class="breadcrumb-current" style="font-size:13px;">' + itemName + '</span>';
+        }
+
+        titleEl.innerHTML = html;
+    }
+
     function devRenderDetailInPanel() {
         const devId = window._devDetailId;
         if (!devId || !devLoaded || !devData) return;
         const dev = devData.devices.find(d => String(d['ID'] ?? '') === String(devId));
         if (!dev) return;
-        const titleEl = document.getElementById('detailPanelTitle');
         const bodyEl = document.getElementById('detailPanelBody');
         const origContent = document.getElementById('deviceDetailContent');
-        if (!titleEl || !bodyEl || !origContent) return;
+        if (!bodyEl || !origContent) return;
         const name = dev['Наименование'] || '(без названия)';
-        titleEl.textContent = name;
         // Временно подменяем целевой контейнер для рендера
         origContent.id = 'deviceDetailContent_orig';
         bodyEl.id = 'deviceDetailContent';
@@ -17078,6 +17108,8 @@
         // Открываем панель
         const panel = document.getElementById('detailPanel');
         if (panel) panel.classList.add('active');
+        // Breadcrumbs в заголовке detail-панели
+        setDetailBreadcrumb('device-detail', name);
     }
 
     function lockRenderDetailInPanel() {
@@ -17086,17 +17118,16 @@
         const origContent = document.getElementById('lockoutDetailContent');
         const origTitle = document.getElementById('lockoutDetailTitle');
         const bodyEl = document.getElementById('detailPanelBody');
-        const titleEl = document.getElementById('detailPanelTitle');
-        if (!origContent || !bodyEl || !titleEl) return;
+        if (!origContent || !bodyEl) return;
         origContent.id = 'lockoutDetailContent_orig';
         bodyEl.id = 'lockoutDetailContent';
         lockRenderDetail();
         bodyEl.id = 'detailPanelBody';
         origContent.id = 'lockoutDetailContent';
         const title = origTitle ? origTitle.textContent : 'Блокировка';
-        titleEl.textContent = title;
         const panel = document.getElementById('detailPanel');
         if (panel) panel.classList.add('active');
+        setDetailBreadcrumb('lockout-detail', title);
     }
 
     function valveRenderDetailInPanel() {
@@ -17105,17 +17136,16 @@
         const origContent = document.getElementById('valveDetailContent');
         const origTitle = document.getElementById('valveDetailTitle');
         const bodyEl = document.getElementById('detailPanelBody');
-        const titleEl = document.getElementById('detailPanelTitle');
-        if (!origContent || !bodyEl || !titleEl) return;
+        if (!origContent || !bodyEl) return;
         origContent.id = 'valveDetailContent_orig';
         bodyEl.id = 'valveDetailContent';
         valveRenderDetail();
         bodyEl.id = 'detailPanelBody';
         origContent.id = 'valveDetailContent';
         const title = origTitle ? origTitle.textContent : 'Клапан';
-        titleEl.textContent = title;
         const panel = document.getElementById('detailPanel');
         if (panel) panel.classList.add('active');
+        setDetailBreadcrumb('valve-detail', title);
     }
 
     function regulatorRenderDetailInPanel() {
@@ -17124,17 +17154,16 @@
         const origContent = document.getElementById('regulatorDetailContent');
         const origTitle = document.getElementById('regulatorDetailTitle');
         const bodyEl = document.getElementById('detailPanelBody');
-        const titleEl = document.getElementById('detailPanelTitle');
-        if (!origContent || !bodyEl || !titleEl) return;
+        if (!origContent || !bodyEl) return;
         origContent.id = 'regulatorDetailContent_orig';
         bodyEl.id = 'regulatorDetailContent';
         regulatorRenderDetail();
         bodyEl.id = 'detailPanelBody';
         origContent.id = 'regulatorDetailContent';
         const title = origTitle ? origTitle.textContent : 'Регулятор';
-        titleEl.textContent = title;
         const panel = document.getElementById('detailPanel');
         if (panel) panel.classList.add('active');
+        setDetailBreadcrumb('regulator-detail', title);
     }
 
     function projectRenderDetailInPanel() {
@@ -17143,27 +17172,25 @@
         const origContent = document.getElementById('projectDetailContent');
         const origTitle = document.getElementById('projectDetailTitle');
         const bodyEl = document.getElementById('detailPanelBody');
-        const titleEl = document.getElementById('detailPanelTitle');
-        if (!origContent || !bodyEl || !titleEl) return;
+        if (!origContent || !bodyEl) return;
         origContent.id = 'projectDetailContent_orig';
         bodyEl.id = 'projectDetailContent';
         projectRenderDetail();
         bodyEl.id = 'detailPanelBody';
         origContent.id = 'projectDetailContent';
         const title = origTitle ? origTitle.textContent : 'Проект';
-        titleEl.textContent = title;
         const panel = document.getElementById('detailPanel');
         if (panel) panel.classList.add('active');
+        setDetailBreadcrumb('project-detail', title);
     }
 
     function cableRenderDetailInPanel() {
         if (typeof KipCableJournal === 'undefined' || !KipCableJournal._viewing) return;
         const row = KipCableJournal._viewing;
-        const titleEl = document.getElementById('detailPanelTitle');
         const bodyEl = document.getElementById('detailPanelBody');
-        if (!titleEl || !bodyEl) return;
+        if (!bodyEl) return;
         const rowNum = row['№ п/п'] || row['Номер'] || '';
-        titleEl.textContent = 'Кабель' + (rowNum ? ' №' + rowNum : '');
+        const cableTitle = 'Кабель' + (rowNum ? ' №' + rowNum : '');
         // Рендерим поля кабельной записи в detail-panel
         let html = '<div class="dev-detail-card">';
         const fields = [
@@ -17191,6 +17218,8 @@
         // Открываем панель
         const panel = document.getElementById('detailPanel');
         if (panel) panel.classList.add('active');
+        // Breadcrumbs в заголовке detail-панели
+        setDetailBreadcrumb('cable-journal-view', cableTitle);
     }
 
     function toggleSidebar() {
