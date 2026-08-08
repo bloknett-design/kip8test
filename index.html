@@ -5780,10 +5780,11 @@
 
         /* --- Detail Breadcrumb Bar (полноэкранная строка пути) --- */
         /* Стилизована как page-inline-header: шеврон слева, крошки по центру, ✕ справа */
+        /* position: relative (не sticky) — в flex-столбце #mainApp без скролла
+           sticky не нужен и может вызывать наложение на #desktopTopBar */
         #detailBreadcrumbBar {
             display: none;
-            position: sticky;
-            top: 0;
+            position: relative;
             z-index: 25;
             background: var(--header-bg);
             backdrop-filter: blur(20px);
@@ -10867,6 +10868,8 @@
         const titleEl = document.getElementById('devGroupTitle');
         if (!list) return;
         if (titleEl) titleEl.textContent = group || 'Приборы';
+        // На десктопе: заменить заголовок на полные хлебные крошки
+        if (isDesktop()) updateDesktopBreadcrumb(null, group || 'Приборы');
 
         if (!devLoaded || !devData) {
             list.innerHTML = '<div class="pb-empty">Загрузка…</div>';
@@ -11283,6 +11286,8 @@
         const titleEl = document.getElementById('lockGroupTitle');
         if (!list) return;
         if (titleEl) titleEl.textContent = group || 'Блокировки';
+        // На десктопе: заменить заголовок на полные хлебные крошки
+        if (isDesktop()) updateDesktopBreadcrumb(null, group || 'Блокировки');
 
         if (!lockLoaded || !lockData) {
             list.innerHTML = '<div class="pb-empty">Загрузка…</div>';
@@ -11808,6 +11813,8 @@
             pageTitle = group || 'Клапана';
         }
         if (titleEl) titleEl.textContent = pageTitle;
+        // На десктопе: заменить заголовок на полные хлебные крошки
+        if (isDesktop()) updateDesktopBreadcrumb(null, pageTitle);
 
         if (!valveLoaded || !valveData) {
             list.innerHTML = '<div class="pb-empty">Загрузка…</div>';
@@ -12544,6 +12551,8 @@
         const titleEl = document.getElementById('regulatorGroupTitle');
         if (!list) return;
         if (titleEl) titleEl.textContent = group || 'Регуляторы';
+        // На десктопе: заменить заголовок на полные хлебные крошки
+        if (isDesktop()) updateDesktopBreadcrumb(null, group || 'Регуляторы');
 
         if (!regulatorLoaded || !regulatorData) {
             list.innerHTML = '<div class="pb-empty">Загрузка…</div>';
@@ -13118,6 +13127,8 @@
         const titleEl = document.getElementById('projectGroupTitle');
         if (!list) return;
         if (titleEl) titleEl.textContent = group || 'Проекты';
+        // На десктопе: заменить заголовок на полные хлебные крошки
+        if (isDesktop()) updateDesktopBreadcrumb(null, group || 'Проекты');
 
         if (!projectLoaded || !projectData) {
             list.innerHTML = '<div class="pb-empty">Загрузка…</div>';
@@ -15808,7 +15819,9 @@
     // Каждый сегмент, кроме последнего, кликабелен и ведёт на соответствующую страницу.
     // Параметр virtualPage — виртуальная страница (например, 'device-detail'),
     // добавляемая в конец пути, если detail-панель открыта поверх текущей страницы.
-    function updateDesktopBreadcrumb(virtualPage) {
+    // customCurrentLabel — если задана, заменяет метку последнего сегмента
+    //   (например, реальное название группы вместо «Группа приборов»).
+    function updateDesktopBreadcrumb(virtualPage, customCurrentLabel) {
         if (!window.matchMedia('(min-width: 1024px)').matches) return;
 
         const active = document.querySelector('.page-content.active');
@@ -15839,10 +15852,12 @@
 
         for (let i = 0; i < path.length; i++) {
             const pageId = path[i];
-            const label = PAGE_LABELS[pageId] || pageId;
+            // Последний сегмент: используем customCurrentLabel если задана
+            const isLast = (i === path.length - 1);
+            const label = (isLast && customCurrentLabel) ? customCurrentLabel : (PAGE_LABELS[pageId] || pageId);
             html += '<span class="breadcrumb-sep"> / </span>';
 
-            if (i < path.length - 1) {
+            if (!isLast) {
                 // Кликабельный сегмент — ведёт на страницу
                 html += '<span class="breadcrumb-link" onclick="navigateTo(\'' + pageId + '\', false)">' + label + '</span>';
             } else {
