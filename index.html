@@ -4512,6 +4512,7 @@
     }
     /* Карточка прибора — без рамки, с разделителем снизу */
     .dev-card {
+        position: relative;
         margin: 0;
         border: none;
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
@@ -5122,10 +5123,10 @@
     [data-theme="light"] .dev-detail-fav-btn { color: rgba(42,93,143,0.45); background: rgba(0,0,0,0.06); }
     [data-theme="light"] .dev-detail-fav-btn.active { color: #b8860b; filter: drop-shadow(0 0 4px rgba(184,134,11,0.4)); }
 
-    /* === Значок избранного на карточке в списке (правый верхний угол картинки) === */
+    /* === Значок избранного на карточке в списке (правый верхний угол карточки) === */
     .dev-card-fav-btn {
         position: absolute;
-        top: 6px; right: 6px;
+        top: 8px; right: 8px;
         width: 28px; height: 28px;
         display: flex; align-items: center; justify-content: center;
         border: none; background: rgba(0,0,0,0.3); cursor: pointer;
@@ -10403,12 +10404,12 @@
             const finalImgUrl = imgUrl || DEV_PLACEHOLDER_SVG;
 
             html += '<div class="dev-card" data-dev-id="' + devEsc(devId) + '">';
+            html += KipFav._cardFavBtnHtml(devId);
             html += '<div class="dev-card-header" onclick="devOpenDetail(\'' + devEsc(devId) + '\')">';
             html += '<div class="dev-card-header-inner">';
             html += '<div class="dev-card-image-wrap">';
             html += '<img class="dev-card-image" src="' + devEsc(finalImgUrl) + '" alt="' + devEsc(name) + '" loading="lazy">';
             html += '<div class="dev-card-name-overlay">' + devMark(name, query) + '</div>';
-            html += KipFav._cardFavBtnHtml(devId);
             html += '</div>'; // .dev-card-image-wrap
             html += '<div class="dev-card-text">';
             html += '<div class="dev-card-title">' + devMark(name, query) + '</div>';
@@ -11134,6 +11135,7 @@
                     const imgUrl = devGetImageUrl(dev);
 
                     html += '<div class="dev-card" data-dev-id="' + devEsc(devId) + '" data-mode="' + mode + '">';
+                    html += KipFav._cardFavBtnHtml(devId);
                     html += '<div class="dev-card-header" onclick="devOpenDetail(\'' + devEsc(devId) + '\')">';
                     html += '<div class="dev-card-header-inner">';
                     html += '<div class="dev-card-image-wrap">';
@@ -11142,7 +11144,6 @@
                     if (!hideNameInCard) {
                         html += '<div class="dev-card-name-overlay">' + devMark(name, query) + '</div>';
                     }
-                    html += KipFav._cardFavBtnHtml(devId);
                     html += '</div>';
                     html += '<div class="dev-card-text">';
                     // Имя показываем в карточке только если оно не дублирует заголовок подгруппы.
@@ -11317,6 +11318,7 @@
                 const imgUrl = devGetImageUrl(dev);
 
                 html += '<div class="dev-card" data-dev-id="' + devEsc(devId) + '" data-mode="' + mode + '">';
+                html += KipFav._cardFavBtnHtml(devId);
                 html += '<div class="dev-card-header" onclick="devOpenDetail(\'' + devEsc(devId) + '\')">';
                 html += '<div class="dev-card-header-inner">';
                 html += '<div class="dev-card-image-wrap">';
@@ -11325,7 +11327,6 @@
                 if (!hideNameInCard) {
                     html += '<div class="dev-card-name-overlay">' + devEsc(name) + '</div>';
                 }
-                html += KipFav._cardFavBtnHtml(devId);
                 html += '</div>';
                 html += '<div class="dev-card-text">';
                 // Имя показываем в карточке только если оно не дублирует заголовок подгруппы.
@@ -22415,13 +22416,12 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 const note = KipFavNotes.get(devId);
 
                 html += '<div class="dev-card" data-dev-id="' + self._esc(devId) + '">';
+                html += self._cardFavBtnHtml(devId);
                 html += '<div class="dev-card-header" onclick="KipFav.openDeviceFromFav(\'' + safeId + '\')">';
                 html += '<div class="dev-card-header-inner">';
                 html += '<div class="dev-card-image-wrap">';
                 html += '<img class="dev-card-image" src="' + self._esc(imgSrc) + '" alt="' + self._esc(devName) + '" loading="lazy">';
                 html += '<div class="dev-card-name-overlay">' + self._esc(devName) + '</div>';
-                // Значок избранного на карточке (для снятия прямо из списка)
-                html += self._cardFavBtnHtml(devId);
                 html += '</div>'; // .dev-card-image-wrap
                 html += '<div class="dev-card-text">';
                 html += '<div class="dev-card-title">' + self._esc(devName) + '</div>';
