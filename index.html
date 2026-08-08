@@ -1065,16 +1065,16 @@
     .query-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; pointer-events: none; }
     
     .toast {
-        position: fixed; top: env(safe-area-inset-top, 0px); left: 8px; right: 8px;
-        height: 56px;
-        background: rgba(30, 42, 56, 0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-        color: #e0e0e0; padding: 0 16px; border-radius: 0 0 12px 12px; display: flex; align-items: center; gap: 8px;
-        font-size: 13px; z-index: 200; transform: translateY(-100%); opacity: 0;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(74, 143, 199, 0.2); border-top: none;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        position: fixed; top: env(safe-area-inset-top, 0px); left: 10px; right: 10px;
+        height: 38px;
+        background: rgba(30, 42, 56, 0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        color: #d0d0d0; padding: 0 12px; border-radius: 0 0 8px 8px; display: flex; align-items: center; gap: 6px;
+        font-size: 12px; z-index: 200; transform: translateY(-100%); opacity: 0;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(74, 143, 199, 0.15); border-top: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
     .toast.show { transform: translateY(0); opacity: 1; }
-    .toast svg { width: 18px; height: 18px; stroke: #4ac771; fill: none; stroke-width: 2; stroke-linecap: round; }
+    .toast svg { width: 14px; height: 14px; stroke: #4ac771; fill: none; stroke-width: 2; stroke-linecap: round; }
     
 
     
@@ -7034,20 +7034,14 @@
         </div>
     </header>
 
-    <!-- Кнопка обновления — фиксированная позиция в самом верхнем правом углу.
-         Поверх всех элементов (z-index: 9999), не зависит от шапки.
-         Онлайн: зелёное облако (3 выступа). Офлайн: красное облако + перечёркивание.
-         Обновление: оранжевые вращающиеся стрелки (без облака). -->
-    <div class="connection-indicator" id="connectionIndicator" title="Обновить данные"
-         onclick="refreshAppData()" role="button" aria-label="Обновить данные приложения">
-        <!-- Облако с 3 выступами (видно в онлайн/офлайн) -->
+    <!-- connectionIndicator — скрытый элемент, нужен только для JS-ссылок.
+         Кнопка обновления убрана из верхнего бара; обновление — через боковое меню. -->
+    <div class="connection-indicator" id="connectionIndicator" style="display:none !important;"
+         title="Обновить данные" role="button" aria-label="Обновить данные приложения">
         <svg class="icon-cloud" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <!-- Асимметричное облако: слева маленький, в центре средний, справа большой выступ -->
             <path d="M5 18 a3 3 0 0 1 0-6 a4.5 4.5 0 0 1 8-2 a6 6 0 0 1 7 8 H5z"/>
-            <!-- Диагональная линия: верхний выступ минимальный -->
             <line class="cloud-cross" x1="6" y1="7" x2="19.5" y2="20"/>
         </svg>
-        <!-- Стрелки обновления (видны только при обновлении, вращаются) -->
         <svg class="icon-refresh" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <polyline points="23 4 23 10 17 10"/>
             <polyline points="1 20 1 14 7 14"/>
@@ -24534,7 +24528,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:#c77ae0;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             <span>Админ-панель</span>
         </div>
-        <div class="sidebar-item" onclick="refreshAppData(); toggleSidebar();">
+        <div class="sidebar-item" onclick="forceFullRefresh(); toggleSidebar();">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:#7ec699;"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>
             <span>Обновить</span>
         </div>
         <div class="sidebar-item" onclick="toggleTheme(); toggleSidebar();">
@@ -24703,6 +24698,41 @@ async function refreshAppData() {
     }
 }
 
+// Полное обновление приложения (из бокового меню).
+// Работает на всех платформах (мобильная PWA + десктоп Electron).
+// Очищает кэш Service Worker, unregister SW и перезагружает страницу.
+async function forceFullRefresh() {
+    showToast('Обновление…');
+
+    try {
+        // 1. Очищаем все кэши Cache Storage
+        if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(name => caches.delete(name)));
+        }
+
+        // 2. Отменяем регистрацию Service Worker
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations.map(reg => reg.unregister()));
+        }
+
+        // 3. Очищаем HTTP-кэш Chromium через Electron (если доступен)
+        if (window.__electronClearCache) {
+            await window.__electronClearCache();
+        }
+    } catch (e) {
+        console.log('[forceFullRefresh] Ошибка очистки кэша:', e);
+    }
+
+    // 4. Перезагрузка с параметром обхода кэша
+    setTimeout(() => {
+        const url = new URL(window.location.href);
+        url.searchParams.set('_nocache', Date.now());
+        window.location.replace(url.toString());
+    }, 400);
+}
+
 // Принудительное обновление десктопного приложения:
 // 1. Очищает все кэши Service Worker (Cache Storage API)
 // 2. Отменяет регистрацию Service Worker
@@ -24802,49 +24832,7 @@ window.addEventListener('load', function() {
     setTimeout(periodicConnectionCheck, 3000);
 });
 
-// ============================================================
-// Pull-to-refresh — свайп вниз для обновления (упрощённая версия)
-// ============================================================
-// Без визуального индикатора и анимации — просто вызывает
-// refreshAppData() (ту же функцию, что и кнопка обновления).
-// Срабатывает при свайпе вниз с самого верха страницы (scrollY=0).
-(function() {
-    let ptrStartY = 0;
-    let ptrPulling = false;
-    let ptrCurrentY = 0;
-    const PTR_THRESHOLD = 50;  // минимальное расстояние свайпа (px)
-
-    document.addEventListener('touchstart', function(e) {
-        if (e.touches.length !== 1) return;
-        if (window.scrollY > 0) return;
-        if (document.body.classList.contains('ticket-open')) return;
-        if (document.body.classList.contains('ticket-img-viewing')) return;
-        ptrStartY = e.touches[0].clientY;
-        ptrPulling = true;
-        ptrCurrentY = ptrStartY;
-    }, { passive: true });
-
-    document.addEventListener('touchmove', function(e) {
-        if (!ptrPulling) return;
-        ptrCurrentY = e.touches[0].clientY;
-    }, { passive: true });
-
-    document.addEventListener('touchend', function(e) {
-        if (!ptrPulling) return;
-        ptrPulling = false;
-        const diff = ptrCurrentY - ptrStartY;
-        // Если свайп вниз достаточный — запускаем обновление
-        // (ту же функцию, что и кнопка обновления в шторке и значок в углу)
-        if (diff >= PTR_THRESHOLD) {
-            refreshAppData();
-        }
-    }, { passive: true });
-
-    // Сброс при прерывании касания (звонок, уведомление и т.д.)
-    document.addEventListener('touchcancel', function() {
-        ptrPulling = false;
-    }, { passive: true });
-})();
+// Pull-to-refresh удалён — обновление только через кнопку в боковом меню.
 </script>
 
 <!-- About Modal -->
