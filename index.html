@@ -1950,6 +1950,66 @@
     [data-theme="light"] .about-modal-desc { color: rgba(0,0,0,0.4); border-top-color: rgba(0,0,0,0.08); }
     [data-theme="light"] .about-modal-close svg { stroke: rgba(0,0,0,0.5); }
 
+    /* ====== Кастомные диалоги (kipConfirm / kipPrompt) ====== */
+    .kip-dialog-overlay {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.55); z-index: 1100;
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0; pointer-events: none; transition: opacity 0.2s;
+        backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    }
+    .kip-dialog-overlay.active { opacity: 1; pointer-events: auto; }
+    .kip-dialog {
+        background: rgba(26, 34, 51, 0.98); border: 1px solid rgba(74, 143, 199, 0.25);
+        border-radius: 14px; padding: 22px 20px 18px; max-width: 320px; width: 88%;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    }
+    .kip-dialog-title {
+        font-size: 15px; font-weight: 600; color: #e0e0e0; margin-bottom: 10px; line-height: 1.4;
+    }
+    .kip-dialog-msg {
+        font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.5; margin-bottom: 16px;
+        white-space: pre-wrap; word-break: break-word;
+    }
+    .kip-dialog-input {
+        width: 100%; box-sizing: border-box; padding: 9px 12px; font-size: 14px;
+        border: 1px solid rgba(74, 143, 199, 0.3); border-radius: 8px;
+        background: rgba(255,255,255,0.06); color: #e0e0e0; margin-bottom: 16px;
+        outline: none; transition: border-color 0.15s;
+    }
+    .kip-dialog-input:focus { border-color: rgba(74, 143, 199, 0.6); }
+    .kip-dialog-btns {
+        display: flex; gap: 8px; justify-content: flex-end;
+    }
+    .kip-dialog-btn {
+        font-size: 13px; padding: 8px 18px; border-radius: 8px;
+        cursor: pointer; border: none; transition: background 0.15s, opacity 0.15s;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .kip-dialog-cancel {
+        background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5);
+    }
+    .kip-dialog-cancel:active { background: rgba(255,255,255,0.15); }
+    .kip-dialog-ok {
+        background: rgba(74, 143, 199, 0.25); color: #7ab3e0; font-weight: 600;
+    }
+    .kip-dialog-ok:active { background: rgba(74, 143, 199, 0.4); }
+    .kip-dialog-ok.danger {
+        background: rgba(220, 80, 80, 0.2); color: #e07070;
+    }
+    .kip-dialog-ok.danger:active { background: rgba(220, 80, 80, 0.35); }
+    [data-theme="light"] .kip-dialog { background: rgba(250, 249, 245, 0.98); border-color: rgba(20,20,19,0.12); box-shadow: 0 12px 40px rgba(0,0,0,0.15); }
+    [data-theme="light"] .kip-dialog-title { color: #1a1a1a; }
+    [data-theme="light"] .kip-dialog-msg { color: rgba(0,0,0,0.55); }
+    [data-theme="light"] .kip-dialog-input { background: rgba(0,0,0,0.04); color: #1a1a1a; border-color: rgba(0,0,0,0.15); }
+    [data-theme="light"] .kip-dialog-input:focus { border-color: rgba(42, 93, 143, 0.5); }
+    [data-theme="light"] .kip-dialog-cancel { background: rgba(0,0,0,0.06); color: rgba(0,0,0,0.45); }
+    [data-theme="light"] .kip-dialog-cancel:active { background: rgba(0,0,0,0.12); }
+    [data-theme="light"] .kip-dialog-ok { background: rgba(42, 93, 143, 0.15); color: #2a5d8f; }
+    [data-theme="light"] .kip-dialog-ok:active { background: rgba(42, 93, 143, 0.25); }
+    [data-theme="light"] .kip-dialog-ok.danger { background: rgba(180, 40, 40, 0.1); color: #a83030; }
+    [data-theme="light"] .kip-dialog-ok.danger:active { background: rgba(180, 40, 40, 0.2); }
+
     /* ====== Admin: модалка создания пользователя ====== */
     .create-user-overlay {
         position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -5165,6 +5225,21 @@
     .dev-fav-count {
         font-size: 13px; color: var(--text-secondary);
     }
+    .fav-header-count {
+        font-size: 12px; color: var(--text-secondary);
+        white-space: nowrap; margin-left: auto; padding-right: 8px;
+        flex-shrink: 0;
+    }
+    .fav-header-clear-btn {
+        font-size: 11px; padding: 4px 10px;
+        border: 1px solid rgba(220,80,80,0.35); border-radius: 6px;
+        background: rgba(220,80,80,0.06); color: #d05050;
+        cursor: pointer; transition: background 0.15s;
+        -webkit-tap-highlight-color: transparent;
+        flex-shrink: 0; white-space: nowrap;
+    }
+    .fav-header-clear-btn:active { background: rgba(220,80,80,0.15); }
+    [data-theme="light"] .fav-header-clear-btn { border-color: rgba(180,40,40,0.3); background: rgba(180,40,40,0.04); color: #a83030; }
     .dev-fav-clear-btn {
         font-size: 12px; padding: 5px 12px;
         border: 1px solid rgba(220,80,80,0.35); border-radius: 6px;
@@ -5175,6 +5250,12 @@
     .dev-fav-clear-btn:active { background: rgba(220,80,80,0.15); }
     [data-theme="light"] .dev-fav-clear-btn { border-color: rgba(180,40,40,0.3); background: rgba(180,40,40,0.04); color: #a83030; }
 
+    /* === Зебра карточек избранного === */
+    .fav-card-cell:nth-child(odd) { background: rgba(40, 50, 65, 0.96); }
+    .fav-card-cell:nth-child(even) { background: rgba(55, 68, 85, 0.96); }
+    [data-theme="light"] .fav-card-cell:nth-child(odd) { background: rgba(220, 213, 200, 0.94); }
+    [data-theme="light"] .fav-card-cell:nth-child(even) { background: rgba(252, 248, 240, 0.97); }
+
     /* === Заметка к избранному прибору === */
     .dev-fav-note-row {
         display: flex; align-items: flex-start; gap: 6px;
@@ -5182,22 +5263,23 @@
         background: rgba(199,150,74,0.06);
         border-top: 1px solid rgba(199,150,74,0.1);
         color: #b89a5a; font-size: 12px; line-height: 1.45;
+        cursor: pointer; transition: background 0.15s;
+        -webkit-tap-highlight-color: transparent;
     }
+    .dev-fav-note-row:active { background: rgba(199,150,74,0.12); }
     .dev-fav-note-row svg { flex-shrink: 0; margin-top: 1px; opacity: 0.7; }
     .dev-fav-note-text { word-break: break-word; }
-    .dev-fav-note-action {
-        display: flex; align-items: center; gap: 5px;
-        padding: 5px 14px;
+    .dev-fav-note-add {
+        padding: 4px 14px 6px;
         border-top: 1px solid var(--border-color);
         color: var(--text-tertiary); font-size: 11px;
         cursor: pointer; transition: color 0.15s, background 0.15s;
         -webkit-tap-highlight-color: transparent;
     }
-    .dev-fav-note-action:active { background: rgba(199,150,74,0.08); }
-    .dev-fav-note-action svg { flex-shrink: 0; opacity: 0.6; }
-    .dev-fav-note-action:hover { color: #c7964a; }
+    .dev-fav-note-add:active { color: #c7964a; }
     [data-theme="light"] .dev-fav-note-row { background: rgba(184,134,11,0.04); border-top-color: rgba(184,134,11,0.08); color: #8a6d2b; }
-    [data-theme="light"] .dev-fav-note-action:hover { color: #8a6d2b; }
+    [data-theme="light"] .dev-fav-note-row:active { background: rgba(184,134,11,0.1); }
+    [data-theme="light"] .dev-fav-note-add:active { color: #8a6d2b; }
 
     /* === Карточка избранного — картинка в верхнем левом углу === */
     .fav-card {
@@ -7276,7 +7358,7 @@
 
         <!-- ======================== ИЗБРАННОЕ ======================== -->
         <div id="page-device-favorites" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Избранное</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Избранное</div><span id="favHeaderCount" class="fav-header-count" style="display:none;"></span><button type="button" id="favHeaderClearBtn" class="fav-header-clear-btn" style="display:none;" onclick="KipFav.clearAll()">Удалить все</button></div>
             <div id="deviceFavoritesContent"></div>
         </div>
 
@@ -10144,19 +10226,20 @@
         const currentNote = pbGetNote(id);
         const newName = card.querySelector('.pb-card-name')?.textContent || 'этот контакт';
         const promptText = 'Примечание для: ' + newName + '\n\n(оставьте пустым, чтобы удалить)';
-        const newNote = prompt(promptText, currentNote);
-        // prompt возвращает null при отмене
-        if (newNote === null) return;
-        const trimmed = newNote.trim();
-        if (trimmed) {
-            pbNotes[id] = trimmed;
-        } else {
-            delete pbNotes[id];
-        }
-        pbSaveNotes();
-        if (navigator.vibrate) navigator.vibrate(25);
-        // Пере-рендер карточки (или всего списка — проще)
-        pbRender();
+        kipPrompt(promptText, currentNote).then(function(newNote) {
+            // null = отмена
+            if (newNote === null) return;
+            const trimmed = newNote.trim();
+            if (trimmed) {
+                pbNotes[id] = trimmed;
+            } else {
+                delete pbNotes[id];
+            }
+            pbSaveNotes();
+            if (navigator.vibrate) navigator.vibrate(25);
+            // Пере-рендер карточки (или всего списка — проще)
+            pbRender();
+        });
     }
 
     // Состояние раскрытых секций в обычном режиме (без поиска).
@@ -10675,20 +10758,21 @@
             msg += '  ' + types[i] + '\n';
         }
         if (types.length > 15) msg += '  ... и ещё ' + (types.length - 15) + '\n';
-        const input = prompt(msg, devFilterType || '');
-        if (input === null) return;
-        const trimmed = input.trim();
-        if (!trimmed) {
-            devFilterType = null;
-        } else {
-            // Точное совпадение или частичное
-            const exact = types.find(t => t.toLowerCase() === trimmed.toLowerCase());
-            devFilterType = exact || trimmed;
-        }
-        // Сброс пагинации
-        devVisibleCount = DEV_DEFAULT_LIMIT;
-        if (navigator.vibrate) navigator.vibrate(25);
-        devRender();
+        kipPrompt(msg, devFilterType || '').then(function(input) {
+            if (input === null) return;
+            const trimmed = input.trim();
+            if (!trimmed) {
+                devFilterType = null;
+            } else {
+                // Точное совпадение или частичное
+                const exact = types.find(t => t.toLowerCase() === trimmed.toLowerCase());
+                devFilterType = exact || trimmed;
+            }
+            // Сброс пагинации
+            devVisibleCount = DEV_DEFAULT_LIMIT;
+            if (navigator.vibrate) navigator.vibrate(25);
+            devRender();
+        });
     }
 
     // Конвертация Excel serial date (число дней с 1899-12-30) в формат DD.MM.YYYY
@@ -18496,6 +18580,91 @@ function showToast(msg, actionText, actionFn) {
     t._hideTimer = setTimeout(() => { t.classList.remove('show'); a.style.display = 'none'; a.onclick = null; }, 3000);
 }
 
+// ============================================================
+// Кастомные диалоги kipConfirm / kipPrompt
+// Заменяют нативные confirm()/prompt(), чтобы убрать
+// «Подтвердите действие на bloknett-design.github.io»
+// ============================================================
+
+/** Получить или создать общий оверлей для кастомных диалогов. */
+function _kipDialogOverlay() {
+    let ov = document.getElementById('kipDialogOverlay');
+    if (ov) return ov;
+    ov = document.createElement('div');
+    ov.id = 'kipDialogOverlay';
+    ov.className = 'kip-dialog-overlay';
+    document.body.appendChild(ov);
+    return ov;
+}
+
+/** Закрыть диалог и вернуть результат. */
+function _kipDialogClose(ov, resolve, value) {
+    ov.classList.remove('active');
+    setTimeout(function() { ov.innerHTML = ''; }, 250);
+    resolve(value);
+}
+
+/**
+ * Кастомный confirm-диалог.
+ * @param {string} msg — текст вопроса
+ * @param {object} [opts] — { danger: true } — красная кнопка OK
+ * @returns {Promise<boolean>}
+ */
+function kipConfirm(msg, opts) {
+    opts = opts || {};
+    return new Promise(function(resolve) {
+        var ov = _kipDialogOverlay();
+        var dangerCls = opts.danger ? ' danger' : '';
+        ov.innerHTML =
+            '<div class="kip-dialog">' +
+                '<div class="kip-dialog-title">Подтвердите действие</div>' +
+                '<div class="kip-dialog-msg">' + (msg || '').replace(/</g,'&lt;') + '</div>' +
+                '<div class="kip-dialog-btns">' +
+                    '<button type="button" class="kip-dialog-btn kip-dialog-cancel">Отмена</button>' +
+                    '<button type="button" class="kip-dialog-btn kip-dialog-ok' + dangerCls + '">OK</button>' +
+                '</div>' +
+            '</div>';
+        ov.querySelector('.kip-dialog-cancel').onclick = function() { _kipDialogClose(ov, resolve, false); };
+        ov.querySelector('.kip-dialog-ok').onclick = function() { _kipDialogClose(ov, resolve, true); };
+        requestAnimationFrame(function() { ov.classList.add('active'); });
+    });
+}
+
+/**
+ * Кастомный prompt-диалог.
+ * @param {string} msg — подсказка
+ * @param {string} [defaultVal] — значение по умолчанию
+ * @returns {Promise<string|null>} — null при отмене
+ */
+function kipPrompt(msg, defaultVal) {
+    return new Promise(function(resolve) {
+        var ov = _kipDialogOverlay();
+        var val = (defaultVal != null) ? String(defaultVal).replace(/"/g,'&quot;') : '';
+        ov.innerHTML =
+            '<div class="kip-dialog">' +
+                '<div class="kip-dialog-title">Подтвердите действие</div>' +
+                '<div class="kip-dialog-msg">' + (msg || '').replace(/</g,'&lt;') + '</div>' +
+                '<input type="text" class="kip-dialog-input" value="' + val + '">' +
+                '<div class="kip-dialog-btns">' +
+                    '<button type="button" class="kip-dialog-btn kip-dialog-cancel">Отмена</button>' +
+                    '<button type="button" class="kip-dialog-btn kip-dialog-ok">OK</button>' +
+                '</div>' +
+            '</div>';
+        var inp = ov.querySelector('.kip-dialog-input');
+        ov.querySelector('.kip-dialog-cancel').onclick = function() { _kipDialogClose(ov, resolve, null); };
+        ov.querySelector('.kip-dialog-ok').onclick = function() { _kipDialogClose(ov, resolve, inp.value); };
+        inp.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { _kipDialogClose(ov, resolve, inp.value); }
+            if (e.key === 'Escape') { _kipDialogClose(ov, resolve, null); }
+        });
+        requestAnimationFrame(function() {
+            ov.classList.add('active');
+            inp.focus();
+            inp.select();
+        });
+    });
+}
+
     // ======================== КОНВЕРТЕРЫ (полные данные) ========================
     const unitData = {
         pressure: { units: { 'Pa':{label:'Па',factor:1}, 'kPa':{label:'кПа',factor:1000}, 'MPa':{label:'МПа',factor:1000000}, 'bar':{label:'бар',factor:100000}, 'mbar':{label:'мбар',factor:100}, 'atm':{label:'атм',factor:101325}, 'kgf_cm2':{label:'кгс/см²',factor:98066.5}, 'kgf_m2':{label:'кгс/м²',factor:9.80665}, 'mmHg':{label:'мм рт. ст.',factor:133.322}, 'PSI':{label:'PSI',factor:6894.757}, 'mmH2O':{label:'мм вод. ст.',factor:9.80665} } },
@@ -22468,12 +22637,16 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             const favs = this.all();
             let html = '';
 
-            // Панель инструментов (очистить всё)
+            // Обновить элементы в верхнем баре
+            var countEl = document.getElementById('favHeaderCount');
+            var clearBtn = document.getElementById('favHeaderClearBtn');
             if (favs.length > 0) {
-                html += '<div class="dev-fav-toolbar">';
-                html += '<span class="dev-fav-count">' + favs.length + ' ' + (favs.length === 1 ? 'прибор' : (favs.length >= 2 && favs.length <= 4 ? 'прибора' : 'приборов')) + '</span>';
-                html += '<button type="button" class="dev-fav-clear-btn" onclick="KipFav.clearAll()">Удалить все</button>';
-                html += '</div>';
+                var word = favs.length === 1 ? 'прибор' : (favs.length >= 2 && favs.length <= 4 ? 'прибора' : 'приборов');
+                if (countEl) { countEl.textContent = favs.length + ' ' + word; countEl.style.display = ''; }
+                if (clearBtn) { clearBtn.style.display = ''; }
+            } else {
+                if (countEl) { countEl.style.display = 'none'; }
+                if (clearBtn) { clearBtn.style.display = 'none'; }
             }
 
             if (favs.length === 0) {
@@ -22526,17 +22699,15 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     html += '<div class="dev-card-subtitle">' + self._esc(subtitle) + '</div>';
                 }
                 html += '</div>'; // .fav-card-body
-                // Заметка
+                // Заметка — клик по заметке открывает редактирование
                 if (note) {
-                    html += '<div class="dev-fav-note-row">';
+                    html += '<div class="dev-fav-note-row" onclick="event.stopPropagation(); KipFavNotes.prompt(\'' + safeId + '\')">';
                     html += '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
                     html += '<span class="dev-fav-note-text">' + self._esc(note) + '</span>';
                     html += '</div>';
+                } else {
+                    html += '<div class="dev-fav-note-add" onclick="event.stopPropagation(); KipFavNotes.prompt(\'' + safeId + '\')">+ заметка</div>';
                 }
-                html += '<div class="dev-fav-note-action" onclick="event.stopPropagation(); KipFavNotes.prompt(\'' + safeId + '\')">';
-                html += '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
-                html += '<span>' + (note ? 'Изменить заметку' : 'Добавить заметку') + '</span>';
-                html += '</div>';
                 html += '</div>'; // .dev-card
                 html += '</div>'; // .fav-card-cell
             });
@@ -22571,7 +22742,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 card.addEventListener('pointerdown', function(e) {
                     if (e.button !== undefined && e.button !== 0) return;
                     if (e.target.closest('.dev-card-fav-btn')) return;
-                    if (e.target.closest('.dev-fav-note-action')) return;
+                    if (e.target.closest('.dev-fav-note-row')) return;
+                    if (e.target.closest('.dev-fav-note-add')) return;
                     const cell = card.closest('.fav-card-cell');
                     if (!cell) return;
                     e.preventDefault();
@@ -22704,22 +22876,25 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         // Очистить всё избранное
         // ----------------------------------------------------------
 
-        /** Удалить все избранные приборы. Вызывает confirm(). */
+        /** Удалить все избранные приборы. */
         clearAll: function() {
             if (this.count() === 0) return;
-            if (!confirm('Удалить все приборы из избранного?')) return;
-            this._load();
-            this._data = {};
-            this._save();
-            KipFavNotes.clearAll();
-            this.updateDashboardButton();
-            this.updateHeaderIcon();
-            this.initFavoritesPage();
-            if (typeof KipToast !== 'undefined' && KipToast.show) {
-                KipToast.show('Избранное очищено');
-            } else {
-                showToast('Избранное очищено');
-            }
+            var self = this;
+            kipConfirm('Удалить все приборы из избранного?', { danger: true }).then(function(ok) {
+                if (!ok) return;
+                self._load();
+                self._data = {};
+                self._save();
+                KipFavNotes.clearAll();
+                self.updateDashboardButton();
+                self.updateHeaderIcon();
+                self.initFavoritesPage();
+                if (typeof KipToast !== 'undefined' && KipToast.show) {
+                    KipToast.show('Избранное очищено');
+                } else {
+                    showToast('Избранное очищено');
+                }
+            });
         },
 
         // ----------------------------------------------------------
@@ -22813,12 +22988,14 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         prompt: function(devId) {
             if (!devId) return;
             const current = this.get(devId);
-            const result = prompt('Заметка к прибору:', current);
-            // null = отмена; пустая строка = удалить заметку
-            if (result === null) return;
-            this.set(devId, result);
-            // Обновить отображение заметки на странице избранного
-            KipFav.initFavoritesPage();
+            const self = this;
+            kipPrompt('Заметка к прибору:', current).then(function(result) {
+                // null = отмена; пустая строка = удалить заметку
+                if (result === null) return;
+                self.set(devId, result);
+                // Обновить отображение заметки на странице избранного
+                KipFav.initFavoritesPage();
+            });
         },
 
         /** Очистить все заметки (при очистке избранного). */
@@ -23799,9 +23976,11 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             if (!this._canEdit || !this._viewing) return;
             const designation = this._viewing.designation || ('Запись №' + (this._viewing.num || '?'));
             const msg = 'Удалить кабель «' + designation + '»?\nЭто действие нельзя отменить.';
-            if (confirm(msg)) {
-                this.submitDelete();
-            }
+            kipConfirm(msg, { danger: true }).then(function(ok) {
+                if (ok) {
+                    this.submitDelete();
+                }
+            }.bind(this));
         },
 
         // ============================================================
