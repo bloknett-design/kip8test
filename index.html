@@ -17395,7 +17395,11 @@
         if (!bar) return;
 
         // Строим иерархический путь по дереву PAGE_PARENTS
-        const path = buildBreadcrumbPath(pageType);
+        const fullPath = buildBreadcrumbPath(pageType);
+        // Исключаем последний сегмент (саму detail-страницу, например «Прибор»),
+        // т.к. далее добавляются группа и имя карточки — они дают точный контекст.
+        // Без этого получаем лишнюю крошку: …/ Приборы по пр-вам / Прибор / Группа / Карточка
+        const path = fullPath.slice(0, -1);
 
         // Строим HTML: «Главная / ... / Родительский список / Группа / Название карточки»
         // Font-size наследуется от #detailBreadcrumbContent (14px), inline style не нужен
