@@ -15431,6 +15431,10 @@
         if (document.body.classList.contains('ticket-open')) {
             document.body.classList.remove('ticket-open');
             document.body.style.top = '';
+            window.scrollTo(0, _savedScrollY || 0);
+        }
+        if (document.body.classList.contains('ticket-img-viewing')) {
+            closeTicketImage();
         }
         // Десктоп: сбросить состояние мастер-детали и закрыть detail-panel
         _ticketSelectedIndex = -1;
@@ -15561,6 +15565,15 @@
             document.documentElement.style.overflow = '';
             document.body.style.height = '';
             document.documentElement.style.height = '';
+            // Снять блокировку прокрутки от билетов
+            if (document.body.classList.contains('ticket-open')) {
+                document.body.classList.remove('ticket-open');
+                document.body.style.top = '';
+            }
+            if (document.body.classList.contains('ticket-img-viewing')) {
+                document.body.classList.remove('ticket-img-viewing');
+            }
+            document.querySelectorAll('.ticket-item.open').forEach(item => item.classList.remove('open'));
 
         } else {
             // === Переход на десктоп: убрать мобильные классы, инициализировать ===
@@ -15688,6 +15701,11 @@
         if (document.body.classList.contains('ticket-open')) {
             document.body.classList.remove('ticket-open');
             document.body.style.top = '';
+            window.scrollTo(0, _savedScrollY || 0);
+        }
+        // Закрыть overlay картинки билета, если открыт
+        if (document.body.classList.contains('ticket-img-viewing')) {
+            closeTicketImage();
         }
         // Закрыть все открытые билеты при навигации на другую страницу
         document.querySelectorAll('.ticket-item.open').forEach(item => {
@@ -16968,6 +16986,12 @@
             history.pushState({ page: e.state ? e.state.page : 'dashboard' }, '', location.hash || '#dashboard');
             return;
         }
+        // Если открыт overlay картинки билета — сначала закрыть его
+        if (document.body.classList.contains('ticket-img-viewing')) {
+            closeTicketImage();
+            history.pushState({ page: e.state ? e.state.page : 'dashboard' }, '', location.hash || '#dashboard');
+            return;
+        }
         // Если открыт билет — сначала закрыть его, а не уходить со страницы
         if (document.body.classList.contains('ticket-open')) {
             const openTicket = document.querySelector('.ticket-item.open');
@@ -16977,6 +17001,10 @@
                 history.pushState({ page: e.state ? e.state.page : 'dashboard' }, '', location.hash || '#dashboard');
                 return;
             }
+            // Orphaned state: ticket-open на body, но .ticket-item.open нет в DOM — очистить
+            document.body.classList.remove('ticket-open');
+            document.body.style.top = '';
+            window.scrollTo(0, _savedScrollY || 0);
         }
         let active = document.querySelector('.page-content.active');
         let currentPageId = active ? active.id.replace('page-', '') : 'dashboard';
