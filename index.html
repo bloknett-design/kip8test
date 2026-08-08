@@ -5862,7 +5862,7 @@
         }
         /* Мобильная защита: страница должна прокручиваться */
         #contentArea > .page-content.active {
-            overflow-y: visible;
+            overflow-y: auto;
             overflow-x: clip;
             height: auto;
             flex: none;
@@ -15452,7 +15452,7 @@
             // Билет закрыт — разблокировать прокрутку страницы
             document.body.classList.remove('ticket-open');
             document.body.style.top = '';
-            window.scrollTo(0, _savedScrollY);
+            requestAnimationFrame(function() { window.scrollTo(0, _savedScrollY || 0); });
             // Вернуть nav-bar и заголовок в исходное состояние только если мы сами добавили scrolled
             if (page && page.classList.contains('scrolled') && !_wasPageScrolled) {
                 page.classList.remove('scrolled');
@@ -15482,7 +15482,7 @@
             // Следующий билет не найден — разблокировать страницу
             document.body.classList.remove('ticket-open');
             document.body.style.top = '';
-            window.scrollTo(0, _savedScrollY);
+            requestAnimationFrame(function() { window.scrollTo(0, _savedScrollY || 0); });
             const page = container.closest('.page-content');
             if (page && page.classList.contains('scrolled')) {
                 page.classList.remove('scrolled');
@@ -15503,7 +15503,7 @@
         if (document.body.classList.contains('ticket-open')) {
             document.body.classList.remove('ticket-open');
             document.body.style.top = '';
-            window.scrollTo(0, _savedScrollY || 0);
+            requestAnimationFrame(function() { window.scrollTo(0, _savedScrollY || 0); });
         }
         if (document.body.classList.contains('ticket-img-viewing')) {
             closeTicketImage();
@@ -15644,6 +15644,7 @@
             if (document.body.classList.contains('ticket-open')) {
                 document.body.classList.remove('ticket-open');
                 document.body.style.top = '';
+                requestAnimationFrame(function() { window.scrollTo(0, _savedScrollY || 0); });
             }
             if (document.body.classList.contains('ticket-img-viewing')) {
                 document.body.classList.remove('ticket-img-viewing');
@@ -15777,7 +15778,7 @@
         if (document.body.classList.contains('ticket-open')) {
             document.body.classList.remove('ticket-open');
             document.body.style.top = '';
-            window.scrollTo(0, _savedScrollY || 0);
+            requestAnimationFrame(function() { window.scrollTo(0, _savedScrollY || 0); });
         }
         // Закрыть overlay картинки билета, если открыт
         if (document.body.classList.contains('ticket-img-viewing')) {
@@ -17089,7 +17090,7 @@
             // Orphaned state: ticket-open на body, но .ticket-item.open нет в DOM — очистить
             document.body.classList.remove('ticket-open');
             document.body.style.top = '';
-            window.scrollTo(0, _savedScrollY || 0);
+            requestAnimationFrame(function() { window.scrollTo(0, _savedScrollY || 0); });
         }
         let active = document.querySelector('.page-content.active');
         let currentPageId = active ? active.id.replace('page-', '') : 'dashboard';
@@ -17106,6 +17107,35 @@
             navigateTo('dashboard', false);
         }
     });
+
+    // ======================== ЗАЩИТНЫЙ АУДИТ ПРОКРУТКИ ========================
+    // На мобильных (особенно iOS Safari) классы ticket-open / ticket-img-viewing
+    // могут «утечь» на body, блокируя прокрутку на всех страницах.
+    // Этот аудит проверяет и очищает такие сиротские состояния.
+    function _auditScrollState() {
+        // Очистить сиротский ticket-open
+        if (document.body.classList.contains('ticket-open') &&
+            !document.querySelector('.ticket-item.open')) {
+            document.body.classList.remove('ticket-open');
+            document.body.style.top = '';
+            requestAnimationFrame(function() { window.scrollTo(0, _savedScrollY || 0); });
+        }
+        // Очистить сиротский ticket-img-viewing
+        if (document.body.classList.contains('ticket-img-viewing') &&
+            !document.querySelector('.ticket-img-overlay.active')) {
+            document.body.classList.remove('ticket-img-viewing');
+        }
+        // Очистить stray inline overflow:hidden
+        if (document.body.style.overflow === 'hidden') {
+            document.body.style.overflow = '';
+        }
+        if (document.documentElement.style.overflow === 'hidden') {
+            document.documentElement.style.overflow = '';
+        }
+    }
+    document.addEventListener('visibilitychange', _auditScrollState);
+    window.addEventListener('focus', _auditScrollState);
+
     // Инициализация: записать стартовую страницу в историю браузера
     history.replaceState({ page: 'dashboard' }, '', '#dashboard');
 
