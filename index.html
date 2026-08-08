@@ -5758,9 +5758,60 @@
     #detailPanel {
         display: none;
     }
-    /* --- Sidebar toggle button: скрыт на мобильном --- */
+    /* --- Sidebar toggle button: скрыт везде (мёртвый элемент, заменён десктопным бургером) --- */
     #sidebarToggleBtn {
-        display: none;
+        display: none !important;
+    }
+
+    /* ============================================================
+       ЗАЩИТА МОБИЛЬНОГО ЛЕЙАУТА (max-width: 1023px)
+       Явные стили, гарантирующие, что десктопный код не «протекает»
+       при resize или при инлайн-стилях от JS.
+       ============================================================ */
+    @media (max-width: 1023px) {
+        html, body {
+            overflow-x: hidden;
+            overflow-y: auto;
+            height: auto;
+            min-height: 100vh;
+        }
+        #mainApp {
+            display: block;
+            height: auto;
+            min-height: 100vh;
+            overflow: visible;
+        }
+        #contentArea {
+            display: block;
+            overflow: visible;
+            min-height: 0;
+        }
+        /* Десктопные элементы — принудительно скрыты на мобильном */
+        #desktopTopBar,
+        #detailBreadcrumbBar,
+        #detailPanel {
+            display: none !important;
+        }
+        /* Sidebar — только мобильное поведение (slide-in через .active) */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 280px;
+            max-width: 85vw;
+            transform: translateX(-100%);
+            z-index: 160;
+        }
+        #sidebar.desktop-open {
+            transform: translateX(-100%); /* .desktop-open не действует на мобильном */
+        }
+        #sidebar.active {
+            transform: translateX(0);
+        }
+        #sidebarOverlay.desktop-active {
+            display: none !important; /* .desktop-active не действует на мобильном */
+        }
     }
 
     @media (min-width: 1024px) {
@@ -15274,23 +15325,57 @@
         updateDesktopBreadcrumb();
     }
 
-    // Слушатель изменения размера окна — закрыть detail-panel при переходе на мобильный
+    // Слушатель изменения размера окна — полная очистка при переходе между режимами
     window.matchMedia('(min-width: 1024px)').addEventListener('change', function(e) {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebarOverlay');
         const ci = document.getElementById('connectionIndicator');
+        const mainApp = document.getElementById('mainApp');
+        const contentArea = document.getElementById('contentArea');
+
         if (!e.matches) {
-            // Переход на мобильный
+            // === Переход на мобильный: полная очистка десктопного состояния ===
             closeDetailPanel();
+
             // Убрать десктопные классы sidebar
-            if (sidebar) sidebar.classList.remove('desktop-open');
-            if (overlay) overlay.classList.remove('desktop-active');
+            if (sidebar) {
+                sidebar.classList.remove('desktop-open');
+                sidebar.classList.remove('active'); // на всякий случай
+            }
+            if (overlay) {
+                overlay.classList.remove('desktop-active');
+                overlay.classList.remove('active');
+            }
+
             // Вернуть connection indicator в body (мобильная позиция — fixed)
             if (ci && ci.parentElement && ci.parentElement.classList.contains('desktop-top-bar-right')) {
                 document.body.appendChild(ci);
+                // Восстановить мобильные стили connection indicator
+                ci.style.position = '';
+                ci.style.top = '';
+                ci.style.right = '';
+                ci.style.zIndex = '';
             }
+
+            // Очистить инлайн-стили, которые могли быть установлены десктопным JS
+            if (mainApp) {
+                mainApp.style.display = '';
+                mainApp.style.height = '';
+                mainApp.style.overflow = '';
+            }
+            if (contentArea) {
+                contentArea.style.display = '';
+                contentArea.style.overflow = '';
+                contentArea.style.flex = '';
+            }
+            // Восстановить прокрутку body
+            document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
+            document.body.style.height = '';
+            document.documentElement.style.height = '';
+
         } else {
-            // Переход на десктоп: sidebar скрыт по умолчанию
+            // === Переход на десктоп: убрать мобильные классы, инициализировать ===
             if (sidebar) sidebar.classList.remove('active');
             if (overlay) overlay.classList.remove('active');
             initDesktopSidebar();
@@ -17651,6 +17736,7 @@
 
     /** Десктоп: сворачивание/разворачивание sidebar */
     function toggleDesktopSidebar() {
+        if (!isDesktop()) return; // Защита: на мобильном не выполняется
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebarOverlay');
         if (!sidebar) return;
@@ -22933,7 +23019,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 </script>
 
 <!-- Sidebar -->
-<button type="button" id="sidebarToggleBtn" onclick="toggleDesktopSidebar()" aria-label="Свернуть/развернуть меню">
+<button type="button" id="sidebarToggleBtn" onclick="toggleSidebar()" aria-label="Свернуть/развернуть меню" style="display:none!important;">
     <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
 </button>
 <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
