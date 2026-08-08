@@ -846,7 +846,7 @@
     /* Картока закреплённого пункта — отключаем нативные жесты браузера (скролл, long-press меню).
        Без этого pointermove начинает прокрутку страницы, инициируя pointercancel — drag срывается. */
     .pinned-item {
-        touch-action: none;
+        touch-action: pan-y;
     }
     /* SWIPE-TO-DELETE: обёртка карточки с подложками «Убрать» */
     .pinned-item-cell {
@@ -4622,7 +4622,7 @@
         z-index: 1;
         background: transparent !important;
         transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        touch-action: none;
+        touch-action: pan-y;
     }
     .dev-card-fav-cell > .dev-card.swipe-active {
         transition: none;
@@ -5352,7 +5352,7 @@
         align-items: stretch;
         min-height: 56px;
         padding: 0;
-        touch-action: none;  /* отключаем нативный скролл при свайпе */
+        touch-action: pan-y;  /* вертикальный скролл разрешён, горизонтальный — нет (для свайпа) */
     }
     .fav-card-type-badge {
         display: flex; align-items: center; justify-content: center;
@@ -22908,7 +22908,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     if (e.target.closest('.dev-fav-note-add')) return;
                     const cell = card.closest('.fav-card-cell');
                     if (!cell) return;
-                    e.preventDefault();
+                    // НЕ вызываем e.preventDefault() здесь — с touch-action: pan-y он не нужен,
+                    // preventDefault вызывается в _onFavPtrMove, когда swipe уже активен.
                     const rect = card.getBoundingClientRect();
                     self._favSwipeState = {
                         card: card,
@@ -23062,7 +23063,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     if (e.target.closest('.dev-card-fav-btn')) return;
                     var card = cell.querySelector('.dev-card');
                     if (!card) return;
-                    e.preventDefault();
+                    // НЕ вызываем e.preventDefault() здесь — с touch-action: pan-y он не нужен,
+                    // preventDefault вызывается в _onDevFavPtrMove, когда swipe уже активен.
                     var rect = card.getBoundingClientRect();
                     self._devFavSwipeState = {
                         card: card,
