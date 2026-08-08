@@ -5094,9 +5094,33 @@
     /* Карточка: картинка слева в левом краю + блок №/Место справа от неё */
     .dev-detail-card {
         padding: 12px 14px 24px;
+        position: relative;
         /* Почти непрозрачный фон, чтобы клетчатый паттерн body не просвечивал */
         background: rgba(28, 34, 46, 0.96);
     }
+    /* Значок избранного в правом верхнем углу карточки прибора (только десктоп) */
+    .dev-detail-fav-btn {
+        position: absolute;
+        top: 8px; right: 8px;
+        width: 32px; height: 32px;
+        display: none;  /* скрыт по умолчанию, показывается только на десктопе */
+        align-items: center; justify-content: center;
+        border: none; background: rgba(0,0,0,0.15); cursor: pointer;
+        color: rgba(140,170,200,0.5);
+        border-radius: 8px;
+        transition: color 0.2s, background 0.15s, transform 0.15s;
+        z-index: 2;
+    }
+    .dev-detail-fav-btn:active { transform: scale(0.88); }
+    .dev-detail-fav-btn.active {
+        color: #c7964a;
+        filter: drop-shadow(0 0 4px rgba(199,150,74,0.5));
+    }
+    @media (min-width: 1024px) {
+        .dev-detail-fav-btn { display: flex; }
+    }
+    [data-theme="light"] .dev-detail-fav-btn { color: rgba(42,93,143,0.45); background: rgba(0,0,0,0.06); }
+    [data-theme="light"] .dev-detail-fav-btn.active { color: #b8860b; filter: drop-shadow(0 0 4px rgba(184,134,11,0.4)); }
     [data-theme="light"] .dev-detail-card {
         background: rgba(255, 252, 245, 0.96);
     }
@@ -10342,6 +10366,8 @@
         const number = dev['№ прибора'] || '';
         const place = dev['Место установки'] || '';
         let html = '<div class="dev-detail-card">';
+        // Значок избранного в правом верхнем углу (виден только на десктопе)
+        html += '<button type="button" class="dev-detail-fav-btn" onclick="KipFav.toggleFromDetail()" aria-label="Избранное" title="Добавить/убрать из избранного"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>';
         // Верх: картинка слева (с Типом в нижней части поверх неё) + №/Место справа
         html += '<div class="dev-detail-top">';
         html += '<div class="dev-detail-image-wrap">';
@@ -22031,6 +22057,12 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     devData.devices.find(function(d) { return String(d['ID'] || '') === String(devId); });
                 dpBtn.style.display = isDevDetail ? '' : 'none';
                 dpBtn.classList.toggle('active', devId ? this.has(devId) : false);
+            }
+            // Десктоп: значок внутри карточки прибора (.dev-detail-fav-btn)
+            const cardBtn = document.querySelector('.dev-detail-fav-btn');
+            if (cardBtn) {
+                const devId = window._devDetailId;
+                cardBtn.classList.toggle('active', devId ? this.has(devId) : false);
             }
         },
 
