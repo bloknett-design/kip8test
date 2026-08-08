@@ -5755,9 +5755,10 @@
         /* --- Detail Panel (правая панель) --- */
         #detailPanel {
             display: none;
-            width: 50%;
-            min-width: 420px;
-            border-left: 1px solid var(--border-color, rgba(74, 143, 199, 0.15));
+            width: 48%;
+            min-width: 380px;
+            max-width: 580px;
+            border-left: 2px solid var(--border-color, rgba(74, 143, 199, 0.25));
             background: var(--bg-primary);
             overflow: hidden;
             position: relative;
@@ -5777,6 +5778,44 @@
             flex: 1;
             overflow-y: auto;
             min-height: 0;
+        }
+
+        /* --- Master-detail: когда detail-panel открыт --- */
+        /* Левая панель (список карточек) — ограничиваем ширину и добавляем скролл */
+        #detailPanel.active ~ .page-content.active,
+        #contentArea > .page-content.active:has(~ #detailPanel.active) {
+            /* page-content занимает оставшееся место (flex:1 уже задан) */
+        }
+        /* Когда detail-panel открыт — левая панель получает фон и разделитель */
+        body:has(#detailPanel.active) #contentArea > .page-content.active {
+            background: var(--bg-tertiary);
+            border-right: 1px solid var(--border-color, rgba(74, 143, 199, 0.1));
+        }
+        /* Карточки в левой панели переключаются на 1 колонку для мастер-детали */
+        body:has(#detailPanel.active) .dev-group-body,
+        body:has(#detailPanel.active) .lock-group-body,
+        body:has(#detailPanel.active) .valve-group-body,
+        body:has(#detailPanel.active) .regulator-group-body,
+        body:has(#detailPanel.active) .project-group-body {
+            grid-template-columns: 1fr;
+        }
+        /* Карточки в левой панели — компактнее в мастер-детали */
+        body:has(#detailPanel.active) .dev-card,
+        body:has(#detailPanel.active) .lock-card,
+        body:has(#detailPanel.active) .valve-card,
+        body:has(#detailPanel.active) .regulator-card,
+        body:has(#detailPanel.active) .project-card {
+            padding: 8px 10px;
+        }
+        /* Detail-подсветка карточки — более заметная */
+        .dev-card.detail-highlight,
+        .lock-card.detail-highlight,
+        .valve-card.detail-highlight,
+        .regulator-card.detail-highlight,
+        .project-card.detail-highlight {
+            background: rgba(74, 143, 199, 0.08) !important;
+            border-color: var(--accent-blue, #4a8fc7) !important;
+            box-shadow: 0 0 0 2px rgba(74, 143, 199, 0.25) !important;
         }
 
         /* --- Дашборд: сетка кнопок --- */
@@ -6010,7 +6049,7 @@
         }
     }
 
-    /* Подсветка активной карточки при открытом detail-panel */
+    /* Подсветка активной карточки при открытом detail-panel (мобильная / базовая) */
     .dev-card.detail-highlight,
     .lock-card.detail-highlight,
     .valve-card.detail-highlight,
@@ -15152,6 +15191,8 @@
                 // Для неизвестных detail-страниц — просто открываем пустую панель
                 const panel = document.getElementById('detailPanel');
                 if (panel) panel.classList.add('active');
+                const bcBar = document.getElementById('detailBreadcrumbBar');
+                if (bcBar) bcBar.classList.add('active');
             }
             // Обновляем breadcrumbs с виртуальной detail-страницей в конце пути
             updateDesktopBreadcrumb(page);
@@ -17155,10 +17196,16 @@
         // Открываем панель
         const panel = document.getElementById('detailPanel');
         if (panel) panel.classList.add('active');
+        // Показываем полноэкранную строку breadcrumbs
+        const bcBar = document.getElementById('detailBreadcrumbBar');
+        if (bcBar) bcBar.classList.add('active');
         // Подсветка активной карточки в списке слева
         document.querySelectorAll('.dev-card.detail-highlight, .lock-card.detail-highlight, .valve-card.detail-highlight, .regulator-card.detail-highlight, .project-card.detail-highlight').forEach(el => el.classList.remove('detail-highlight'));
         const activeCard = document.querySelector('.dev-card[data-dev-id="' + devId + '"]');
-        if (activeCard) activeCard.classList.add('detail-highlight');
+        if (activeCard) {
+            activeCard.classList.add('detail-highlight');
+            activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
         // Breadcrumbs в заголовке detail-панели
         const devGroupCtx = window._devGroupCtx || {};
         const devGroupName = devGroupCtx.group || '';
@@ -17180,10 +17227,16 @@
         const title = origTitle ? origTitle.textContent : 'Блокировка';
         const panel = document.getElementById('detailPanel');
         if (panel) panel.classList.add('active');
+        // Показываем полноэкранную строку breadcrumbs
+        const bcBar = document.getElementById('detailBreadcrumbBar');
+        if (bcBar) bcBar.classList.add('active');
         // Подсветка активной карточки в списке слева
         document.querySelectorAll('.lock-card.detail-highlight').forEach(el => el.classList.remove('detail-highlight'));
         const activeLockCard = document.querySelector('.lock-card[data-lock-id="' + lockId + '"]');
-        if (activeLockCard) activeLockCard.classList.add('detail-highlight');
+        if (activeLockCard) {
+            activeLockCard.classList.add('detail-highlight');
+            activeLockCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
         const lockGroupCtx = window._lockGroupCtx || {};
         const lockGroupName = lockGroupCtx.group || '';
         setDetailBreadcrumb('lockout-detail', title, lockGroupName, 'lock-group');
@@ -17204,10 +17257,16 @@
         const title = origTitle ? origTitle.textContent : 'Клапан';
         const panel = document.getElementById('detailPanel');
         if (panel) panel.classList.add('active');
+        // Показываем полноэкранную строку breadcrumbs
+        const bcBar = document.getElementById('detailBreadcrumbBar');
+        if (bcBar) bcBar.classList.add('active');
         // Подсветка активной карточки в списке слева
         document.querySelectorAll('.valve-card.detail-highlight').forEach(el => el.classList.remove('detail-highlight'));
         const activeValveCard = document.querySelector('.valve-card[data-valve-id="' + valveId + '"]');
-        if (activeValveCard) activeValveCard.classList.add('detail-highlight');
+        if (activeValveCard) {
+            activeValveCard.classList.add('detail-highlight');
+            activeValveCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
         const valveGroupCtx = window._valveGroupCtx || {};
         const valveGroupName = valveGroupCtx.group || '';
         setDetailBreadcrumb('valve-detail', title, valveGroupName, 'valve-group');
@@ -17228,10 +17287,16 @@
         const title = origTitle ? origTitle.textContent : 'Регулятор';
         const panel = document.getElementById('detailPanel');
         if (panel) panel.classList.add('active');
+        // Показываем полноэкранную строку breadcrumbs
+        const bcBar = document.getElementById('detailBreadcrumbBar');
+        if (bcBar) bcBar.classList.add('active');
         // Подсветка активной карточки в списке слева
         document.querySelectorAll('.regulator-card.detail-highlight').forEach(el => el.classList.remove('detail-highlight'));
         const activeRegCard = document.querySelector('.regulator-card[data-regulator-id="' + regulatorId + '"]');
-        if (activeRegCard) activeRegCard.classList.add('detail-highlight');
+        if (activeRegCard) {
+            activeRegCard.classList.add('detail-highlight');
+            activeRegCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
         const regulatorGroupCtx = window._regulatorGroupCtx || {};
         const regulatorGroupName = regulatorGroupCtx.group || '';
         setDetailBreadcrumb('regulator-detail', title, regulatorGroupName, 'regulator-group');
@@ -17252,10 +17317,16 @@
         const title = origTitle ? origTitle.textContent : 'Проект';
         const panel = document.getElementById('detailPanel');
         if (panel) panel.classList.add('active');
+        // Показываем полноэкранную строку breadcrumbs
+        const bcBar = document.getElementById('detailBreadcrumbBar');
+        if (bcBar) bcBar.classList.add('active');
         // Подсветка активной карточки в списке слева
         document.querySelectorAll('.project-card.detail-highlight').forEach(el => el.classList.remove('detail-highlight'));
         const activeProjCard = document.querySelector('.project-card[data-project-id="' + projectId + '"]');
-        if (activeProjCard) activeProjCard.classList.add('detail-highlight');
+        if (activeProjCard) {
+            activeProjCard.classList.add('detail-highlight');
+            activeProjCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
         const projectGroupCtx = window._projectGroupCtx || {};
         const projectGroupName = projectGroupCtx.group || '';
         setDetailBreadcrumb('project-detail', title, projectGroupName, 'project-group');
@@ -17295,6 +17366,9 @@
         // Открываем панель
         const panel = document.getElementById('detailPanel');
         if (panel) panel.classList.add('active');
+        // Показываем полноэкранную строку breadcrumbs
+        const bcBar = document.getElementById('detailBreadcrumbBar');
+        if (bcBar) bcBar.classList.add('active');
         // Breadcrumbs в заголовке detail-панели (кабели не имеют групп — groupName пустая)
         setDetailBreadcrumb('cable-journal-view', cableTitle, '', '');
     }
@@ -20826,6 +20900,108 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 const isAdmin = this._cachedRole === 'Админ';
                 sidebarAdminBtn.style.display = isAdmin ? '' : 'none';
             }
+
+            // ============================================================
+            // Десктоп: верхний бар — скрыть вкладки без доступа.
+            //   - «Инженерные калькуляторы» (data-page="calculators") — видна
+            //     всегда (калькуляторы доступны всем ролям).
+            //   - «Документация» (data-page="docs") — видна только ролям
+            //     с доступом к docs / library / kip-ios.
+            //   - Разделители (.desktop-top-bar-divider) скрываются,
+            //     если соседняя вкладка скрыта.
+            // ============================================================
+            document.querySelectorAll('.desktop-top-bar-tab').forEach(function(tab) {
+                const page = tab.getAttribute('data-page');
+                if (!page) return;
+                // «Документация» требует доступа к docs/library/kip-ios
+                let tabAllowed;
+                if (page === 'docs') {
+                    tabAllowed = isAll
+                        || allowed.indexOf('docs') !== -1
+                        || allowed.indexOf('library') !== -1
+                        || allowed.indexOf('kip-ios') !== -1;
+                } else {
+                    tabAllowed = isAll || allowed.indexOf(page) !== -1;
+                }
+                tab.style.display = tabAllowed ? '' : 'none';
+            });
+            // Скрыть разделители, у которых соседняя вкладка скрыта
+            document.querySelectorAll('.desktop-top-bar-divider').forEach(function(div) {
+                const prev = div.previousElementSibling;
+                const next = div.nextElementSibling;
+                const prevHidden = prev && prev.classList.contains('desktop-top-bar-tab') && prev.style.display === 'none';
+                const nextHidden = next && next.classList.contains('desktop-top-bar-tab') && next.style.display === 'none';
+                // Скрыть разделитель, если обе соседние вкладки скрыты,
+                // или если вкладка слева скрыта (разделитель относится к ней)
+                if (prevHidden || (prevHidden && nextHidden)) {
+                    div.style.display = 'none';
+                } else {
+                    div.style.display = '';
+                }
+            });
+
+            // ============================================================
+            // Десктоп: скрыть пустые menu-btn-row на активной странице.
+            // Если после фильтрации все .menu-btn в строке скрыты —
+            // скрываем всю строку, чтобы не было пустого пространства.
+            // ============================================================
+            document.querySelectorAll('.menu-btn-row').forEach(function(row) {
+                const btns = row.querySelectorAll('.menu-btn');
+                if (btns.length === 0) return;
+                let anyVisible = false;
+                btns.forEach(function(btn) {
+                    if (btn.style.display !== 'none') anyVisible = true;
+                });
+                row.style.display = anyVisible ? '' : 'none';
+            });
+
+            // ============================================================
+            // Закреплённые элементы: скрыть .pinned-item-cell,
+            // если вложенный .pinned-item (.menu-btn) скрыт.
+            // ============================================================
+            document.querySelectorAll('.pinned-item-cell').forEach(function(cell) {
+                const btn = cell.querySelector('.pinned-item');
+                if (!btn) return;
+                cell.style.display = (btn.style.display === 'none') ? 'none' : '';
+            });
+            // Скрыть весь контейнер закреплённых, если все ячейки скрыты
+            const pinnedContainer = document.getElementById('pinnedItemsContainer');
+            if (pinnedContainer) {
+                const visibleCells = pinnedContainer.querySelectorAll('.pinned-item-cell');
+                let anyPinnedVisible = false;
+                visibleCells.forEach(function(cell) {
+                    if (cell.style.display !== 'none') anyPinnedVisible = true;
+                });
+                // Если нет видимых закреплённых — показываем подсказку
+                // (перерендерим через renderPinnedItems, которая учитывает
+                // фильтрацию при следующем вызове _applyRoleToUI)
+                if (!anyPinnedVisible && visibleCells.length > 0) {
+                    pinnedContainer.style.display = 'none';
+                } else {
+                    pinnedContainer.style.display = '';
+                }
+            }
+
+            // ============================================================
+            // Десктоп: скрыть пустые группы (pb-section / dev-group)
+            // на страницах каталогов, если все карточки скрыты.
+            // Это актуально для roles с ограниченным доступом.
+            // ============================================================
+            document.querySelectorAll('.pb-section').forEach(function(section) {
+                const body = section.querySelector('.pb-section-body');
+                if (!body) return;
+                const cards = body.querySelectorAll('.dev-card, .lock-card, .valve-card, .regulator-card, .project-card');
+                if (cards.length === 0) return;
+                let anyCardVisible = false;
+                cards.forEach(function(card) {
+                    if (card.style.display !== 'none') anyCardVisible = true;
+                });
+                if (!anyCardVisible) {
+                    section.style.display = 'none';
+                } else {
+                    section.style.display = '';
+                }
+            });
 
             // ============================================================
             // Примечание: раздел "Кабельный журнал" объединён с ред. версией.
