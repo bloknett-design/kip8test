@@ -5831,12 +5831,22 @@
        при resize или при инлайн-стилях от JS.
        ============================================================ */
     @media (max-width: 1023px) {
-        html, body {
+        /* КЛЮЧЕВОЕ: html — единственный scroll-контейнер на мобильном.
+           body НЕ должен иметь overflow-x:hidden, иначе он создаёт
+           собственный scroll-контейнер, который «перехватывает» свайп,
+           но не может прокрутиться (height:auto → нет overflow).
+           Свайп не доходит до html (viewport), и прокрутка не работает. */
+        html {
             overflow-x: hidden;
             overflow-y: auto;
             height: auto;
             min-height: 100vh;
             overscroll-behavior-y: contain; /* prevent pull-to-refresh chain, allow vertical scroll */
+        }
+        body {
+            overflow: visible; /* НЕ создавать scroll-контейнер на body! */
+            height: auto;
+            min-height: 100vh;
         }
         #mainApp {
             display: block;
@@ -5875,12 +5885,31 @@
            Когда билет РЕАЛЬНО открыт — :has(.ticket-item.open) истинен,
            селектор НЕ матчит, и body.ticket-open сохраняет силу. */
         body.ticket-open:not(:has(.ticket-item.open)) {
-            overflow: auto !important;
-            position: relative !important;
+            overflow: visible !important;
+            position: static !important;
             width: auto !important;
         }
+        /* На мобильном: body.ticket-open НЕ должен делать overflow:hidden на body
+           (это создаёт scroll-контейнер, который перехватывает свайп).
+           Вместо этого блокируем прокрутку на html через :has().
+           Когда билет открыт — html:has(body.ticket-open) получает overflow:hidden.
+           Когда закрыт — класс снимается, html возвращается к overflow-y:auto. */
+        body.ticket-open {
+            overflow: visible !important;
+            position: static !important;
+            width: auto !important;
+        }
+        html:has(body.ticket-open) {
+            overflow: hidden !important;
+        }
         body.ticket-img-viewing:not(:has(.ticket-img-overlay.active)) {
-            overflow: auto !important;
+            overflow: visible !important;
+        }
+        body.ticket-img-viewing {
+            overflow: visible !important;
+        }
+        html:has(body.ticket-img-viewing) {
+            overflow: hidden !important;
         }
         /* Sidebar — только мобильное поведение (slide-in через .active) */
         #sidebar {
@@ -15459,7 +15488,12 @@
             // Запомнить, была ли страница уже в состоянии scrolled
             _wasPageScrolled = page ? page.classList.contains('scrolled') : false;
             document.body.classList.add('ticket-open');
-            document.body.style.top = '-' + _savedScrollY + 'px';
+            // На десктопе: position:fixed + top для iOS scroll-lock паттерна
+            // На мобильном: CSS через html:has(body.ticket-open) блокирует прокрутку на html
+            // body остаётся overflow:visible (не создаёт scroll-контейнер)
+            if (isDesktop()) {
+                document.body.style.top = '-' + _savedScrollY + 'px';
+            }
             // Скрыть nav-bar и сжать заголовок страницы (как при прокрутке вниз)
             if (page && !page.classList.contains('scrolled')) {
                 page.classList.add('scrolled');
@@ -15467,7 +15501,9 @@
         } else {
             // Билет закрыт — разблокировать прокрутку страницы
             document.body.classList.remove('ticket-open');
-            document.body.style.top = '';
+            if (isDesktop()) {
+                document.body.style.top = '';
+            }
             requestAnimationFrame(function() { window.scrollTo(0, _savedScrollY || 0); });
             // Вернуть nav-bar и заголовок в исходное состояние только если мы сами добавили scrolled
             if (page && page.classList.contains('scrolled') && !_wasPageScrolled) {
@@ -17139,11 +17175,10 @@
     });
 
     // ======================== ЗАЩИТНЫЙ АУДИТ ПРОКРУТКИ ========================
-    // На мобильных (особенно iOS Safari) классы ticket-open / ticket-img-viewing
-    // могут «утечь» на body, блокируя прокрутку на всех страницах.
-    // Также инлайн-стили overflow:hidden / position:fixed / height:100%
-    // могут остаться от десктопного режима или от iOS scroll-lock паттерна.
-    // Этот аудит проверяет и очищает все такие сиротские состояния.
+    // На мобильных scroll-контейнер — html (НЕ body).
+    // body всегда overflow:visible на мобильном (чтобы не перехватывать свайп).
+    // Блокировка прокрутки при открытом билете — через CSS html:has(body.ticket-open).
+    // Этот аудит очищает сиротские состояния и stray инлайн-стили.
     function _auditScrollState() {
         // На десктопе — не вмешиваемся (body намеренно overflow:hidden)
         if (window.matchMedia('(min-width: 1024px)').matches) return;
@@ -17166,8 +17201,10 @@
         if (document.body.style.overflow === 'hidden' || document.body.style.overflow === 'hidden auto') {
             document.body.style.overflow = '';
         }
-        // Очистить stray inline overflow:hidden на html
-        if (document.documentElement.style.overflow === 'hidden' || document.documentElement.style.overflow === 'hidden auto') {
+        // На мобильном: html может иметь overflow:hidden только если билет открыт
+        // (через CSS html:has(body.ticket-open)). Если билета нет — очистить.
+        if ((document.documentElement.style.overflow === 'hidden' || document.documentElement.style.overflow === 'hidden auto') &&
+            !document.body.classList.contains('ticket-open') && !document.body.classList.contains('ticket-img-viewing')) {
             document.documentElement.style.overflow = '';
         }
         // Очистить stray inline position:fixed на body (остаток от iOS scroll-lock)

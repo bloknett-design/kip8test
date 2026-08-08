@@ -1,6 +1,42 @@
 # Журнал работы ИИ-ассистентов — kip8test
 
 ---
+Task ID: 83
+Agent: AI Assistant (GLM)
+Task: Исправить прокрутку на мобильном — комплексное исправление (5 уровень защиты)
+
+Work Log:
+- Проанализировал 4 предыдущих коммита с фиксом прокрутки (e024599, ec26e57, 402c3f7, cab3696) — все не решили проблему полностью
+- CSS: добавил :has()-based safety nets в @media (max-width:1023px):
+  * body.ticket-open:not(:has(.ticket-item.open)) → overflow:auto !important; position:relative !important
+  * body.ticket-img-viewing:not(:has(.ticket-img-overlay.active)) → overflow:auto !important
+  Это автоматически восстанавливает прокрутку при утечке классов на мобильном, без JS
+- CSS: убран overscroll-behavior:contain с base body (подозрение на баг iOS Safari PWA)
+  * Перенесён в десктопный @media (min-width:1024px)
+  * На мобильном — overscroll-behavior-y:contain (без блокировки горизонтального скролла)
+- JS: расширен _auditScrollState:
+  * Проверяет position:fixed, height:100%/100vh на body/html
+  * Проверяет overflow:hidden на #mainApp и #contentArea
+  * Очищает инлайн position/top/width при orphaned ticket-open
+  * Пропускает аудит на десктопе (return early)
+- JS: аудит запускается на touchend, click, popstate + периодический таймер 3 сек на мобильном
+- JS: navigateTo — полная очистка body scroll-блокировки (overflow, position, height, width, top)
+- JS: resize handler — очистка position/top/width при переходе на мобильный
+- Тесты: 207 passed, 0 failed
+- SW: kipia-test-v273 → v274
+- Коммит 539e691 запушен в main
+
+Stage Summary:
+- 5 уровней защиты мобильной прокрутки:
+  1. CSS :has()-safety net (автоочистка утечек без JS)
+  2. Убран overscroll-behavior:contain с body (потенциальный баг iOS Safari PWA)
+  3. Расширенный JS-аудит (проверка position/height/overflow на всех контейнерах)
+  4. Периодический таймер + аудит по touchend/click/popstate
+  5. Полная очистка инлайн-стилей в navigateTo и resize handler
+- Кэш: kipia-test-v274
+- Файлы: index.html (+98/-6 строк), sw.js (+1/-1)
+
+---
 Task ID: 1
 Agent: AI Assistant (GLM)
 Task: В разделе «Библиотека КИП и А» сделать кнопки одинакового размера
