@@ -8834,6 +8834,66 @@
             <div id="buoyResults" class="converter-result-group" style="display:none;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;"><div class="converter-result-label-title">Таблица калибровки (шаг 10%)</div><button type="button" class="query-btn" onclick="copyBuoyTable()" style="width:auto; padding:5px 10px; font-size:11px;"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Копировать</button></div><div id="buoyTableContainer" style="overflow-x:auto;border-radius:10px;border:1px solid rgba(255,255,255,0.05);"></div><div id="buoyInfo" style="margin-top:14px; padding:14px 18px; background:rgba(13,17,23,0.5); border-radius:10px; font-size:15px; color:rgba(255,255,255,0.35); line-height:1.6;"></div><div id="buoyCustomCalcPanel" style="display:none;"><div class="converter-result-label-title" style="margin-top:16px;">Расчёт произвольных значений</div><div class="scale-form" style="margin-top:8px;"><div style="color:rgba(255,255,255,0.25); font-size:11px; margin-bottom:10px; line-height:1.4;">Введите значение в любое поле — два других рассчитаются автоматически</div><div class="scale-form-label">Уровень (%)</div><input type="text" inputmode="numeric" id="buoyCustomLevel" class="scale-field" placeholder="Например: 37,5" oninput="calcBuoyFromLevel()" autocomplete="off" enterkeyhint="done"><div class="scale-form-label">Масса гирь (г)</div><input type="text" inputmode="numeric" id="buoyCustomMass" class="scale-field" placeholder="Например: 542,3" oninput="calcBuoyFromMass()" autocomplete="off" enterkeyhint="done"><div class="scale-form-label">Сигнал (<span id="buoyCustomSigUnit">мА</span>)</div><input type="text" inputmode="numeric" id="buoyCustomSignal" class="scale-field" placeholder="Например: 9,6" oninput="calcBuoyFromSignal()" autocomplete="off" enterkeyhint="done"></div></div></div>
             <div style="margin:14px 0 10px;padding:14px 16px;background:var(--card-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--card-border);border-radius:14px;position:relative;z-index:2;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span style="font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:-0.2px;">Справочная информация</span></div><div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6;"><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Принцип действия:</b> Основан на законе Архимеда: F = ρ · g · V, где V — объём погружённой части буйка. По мере повышения уровня растёт выталкивающая сила, уменьшающая натяжение подвеса. Преобразователь (тензо/механический) переводит силу в выходной сигнал.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Метод «С буйком» (компенсационный):</b> m_гиры = m_выт + m_подвеса, где m_выт = ρ · V_погр — выталкивающая масса, эквивалентная погружённой части буйка. Буёк остаётся в жидкости, гири компенсируют изменение архимедовой силы на каждой отметке шкалы.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Метод «Без буйка» (имитация):</b> m_гиры = m_буйка − m_выт + m_подвеса. Буёк демонтирован, гири полностью воспроизводят натяжение подвеса при 100% уровне: масса буйка минус максимальная выталкивающая сила. Точнее компенсационного — нет трения буйка о стенки.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Калибровочная таблица:</b> 11 точек: 0%, 10%, 20%, ..., 100% шкалы — стандартная градуировка с шагом 10%. На каждой отметке: уровень (мм или %), масса гирь (г), выходной сигнал (мА / В / кПа). Дополнительно — расчёт произвольных значений через интерполяцию.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Плотности сред (20 °C):</b> Вода 998; дивинилбензол 926; диэтилбензол 860; стирол 906; дихлорэтан 1253; этиловый спирт 789; этиленгликоль 1112; едкий натр 2130; олеум 1890; серная кислота 96% 1834; перекись водорода 1450 кг/м³.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Типовые параметры:</b> Диаметр буйка 30–100 мм; длина 200–3000 мм; материал — нержавеющая сталь 12Х18Н10Т (для агрессивных сред — ХН78Т, титан ВТ1-0). Класс точности 0,5–1,5; рабочее давление до 16 МПа.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Нормативный документ:</b> ГОСТ 13045-81 «Уровнемеры буйковые. Общие технические условия»; РД 50-213-80 «Правила измерения уровня»; МИ 198-77 «Методика поверки буйковых уровнемеров»; ГОСТ 8.285-2012 (поверочная схема).</div></div></div>
         </div>
+        <div id="page-temp-sensors" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Датчики температуры</div></div>
+
+            <div class="scale-form">
+                <div class="scale-form-label">Тип датчика</div>
+                <select id="temp_sensor_type" class="scale-field" onchange="updateTempSensorOptions()" autocomplete="off">
+                    <option value="rtd" selected>Термометр сопротивления (ТС)</option>
+                    <option value="tc">Термопара (ТП)</option>
+                </select>
+                <div id="rtd_options">
+                    <div class="scale-form-label" style="margin-top:12px;">Тип ТС</div>
+                    <select id="temp_rtd_type" class="scale-field" autocomplete="off">
+                        <optgroup label="Cu  (α = 0,00428 °С⁻¹)">
+                            <option value="cu50_1428" selected>50М (Cu50)</option>
+                            <option value="cu100_1428">100М (Cu100)</option>
+                        </optgroup>
+                        <optgroup label="Cu  (α = 0,00426 °С⁻¹)">
+                            <option value="cu50_1426">50М (Cu50)</option>
+                            <option value="cu100_1426">100М (Cu100)</option>
+                        </optgroup>
+                        <optgroup label="Pt  (α = 0,00391 °С⁻¹)">
+                            <option value="pt50_1391">50П (Pt50)</option>
+                            <option value="pt100_1391">100П (Pt100)</option>
+                        </optgroup>
+                        <optgroup label="Pt  (α = 0,00385 °С⁻¹)">
+                            <option value="pt100_1385">Pt100 (IEC)</option>
+                            <option value="pt1000_1385">Pt1000 (IEC)</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div id="tc_options" style="display:none;">
+                    <div class="scale-form-label" style="margin-top:12px;">Тип термопары</div>
+                    <select id="temp_tc_type" class="scale-field" autocomplete="off">
+                        <option value="K" selected>ТХА (K)</option>
+                        <option value="J">ТЖК (J)</option>
+                        <option value="T">ТМК (T)</option>
+                        <option value="N">ТНН (N)</option>
+                        <option value="E">ТХКн (E)</option>
+                        <option value="R">ТПП (R)</option>
+                        <option value="S">ТПП (S)</option>
+                        <option value="B">ТПР (B)</option>
+                    </select>
+                </div>
+                <div class="scale-form-label" style="margin-top:12px;">Диапазон измерения (°C)</div>
+                <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: stretch;"><input type="text" inputmode="numeric" id="temp_sensor_min" class="scale-field" style="flex: 1; margin-bottom: 0;" value="0" placeholder="min °C" autocomplete="off" enterkeyhint="next"><input type="text" inputmode="numeric" id="temp_sensor_max" class="scale-field" style="flex: 1; margin-bottom: 0;" value="100" placeholder="max °C" autocomplete="off" enterkeyhint="next"></div>
+                <div class="scale-form-label">Шаг таблицы (°C)</div>
+                <input type="text" inputmode="numeric" id="temp_sensor_step" class="scale-field" value="10" placeholder="10" autocomplete="off" enterkeyhint="done"><div style="color:rgba(255,255,255,0.25); font-size:10px; margin-top:-6px; margin-bottom:8px; padding-left:4px;">Шаг расчёта таблицы в градусах Цельсия</div>
+                            </div>
+            <button type="button" class="converter-convert-btn" onclick="calcTempSensor()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 16 16 12 12 8"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Рассчитать</button>
+            <div id="tempSensorResults" class="converter-result-group" style="display:none;"></div>
+            <div style="margin:14px 0 10px;padding:14px 16px;background:var(--card-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--card-border);border-radius:14px;position:relative;z-index:2;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span style="font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:-0.2px;">Справочная информация</span></div>
+                <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6;">
+                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Термопреобразователи сопротивления (ТС):</b> измеряют температуру по изменению электрического сопротивления чувствительного элемента. Для медных ТС: R(t) = R₀·(1 + α·t). Для платиновых: R(t) = R₀·[1 + A·t + B·t² + C·(t−100)·t³] (ниже 0°C добавляется член C).</div>
+                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Термопары (ТП):</b> измеряют температуру по термо-ЭДС, возникающей в спае двух разнородных проводников. НСХ термопар стандартизированы ГОСТ Р 8.585-2001. Наиболее распространённые типы: ТХА (K), ТЖК (J), ТМК (T), ТНН (N), ТХКн (E), R, ТПП (S), ТПР (B).</div>
+                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Температурные коэффициенты ТС:</b> Cu: α = 0,00428 °C⁻¹ (50М, 100М) или 0,00426 °C⁻¹. Pt: α = 0,00391 °C⁻¹ (50П, 100П) или 0,00385 °C⁻¹ (IEC 60751). Ni: α = 0,00617 °C⁻¹.</div>
+                    <div><b style="color:rgba(255,255,255,0.7);">Нормативные документы:</b> ГОСТ 6651-2009 (ТС), ГОСТ Р 8.585-2001 (ТП), IEC 60751 (Pt).</div>
+                </div>
+            </div>
+    </div>
     </div>
 
         <!-- ===== Десктоп: правая панель деталей (master-detail) ===== -->
@@ -8843,6 +8903,7 @@
                 <button type="button" class="detail-panel-close" onclick="closeDetailPanel()" aria-label="Закрыть панель">
                     <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:rgba(74,143,199,0.9);fill:none;stroke-width:2;stroke-linecap:round;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
+        <!-- Датчики температуры -->
             </div>
             <div class="detail-panel-body" id="detailPanelBody"></div>
         </div>
@@ -23020,67 +23081,6 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
     </div>
 </div>
 
-        <!-- Датчики температуры -->
-        <div id="page-temp-sensors" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Датчики температуры</div></div>
-
-            <div class="scale-form">
-                <div class="scale-form-label">Тип датчика</div>
-                <select id="temp_sensor_type" class="scale-field" onchange="updateTempSensorOptions()" autocomplete="off">
-                    <option value="rtd" selected>Термометр сопротивления (ТС)</option>
-                    <option value="tc">Термопара (ТП)</option>
-                </select>
-                <div id="rtd_options">
-                    <div class="scale-form-label" style="margin-top:12px;">Тип ТС</div>
-                    <select id="temp_rtd_type" class="scale-field" autocomplete="off">
-                        <optgroup label="Cu  (α = 0,00428 °С⁻¹)">
-                            <option value="cu50_1428" selected>50М (Cu50)</option>
-                            <option value="cu100_1428">100М (Cu100)</option>
-                        </optgroup>
-                        <optgroup label="Cu  (α = 0,00426 °С⁻¹)">
-                            <option value="cu50_1426">50М (Cu50)</option>
-                            <option value="cu100_1426">100М (Cu100)</option>
-                        </optgroup>
-                        <optgroup label="Pt  (α = 0,00391 °С⁻¹)">
-                            <option value="pt50_1391">50П (Pt50)</option>
-                            <option value="pt100_1391">100П (Pt100)</option>
-                        </optgroup>
-                        <optgroup label="Pt  (α = 0,00385 °С⁻¹)">
-                            <option value="pt100_1385">Pt100 (IEC)</option>
-                            <option value="pt1000_1385">Pt1000 (IEC)</option>
-                        </optgroup>
-                    </select>
-                </div>
-                <div id="tc_options" style="display:none;">
-                    <div class="scale-form-label" style="margin-top:12px;">Тип термопары</div>
-                    <select id="temp_tc_type" class="scale-field" autocomplete="off">
-                        <option value="K" selected>ТХА (K)</option>
-                        <option value="J">ТЖК (J)</option>
-                        <option value="T">ТМК (T)</option>
-                        <option value="N">ТНН (N)</option>
-                        <option value="E">ТХКн (E)</option>
-                        <option value="R">ТПП (R)</option>
-                        <option value="S">ТПП (S)</option>
-                        <option value="B">ТПР (B)</option>
-                    </select>
-                </div>
-                <div class="scale-form-label" style="margin-top:12px;">Диапазон измерения (°C)</div>
-                <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: stretch;"><input type="text" inputmode="numeric" id="temp_sensor_min" class="scale-field" style="flex: 1; margin-bottom: 0;" value="0" placeholder="min °C" autocomplete="off" enterkeyhint="next"><input type="text" inputmode="numeric" id="temp_sensor_max" class="scale-field" style="flex: 1; margin-bottom: 0;" value="100" placeholder="max °C" autocomplete="off" enterkeyhint="next"></div>
-                <div class="scale-form-label">Шаг таблицы (°C)</div>
-                <input type="text" inputmode="numeric" id="temp_sensor_step" class="scale-field" value="10" placeholder="10" autocomplete="off" enterkeyhint="done"><div style="color:rgba(255,255,255,0.25); font-size:10px; margin-top:-6px; margin-bottom:8px; padding-left:4px;">Шаг расчёта таблицы в градусах Цельсия</div>
-                            </div>
-            <button type="button" class="converter-convert-btn" onclick="calcTempSensor()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 16 16 12 12 8"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Рассчитать</button>
-            <div id="tempSensorResults" class="converter-result-group" style="display:none;"></div>
-            <div style="margin:14px 0 10px;padding:14px 16px;background:var(--card-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--card-border);border-radius:14px;position:relative;z-index:2;">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span style="font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:-0.2px;">Справочная информация</span></div>
-                <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6;">
-                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Термопреобразователи сопротивления (ТС):</b> измеряют температуру по изменению электрического сопротивления чувствительного элемента. Для медных ТС: R(t) = R₀·(1 + α·t). Для платиновых: R(t) = R₀·[1 + A·t + B·t² + C·(t−100)·t³] (ниже 0°C добавляется член C).</div>
-                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Термопары (ТП):</b> измеряют температуру по термо-ЭДС, возникающей в спае двух разнородных проводников. НСХ термопар стандартизированы ГОСТ Р 8.585-2001. Наиболее распространённые типы: ТХА (K), ТЖК (J), ТМК (T), ТНН (N), ТХКн (E), R, ТПП (S), ТПР (B).</div>
-                    <div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Температурные коэффициенты ТС:</b> Cu: α = 0,00428 °C⁻¹ (50М, 100М) или 0,00426 °C⁻¹. Pt: α = 0,00391 °C⁻¹ (50П, 100П) или 0,00385 °C⁻¹ (IEC 60751). Ni: α = 0,00617 °C⁻¹.</div>
-                    <div><b style="color:rgba(255,255,255,0.7);">Нормативные документы:</b> ГОСТ 6651-2009 (ТС), ГОСТ Р 8.585-2001 (ТП), IEC 60751 (Pt).</div>
-                </div>
-            </div>
-    </div>
 <script>
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
