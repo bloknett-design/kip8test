@@ -80,7 +80,7 @@
 
     * { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-padding-top: 56px; }
-    body { background-color: var(--bg-tertiary); background-image: linear-gradient(rgba(74, 143, 199, 0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(74, 143, 199, 0.15) 1px, transparent 1px); background-size: 20px 20px, 20px 20px; color: var(--text-primary); overflow-x: hidden; min-height: 100vh; position: relative; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+    body { background-color: var(--bg-tertiary); background-image: linear-gradient(rgba(74, 143, 199, 0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(74, 143, 199, 0.15) 1px, transparent 1px); background-size: 20px 20px, 20px 20px; color: var(--text-primary); overflow-x: hidden; min-height: 100vh; position: relative; -webkit-overflow-scrolling: touch; }
 
     
     .bg-network {
@@ -5836,6 +5836,7 @@
             overflow-y: auto;
             height: auto;
             min-height: 100vh;
+            overscroll-behavior-y: contain; /* prevent pull-to-refresh chain, allow vertical scroll */
         }
         #mainApp {
             display: block;
@@ -5867,6 +5868,20 @@
             height: auto;
             flex: none;
         }
+        /* ====== SAFETY NET: автоочистка утечек ticket-open / ticket-img-viewing ======
+           Если класс-блокировка остался на body, но соответствующий элемент
+           в DOM отсутствует (сиротский класс), — переопределяем overflow
+           через :has(), чтобы мобильная прокрутка восстановилась без JS.
+           Когда билет РЕАЛЬНО открыт — :has(.ticket-item.open) истинен,
+           селектор НЕ матчит, и body.ticket-open сохраняет силу. */
+        body.ticket-open:not(:has(.ticket-item.open)) {
+            overflow: auto !important;
+            position: relative !important;
+            width: auto !important;
+        }
+        body.ticket-img-viewing:not(:has(.ticket-img-overlay.active)) {
+            overflow: auto !important;
+        }
         /* Sidebar — только мобильное поведение (slide-in через .active) */
         #sidebar {
             position: fixed;
@@ -5897,6 +5912,7 @@
         html, body {
             overflow: hidden;
             height: 100%;
+            overscroll-behavior: contain;
         }
 
         /* Шапка приложения — скрыта на десктопе (top bar заменяет) */
@@ -15640,6 +15656,9 @@
             document.documentElement.style.overflow = '';
             document.body.style.height = '';
             document.documentElement.style.height = '';
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
             // Снять блокировку прокрутки от билетов
             if (document.body.classList.contains('ticket-open')) {
                 document.body.classList.remove('ticket-open');
@@ -15778,11 +15797,22 @@
         if (document.body.classList.contains('ticket-open')) {
             document.body.classList.remove('ticket-open');
             document.body.style.top = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
             requestAnimationFrame(function() { window.scrollTo(0, _savedScrollY || 0); });
         }
         // Закрыть overlay картинки билета, если открыт
         if (document.body.classList.contains('ticket-img-viewing')) {
             closeTicketImage();
+        }
+        // Полная очистка инлайн-стилей, блокирующих прокрутку на мобильном
+        // (могут остаться от десктопного режима при resize или от iOS scroll-lock)
+        if (!isDesktop()) {
+            if (document.body.style.overflow === 'hidden') document.body.style.overflow = '';
+            if (document.documentElement.style.overflow === 'hidden') document.documentElement.style.overflow = '';
+            if (document.body.style.position === 'fixed') { document.body.style.position = ''; document.body.style.top = ''; document.body.style.width = ''; }
+            var _bh = document.body.style.height; if (_bh === '100%' || _bh === '100vh') document.body.style.height = '';
+            var _dh = document.documentElement.style.height; if (_dh === '100%' || _dh === '100vh') document.documentElement.style.height = '';
         }
         // Закрыть все открытые билеты при навигации на другую страницу
         document.querySelectorAll('.ticket-item.open').forEach(item => {
@@ -17111,13 +17141,20 @@
     // ======================== ЗАЩИТНЫЙ АУДИТ ПРОКРУТКИ ========================
     // На мобильных (особенно iOS Safari) классы ticket-open / ticket-img-viewing
     // могут «утечь» на body, блокируя прокрутку на всех страницах.
-    // Этот аудит проверяет и очищает такие сиротские состояния.
+    // Также инлайн-стили overflow:hidden / position:fixed / height:100%
+    // могут остаться от десктопного режима или от iOS scroll-lock паттерна.
+    // Этот аудит проверяет и очищает все такие сиротские состояния.
     function _auditScrollState() {
+        // На десктопе — не вмешиваемся (body намеренно overflow:hidden)
+        if (window.matchMedia('(min-width: 1024px)').matches) return;
+
         // Очистить сиротский ticket-open
         if (document.body.classList.contains('ticket-open') &&
             !document.querySelector('.ticket-item.open')) {
             document.body.classList.remove('ticket-open');
             document.body.style.top = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
             requestAnimationFrame(function() { window.scrollTo(0, _savedScrollY || 0); });
         }
         // Очистить сиротский ticket-img-viewing
@@ -17125,16 +17162,71 @@
             !document.querySelector('.ticket-img-overlay.active')) {
             document.body.classList.remove('ticket-img-viewing');
         }
-        // Очистить stray inline overflow:hidden
-        if (document.body.style.overflow === 'hidden') {
+        // Очистить stray inline overflow:hidden на body
+        if (document.body.style.overflow === 'hidden' || document.body.style.overflow === 'hidden auto') {
             document.body.style.overflow = '';
         }
-        if (document.documentElement.style.overflow === 'hidden') {
+        // Очистить stray inline overflow:hidden на html
+        if (document.documentElement.style.overflow === 'hidden' || document.documentElement.style.overflow === 'hidden auto') {
             document.documentElement.style.overflow = '';
         }
+        // Очистить stray inline position:fixed на body (остаток от iOS scroll-lock)
+        if (document.body.style.position === 'fixed') {
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
+        }
+        // Очистить stray inline height:100% / height:100vh на body и html
+        var bh = document.body.style.height;
+        if (bh === '100%' || bh === '100vh') {
+            document.body.style.height = '';
+        }
+        var dh = document.documentElement.style.height;
+        if (dh === '100%' || dh === '100vh') {
+            document.documentElement.style.height = '';
+        }
+        // Очистить stray inline overflow:hidden на #mainApp и #contentArea
+        var mainApp = document.getElementById('mainApp');
+        if (mainApp && mainApp.style.overflow === 'hidden') {
+            mainApp.style.overflow = '';
+        }
+        var contentArea = document.getElementById('contentArea');
+        if (contentArea && contentArea.style.overflow === 'hidden') {
+            contentArea.style.overflow = '';
+        }
+        // Если #mainApp или #contentArea имеют height:100vh/100% inline — очистить
+        if (mainApp) {
+            var mh = mainApp.style.height;
+            if (mh === '100%' || mh === '100vh') mainApp.style.height = '';
+        }
+        if (contentArea) {
+            var ch = contentArea.style.height;
+            if (ch === '100%' || ch === '100vh') contentArea.style.height = '';
+        }
     }
+    // Запуск аудита на множестве событий для максимального покрытия
     document.addEventListener('visibilitychange', _auditScrollState);
     window.addEventListener('focus', _auditScrollState);
+    // touchend и click — после закрытия билетов/оверлеев
+    document.addEventListener('touchend', _auditScrollState, { passive: true });
+    document.addEventListener('click', _auditScrollState, { passive: true });
+    // popstate — при навигации назад
+    window.addEventListener('popstate', _auditScrollState, { passive: true });
+    // Периодический аудит на мобильном — раз в 3 секунды
+    // (ловит любые утечки, которые не попали в события)
+    var _scrollAuditTimer = null;
+    function _startScrollAuditTimer() {
+        if (_scrollAuditTimer) clearInterval(_scrollAuditTimer);
+        if (!window.matchMedia('(min-width: 1024px)').matches) {
+            _scrollAuditTimer = setInterval(_auditScrollState, 3000);
+        }
+    }
+    _startScrollAuditTimer();
+    // При resize — перезапустить/отменить периодический аудит
+    window.matchMedia('(min-width: 1024px)').addEventListener('change', function() {
+        _startScrollAuditTimer();
+        _auditScrollState();
+    });
 
     // Инициализация: записать стартовую страницу в историю браузера
     history.replaceState({ page: 'dashboard' }, '', '#dashboard');
