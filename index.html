@@ -5794,6 +5794,19 @@
         #detailPanel {
             display: none !important;
         }
+        /* Убрать класс .active с #detailPanel на мобильном — 
+           чтобы body:has(#detailPanel.active) не срабатывал,
+           если панель была открыта на десктопе и затем размер окна уменьшился */
+        #detailPanel.active {
+            display: none !important;
+        }
+        /* Мобильная защита: страница должна прокручиваться */
+        #contentArea > .page-content.active {
+            overflow-y: visible;
+            overflow-x: clip;
+            height: auto;
+            flex: none;
+        }
         /* Sidebar — только мобильное поведение (slide-in через .active) */
         #sidebar {
             position: fixed;
