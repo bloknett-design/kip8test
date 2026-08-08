@@ -5195,8 +5195,8 @@
         border: 1px solid var(--border-color);
     }
 
-    /* === Значок заметки в хедере карточки прибора === */
-    .dev-note-header-btn {
+    /* === Значок избранного в хедере карточки прибора === */
+    .dev-fav-header-btn {
         flex-shrink: 0;
         width: 36px; height: 36px;
         display: flex; align-items: center; justify-content: center;
@@ -5208,135 +5208,18 @@
         touch-action: manipulation;
         margin-left: -4px;
     }
-    .dev-note-header-btn:active { transform: scale(0.88); background: rgba(199,150,74,0.15); }
-    .dev-note-header-btn.active {
+    .dev-fav-header-btn:active { transform: scale(0.88); background: rgba(199,150,74,0.15); }
+    .dev-fav-header-btn.active {
         color: #c7964a;
         filter: drop-shadow(0 0 4px rgba(199,150,74,0.5));
     }
-    [data-theme="light"] .dev-note-header-btn { color: rgba(42,93,143,0.45); }
-    [data-theme="light"] .dev-note-header-btn.active { color: #b8860b; filter: drop-shadow(0 0 4px rgba(184,134,11,0.4)); }
+    [data-theme="light"] .dev-fav-header-btn { color: rgba(42,93,143,0.45); }
+    [data-theme="light"] .dev-fav-header-btn.active { color: #b8860b; filter: drop-shadow(0 0 4px rgba(184,134,11,0.4)); }
 
-    /* === Страница заметок по прибору === */
-    .dev-note-card {
-        margin: 10px 14px;
-        padding: 14px 16px;
-        background: var(--card-bg, rgba(25,35,45,0.7));
-        border-radius: 12px;
-        border: 1px solid var(--border-color);
-    }
-    .dev-note-card-header {
-        display: flex; align-items: center; justify-content: space-between;
-        margin-bottom: 8px;
-    }
-    .dev-note-card-device {
-        font-size: 15px; font-weight: 600; color: #e0e0e0;
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-        max-width: 70%;
-    }
-    .dev-note-card-meta {
-        font-size: 11px; color: var(--text-secondary, rgba(255,255,255,0.45));
-    }
-    .dev-note-card-text {
-        font-size: 14px; line-height: 1.5; color: var(--text-secondary, rgba(255,255,255,0.7));
-        white-space: pre-wrap; word-break: break-word;
-    }
-    .dev-note-card-actions {
-        display: flex; gap: 8px; margin-top: 10px; padding-top: 8px;
-        border-top: 1px solid var(--border-color);
-    }
-    .dev-note-card-actions button {
-        flex: 1; padding: 6px 0; border-radius: 8px; font-size: 13px;
-        border: 1px solid var(--border-color); background: transparent;
-        color: var(--text-secondary, rgba(255,255,255,0.6)); cursor: pointer;
-        -webkit-tap-highlight-color: transparent; touch-action: manipulation;
-    }
-    .dev-note-card-actions button:active { background: rgba(74,143,199,0.1); }
-    .dev-note-card-actions .dev-note-delete-btn { color: #e55; border-color: rgba(229,85,85,0.3); }
-
-    /* Форма редактирования заметки */
-    .dev-note-form {
-        margin: 10px 14px; padding: 14px 16px;
-        background: var(--card-bg, rgba(25,35,45,0.7));
-        border-radius: 12px; border: 1px solid var(--border-color);
-    }
-    .dev-note-form textarea {
-        width: 100%; min-height: 100px; padding: 10px 12px;
-        border-radius: 8px; border: 1px solid var(--border-color);
-        background: rgba(0,0,0,0.2); color: #e0e0e0; font-size: 14px;
-        line-height: 1.5; resize: vertical; font-family: inherit;
-        box-sizing: border-box;
-    }
-    .dev-note-form textarea:focus { outline: none; border-color: rgba(199,150,74,0.6); }
-    .dev-note-form-buttons {
-        display: flex; gap: 8px; margin-top: 10px;
-    }
-    .dev-note-form-buttons button {
-        flex: 1; padding: 10px 0; border-radius: 8px; font-size: 14px;
-        font-weight: 600; cursor: pointer; border: 1px solid var(--border-color);
-        -webkit-tap-highlight-color: transparent; touch-action: manipulation;
-    }
-    .dev-note-save-btn {
-        background: rgba(199,150,74,0.2); color: #c7964a; border-color: rgba(199,150,74,0.4);
-    }
-    .dev-note-cancel-btn {
-        background: transparent; color: var(--text-secondary, rgba(255,255,255,0.6));
-    }
-    .dev-note-empty {
+    /* === Страница избранного — пустое состояние === */
+    .dev-fav-empty {
         padding: 40px 20px; text-align: center;
         color: var(--text-secondary, rgba(255,255,255,0.45)); font-size: 14px;
-    }
-
-    /* Список приборов с заметками — малые карточки */
-    .dev-notes-list {
-        padding: 8px 0;
-    }
-    .dev-note-device-card {
-        display: flex; align-items: flex-start; gap: 12px;
-        padding: 12px 16px; margin: 0 14px 6px;
-        background: var(--card-bg, rgba(25,35,45,0.7));
-        border-radius: 12px; border: 1px solid var(--border-color);
-        cursor: pointer;
-        -webkit-tap-highlight-color: transparent; touch-action: manipulation;
-        transition: background 0.15s;
-    }
-    .dev-note-device-card:active { background: rgba(74,143,199,0.1); }
-    .dev-note-device-img {
-        flex-shrink: 0; width: 48px; height: 48px;
-        border-radius: 10px; overflow: hidden; position: relative;
-        background: rgba(0,0,0,0.2);
-    }
-    .dev-note-device-img img {
-        width: 100%; height: 100%; object-fit: cover;
-    }
-    .dev-note-device-type {
-        position: absolute; bottom: 0; left: 0; right: 0;
-        background: rgba(0,0,0,0.55); color: rgba(255,255,255,0.8);
-        font-size: 8px; text-align: center; padding: 1px 0;
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    }
-    .dev-note-device-info { flex: 1; min-width: 0; }
-    .dev-note-device-name {
-        font-size: 14px; font-weight: 600; color: #e0e0e0;
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-        margin-bottom: 2px;
-    }
-    .dev-note-device-row {
-        font-size: 12px; color: var(--text-secondary, rgba(255,255,255,0.45));
-        margin-bottom: 1px;
-    }
-    .dev-note-device-label {
-        color: rgba(255,255,255,0.3); font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px;
-    }
-    .dev-note-device-val {
-        color: var(--text-secondary, rgba(255,255,255,0.55));
-    }
-    .dev-note-device-text {
-        font-size: 12px; color: var(--text-secondary, rgba(255,255,255,0.55));
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-        margin-top: 4px; line-height: 1.4;
-    }
-    .dev-note-device-date {
-        font-size: 11px; color: rgba(255,255,255,0.25); margin-top: 2px;
     }
 
     .header-title {
@@ -7175,14 +7058,14 @@
         
         <!-- ======================== КАРТОЧКА ПРИБОРА ======================== -->
         <div id="page-device-detail" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="deviceDetailTitle">Прибор</div><button type="button" id="deviceNoteBtn" class="dev-note-header-btn" onclick="KipNotes.toggleFromDetail()" aria-label="Заметка" title="Добавить/убрать заметку"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="deviceDetailTitle">Прибор</div><button type="button" id="deviceFavBtn" class="dev-fav-header-btn" onclick="KipFav.toggleFromDetail()" aria-label="Избранное" title="Добавить/убрать из избранного"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div>
             <div id="deviceDetailContent"></div>
         </div>
 
-        <!-- ======================== ЗАМЕТКИ ПО ПРИБОРУ ======================== -->
-        <div id="page-device-notes" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="deviceNotesTitle">Заметки</div></div>
-            <div id="deviceNotesContent"></div>
+        <!-- ======================== ИЗБРАННОЕ ======================== -->
+        <div id="page-device-favorites" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Избранное</div></div>
+            <div id="deviceFavoritesContent"></div>
         </div>
 
         <!-- ======================== БЛОКИРОВКИ ======================== -->
@@ -7279,12 +7162,6 @@
         <div id="page-project-group" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="projectGroupTitle">Проекты</div></div>
             <div id="projectGroupList"></div>
-        </div>
-
-        <!-- ======================== СПИСОК ЗАМЕТОК ======================== -->
-        <div id="page-device-notes-list" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Заметки</div></div>
-            <div id="deviceNotesListContent"></div>
         </div>
 
         <!-- ======================== КАБЕЛЬНЫЙ ЖУРНАЛ (РЕДАКТИРОВАНИЕ) ========================
@@ -9252,7 +9129,7 @@
         <div id="detailPanel">
             <div class="detail-panel-header">
                 <div class="detail-panel-title" id="detailPanelTitle">Детали</div>
-                <button type="button" id="detailPanelNoteBtn" class="dev-note-header-btn" onclick="KipNotes.toggleFromDetail()" aria-label="Заметка" title="Добавить/убрать заметку" style="display:none;"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+                <button type="button" id="detailPanelFavBtn" class="dev-fav-header-btn" onclick="KipFav.toggleFromDetail()" aria-label="Избранное" title="Добавить/убрать из избранного" style="display:none;"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
                 <button type="button" class="detail-panel-close" onclick="closeDetailPanel()" aria-label="Закрыть панель">
                     <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:rgba(74,143,199,0.9);fill:none;stroke-width:2;stroke-linecap:round;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
@@ -10551,8 +10428,8 @@
                 regulatorOpenBySarNo(this.getAttribute('data-sar-link'));
             });
         });
-        // Обновить значок заметки в хедере
-        if (typeof KipNotes !== 'undefined') KipNotes.updateHeaderIcon();
+        // Обновить значок избранного в хедере
+        if (typeof KipFav !== 'undefined') KipFav.updateHeaderIcon();
     }
 
 
@@ -15672,9 +15549,9 @@
         if (!panel) return;
         panel.classList.remove('active');
         document.getElementById('detailPanelBody').innerHTML = '';
-        // Скрыть значок заметки в хедере десктоп-панели
-        const noteBtn = document.getElementById('detailPanelNoteBtn');
-        if (noteBtn) noteBtn.style.display = 'none';
+        // Скрыть значок избранного в хедере десктоп-панели
+        const favBtn = document.getElementById('detailPanelFavBtn');
+        if (favBtn) favBtn.style.display = 'none';
         // Скрываем полноэкранную строку breadcrumbs
         const bcBar = document.getElementById('detailBreadcrumbBar');
         if (bcBar) {
@@ -15843,8 +15720,7 @@
         if (page === 'project-group') { setTimeout(() => { if (typeof projectsRenderGroup === 'function') projectsRenderGroup(); }, 30); }
         if (page === 'cable-journal-edit') { setTimeout(() => { if (typeof KipCableJournal !== 'undefined') KipCableJournal.init(); }, 30); }
         if (page === 'cable-journal-add')  { setTimeout(() => { if (typeof KipCableJournal !== 'undefined') KipCableJournal.initAddPage(); }, 30); }
-        if (page === 'device-notes') { setTimeout(() => { if (typeof KipNotes !== 'undefined') KipNotes.initNotesPage(); }, 30); }
-        if (page === 'device-notes-list') { setTimeout(() => { if (typeof KipNotes !== 'undefined') KipNotes.initNotesListPage(); }, 30); }
+        if (page === 'device-favorites') { setTimeout(() => { if (typeof KipFav !== 'undefined') KipFav.initFavoritesPage(); }, 30); }
         if (page === 'cable-journal-view') {
             if (isDesktop()) {
                 // На десктопе: рендерим в detail-panel вместо перехода
@@ -16128,8 +16004,7 @@
         'devices-prod':     'kip-ios',
         'devices':          'kip-ios',
         'device-detail':    'devices-prod',
-        'device-notes':     'device-detail',
-        'device-notes-list':'dashboard',
+        'device-favorites': 'dashboard',
         'dev-group':        'devices-prod',
         'lockouts-prod':    'kip-ios',
         'lockout-detail':   'lockouts-prod',
@@ -16179,8 +16054,7 @@
         'devices-name':     'Приборы по наименованию',
         'devices-prod':     'Приборы по производствам',
         'device-detail':    'Прибор',
-        'device-notes':     'Заметка',
-        'device-notes-list':'Заметки',
+        'device-favorites': 'Избранное',
         'dev-group':        'Группа приборов',
         'lockouts-prod':    'Блокировки',
         'lockout-detail':   'Блокировка',
@@ -16417,6 +16291,8 @@
                 'нажмите <svg class="pin-empty-icon" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg> на нужном пункте и выберите <b>«Добавить на главную»</b>, ' +
                 'или сделайте свайп влево/вправо по пункту — появится зелёная подложка <b>«Добавить»</b>.' +
                 '</div>';
+            // Даже если нет закреплённых, добавляем кнопку «Избранное» если есть избранное
+            if (typeof KipFav !== 'undefined') KipFav.updateDashboardButton();
             return;
         }
         let html = '<div class="menu-btn-row pinned-items-row">';
@@ -16447,8 +16323,8 @@
         container.innerHTML = html;
         // После рендера вешаем обработчики long-press + drag-and-drop на каждую карточку.
         attachPinnedDragHandlers();
-        // Добавить кнопку «Заметки» (если есть заметки)
-        if (typeof KipNotes !== 'undefined') KipNotes.updateDashboardButton();
+        // Добавить кнопку «Избранное» (если есть избранное)
+        if (typeof KipFav !== 'undefined') KipFav.updateDashboardButton();
     }
 
     // ============================================================
@@ -17158,7 +17034,7 @@
     // Запускаем после готовности DOM.
     document.addEventListener('DOMContentLoaded', function() {
         renderPinnedItems();
-        if (typeof KipNotes !== 'undefined') KipNotes.updateDashboardButton();
+        if (typeof KipFav !== 'undefined') KipFav.updateDashboardButton();
     });
 
     // Обработчик системной кнопки «Назад»
@@ -17952,7 +17828,7 @@
         const devGroupName = devGroupCtx.group || '';
         setDetailBreadcrumb('device-detail', name, devGroupName, 'dev-group');
         // Показать значок заметки в хедере десктоп-панели
-        if (typeof KipNotes !== 'undefined') KipNotes.updateHeaderIcon();
+        if (typeof KipFav !== 'undefined') KipFav.updateHeaderIcon();
     }
 
     function lockRenderDetailInPanel() {
@@ -21007,7 +20883,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                          'exam-tickets', 'tickets-4', 'tickets-5', 'tickets-6', 'tickets-1000v'],
         _KIP_IOS_PAGES: ['kip-ios',
                          'devices-prod', 'devices-type', 'devices-name', 'device-detail', 'dev-group',
-                         'device-notes', 'device-notes-list',
+                         'device-favorites',
                          'lockouts-prod', 'lockout-detail', 'lock-group',
                          'valves-prod', 'valves-type', 'valves-name', 'valve-detail', 'valve-group',
                          'regulators-prod', 'regulator-detail', 'regulator-group',
@@ -22038,88 +21914,99 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
     // ============================================================
 
     // ============================================================
-    // KipNotes — Заметки по приборам (localStorage)
+    // KipFav — Избранное: приборы (localStorage)
     // ============================================================
-    // Хранит заметки привязанные к приборам (по devId).
-    // Структура в localStorage (ключ KipNotes._STORAGE_KEY):
-    //   { "devId1": { text: "...", updatedAt: "ISO" }, ... }
+    // Хранит список ID приборов, добавленных в избранное.
+    // Структура в localStorage (ключ KipFav._STORAGE_KEY):
+    //   { "devId1": addedAt, "devId2": addedAt, ... }
+    //   (addedAt — ISO-строка времени добавления)
     //
     // UI:
-    //   - Значок-закладка в хедере карточки прибора (#deviceNoteBtn)
-    //   - Страница page-device-notes — заметка по конкретному прибору
-    //   - Страница page-device-notes-list — все приборы с заметками
-    //   - Кнопка «Заметки» на дашборде (динамическая)
+    //   - Значок-закладка в хедере карточки прибора (#deviceFavBtn / #detailPanelFavBtn)
+    //     — простой toggle: добавить/убрать из избранного
+    //   - Страница page-device-favorites — список избранных приборов (малые карточки)
+    //   - Кнопка «Избранное» на дашборде (динамическая, только если есть избранное)
     // ============================================================
-    const KipNotes = {
+    const KipFav = {
 
-        _STORAGE_KEY: 'kip8_device_notes_v1',
-        _notes: null,  // ленивый кэш
+        _STORAGE_KEY: 'kip8_device_fav_v1',
+        _data: null,  // ленивый кэш: { devId: addedAt, ... }
 
         // ----------------------------------------------------------
         // Хранилище
         // ----------------------------------------------------------
 
         _load: function() {
-            if (this._notes !== null) return;
+            if (this._data !== null) return;
             try {
                 const raw = localStorage.getItem(this._STORAGE_KEY);
-                this._notes = raw ? JSON.parse(raw) : {};
-            } catch (e) { this._notes = {}; }
+                this._data = raw ? JSON.parse(raw) : {};
+            } catch (e) { this._data = {}; }
         },
 
         _save: function() {
-            try { localStorage.setItem(this._STORAGE_KEY, JSON.stringify(this._notes || {})); } catch (e) {}
+            try { localStorage.setItem(this._STORAGE_KEY, JSON.stringify(this._data || {})); } catch (e) {}
         },
 
         _esc: function(s) {
             return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         },
 
-        /** Получить заметку по devId. Возвращает {text, updatedAt} или null. */
-        get: function(devId) {
+        /** Проверить, в избранном ли прибор. */
+        has: function(devId) {
             this._load();
-            return this._notes[devId] || null;
+            return this._data.hasOwnProperty(devId);
         },
 
-        /** Сохранить заметку. */
-        set: function(devId, text) {
+        /** Добавить прибор в избранное. */
+        add: function(devId) {
             this._load();
-            text = String(text || '').trim();
-            if (text) {
-                this._notes[devId] = { text: text, updatedAt: new Date().toISOString() };
-            } else {
-                delete this._notes[devId];
+            if (!this._data.hasOwnProperty(devId)) {
+                this._data[devId] = new Date().toISOString();
+                this._save();
+                this.updateDashboardButton();
+                this.updateHeaderIcon();
             }
-            this._save();
-            this.updateDashboardButton();
-            this.updateHeaderIcon();
         },
 
-        /** Удалить заметку. */
+        /** Убрать прибор из избранного. */
         remove: function(devId) {
             this._load();
-            delete this._notes[devId];
-            this._save();
-            this.updateDashboardButton();
-            this.updateHeaderIcon();
+            if (this._data.hasOwnProperty(devId)) {
+                delete this._data[devId];
+                this._save();
+                this.updateDashboardButton();
+                this.updateHeaderIcon();
+            }
         },
 
-        /** Количество заметок. */
+        /** Переключить избранное для прибора. Возвращает true если добавлен, false если убран. */
+        toggle: function(devId) {
+            if (this.has(devId)) {
+                this.remove(devId);
+                return false;
+            } else {
+                this.add(devId);
+                return true;
+            }
+        },
+
+        /** Количество избранных. */
         count: function() {
             this._load();
-            return Object.keys(this._notes).length;
+            return Object.keys(this._data).length;
         },
 
-        /** Все заметки (для списка). */
+        /** Все избранные (для списка). Возвращает [{devId, addedAt},...] отсортированные по addedAt desc. */
         all: function() {
             this._load();
             const result = [];
-            for (const devId in this._notes) {
-                if (this._notes.hasOwnProperty(devId)) {
-                    result.push({ devId: devId, text: this._notes[devId].text, updatedAt: this._notes[devId].updatedAt });
+            for (const devId in this._data) {
+                if (this._data.hasOwnProperty(devId)) {
+                    result.push({ devId: devId, addedAt: this._data[devId] });
                 }
             }
-            result.sort(function(a, b) { return (b.updatedAt || '').localeCompare(a.updatedAt || ''); });
+            result.sort(function(a, b) { return (b.addedAt || '').localeCompare(a.addedAt || ''); });
             return result;
         },
 
@@ -22130,73 +22017,63 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         /** Обновить состояние значка-закладки в хедере (мобильный + десктоп). */
         updateHeaderIcon: function() {
             // Мобильный: значок в page-device-detail хедере
-            const btn = document.getElementById('deviceNoteBtn');
+            const btn = document.getElementById('deviceFavBtn');
             if (btn) {
                 const devId = window._devDetailId;
-                const note = devId ? this.get(devId) : null;
-                btn.classList.toggle('active', !!note);
+                btn.classList.toggle('active', devId ? this.has(devId) : false);
             }
             // Десктоп: значок в detailPanel хедере
-            const dpBtn = document.getElementById('detailPanelNoteBtn');
+            const dpBtn = document.getElementById('detailPanelFavBtn');
             if (dpBtn) {
                 const devId = window._devDetailId;
                 // Показываем только если открыт прибор
                 const isDevDetail = devId && typeof devData !== 'undefined' && devData && devData.devices &&
                     devData.devices.find(function(d) { return String(d['ID'] || '') === String(devId); });
                 dpBtn.style.display = isDevDetail ? '' : 'none';
-                const note = devId ? this.get(devId) : null;
-                dpBtn.classList.toggle('active', !!note);
+                dpBtn.classList.toggle('active', devId ? this.has(devId) : false);
             }
         },
 
-        /** Клик по значку: переключить заметку для текущего прибора. */
+        /** Клик по значку: toggle избранного для текущего прибора. */
         toggleFromDetail: function() {
             const devId = window._devDetailId;
             if (!devId) return;
             if (navigator.vibrate) navigator.vibrate(10);
-            const note = this.get(devId);
-            if (note) {
-                // Есть заметка — перейти к просмотру/редактированию
-                navigateTo('device-notes');
-                setTimeout(function() { KipNotes.initNotesPage(); }, 30);
-            } else {
-                // Нет заметки — сразу открыть форму создания
-                navigateTo('device-notes');
-                setTimeout(function() { KipNotes.initNotesPage(true); }, 30);
+            const wasAdded = this.toggle(devId);
+            if (typeof KipToast !== 'undefined' && KipToast.show) {
+                KipToast.show(wasAdded ? 'Добавлено в избранное' : 'Убрано из избранного');
             }
         },
 
         // ----------------------------------------------------------
-        // UI: кнопка «Заметки» на дашборде
+        // UI: кнопка «Избранное» на дашборде
         // ----------------------------------------------------------
 
         updateDashboardButton: function() {
             const n = this.count();
-            // Рендерим кнопку «Заметки» внутри pinnedItemsContainer,
-            // чтобы на десктопе она получила ту же сетку (grid),
-            // что и закреплённые разделы.
-            // После renderPinnedItems() вызываем _appendNotesButton(),
-            // который добавляет кнопку в конец контейнера.
-            this._appendNotesButton(n);
+            this._appendFavButton(n);
         },
 
-        /** Добавить/обновить кнопку «Заметки» в pinnedItemsContainer. */
-        _appendNotesButton: function(n) {
+        /** Добавить/обновить кнопку «Избранное» в pinnedItemsContainer. */
+        _appendFavButton: function(n) {
             const container = document.getElementById('pinnedItemsContainer');
             if (!container) return;
             // Удалить старую кнопку если есть
-            const existing = document.getElementById('dashboardNotesBtn');
-            if (existing) existing.remove();
+            const existing = document.getElementById('dashboardFavBtn');
+            if (existing) {
+                const existingCell = existing.closest('.pinned-item-cell') || existing;
+                existingCell.remove();
+            }
 
-            if (n <= 0) return;  // Нет заметок — не показываем кнопку
+            if (n <= 0) return;  // Нет избранного — не показываем кнопку
 
             const word = n === 1 ? 'прибор' : (n >= 2 && n <= 4 ? 'прибора' : 'приборов');
-            const sublabel = n + ' ' + word + ' с заметками';
+            const sublabel = n + ' ' + word + ' в избранном';
 
             // Если контейнер пуст (нет закреплённых), нужно создать menu-btn-row
             let row = container.querySelector('.menu-btn-row.pinned-items-row');
             if (!row) {
-                // Нет закреплённых — создаём отдельный row для заметок
+                // Нет закреплённых — создаём отдельный row для избранного
                 row = document.createElement('div');
                 row.className = 'menu-btn-row pinned-items-row';
                 container.appendChild(row);
@@ -22204,13 +22081,13 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
             const cell = document.createElement('div');
             cell.className = 'pinned-item-cell';
-            cell.id = 'dashboardNotesBtn';
+            cell.id = 'dashboardFavBtn';
             cell.innerHTML =
                 '<div class="pinned-item-delete-bg pinned-item-delete-left"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Убрать</span></div>' +
                 '<div class="pinned-item-delete-bg pinned-item-delete-right"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Убрать</span></div>' +
-                '<div class="menu-btn pinned-item" data-pinned-key="_notes" onclick="navigateTo(\'device-notes-list\')" style="border-color:rgba(199,150,74,0.35);">' +
+                '<div class="menu-btn pinned-item" data-pinned-key="_fav" onclick="navigateTo(\'device-favorites\')" style="border-color:rgba(199,150,74,0.35);">' +
                     '<div class="menu-btn-text">' +
-                        '<div class="menu-btn-label" style="color:#c7964a;">Заметки</div>' +
+                        '<div class="menu-btn-label" style="color:#c7964a;">Избранное</div>' +
                         '<div class="menu-btn-sublabel">' + this._esc(sublabel) + '</div>' +
                     '</div>' +
                     '<i class="menu-btn-arrow" style="color:rgba(199,150,74,0.4);">›</i>' +
@@ -22219,157 +22096,82 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         },
 
         // ----------------------------------------------------------
-        // UI: страница заметок по конкретному прибору (page-device-notes)
+        // UI: страница избранного (page-device-favorites)
         // ----------------------------------------------------------
 
-        initNotesPage: function(startEditing) {
-            const devId = window._devDetailId;
-            const content = document.getElementById('deviceNotesContent');
-            const titleEl = document.getElementById('deviceNotesTitle');
+        initFavoritesPage: function() {
+            const content = document.getElementById('deviceFavoritesContent');
             if (!content) return;
 
-            // Получить имя прибора
-            let devName = '(прибор)';
-            if (typeof devData !== 'undefined' && devData && devData.devices) {
-                const dev = devData.devices.find(function(d) { return String(d['ID'] || '') === String(devId); });
-                if (dev) devName = dev['Наименование'] || '(прибор)';
-            }
-            if (titleEl) titleEl.textContent = 'Заметка: ' + devName;
-
-            const note = this.get(devId);
-
-            if (startEditing || !note) {
-                // Показать форму
-                const existingText = note ? this._esc(note.text) : '';
-                content.innerHTML =
-                    '<div class="dev-note-form">' +
-                        '<textarea id="devNoteTextarea" placeholder="Введите заметку…">' + existingText + '</textarea>' +
-                        '<div class="dev-note-form-buttons">' +
-                            '<button type="button" class="dev-note-save-btn" onclick="KipNotes.saveFromForm()">Сохранить</button>' +
-                            '<button type="button" class="dev-note-cancel-btn" onclick="KipNotes.cancelNote()">Отмена</button>' +
-                        '</div>' +
-                    '</div>';
-                setTimeout(function() {
-                    const ta = document.getElementById('devNoteTextarea');
-                    if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
-                }, 50);
-            } else {
-                // Показать заметку
-                const dateStr = note.updatedAt ? new Date(note.updatedAt).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-                content.innerHTML =
-                    '<div class="dev-note-card">' +
-                        '<div class="dev-note-card-header">' +
-                            '<div class="dev-note-card-device">' + this._esc(devName) + '</div>' +
-                            '<div class="dev-note-card-meta">' + dateStr + '</div>' +
-                        '</div>' +
-                        '<div class="dev-note-card-text">' + this._esc(note.text) + '</div>' +
-                        '<div class="dev-note-card-actions">' +
-                            '<button type="button" onclick="KipNotes.editNote()">Править</button>' +
-                            '<button type="button" class="dev-note-delete-btn" onclick="KipNotes.confirmDeleteNote()">Удалить</button>' +
-                        '</div>' +
-                    '</div>';
-            }
-        },
-
-        saveFromForm: function() {
-            const ta = document.getElementById('devNoteTextarea');
-            if (!ta) return;
-            const devId = window._devDetailId;
-            this.set(devId, ta.value);
-            // Перерисовать заметку (просмотр)
-            this.initNotesPage(false);
-            if (typeof KipToast !== 'undefined' && KipToast.show) {
-                KipToast.show('Заметка сохранена');
-            }
-        },
-
-        editNote: function() {
-            this.initNotesPage(true);
-        },
-
-        cancelNote: function() {
-            // Вернуться к карточке прибора
-            if (isDesktop()) {
-                if (typeof devRenderDetailInPanel === 'function') devRenderDetailInPanel();
-            } else {
-                navigateTo('device-detail');
-            }
-        },
-
-        confirmDeleteNote: function() {
-            if (confirm('Удалить заметку?')) {
-                const devId = window._devDetailId;
-                this.remove(devId);
-                if (typeof KipToast !== 'undefined' && KipToast.show) {
-                    KipToast.show('Заметка удалена');
-                }
-                // Вернуться к карточке прибора
-                if (isDesktop()) {
-                    if (typeof devRenderDetailInPanel === 'function') devRenderDetailInPanel();
-                } else {
-                    navigateTo('device-detail');
-                }
-            }
-        },
-
-        // ----------------------------------------------------------
-        // UI: список всех заметок (page-device-notes-list)
-        // ----------------------------------------------------------
-
-        initNotesListPage: function() {
-            const content = document.getElementById('deviceNotesListContent');
-            if (!content) return;
-
-            const notes = this.all();
-            if (notes.length === 0) {
-                content.innerHTML = '<div class="dev-note-empty">Нет заметок.<br>Откройте карточку прибора и нажмите значок закладки, чтобы добавить заметку.</div>';
+            const favs = this.all();
+            if (favs.length === 0) {
+                content.innerHTML = '<div class="dev-fav-empty">Нет приборов в избранном.<br>Откройте карточку прибора и нажмите значок закладки, чтобы добавить в избранное.</div>';
                 return;
             }
 
             const self = this;
-            let html = '<div class="dev-notes-list">';
-            notes.forEach(function(note) {
+            // Используем те же малые карточки, что и в списках приборов (dev-card)
+            let html = '<div class="dev-list">';
+            favs.forEach(function(fav) {
+                const devId = fav.devId;
                 // Найти данные прибора
-                let devName = note.devId;
+                let devName = devId;
                 let devType = '';
                 let devNumber = '';
                 let devPlace = '';
                 let devImgUrl = '';
                 if (typeof devData !== 'undefined' && devData && devData.devices) {
-                    const dev = devData.devices.find(function(d) { return String(d['ID'] || '') === String(note.devId); });
+                    const dev = devData.devices.find(function(d) { return String(d['ID'] || '') === String(devId); });
                     if (dev) {
-                        devName = dev['Наименование'] || note.devId;
+                        devName = dev['Наименование'] || devId;
                         devType = dev['Тип'] || '';
                         devNumber = dev['№ прибора'] || '';
                         devPlace = dev['Место установки'] || '';
                         if (typeof devGetImageUrl === 'function') devImgUrl = devGetImageUrl(dev) || '';
                     }
                 }
-                const dateStr = note.updatedAt ? new Date(note.updatedAt).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }) : '';
-                const preview = note.text.length > 80 ? note.text.substring(0, 80) + '…' : note.text;
                 const imgSrc = devImgUrl || (typeof DEV_PLACEHOLDER_SVG !== 'undefined' ? DEV_PLACEHOLDER_SVG : '');
+                const safeId = self._esc(devId).replace(/'/g, "\\'");
 
-                html +=
-                    '<div class="dev-note-device-card" onclick="KipNotes.openDeviceFromList(\'' + self._esc(note.devId).replace(/'/g, "\\'") + '\')">' +
-                        '<div class="dev-note-device-img">' +
-                            '<img src="' + self._esc(imgSrc) + '" alt="' + self._esc(devName) + '">' +
-                            (devType ? '<div class="dev-note-device-type">' + self._esc(devType) + '</div>' : '') +
-                        '</div>' +
-                        '<div class="dev-note-device-info">' +
-                            '<div class="dev-note-device-name">' + self._esc(devName) + '</div>' +
-                            (devNumber ? '<div class="dev-note-device-row"><span class="dev-note-device-label">№</span> <span class="dev-note-device-val">' + self._esc(devNumber) + '</span></div>' : '') +
-                            (devPlace ? '<div class="dev-note-device-row"><span class="dev-note-device-label">Место</span> <span class="dev-note-device-val">' + self._esc(devPlace) + '</span></div>' : '') +
-                            '<div class="dev-note-device-text">' + self._esc(preview) + '</div>' +
-                            '<div class="dev-note-device-date">' + dateStr + '</div>' +
-                        '</div>' +
-                    '</div>';
+                html += '<div class="dev-card" data-dev-id="' + self._esc(devId) + '">';
+                html += '<div class="dev-card-header" onclick="KipFav.openDeviceFromFav(\'' + safeId + '\')">';
+                html += '<div class="dev-card-header-inner">';
+                html += '<div class="dev-card-image-wrap">';
+                html += '<img class="dev-card-image" src="' + self._esc(imgSrc) + '" alt="' + self._esc(devName) + '" loading="lazy">';
+                html += '<div class="dev-card-name-overlay">' + self._esc(devName) + '</div>';
+                html += '</div>'; // .dev-card-image-wrap
+                html += '<div class="dev-card-text">';
+                html += '<div class="dev-card-title">' + self._esc(devName) + '</div>';
+                let subtitle = '';
+                if (devType) subtitle += devType;
+                if (devNumber) subtitle += (subtitle ? ' · №' : '№') + devNumber;
+                if (devPlace) subtitle += (subtitle ? ' · ' : '') + devPlace;
+                if (subtitle) {
+                    html += '<div class="dev-card-subtitle">' + self._esc(subtitle) + '</div>';
+                }
+                html += '</div>'; // .dev-card-text
+                html += '<div class="dev-card-info-block">';
+                if (devType) {
+                    html += '<div class="dev-card-info-row">' + self._esc(devType) + '</div>';
+                }
+                if (devNumber) {
+                    html += '<div class="dev-card-info-row" style="color:#6aa6e0;font-weight:600;">№ ' + self._esc(devNumber) + '</div>';
+                }
+                if (devPlace) {
+                    html += '<div class="dev-card-info-row">' + self._esc(devPlace) + '</div>';
+                }
+                html += '</div>'; // .dev-card-info-block
+                html += '<span class="dev-card-arrow"></span>';
+                html += '</div>'; // .dev-card-header-inner
+                html += '</div>'; // .dev-card-header
+                html += '</div>'; // .dev-card
             });
             html += '</div>';
             content.innerHTML = html;
         },
 
-        /** Открыть подробную карточку прибора из списка заметок. */
-        openDeviceFromList: function(devId) {
+        /** Открыть подробную карточку прибора из избранного. */
+        openDeviceFromFav: function(devId) {
             if (!devId) return;
             window._devDetailId = devId;
             if (isDesktop()) {
@@ -24419,6 +24221,9 @@ async function refreshAppData() {
                 }
             }
         }
+
+        // Обновить кнопку «Избранное» на дашборде (после обновления данных)
+        if (typeof KipFav !== 'undefined') KipFav.updateDashboardButton();
 
         showToast('Данные обновлены');
     } catch (e) {
