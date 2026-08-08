@@ -2512,6 +2512,8 @@
     .ticket-cat-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
     .ticket-cat-info { position: relative; z-index: 1; padding: 28px 12px 12px 12px; display: flex; flex-direction: column; justify-content: flex-end; min-height: 130px; }
     .ticket-cat-title { font-size: 20px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; background: rgba(255,255,255,0.20); padding: 6px 14px; border-radius: 8px; display: inline-block; align-self: flex-start; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+    /* Обёртка сетки категорий билетов (мобильный: вертикальный стек) */
+    .ticket-cat-grid { padding: 0 16px; }
 
     [data-theme="light"] .ticket-cat-title { color: #1a1a1a; background: rgba(255,255,255,0.20); }
 
@@ -6096,6 +6098,57 @@
             display: none;
         }
 
+        /* --- Экзаменационные билеты: 3 колонки как Библиотека, с картинками --- */
+        .ticket-cat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 0 16px;
+        }
+        .ticket-cat-card {
+            border-radius: 4px;
+            min-height: 160px;
+            margin-bottom: 0;
+        }
+        .ticket-cat-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+        .ticket-cat-card img {
+            /* Картинка остаётся фоновым cover — как на мобильном, но компактнее */
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .ticket-cat-info {
+            min-height: 0;
+            padding: 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: stretch;
+        }
+        .ticket-cat-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 0;
+            background: rgba(0, 0, 0, 0.45);
+            color: #fff;
+            padding: 8px 6px;
+            border-radius: 0 0 4px 4px;
+            align-self: stretch;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        [data-theme="light"] .ticket-cat-title {
+            background: rgba(255, 255, 255, 0.75);
+            color: #1a1a1a;
+        }
+
         /* --- КИП ИОС: отдельные кнопки под блоком (Проекты, Кабельный журнал, План) --- */
         #page-kip-ios > .menu-btn-row {
             grid-template-columns: repeat(3, 1fr);
@@ -8243,7 +8296,7 @@
         <div id="page-exam-tickets" class="page-content">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Экзаменационные билеты</div></div>
 
-            <div style="padding: 0 16px;">
+            <div class="ticket-cat-grid">
                 <div class="ticket-cat-card" onclick="navigateTo('tickets-1000v')">
                     <img src="images/1000В.png" alt="1000В">
                     <div class="ticket-cat-info"><div class="ticket-cat-title">Билеты до 1000 В</div></div>
