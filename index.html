@@ -1075,6 +1075,14 @@
     }
     .toast.show { transform: translateY(0); opacity: 1; }
     .toast svg { width: 14px; height: 14px; stroke: #4ac771; fill: none; stroke-width: 2; stroke-linecap: round; }
+    .toast-action {
+        margin-left: auto; padding: 2px 8px; border-radius: 4px;
+        background: rgba(74,199,113,0.15); color: #4ac771;
+        font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap;
+        transition: background 0.15s;
+    }
+    .toast-action:active { background: rgba(74,199,113,0.3); }
+    [data-theme="light"] .toast-action { background: rgba(90,138,58,0.1); color: #5a8a3a; }
     
 
     
@@ -4554,6 +4562,7 @@
         align-items: center;
         gap: 0;
         min-height: 56px;
+        padding-right: 36px;  /* отступ под значок избранного (.dev-card-fav-btn) */
     }
     .dev-card.expanded .dev-card-header-inner {
         align-items: flex-start;
@@ -5189,6 +5198,28 @@
     .dev-fav-note-action:hover { color: #c7964a; }
     [data-theme="light"] .dev-fav-note-row { background: rgba(184,134,11,0.04); border-top-color: rgba(184,134,11,0.08); color: #8a6d2b; }
     [data-theme="light"] .dev-fav-note-action:hover { color: #8a6d2b; }
+
+    /* === Свайп для удаления из избранного === */
+    .fav-card-cell {
+        position: relative;
+        overflow: hidden;
+    }
+    .fav-card-delete-bg {
+        position: absolute; top: 0; bottom: 0; left: 0; right: 0;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(220,80,80,0.12);
+        color: #d05050; font-size: 13px; font-weight: 600;
+        opacity: 0; pointer-events: none;
+        transition: opacity 0.1s;
+    }
+    .dev-card.fav-swipe-active {
+        position: relative; z-index: 2;
+        transition: none;
+    }
+    .dev-card.fav-swipe-removing {
+        transition: transform 0.2s ease-out;
+    }
+    [data-theme="light"] .fav-card-delete-bg { background: rgba(180,40,40,0.08); color: #a83030; }
     [data-theme="light"] .dev-detail-card {
         background: rgba(255, 252, 245, 0.96);
     }
@@ -9270,7 +9301,7 @@
     </div>
 </div>
 
-<div id="toast" class="toast"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg><span id="toastMessage"></span></div>
+<div id="toast" class="toast"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg><span id="toastMessage"></span><span id="toastAction" class="toast-action" style="display:none;"></span></div>
 
 <!-- ===== Нижний бар быстрого доступа (только на главной) ===== -->
 <div id="dashboardBottomBar" class="dashboard-bottom-bar">
@@ -18396,7 +18427,24 @@ document.addEventListener('click', function(e) {
     }
 });
 
-function showToast(msg) { let t = document.getElementById('toast'); document.getElementById('toastMessage').textContent = msg; t.classList.add('show'); if (navigator.vibrate) navigator.vibrate(50); setTimeout(() => t.classList.remove('show'), 2500); }
+function showToast(msg, actionText, actionFn) {
+    let t = document.getElementById('toast');
+    let m = document.getElementById('toastMessage');
+    let a = document.getElementById('toastAction');
+    m.textContent = msg;
+    if (actionText && actionFn) {
+        a.textContent = actionText;
+        a.style.display = 'inline';
+        a.onclick = function() { t.classList.remove('show'); a.style.display = 'none'; a.onclick = null; actionFn(); };
+    } else {
+        a.style.display = 'none';
+        a.onclick = null;
+    }
+    t.classList.add('show');
+    if (navigator.vibrate) navigator.vibrate(50);
+    clearTimeout(t._hideTimer);
+    t._hideTimer = setTimeout(() => { t.classList.remove('show'); a.style.display = 'none'; a.onclick = null; }, 3000);
+}
 
     // ======================== КОНВЕРТЕРЫ (полные данные) ========================
     const unitData = {
@@ -22296,8 +22344,10 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             if (!devId) return;
             if (navigator.vibrate) navigator.vibrate(10);
             const wasAdded = this.toggle(devId);
-            if (typeof KipToast !== 'undefined' && KipToast.show) {
-                KipToast.show(wasAdded ? 'Добавлено в избранное' : 'Убрано из избранного');
+            if (wasAdded) {
+                showToast('Добавлено в избранное', 'Открыть', function() { navigateTo('device-favorites'); });
+            } else {
+                showToast('Убрано из избранного');
             }
         },
 
@@ -22409,6 +22459,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 // Заметка
                 const note = KipFavNotes.get(devId);
 
+                html += '<div class="fav-card-cell" data-fav-id="' + self._esc(devId) + '">';
+                html += '<div class="fav-card-delete-bg">Убрать</div>';
                 html += '<div class="dev-card" data-dev-id="' + self._esc(devId) + '">';
                 html += self._cardFavBtnHtml(devId);
                 html += '<div class="dev-card-header" onclick="KipFav.openDeviceFromFav(\'' + safeId + '\')">';
@@ -22454,9 +22506,11 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 html += '<span>' + (note ? 'Изменить заметку' : 'Добавить заметку') + '</span>';
                 html += '</div>';
                 html += '</div>'; // .dev-card
+                html += '</div>'; // .fav-card-cell
             });
             html += '</div>';
             content.innerHTML = html;
+            this._attachFavSwipe();
         },
 
         /** Открыть подробную карточку прибора из избранного. */
@@ -22468,6 +22522,117 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             } else {
                 navigateTo('device-detail');
             }
+        },
+
+        // ----------------------------------------------------------
+        // Свайп для удаления из избранного
+        // ----------------------------------------------------------
+
+        _favSwipeState: null,
+
+        _attachFavSwipe: function() {
+            const cells = document.querySelectorAll('#deviceFavoritesContent .fav-card-cell');
+            const self = this;
+            cells.forEach(function(cell) {
+                const card = cell.querySelector('.dev-card');
+                if (!card) return;
+                card.addEventListener('pointerdown', function(e) {
+                    if (e.button !== undefined && e.button !== 0) return;
+                    // Не начинаем свайп с кнопки избранного
+                    if (e.target.closest('.dev-card-fav-btn')) return;
+                    if (e.target.closest('.dev-fav-note-action')) return;
+                    self._favSwipeState = {
+                        cell: cell,
+                        card: card,
+                        startX: e.clientX,
+                        startY: e.clientY,
+                        width: card.offsetWidth,
+                        dx: 0,
+                        decided: false
+                    };
+                    window.addEventListener('pointermove', self._onFavSwipeMove);
+                    window.addEventListener('pointerup', self._onFavSwipeEnd);
+                    window.addEventListener('pointercancel', self._onFavSwipeEnd);
+                });
+            });
+        },
+
+        _onFavSwipeMove: function(e) {
+            const st = KipFav._favSwipeState;
+            if (!st || st.decided) return;
+            const dx = e.clientX - st.startX;
+            const dy = e.clientY - st.startY;
+            // Если ещё не решили направление
+            if (!st.swiping) {
+                if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+                // Горизонтальное движение преобладает → свайп
+                if (Math.abs(dx) > Math.abs(dy) * 1.3) {
+                    st.swiping = true;
+                    st.card.classList.add('fav-swipe-active');
+                    if (navigator.vibrate) navigator.vibrate(5);
+                } else {
+                    // Вертикальное → скролл, отменяем
+                    KipFav._cleanupFavSwipe();
+                    return;
+                }
+            }
+            e.preventDefault();
+            // Сопротивление (резина) при выходе за пределы
+            let effectiveDx = dx;
+            if (Math.abs(dx) > st.width * 0.6) {
+                const over = Math.abs(dx) - st.width * 0.6;
+                effectiveDx = Math.sign(dx) * (st.width * 0.6 + over * 0.25);
+            }
+            st.dx = effectiveDx;
+            st.card.style.transform = 'translateX(' + effectiveDx + 'px)';
+            // Показываем подложку
+            const bg = st.cell.querySelector('.fav-card-delete-bg');
+            if (bg) {
+                bg.style.opacity = Math.min(1, Math.abs(effectiveDx) / 80);
+            }
+        },
+
+        _onFavSwipeEnd: function(e) {
+            const st = KipFav._favSwipeState;
+            if (!st) return;
+            if (!st.swiping) {
+                KipFav._cleanupFavSwipe();
+                return;
+            }
+            const threshold = st.width * 0.25;
+            const shouldDelete = Math.abs(st.dx) > threshold;
+            if (shouldDelete) {
+                const devId = st.cell.getAttribute('data-fav-id');
+                // Анимация удаления
+                st.card.classList.remove('fav-swipe-active');
+                st.card.classList.add('fav-swipe-removing');
+                st.card.style.transform = 'translateX(' + (Math.sign(st.dx) * st.width * 1.2) + 'px)';
+                if (navigator.vibrate) navigator.vibrate(20);
+                setTimeout(function() {
+                    KipFav.remove(devId);
+                    KipFavNotes.remove(devId);
+                    KipFav.initFavoritesPage();
+                    showToast('Убрано из избранного');
+                }, 220);
+            } else {
+                // Возвращаем на место
+                st.card.style.transition = 'transform 0.2s ease';
+                st.card.style.transform = 'translateX(0)';
+                const bg = st.cell.querySelector('.fav-card-delete-bg');
+                if (bg) bg.style.opacity = '0';
+                setTimeout(function() {
+                    st.card.style.transition = '';
+                    st.card.classList.remove('fav-swipe-active');
+                }, 200);
+            }
+            KipFav._cleanupFavSwipe();
+        },
+
+        _cleanupFavSwipe: function() {
+            window.removeEventListener('pointermove', KipFav._onFavSwipeMove);
+            window.removeEventListener('pointerup', KipFav._onFavSwipeEnd);
+            window.removeEventListener('pointercancel', KipFav._onFavSwipeEnd);
+            KipFav._favSwipeState = null;
         },
 
         // ----------------------------------------------------------
@@ -22535,10 +22700,10 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             }
             // Также обновить значок в хедере если это тот же прибор
             this.updateHeaderIcon();
-            if (typeof KipToast !== 'undefined' && KipToast.show) {
-                KipToast.show(wasAdded ? 'Добавлено в избранное' : 'Убрано из избранного');
+            if (wasAdded) {
+                showToast('Добавлено в избранное', 'Открыть', function() { navigateTo('device-favorites'); });
             } else {
-                showToast(wasAdded ? 'Добавлено в избранное' : 'Убрано из избранного');
+                showToast('Убрано из избранного');
             }
         },
 
