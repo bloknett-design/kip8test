@@ -6456,17 +6456,31 @@
         /* Карточки в detail-panel — адаптация для десктопа */
         #detailPanel .dev-detail-card {
             max-width: 100%;
+            padding-left: 0;  /* картинка вплотную к левому краю */
+        }
+        /* Верхний блок: картинка квадратная слева, №/Место справа */
+        #detailPanel .dev-detail-top {
+            flex-direction: row;  /* ряд: картинка + мета */
+            margin-bottom: 14px;
+        }
+        /* Квадратный блок картинки на десктопе */
+        #detailPanel .dev-detail-image-wrap {
+            width: 160px;
+            height: 160px;
+            border-radius: 0 12px 12px 0;  /* скругление только справа */
         }
         #detailPanel .dev-detail-image {
-            max-height: 200px;
-            object-fit: contain;
+            object-fit: cover;  /* заполнить квадрат */
         }
-        #detailPanel .dev-detail-top {
-            flex-direction: column;
+        /* Мета-блок справа от картинки */
+        #detailPanel .dev-detail-meta {
+            padding-left: 14px;
+            padding-right: 14px;
         }
-        #detailPanel .dev-detail-image-wrap {
-            width: 100%;
-            max-height: 200px;
+        /* Строки данных — отступ слева как у карты */
+        #detailPanel .dev-detail-rows {
+            margin-left: 14px;
+            margin-right: 14px;
         }
         /* Inline-заголовок страницы скрываем на десктопе (есть top bar) */
         #contentArea > .page-content.active > .page-inline-header {
@@ -6477,35 +6491,6 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
         }
-    }
-
-
-    @media (min-width: 1024px) {
-        /* Карточки в detail-panel — адаптация для десктопа */
-        #detailPanel .dev-detail-card {
-            max-width: 100%;
-        }
-        #detailPanel .dev-detail-image {
-            max-height: 200px;
-            object-fit: contain;
-        }
-        #detailPanel .dev-detail-top {
-            flex-direction: column;
-        }
-        #detailPanel .dev-detail-image-wrap {
-            width: 100%;
-            max-height: 200px;
-        }
-        /* Inline-заголовок страницы скрываем на десктопе (есть top bar) */
-        #contentArea > .page-content.active > .page-inline-header {
-            position: sticky;
-            top: 0;
-            z-index: 5;
-            background: var(--header-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-        }
-
     }
 
     @media (min-width: 1024px) {
