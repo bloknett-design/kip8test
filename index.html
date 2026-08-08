@@ -5349,29 +5349,36 @@
     .fav-card {
         display: flex;
         flex-direction: column;
-        align-items: stretch;
         min-height: 56px;
         padding: 0;
         touch-action: pan-y;  /* вертикальный скролл разрешён, горизонтальный — нет (для свайпа) */
     }
+    /* Верхняя строка: миниатюра слева + данные справа */
+    .fav-card-top {
+        display: flex;
+        align-items: flex-start;
+    }
     .fav-card-type-badge {
+        flex-shrink: 0;
         display: flex; align-items: center; justify-content: center;
-        width: 100%; height: 48px;
-        font-size: 20px; font-weight: 700; color: #fff;
+        width: 48px; height: 48px;
+        font-size: 18px; font-weight: 700; color: #fff;
         letter-spacing: 1px;
         opacity: 0.85;
+        margin: 8px 0 8px 0;
     }
     .fav-card-img {
-        width: 100%; height: 110px;
+        flex-shrink: 0;
+        width: 56px; height: 56px;
         border-radius: 0;
         object-fit: cover;
         background: rgba(255, 255, 255, 0.08);
-        display: block;
+        margin: 8px 10px 8px 0;
     }
     .fav-card-body {
         flex: 1;
         min-width: 0;
-        padding: 8px 14px 4px;
+        padding: 8px 14px 4px 0;
     }
     [data-theme="light"] .fav-card-img { background: rgba(0,0,0,0.04); }
 
@@ -22818,11 +22825,11 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 html += '<div class="fav-card-delete-bg fav-card-delete-right"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Убрать</span></div>';
                 // Карточка
                 html += '<div class="dev-card fav-card" data-dev-id="' + self._esc(favKey) + '">';
-                // Картинка — баннер без скруглений (только для приборов с картинкой)
+                // Верхняя строка: миниатюра/бейдж слева + данные справа
+                html += '<div class="fav-card-top">';
                 if (type === 'dev' && imgSrc) {
                     html += '<img class="fav-card-img" src="' + self._esc(imgSrc) + '" alt="' + self._esc(itemName) + '" loading="lazy">';
                 } else {
-                    // Для не-приборов: цветной бейдж типа вместо картинки
                     html += '<div class="fav-card-type-badge" style="background:' + meta.color + ';">' + meta.label + '</div>';
                 }
                 // Текстовый блок
@@ -22835,6 +22842,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     html += '<div class="dev-card-subtitle">' + self._esc(subtitle) + '</div>';
                 }
                 html += '</div>'; // .fav-card-body
+                html += '</div>'; // .fav-card-top
                 // Заметка
                 if (note) {
                     html += '<div class="dev-fav-note-row" onclick="event.stopPropagation(); KipFavNotes.prompt(\'' + safeKey + '\')">';
