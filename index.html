@@ -5779,6 +5779,7 @@
         }
 
         /* --- Detail Breadcrumb Bar (полноэкранная строка пути) --- */
+        /* Стилизована как page-inline-header: шеврон слева, крошки по центру, ✕ справа */
         #detailBreadcrumbBar {
             display: none;
             position: sticky;
@@ -5788,22 +5789,49 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border-color, rgba(74, 143, 199, 0.15));
-            padding: 10px 20px;
+            padding: 0 20px 0 8px;
             align-items: center;
-            gap: 10px;
-            min-height: 44px;
+            gap: 6px;
+            height: 56px;
             width: 100%;
+            flex-shrink: 0;
         }
         #detailBreadcrumbBar.active {
             display: flex;
         }
+        /* Шеврон «назад» в строке крошек — как в page-inline-header */
+        .detail-breadcrumb-chevron {
+            position: absolute;
+            top: 0; bottom: 0; left: 4px;
+            display: flex; align-items: center;
+            cursor: pointer;
+            -webkit-user-select: none; user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            padding: 0 6px 0 8px;
+            border-radius: 6px;
+            transition: background 0.15s;
+            z-index: 2;
+        }
+        .detail-breadcrumb-chevron:active { background: rgba(74, 143, 199, 0.15); }
+        .detail-breadcrumb-chevron svg {
+            width: 14px; height: 14px;
+            stroke: rgba(140, 170, 200, 0.85);
+            fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round;
+            pointer-events: none;
+        }
+        [data-theme="light"] .detail-breadcrumb-chevron svg {
+            stroke: rgba(42, 93, 143, 0.7);
+        }
         #detailBreadcrumbContent {
             flex: 1;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 500;
             color: var(--text-primary);
             white-space: normal;
-            line-height: 1.5;
+            line-height: 1.4;
+            padding: 0 16px 0 40px;
+            min-width: 0;
         }
         .detail-breadcrumb-close {
             width: 32px;
@@ -5824,9 +5852,9 @@
         /* --- Detail Panel (правая панель) --- */
         #detailPanel {
             display: none;
-            width: 48%;
-            min-width: 380px;
-            max-width: 580px;
+            width: 50%;
+            min-width: 400px;
+            max-width: none;
             border-left: 2px solid var(--border-color, rgba(74, 143, 199, 0.25));
             background: var(--bg-primary);
             overflow: hidden;
@@ -5859,6 +5887,11 @@
         body:has(#detailPanel.active) #contentArea > .page-content.active {
             background: var(--bg-tertiary);
             border-right: 1px solid var(--border-color, rgba(74, 143, 199, 0.1));
+        }
+        /* Когда detail-panel открыт — скрываем page-inline-header в левой панели,
+           т.к. полная строка крошек (#detailBreadcrumbBar) уже показывает путь */
+        body:has(#detailPanel.active) #contentArea > .page-content.active > .page-inline-header {
+            display: none;
         }
         /* Карточки в левой панели переключаются на 1 колонку для мастер-детали */
         body:has(#detailPanel.active) .dev-group-body,
@@ -6728,6 +6761,9 @@
 
     <!-- ===== Десктоп: полноэкранная строка breadcrumbs для detail-панели ===== -->
     <div id="detailBreadcrumbBar">
+        <div class="detail-breadcrumb-chevron" onclick="closeDetailPanel()" aria-label="Назад">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </div>
         <div id="detailBreadcrumbContent"></div>
         <button type="button" class="detail-breadcrumb-close" onclick="closeDetailPanel()" aria-label="Закрыть панель">
             <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:rgba(74,143,199,0.9);fill:none;stroke-width:2;stroke-linecap:round;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -17363,7 +17399,8 @@
         const path = buildBreadcrumbPath(pageType);
 
         // Строим HTML: «Главная / ... / Родительский список / Группа / Название карточки»
-        let html = '<span class="breadcrumb-link" style="font-size:13px;" onclick="navigateTo(\'dashboard\', false)">Главная</span>';
+        // Font-size наследуется от #detailBreadcrumbContent (14px), inline style не нужен
+        let html = '<span class="breadcrumb-link" onclick="navigateTo(\'dashboard\', false)">Главная</span>';
 
         for (let i = 0; i < path.length; i++) {
             const pageId = path[i];
@@ -17371,23 +17408,23 @@
             html += '<span class="breadcrumb-sep"> / </span>';
 
             // Все сегменты кликабельны — клик закрывает detail-панель и переходит
-            html += '<span class="breadcrumb-link" style="font-size:13px;" onclick="closeDetailPanel(); navigateTo(\'' + pageId + '\', false)">' + label + '</span>';
+            html += '<span class="breadcrumb-link" onclick="closeDetailPanel(); navigateTo(\'' + pageId + '\', false)">' + label + '</span>';
         }
 
         // Название группы (например «Корпус 114. Общее») — кликабельно, если задана groupNavPage
         if (groupName) {
             html += '<span class="breadcrumb-sep"> / </span>';
             if (groupNavPage) {
-                html += '<span class="breadcrumb-link" style="font-size:13px;" onclick="closeDetailPanel(); navigateTo(\'' + groupNavPage + '\', false)">' + groupName + '</span>';
+                html += '<span class="breadcrumb-link" onclick="closeDetailPanel(); navigateTo(\'' + groupNavPage + '\', false)">' + groupName + '</span>';
             } else {
-                html += '<span class="breadcrumb-current" style="font-size:13px;">' + groupName + '</span>';
+                html += '<span class="breadcrumb-current">' + groupName + '</span>';
             }
         }
 
         // Последний сегмент — название карточки (жирный, не кликабелен)
         if (itemName) {
             html += '<span class="breadcrumb-sep"> / </span>';
-            html += '<span class="breadcrumb-current" style="font-size:13px;">' + itemName + '</span>';
+            html += '<span class="breadcrumb-current">' + itemName + '</span>';
         }
 
         bar.innerHTML = html;
