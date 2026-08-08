@@ -22343,6 +22343,11 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 }
                 return;
             }
+            // Сбросить режим правки — мы открываем форму добавления,
+            // а не правки существующей записи. Без этого _editingRow
+            // мог остаться от предыдущего openEdit() и initAddPage
+            // отрендерил бы форму с данными правки вместо пустых полей.
+            this._editingRow = null;
             navigateTo('cable-journal-add');
         },
 
