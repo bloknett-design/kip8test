@@ -2019,6 +2019,42 @@
         color: var(--text-secondary);
         line-height: 1.5;
     }
+    /* Единый блок обновлений */
+    .wn-update-single {
+        padding: 16px 18px;
+    }
+    .wn-update-list {
+        list-style: none;
+        padding: 0;
+        margin: 8px 0 0 0;
+    }
+    .wn-update-list li {
+        font-size: 13px;
+        color: var(--text-secondary);
+        line-height: 1.55;
+        padding: 5px 0 5px 18px;
+        position: relative;
+        border-bottom: 1px solid var(--card-border);
+    }
+    .wn-update-list li:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    .wn-update-list li::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 11px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--accent-color, #4a8fc7);
+        opacity: .6;
+    }
+    .wn-update-list li b {
+        color: var(--text-primary);
+        font-weight: 600;
+    }
 
     /* Сетка возможностей */
     .wn-feature-grid {
@@ -3325,6 +3361,10 @@
     }
     [data-theme="light"] .global-overlay {
         background: radial-gradient(ellipse at center, transparent 40%, rgba(240, 238, 230, 0.85) 95%);
+    }
+    /* Десктоп: убираем затуманивание по краям */
+    @media (min-width: 1024px) {
+        .global-overlay { display: none; }
     }
 
     /* ============================================================
@@ -10195,34 +10235,15 @@
                 <div class="wn-section">
                     <div class="wn-section-title"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin$"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> Последние обновления</div>
 
-                    <div class="wn-update-card">
-                        <div class="wn-update-date">Август 2026</div>
-                        <div class="wn-update-title">Кнопка избранного для всех типов записей</div>
-                        <div class="wn-update-desc">Значок-закладка теперь доступен не только в карточках приборов, но и в полных карточках блокировок, клапанов и регуляторов — как на мобильном, так и на десктопе.</div>
-                    </div>
-
-                    <div class="wn-update-card">
-                        <div class="wn-update-date">Август 2026</div>
-                        <div class="wn-update-title">Улучшено перетаскивание на мобильном</div>
-                        <div class="wn-update-desc">Карточки на главной и в избранном больше не «прилипают» при вертикальном движении пальца. Вертикальный скролл и долгое зажатие для перетаскивания теперь чётко разделены.</div>
-                    </div>
-
-                    <div class="wn-update-card">
-                        <div class="wn-update-date">Июль 2026</div>
-                        <div class="wn-update-title">Страница обновлений и справки</div>
-                        <div class="wn-update-desc">Новая страница с описанием возможностей, инструкциями и историей обновлений. Значок вопроса в верхнем баре подсвечивается красным при появлении новостей.</div>
-                    </div>
-
-                    <div class="wn-update-card">
-                        <div class="wn-update-date">Июнь 2026</div>
-                        <div class="wn-update-title">Избранное с перетаскиванием</div>
-                        <div class="wn-update-desc">Список избранных записей можно перетаскивать для изменения порядка (долгое зажатие) и удалять свайпом. Карточки закреплённых разделов на главной тоже поддерживают перетаскивание и свайп-удаление.</div>
-                    </div>
-
-                    <div class="wn-update-card">
-                        <div class="wn-update-date">Май 2026</div>
-                        <div class="wn-update-title">Десктоп: разделённый экран</div>
-                        <div class="wn-update-desc">На экранах шириной 1024 px и больше список и детальная карточка отображаются рядом. Кнопка-стрелки позволяет поменять панели местами. Значок избранного появляется в правом верхнем углу карточки.</div>
+                    <div class="wn-update-card wn-update-single">
+                        <div class="wn-update-date">Версия 2.0.0</div>
+                        <ul class="wn-update-list">
+                            <li><b>Настраиваемый дашборд</b> — закрепляйте разделы на главной, перетаскивайте карточки для изменения порядка, удаляйте свайпом.</li>
+                            <li><b>Избранное для всех каталогов</b> — закладка доступна не только в приборах, но и в блокировках, клапанах и регуляторах. Список избранного можно перетаскивать и очищать свайпом.</li>
+                            <li><b>Десктоп: разделённый экран</b> — на широких экранах список и карточка деталей показываются рядом; кнопка ⇄ меняет панели местами.</li>
+                            <li><b>Перетаскивание и свайпы</b> — долгое зажатие + перетаскивание для смены порядка; свайп по карточке — удаление из закреплённых / избранного или добавление в каталогах.</li>
+                            <li><b>Страница обновлений и справки</b> — раздел «Что нового» с возможностями и инструкциями; значок <b>?</b> в верхнем баре подсвечивается красным при непрочитанных обновлениях.</li>
+                        </ul>
                     </div>
                 </div>
 
