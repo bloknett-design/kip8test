@@ -2575,13 +2575,49 @@
     }
 
     /* Кнопки правки/удаления в карточке просмотра кабеля */
-    .cj-view-actions {
-        display: flex;
-        gap: 10px;
-        margin-top: 16px;
-        padding-top: 12px;
+    /* Нижний бар — фиксированный внизу экрана, с вертикальной разделительной линией */
+    .cj-view-bottom-bar {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        z-index: 80;
+        display: none; /* скрыт по умолчанию; показывается при _canEdit */
+        align-items: stretch;
+        background: var(--bottom-nav-bg, rgba(23, 33, 43, 0.95));
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
         border-top: 1px solid var(--card-border);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
     }
+    /* Показываем бар только когда активна страница просмотра кабеля */
+    body:has(#page-cable-journal-view.active) .cj-view-bottom-bar:not(:empty) {
+        display: flex;
+    }
+    /* Отступ контента, чтобы не перекрывался баром */
+    body:has(#page-cable-journal-view.active) .cj-view-page-body {
+        padding-bottom: 60px;
+    }
+    .cj-view-bottom-bar-btn {
+        flex: 1;
+        display: flex; align-items: center; justify-content: center;
+        padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+        border: none; background: transparent;
+        font-size: 15px; font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .cj-view-bottom-bar-btn:active { background: rgba(106,166,224,0.12); }
+    .cj-view-bottom-bar-btn-edit { color: #6aa6e0; }
+    .cj-view-bottom-bar-btn-delete { color: #e55; }
+    .cj-view-bottom-bar-divider {
+        width: 1px;
+        background: var(--card-border);
+        flex-shrink: 0;
+    }
+    [data-theme="light"] .cj-view-bottom-bar {
+        background: rgba(255,255,255,0.95);
+    }
+    [data-theme="light"] .cj-view-bottom-bar-btn-edit { color: #1a5a8a; }
+    [data-theme="light"] .cj-view-bottom-bar-btn-delete { color: #c33; }
 
     /* ========== Экзаменационные билеты ========== */
     .ticket-cat-card { position: relative; border-radius: 14px; margin-bottom: 10px; cursor: pointer; transition: transform .15s; overflow: hidden; min-height: 120px; }
@@ -7649,6 +7685,9 @@
                     <div class="admin-empty">Загрузка…</div>
                 </div>
             </div>
+
+            <!-- Нижний бар с кнопками Править / Удалить (только для canEdit) -->
+            <div id="cjViewBottomBar" class="cj-view-bottom-bar"></div>
         </div>
 
         <!-- ======================== ПЛАН КОРПУСА 114 (список планов) ======================== -->
@@ -16224,6 +16263,11 @@
             const body = item.querySelector('.ticket-item-body');
             if (body) body.scrollTop = 0;
         });
+        // Очистить нижний бар кабельного журнала при уходе со страницы
+        if (page !== 'cable-journal-view') {
+            const cjBar = document.getElementById('cjViewBottomBar');
+            if (cjBar) cjBar.innerHTML = '';
+        }
         let active = document.querySelector('.page-content.active');
         let currentPageId = active ? active.id.replace('page-', '') : 'dashboard';
         if (active && addToHistory) { if (currentPageId !== page) pageHistory.push(currentPageId); }
@@ -23935,12 +23979,17 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             order.forEach(function(item) {
                 rowsHtml += self._renderViewField(item.key, item.group);
             });
-            // Кнопки правки/удаления — только для ролей с _canEdit
-            if (this._canEdit) {
-                rowsHtml += '<div class="cj-view-actions" style="display:flex;gap:10px;margin-top:16px;padding-top:12px;border-top:1px solid var(--card-border);">';
-                rowsHtml += '<button type="button" class="cj-save-btn" style="flex:1;" onclick="KipCableJournal.openEdit()">Править</button>';
-                rowsHtml += '<button type="button" class="cj-cancel-btn" style="flex:1;color:#e55;border-color:rgba(229,85,85,0.3);" onclick="KipCableJournal.confirmDelete()">Удалить</button>';
-                rowsHtml += '</div>';
+            // Кнопки правки/удаления — в нижний бар (cjViewBottomBar)
+            const bottomBar = document.getElementById('cjViewBottomBar');
+            if (bottomBar) {
+                if (this._canEdit) {
+                    bottomBar.innerHTML =
+                        '<button type="button" class="cj-view-bottom-bar-btn cj-view-bottom-bar-btn-edit" onclick="KipCableJournal.openEdit()">Править</button>' +
+                        '<div class="cj-view-bottom-bar-divider"></div>' +
+                        '<button type="button" class="cj-view-bottom-bar-btn cj-view-bottom-bar-btn-delete" onclick="KipCableJournal.confirmDelete()">Удалить</button>';
+                } else {
+                    bottomBar.innerHTML = '';
+                }
             }
             fieldsEl.innerHTML = rowsHtml;
         },
