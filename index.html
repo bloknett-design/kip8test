@@ -2571,7 +2571,7 @@
         display: flex;
         flex-direction: column;
         gap: 2px;
-        padding: 8px 0;
+        padding: 8px 12px 8px 0;
         border-bottom: 1px solid rgba(106,141,181,0.10);
         background: transparent;  /* зебра от групп */
     }
@@ -3702,7 +3702,7 @@
     .lock-detail-row {
         display: flex;
         flex-direction: column;
-        padding: 8px 0;
+        padding: 8px 12px 8px 0;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         gap: 2px;
         font-size: 16px;
@@ -3889,7 +3889,7 @@
     .valve-detail-row {
         display: flex;
         flex-direction: column;
-        padding: 8px 0;
+        padding: 8px 12px 8px 0;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         gap: 2px;
         font-size: 16px;
@@ -4084,7 +4084,7 @@
         display: flex;
         flex-direction: column;
         gap: 2px;
-        padding: 10px 16px;
+        padding: 10px 12px 10px 0;
         border-bottom: 1px solid rgba(255,255,255,0.08);
     }
     [data-theme="light"] .project-detail-row {
@@ -4267,7 +4267,7 @@
     .regulator-detail-row {
         display: flex;
         flex-direction: column;
-        padding: 8px 0;
+        padding: 8px 12px 8px 0;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         gap: 2px;
         font-size: 16px;
@@ -4927,7 +4927,7 @@
     .dev-card-row {
         display: flex;
         flex-direction: column;
-        padding: 8px 0;
+        padding: 8px 12px 8px 0;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         gap: 0;
         font-size: 16px;
@@ -5534,7 +5534,11 @@
         display: flex;
         align-items: flex-start;
         gap: 12px;
-        margin-bottom: 14px;
+        margin-bottom: 0;
+        background: #283241;  /* непрозрачный фон под картинкой и справа */
+    }
+    [data-theme="light"] .dev-detail-top {
+        background: #fcf8f0;
     }
     /* Картинка-превью — прижата к левому краю карточки */
     .dev-detail-image-wrap {
@@ -5543,8 +5547,8 @@
         width: 140px;
         height: 140px;
         overflow: hidden;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.04);
+        border-radius: 0;  /* без скруглений */
+        background: #283241;  /* непрозрачный */
     }
     .dev-detail-image {
         width: 100%;
@@ -5553,7 +5557,7 @@
         display: block;
     }
     [data-theme="light"] .dev-detail-image-wrap {
-        background: rgba(0, 0, 0, 0.04);
+        background: #fcf8f0;  /* непрозрачный */
     }
     /* Оверлей Типа — в нижней части картинки, поверх неё */
     .dev-detail-type-overlay {
@@ -5584,6 +5588,7 @@
         flex-direction: column;
         gap: 10px;
         padding-top: 2px;
+        padding-right: 12px;  /* небольшой отступ текста справа */
     }
     .dev-detail-meta-row {
         display: flex;
@@ -7182,7 +7187,7 @@
         #detailPanel .dev-detail-image-wrap {
             width: 160px;
             height: 160px;
-            border-radius: 0 12px 12px 0;  /* скругление только справа */
+            border-radius: 0;  /* без скруглений */
         }
         #detailPanel .dev-detail-image {
             object-fit: cover;  /* заполнить квадрат */
