@@ -16959,7 +16959,8 @@
     // оригинал получает класс .pinned-item-dragging (полупрозрачный).
     // Карточка под курсором подсвечивается классом .pinned-item-drag-over.
     const PINNED_DRAG_DELAY = 500;       // мс долгого зажатия до начала перетаскивания
-    const PINNED_DRAG_THRESHOLD = 10;    // px — если сдвинулись больше, long-press отменяется
+    const PINNED_DRAG_THRESHOLD = 10;    // px — горизонтальное движение больше этого → свайп
+    const PINNED_IDLE_CANCEL_DIST = 120; // px — суммарное смещение в idle, после которого отменяем (скролл)
     const PINNED_SWIPE_DELETE_RATIO = 0.3; // доля ширины карточки для удаления свайпом
     let pinnedDragState = null;          // { el, key, startX, startY, timer, clone, hoverEl, mode, width, currentDx }
 
@@ -17010,6 +17011,15 @@
         window.addEventListener('pointermove', onPinnedPointerMove);
         window.addEventListener('pointerup', onPinnedPointerUp);
         window.addEventListener('pointercancel', onPinnedPointerUp);
+        // touchmove-перехватчик: блокирует скролл в режиме drag
+        window.addEventListener('touchmove', onPinnedTouchMove, { passive: false });
+    }
+
+    /** touchmove-перехватчик: запрещает скролл в режиме drag. */
+    function onPinnedTouchMove(e) {
+        if (pinnedDragState && pinnedDragState.mode === 'drag') {
+            e.preventDefault();
+        }
     }
 
     function onPinnedPointerMove(e) {
@@ -17019,17 +17029,18 @@
         const dy = e.clientY - st.startY;
         // Если drag ещё не начался (нет клона) и swipe не начался — определяем намерение пользователя
         if (!st.clone && st.mode !== 'swipe') {
-            if (Math.abs(dx) > PINNED_DRAG_THRESHOLD || Math.abs(dy) > PINNED_DRAG_THRESHOLD) {
-                // Движение превысило порог — отменяем таймер long-press
+            var absDx = Math.abs(dx), absDy = Math.abs(dy);
+            // Явно горизонтальное движение → свайп
+            if (absDx > PINNED_DRAG_THRESHOLD && absDx > absDy * 1.5) {
                 clearTimeout(st.timer);
-                // Если горизонтальное движение превалирует (в 1.5 раза больше вертикали) — это свайп
-                if (Math.abs(dx) > Math.abs(dy) * 1.5) {
-                    startPinnedSwipe();
-                } else {
-                    // Вертикальное движение — пользователь скроллит страницу, отменяем взаимодействие
-                    cleanupPinnedDrag();
-                }
+                startPinnedSwipe();
             }
+            // Слишком большое смещение в любом направлении → отмена (пользователь скроллит)
+            else if (Math.sqrt(dx * dx + dy * dy) > PINNED_IDLE_CANCEL_DIST) {
+                clearTimeout(st.timer);
+                cleanupPinnedDrag();
+            }
+            // Иначе: малое движение (джиттер пальца) — ничего не делаем, таймер drag продолжает идти
             return;
         }
         // Swipe-режим — двигаем карточку и показываем подложку
@@ -17220,6 +17231,7 @@
         window.removeEventListener('pointermove', onPinnedPointerMove);
         window.removeEventListener('pointerup', onPinnedPointerUp);
         window.removeEventListener('pointercancel', onPinnedPointerUp);
+        window.removeEventListener('touchmove', onPinnedTouchMove);
     }
 
     // ============================================================
