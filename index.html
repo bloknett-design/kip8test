@@ -6376,6 +6376,41 @@
             overflow-y: auto;
             min-height: 0;
         }
+        #detailPanel .detail-panel-footer {
+            display: none;  /* показывается только когда есть содержимое */
+            flex-shrink: 0;
+            padding: 0;
+            border-top: 1px solid var(--card-border);
+            background: inherit;
+        }
+        #detailPanel .detail-panel-footer:not(:empty) {
+            display: flex;
+            align-items: stretch;
+        }
+        .detail-footer-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .detail-footer-btn:active { background: rgba(199,150,74,0.12); }
+        .detail-footer-btn-edit { color: #6aa6e0; }
+        .detail-footer-btn-delete { color: #e55; }
+        .detail-footer-divider {
+            width: 1px;
+            background: var(--card-border);
+            flex-shrink: 0;
+        }
+        [data-theme="light"] .detail-footer-btn-edit { color: #1a5a8a; }
+        [data-theme="light"] .detail-footer-btn-delete { color: #c33; }
 
         /* --- Master-detail: когда detail-panel открыт --- */
         /* Левая панель (список карточек) — ограничиваем ширину и добавляем скролл */
@@ -6392,6 +6427,11 @@
            т.к. полная строка крошек (#detailBreadcrumbBar) уже показывает путь */
         body:has(#detailPanel.active) #contentArea > .page-content.active > .page-inline-header {
             display: none;
+        }
+        /* Когда page-inline-header скрыт (detail-panel открыт),
+           sticky-заголовки групп должны прилипать к top:0, а не top:56px */
+        body:has(#detailPanel.active) .cj-group-header {
+            top: 0;
         }
         /* Карточки в левой панели переключаются на 1 колонку для мастер-детали */
         body:has(#detailPanel.active) .dev-group-body,
@@ -9526,6 +9566,7 @@
                 </button>
             </div>
             <div class="detail-panel-body" id="detailPanelBody"></div>
+            <div class="detail-panel-footer" id="detailPanelFooter"></div>
         </div>
     </div>
 </div>
@@ -15952,6 +15993,8 @@
         if (!panel) return;
         panel.classList.remove('active');
         document.getElementById('detailPanelBody').innerHTML = '';
+        const footer = document.getElementById('detailPanelFooter');
+        if (footer) footer.innerHTML = '';
         // Скрыть значок избранного в хедере десктоп-панели
         const favBtn = document.getElementById('detailPanelFavBtn');
         if (favBtn) favBtn.style.display = 'none';
@@ -18506,15 +18549,20 @@
             html += '<div class="dev-card-value">' + devEsc(valStr) + '</div>';
             html += '</div>';
         }
-        // Кнопки правки/удаления — только для ролей с _canEdit
-        if (KipCableJournal._canEdit) {
-            html += '<div class="cj-view-actions" style="display:flex;gap:10px;margin-top:16px;padding-top:12px;border-top:1px solid var(--card-border);">';
-            html += '<button type="button" class="cj-save-btn" style="flex:1;" onclick="KipCableJournal.openEdit()">Править</button>';
-            html += '<button type="button" class="cj-cancel-btn" style="flex:1;color:#e55;border-color:rgba(229,85,85,0.3);" onclick="KipCableJournal.confirmDelete()">Удалить</button>';
-            html += '</div>';
-        }
         html += '</div>';
         bodyEl.innerHTML = html;
+        // Кнопки правки/удаления — в нижний бар detail-panel-footer
+        const footerEl = document.getElementById('detailPanelFooter');
+        if (footerEl) {
+            if (KipCableJournal._canEdit) {
+                footerEl.innerHTML =
+                    '<button type="button" class="detail-footer-btn detail-footer-btn-edit" onclick="KipCableJournal.openEdit()">Править</button>' +
+                    '<div class="detail-footer-divider"></div>' +
+                    '<button type="button" class="detail-footer-btn detail-footer-btn-delete" onclick="KipCableJournal.confirmDelete()">Удалить</button>';
+            } else {
+                footerEl.innerHTML = '';
+            }
+        }
         // Открываем панель
         const panel = document.getElementById('detailPanel');
         if (panel) panel.classList.add('active');
