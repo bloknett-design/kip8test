@@ -4702,10 +4702,31 @@
         transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         touch-action: pan-y;
     }
+    /* Lock/Valve/Regulator карточки внутри fav-cell обёртки */
+    .dev-card-fav-cell > .lock-card,
+    .dev-card-fav-cell > .valve-card,
+    .dev-card-fav-cell > .regulator-card {
+        position: relative;
+        z-index: 1;
+        background: transparent !important;
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        touch-action: pan-y;
+    }
     .dev-card-fav-cell > .dev-card.swipe-active {
         transition: none;
     }
+    .dev-card-fav-cell > .lock-card.swipe-active,
+    .dev-card-fav-cell > .valve-card.swipe-active,
+    .dev-card-fav-cell > .regulator-card.swipe-active {
+        transition: none;
+    }
     .dev-card-fav-cell > .dev-card.swipe-removing {
+        transition: transform 0.25s ease-out, opacity 0.25s ease-out;
+        opacity: 0;
+    }
+    .dev-card-fav-cell > .lock-card.swipe-removing,
+    .dev-card-fav-cell > .valve-card.swipe-removing,
+    .dev-card-fav-cell > .regulator-card.swipe-removing {
         transition: transform 0.25s ease-out, opacity 0.25s ease-out;
         opacity: 0;
     }
@@ -5343,6 +5364,12 @@
         border-radius: 0;
         pointer-events: none;
         z-index: 2;
+    }
+    /* На карточках без картинки (lock/valve/regulator) — чуть правее и выше */
+    .lock-card > .dev-card-fav-indicator,
+    .valve-card > .dev-card-fav-indicator,
+    .regulator-card > .dev-card-fav-indicator {
+        top: 6px; right: 6px;
     }
     [data-theme="light"] .dev-card-fav-indicator {
         color: #388e3c;
@@ -12005,6 +12032,8 @@
         list.innerHTML = html;
         // Привязка обработчика к кнопке ✕ в бейдже фильтра
         kipBindFilterBadge(list, 'lockouts', lockRenderSorted);
+        // Свайп для добавления в избранное
+        if (typeof KipFav !== 'undefined') KipFav.wrapKipCardsForFavSwipe('.lock-card', 'lock', 'data-lock-id');
     }
 
     function lockToggleGroup(titleEl) {
@@ -12126,6 +12155,8 @@
         list.innerHTML = html;
         // Привязка обработчика к кнопке ✕ в бейдже фильтра
         kipBindFilterBadge(list, 'lockouts', function() { lockRenderGroup(); });
+        // Свайп для добавления в избранное
+        if (typeof KipFav !== 'undefined') KipFav.wrapKipCardsForFavSwipe('.lock-card', 'lock', 'data-lock-id');
     }
 
     function lockScrollToGroup(el) {
@@ -12462,6 +12493,8 @@
             kipBindFilterBadge(list, 'valves', valveRenderSorted);
             kipBindSbsFilterBadge(list, 'valves', valveRenderSorted);
             kipBindSarFilterBadge(list, 'valves', valveRenderSorted);
+            // Свайп для добавления в избранное
+            if (typeof KipFav !== 'undefined') KipFav.wrapKipCardsForFavSwipe('.valve-card', 'valve', 'data-valve-id');
             return;
         }
 
@@ -12522,6 +12555,8 @@
         kipBindFilterBadge(list, 'valves', valveRenderSorted);
         kipBindSbsFilterBadge(list, 'valves', valveRenderSorted);
         kipBindSarFilterBadge(list, 'valves', valveRenderSorted);
+        // Свайп для добавления в избранное
+        if (typeof KipFav !== 'undefined') KipFav.wrapKipCardsForFavSwipe('.valve-card', 'valve', 'data-valve-id');
     }
 
     function valveToggleGroup(titleEl) {
@@ -12656,6 +12691,8 @@
             kipBindFilterBadge(list, 'valves', function() { valveRenderGroup(); });
             kipBindSbsFilterBadge(list, 'valves', function() { valveRenderGroup(); });
             kipBindSarFilterBadge(list, 'valves', function() { valveRenderGroup(); });
+            // Свайп для добавления в избранное
+            if (typeof KipFav !== 'undefined') KipFav.wrapKipCardsForFavSwipe('.valve-card', 'valve', 'data-valve-id');
             return;
         }
 
@@ -12768,6 +12805,8 @@
         kipBindFilterBadge(list, 'valves', function() { valveRenderGroup(); });
         kipBindSbsFilterBadge(list, 'valves', function() { valveRenderGroup(); });
         kipBindSarFilterBadge(list, 'valves', function() { valveRenderGroup(); });
+        // Свайп для добавления в избранное
+        if (typeof KipFav !== 'undefined') KipFav.wrapKipCardsForFavSwipe('.valve-card', 'valve', 'data-valve-id');
     }
 
     function valveScrollToGroup(el) {
@@ -13215,6 +13254,8 @@
             list.innerHTML = emptyHtml;
             kipBindFilterBadge(list, 'regulators', regulatorRenderSorted);
             kipBindSbsFilterBadge(list, 'regulators', regulatorRenderSorted);
+            // Свайп для добавления в избранное
+            if (typeof KipFav !== 'undefined') KipFav.wrapKipCardsForFavSwipe('.regulator-card', 'reg', 'data-regulator-id');
             return;
         }
 
@@ -13270,6 +13311,8 @@
         // Привязка обработчика к кнопке ✕ в бейдже фильтра
         kipBindFilterBadge(list, 'regulators', regulatorRenderSorted);
         kipBindSbsFilterBadge(list, 'regulators', regulatorRenderSorted);
+        // Свайп для добавления в избранное
+        if (typeof KipFav !== 'undefined') KipFav.wrapKipCardsForFavSwipe('.regulator-card', 'reg', 'data-regulator-id');
     }
 
     function regulatorToggleGroup(titleEl) {
@@ -13337,6 +13380,8 @@
             list.innerHTML = emptyHtml;
             kipBindFilterBadge(list, 'regulators', function() { regulatorRenderGroup(); });
             kipBindSbsFilterBadge(list, 'regulators', function() { regulatorRenderGroup(); });
+            // Свайп для добавления в избранное
+            if (typeof KipFav !== 'undefined') KipFav.wrapKipCardsForFavSwipe('.regulator-card', 'reg', 'data-regulator-id');
             return;
         }
 
@@ -13403,6 +13448,8 @@
         // Привязка обработчиков к кнопкам ✕ в бейджах фильтра
         kipBindFilterBadge(list, 'regulators', function() { regulatorRenderGroup(); });
         kipBindSbsFilterBadge(list, 'regulators', function() { regulatorRenderGroup(); });
+        // Свайп для добавления в избранное
+        if (typeof KipFav !== 'undefined') KipFav.wrapKipCardsForFavSwipe('.regulator-card', 'reg', 'data-regulator-id');
     }
 
     function regulatorScrollToGroup(el) {
@@ -23395,10 +23442,12 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             cards.forEach(function(card) {
                 var devId = card.getAttribute('data-dev-id');
                 if (!devId) return;
-                var isFav = self.has(devId);
+                var favKey = self._favKey('dev', devId);
+                var isFav = self.hasItem(favKey);
                 var cell = document.createElement('div');
                 cell.className = 'dev-card-fav-cell' + (isFav ? ' is-fav' : '');
                 cell.setAttribute('data-dev-id', devId);
+                cell.setAttribute('data-fav-key', favKey);
 
                 var favLabel = isFav ? 'Убрать' : 'В избранное';
                 var bgLeft = document.createElement('div');
@@ -23416,14 +23465,49 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 card.classList.add('dev-card-fav-wrapped');
             });
             // Вешаем обработчики
-            self._attachDevFavSwipe();
+            self._attachKipFavSwipe();
+        },
+
+        /** Обернуть карточки (lock/valve/regulator) в ячейки для свайпа в избранное.
+         *  @param {string} selector — CSS-селектор карточек (напр. '.lock-card')
+         *  @param {string} type — тип избранного: 'lock'|'valve'|'reg'
+         *  @param {string} idAttr — data-атрибут с ID (напр. 'data-lock-id') */
+        wrapKipCardsForFavSwipe: function(selector, type, idAttr) {
+            var self = this;
+            var cards = document.querySelectorAll(selector + ':not(.dev-card-fav-wrapped)');
+            cards.forEach(function(card) {
+                var itemId = card.getAttribute(idAttr);
+                if (!itemId) return;
+                var favKey = self._favKey(type, itemId);
+                var isFav = self.hasItem(favKey);
+                var cell = document.createElement('div');
+                cell.className = 'dev-card-fav-cell' + (isFav ? ' is-fav' : '');
+                cell.setAttribute('data-fav-key', favKey);
+                cell.setAttribute(idAttr, itemId);
+
+                var favLabel = isFav ? 'Убрать' : 'В избранное';
+                var bgLeft = document.createElement('div');
+                bgLeft.className = 'dev-card-fav-bg dev-card-fav-bg-left';
+                bgLeft.innerHTML = self._devFavSvg + '<span>' + favLabel + '</span>';
+
+                var bgRight = document.createElement('div');
+                bgRight.className = 'dev-card-fav-bg dev-card-fav-bg-right';
+                bgRight.innerHTML = self._devFavSvg + '<span>' + favLabel + '</span>';
+
+                card.parentNode.insertBefore(cell, card);
+                cell.appendChild(bgLeft);
+                cell.appendChild(bgRight);
+                cell.appendChild(card);
+                card.classList.add('dev-card-fav-wrapped');
+            });
+            self._attachKipFavSwipe();
         },
 
         _devFavSwipeState: null,
         _DEV_FAV_SWIPE_RATIO: 0.3,
         _DEV_FAV_SWIPE_THRESHOLD: 10,
 
-        _attachDevFavSwipe: function() {
+        _attachKipFavSwipe: function() {
             var cells = document.querySelectorAll('.dev-card-fav-cell');
             var self = this;
             cells.forEach(function(cell) {
@@ -23432,14 +23516,14 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 cell.addEventListener('pointerdown', function(e) {
                     if (e.button !== undefined && e.button !== 0) return;
                     if (e.target.closest('.dev-card-fav-indicator')) return;
-                    var card = cell.querySelector('.dev-card');
+                    // Найти карточку внутри ячейки (любой тип)
+                    var card = cell.querySelector('.dev-card, .lock-card, .valve-card, .regulator-card');
                     if (!card) return;
-                    // НЕ вызываем e.preventDefault() здесь — с touch-action: pan-y он не нужен,
-                    // preventDefault вызывается в _onDevFavPtrMove, когда swipe уже активен.
                     var rect = card.getBoundingClientRect();
                     self._devFavSwipeState = {
                         card: card,
                         cell: cell,
+                        favKey: cell.getAttribute('data-fav-key') || cell.getAttribute('data-dev-id'),
                         startX: e.clientX,
                         startY: e.clientY,
                         width: rect.width,
@@ -23496,35 +23580,34 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             var shouldToggle = Math.abs(st.currentDx) > threshold;
 
             if (shouldToggle) {
-                var devId = st.cell.getAttribute('data-dev-id');
+                var favKey = st.favKey;
                 var direction = st.currentDx < 0 ? -1 : 1;
                 st.card.classList.remove('swipe-active');
                 st.card.classList.add('swipe-removing');
                 st.card.style.transform = 'translateX(' + (direction * st.width * 1.2) + 'px)';
                 if (navigator.vibrate) navigator.vibrate(30);
                 var savedCell = st.cell;
+                var savedCard = st.card;
                 KipFav._devFavSwipeState = null;
                 window.removeEventListener('pointermove', KipFav._onDevFavPtrMove);
                 window.removeEventListener('pointerup', KipFav._onDevFavPtrUp);
                 window.removeEventListener('pointercancel', KipFav._onDevFavPtrUp);
                 if (savedCell) savedCell.classList.remove('swiping-left', 'swiping-right');
                 setTimeout(function() {
-                    // Toggle favorite
-                    var wasAdded = KipFav.toggle(devId);
+                    // Toggle favorite (используем составной ключ)
+                    var wasAdded = KipFav.toggle(favKey);
                     // Обновить значок на карточке напрямую (без полного ререндера)
-                    var cardEl = savedCell ? savedCell.querySelector('.dev-card') : null;
-                    if (cardEl) {
-                        var wrap = cardEl.querySelector('.dev-card-image-wrap');
+                    if (savedCard) {
+                        // Для приборов — значок внутри .dev-card-image-wrap
+                        var wrap = savedCard.querySelector('.dev-card-image-wrap');
                         if (wrap) {
                             var existing = wrap.querySelector('.dev-card-fav-indicator');
                             if (wasAdded && !existing) {
-                                // Добавить значок
                                 var span = document.createElement('span');
                                 span.className = 'dev-card-fav-indicator';
                                 span.setAttribute('aria-label', 'В избранном');
                                 span.setAttribute('title', 'В избранном');
                                 span.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
-                                // Вставить после img, перед name-overlay
                                 var img = wrap.querySelector('.dev-card-image');
                                 if (img && img.nextSibling) {
                                     wrap.insertBefore(span, img.nextSibling);
@@ -23535,6 +23618,18 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                                 existing.remove();
                             }
                         }
+                        // Для lock/valve/regulator — значок прямо в карточке
+                        var existingIndicator = savedCard.querySelector(':scope > .dev-card-fav-indicator');
+                        if (wasAdded && !existingIndicator) {
+                            var span2 = document.createElement('span');
+                            span2.className = 'dev-card-fav-indicator';
+                            span2.setAttribute('aria-label', 'В избранном');
+                            span2.setAttribute('title', 'В избранном');
+                            span2.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+                            savedCard.insertBefore(span2, savedCard.firstChild);
+                        } else if (!wasAdded && existingIndicator) {
+                            existingIndicator.remove();
+                        }
                     }
                     // Обновить класс ячейки
                     if (savedCell) savedCell.classList.toggle('is-fav', wasAdded);
@@ -23544,7 +23639,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                         savedCell.querySelectorAll('.dev-card-fav-bg span').forEach(function(s) { s.textContent = label; });
                     }
                     // Убрать анимацию
-                    var c = savedCell ? savedCell.querySelector('.dev-card') : null;
+                    var c = savedCard;
                     if (c) { c.classList.remove('swipe-removing'); c.style.transform = ''; }
                     // Тост
                     KipFav.updateHeaderIcon();
