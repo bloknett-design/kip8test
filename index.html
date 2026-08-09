@@ -23218,8 +23218,19 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         _favInteractState: null,
         _FAV_DRAG_DELAY: 500,        // мс до начала перетаскивания
         _FAV_DRAG_THRESHOLD: 10,     // px — горизонтальное движение больше этого → свайп
-        _FAV_IDLE_CANCEL_DIST: 60,   // px — суммарное смещение в idle, после которого отменяем (скролл)
+        _FAV_IDLE_CANCEL_DIST: 120,  // px — суммарное смещение в idle, после которого отменяем (скролл)
         _FAV_SWIPE_RATIO: 0.3,       // доля ширины карточки для порога удаления свайпом
+
+        /** touchmove-перехватчик: запрещает скролл в режиме drag.
+         *  Вешается на window с { passive: false } при pointerdown на карточке.
+         *  В idle/swipe режиме пропускает событие (скролл разрешён).
+         *  В drag режиме вызывает preventDefault() — скролл блокируется. */
+        _onFavTouchMove: function(e) {
+            var st = KipFav._favInteractState;
+            if (st && st.mode === 'drag') {
+                e.preventDefault();
+            }
+        },
 
         _attachFavSwipe: function() {
             // Переименовали для обратной совместимости — теперь вешает и swipe, и drag
@@ -23256,6 +23267,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     window.addEventListener('pointermove', self._onFavPtrMove);
                     window.addEventListener('pointerup', self._onFavPtrUp);
                     window.addEventListener('pointercancel', self._onFavPtrUp);
+                    // touchmove-перехватчик: блокирует скролл в режиме drag
+                    window.addEventListener('touchmove', self._onFavTouchMove, { passive: false });
                 });
             });
         },
@@ -23431,6 +23444,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             window.removeEventListener('pointermove', this._onFavPtrMove);
             window.removeEventListener('pointerup', this._onFavPtrUp);
             window.removeEventListener('pointercancel', this._onFavPtrUp);
+            window.removeEventListener('touchmove', this._onFavTouchMove);
         },
 
         // ----------------------------------------------------------
