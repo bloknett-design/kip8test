@@ -3691,6 +3691,7 @@
     /* ===== Страница детального просмотра блокировки ===== */
     .lock-detail-card {
         padding: 0;
+        position: relative;
         background: transparent;
     }
     [data-theme="light"] .lock-detail-card {
@@ -3878,6 +3879,7 @@
     /* ===== Страница детального просмотра клапана ===== */
     .valve-detail-card {
         padding: 0;
+        position: relative;
         background: transparent;
     }
     [data-theme="light"] .valve-detail-card {
@@ -4256,6 +4258,7 @@
     /* ===== Страница детального просмотра регулятора ===== */
     .regulator-detail-card {
         padding: 0;
+        position: relative;
         background: transparent;
     }
     [data-theme="light"] .regulator-detail-card {
@@ -7679,7 +7682,7 @@
 
         <!-- ======================== КАРТОЧКА БЛОКИРОВКИ ======================== -->
         <div id="page-lockout-detail" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="lockoutDetailTitle">Блокировка</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="lockoutDetailTitle">Блокировка</div><button type="button" id="lockFavBtn" class="dev-fav-header-btn" onclick="KipFav.toggleFromDetailByType('lock')" aria-label="Избранное" title="Добавить/убрать из избранного"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div>
             <div id="lockoutDetailContent"></div>
         </div>
 
@@ -7706,7 +7709,7 @@
 
         <!-- ======================== КАРТОЧКА КЛАПАНА ======================== -->
         <div id="page-valve-detail" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="valveDetailTitle">Клапан</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="valveDetailTitle">Клапан</div><button type="button" id="valveFavBtn" class="dev-fav-header-btn" onclick="KipFav.toggleFromDetailByType('valve')" aria-label="Избранное" title="Добавить/убрать из избранного"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div>
             <div id="valveDetailContent"></div>
         </div>
 
@@ -7719,7 +7722,7 @@
 
         <!-- ======================== КАРТОЧКА РЕГУЛЯТОРА ======================== -->
         <div id="page-regulator-detail" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="regulatorDetailTitle">Регулятор</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="regulatorDetailTitle">Регулятор</div><button type="button" id="regulatorFavBtn" class="dev-fav-header-btn" onclick="KipFav.toggleFromDetailByType('reg')" aria-label="Избранное" title="Добавить/убрать из избранного"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div>
             <div id="regulatorDetailContent"></div>
         </div>
 
@@ -9735,7 +9738,7 @@
         <div id="detailPanel">
             <div class="detail-panel-header">
                 <div class="detail-panel-title" id="detailPanelTitle">Детали</div>
-                <button type="button" id="detailPanelFavBtn" class="dev-fav-header-btn" onclick="KipFav.toggleFromDetail()" aria-label="Избранное" title="Добавить/убрать из избранного" style="display:none;"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+                <button type="button" id="detailPanelFavBtn" class="dev-fav-header-btn" onclick="KipFav.toggleFromDetailPanel()" aria-label="Избранное" title="Добавить/убрать из избранного" style="display:none;"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
                 <button type="button" class="detail-panel-close" onclick="closeDetailPanel()" aria-label="Закрыть панель">
                     <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:rgba(74,143,199,0.9);fill:none;stroke-width:2;stroke-linecap:round;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
@@ -12235,6 +12238,8 @@
         titleEl.textContent = name;
 
         let html = '<div class="lock-detail-card">';
+        // Значок избранного в правом верхнем углу (виден только на десктопе)
+        html += '<button type="button" class="dev-detail-fav-btn" onclick="KipFav.toggleFromDetailByType(\'lock\')" aria-label="Избранное" title="Добавить/убрать из избранного"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>';
         html += '<div class="lock-detail-rows">';
         for (const f of LOCK_FIELDS) {
             if (f.hiddenInCard) continue;
@@ -12267,6 +12272,8 @@
             html += kipRenderSbsRelatedBlock(String(sbsNo));
         }
         content.innerHTML = html;
+        // Обновить состояние кнопки избранного в карточке
+        KipFav.updateDetailFavBtnByType('lock', lockId);
         // Привязка кликов по ссылкам «№ проекта» (безопасно: через data-атрибут)
         content.querySelectorAll('[data-project-link]').forEach(function(el) {
             el.addEventListener('click', function() {
@@ -12277,6 +12284,8 @@
         if (sbsNo && !kipIsEmptySbsNo(sbsNo)) {
             kipLoadAndUpdateSbsRelated(String(sbsNo));
         }
+        // Обновить значок избранного в заголовке (мобильный)
+        if (typeof KipFav !== 'undefined') KipFav.updateHeaderIcon();
     }
 
     // ===== КЛАПАНЫ (зеркало блокировок) =====
@@ -12885,6 +12894,8 @@
         titleEl.textContent = name;
 
         let html = '<div class="valve-detail-card">';
+        // Значок избранного в правом верхнем углу (виден только на десктопе)
+        html += '<button type="button" class="dev-detail-fav-btn" onclick="KipFav.toggleFromDetailByType(\'valve\')" aria-label="Избранное" title="Добавить/убрать из избранного"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>';
         html += '<div class="valve-detail-rows">';
         for (const f of VALVE_FIELDS) {
             if (f.hiddenInCard) continue;
@@ -12921,6 +12932,8 @@
         html += '</div>';
         html += '</div>';
         content.innerHTML = html;
+        // Обновить состояние кнопки избранного в карточке
+        KipFav.updateDetailFavBtnByType('valve', valveId);
         // Привязка кликов по ссылкам «№ проекта» (безопасно: через data-атрибут)
         content.querySelectorAll('[data-project-link]').forEach(function(el) {
             el.addEventListener('click', function() {
@@ -12939,6 +12952,8 @@
                 regulatorOpenBySarNo(this.getAttribute('data-sar-link'));
             });
         });
+        // Обновить значок избранного в заголовке (мобильный)
+        if (typeof KipFav !== 'undefined') KipFav.updateHeaderIcon();
     }
 
     // ===== Кнопка «Клапана» на странице КИП И ОС: tap + свайпы =====
@@ -13528,6 +13543,8 @@
         titleEl.textContent = name;
 
         let html = '<div class="regulator-detail-card">';
+        // Значок избранного в правом верхнем углу (виден только на десктопе)
+        html += '<button type="button" class="dev-detail-fav-btn" onclick="KipFav.toggleFromDetailByType(\'reg\')" aria-label="Избранное" title="Добавить/убрать из избранного"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>';
         html += '<div class="regulator-detail-rows">';
         for (const f of REGULATOR_FIELDS) {
             if (f.hiddenInCard) continue;
@@ -13565,6 +13582,8 @@
             html += kipRenderSarRelatedBlock(String(sarNo));
         }
         content.innerHTML = html;
+        // Обновить состояние кнопки избранного в карточке
+        KipFav.updateDetailFavBtnByType('reg', regulatorId);
         // Привязка кликов по ссылкам «№ проекта» (безопасно: через data-атрибут)
         content.querySelectorAll('[data-project-link]').forEach(function(el) {
             el.addEventListener('click', function() {
@@ -13581,6 +13600,8 @@
         if (sarNo && !kipIsEmptySarNo(sarNo)) {
             kipLoadAndUpdateSarRelated(String(sarNo));
         }
+        // Обновить значок избранного в заголовке (мобильный)
+        if (typeof KipFav !== 'undefined') KipFav.updateHeaderIcon();
     }
 
     // ===== Кнопка Регуляторы на странице КИП И ОС: только tap =====
@@ -18683,6 +18704,8 @@
         const lockGroupCtx = window._lockGroupCtx || {};
         const lockGroupName = lockGroupCtx.group || '';
         setDetailBreadcrumb('lockout-detail', title, lockGroupName, 'lock-group');
+        // Показать значок избранного в хедере десктоп-панели
+        if (typeof KipFav !== 'undefined') KipFav.updateHeaderIcon();
     }
 
     function valveRenderDetailInPanel() {
@@ -18713,6 +18736,8 @@
         const valveGroupCtx = window._valveGroupCtx || {};
         const valveGroupName = valveGroupCtx.group || '';
         setDetailBreadcrumb('valve-detail', title, valveGroupName, 'valve-group');
+        // Показать значок избранного в хедере десктоп-панели
+        if (typeof KipFav !== 'undefined') KipFav.updateHeaderIcon();
     }
 
     function regulatorRenderDetailInPanel() {
@@ -18743,6 +18768,8 @@
         const regulatorGroupCtx = window._regulatorGroupCtx || {};
         const regulatorGroupName = regulatorGroupCtx.group || '';
         setDetailBreadcrumb('regulator-detail', title, regulatorGroupName, 'regulator-group');
+        // Показать значок избранного в хедере десктоп-панели
+        if (typeof KipFav !== 'undefined') KipFav.updateHeaderIcon();
     }
 
     function projectRenderDetailInPanel() {
@@ -23010,15 +23037,46 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 const devId = window._devDetailId;
                 btn.classList.toggle('active', devId ? this.has(devId) : false);
             }
+            // Мобильный: значки в хедерах блокировки/клапана/регулятора
+            const lockBtn = document.getElementById('lockFavBtn');
+            if (lockBtn) {
+                const lockId = window._lockDetailId;
+                lockBtn.classList.toggle('active', lockId ? this.hasItem(this._favKey('lock', lockId)) : false);
+            }
+            const valveBtn = document.getElementById('valveFavBtn');
+            if (valveBtn) {
+                const valveId = window._valveDetailId;
+                valveBtn.classList.toggle('active', valveId ? this.hasItem(this._favKey('valve', valveId)) : false);
+            }
+            const regBtn = document.getElementById('regulatorFavBtn');
+            if (regBtn) {
+                const regId = window._regulatorDetailId;
+                regBtn.classList.toggle('active', regId ? this.hasItem(this._favKey('reg', regId)) : false);
+            }
             // Десктоп: значок в detailPanel хедере
             const dpBtn = document.getElementById('detailPanelFavBtn');
             if (dpBtn) {
                 const devId = window._devDetailId;
-                // Показываем только если открыт прибор
+                // Показываем только если открыт прибор, блокировка, клапан или регулятор
                 const isDevDetail = devId && typeof devData !== 'undefined' && devData && devData.devices &&
                     devData.devices.find(function(d) { return String(d['ID'] || '') === String(devId); });
-                dpBtn.style.display = isDevDetail ? '' : 'none';
-                dpBtn.classList.toggle('active', devId ? this.has(devId) : false);
+                const isLockDetail = !!window._lockDetailId;
+                const isValveDetail = !!window._valveDetailId;
+                const isRegDetail = !!window._regulatorDetailId;
+                const showFav = isDevDetail || isLockDetail || isValveDetail || isRegDetail;
+                dpBtn.style.display = showFav ? '' : 'none';
+                // Определяем активность: для приборов — по devId, для lock/valve/reg — по составному ключу
+                let isActive = false;
+                if (isDevDetail) isActive = this.has(devId);
+                else if (isLockDetail) isActive = this.hasItem(this._favKey('lock', window._lockDetailId));
+                else if (isValveDetail) isActive = this.hasItem(this._favKey('valve', window._valveDetailId));
+                else if (isRegDetail) isActive = this.hasItem(this._favKey('reg', window._regulatorDetailId));
+                dpBtn.classList.toggle('active', isActive);
+                // Сохраняем текущий тип для toggleFromDetailByType
+                if (isLockDetail) dpBtn.setAttribute('data-fav-type', 'lock');
+                else if (isValveDetail) dpBtn.setAttribute('data-fav-type', 'valve');
+                else if (isRegDetail) dpBtn.setAttribute('data-fav-type', 'reg');
+                else dpBtn.removeAttribute('data-fav-type');
             }
             // Десктоп: значок внутри карточки прибора (.dev-detail-fav-btn)
             const cardBtn = document.querySelector('.dev-detail-fav-btn');
@@ -23039,6 +23097,51 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             } else {
                 showToast('Убрано из избранного');
             }
+        },
+
+        /** Клик по значку в десктоп-панели: определяет тип (dev/lock/valve/reg) и toggle. */
+        toggleFromDetailPanel: function() {
+            const dpBtn = document.getElementById('detailPanelFavBtn');
+            const favType = dpBtn ? dpBtn.getAttribute('data-fav-type') : null;
+            if (favType) {
+                this.toggleFromDetailByType(favType);
+            } else {
+                // Прибор — используем старый метод
+                this.toggleFromDetail();
+                this.updateHeaderIcon();
+            }
+        },
+
+        /** Клик по значку: toggle избранного для блокировки/клапана/регулятора.
+         *  type: 'lock' | 'valve' | 'reg'
+         *  Определяет ID по window._lockDetailId / _valveDetailId / _regulatorDetailId,
+         *  строит составной ключ через _favKey(), toggle, обновляет UI. */
+        toggleFromDetailByType: function(type) {
+            var id;
+            if (type === 'lock') id = window._lockDetailId;
+            else if (type === 'valve') id = window._valveDetailId;
+            else if (type === 'reg') id = window._regulatorDetailId;
+            if (!id) return;
+            if (navigator.vibrate) navigator.vibrate(10);
+            const favKey = this._favKey(type, id);
+            const wasAdded = this.toggle(favKey);
+            if (wasAdded) {
+                showToast('Добавлено в избранное', 'Открыть', function() { navigateTo('device-favorites'); });
+            } else {
+                showToast('Убрано из избранного');
+            }
+            // Обновить состояние кнопок: в карточке + в заголовке
+            this.updateDetailFavBtnByType(type, id);
+            this.updateHeaderIcon();
+        },
+
+        /** Обновить состояние значка избранного внутри карточки (десктоп).
+         *  type: 'lock' | 'valve' | 'reg'  */
+        updateDetailFavBtnByType: function(type, id) {
+            const cardBtn = document.querySelector('.dev-detail-fav-btn');
+            if (!cardBtn) return;
+            const favKey = this._favKey(type, id);
+            cardBtn.classList.toggle('active', this.hasItem(favKey));
         },
 
         // ----------------------------------------------------------
