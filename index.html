@@ -843,10 +843,13 @@
         -webkit-user-select: none; user-select: none;
         -webkit-touch-callout: none;
     }
-    /* Картока закреплённого пункта — отключаем нативные жесты браузера (скролл, long-press меню).
-       Без этого pointermove начинает прокрутку страницы, инициируя pointercancel — drag срывается. */
+    /* Картока закреплённого пункта — отключаем ВСЕ нативные жесты браузера.
+       touch-action: none предотвращает pointercancel при вертикальном движении пальца
+       во время перетаскивания. Без этого браузер перехватывает вертикальный скролл
+       и стреляет pointercancel — drag срывается, карточка «прилипает» на место.
+       В idle-фазе (до long-press) скролл эмулируется вручную через window.scrollBy(). */
     .pinned-item {
-        touch-action: pan-y;
+        touch-action: none;
     }
     /* SWIPE-TO-DELETE: обёртка карточки с подложками «Убрать» */
     .pinned-item-cell {
@@ -5447,7 +5450,7 @@
         display: flex;
         flex-direction: column;
         padding: 0;
-        touch-action: pan-y;  /* вертикальный скролл разрешён, горизонтальный — нет (для свайпа) */
+        touch-action: none;  /* предотвращает pointercancel при вертикальном движении во время drag; скролл эмулируется вручную */
     }
     /* Верхняя часть: миниатюра/бейдж слева + данные справа */
     .fav-card-top {
@@ -17026,9 +17029,9 @@
     // Карточка под курсором подсвечивается классом .pinned-item-drag-over.
     const PINNED_DRAG_DELAY = 500;       // мс долгого зажатия до начала перетаскивания
     const PINNED_DRAG_THRESHOLD = 10;    // px — горизонтальное движение больше этого → свайп
-    const PINNED_IDLE_CANCEL_DIST = 120; // px — суммарное смещение в idle, после которого отменяем (скролл)
+    const PINNED_IDLE_SCROLL_THRESHOLD = 15; // px — вертикальное смещение в idle, после которого переходим в ручной скролл
     const PINNED_SWIPE_DELETE_RATIO = 0.3; // доля ширины карточки для удаления свайпом
-    let pinnedDragState = null;          // { el, key, startX, startY, timer, clone, hoverEl, mode, width, currentDx }
+    let pinnedDragState = null;          // { el, key, startX, startY, timer, clone, hoverEl, mode, width, currentDx, lastScrollY }
 
     function attachPinnedDragHandlers() {
         const items = document.querySelectorAll('#pinnedItemsContainer .pinned-item');
@@ -17066,12 +17069,15 @@
             // Если pointerup сработал сразу после long-press без движения — это не перенос,
             // а просто отпускание, ре-рендерить не нужно.
             moved: false,
-            // Режим взаимодействия: 'idle' (ожидание), 'drag' (long-press + перенос), 'swipe' (быстрый свайп для удаления)
+            // Режим взаимодействия: 'idle' (ожидание), 'drag' (long-press + перенос),
+            // 'swipe' (быстрый свайп для удаления), 'scroll' (ручной скролл страницы в idle-фазе)
             mode: 'idle',
             // Ширина карточки — для расчёта порога удаления (30%)
             width: rect.width,
             // Текущее смещение по X в swipe-режиме
-            currentDx: 0
+            currentDx: 0,
+            // Последняя Y-позиция — для ручного скролла в режиме 'scroll'
+            lastScrollY: e.clientY
         };
         // Слушаем movement/up на window — чтобы поймать даже если палец вышел за пределы карточки
         window.addEventListener('pointermove', onPinnedPointerMove);
@@ -17093,6 +17099,17 @@
         const st = pinnedDragState;
         const dx = e.clientX - st.startX;
         const dy = e.clientY - st.startY;
+        // Режим ручного скролла — прокручиваем страницу вместо перетаскивания.
+        // Включается, когда в idle-фазе пользователь двигает палец вертикально
+        // (явное намерение скролла, а не long-press drag).
+        if (st.mode === 'scroll') {
+            const deltaY = e.clientY - st.lastScrollY;
+            if (deltaY !== 0) {
+                window.scrollBy(0, -deltaY);
+            }
+            st.lastScrollY = e.clientY;
+            return;
+        }
         // Если drag ещё не начался (нет клона) и swipe не начался — определяем намерение пользователя
         if (!st.clone && st.mode !== 'swipe') {
             var absDx = Math.abs(dx), absDy = Math.abs(dy);
@@ -17101,10 +17118,18 @@
                 clearTimeout(st.timer);
                 startPinnedSwipe();
             }
-            // Слишком большое смещение в любом направлении → отмена (пользователь скроллит)
-            else if (Math.sqrt(dx * dx + dy * dy) > PINNED_IDLE_CANCEL_DIST) {
+            // Явно вертикальное движение (скролл страницы) → переключаемся в режим scroll.
+            // Порог 15px — меньше, чем старый IDLE_CANCEL_DIST=120, но достаточно,
+            // чтобы отличить скролл от джиттера пальца при долгом зажатии.
+            // В режиме scroll мы вручную прокручиваем страницу через window.scrollBy().
+            else if (absDy > PINNED_IDLE_SCROLL_THRESHOLD && absDy > absDx * 1.5) {
                 clearTimeout(st.timer);
-                cleanupPinnedDrag();
+                st.mode = 'scroll';
+                st.lastScrollY = e.clientY;
+                // Прокручиваем на начальное смещение
+                if (dy !== 0) {
+                    window.scrollBy(0, -dy);
+                }
             }
             // Иначе: малое движение (джиттер пальца) — ничего не делаем, таймер drag продолжает идти
             return;
@@ -17169,6 +17194,11 @@
         if (!pinnedDragState) return;
         const st = pinnedDragState;
         clearTimeout(st.timer);
+        // Режим ручного скролла — просто очищаем состояние
+        if (st.mode === 'scroll') {
+            cleanupPinnedDrag();
+            return;
+        }
         // Swipe-завершение: проверяем порог удаления (30% ширины карточки)
         if (st.mode === 'swipe') {
             endPinnedSwipe();
@@ -23297,7 +23327,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         _favInteractState: null,
         _FAV_DRAG_DELAY: 500,        // мс до начала перетаскивания
         _FAV_DRAG_THRESHOLD: 10,     // px — горизонтальное движение больше этого → свайп
-        _FAV_IDLE_CANCEL_DIST: 120,  // px — суммарное смещение в idle, после которого отменяем (скролл)
+        _FAV_IDLE_SCROLL_THRESHOLD: 15, // px — вертикальное смещение в idle, после которого переходим в ручной скролл
         _FAV_SWIPE_RATIO: 0.3,       // доля ширины карточки для порога удаления свайпом
 
         /** touchmove-перехватчик: запрещает скролл в режиме drag.
@@ -23334,14 +23364,16 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                         startY: e.clientY,
                         width: rect.width,
                         timer: setTimeout(function() { self._startFavDrag(e); }, self._FAV_DRAG_DELAY),
-                        mode: 'idle',   // 'idle' | 'swipe' | 'drag'
+                        mode: 'idle',   // 'idle' | 'swipe' | 'drag' | 'scroll'
                         currentDx: 0,
                         // Drag-поля
                         clone: null,
                         hoverCard: null,
                         grabOffsetX: 0,
                         grabOffsetY: 0,
-                        moved: false
+                        moved: false,
+                        // Последняя Y-позиция — для ручного скролла в режиме 'scroll'
+                        lastScrollY: e.clientY
                     };
                     window.addEventListener('pointermove', self._onFavPtrMove);
                     window.addEventListener('pointerup', self._onFavPtrUp);
@@ -23358,6 +23390,16 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             const dx = e.clientX - st.startX;
             const dy = e.clientY - st.startY;
 
+            // Режим ручного скролла — прокручиваем страницу вместо перетаскивания
+            if (st.mode === 'scroll') {
+                const deltaY = e.clientY - st.lastScrollY;
+                if (deltaY !== 0) {
+                    window.scrollBy(0, -deltaY);
+                }
+                st.lastScrollY = e.clientY;
+                return;
+            }
+
             // Если режим ещё не определён — определяем намерение
             if (st.mode === 'idle') {
                 var absDx = Math.abs(dx), absDy = Math.abs(dy);
@@ -23368,11 +23410,14 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     st.card.classList.add('swipe-active');
                     if (navigator.vibrate) navigator.vibrate(5);
                 }
-                // Слишком большое смещение в любом направлении без явного свайпа → отмена (скролл)
-                else if (Math.sqrt(dx * dx + dy * dy) > KipFav._FAV_IDLE_CANCEL_DIST) {
+                // Явно вертикальное движение (скролл страницы) → переключаемся в режим scroll
+                else if (absDy > KipFav._FAV_IDLE_SCROLL_THRESHOLD && absDy > absDx * 1.5) {
                     clearTimeout(st.timer);
-                    KipFav._cleanupFavInteract();
-                    return;
+                    st.mode = 'scroll';
+                    st.lastScrollY = e.clientY;
+                    if (dy !== 0) {
+                        window.scrollBy(0, -dy);
+                    }
                 }
                 // Иначе: малое движение (джиттер пальца) — ничего не делаем, таймер drag продолжает идти
                 return;
@@ -23415,6 +23460,12 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             const st = KipFav._favInteractState;
             if (!st) return;
             clearTimeout(st.timer);
+
+            // Режим ручного скролла — просто очищаем состояние
+            if (st.mode === 'scroll') {
+                KipFav._cleanupFavInteract();
+                return;
+            }
 
             // Swipe-завершение
             if (st.mode === 'swipe') {
