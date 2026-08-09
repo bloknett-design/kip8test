@@ -3226,13 +3226,13 @@
 
     /* КИП ИОС — общий блок с кнопками подразделов и датой последнего изменения */
     .kip-ios-block {
-        margin: 12px 8px 6px;
-        padding: 14px 14px 8px;
+        margin: 12px 0 6px;
+        padding: 14px 0 8px;
         background: var(--card-bg, rgba(255,255,255,0.04));
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
-        border: 1px solid var(--card-border, rgba(255,255,255,0.08));
-        border-radius: 14px;
+        border: none;
+        border-radius: 0;
         position: relative;
         z-index: 2;
     }
@@ -3241,7 +3241,7 @@
         align-items: baseline;
         gap: 6px;
         margin-bottom: 10px;
-        padding: 0 6px 10px;
+        padding: 0 8px 10px;
         border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.08));
         font-size: 12px;
         color: var(--text-secondary, rgba(255,255,255,0.5));
@@ -3256,7 +3256,6 @@
     }
     [data-theme="light"] .kip-ios-block {
         background: rgba(255,255,255,0.7);
-        border-color: rgba(0,0,0,0.08);
     }
     [data-theme="light"] .kip-ios-block-update {
         color: rgba(20,20,19,0.55);
@@ -3267,7 +3266,7 @@
     }
     /* Внутри блока убираем внешние отступы и выравниваем расстояние между 4 кнопками */
     .kip-ios-block .menu-btn-row {
-        padding: 0;
+        padding: 0 8px;
         gap: 6px;
     }
     .kip-ios-block .dev-swipe-cell {
@@ -6857,6 +6856,12 @@
         #page-kip-ios .kip-ios-block .dev-swipe-cell {
             border-radius: 4px;
             margin-bottom: 0;
+        }
+        /* На десктопе блок КИП ИОС с отступами от краёв панели */
+        #page-kip-ios .kip-ios-block {
+            margin: 12px 16px 6px;
+            padding: 14px 14px 8px;
+            border-radius: 14px;
         }
 
         /* --- Нижний бар дашборда: скрыт на десктопе --- */
