@@ -2571,9 +2571,9 @@
         display: flex;
         flex-direction: column;
         gap: 2px;
-        padding: 10px 14px;
+        padding: 8px 0;
         border-bottom: 1px solid rgba(106,141,181,0.10);
-        background: transparent;  /* без подложки */
+        background: transparent;  /* зебра от групп */
     }
     [data-theme="light"] .cj-view-fields .cj-view-row {
         border-bottom-color: rgba(74,108,148,0.10);
@@ -3677,33 +3677,32 @@
     }
 
     /* Группировка строк */
-    .lock-card-row.lock-row-group-1 { background: rgba(255,255,255,0.015); }
-    .lock-card-row.lock-row-group-2 { background: rgba(255,255,255,0.055); }
-    .lock-card-row.lock-row-group-3 { background: rgba(255,255,255,0.015); }
-    .lock-card-row.lock-row-group-4 { background: rgba(255,255,255,0.055); }
-    [data-theme="light"] .lock-card-row.lock-row-group-1 { background: rgba(0,0,0,0.01); }
-    [data-theme="light"] .lock-card-row.lock-row-group-2 { background: rgba(0,0,0,0.04); }
-    [data-theme="light"] .lock-card-row.lock-row-group-3 { background: rgba(0,0,0,0.01); }
-    [data-theme="light"] .lock-card-row.lock-row-group-4 { background: rgba(0,0,0,0.04); }
+    .lock-card-row.lock-row-group-1 { background: #2d2a2e; }
+    .lock-card-row.lock-row-group-2 { background: #3a3539; }
+    .lock-card-row.lock-row-group-3 { background: #2d2a2e; }
+    .lock-card-row.lock-row-group-4 { background: #3a3539; }
+    [data-theme="light"] .lock-card-row.lock-row-group-1 { background: #f8f4f6; }
+    [data-theme="light"] .lock-card-row.lock-row-group-2 { background: #ede8ea; }
+    [data-theme="light"] .lock-card-row.lock-row-group-3 { background: #f8f4f6; }
+    [data-theme="light"] .lock-card-row.lock-row-group-4 { background: #ede8ea; }
 
     /* ===== Страница детального просмотра блокировки ===== */
     .lock-detail-card {
-        padding: 12px 14px 24px;
-        /* Почти непрозрачный фон, чтобы клетчатый паттерн body не просвечивал */
-        background: rgba(45, 42, 46, 0.96);
+        padding: 0;
+        background: transparent;
     }
     [data-theme="light"] .lock-detail-card {
-        background: rgba(248, 244, 246, 0.96);
+        background: transparent;
     }
     .lock-detail-rows {
-        border-radius: 12px;
-        overflow: hidden;
-        border: 1px solid var(--border-color);
+        border-radius: 0;
+        overflow: visible;
+        border: none;
     }
     .lock-detail-row {
         display: flex;
         flex-direction: column;
-        padding: 8px 14px;
+        padding: 8px 0;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         gap: 2px;
         font-size: 16px;
@@ -3711,16 +3710,16 @@
     }
     [data-theme="light"] .lock-detail-row { border-bottom-color: rgba(20, 20, 19, 0.06); }
     .lock-detail-row:last-child { border-bottom: none; }
-    .lock-detail-row.lock-row-group-1 { background: rgba(55, 50, 54, 0.96); }
-    .lock-detail-row.lock-row-group-2 { background: rgba(70, 64, 70, 0.96); }
-    .lock-detail-row.lock-row-group-3 { background: rgba(55, 50, 54, 0.96); }
-    .lock-detail-row.lock-row-group-4 { background: rgba(70, 64, 70, 0.96); }
-    .lock-detail-row.lock-row-group-5 { background: rgba(62, 57, 62, 0.96); }
-    [data-theme="light"] .lock-detail-row.lock-row-group-1 { background: rgba(252, 248, 250, 0.97); }
-    [data-theme="light"] .lock-detail-row.lock-row-group-2 { background: rgba(225, 218, 222, 0.94); }
-    [data-theme="light"] .lock-detail-row.lock-row-group-3 { background: rgba(252, 248, 250, 0.97); }
-    [data-theme="light"] .lock-detail-row.lock-row-group-4 { background: rgba(225, 218, 222, 0.94); }
-    [data-theme="light"] .lock-detail-row.lock-row-group-5 { background: rgba(238, 233, 236, 0.96); }
+    .lock-detail-row.lock-row-group-1 { background: #373236; }
+    .lock-detail-row.lock-row-group-2 { background: #464046; }
+    .lock-detail-row.lock-row-group-3 { background: #373236; }
+    .lock-detail-row.lock-row-group-4 { background: #464046; }
+    .lock-detail-row.lock-row-group-5 { background: #3e393e; }
+    [data-theme="light"] .lock-detail-row.lock-row-group-1 { background: #fcf8fa; }
+    [data-theme="light"] .lock-detail-row.lock-row-group-2 { background: #e1dade; }
+    [data-theme="light"] .lock-detail-row.lock-row-group-3 { background: #fcf8fa; }
+    [data-theme="light"] .lock-detail-row.lock-row-group-4 { background: #e1dade; }
+    [data-theme="light"] .lock-detail-row.lock-row-group-5 { background: #eee9ec; }
     .lock-detail-label {
         font-size: 12px;
         color: rgba(180, 200, 220, 0.45);
@@ -3876,22 +3875,21 @@
 
     /* ===== Страница детального просмотра клапана ===== */
     .valve-detail-card {
-        padding: 12px 14px 24px;
-        /* Почти непрозрачный фон, чтобы клетчатый паттерн body не просвечивал */
-        background: rgba(40, 50, 48, 0.96);
+        padding: 0;
+        background: transparent;
     }
     [data-theme="light"] .valve-detail-card {
-        background: rgba(245, 248, 246, 0.96);
+        background: transparent;
     }
     .valve-detail-rows {
-        border-radius: 12px;
-        overflow: hidden;
-        border: 1px solid var(--border-color);
+        border-radius: 0;
+        overflow: visible;
+        border: none;
     }
     .valve-detail-row {
         display: flex;
         flex-direction: column;
-        padding: 8px 14px;
+        padding: 8px 0;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         gap: 2px;
         font-size: 16px;
@@ -3899,16 +3897,16 @@
     }
     [data-theme="light"] .valve-detail-row { border-bottom-color: rgba(20, 20, 19, 0.06); }
     .valve-detail-row:last-child { border-bottom: none; }
-    .valve-detail-row.valve-row-group-1 { background: rgba(50, 60, 58, 0.96); }
-    .valve-detail-row.valve-row-group-2 { background: rgba(65, 76, 72, 0.96); }
-    .valve-detail-row.valve-row-group-3 { background: rgba(50, 60, 58, 0.96); }
-    .valve-detail-row.valve-row-group-4 { background: rgba(65, 76, 72, 0.96); }
-    .valve-detail-row.valve-row-group-5 { background: rgba(57, 67, 64, 0.96); }
-    [data-theme="light"] .valve-detail-row.valve-row-group-1 { background: rgba(250, 252, 250, 0.97); }
-    [data-theme="light"] .valve-detail-row.valve-row-group-2 { background: rgba(222, 230, 226, 0.94); }
-    [data-theme="light"] .valve-detail-row.valve-row-group-3 { background: rgba(250, 252, 250, 0.97); }
-    [data-theme="light"] .valve-detail-row.valve-row-group-4 { background: rgba(222, 230, 226, 0.94); }
-    [data-theme="light"] .valve-detail-row.valve-row-group-5 { background: rgba(236, 242, 240, 0.96); }
+    .valve-detail-row.valve-row-group-1 { background: #323c3a; }
+    .valve-detail-row.valve-row-group-2 { background: #414c48; }
+    .valve-detail-row.valve-row-group-3 { background: #323c3a; }
+    .valve-detail-row.valve-row-group-4 { background: #414c48; }
+    .valve-detail-row.valve-row-group-5 { background: #394340; }
+    [data-theme="light"] .valve-detail-row.valve-row-group-1 { background: #fafcfa; }
+    [data-theme="light"] .valve-detail-row.valve-row-group-2 { background: #dee6e2; }
+    [data-theme="light"] .valve-detail-row.valve-row-group-3 { background: #fafcfa; }
+    [data-theme="light"] .valve-detail-row.valve-row-group-4 { background: #dee6e2; }
+    [data-theme="light"] .valve-detail-row.valve-row-group-5 { background: #ecf2f0; }
     .valve-detail-label {
         font-size: 12px;
         color: rgba(180, 200, 220, 0.45);
@@ -4255,22 +4253,21 @@
 
     /* ===== Страница детального просмотра регулятора ===== */
     .regulator-detail-card {
-        padding: 12px 14px 24px;
-        /* Почти непрозрачный фон, чтобы клетчатый паттерн body не просвечивал */
-        background: rgba(48, 45, 54, 0.96);
+        padding: 0;
+        background: transparent;
     }
     [data-theme="light"] .regulator-detail-card {
-        background: rgba(250, 248, 250, 0.96);
+        background: transparent;
     }
     .regulator-detail-rows {
-        border-radius: 12px;
-        overflow: hidden;
-        border: 1px solid var(--border-color);
+        border-radius: 0;
+        overflow: visible;
+        border: none;
     }
     .regulator-detail-row {
         display: flex;
         flex-direction: column;
-        padding: 8px 14px;
+        padding: 8px 0;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         gap: 2px;
         font-size: 16px;
@@ -4278,16 +4275,16 @@
     }
     [data-theme="light"] .regulator-detail-row { border-bottom-color: rgba(20, 20, 19, 0.06); }
     .regulator-detail-row:last-child { border-bottom: none; }
-    .regulator-detail-row.regulator-row-group-1 { background: rgba(58, 54, 66, 0.96); }
-    .regulator-detail-row.regulator-row-group-2 { background: rgba(72, 67, 82, 0.96); }
-    .regulator-detail-row.regulator-row-group-3 { background: rgba(58, 54, 66, 0.96); }
-    .regulator-detail-row.regulator-row-group-4 { background: rgba(72, 67, 82, 0.96); }
-    .regulator-detail-row.regulator-row-group-5 { background: rgba(64, 60, 73, 0.96); }
-    [data-theme="light"] .regulator-detail-row.regulator-row-group-1 { background: rgba(252, 250, 252, 0.97); }
-    [data-theme="light"] .regulator-detail-row.regulator-row-group-2 { background: rgba(225, 220, 230, 0.94); }
-    [data-theme="light"] .regulator-detail-row.regulator-row-group-3 { background: rgba(252, 250, 252, 0.97); }
-    [data-theme="light"] .regulator-detail-row.regulator-row-group-4 { background: rgba(225, 220, 230, 0.94); }
-    [data-theme="light"] .regulator-detail-row.regulator-row-group-5 { background: rgba(238, 235, 242, 0.96); }
+    .regulator-detail-row.regulator-row-group-1 { background: #3a3642; }
+    .regulator-detail-row.regulator-row-group-2 { background: #484352; }
+    .regulator-detail-row.regulator-row-group-3 { background: #3a3642; }
+    .regulator-detail-row.regulator-row-group-4 { background: #484352; }
+    .regulator-detail-row.regulator-row-group-5 { background: #403c49; }
+    [data-theme="light"] .regulator-detail-row.regulator-row-group-1 { background: #fcfafc; }
+    [data-theme="light"] .regulator-detail-row.regulator-row-group-2 { background: #e1dce6; }
+    [data-theme="light"] .regulator-detail-row.regulator-row-group-3 { background: #fcfafc; }
+    [data-theme="light"] .regulator-detail-row.regulator-row-group-4 { background: #e1dce6; }
+    [data-theme="light"] .regulator-detail-row.regulator-row-group-5 { background: #eeebf2; }
     .regulator-detail-label {
         font-size: 12px;
         color: rgba(200, 190, 220, 0.45);
@@ -4930,7 +4927,7 @@
     .dev-card-row {
         display: flex;
         flex-direction: column;
-        padding: 8px 14px;
+        padding: 8px 0;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         gap: 0;
         font-size: 16px;
@@ -4940,14 +4937,14 @@
     .dev-card-row:last-child { border-bottom: none; }
     /* Толстые разделители */
     /* Группировка строк карточки по цвету */
-    .dev-card-row.dev-row-group-1 { background: rgba(40, 50, 65, 0.96); }
-    .dev-card-row.dev-row-group-2 { background: rgba(55, 68, 85, 0.96); }
-    .dev-card-row.dev-row-group-3 { background: rgba(40, 50, 65, 0.96); }
-    .dev-card-row.dev-row-group-4 { background: rgba(55, 68, 85, 0.96); }
-    [data-theme="light"] .dev-card-row.dev-row-group-1 { background: rgba(252, 248, 240, 0.97); }
-    [data-theme="light"] .dev-card-row.dev-row-group-2 { background: rgba(220, 213, 200, 0.94); }
-    [data-theme="light"] .dev-card-row.dev-row-group-3 { background: rgba(252, 248, 240, 0.97); }
-    [data-theme="light"] .dev-card-row.dev-row-group-4 { background: rgba(220, 213, 200, 0.94); }
+    .dev-card-row.dev-row-group-1 { background: #283241; }
+    .dev-card-row.dev-row-group-2 { background: #374455; }
+    .dev-card-row.dev-row-group-3 { background: #283241; }
+    .dev-card-row.dev-row-group-4 { background: #374455; }
+    [data-theme="light"] .dev-card-row.dev-row-group-1 { background: #fcf8f0; }
+    [data-theme="light"] .dev-card-row.dev-row-group-2 { background: #dcd5c8; }
+    [data-theme="light"] .dev-card-row.dev-row-group-3 { background: #fcf8f0; }
+    [data-theme="light"] .dev-card-row.dev-row-group-4 { background: #dcd5c8; }
     .dev-card-label {
         font-size: 12px;
         color: rgba(180, 200, 220, 0.45);
@@ -5305,10 +5302,9 @@
     /* ===== Страница детального просмотра прибора ===== */
     /* Карточка: картинка слева в левом краю + блок №/Место справа от неё */
     .dev-detail-card {
-        padding: 12px 14px 24px;
+        padding: 0;
         position: relative;
-        /* Почти непрозрачный фон, чтобы клетчатый паттерн body не просвечивал */
-        background: rgba(28, 34, 46, 0.96);
+        background: transparent;
     }
     /* Значок избранного в правом верхнем углу карточки прибора (только десктоп) */
     .dev-detail-fav-btn {
@@ -5531,7 +5527,7 @@
         background: linear-gradient(135deg, #C6613F, #D97757);
     }
     [data-theme="light"] .dev-detail-card {
-        background: rgba(255, 252, 245, 0.96);
+        background: transparent;
     }
     /* Верхний блок: flex-row — картинка слева + мета-блок справа */
     .dev-detail-top {
@@ -5623,9 +5619,9 @@
         color: #1a4060;
     }
     .dev-detail-rows {
-        border-radius: 12px;
-        overflow: hidden;
-        border: 1px solid var(--border-color);
+        border-radius: 0;
+        overflow: visible;
+        border: none;
     }
 
     /* === Значок избранного в хедере карточки прибора === */
@@ -7196,10 +7192,10 @@
             padding-left: 14px;
             padding-right: 14px;
         }
-        /* Строки данных — отступ слева как у карты */
+        /* Строки данных — во всю ширину без отступов */
         #detailPanel .dev-detail-rows {
-            margin-left: 14px;
-            margin-right: 14px;
+            margin-left: 0;
+            margin-right: 0;
         }
         /* Inline-заголовок страницы скрываем на десктопе (есть top bar) */
         #contentArea > .page-content.active > .page-inline-header {
