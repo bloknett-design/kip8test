@@ -17056,8 +17056,11 @@
         if (page === 'library') { navigateTo('library-internal'); return; }
         // Раздел "Кабельный журнал" объединён с редакторской версией:
         // единая страница — cable-journal-edit (роль с правом записи видит
-        // UI редактирования, остальные — только просмотр). Любой переход на
-        // устаревший идентификатор 'cables' или 'cables-prod' перенаправляется туда же.
+        // UI редактирования, остальные — только просмотр).
+        // Доступ к кабельному журналу (страницы cable-journal-*) определяется
+        // _CABLE_EDIT_PAGES: только КИП ИОС pro, ИТР ИОС и Админ.
+        // Любой переход на устаревший идентификатор 'cables' или 'cables-prod'
+        // перенаправляется туда же.
         if (page === 'cables' || page === 'cables-prod') { navigateTo('cable-journal-edit'); return; }
         // Сброс активного фильтра «№ проекта» при уходе со страницы соответствующего раздела.
         // Карта: страница → раздел, к которому относится фильтр.
@@ -22513,36 +22516,31 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
         // ============================================================
         // Карта доступа: роль → список разрешённых страниц.
+        // (Подробная карта — см. ниже, после «Карта доступа на основе…».)
         // ============================================================
-        // 'Запрет'     — нет доступа вообще (только login screen).
-        // 'Общий'      — инженерные калькуляторы + библиотека + билеты.
-        // 'КИП8'       — Общий + телефонный справочник.
-        // 'КИП_ИОС'    — только раздел КИП ИОС.
-        // 'КИП_ИОС+'   — Общий + КИП_ИОС.
-        // 'ИТР8'       — Общий + телефонный справочник.
-        // 'ИТР_ИОС'    — Общий + КИП_ИОС + телефонный справочник.
-        // 'Админ'      — полный доступ ['*'].
 
         // ============================================================
-        // Карта доступа (Task 38, на основе "Карта ролей.xlsx" от пользователя).
+        // Карта доступа (на основе "Карта ролей.xlsx" от пользователя).
         // ============================================================
         // Структура (всё хранится как массивы page-id):
-        //   _BASE_PAGES  — главная страница (доступна всем, включая гостей).
-        //   _CALC_PAGES  — инженерные калькуляторы.
-        //   _LIBRARY_PAGES — библиотека: «Экзаменационные билеты» + «Библиотека КИП и А».
-        //   _KIP_IOS_PAGES — раздел КИП ИОС.
-        //   _SECRET_PAGES — секретные кнопки (сапёр + телефонный справочник).
+        //   _BASE_PAGES       — главная страница (доступна всем, включая гостей).
+        //   _CALC_PAGES       — инженерные калькуляторы.
+        //   _LIBRARY_PAGES    — библиотека: «Экзаменационные билеты» + «Библиотека КИП и А».
+        //   _KIP_IOS_PAGES    — раздел КИП ИОС (без кабельного журнала).
+        //   _CABLE_EDIT_PAGES — кабельный журнал (добавление, правка, удаление кабелей).
+        //   _SECRET_PAGES     — секретные кнопки (сапёр + телефонный справочник).
+        //   _WHATS_NEW_PAGES  — раздел «Что нового».
         //
         // Карта ролей (из Excel):
         //   Запрет         — нет доступа (только dashboard).
         //   Общий доступ   — только калькуляторы. НЕ требует входа — гостевой режим.
-        //   КИП8           — калькуляторы + библиотека + секретные кнопки.
+        //   КИП8           — калькуляторы + библиотека + секретные кнопки + Что нового.
         //   КИП8 pro       — то же, что КИП8.
-        //   КИП ИОС        — калькуляторы + библиотека + КИП ИОС + секретные.
-        //   КИП ИОС pro    — то же, что КИП ИОС.
+        //   КИП ИОС        — калькуляторы + библиотека + КИП ИОС + секретные + Что нового.
+        //   КИП ИОС pro    — то же, что КИП ИОС + кабельный журнал.
         //   ИТР8           — то же, что КИП ИОС.
         //   ИТР8 pro       — то же, что КИП ИОС.
-        //   ИТР ИОС        — то же, что КИП ИОС.
+        //   ИТР ИОС        — то же, что КИП ИОС + кабельный журнал.
         //   Админ          — полный доступ ['*'] + админ-панель.
         // ============================================================
         _BASE_PAGES: ['dashboard'],
@@ -22559,8 +22557,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                       'circuit-breaker',
                       'geo-circle', 'geo-ring', 'geo-cylinder', 'geo-horiz', 'geo-sphere', 'geo-cone'],
         _LIBRARY_PAGES: ['docs', 'library', 'library-internal', 'library-electro',
-                         'exam-tickets', 'tickets-4', 'tickets-5', 'tickets-6', 'tickets-1000v',
-                         'whats-new'],
+                         'exam-tickets', 'tickets-4', 'tickets-5', 'tickets-6', 'tickets-1000v'],
         _KIP_IOS_PAGES: ['kip-ios',
                          'devices-prod', 'devices-type', 'devices-name', 'device-detail', 'dev-group',
                          'device-favorites',
@@ -22568,11 +22565,10 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                          'valves-prod', 'valves-type', 'valves-name', 'valve-detail', 'valve-group',
                          'regulators-prod', 'regulator-detail', 'regulator-group',
                          'projects-prod', 'project-detail', 'project-group',
-                         'cable-journal-edit',
-                         'cable-journal-add',
-                         'cable-journal-view',
                          'plan-114', 'plan-114-view'],
+        _CABLE_EDIT_PAGES: ['cable-journal-edit', 'cable-journal-add', 'cable-journal-view'],
         _SECRET_PAGES: ['minesweeper', 'phonebook'],
+        _WHATS_NEW_PAGES: ['whats-new'],
 
         ROLE_ACCESS: null,  // вычисляется в init()
 
@@ -22585,23 +22581,26 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             const CALC = this._CALC_PAGES;
             const LIB = this._LIBRARY_PAGES;
             const KIP_IOS = this._KIP_IOS_PAGES;
+            const CABLE_EDIT = this._CABLE_EDIT_PAGES;
             const SECRET = this._SECRET_PAGES;
+            const WHATS_NEW = this._WHATS_NEW_PAGES;
 
-            // Уровни доступа (по карте ролей):
+            // Уровни доступа (по карте ролей из Excel):
             const LVL_OBSHCHIJ = [].concat(BASE, CALC);
-            const LVL_KIP8 = [].concat(BASE, CALC, LIB, SECRET);
-            const LVL_KIP_IOS = [].concat(BASE, CALC, LIB, KIP_IOS, SECRET);
+            const LVL_KIP8 = [].concat(BASE, CALC, LIB, SECRET, WHATS_NEW);
+            const LVL_KIP_IOS = [].concat(BASE, CALC, LIB, KIP_IOS, SECRET, WHATS_NEW);
+            const LVL_KIP_IOS_PRO = [].concat(BASE, CALC, LIB, KIP_IOS, CABLE_EDIT, SECRET, WHATS_NEW);
 
             this.ROLE_ACCESS = {
-                'Запрет': BASE,                // только главная
-                'Общий доступ': LVL_OBSHCHIJ,  // только калькуляторы (гостевой режим)
+                'Запрет': BASE,                   // только главная
+                'Общий доступ': LVL_OBSHCHIJ,     // только калькуляторы (гостевой режим)
                 'КИП8': LVL_KIP8,
                 'КИП8 pro': LVL_KIP8,
                 'КИП ИОС': LVL_KIP_IOS,
-                'КИП ИОС pro': LVL_KIP_IOS,
+                'КИП ИОС pro': LVL_KIP_IOS_PRO,   // + кабельный журнал
                 'ИТР8': LVL_KIP_IOS,
                 'ИТР8 pro': LVL_KIP_IOS,
-                'ИТР ИОС': LVL_KIP_IOS,
+                'ИТР ИОС': LVL_KIP_IOS_PRO,       // + кабельный журнал
                 'Админ': ['*']
             };
         },
@@ -23346,7 +23345,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             // Кнопка в sidebar одна; видимость UI редактирования (кнопка
             // "+ Добавить", поля в модалке) управляется флагом canEdit,
             // который сервер возвращает в cableJournal.list / getColumns.
-            // Роли с правом записи: Админ, ИТР ИОС, КИП ИОС pro.
+            // Роли с правом записи: Админ, ИТР ИОС, КИП ИОС pro
+            // (определяется картой _CABLE_EDIT_PAGES в ROLE_ACCESS).
             // ============================================================
         },
 
