@@ -3964,6 +3964,141 @@
     [data-theme="light"] .chart-stat-value { color: #2e8a72; }
     [data-theme="light"] .chart-card { background: #fafaf8; border-color: rgba(0,0,0,0.08); }
 
+    /* ======================== ГРАФИК ППР — вертикальная гистограмма ======================== */
+    .ppr-chart-card {
+        margin-bottom: 16px;
+    }
+    .ppr-chart-header {
+        padding: 12px 14px 8px;
+    }
+    .ppr-chart-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+    .ppr-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .ppr-legend-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .ppr-legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+        flex-shrink: 0;
+    }
+    .ppr-legend-code {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    .ppr-legend-name {
+        font-size: 11px;
+        color: var(--text-secondary);
+    }
+    .ppr-chart-body {
+        padding: 4px 14px 12px;
+    }
+    .ppr-chart-area {
+        display: flex;
+        position: relative;
+    }
+    .ppr-y-axis {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding-right: 6px;
+        flex-shrink: 0;
+        width: 30px;
+    }
+    .ppr-y-label {
+        font-size: 9px;
+        color: var(--text-secondary);
+        text-align: right;
+        line-height: 1;
+    }
+    .ppr-chart-grid {
+        flex: 1;
+        display: flex;
+        position: relative;
+        height: 180px;
+        border-left: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+    }
+    .ppr-grid-line {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--border-color);
+        opacity: 0.5;
+    }
+    .ppr-month-group {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: center;
+        position: relative;
+        min-width: 0;
+    }
+    .ppr-bars-row {
+        display: flex;
+        gap: 2px;
+        width: 100%;
+        justify-content: center;
+        align-items: flex-end;
+        flex: 1;
+        padding: 0 1px;
+    }
+    .ppr-bar-cell {
+        flex: 1;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        max-width: 14px;
+    }
+    .ppr-bar {
+        width: 100%;
+        border-radius: 2px 2px 0 0;
+        position: relative;
+        min-height: 2px;
+        transition: height 0.3s ease;
+    }
+    .ppr-bar-val {
+        position: absolute;
+        top: -14px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 8px;
+        font-weight: 600;
+        color: var(--text-primary);
+        white-space: nowrap;
+        pointer-events: none;
+    }
+    .ppr-month-label {
+        font-size: 9px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        padding-top: 4px;
+        text-align: center;
+        flex-shrink: 0;
+    }
+    /* Светлая тема для ППР */
+    [data-theme="light"] .ppr-chart-grid {
+        border-left-color: rgba(0,0,0,0.12);
+        border-bottom-color: rgba(0,0,0,0.12);
+    }
+    [data-theme="light"] .ppr-grid-line {
+        background: rgba(0,0,0,0.08);
+    }
+
     .pb-section {
         margin: 6px 8px 8px;
         border: 1px solid rgba(255,255,255,0.07);
@@ -26208,6 +26343,30 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         _currentTab: 'devices',   // активная вкладка
         _cache: {},               // кэш загруженных данных {devices: [...], lockouts: [...], ...}
 
+        // Месяцы года (римские)
+        _MONTHS_ROMAN: ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'],
+
+        // Данные ППР на текущий год (2026) — Приборы
+        // 3 серии: Калибровка (K), Поверка (П), Тех.обслуж. (ТО)
+        _PPR_DEVICES: {
+            title: 'График ППР — Приборы на 2026 год',
+            series: [
+                { name: 'Калибровка', code: 'K', color: '#4a90d9', values: [13, 33, 30, 45, 24, 28, 33, 33, 48, 16, 34, 35] },
+                { name: 'Поверка', code: 'П', color: '#e07040', values: [12, 12, 4, 15, 0, 4, 6, 10, 4, 6, 1, 12] },
+                { name: 'Тех. обслуж.', code: 'ТО', color: '#5ab870', values: [353, 353, 500, 320, 373, 496, 333, 353, 481, 358, 361, 485] }
+            ]
+        },
+
+        // Данные ППР на текущий год (2026) — Блокировки (Схемы)
+        // 2 серии: Кан.ремонт (Кр), Тех.обслуж. (ТО)
+        _PPR_LOCKOUTS: {
+            title: 'График ППР — Схемы на 2026 год',
+            series: [
+                { name: 'Кан. ремонт', code: 'Кр', color: '#4a90d9', values: [58, 49, 26, 31, 13, 38, 33, 34, 74, 23, 49, 98] },
+                { name: 'Тех. обслуж.', code: 'ТО', color: '#5ab870', values: [87, 96, 210, 114, 132, 198, 112, 111, 162, 122, 96, 138] }
+            ]
+        },
+
         // Конфигурация разделов
         _SECTIONS: {
             devices: {
@@ -26307,6 +26466,13 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             var sec = this._SECTIONS[tab];
             var html = '';
 
+            // 0. График ППР (если есть для данного раздела)
+            if (tab === 'devices') {
+                html += this._renderPPRChart(this._PPR_DEVICES);
+            } else if (tab === 'lockouts') {
+                html += this._renderPPRChart(this._PPR_LOCKOUTS);
+            }
+
             // 1. Сводная статистика
             var totalItems = items.length;
             var groupField = sec.groupField;
@@ -26383,6 +26549,116 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             }
 
             container.innerHTML = html;
+        },
+
+        // ============================================================
+        // Рендер графика ППР — группированная вертикальная гистограмма
+        // ============================================================
+        _renderPPRChart: function(pprData) {
+            var series = pprData.series;
+            var numSeries = series.length;
+            var numMonths = 12;
+
+            // Найти максимальное значение для масштаба оси Y
+            var maxVal = 0;
+            for (var s = 0; s < numSeries; s++) {
+                for (var m = 0; m < numMonths; m++) {
+                    if (series[s].values[m] > maxVal) maxVal = series[s].values[m];
+                }
+            }
+            if (maxVal === 0) maxVal = 1;
+
+            // Округлить maxVal вверх до красивого числа
+            var niceMax = this._niceMax(maxVal);
+
+            // Ось Y: 5 делений
+            var ySteps = 5;
+            var yStepVal = niceMax / ySteps;
+
+            var html = '<div class="chart-card ppr-chart-card">';
+            html += '<div class="ppr-chart-header">';
+            html += '<div class="ppr-chart-title">' + this._escHtml(pprData.title) + '</div>';
+            // Легенда
+            html += '<div class="ppr-legend">';
+            for (var s = 0; s < numSeries; s++) {
+                html += '<div class="ppr-legend-item">';
+                html += '<span class="ppr-legend-dot" style="background:' + series[s].color + ';"></span>';
+                html += '<span class="ppr-legend-code">' + this._escHtml(series[s].code) + '</span>';
+                html += '<span class="ppr-legend-name">' + this._escHtml(series[s].name) + '</span>';
+                html += '</div>';
+            }
+            html += '</div>';
+            html += '</div>';
+
+            // Тело графика
+            html += '<div class="ppr-chart-body">';
+
+            // Оси + область графика
+            html += '<div class="ppr-chart-area">';
+
+            // Ось Y (метки слева)
+            html += '<div class="ppr-y-axis">';
+            for (var i = ySteps; i >= 0; i--) {
+                var yVal = Math.round(yStepVal * i);
+                html += '<div class="ppr-y-label">' + yVal + '</div>';
+            }
+            html += '</div>';
+
+            // Сетка + столбцы
+            html += '<div class="ppr-chart-grid">';
+
+            // Горизонтальные линии сетки
+            for (var i = 0; i <= ySteps; i++) {
+                var bottomPct = (i / ySteps) * 100;
+                html += '<div class="ppr-grid-line" style="bottom:' + bottomPct + '%;"></div>';
+            }
+
+            // Группы столбцов по месяцам
+            for (var m = 0; m < numMonths; m++) {
+                html += '<div class="ppr-month-group">';
+
+                // Столбцы серий
+                html += '<div class="ppr-bars-row">';
+                for (var s = 0; s < numSeries; s++) {
+                    var val = series[s].values[m];
+                    var heightPct = (val / niceMax) * 100;
+                    html += '<div class="ppr-bar-cell">';
+                    if (val > 0) {
+                        html += '<div class="ppr-bar" style="height:' + heightPct + '%;background:' + series[s].color + ';">';
+                        // Значение над столбцом (показываем если достаточно высокий)
+                        if (heightPct > 8) {
+                            html += '<span class="ppr-bar-val">' + val + '</span>';
+                        }
+                        html += '</div>';
+                    }
+                    html += '</div>';
+                }
+                html += '</div>';
+
+                // Метка месяца
+                html += '<div class="ppr-month-label">' + this._MONTHS_ROMAN[m] + '</div>';
+                html += '</div>';
+            }
+
+            html += '</div>'; // .ppr-chart-grid
+            html += '</div>'; // .ppr-chart-area
+            html += '</div>'; // .ppr-chart-body
+            html += '</div>'; // .chart-card
+
+            return html;
+        },
+
+        // Красивое округление максимума для оси Y
+        _niceMax: function(val) {
+            if (val <= 0) return 10;
+            var mag = Math.pow(10, Math.floor(Math.log10(val)));
+            var norm = val / mag;
+            var nice;
+            if (norm <= 1) nice = 1;
+            else if (norm <= 2) nice = 2;
+            else if (norm <= 5) nice = 5;
+            else nice = 10;
+            return nice * mag;
         },
 
         // Название группировки для заголовка
