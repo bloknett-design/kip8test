@@ -11846,9 +11846,10 @@
                 if (type) subtitle += type;
                 if (place) subtitle += (subtitle ? ' · ' : '') + place;
                 if (subtitle) html += '<div class="lock-card-subtitle">' + lockMark(subtitle, query) + '</div>';
-                html += '</div>';
-                html += '</div>';
-                html += '</div>';
+                html += '</div>'; // .lock-card-text
+                html += '</div>'; // .lock-card-header-inner
+                html += '</div>'; // .lock-card-header
+                html += '</div>'; // .lock-card
             }
             html += '</div>';
             html += '</div>';
