@@ -11471,11 +11471,11 @@
                     const imgUrl = devGetImageUrl(dev);
 
                     html += '<div class="dev-card" data-dev-id="' + devEsc(devId) + '" data-mode="' + mode + '">';
-                    html += KipFav._cardFavBtnHtml(devId);
                     html += '<div class="dev-card-header" onclick="devOpenDetail(\'' + devEsc(devId) + '\')">';
                     html += '<div class="dev-card-header-inner">';
                     html += '<div class="dev-card-image-wrap">';
                     html += '<img class="dev-card-image" src="' + devEsc(imgUrl) + '" alt="' + devEsc(name) + '" loading="lazy">';
+                    html += KipFav._cardFavBtnHtml(devId);
                     // Если имя прибора уже в заголовке подгруппы — overlay не нужен.
                     if (!hideNameInCard) {
                         html += '<div class="dev-card-name-overlay">' + devMark(name, query) + '</div>';
@@ -11654,11 +11654,11 @@
                 const imgUrl = devGetImageUrl(dev);
 
                 html += '<div class="dev-card" data-dev-id="' + devEsc(devId) + '" data-mode="' + mode + '">';
-                html += KipFav._cardFavBtnHtml(devId);
                 html += '<div class="dev-card-header" onclick="devOpenDetail(\'' + devEsc(devId) + '\')">';
                 html += '<div class="dev-card-header-inner">';
                 html += '<div class="dev-card-image-wrap">';
                 html += '<img class="dev-card-image" src="' + devEsc(imgUrl) + '" alt="' + devEsc(name) + '" loading="lazy">';
+                html += KipFav._cardFavBtnHtml(devId);
                 // Если имя уже в заголовке подгруппы (mode='prod') — overlay не нужен.
                 if (!hideNameInCard) {
                     html += '<div class="dev-card-name-overlay">' + devEsc(name) + '</div>';
@@ -23306,9 +23306,31 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 setTimeout(function() {
                     // Toggle favorite
                     var wasAdded = KipFav.toggle(devId);
-                    // Обновить значок на карточке
-                    // Перерендерить карточку чтобы обновить информационный значок
-                    if (typeof devRender === 'function') devRender();
+                    // Обновить значок на карточке напрямую (без полного ререндера)
+                    var cardEl = savedCell ? savedCell.querySelector('.dev-card') : null;
+                    if (cardEl) {
+                        var wrap = cardEl.querySelector('.dev-card-image-wrap');
+                        if (wrap) {
+                            var existing = wrap.querySelector('.dev-card-fav-indicator');
+                            if (wasAdded && !existing) {
+                                // Добавить значок
+                                var span = document.createElement('span');
+                                span.className = 'dev-card-fav-indicator';
+                                span.setAttribute('aria-label', 'В избранном');
+                                span.setAttribute('title', 'В избранном');
+                                span.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+                                // Вставить после img, перед name-overlay
+                                var img = wrap.querySelector('.dev-card-image');
+                                if (img && img.nextSibling) {
+                                    wrap.insertBefore(span, img.nextSibling);
+                                } else {
+                                    wrap.appendChild(span);
+                                }
+                            } else if (!wasAdded && existing) {
+                                existing.remove();
+                            }
+                        }
+                    }
                     // Обновить класс ячейки
                     if (savedCell) savedCell.classList.toggle('is-fav', wasAdded);
                     // Обновить подложку текст
@@ -23426,8 +23448,34 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             if (!favKey) return;
             if (navigator.vibrate) navigator.vibrate(10);
             const wasAdded = this.toggle(favKey);
-            // Обновить значок на карточке — перерендер списка
-            // (информационный значок обновляется при рендере)
+            // Обновить значок на карточке напрямую (без полного ререндера)
+            if (ev && ev.target) {
+                var cardEl = ev.target.closest('.dev-card, .lock-card, .valve-card, .reg-card');
+                if (cardEl) {
+                    var wrap = cardEl.querySelector('.dev-card-image-wrap') || cardEl;
+                    var existing = wrap.querySelector('.dev-card-fav-indicator');
+                    if (wasAdded && !existing) {
+                        var span = document.createElement('span');
+                        span.className = 'dev-card-fav-indicator';
+                        span.setAttribute('aria-label', 'В избранном');
+                        span.setAttribute('title', 'В избранном');
+                        span.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+                        if (wrap === cardEl) {
+                            // Нет image-wrap — вставить в начало карточки
+                            cardEl.insertBefore(span, cardEl.firstChild);
+                        } else {
+                            var img = wrap.querySelector('.dev-card-image');
+                            if (img && img.nextSibling) {
+                                wrap.insertBefore(span, img.nextSibling);
+                            } else {
+                                wrap.appendChild(span);
+                            }
+                        }
+                    } else if (!wasAdded && existing) {
+                        existing.remove();
+                    }
+                }
+            }
             // Также обновить значок в хедере если это тот же прибор
             this.updateHeaderIcon();
             if (wasAdded) {
