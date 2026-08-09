@@ -17057,8 +17057,10 @@
         // Раздел "Кабельный журнал" объединён с редакторской версией:
         // единая страница — cable-journal-edit (роль с правом записи видит
         // UI редактирования, остальные — только просмотр).
-        // Доступ к кабельному журналу (страницы cable-journal-*) определяется
-        // _CABLE_EDIT_PAGES: только КИП ИОС pro, ИТР ИОС и Админ.
+        // Доступ к кабельному журналу (страницы cable-journal-*) —
+        // всем ролям с доступом к КИП ИОС (просмотр).
+        // Право записи (canEdit) — только КИП ИОС pro, ИТР ИОС и Админ
+        // (определяется сервером в cableJournal.getColumns).
         // Любой переход на устаревший идентификатор 'cables' или 'cables-prod'
         // перенаправляется туда же.
         if (page === 'cables' || page === 'cables-prod') { navigateTo('cable-journal-edit'); return; }
@@ -22526,10 +22528,14 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         //   _BASE_PAGES       — главная страница (доступна всем, включая гостей).
         //   _CALC_PAGES       — инженерные калькуляторы.
         //   _LIBRARY_PAGES    — библиотека: «Экзаменационные билеты» + «Библиотека КИП и А».
-        //   _KIP_IOS_PAGES    — раздел КИП ИОС (без кабельного журнала).
-        //   _CABLE_EDIT_PAGES — кабельный журнал (добавление, правка, удаление кабелей).
+        //   _KIP_IOS_PAGES    — раздел КИП ИОС (включая кабельный журнал для просмотра).
         //   _SECRET_PAGES     — секретные кнопки (сапёр + телефонный справочник).
         //   _WHATS_NEW_PAGES  — раздел «Что нового».
+        //
+        // Право ЗАПИСИ в кабельный журнал (добавление, правка, удаление кабелей)
+        // определяется ОТДЕЛЬНО столбцом «Добавить, править, удалить кабели»
+        // в «Карта ролей.xlsx» и управляется серверным флагом canEdit
+        // (см. раздел «Кабельный журнал — canEdit» ниже).
         //
         // Карта ролей (из Excel):
         //   Запрет         — нет доступа (только dashboard).
@@ -22537,10 +22543,10 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         //   КИП8           — калькуляторы + библиотека + секретные кнопки + Что нового.
         //   КИП8 pro       — то же, что КИП8.
         //   КИП ИОС        — калькуляторы + библиотека + КИП ИОС + секретные + Что нового.
-        //   КИП ИОС pro    — то же, что КИП ИОС + кабельный журнал.
+        //   КИП ИОС pro    — то же + canEdit (право записи в кабельный журнал).
         //   ИТР8           — то же, что КИП ИОС.
         //   ИТР8 pro       — то же, что КИП ИОС.
-        //   ИТР ИОС        — то же, что КИП ИОС + кабельный журнал.
+        //   ИТР ИОС        — то же + canEdit (право записи в кабельный журнал).
         //   Админ          — полный доступ ['*'] + админ-панель.
         // ============================================================
         _BASE_PAGES: ['dashboard'],
@@ -22565,8 +22571,10 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                          'valves-prod', 'valves-type', 'valves-name', 'valve-detail', 'valve-group',
                          'regulators-prod', 'regulator-detail', 'regulator-group',
                          'projects-prod', 'project-detail', 'project-group',
+                         'cable-journal-edit',
+                         'cable-journal-add',
+                         'cable-journal-view',
                          'plan-114', 'plan-114-view'],
-        _CABLE_EDIT_PAGES: ['cable-journal-edit', 'cable-journal-add', 'cable-journal-view'],
         _SECRET_PAGES: ['minesweeper', 'phonebook'],
         _WHATS_NEW_PAGES: ['whats-new'],
 
@@ -22581,7 +22589,6 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             const CALC = this._CALC_PAGES;
             const LIB = this._LIBRARY_PAGES;
             const KIP_IOS = this._KIP_IOS_PAGES;
-            const CABLE_EDIT = this._CABLE_EDIT_PAGES;
             const SECRET = this._SECRET_PAGES;
             const WHATS_NEW = this._WHATS_NEW_PAGES;
 
@@ -22589,7 +22596,6 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             const LVL_OBSHCHIJ = [].concat(BASE, CALC);
             const LVL_KIP8 = [].concat(BASE, CALC, LIB, SECRET, WHATS_NEW);
             const LVL_KIP_IOS = [].concat(BASE, CALC, LIB, KIP_IOS, SECRET, WHATS_NEW);
-            const LVL_KIP_IOS_PRO = [].concat(BASE, CALC, LIB, KIP_IOS, CABLE_EDIT, SECRET, WHATS_NEW);
 
             this.ROLE_ACCESS = {
                 'Запрет': BASE,                   // только главная
@@ -22597,10 +22603,10 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 'КИП8': LVL_KIP8,
                 'КИП8 pro': LVL_KIP8,
                 'КИП ИОС': LVL_KIP_IOS,
-                'КИП ИОС pro': LVL_KIP_IOS_PRO,   // + кабельный журнал
+                'КИП ИОС pro': LVL_KIP_IOS,       // + canEdit (право записи в каб. журнал)
                 'ИТР8': LVL_KIP_IOS,
                 'ИТР8 pro': LVL_KIP_IOS,
-                'ИТР ИОС': LVL_KIP_IOS_PRO,       // + кабельный журнал
+                'ИТР ИОС': LVL_KIP_IOS,           // + canEdit (право записи в каб. журнал)
                 'Админ': ['*']
             };
         },
@@ -23345,8 +23351,9 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             // Кнопка в sidebar одна; видимость UI редактирования (кнопка
             // "+ Добавить", поля в модалке) управляется флагом canEdit,
             // который сервер возвращает в cableJournal.list / getColumns.
-            // Роли с правом записи: Админ, ИТР ИОС, КИП ИОС pro
-            // (определяется картой _CABLE_EDIT_PAGES в ROLE_ACCESS).
+            // Роли с правом записи: Админ, ИТР ИОС, КИП ИОС pro.
+            // Просмотр кабельного журнала — всем ролям с доступом к КИП ИОС.
+            // Право записи определяется сервером (canEdit в cableJournal.getColumns).
             // ============================================================
         },
 
