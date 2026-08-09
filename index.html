@@ -5523,6 +5523,26 @@
     /* Подложка видна когда карточка сдвинута в противоположную сторону */
     .fav-card-cell.swiping-right .fav-card-delete-left  { opacity: 1; }
     .fav-card-cell.swiping-left  .fav-card-delete-right { opacity: 1; }
+    /* Drag-and-drop: карточка в состоянии перетаскивания (оригинал) */
+    .fav-card.fav-card-dragging {
+        opacity: 0.25;
+        transform: scale(0.97);
+    }
+    /* Drag-and-drop: карточка-цель под курсором */
+    .fav-card.fav-card-drag-over {
+        box-shadow: inset 0 0 0 2px rgba(74, 199, 74, 0.5);
+        transform: scale(1.01);
+    }
+    /* Drag-and-drop: клон карточки, следующий за пальцем */
+    .fav-card-clone {
+        pointer-events: none !important;
+        opacity: 0.92;
+        box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+        transform: scale(1.02);
+        transition: none !important;
+        z-index: 9999;
+    }
+
     [data-theme="light"] .fav-card-delete-bg {
         background: linear-gradient(135deg, #C6613F, #D97757);
     }
@@ -22685,6 +22705,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
     const KipFav = {
 
         _STORAGE_KEY: 'kip8_device_fav_v1',
+        _ORDER_KEY: 'kip8_fav_order_v1',   // пользовательский порядок (массив ключей)
         _data: null,  // ленивый кэш: { devId: addedAt, ... }
 
         // ----------------------------------------------------------
@@ -22773,17 +22794,52 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             return Object.keys(this._data).length;
         },
 
-        /** Все избранные (для списка). Возвращает [{devId, addedAt},...] отсортированные по addedAt desc. */
+        /** Все избранные (для списка). Возвращает [{devId, addedAt},...] отсортированные по пользовательскому порядку, затем по addedAt desc. */
         all: function() {
             this._load();
+            const order = this.getOrder();
             const result = [];
             for (const devId in this._data) {
                 if (this._data.hasOwnProperty(devId)) {
                     result.push({ devId: devId, addedAt: this._data[devId] });
                 }
             }
-            result.sort(function(a, b) { return (b.addedAt || '').localeCompare(a.addedAt || ''); });
+            if (order.length > 0) {
+                // Сортировка по пользовательскому порядку
+                const orderMap = {};
+                order.forEach(function(k, i) { orderMap[k] = i; });
+                result.sort(function(a, b) {
+                    const ai = orderMap[a.devId];
+                    const bi = orderMap[b.devId];
+                    // Элементы с порядком идут первыми (по индексу), без порядка — в конце (по addedAt desc)
+                    if (ai !== undefined && bi !== undefined) return ai - bi;
+                    if (ai !== undefined) return -1;
+                    if (bi !== undefined) return 1;
+                    return (b.addedAt || '').localeCompare(a.addedAt || '');
+                });
+                // Автоочистка: убрать из порядка ключи, которых больше нет в избранном
+                const currentKeys = Object.keys(this._data);
+                const cleaned = order.filter(function(k) { return currentKeys.indexOf(k) !== -1; });
+                if (cleaned.length !== order.length) this.setOrder(cleaned);
+            } else {
+                result.sort(function(a, b) { return (b.addedAt || '').localeCompare(a.addedAt || ''); });
+            }
             return result;
+        },
+
+        /** Получить пользовательский порядок избранных. */
+        getOrder: function() {
+            try {
+                const raw = localStorage.getItem(this._ORDER_KEY);
+                if (!raw) return [];
+                const arr = JSON.parse(raw);
+                return Array.isArray(arr) ? arr : [];
+            } catch (e) { return []; }
+        },
+
+        /** Сохранить пользовательский порядок избранных. */
+        setOrder: function(arr) {
+            try { localStorage.setItem(this._ORDER_KEY, JSON.stringify(arr)); } catch (e) {}
         },
 
         // ----------------------------------------------------------
@@ -23107,14 +23163,18 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         },
 
         // ----------------------------------------------------------
-        // Свайп для удаления из избранного
+        // Свайп для удаления + долгое зажатие для перетаскивания
         // ----------------------------------------------------------
+        // По паттерну pinned-item: pointer events, 500 мс long-press → drag,
+        // быстрое горизонтальное движение → swipe-to-delete.
 
-        _favSwipeState: null,
-        _FAV_SWIPE_RATIO: 0.3,   // порог удаления — 30% ширины карточки
-        _FAV_SWIPE_THRESHOLD: 10, // минимальное движение до определения намерения
+        _favInteractState: null,
+        _FAV_DRAG_DELAY: 500,        // мс до начала перетаскивания
+        _FAV_DRAG_THRESHOLD: 10,     // px — движение больше этого отменяет long-press
+        _FAV_SWIPE_RATIO: 0.3,       // доля ширины карточки для порога удаления свайпом
 
         _attachFavSwipe: function() {
+            // Переименовали для обратной совместимости — теперь вешает и swipe, и drag
             const cards = document.querySelectorAll('#deviceFavoritesContent .fav-card');
             const self = this;
             cards.forEach(function(card) {
@@ -23125,17 +23185,25 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     if (e.target.closest('.dev-fav-note-add')) return;
                     const cell = card.closest('.fav-card-cell');
                     if (!cell) return;
-                    // НЕ вызываем e.preventDefault() здесь — с touch-action: pan-y он не нужен,
-                    // preventDefault вызывается в _onFavPtrMove, когда swipe уже активен.
+                    e.preventDefault();  // запрещаем нативные действия (скролл, контекстное меню)
+                    const favId = cell.getAttribute('data-fav-id');
                     const rect = card.getBoundingClientRect();
-                    self._favSwipeState = {
+                    self._favInteractState = {
                         card: card,
                         cell: cell,
+                        favId: favId,
                         startX: e.clientX,
                         startY: e.clientY,
                         width: rect.width,
+                        timer: setTimeout(function() { self._startFavDrag(e); }, self._FAV_DRAG_DELAY),
+                        mode: 'idle',   // 'idle' | 'swipe' | 'drag'
                         currentDx: 0,
-                        mode: 'idle'   // 'idle' | 'swipe'
+                        // Drag-поля
+                        clone: null,
+                        hoverCard: null,
+                        grabOffsetX: 0,
+                        grabOffsetY: 0,
+                        moved: false
                     };
                     window.addEventListener('pointermove', self._onFavPtrMove);
                     window.addEventListener('pointerup', self._onFavPtrUp);
@@ -23145,86 +23213,172 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         },
 
         _onFavPtrMove: function(e) {
-            const st = KipFav._favSwipeState;
+            const st = KipFav._favInteractState;
             if (!st) return;
             const dx = e.clientX - st.startX;
             const dy = e.clientY - st.startY;
 
+            // Если режим ещё не определён — определяем намерение
             if (st.mode === 'idle') {
-                if (Math.abs(dx) < KipFav._FAV_SWIPE_THRESHOLD && Math.abs(dy) < KipFav._FAV_SWIPE_THRESHOLD) return;
+                if (Math.abs(dx) < KipFav._FAV_DRAG_THRESHOLD && Math.abs(dy) < KipFav._FAV_DRAG_THRESHOLD) return;
+                clearTimeout(st.timer);
                 if (Math.abs(dx) > Math.abs(dy) * 1.3) {
                     // Горизонтальное → свайп
                     st.mode = 'swipe';
                     st.card.classList.add('swipe-active');
                     if (navigator.vibrate) navigator.vibrate(5);
                 } else {
-                    // Вертикальное → скролл
-                    KipFav._cleanupFavSwipe();
+                    // Вертикальное → скролл, отменяем
+                    KipFav._cleanupFavInteract();
                     return;
                 }
             }
 
-            e.preventDefault();
-            // Резина при выходе за пределы
-            let effectiveDx = dx;
-            if (Math.abs(dx) > st.width) {
-                const over = Math.abs(dx) - st.width;
-                effectiveDx = Math.sign(dx) * (st.width + over * 0.3);
-            }
-            st.currentDx = effectiveDx;
-            st.card.style.transform = 'translateX(' + effectiveDx + 'px)';
-            // Переключаем подложку по направлению
-            st.cell.classList.toggle('swiping-left', effectiveDx < 0);
-            st.cell.classList.toggle('swiping-right', effectiveDx > 0);
-        },
-
-        _onFavPtrUp: function(e) {
-            const st = KipFav._favSwipeState;
-            if (!st) return;
-
-            if (st.mode !== 'swipe') {
-                KipFav._cleanupFavSwipe();
+            // Swipe-режим
+            if (st.mode === 'swipe') {
+                e.preventDefault();
+                let effectiveDx = dx;
+                if (Math.abs(dx) > st.width) {
+                    const over = Math.abs(dx) - st.width;
+                    effectiveDx = Math.sign(dx) * (st.width + over * 0.3);
+                }
+                st.currentDx = effectiveDx;
+                st.card.style.transform = 'translateX(' + effectiveDx + 'px)';
+                st.cell.classList.toggle('swiping-left', effectiveDx < 0);
+                st.cell.classList.toggle('swiping-right', effectiveDx > 0);
                 return;
             }
 
-            const threshold = st.width * KipFav._FAV_SWIPE_RATIO;
-            const shouldDelete = Math.abs(st.currentDx) > threshold;
-
-            if (shouldDelete) {
-                const devId = st.cell.getAttribute('data-fav-id');
-                const direction = st.currentDx < 0 ? -1 : 1;
-                st.card.classList.remove('swipe-active');
-                st.card.classList.add('swipe-removing');
-                st.card.style.transform = 'translateX(' + (direction * st.width * 1.2) + 'px)';
-                if (navigator.vibrate) navigator.vibrate(30);
-                const savedCell = st.cell;
-                // Очищаем состояние сразу
-                KipFav._favSwipeState = null;
-                window.removeEventListener('pointermove', KipFav._onFavPtrMove);
-                window.removeEventListener('pointerup', KipFav._onFavPtrUp);
-                window.removeEventListener('pointercancel', KipFav._onFavPtrUp);
-                if (savedCell) savedCell.classList.remove('swiping-left', 'swiping-right');
-                // После анимации — удаляем и ре-рендерим
-                setTimeout(function() {
-                    KipFav.remove(devId);
-                    KipFavNotes.remove(devId);
-                    KipFav.initFavoritesPage();
-                    showToast('Убрано из избранного');
-                }, 250);
-            } else {
-                // Возвращаем на место
-                st.card.classList.remove('swipe-active');
-                st.card.style.transform = 'translateX(0)';
-                st.cell.classList.remove('swiping-left', 'swiping-right');
-                KipFav._cleanupFavSwipe();
+            // Drag-режим
+            if (st.mode === 'drag') {
+                e.preventDefault();
+                st.moved = true;
+                st.clone.style.left = (e.clientX - st.grabOffsetX) + 'px';
+                st.clone.style.top = (e.clientY - st.grabOffsetY) + 'px';
+                // Находим карточку под курсором (исключая клон)
+                st.clone.style.pointerEvents = 'none';
+                const target = document.elementFromPoint(e.clientX, e.clientY);
+                const newHover = target ? target.closest('#deviceFavoritesContent .fav-card') : null;
+                if (newHover !== st.hoverCard) {
+                    if (st.hoverCard) st.hoverCard.classList.remove('fav-card-drag-over');
+                    if (newHover && newHover !== st.card) newHover.classList.add('fav-card-drag-over');
+                    st.hoverCard = newHover;
+                }
             }
         },
 
-        _cleanupFavSwipe: function() {
-            window.removeEventListener('pointermove', KipFav._onFavPtrMove);
-            window.removeEventListener('pointerup', KipFav._onFavPtrUp);
-            window.removeEventListener('pointercancel', KipFav._onFavPtrUp);
-            KipFav._favSwipeState = null;
+        _onFavPtrUp: function(e) {
+            const st = KipFav._favInteractState;
+            if (!st) return;
+            clearTimeout(st.timer);
+
+            // Swipe-завершение
+            if (st.mode === 'swipe') {
+                const threshold = st.width * KipFav._FAV_SWIPE_RATIO;
+                const shouldDelete = Math.abs(st.currentDx) > threshold;
+                if (shouldDelete) {
+                    const devId = st.cell.getAttribute('data-fav-id');
+                    const direction = st.currentDx < 0 ? -1 : 1;
+                    st.card.classList.remove('swipe-active');
+                    st.card.classList.add('swipe-removing');
+                    st.card.style.transform = 'translateX(' + (direction * st.width * 1.2) + 'px)';
+                    if (navigator.vibrate) navigator.vibrate(30);
+                    const savedCell = st.cell;
+                    KipFav._favInteractState = null;
+                    window.removeEventListener('pointermove', KipFav._onFavPtrMove);
+                    window.removeEventListener('pointerup', KipFav._onFavPtrUp);
+                    window.removeEventListener('pointercancel', KipFav._onFavPtrUp);
+                    if (savedCell) savedCell.classList.remove('swiping-left', 'swiping-right');
+                    setTimeout(function() {
+                        KipFav.remove(devId);
+                        KipFavNotes.remove(devId);
+                        KipFav.initFavoritesPage();
+                        showToast('Убрано из избранного');
+                    }, 250);
+                } else {
+                    st.card.classList.remove('swipe-active');
+                    st.card.style.transform = 'translateX(0)';
+                    st.cell.classList.remove('swiping-left', 'swiping-right');
+                    KipFav._cleanupFavInteract();
+                }
+                return;
+            }
+
+            // Drag-завершение
+            if (st.mode === 'drag') {
+                let didReorder = false;
+                if (st.moved && st.hoverCard && st.hoverCard !== st.card) {
+                    const hoverCell = st.hoverCard.closest('.fav-card-cell');
+                    if (hoverCell) {
+                        const targetFavId = hoverCell.getAttribute('data-fav-id');
+                        const order = KipFav.getOrder();
+                        // Текущий список ключей в порядке DOM
+                        const allKeys = [];
+                        document.querySelectorAll('#deviceFavoritesContent .fav-card-cell').forEach(function(c) {
+                            allKeys.push(c.getAttribute('data-fav-id'));
+                        });
+                        const fromIdx = allKeys.indexOf(st.favId);
+                        const toIdx = allKeys.indexOf(targetFavId);
+                        if (fromIdx !== -1 && toIdx !== -1 && fromIdx !== toIdx) {
+                            allKeys.splice(fromIdx, 1);
+                            allKeys.splice(toIdx, 0, st.favId);
+                            KipFav.setOrder(allKeys);
+                            didReorder = true;
+                            if (navigator.vibrate) navigator.vibrate(15);
+                        }
+                    }
+                }
+                KipFav._cleanupFavInteract();
+                if (didReorder) {
+                    KipFav.initFavoritesPage();
+                }
+                return;
+            }
+
+            // Не было ни swipe, ни drag — обычный тап
+            KipFav._cleanupFavInteract();
+        },
+
+        /** Старт перетаскивания (после долгого зажатия). */
+        _startFavDrag: function(e) {
+            const st = this._favInteractState;
+            if (!st) return;
+            st.mode = 'drag';
+            const rect = st.card.getBoundingClientRect();
+            st.grabOffsetX = st.startX - rect.left;
+            st.grabOffsetY = st.startY - rect.top;
+            // Клон карточки
+            const clone = st.card.cloneNode(true);
+            clone.classList.add('fav-card-clone');
+            clone.style.position = 'fixed';
+            clone.style.left = rect.left + 'px';
+            clone.style.top = rect.top + 'px';
+            clone.style.width = rect.width + 'px';
+            clone.style.height = rect.height + 'px';
+            clone.style.zIndex = '9999';
+            clone.style.pointerEvents = 'none';
+            clone.style.margin = '0';
+            document.body.appendChild(clone);
+            st.clone = clone;
+            st.card.classList.add('fav-card-dragging');
+            if (navigator.vibrate) navigator.vibrate(30);
+            st.card.style.pointerEvents = 'none';
+        },
+
+        _cleanupFavInteract: function() {
+            const st = this._favInteractState;
+            if (!st) return;
+            clearTimeout(st.timer);
+            if (st.clone) st.clone.remove();
+            if (st.card) {
+                st.card.classList.remove('fav-card-dragging');
+                st.card.style.pointerEvents = '';
+            }
+            if (st.hoverCard) st.hoverCard.classList.remove('fav-card-drag-over');
+            this._favInteractState = null;
+            window.removeEventListener('pointermove', this._onFavPtrMove);
+            window.removeEventListener('pointerup', this._onFavPtrUp);
+            window.removeEventListener('pointercancel', this._onFavPtrUp);
         },
 
         // ----------------------------------------------------------
