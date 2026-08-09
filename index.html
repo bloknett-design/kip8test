@@ -22720,9 +22720,55 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         // UI: страница избранного (page-device-favorites)
         // ----------------------------------------------------------
 
-        initFavoritesPage: function() {
+        /** Загрузить данные для всех типов, которые есть в избранном.
+         *  Вызывается перед cleanupStale и рендером, чтобы:
+         *  - cleanupStale мог корректно определить «мёртвые» ссылки
+         *  - карточки отображали имена вместо сырых ID */
+        _ensureDataLoaded: async function() {
+            this._load();
+            const types = new Set();
+            for (var favKey in this._data) {
+                if (this._data.hasOwnProperty(favKey)) {
+                    types.add(this._parseKey(favKey).type);
+                }
+            }
+            const loads = [];
+            if (types.has('dev') && typeof devLoad === 'function' && !devLoaded) {
+                loads.push(devLoad().catch(function(e) { console.warn('[KipFav] devLoad failed:', e); }));
+            }
+            if (types.has('lock') && typeof lockLoaded !== 'undefined' && !lockLoaded) {
+                loads.push(
+                    fetch('data/lockouts.json?v=' + Date.now(), { cache: 'no-store' })
+                        .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+                        .then(function(d) { lockData = d; lockLoaded = true; })
+                        .catch(function(e) { console.warn('[KipFav] lockouts load failed:', e); })
+                );
+            }
+            if (types.has('valve') && typeof valveLoaded !== 'undefined' && !valveLoaded) {
+                loads.push(
+                    fetch('data/valves.json?v=' + Date.now(), { cache: 'no-store' })
+                        .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+                        .then(function(d) { valveData = d; valveLoaded = true; })
+                        .catch(function(e) { console.warn('[KipFav] valves load failed:', e); })
+                );
+            }
+            if (types.has('reg') && typeof regulatorLoaded !== 'undefined' && !regulatorLoaded) {
+                loads.push(
+                    fetch('data/regulators.json?v=' + Date.now(), { cache: 'no-store' })
+                        .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+                        .then(function(d) { regulatorData = d; regulatorLoaded = true; })
+                        .catch(function(e) { console.warn('[KipFav] regulators load failed:', e); })
+                );
+            }
+            if (loads.length > 0) await Promise.all(loads);
+        },
+
+        initFavoritesPage: async function() {
             const content = document.getElementById('deviceFavoritesContent');
             if (!content) return;
+
+            // Загрузить данные для всех типов, которые есть в избранном
+            await this._ensureDataLoaded();
 
             // Автоматическая очистка «мёртвых» ссылок
             const staleRemoved = this.cleanupStale();
@@ -23210,11 +23256,17 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 if (!this._data.hasOwnProperty(favKey)) continue;
                 var parsed = this._parseKey(favKey);
                 var live = null;
+                var knownType = true;
                 if (parsed.type === 'dev') live = liveDevIds;
                 else if (parsed.type === 'lock') live = liveLockIds;
                 else if (parsed.type === 'valve') live = liveValveIds;
                 else if (parsed.type === 'reg') live = liveRegIds;
-                if (live === null || !live.has(parsed.id)) {
+                else knownType = false;
+                // Удаляем только если данные загружены (live !== null) и ID не найден,
+                // либо если тип неизвестен (knownType = false).
+                // Если данные не загружены (live === null) — пропускаем,
+                // чтобы не удалить избранное при первом открытии до загрузки данных.
+                if (!knownType || (live !== null && !live.has(parsed.id))) {
                     delete this._data[favKey];
                     removed++;
                 }
