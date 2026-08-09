@@ -2383,8 +2383,8 @@
         font-weight: 600;
         letter-spacing: 0.1px;
     }
-    .cj-field-input, .cj-field-textarea {
-        background: var(--card-bg, rgba(255,255,255,0.04));
+    .cj-field-input, .cj-field-textarea, .cj-field-select {
+        background: #1a2233;
         border: 1px solid var(--border-color, rgba(255,255,255,0.08));
         border-radius: 8px;
         padding: 7px 10px;
@@ -2408,7 +2408,7 @@
         line-height: 1.4;
         overflow: hidden;
     }
-    [data-theme="light"] .cj-field-input, [data-theme="light"] .cj-field-textarea { background: #f5f7fa; }
+    [data-theme="light"] .cj-field-input, [data-theme="light"] .cj-field-textarea, [data-theme="light"] .cj-field-select { background: #f5f7fa; }
     .cj-field-row { display: flex; gap: 8px; }
     .cj-field-row > .cj-field-group { flex: 1; }
     .cj-save-btn {
@@ -2442,6 +2442,10 @@
         padding: 14px 14px 36px;
         max-width: 640px;
         margin: 0 auto;
+        background: #1a2233;
+    }
+    [data-theme="light"] .cj-add-page-body {
+        background: #ffffff;
     }
     .cj-add-fields {
         display: flex;
@@ -2508,6 +2512,47 @@
         cursor: pointer;
     }
     .cj-cancel-btn:active { opacity: 0.7; }
+
+    /* Нижний бар страницы добавления/правки кабеля */
+    .cj-add-bottom-bar {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        z-index: 80;
+        display: none; /* скрыт по умолчанию; показывается когда не пуст */
+        align-items: stretch;
+        background: var(--bottom-nav-bg, rgba(23, 33, 43, 0.95));
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid var(--card-border);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    body:has(#page-cable-journal-add.active) .cj-add-bottom-bar:not(:empty) {
+        display: flex;
+    }
+    body:has(#page-cable-journal-add.active) .cj-add-page-body {
+        padding-bottom: 60px;
+    }
+    .cj-add-bottom-bar-btn {
+        flex: 1;
+        display: flex; align-items: center; justify-content: center;
+        padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+        border: none; background: transparent;
+        font-size: 15px; font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .cj-add-bottom-bar-btn:active { background: rgba(106,166,224,0.12); }
+    .cj-add-bottom-bar-btn-save { color: #6aa6e0; }
+    .cj-add-bottom-bar-btn-cancel { color: var(--text-secondary, rgba(255,255,255,0.65)); }
+    .cj-add-bottom-bar-divider {
+        width: 1px;
+        background: var(--card-border);
+        flex-shrink: 0;
+    }
+    [data-theme="light"] .cj-add-bottom-bar {
+        background: rgba(255,255,255,0.95);
+    }
+    [data-theme="light"] .cj-add-bottom-bar-btn-save { color: #1a5a8a; }
 
     /* ========== Кабельный журнал — страница просмотра записи ==========
        Открывается по клику на карточку в списке. Read-only: данные
@@ -7664,10 +7709,11 @@
                 <div id="cjAddFields" class="cj-add-fields">
                     <div class="admin-empty">Загрузка полей…</div>
                 </div>
-                <button type="button" id="cjAddSubmitBtn" class="cj-save-btn" onclick="KipCableJournal.submitAdd()">Добавить запись</button>
-                <button type="button" class="cj-cancel-btn" onclick="KipCableJournal.cancelAddOrEdit()">Отмена</button>
                 <div id="cjAddError" class="cj-edit-error"></div>
             </div>
+
+            <!-- Нижний бар с кнопками Сохранить / Отмена -->
+            <div id="cjAddBottomBar" class="cj-add-bottom-bar"></div>
         </div>
 
         <!-- ======================== КАБЕЛЬНЫЙ ЖУРНАЛ — ПРОСМОТР ЗАПИСИ ========================
@@ -16268,6 +16314,10 @@
             const cjBar = document.getElementById('cjViewBottomBar');
             if (cjBar) cjBar.innerHTML = '';
         }
+        if (page !== 'cable-journal-add') {
+            const cjAddBar = document.getElementById('cjAddBottomBar');
+            if (cjAddBar) cjAddBar.innerHTML = '';
+        }
         let active = document.querySelector('.page-content.active');
         let currentPageId = active ? active.id.replace('page-', '') : 'dashboard';
         if (active && addToHistory) { if (currentPageId !== page) pageHistory.push(currentPageId); }
@@ -24239,6 +24289,22 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             }
             fieldsEl.innerHTML = html;
 
+            // Кнопки Сохранить / Отмена — в нижний бар (cjAddBottomBar)
+            const addBar = document.getElementById('cjAddBottomBar');
+            if (addBar) {
+                if (isEditing) {
+                    addBar.innerHTML =
+                        '<button type="button" id="cjAddSubmitBtn" class="cj-add-bottom-bar-btn cj-add-bottom-bar-btn-save" onclick="KipCableJournal.submitEdit()">Сохранить</button>' +
+                        '<div class="cj-add-bottom-bar-divider"></div>' +
+                        '<button type="button" class="cj-add-bottom-bar-btn cj-add-bottom-bar-btn-cancel" onclick="KipCableJournal.cancelEdit()">Отмена</button>';
+                } else {
+                    addBar.innerHTML =
+                        '<button type="button" id="cjAddSubmitBtn" class="cj-add-bottom-bar-btn cj-add-bottom-bar-btn-save" onclick="KipCableJournal.submitAdd()">Добавить запись</button>' +
+                        '<div class="cj-add-bottom-bar-divider"></div>' +
+                        '<button type="button" class="cj-add-bottom-bar-btn cj-add-bottom-bar-btn-cancel" onclick="KipCableJournal.cancelAddOrEdit()">Отмена</button>';
+                }
+            }
+
             if (!isEditing) {
                 // Восстановить черновик из localStorage (если он был).
                 self._restoreDraft();
@@ -24400,14 +24466,18 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             for (const key of order) {
                 html += this._renderEditField(key, row[key]);
             }
-            html += '</div>';
-            html += '<div style="display:flex;gap:10px;margin-top:16px;">';
-            html += '<button type="button" id="cjEditSubmitBtn" class="cj-save-btn" style="flex:1;" onclick="KipCableJournal.submitEdit()">Сохранить</button>';
-            html += '<button type="button" class="cj-cancel-btn" style="flex:1;" onclick="KipCableJournal.cancelEdit()">Отмена</button>';
-            html += '</div>';
+            html += '</div>';  // close .cj-add-fields
             html += '<div id="cjEditError" class="cj-edit-error"></div>';
-            html += '</div>';
+            html += '</div>'; // close .dev-detail-card
             bodyEl.innerHTML = html;
+            // Кнопки Сохранить / Отмена — в нижний бар detail-panel
+            const footerEl = document.getElementById('detailPanelFooter');
+            if (footerEl) {
+                footerEl.innerHTML =
+                    '<button type="button" id="cjEditSubmitBtn" class="detail-footer-btn detail-footer-btn-edit" onclick="KipCableJournal.submitEdit()">Сохранить</button>' +
+                    '<div class="detail-footer-divider"></div>' +
+                    '<button type="button" class="detail-footer-btn" style="color:var(--text-secondary,rgba(255,255,255,0.65));" onclick="KipCableJournal.cancelEdit()">Отмена</button>';
+            }
         },
 
         // ============================================================
