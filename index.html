@@ -22559,7 +22559,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                       'circuit-breaker',
                       'geo-circle', 'geo-ring', 'geo-cylinder', 'geo-horiz', 'geo-sphere', 'geo-cone'],
         _LIBRARY_PAGES: ['docs', 'library', 'library-internal', 'library-electro',
-                         'exam-tickets', 'tickets-4', 'tickets-5', 'tickets-6', 'tickets-1000v'],
+                         'exam-tickets', 'tickets-4', 'tickets-5', 'tickets-6', 'tickets-1000v',
+                         'whats-new'],
         _KIP_IOS_PAGES: ['kip-ios',
                          'devices-prod', 'devices-type', 'devices-name', 'device-detail', 'dev-group',
                          'device-favorites',
@@ -23222,6 +23223,20 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             if (sidebarAdminBtn) {
                 const isAdmin = this._cachedRole === 'Админ';
                 sidebarAdminBtn.style.display = isAdmin ? '' : 'none';
+            }
+
+            // ============================================================
+            // Кнопка «?» (Что нового) — видна всем ролям, кроме
+            // «Запрет» и «Общий доступ» (гости не видят обновлений).
+            // ============================================================
+            var whatsNewAllowed = isAll || allowed.indexOf('whats-new') !== -1;
+            var mobileWhatsNewBtn = document.getElementById('mobileWhatsNewBtn');
+            if (mobileWhatsNewBtn) {
+                mobileWhatsNewBtn.style.display = whatsNewAllowed ? '' : 'none';
+            }
+            var desktopWhatsNewBtn = document.getElementById('desktopWhatsNewBtn');
+            if (desktopWhatsNewBtn) {
+                desktopWhatsNewBtn.style.display = whatsNewAllowed ? '' : 'none';
             }
 
             // ============================================================
