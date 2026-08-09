@@ -6476,6 +6476,37 @@
         .detail-breadcrumb-close:hover {
             background: rgba(74, 143, 199, 0.15);
         }
+        /* Кнопка «поменять панели местами» в строке крошек */
+        .detail-breadcrumb-swap {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.15s, transform 0.2s;
+        }
+        .detail-breadcrumb-swap:hover {
+            background: rgba(74, 143, 199, 0.15);
+        }
+        .detail-breadcrumb-swap:active {
+            transform: scale(0.88);
+        }
+        /* Когда панели поменяли местами: детальная панель слева, список справа */
+        #contentArea.panels-swapped {
+            flex-direction: row-reverse;
+        }
+        #contentArea.panels-swapped > .page-content.active {
+            /* Список справа — рамка слева вместо справа */
+        }
+        #contentArea.panels-swapped > #detailPanel {
+            border-left: none;
+            border-right: 2px solid var(--border-color, rgba(74, 143, 199, 0.25));
+        }
 
         /* --- Detail Panel (правая панель) --- */
         #detailPanel {
@@ -7519,6 +7550,9 @@
         <div id="detailBreadcrumbContent"></div>
         <button type="button" class="detail-breadcrumb-close" onclick="closeDetailPanel()" aria-label="Закрыть панель">
             <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:rgba(74,143,199,0.9);fill:none;stroke-width:2;stroke-linecap:round;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <button type="button" class="detail-breadcrumb-swap" onclick="swapDetailPanels()" aria-label="Поменять панели местами" title="Поменять панели местами">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(74,143,199,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16l-4-4 4-4"/><path d="M17 8l4 4-4 4"/><line x1="3" y1="12" x2="21" y2="12"/></svg>
         </button>
     </div>
 
@@ -16169,6 +16203,31 @@
         updateDesktopBreadcrumb();
     }
 
+    /** Поменять местами левую и правую панели на десктопе. */
+    function swapDetailPanels() {
+        const contentArea = document.getElementById('contentArea');
+        if (!contentArea) return;
+        contentArea.classList.toggle('panels-swapped');
+        // Сохраняем состояние в localStorage
+        try {
+            if (contentArea.classList.contains('panels-swapped')) {
+                localStorage.setItem('kip8_panels_swapped', '1');
+            } else {
+                localStorage.removeItem('kip8_panels_swapped');
+            }
+        } catch(e) {}
+    }
+
+    /** Восстановить сохранённое состояние панелей при загрузке. */
+    function restorePanelsSwapState() {
+        try {
+            if (localStorage.getItem('kip8_panels_swapped') === '1') {
+                const contentArea = document.getElementById('contentArea');
+                if (contentArea) contentArea.classList.add('panels-swapped');
+            }
+        } catch(e) {}
+    }
+
     // Слушатель изменения размера окна — полная очистка при переходе между режимами
     window.matchMedia('(min-width: 1024px)').addEventListener('change', function(e) {
         const sidebar = document.getElementById('sidebar');
@@ -16181,6 +16240,8 @@
             // === Переход на мобильный: полная очистка десктопного состояния ===
             closeDetailPanel();
             _ticketSelectedIndex = -1;
+            // Снять swap-режим панелей
+            if (contentArea) contentArea.classList.remove('panels-swapped');
 
             // Убрать десктопные классы sidebar
             if (sidebar) {
@@ -17675,6 +17736,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         renderPinnedItems();
         if (typeof KipFav !== 'undefined') KipFav.updateDashboardButton();
+        restorePanelsSwapState();
     });
 
     // Обработчик системной кнопки «Назад»
