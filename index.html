@@ -5345,36 +5345,39 @@
     [data-theme="light"] .dev-fav-note-row:active { background: rgba(184,134,11,0.1); }
     [data-theme="light"] .dev-fav-note-add:active { color: #8a6d2b; }
 
-    /* === Карточка избранного — картинка в верхнем левом углу === */
+    /* === Карточка избранного — по шаблону: картинка слева (stretch), данные справа, заметка внизу === */
     .fav-card {
         display: flex;
         flex-direction: column;
-        min-height: 56px;
         padding: 0;
         touch-action: pan-y;  /* вертикальный скролл разрешён, горизонтальный — нет (для свайпа) */
     }
-    /* Верхняя строка: миниатюра слева + данные справа */
+    /* Верхняя часть: миниатюра/бейдж слева + данные справа */
     .fav-card-top {
         display: flex;
-        align-items: center;
+        align-items: stretch;  /* картинка растягивается по высоте текста */
     }
     .fav-card-type-badge {
         flex-shrink: 0;
         display: flex; align-items: center; justify-content: center;
-        width: 44px; height: 44px;
+        width: 44px;
+        min-height: 44px;
         font-size: 17px; font-weight: 700; color: #fff;
         letter-spacing: 1px;
         opacity: 0.85;
         margin: 6px 8px 6px 6px;
         border-radius: 6px;
+        align-self: stretch;
     }
     .fav-card-img {
         flex-shrink: 0;
-        width: 48px; height: 48px;
+        width: 48px;
+        min-height: 48px;
         border-radius: 6px;
         object-fit: cover;
         background: rgba(255, 255, 255, 0.08);
         margin: 6px 8px 6px 6px;
+        align-self: stretch;
     }
     .fav-card-body {
         flex: 1;
@@ -5382,9 +5385,9 @@
         padding: 6px 10px 6px 0;
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        justify-content: flex-start;  /* строки прижимаются вверх, без пустот */
     }
-    /* Компактные строки в карточке избранного: обрезка многоточием, без лишних отступов */
+    /* Компактные строки: обрезка многоточием, без лишних отступов */
     .fav-card .dev-card-title {
         white-space: nowrap;
         overflow: hidden;
@@ -5397,7 +5400,7 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        margin-top: 1px;
+        margin-top: 2px;
         margin-bottom: 0;
     }
     [data-theme="light"] .fav-card-img { background: rgba(0,0,0,0.04); }
@@ -22903,11 +22906,11 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 // Текстовый блок
                 html += '<div class="fav-card-body" onclick="KipFav.openFromFav(\'' + safeKey + '\')">';
                 html += '<div class="dev-card-title">' + self._esc(itemName) + '</div>';
-                let subtitle = '';
-                if (itemSub1) subtitle += itemSub1;
-                if (itemSub2) subtitle += (subtitle ? ' · ' : '') + itemSub2;
-                if (subtitle) {
-                    html += '<div class="dev-card-subtitle">' + self._esc(subtitle) + '</div>';
+                if (itemSub1) {
+                    html += '<div class="dev-card-subtitle">' + self._esc(itemSub1) + '</div>';
+                }
+                if (itemSub2) {
+                    html += '<div class="dev-card-subtitle">' + self._esc(itemSub2) + '</div>';
                 }
                 html += '</div>'; // .fav-card-body
                 html += '</div>'; // .fav-card-top
