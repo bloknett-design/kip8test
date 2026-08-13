@@ -4104,6 +4104,35 @@
         text-align: center;
         flex-shrink: 0;
     }
+    /* Строка итогов под графиком ППР */
+    .ppr-totals-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 0 0;
+        border-top: 1px solid var(--border-color);
+        margin-top: 6px;
+        flex-wrap: wrap;
+    }
+    .ppr-totals-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-primary);
+        flex-shrink: 0;
+    }
+    .ppr-totals-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .ppr-totals-value {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    [data-theme="light"] .ppr-totals-row {
+        border-top-color: rgba(0,0,0,0.1);
+    }
     /* Светлая тема для ППР */
     [data-theme="light"] .ppr-chart-grid {
         border-left-color: rgba(0,0,0,0.12);
@@ -26531,12 +26560,14 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
         // Данные ППР на текущий год (2026) — Приборы
         // 3 серии: Калибровка (K), Поверка (П), Тех.обслуж. (ТО)
+        // Источник: «Перечень КИП ИОС рабочий.xlsx» → лист «Диаграмма приборов»
+        // Формулы: COUNTIF(Приборы[<месяц>], <код вида обслуживания>)
         _PPR_DEVICES: {
-            title: 'График ППР — Приборы на 2026 год',
+            title: 'Количество приборов по графику ППР по месяцам на 2026 год',
             series: [
-                { name: 'Калибровка', code: 'K', color: '#4a90d9', values: [13, 33, 30, 45, 24, 28, 33, 33, 48, 16, 34, 35] },
+                { name: 'Калибровка', code: 'К', color: '#4a90d9', values: [13, 33, 30, 45, 24, 28, 33, 34, 48, 16, 34, 35] },
                 { name: 'Поверка', code: 'П', color: '#e07040', values: [12, 12, 4, 15, 0, 4, 6, 10, 4, 6, 1, 12] },
-                { name: 'Тех. обслуж.', code: 'ТО', color: '#5ab870', values: [353, 353, 500, 320, 373, 496, 333, 353, 481, 358, 361, 485] }
+                { name: 'Тех. обслуж.', code: 'ТО', color: '#5ab870', values: [353, 354, 500, 320, 374, 496, 333, 353, 481, 358, 362, 485] }
             ]
         },
 
@@ -26634,8 +26665,14 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         _renderTab: function(tab) {
             var container = document.getElementById('chartsContent');
             if (!container) return;
-            container.innerHTML = '<div class="charts-loading">Загрузка…</div>';
 
+            // Для вкладки Приборы — диаграмма ППР не зависит от JSON-данных
+            if (tab === 'devices') {
+                this._renderContent(tab, []);
+                return;
+            }
+
+            container.innerHTML = '<div class="charts-loading">Загрузка…</div>';
             this._loadData(tab, function(items) {
                 KipCharts._renderContent(tab, items);
             });
@@ -26649,10 +26686,15 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             var sec = this._SECTIONS[tab];
             var html = '';
 
-            // 0. График ППР (если есть для данного раздела)
+            // Для вкладки Приборы — только диаграмма ППР (как в Excel)
             if (tab === 'devices') {
                 html += this._renderPPRChart(this._PPR_DEVICES);
-            } else if (tab === 'lockouts') {
+                container.innerHTML = html;
+                return;
+            }
+
+            // 0. График ППР (если есть для данного раздела)
+            if (tab === 'lockouts') {
                 html += this._renderPPRChart(this._PPR_LOCKOUTS);
             }
 
@@ -26736,6 +26778,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
         // ============================================================
         // Рендер графика ППР — группированная вертикальная гистограмма
+        // (как в Excel: clustered column chart с легендой и итогами)
         // ============================================================
         _renderPPRChart: function(pprData) {
             var series = pprData.series;
@@ -26807,7 +26850,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     var heightPct = (val / niceMax) * 100;
                     html += '<div class="ppr-bar-cell">';
                     if (val > 0) {
-                        html += '<div class="ppr-bar" style="height:' + heightPct + '%;background:' + series[s].color + ';">';
+                        html += '<div class="ppr-bar" style="height:' + heightPct + '%;background:' + series[s].color + ';" title="' + this._escHtml(series[s].name) + ': ' + val + '">';
                         // Значение над столбцом (показываем если достаточно высокий)
                         if (heightPct > 8) {
                             html += '<span class="ppr-bar-val">' + val + '</span>';
@@ -26825,6 +26868,21 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
             html += '</div>'; // .ppr-chart-grid
             html += '</div>'; // .ppr-chart-area
+
+            // Строка итогов (сумма по каждой серии)
+            html += '<div class="ppr-totals-row">';
+            html += '<div class="ppr-totals-label">Итого:</div>';
+            for (var s = 0; s < numSeries; s++) {
+                var total = 0;
+                for (var m = 0; m < numMonths; m++) total += series[s].values[m];
+                html += '<div class="ppr-totals-item">';
+                html += '<span class="ppr-legend-dot" style="background:' + series[s].color + ';"></span>';
+                html += '<span class="ppr-legend-code">' + this._escHtml(series[s].code) + '</span>';
+                html += '<span class="ppr-totals-value">' + total + '</span>';
+                html += '</div>';
+            }
+            html += '</div>';
+
             html += '</div>'; // .ppr-chart-body
             html += '</div>'; // .chart-card
 
