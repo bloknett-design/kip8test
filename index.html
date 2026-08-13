@@ -5513,10 +5513,11 @@
         transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         touch-action: pan-y;
     }
-    /* Lock/Valve/Regulator карточки внутри fav-cell обёртки */
+    /* Lock/Valve/Regulator/Project карточки внутри fav-cell обёртки */
     .dev-card-fav-cell > .lock-card,
     .dev-card-fav-cell > .valve-card,
-    .dev-card-fav-cell > .regulator-card {
+    .dev-card-fav-cell > .regulator-card,
+    .dev-card-fav-cell > .project-card {
         position: relative;
         z-index: 1;
         background: transparent !important;
@@ -5528,7 +5529,8 @@
     }
     .dev-card-fav-cell > .lock-card.swipe-active,
     .dev-card-fav-cell > .valve-card.swipe-active,
-    .dev-card-fav-cell > .regulator-card.swipe-active {
+    .dev-card-fav-cell > .regulator-card.swipe-active,
+    .dev-card-fav-cell > .project-card.swipe-active {
         transition: none;
     }
     .dev-card-fav-cell > .dev-card.swipe-removing {
@@ -5537,7 +5539,8 @@
     }
     .dev-card-fav-cell > .lock-card.swipe-removing,
     .dev-card-fav-cell > .valve-card.swipe-removing,
-    .dev-card-fav-cell > .regulator-card.swipe-removing {
+    .dev-card-fav-cell > .regulator-card.swipe-removing,
+    .dev-card-fav-cell > .project-card.swipe-removing {
         transition: transform 0.25s ease-out, opacity 0.25s ease-out;
         opacity: 0;
     }
@@ -6185,6 +6188,27 @@
     }
     [data-theme="light"] .dev-card-fav-indicator {
         color: #388e3c;
+    }
+    /* Значок заметки на карточке в списке (рядом с закладкой) */
+    .dev-card-fav-note-icon {
+        position: absolute;
+        top: 20px; right: 3px;
+        width: 18px; height: 18px;
+        display: flex; align-items: center; justify-content: center;
+        border: none; background: none;
+        color: #c7964a;
+        border-radius: 0;
+        pointer-events: none;
+        z-index: 2;
+    }
+    .lock-card > .dev-card-fav-note-icon,
+    .valve-card > .dev-card-fav-note-icon,
+    .regulator-card > .dev-card-fav-note-icon,
+    .project-card > .dev-card-fav-note-icon {
+        top: 22px; right: 6px;
+    }
+    [data-theme="light"] .dev-card-fav-note-icon {
+        color: #b8860b;
     }
 
     /* === Панель инструментов на странице избранного === */
@@ -25126,18 +25150,25 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             }
         },
 
-        /** Сгенерировать HTML значка избранного для карточки в списке.
+        /** Сгенерировать HTML значков избранного и заметки для карточки в списке.
          *  @param {string} itemId — ID элемента
-         *  @param {string} [type='dev'] — тип: 'dev'|'lock'|'valve'|'reg' */
-        /** HTML информационного значка избранного (поверх картинки).
-         *  Некликабельный: показывается только если элемент в избранном.
+         *  @param {string} [type='dev'] — тип: 'dev'|'lock'|'valve'|'reg'|'proj' */
+        /** HTML информационных значков (поверх карточки).
+         *  Закладка — показывается только если элемент в избранном.
+         *  Значок заметки — показывается рядом с закладкой, если есть заметка.
          *  Если не в избранном — возвращается пустая строка. */
         _cardFavBtnHtml: function(itemId, type) {
             var favKey = this._favKey(type || 'dev', itemId);
             var isActive = this.hasItem(favKey);
             if (!isActive) return '';
-            return '<span class="dev-card-fav-indicator" aria-label="В избранном" title="В избранном">' +
+            var html = '<span class="dev-card-fav-indicator" aria-label="В избранном" title="В избранном">' +
                    '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span>';
+            // Значок заметки (карандаш) — если есть заметка к этому элементу
+            if (typeof KipFavNotes !== 'undefined' && KipFavNotes.get(favKey)) {
+                html += '<span class="dev-card-fav-note-icon" aria-label="Есть заметка" title="Есть заметка">' +
+                        '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>';
+            }
+            return html;
         }
     };
 
