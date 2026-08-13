@@ -4885,6 +4885,7 @@
        (.project-detail-row), чтобы разделители строк и текст занимали всю ширину,
        но при этом текст не упирался в края экрана. */
     .project-detail-card {
+        position: relative;
         margin: 0;
         background: transparent;
     }
@@ -16271,6 +16272,8 @@
         const projectFileUrl = getProjectFileUrl(item);
 
         let html = '<div class="project-detail-card">';
+        // Значок избранного в правом верхнем углу (виден только на десктопе)
+        html += '<button type="button" class="dev-detail-fav-btn" onclick="KipFav.toggleFromDetailByType(\'proj\')" aria-label="Избранное" title="Добавить/убрать из избранного"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>';
         html += '<div class="project-detail-rows">';
         for (const f of PROJECT_FIELDS) {
             if (f.hiddenInCard) continue;
@@ -24190,11 +24193,17 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 else if (isProjDetail) dpBtn.setAttribute('data-fav-type', 'proj');
                 else dpBtn.removeAttribute('data-fav-type');
             }
-            // Десктоп: значок внутри карточки прибора (.dev-detail-fav-btn)
+            // Десктоп: значок внутри карточки (.dev-detail-fav-btn)
             const cardBtn = document.querySelector('.dev-detail-fav-btn');
             if (cardBtn) {
-                const devId = window._devDetailId;
-                cardBtn.classList.toggle('active', devId ? this.has(devId) : false);
+                // Определяем активность по текущему открытому типу
+                let isActive = false;
+                if (window._devDetailId) isActive = this.has(window._devDetailId);
+                else if (window._lockDetailId) isActive = this.hasItem(this._favKey('lock', window._lockDetailId));
+                else if (window._valveDetailId) isActive = this.hasItem(this._favKey('valve', window._valveDetailId));
+                else if (window._regulatorDetailId) isActive = this.hasItem(this._favKey('reg', window._regulatorDetailId));
+                else if (window._projectDetailId) isActive = this.hasItem(this._favKey('proj', window._projectDetailId));
+                cardBtn.classList.toggle('active', isActive);
             }
         },
 
