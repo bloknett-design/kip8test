@@ -675,6 +675,20 @@
     }
     /* Показываем нижний бар только когда активна главная страница */
     body:has(#page-dashboard.active) .dashboard-bottom-bar { display: grid; }
+    /* Кнопка ⋮ (действия) внутри нижнего бара дашборда */
+    .dashboard-bottom-overflow {
+        position: absolute;
+        top: 6px; right: 6px;
+        width: 24px; height: 24px;
+        display: flex; align-items: center; justify-content: center;
+        border: none; background: rgba(255,255,255,0.08);
+        color: rgba(140,170,200,0.5); border-radius: 6px;
+        cursor: pointer; padding: 0;
+        transition: background 0.15s;
+    }
+    .dashboard-bottom-overflow:hover { background: rgba(199,150,74,0.15); }
+    .dashboard-bottom-overflow:active { transform: scale(0.88); }
+    [data-theme="light"] .dashboard-bottom-overflow { background: rgba(0,0,0,0.05); color: rgba(42,93,143,0.4); }
     /* На дашборде добавляем нижний отступ, чтобы контент не перекрывался баром */
     body:has(#page-dashboard.active) #contentArea { padding-bottom: 88px; }
 
@@ -8448,9 +8462,9 @@
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Инженерные калькуляторы</div></div>
 
             <div class="menu-btn-row">
-                <div class="menu-btn" onclick="navigateTo('calc-kipa')"><div class="menu-btn-text"><div class="menu-btn-label">КИП и А</div><div class="menu-btn-sublabel">Конвертеры, погрешности, датчики, диафрагмы</div></div><i class="menu-btn-arrow">›</i></div>
-                <div class="menu-btn" onclick="navigateTo('calc-electro')"><div class="menu-btn-text"><div class="menu-btn-label">Электротехника</div><div class="menu-btn-sublabel">Автоматический выключатель</div></div><i class="menu-btn-arrow">›</i></div>
-                <div class="menu-btn" onclick="navigateTo('calc-geometry')"><div class="menu-btn-text"><div class="menu-btn-label">Геометрия</div><div class="menu-btn-sublabel">Площади, объёмы, сечения</div></div><i class="menu-btn-arrow">›</i></div>
+                <div class="menu-btn" onclick="navigateTo('calc-kipa')"><div class="menu-btn-text"><div class="menu-btn-label">КИП и А</div><div class="menu-btn-sublabel">Конвертеры, погрешности, датчики, диафрагмы</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('calc-kipa')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
+                <div class="menu-btn" onclick="navigateTo('calc-electro')"><div class="menu-btn-text"><div class="menu-btn-label">Электротехника</div><div class="menu-btn-sublabel">Автоматический выключатель</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('calc-electro')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
+                <div class="menu-btn" onclick="navigateTo('calc-geometry')"><div class="menu-btn-text"><div class="menu-btn-label">Геометрия</div><div class="menu-btn-sublabel">Площади, объёмы, сечения</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('calc-geometry')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
             </div>
         </div>
 
@@ -8478,27 +8492,27 @@
                     <div class="dev-swipe-cell" id="devSwipeCell">
                         <div class="dev-swipe-bg dev-swipe-bg-left"><span>По наименованию</span></div>
                         <div class="dev-swipe-bg dev-swipe-bg-right"><span>По типу</span></div>
-                        <div class="menu-btn" id="devicesEntryBtn"><div class="menu-btn-text"><div class="menu-btn-label">Приборы</div><div class="menu-btn-sublabel">1312 приборов КИП ИОС</div></div><i class="menu-btn-arrow">›</i></div>
+                        <div class="menu-btn" id="devicesEntryBtn"><div class="menu-btn-text"><div class="menu-btn-label">Приборы</div><div class="menu-btn-sublabel">1312 приборов КИП ИОС</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('devices')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
                     </div>
-                    <div class="menu-btn" id="lockoutsEntryBtn" style="border-color:rgba(184,90,122,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#b85a7a;">Блокировки</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(184,90,122,0.4);">›</i></div>
+                    <div class="menu-btn" id="lockoutsEntryBtn" style="border-color:rgba(184,90,122,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#b85a7a;">Блокировки</div><div class="menu-btn-sublabel">По производствам</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('lockouts')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(184,90,122,0.4);">›</i></div>
                     <div class="dev-swipe-cell valve-swipe-cell" id="valveSwipeCell">
                         <div class="dev-swipe-bg dev-swipe-bg-left valve-swipe-bg"><span>По DN</span></div>
                         <div class="dev-swipe-bg dev-swipe-bg-right valve-swipe-bg"><span>По типу</span></div>
-                        <div class="menu-btn" id="valvesEntryBtn" style="border-color:rgba(74,138,140,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#4a8a8c;">Клапана</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(74,138,140,0.4);">›</i></div>
+                        <div class="menu-btn" id="valvesEntryBtn" style="border-color:rgba(74,138,140,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#4a8a8c;">Клапана</div><div class="menu-btn-sublabel">По производствам</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('valves')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(74,138,140,0.4);">›</i></div>
                     </div>
-                    <div class="menu-btn" id="regulatorsEntryBtn" style="border-color:rgba(126,90,184,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#7e5ab8;">Регуляторы</div><div class="menu-btn-sublabel">По производствам</div></div><i class="menu-btn-arrow" style="color:rgba(126,90,184,0.4);">›</i></div>
-                    <div class="menu-btn" id="chartsEntryBtn" style="border-color:rgba(58,162,136,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#3aa288;">Графики</div><div class="menu-btn-sublabel">Статистика КИП ИОС</div></div><i class="menu-btn-arrow" style="color:rgba(58,162,136,0.4);">›</i></div>
+                    <div class="menu-btn" id="regulatorsEntryBtn" style="border-color:rgba(126,90,184,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#7e5ab8;">Регуляторы</div><div class="menu-btn-sublabel">По производствам</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('regulators')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(126,90,184,0.4);">›</i></div>
+                    <div class="menu-btn" id="chartsEntryBtn" style="border-color:rgba(58,162,136,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#3aa288;">Графики</div><div class="menu-btn-sublabel">Статистика КИП ИОС</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('charts')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(58,162,136,0.4);">›</i></div>
                 </div>
             </div>
 
             <div class="menu-btn-row">
-                <div class="menu-btn" id="projectsEntryBtn" style="border-color:rgba(176,128,72,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#b08048;">Проекты</div><div class="menu-btn-sublabel">По отделениям</div></div><i class="menu-btn-arrow" style="color:rgba(176,128,72,0.4);">›</i></div>
+                <div class="menu-btn" id="projectsEntryBtn" style="border-color:rgba(176,128,72,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#b08048;">Проекты</div><div class="menu-btn-sublabel">По отделениям</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('projects')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(176,128,72,0.4);">›</i></div>
             </div>
             <div class="menu-btn-row">
-                <div class="menu-btn" id="cablesEntryBtn" style="border-color:rgba(120,144,100,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#8aa070;">Кабельный журнал</div><div class="menu-btn-sublabel">Журнал КИП пр-ва ИОС</div></div><i class="menu-btn-arrow" style="color:rgba(120,144,100,0.4);">›</i></div>
+                <div class="menu-btn" id="cablesEntryBtn" style="border-color:rgba(120,144,100,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#8aa070;">Кабельный журнал</div><div class="menu-btn-sublabel">Журнал КИП пр-ва ИОС</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('cables')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(120,144,100,0.4);">›</i></div>
             </div>
             <div class="menu-btn-row">
-                <div class="menu-btn" id="plan114EntryBtn" style="border-color:rgba(120,140,170,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#7896b0;">План корпуса 114</div><div class="menu-btn-sublabel">6 планов помещений</div></div><i class="menu-btn-arrow" style="color:rgba(120,140,170,0.4);">›</i></div>
+                <div class="menu-btn" id="plan114EntryBtn" style="border-color:rgba(120,140,170,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#7896b0;">План корпуса 114</div><div class="menu-btn-sublabel">6 планов помещений</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('plan-114')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(120,140,170,0.4);">›</i></div>
             </div>
         </div>
 
@@ -10821,10 +10835,12 @@
     <button type="button" class="dashboard-bottom-btn" onclick="navigateTo('calculators')">
         <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/></svg>
         <span>Инженерные калькуляторы</span>
+        <button type="button" class="dashboard-bottom-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('calculators')"><svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
     </button>
     <button type="button" class="dashboard-bottom-btn dashboard-bottom-btn-docs" onclick="navigateTo('docs')">
         <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
         <span>Документация</span>
+        <button type="button" class="dashboard-bottom-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('docs')"><svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
     </button>
 </div>
 
@@ -17596,7 +17612,7 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
         if (page === 'buoy-calc') { updateBuoyCalcTitle(); setCalibMethodOnForm(); }
         // Обернуть карточки подразделов для swipe-to-add на страницах меню подразделов
-        if (page === 'calc-kipa' || page === 'calc-electro' || page === 'calc-geometry' || page === 'docs' || page === 'kip-ios') {
+        if (page === 'calculators' || page === 'calc-kipa' || page === 'calc-electro' || page === 'calc-geometry' || page === 'docs' || page === 'kip-ios') {
             wrapSubsectionItems('page-' + page);
         }
         updateBottomNavActive(page);
@@ -18007,6 +18023,13 @@
     // key — уникальный идентификатор (совпадает с target страницы навигации).
     // category: 'calculators' (синий) | 'docs' (золотистый) — для стилизации.
     const SUBSECTIONS = {
+        // ===== Главные разделы =====
+        'calculators':   { label: 'Инженерные калькуляторы', sublabel: 'Конвертеры, погрешности, геометрия',             target: 'calculators',    category: 'calculators' },
+        'docs':          { label: 'Документация',            sublabel: 'Билеты, библиотека, КИП ИОС',                    target: 'docs',           category: 'docs' },
+        // ===== Калькуляторы — разделы (страница page-calculators) =====
+        'calc-kipa':     { label: 'КИП и А',                  sublabel: 'Конвертеры, погрешности, датчики, диафрагмы',   target: 'calc-kipa',      category: 'calculators' },
+        'calc-electro':  { label: 'Электротехника',           sublabel: 'Автоматический выключатель',                     target: 'calc-electro',   category: 'calculators' },
+        'calc-geometry': { label: 'Геометрия',                sublabel: 'Площади, объёмы, сечения',                       target: 'calc-geometry',  category: 'calculators' },
         // ===== КИП и А — подразделы (страница page-calc-kipa) =====
         'converter':      { label: 'Конвертер единиц',          sublabel: 'Давление, расход, температура и др.',           target: 'converter',      category: 'calculators' },
         'scale-signal':   { label: 'Шкала-сигнал',              sublabel: 'Расчёт диапазонов шкалы и сигнала',             target: 'scale-signal',   category: 'calculators' },
@@ -18023,16 +18046,20 @@
         'geo-horiz':     { label: 'Цилиндр горизонтальный',  sublabel: 'Объём жидкости при частичном заполнении',       target: 'geo-horiz',     category: 'calculators' },
         'geo-sphere':    { label: 'Сфера',                   sublabel: 'Объём, площадь поверхности',                    target: 'geo-sphere',    category: 'calculators' },
         'geo-cone':      { label: 'Конус',                   sublabel: 'Объём, образующая, площадь',                    target: 'geo-cone',      category: 'calculators' },
-        // ===== Документация — конечные страницы (страница page-docs) =====
+        // ===== Документация — разделы (страница page-docs) =====
         'exam-tickets':  { label: 'Экзаменационные билеты',  sublabel: '4, 5, 6 разряд, до 1000 В',                      target: 'exam-tickets',  category: 'docs' },
         'library':       { label: 'Библиотека КИП и А',      sublabel: 'Документация, схемы, инструкции',                target: 'library',       category: 'docs' },
         'kip-ios':       { label: 'КИП ИОС',                  sublabel: 'Перечень приборов, документация',               target: 'kip-ios',       category: 'docs' },
         // ===== КИП ИОС — подразделы (страница page-kip-ios) =====
         'devices':       { label: 'Приборы',                  sublabel: 'Перечень КИП ИОС — 1312 приборов',              target: 'devices',       category: 'docs' },
+        'lockouts':      { label: 'Блокировки',               sublabel: 'По производствам',                               target: 'lockouts-prod', category: 'docs' },
+        'valves':        { label: 'Клапана',                  sublabel: 'По производствам',                               target: 'valves-prod',   category: 'docs' },
+        'regulators':    { label: 'Регуляторы',               sublabel: 'По производствам',                               target: 'regulators-prod',category: 'docs' },
         'projects':      { label: 'Проекты',                  sublabel: 'Перечень проектов КИП пр-ва ИОС',               target: 'projects',      category: 'docs' },
         'cables':        { label: 'Кабельный журнал',        sublabel: 'Кабельный журнал КИП пр-ва ИОС',                 target: 'cable-journal-edit', category: 'docs' },
         'plan-114':      { label: 'План корпуса 114',        sublabel: '6 планов помещений',                             target: 'plan-114',      category: 'docs' },
-        'charts':        { label: 'Графики',                  sublabel: 'Статистика КИП ИОС',                             target: 'charts',        category: 'docs' }
+        'charts':        { label: 'Графики',                  sublabel: 'Статистика КИП ИОС',                             target: 'charts',        category: 'docs' },
+        'favorites':     { label: 'Избранное',                sublabel: 'Закладки и заметки',                             target: 'device-favorites', category: 'docs' }
     };
     const PINNED_STORAGE_KEY = 'pinnedSubsections';
     let currentPinKey = null; // ключ подраздела, для которого открыт sheet
@@ -18087,8 +18114,7 @@
             container.innerHTML =
                 '<div class="pinned-empty-hint">' +
                 'Закрепите часто используемые разделы — они появятся здесь. ' +
-                'Откройте «Инженерные калькуляторы» или «Документацию», ' +
-                'нажмите <svg class="pin-empty-icon" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg> на нужном пункте и выберите <b>«Добавить на главную»</b>, ' +
+                'Нажмите <svg class="pin-empty-icon" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg> на любом разделе или подразделе и выберите <b>«Добавить на главную»</b>, ' +
                 'или сделайте свайп влево/вправо по пункту — появится зелёная подложка <b>«Добавить»</b>.' +
                 '</div>';
             // Даже если нет закреплённых, добавляем кнопку «Избранное» если есть избранное
