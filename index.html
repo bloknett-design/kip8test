@@ -6179,7 +6179,8 @@
     /* На карточках без картинки (lock/valve/regulator) — чуть правее и выше */
     .lock-card > .dev-card-fav-indicator,
     .valve-card > .dev-card-fav-indicator,
-    .regulator-card > .dev-card-fav-indicator {
+    .regulator-card > .dev-card-fav-indicator,
+    .project-card > .dev-card-fav-indicator {
         top: 6px; right: 6px;
     }
     [data-theme="light"] .dev-card-fav-indicator {
@@ -8569,7 +8570,7 @@
 
         <!-- ======================== КАРТОЧКА ПРОЕКТА ======================== -->
         <div id="page-project-detail" class="page-content">
-            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="projectDetailTitle">Проект</div></div>
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="projectDetailTitle">Проект</div><button type="button" id="projectFavBtn" class="dev-fav-header-btn" onclick="KipFav.toggleFromDetailByType('proj')" aria-label="Избранное" title="Добавить/убрать из избранного"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div>
             <div id="projectDetailContent"></div>
         </div>
 
@@ -14959,6 +14960,7 @@
                 if (status) html += '<div class="project-card-status ' + statusCls + '">' + projectMark(status, query) + '</div>';
                 html += '</div>';
                 html += '</div>';
+                html += KipFav._cardFavBtnHtml(itemId, 'proj');
                 html += '</div>';
                 html += '</div>';
             }
@@ -14967,6 +14969,8 @@
         }
         html += '</div>';
         list.innerHTML = html;
+        // Добавить кликабельность значка избранного на карточках проектов
+        if (typeof KipFav !== 'undefined') KipFav.wrapKipCardsForFavSwipe('.project-card', 'proj', 'data-project-id');
     }
 
     function projectsToggleGroup(titleEl) {
@@ -15074,6 +15078,7 @@
                 if (status) html += '<div class="project-card-status ' + statusCls + '">' + projectEsc(status) + '</div>';
                 html += '</div>';
                 html += '</div>';
+                html += KipFav._cardFavBtnHtml(itemId, 'proj');
                 html += '</div>';
                 html += '</div>';
             }
@@ -15082,6 +15087,8 @@
         }
         html += '</div>';
         list.innerHTML = html;
+        // Добавить кликабельность значка избранного на карточках проектов
+        if (typeof KipFav !== 'undefined') KipFav.wrapKipCardsForFavSwipe('.project-card', 'proj', 'data-project-id');
     }
 
     function projectsScrollToGroup(el) {
@@ -16253,6 +16260,8 @@
         if (projectNo && !kipIsEmptyProjectNo(projectNo)) {
             kipLoadAndUpdateRelated(String(projectNo));
         }
+        // Обновить значок избранного в заголовке
+        if (typeof KipFav !== 'undefined') KipFav.updateHeaderIcon();
     }
 
     // ===== Кнопка Проекты на странице КИП И ОС =====
@@ -19822,6 +19831,8 @@
         const projectGroupCtx = window._projectGroupCtx || {};
         const projectGroupName = projectGroupCtx.group || '';
         setDetailBreadcrumb('project-detail', title, projectGroupName, 'project-group');
+        // Обновить значок избранного в десктоп-панели
+        if (typeof KipFav !== 'undefined') KipFav.updateHeaderIcon();
     }
 
     function cableRenderDetailInPanel() {
@@ -24093,6 +24104,11 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 const regId = window._regulatorDetailId;
                 regBtn.classList.toggle('active', regId ? this.hasItem(this._favKey('reg', regId)) : false);
             }
+            const projBtn = document.getElementById('projectFavBtn');
+            if (projBtn) {
+                const projId = window._projectDetailId;
+                projBtn.classList.toggle('active', projId ? this.hasItem(this._favKey('proj', projId)) : false);
+            }
             // Десктоп: значок в detailPanel хедере
             const dpBtn = document.getElementById('detailPanelFavBtn');
             if (dpBtn) {
@@ -24103,7 +24119,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 const isLockDetail = !!window._lockDetailId;
                 const isValveDetail = !!window._valveDetailId;
                 const isRegDetail = !!window._regulatorDetailId;
-                const showFav = isDevDetail || isLockDetail || isValveDetail || isRegDetail;
+                const isProjDetail = !!window._projectDetailId;
+                const showFav = isDevDetail || isLockDetail || isValveDetail || isRegDetail || isProjDetail;
                 dpBtn.style.display = showFav ? '' : 'none';
                 // Определяем активность: для приборов — по devId, для lock/valve/reg — по составному ключу
                 let isActive = false;
@@ -24111,11 +24128,13 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 else if (isLockDetail) isActive = this.hasItem(this._favKey('lock', window._lockDetailId));
                 else if (isValveDetail) isActive = this.hasItem(this._favKey('valve', window._valveDetailId));
                 else if (isRegDetail) isActive = this.hasItem(this._favKey('reg', window._regulatorDetailId));
+                else if (isProjDetail) isActive = this.hasItem(this._favKey('proj', window._projectDetailId));
                 dpBtn.classList.toggle('active', isActive);
                 // Сохраняем текущий тип для toggleFromDetailByType
                 if (isLockDetail) dpBtn.setAttribute('data-fav-type', 'lock');
                 else if (isValveDetail) dpBtn.setAttribute('data-fav-type', 'valve');
                 else if (isRegDetail) dpBtn.setAttribute('data-fav-type', 'reg');
+                else if (isProjDetail) dpBtn.setAttribute('data-fav-type', 'proj');
                 else dpBtn.removeAttribute('data-fav-type');
             }
             // Десктоп: значок внутри карточки прибора (.dev-detail-fav-btn)
@@ -24152,15 +24171,16 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             }
         },
 
-        /** Клик по значку: toggle избранного для блокировки/клапана/регулятора.
-         *  type: 'lock' | 'valve' | 'reg'
-         *  Определяет ID по window._lockDetailId / _valveDetailId / _regulatorDetailId,
+        /** Клик по значку: toggle избранного для блокировки/клапана/регулятора/проекта.
+         *  type: 'lock' | 'valve' | 'reg' | 'proj'
+         *  Определяет ID по window._lockDetailId / _valveDetailId / _regulatorDetailId / _projectDetailId,
          *  строит составной ключ через _favKey(), toggle, обновляет UI. */
         toggleFromDetailByType: function(type) {
             var id;
             if (type === 'lock') id = window._lockDetailId;
             else if (type === 'valve') id = window._valveDetailId;
             else if (type === 'reg') id = window._regulatorDetailId;
+            else if (type === 'proj') id = window._projectDetailId;
             if (!id) return;
             if (navigator.vibrate) navigator.vibrate(10);
             const favKey = this._favKey(type, id);
@@ -24278,6 +24298,14 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                         .catch(function(e) { console.warn('[KipFav] regulators load failed:', e); })
                 );
             }
+            if (types.has('proj') && typeof projectLoaded !== 'undefined' && !projectLoaded) {
+                loads.push(
+                    fetch('data/projects.json?v=' + Date.now(), { cache: 'no-store' })
+                        .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+                        .then(function(d) { projectData = d; projectLoaded = true; })
+                        .catch(function(e) { console.warn('[KipFav] projects load failed:', e); })
+                );
+            }
             if (loads.length > 0) await Promise.all(loads);
         },
 
@@ -24320,7 +24348,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 dev:  { label: 'П', color: '#6aa6e0', name: 'Прибор' },
                 lock: { label: 'Б', color: '#b85a7a', name: 'Блокировка' },
                 valve:{ label: 'К', color: '#4a8a8c', name: 'Клапан' },
-                reg:  { label: 'Р', color: '#7e5ab8', name: 'Регулятор' }
+                reg:  { label: 'Р', color: '#7e5ab8', name: 'Регулятор' },
+                proj: { label: 'Пр', color: '#c7964a', name: 'Проект' }
             };
 
             const self = this;
@@ -24375,6 +24404,15 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                             itemName = item['Параметр'] || itemId;
                             itemSub1 = item['Устроиство регулятора или ручного управления'] || '';
                             itemSub2 = item['Производство'] || '';
+                        }
+                    }
+                } else if (type === 'proj') {
+                    if (typeof projectData !== 'undefined' && projectData && projectData.projects) {
+                        const item = projectData.projects.find(function(d) { return String(d['ID'] || '') === String(itemId); });
+                        if (item) {
+                            itemName = item['Наименование проекта'] || itemId;
+                            itemSub1 = item['№ проекта'] || '';
+                            itemSub2 = item['Статус проекта'] || '';
                         }
                     }
                 }
@@ -24457,6 +24495,13 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     if (typeof regulatorRenderDetailInPanel === 'function') regulatorRenderDetailInPanel();
                 } else {
                     navigateTo('regulator-detail');
+                }
+            } else if (type === 'proj') {
+                window._projectDetailId = itemId;
+                if (isDesktop()) {
+                    if (typeof projectRenderDetailInPanel === 'function') projectRenderDetailInPanel();
+                } else {
+                    navigateTo('project-detail');
                 }
             }
         },
@@ -24978,6 +25023,9 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             var liveRegIds = (typeof regulatorData !== 'undefined' && regulatorData && regulatorData.regulators)
                 ? new Set(regulatorData.regulators.map(function(d) { return String(d['ID'] || ''); }))
                 : null;
+            var liveProjIds = (typeof projectData !== 'undefined' && projectData && projectData.projects)
+                ? new Set(projectData.projects.map(function(d) { return String(d['ID'] || ''); }))
+                : null;
             for (var favKey in this._data) {
                 if (!this._data.hasOwnProperty(favKey)) continue;
                 var parsed = this._parseKey(favKey);
@@ -24987,6 +25035,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 else if (parsed.type === 'lock') live = liveLockIds;
                 else if (parsed.type === 'valve') live = liveValveIds;
                 else if (parsed.type === 'reg') live = liveRegIds;
+                else if (parsed.type === 'proj') live = liveProjIds;
                 else knownType = false;
                 // Удаляем только если данные загружены (live !== null) и ID не найден,
                 // либо если тип неизвестен (knownType = false).
