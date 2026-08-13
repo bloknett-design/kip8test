@@ -4818,6 +4818,7 @@
 
     /* Карточка проекта в списке */
     .project-card {
+        position: relative;
         border-bottom: 1px solid rgba(255,255,255,0.05);
         background: var(--card-bg, rgba(50, 45, 38, 0.96));
     }
@@ -6210,6 +6211,32 @@
     [data-theme="light"] .dev-card-fav-note-icon {
         color: #b8860b;
     }
+    /* Кликабельная кнопка избранного на карточке проекта (только десктоп) */
+    .project-card-fav-btn {
+        display: none; /* скрыта на мобильных */
+        position: absolute;
+        top: 8px; right: 8px;
+        width: 28px; height: 28px;
+        align-items: center; justify-content: center;
+        border: none; background: rgba(255,255,255,0.06);
+        color: rgba(140,170,200,0.45);
+        border-radius: 6px; cursor: pointer;
+        transition: color 0.15s, background 0.15s, transform 0.1s;
+        -webkit-tap-highlight-color: transparent;
+        z-index: 3;
+    }
+    .project-card-fav-btn:hover { background: rgba(199,150,74,0.12); }
+    .project-card-fav-btn:active { transform: scale(0.88); }
+    .project-card-fav-btn.active {
+        color: #c7964a;
+        background: rgba(199,150,74,0.1);
+    }
+    @media (min-width: 1024px) {
+        .project-card-fav-btn { display: flex; }
+    }
+    [data-theme="light"] .project-card-fav-btn { background: rgba(0,0,0,0.04); color: rgba(42,93,143,0.4); }
+    [data-theme="light"] .project-card-fav-btn:hover { background: rgba(184,134,11,0.08); }
+    [data-theme="light"] .project-card-fav-btn.active { color: #b8860b; background: rgba(184,134,11,0.08); }
 
     /* === Панель инструментов на странице избранного === */
     .dev-fav-toolbar {
@@ -14985,6 +15012,7 @@
                 html += '</div>';
                 html += '</div>';
                 html += KipFav._cardFavBtnHtml(itemId, 'proj');
+                html += KipFav._cardFavToggleHtml(itemId, 'proj');
                 html += '</div>';
                 html += '</div>';
             }
@@ -15103,6 +15131,7 @@
                 html += '</div>';
                 html += '</div>';
                 html += KipFav._cardFavBtnHtml(itemId, 'proj');
+                html += KipFav._cardFavToggleHtml(itemId, 'proj');
                 html += '</div>';
                 html += '</div>';
             }
@@ -24878,7 +24907,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     if (e.button !== undefined && e.button !== 0) return;
                     if (e.target.closest('.dev-card-fav-indicator')) return;
                     // Найти карточку внутри ячейки (любой тип)
-                    var card = cell.querySelector('.dev-card, .lock-card, .valve-card, .regulator-card');
+                    var card = cell.querySelector('.dev-card, .lock-card, .valve-card, .regulator-card, .project-card');
                     if (!card) return;
                     var rect = card.getBoundingClientRect();
                     self._devFavSwipeState = {
@@ -24979,8 +25008,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                                 existing.remove();
                             }
                         }
-                        // Для lock/valve/regulator — значок прямо в карточке
-                        var existingIndicator = savedCard.querySelector(':scope > .dev-card-fav-indicator');
+                        // Для lock/valve/regulator/project — значок в карточке (прямой дочерний или внутри header)
+                        var existingIndicator = savedCard.querySelector(':scope > .dev-card-fav-indicator') || savedCard.querySelector('.project-card-header > .dev-card-fav-indicator');
                         if (wasAdded && !existingIndicator) {
                             var span2 = document.createElement('span');
                             span2.className = 'dev-card-fav-indicator';
@@ -25115,9 +25144,10 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             const wasAdded = this.toggle(favKey);
             // Обновить значок на карточке напрямую (без полного ререндера)
             if (ev && ev.target) {
-                var cardEl = ev.target.closest('.dev-card, .lock-card, .valve-card, .reg-card');
+                var cardEl = ev.target.closest('.dev-card, .lock-card, .valve-card, .regulator-card, .project-card');
                 if (cardEl) {
-                    var wrap = cardEl.querySelector('.dev-card-image-wrap') || cardEl;
+                    // Найти контейнер для индикатора — для project-card он внутри .project-card-header
+                    var wrap = cardEl.querySelector('.dev-card-image-wrap') || cardEl.querySelector('.project-card-header') || cardEl;
                     var existing = wrap.querySelector('.dev-card-fav-indicator');
                     if (wasAdded && !existing) {
                         var span = document.createElement('span');
@@ -25125,24 +25155,21 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                         span.setAttribute('aria-label', 'В избранном');
                         span.setAttribute('title', 'В избранном');
                         span.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
-                        if (wrap === cardEl) {
-                            // Нет image-wrap — вставить в начало карточки
-                            cardEl.insertBefore(span, cardEl.firstChild);
-                        } else {
-                            var img = wrap.querySelector('.dev-card-image');
-                            if (img && img.nextSibling) {
-                                wrap.insertBefore(span, img.nextSibling);
-                            } else {
-                                wrap.appendChild(span);
-                            }
-                        }
+                        wrap.appendChild(span);
                     } else if (!wasAdded && existing) {
                         existing.remove();
+                        // Также убрать значок заметки
+                        var noteIcon = wrap.querySelector('.dev-card-fav-note-icon');
+                        if (noteIcon) noteIcon.remove();
                     }
+                    // Обновить десктопную кнопку-закладку на карточке
+                    var favBtn = cardEl.querySelector('.project-card-fav-btn');
+                    if (favBtn) favBtn.classList.toggle('active', wasAdded);
                 }
             }
-            // Также обновить значок в хедере если это тот же прибор
+            // Также обновить значок в хедере и дашборд
             this.updateHeaderIcon();
+            this.updateDashboardButton();
             if (wasAdded) {
                 showToast('Добавлено в избранное', 'Открыть', function() { navigateTo('device-favorites'); });
             } else {
@@ -25169,6 +25196,18 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                         '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>';
             }
             return html;
+        },
+
+        /** Кликабельная кнопка избранного на карточке (только десктоп).
+         *  Показывается всегда — позволяет добавить/убрать из избранного.
+         *  На мобильных скрыта через CSS media query. */
+        _cardFavToggleHtml: function(itemId, type) {
+            var favKey = this._favKey(type || 'dev', itemId);
+            var isActive = this.hasItem(favKey);
+            var cls = 'project-card-fav-btn' + (isActive ? ' active' : '');
+            var safeKey = favKey.replace(/'/g, "\\'");
+            return '<button type="button" class="' + cls + '" onclick="KipFav.toggleFromCard(\'' + safeKey + '\', event)" aria-label="Избранное" title="Добавить/убрать из избранного">' +
+                   '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>';
         }
     };
 
