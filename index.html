@@ -8591,7 +8591,7 @@
 
             <div class="kip-ios-block">
                 <div class="menu-btn-row">
-                    <div class="menu-btn" onclick="navigateTo('flowmeter-data')" style="border-color:rgba(200,112,72,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#c87048;">Расходомеры хозрасчётные</div><div class="menu-btn-sublabel">Накопительные расходы и показания</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('flowmeter-data')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(200,112,72,0.4);">›</i></div>
+                    <div class="menu-btn" onclick="navigateTo('flowmeter-data')" style="cursor: pointer;"><div class="menu-btn-text"><div class="menu-btn-label">Расходомеры хозрасчётные</div><div class="menu-btn-sublabel">Накопительные расходы и показания</div></div><svg class="menu-btn-arrow" viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: rgba(255,255,255,0.12); fill: none; stroke-width: 2; stroke-linecap: round;"><polyline points="9 18 15 12 9 6"/></svg></div>
                 </div>
             </div>
         </div>
@@ -26678,8 +26678,6 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             if (!container) return;
 
             var html = '';
-            // Ссылка на Google Таблицу
-            html += '<a class="flow-sheet-link" href="' + this._GOOGLE_SHEET_URL + '" target="_blank" rel="noopener">Открыть Google Таблицу</a>';
 
             for (var i = 0; i < this._METERS.length; i++) {
                 var m = this._METERS[i];
@@ -26746,9 +26744,6 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             html += '<div class="flow-detail-row"><span class="flow-detail-label">Единицы измерения</span><span class="flow-detail-value">' + this._esc(m.unit) + '</span></div>';
             html += '<div class="flow-detail-row"><span class="flow-detail-label">Температура среды</span><span class="flow-detail-value">' + tempStr + '</span></div>';
             html += '</div>';
-
-            // Ссылка на таблицу
-            html += '<a class="flow-sheet-link" href="' + this._GOOGLE_SHEET_URL + '" target="_blank" rel="noopener" style="margin-top:16px;">Открыть Google Таблицу</a>';
 
             var body = document.getElementById('flowDetailBody');
             if (body) body.innerHTML = html;
