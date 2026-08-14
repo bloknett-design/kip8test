@@ -2993,10 +2993,19 @@
     .flow-card {
         background: var(--card-bg); border: 1px solid var(--card-border);
         border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
+        cursor: pointer; transition: background 0.15s;
     }
+    .flow-card:active { background: rgba(200,112,72,0.08); }
     .flow-card-header {
         display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;
     }
+    .flow-card-hoz { font-size: 13px; font-weight: 700; color: #c87048; }
+    .flow-card-period { font-size: 10px; color: var(--text-secondary); background: rgba(200,112,72,0.12); padding: 1px 6px; border-radius: 4px; flex-shrink: 0; margin-left: 8px; }
+    .flow-card-param { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+    .flow-card-summary { display: flex; gap: 16px; padding-top: 6px; border-top: 1px solid var(--border-color); }
+    .flow-summary-item { display: flex; flex-direction: column; }
+    .flow-summary-label { font-size: 9px; color: var(--text-secondary); }
+    .flow-summary-val { font-size: 13px; font-weight: 700; color: #5ab870; }
     .flow-card-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
     .flow-card-date { font-size: 11px; color: var(--text-secondary); flex-shrink: 0; margin-left: 8px; }
     .flow-card-location { font-size: 12px; color: #c87048; margin-bottom: 2px; }
@@ -3014,8 +3023,23 @@
     .flow-consumption-val { font-size: 13px; font-weight: 700; color: #5ab870; }
     .flow-card-note { font-size: 11px; color: var(--text-secondary); margin-top: 4px; font-style: italic; }
     .flow-add-page-body { padding: 12px 14px 24px; }
+    /* Детальная карточка расходомера */
+    .flow-detail-body { padding: 12px 14px 24px; }
+    .flow-detail-header { margin-bottom: 12px; }
+    .flow-detail-hoz { font-size: 15px; font-weight: 700; color: #c87048; margin-bottom: 2px; }
+    .flow-detail-param { font-size: 13px; color: var(--text-primary); }
+    .flow-detail-section { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+    .flow-detail-section-title { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .flow-detail-row { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; }
+    .flow-detail-label { font-size: 12px; color: var(--text-secondary); }
+    .flow-detail-value { font-size: 13px; font-weight: 600; color: var(--text-primary); text-align: right; }
+    .flow-detail-highlight { background: rgba(90,184,112,0.08); margin: 4px -12px; padding: 6px 12px; border-radius: 6px; }
+    .flow-detail-highlight .flow-detail-value { color: #5ab870; font-weight: 700; }
     [data-theme="light"] .flow-card { background: #fafaf8; border-color: rgba(0,0,0,0.08); }
     [data-theme="light"] .flow-sheet-link { background: rgba(74,143,199,0.06); border-color: rgba(74,143,199,0.15); }
+    [data-theme="light"] .flow-detail-section { background: #fafaf8; border-color: rgba(0,0,0,0.08); }
+    [data-theme="light"] .flow-detail-highlight { background: rgba(90,184,112,0.06); }
+    [data-theme="light"] .flow-card:active { background: rgba(200,112,72,0.06); }
     .cj-field-input option, .cj-field-textarea option { background: #1a1f2e; color: #fff; }
     [data-theme="light"] .cj-field-input option, [data-theme="light"] .cj-field-textarea option { background: #fff; color: #1a1a1a; }
 
@@ -8577,69 +8601,19 @@
             <div class="page-inline-header">
                 <div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div>
                 <div class="page-inline-header-title">Расходомеры хозрасчётные</div>
-                <button type="button" class="cj-add-btn-inline" id="flowAddBtn" onclick="navigateTo('flowmeter-add')" aria-label="Добавить запись">+</button>
             </div>
             <div id="flowList" class="flow-list">
                 <div class="admin-empty" id="flowEmpty">Загрузка…</div>
             </div>
         </div>
 
-        <!-- ======================== РАСХОДОМЕРЫ ХОЗРАСЧЁТНЫЕ — добавление записи ======================== -->
-        <div id="page-flowmeter-add" class="page-content">
+        <!-- ======================== РАСХОДОМЕРЫ ХОЗРАСЧЁТНЫЕ — детальная карточка ======================== -->
+        <div id="page-flowmeter-detail" class="page-content">
             <div class="page-inline-header">
                 <div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div>
-                <div class="page-inline-header-title">Новая запись</div>
+                <div class="page-inline-header-title" id="flowDetailTitle">Расходомер</div>
             </div>
-
-            <div class="flow-add-page-body">
-                <div class="cj-add-fields">
-                    <div class="cj-field-group">
-                        <label class="cj-field-label">Дата снятия показаний</label>
-                        <input type="date" class="cj-field-input" id="flowFieldDate">
-                    </div>
-                    <div class="cj-field-group">
-                        <label class="cj-field-label">Место установки</label>
-                        <input type="text" class="cj-field-input" id="flowFieldLocation" placeholder="Например: ТЭЦ-2, котёл №3">
-                    </div>
-                    <div class="cj-field-group">
-                        <label class="cj-field-label">Наименование расходомера / счётчика</label>
-                        <input type="text" class="cj-field-input" id="flowFieldName" placeholder="Например: СВК-15, КАРАТ-520">
-                    </div>
-                    <div class="cj-field-group">
-                        <label class="cj-field-label">Заводской номер</label>
-                        <input type="text" class="cj-field-input" id="flowFieldSerial" placeholder="Номер по паспорту">
-                    </div>
-                    <div class="cj-field-row">
-                        <div class="cj-field-group">
-                            <label class="cj-field-label">Предыдущие показания</label>
-                            <input type="number" step="0.01" class="cj-field-input" id="flowFieldPrev" placeholder="0.00" oninput="FlowmeterData._calcConsumption()">
-                        </div>
-                        <div class="cj-field-group">
-                            <label class="cj-field-label">Текущие показания</label>
-                            <input type="number" step="0.01" class="cj-field-input" id="flowFieldCurr" placeholder="0.00" oninput="FlowmeterData._calcConsumption()">
-                        </div>
-                    </div>
-                    <div class="cj-field-group">
-                        <label class="cj-field-label">Расход (автоматически)</label>
-                        <input type="text" class="cj-field-input" id="flowFieldConsumption" readonly style="background:rgba(23,33,43,0.35);color:var(--text-secondary);">
-                    </div>
-                    <div class="cj-field-group">
-                        <label class="cj-field-label">Единица измерения</label>
-                        <select class="cj-field-select" id="flowFieldUnit">
-                            <option value="м³">м³</option>
-                            <option value="т">т</option>
-                            <option value="Гкал">Гкал</option>
-                            <option value="кВт·ч">кВт·ч</option>
-                        </select>
-                    </div>
-                    <div class="cj-field-group">
-                        <label class="cj-field-label">Примечание</label>
-                        <input type="text" class="cj-field-input" id="flowFieldNote" placeholder="Необязательно">
-                    </div>
-                </div>
-                <div id="flowAddError" class="cj-edit-error"></div>
-                <button type="button" class="cj-save-btn" onclick="FlowmeterData.saveRecord()">Сохранить</button>
-            </div>
+            <div id="flowDetailBody" class="flow-detail-body"></div>
         </div>
 
         <!-- ======================== КИП ИОС (родительское меню) ======================== -->
@@ -17693,7 +17667,6 @@
         if (page === 'kip-ios') { setTimeout(() => { if (typeof plan114InitEntryButton === 'function') plan114InitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof KipCharts !== 'undefined') KipCharts.initEntryButton(); }, 30); }
         if (page === 'flowmeter-data') { setTimeout(() => { if (typeof FlowmeterData !== 'undefined') FlowmeterData.renderList(); }, 30); }
-        if (page === 'flowmeter-add') { setTimeout(() => { if (typeof FlowmeterData !== 'undefined') FlowmeterData._setDefaultDate(); }, 30); }
         if (page === 'plan-114') { setTimeout(() => { if (typeof plan114RenderList === 'function') plan114RenderList(); }, 30); }
         if (page === 'charts') { setTimeout(() => { if (typeof KipCharts !== 'undefined') KipCharts.onPageOpen(); }, 30); }
         if (TICKET_IDS.includes(page)) { setTimeout(() => initTicketsPage(page), 30); }
@@ -17973,7 +17946,7 @@
         'kip-ios':          'docs',
         'docs-ios':         'docs',
         'flowmeter-data':   'docs-ios',
-        'flowmeter-add':    'flowmeter-data',
+        'flowmeter-detail': 'flowmeter-data',
         // Экзаменационные билеты
         'tickets-1000v':    'exam-tickets',
         'tickets-4':        'exam-tickets',
@@ -18025,7 +17998,7 @@
         'kip-ios':          'КИП ИОС',
         'docs-ios':         'Документация ИОС',
         'flowmeter-data':   'Расходомеры хозрасчётные',
-        'flowmeter-add':    'Новая запись',
+        'flowmeter-detail': 'Расходомер',
         'exam-tickets':     'Экзаменационные билеты',
         'tickets-1000v':    'Билеты до 1000 В',
         'tickets-4':        'Билеты на 4 разряд',
@@ -23129,7 +23102,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                          'exam-tickets', 'tickets-4', 'tickets-5', 'tickets-6', 'tickets-1000v'],
         _KIP_IOS_PAGES: ['kip-ios',
                          'docs-ios',
-                         'flowmeter-data', 'flowmeter-add',
+                         'flowmeter-data', 'flowmeter-detail',
                          'devices-prod', 'devices-type', 'devices-name', 'device-detail', 'dev-group',
                          'device-favorites',
                          'lockouts-prod', 'lockout-detail', 'lock-group',
@@ -26670,150 +26643,116 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
     // ============================================================
     // ============================================================
     // FlowmeterData — Расходомеры хозрасчётные: накопительные расходы
-    // Данные хранятся в Google Таблице (ссылка будет добавлена позже).
-    // Пока записи сохраняются в localStorage как черновики.
+    // Источник: Google Таблица
     // ============================================================
     var FlowmeterData = {
-        _STORAGE_KEY: 'flowmeterRecords',
-        _GOOGLE_SHEET_URL: null,  // Будет задана позже
+        _GOOGLE_SHEET_URL: 'https://docs.google.com/spreadsheets/d/1enZSq7K8pwJVzaAI_tbXZtvATqARTxH0lSU4c-wc1eY/edit?usp=sharing',
 
-        // Вычислить расход = текущие − предыдущие
-        _calcConsumption: function() {
-            var prev = parseFloat(document.getElementById('flowFieldPrev').value) || 0;
-            var curr = parseFloat(document.getElementById('flowFieldCurr').value) || 0;
-            var diff = curr - prev;
-            var field = document.getElementById('flowFieldConsumption');
-            if (diff >= 0) {
-                field.value = diff.toFixed(2);
-            } else {
-                field.value = '−' + Math.abs(diff).toFixed(2);
-            }
+        // 12 позиций хозрасчётных расходомеров из Google Таблицы
+        _METERS: [
+            { id: 1,  hoz: 'Хозрасчёт №1',  param: 'Расход пара в корпус 114',                         datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 73.60,     curr: 74.60,     unit: 'т',  temp: null,  period: 'Ежедневно' },
+            { id: 2,  hoz: 'Хозрасчёт №2',  param: 'Расход воды речной в корпус 114',                  datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 381484.00, curr: 381485.00, unit: 'м³', temp: null,  period: 'Ежедневно' },
+            { id: 3,  hoz: 'Хозрасчёт №3',  param: 'Расход воды пожарохозяйственной (ПХВ) в корпус 114', datePrev: '8/3/2026', dateCurr: '8/10/2026', prev: 381484.00, curr: 381485.00, unit: 'м³', temp: null,  period: 'Еженедельно' },
+            { id: 4,  hoz: 'Хозрасчёт №4',  param: 'Расход воздуха технологического в корпус 114',      datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 314737.00, curr: 314738.00, unit: 'м³', temp: null,  period: 'Ежедневно' },
+            { id: 5,  hoz: 'Хозрасчёт №5',  param: 'Расход воздуха КИП в корпус 114',                   datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 90738.00,  curr: 90739.00,  unit: 'м³', temp: null,  period: 'Ежедневно' },
+            { id: 6,  hoz: 'Хозрасчёт №6',  param: 'Расход природного газа общего в корпус 114',        datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 8457.20,   curr: 8458.20,   unit: 'м³', temp: 32.7,  period: 'Ежедневно' },
+            { id: 7,  hoz: 'Хозрасчёт №7',  param: 'Расход природного газа на печь поз. 704/1',         datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 0.00,      curr: 0.00,      unit: 'м³', temp: null,  period: 'Ежедневно' },
+            { id: 8,  hoz: 'Хозрасчёт №8',  param: 'Расход природного газа на печь поз. 704/2',         datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 8544.50,   curr: 8545.50,   unit: 'м³', temp: null,  period: 'Ежедневно' },
+            { id: 9,  hoz: 'Хозрасчёт №9',  param: 'Расход азота в корпус 114',                         datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 8544.50,   curr: 8545.50,   unit: 'м³', temp: null,  period: 'Ежемесячно' },
+            { id: 10, hoz: 'Хозрасчёт №10', param: 'Расход воздуха технологического в корпус 115',      datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 4604.40,   curr: 4605.40,   unit: 'м³', temp: null,  period: 'Ежедневно' },
+            { id: 11, hoz: 'Хозрасчёт №11', param: 'Расход воды речной в корпус 116',                   datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 105240.00,  curr: 105241.00, unit: 'м³', temp: null,  period: 'Еженедельно' },
+            { id: 12, hoz: 'Хозрасчёт №12', param: 'Расход воздуха технологического в корпус 116',      datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 105240.00,  curr: 105241.00, unit: 'м³', temp: null,  period: 'Еженедельно' }
+        ],
+
+        // Форматирование числа с разделителями
+        _fmtNum: function(n) {
+            if (n === 0) return '0,00';
+            var parts = n.toFixed(2).split('.');
+            var intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
+            return intPart + ',' + parts[1];
         },
 
-        // Получить записи из localStorage
-        _getRecords: function() {
-            try {
-                var raw = localStorage.getItem(this._STORAGE_KEY);
-                return raw ? JSON.parse(raw) : [];
-            } catch (e) { return []; }
-        },
-
-        // Сохранить записи в localStorage
-        _setRecords: function(records) {
-            localStorage.setItem(this._STORAGE_KEY, JSON.stringify(records));
-        },
-
-        // Сохранить новую запись
-        saveRecord: function() {
-            var date = document.getElementById('flowFieldDate').value;
-            var location = document.getElementById('flowFieldLocation').value.trim();
-            var name = document.getElementById('flowFieldName').value.trim();
-            var serial = document.getElementById('flowFieldSerial').value.trim();
-            var prev = document.getElementById('flowFieldPrev').value;
-            var curr = document.getElementById('flowFieldCurr').value;
-            var unit = document.getElementById('flowFieldUnit').value;
-            var note = document.getElementById('flowFieldNote').value.trim();
-
-            // Валидация
-            var errEl = document.getElementById('flowAddError');
-            if (!date) { errEl.textContent = 'Укажите дату снятия показаний'; errEl.style.display = 'block'; return; }
-            if (!location) { errEl.textContent = 'Укажите место установки'; errEl.style.display = 'block'; return; }
-            if (!name) { errEl.textContent = 'Укажите наименование расходомера / счётчика'; errEl.style.display = 'block'; return; }
-            if (prev === '' || curr === '') { errEl.textContent = 'Укажите предыдущие и текущие показания'; errEl.style.display = 'block'; return; }
-            errEl.textContent = '';
-            errEl.style.display = 'none';
-
-            var consumption = (parseFloat(curr) - parseFloat(prev)).toFixed(2);
-
-            var record = {
-                id: Date.now(),
-                date: date,
-                location: location,
-                name: name,
-                serial: serial,
-                prev: parseFloat(prev),
-                curr: parseFloat(curr),
-                consumption: parseFloat(consumption),
-                unit: unit,
-                note: note,
-                savedAt: new Date().toISOString()
-            };
-
-            var records = this._getRecords();
-            records.unshift(record);
-            this._setRecords(records);
-
-            if (typeof showToast === 'function') {
-                showToast('Запись сохранена (черновик)');
-            }
-            navigateTo('flowmeter-data');
-        },
-
-        // Рендер списка записей
+        // Рендер списка карточек
         renderList: function() {
-            var records = this._getRecords();
             var container = document.getElementById('flowList');
             if (!container) return;
 
-            if (records.length === 0) {
-                var html = '<div class="flow-empty">';
-                html += '<div class="flow-empty-icon">📊</div>';
-                html += '<div class="flow-empty-text">Нет записей</div>';
-                html += '<div class="flow-empty-hint">Нажмите + чтобы добавить показания расходомера или счётчика</div>';
-                if (this._GOOGLE_SHEET_URL) {
-                    html += '<a class="flow-sheet-link" href="' + this._GOOGLE_SHEET_URL + '" target="_blank" rel="noopener">Открыть Google Таблицу</a>';
-                }
-                html += '</div>';
-                container.innerHTML = html;
-                return;
-            }
-
             var html = '';
-            // Ссылка на Google Таблицу (если задана)
-            if (this._GOOGLE_SHEET_URL) {
-                html += '<a class="flow-sheet-link" href="' + this._GOOGLE_SHEET_URL + '" target="_blank" rel="noopener">Открыть Google Таблицу</a>';
-            }
+            // Ссылка на Google Таблицу
+            html += '<a class="flow-sheet-link" href="' + this._GOOGLE_SHEET_URL + '" target="_blank" rel="noopener">Открыть Google Таблицу</a>';
 
-            for (var i = 0; i < records.length; i++) {
-                var r = records[i];
-                var dateStr = r.date || '—';
-                var consStr = r.consumption >= 0 ? r.consumption.toFixed(2) : '−' + Math.abs(r.consumption).toFixed(2);
-                html += '<div class="flow-card">';
+            for (var i = 0; i < this._METERS.length; i++) {
+                var m = this._METERS[i];
+                var consumption = m.curr - m.prev;
+                var consStr = this._fmtNum(Math.abs(consumption));
+                var tempStr = (m.temp !== null && m.temp !== undefined) ? m.temp.toFixed(1).replace('.', ',') + ' °C' : '—';
+
+                html += '<div class="flow-card" onclick="FlowmeterData.openDetail(' + m.id + ')">';
                 html += '<div class="flow-card-header">';
-                html += '<div class="flow-card-name">' + this._esc(r.name) + '</div>';
-                html += '<div class="flow-card-date">' + dateStr + '</div>';
+                html += '<div class="flow-card-hoz">' + this._esc(m.hoz) + '</div>';
+                html += '<div class="flow-card-period">' + this._esc(m.period) + '</div>';
                 html += '</div>';
-                html += '<div class="flow-card-location">' + this._esc(r.location) + '</div>';
-                if (r.serial) {
-                    html += '<div class="flow-card-serial">Зав. № ' + this._esc(r.serial) + '</div>';
-                }
-                html += '<div class="flow-card-readings">';
-                html += '<span class="flow-reading"><span class="flow-reading-label">Пред.</span><span class="flow-reading-val">' + r.prev.toFixed(2) + '</span></span>';
-                html += '<span class="flow-reading-arrow">→</span>';
-                html += '<span class="flow-reading"><span class="flow-reading-label">Тек.</span><span class="flow-reading-val">' + r.curr.toFixed(2) + '</span></span>';
+                html += '<div class="flow-card-param">' + this._esc(m.param) + '</div>';
+                html += '<div class="flow-card-summary">';
+                html += '<span class="flow-summary-item"><span class="flow-summary-label">Расход</span><span class="flow-summary-val">' + consStr + ' ' + this._esc(m.unit) + '</span></span>';
+                html += '<span class="flow-summary-item"><span class="flow-summary-label">T среды</span><span class="flow-summary-val">' + tempStr + '</span></span>';
                 html += '</div>';
-                html += '<div class="flow-card-consumption">';
-                html += '<span class="flow-consumption-label">Расход:</span>';
-                html += '<span class="flow-consumption-val">' + consStr + ' ' + this._esc(r.unit) + '</span>';
-                html += '</div>';
-                if (r.note) {
-                    html += '<div class="flow-card-note">' + this._esc(r.note) + '</div>';
-                }
                 html += '</div>';
             }
             container.innerHTML = html;
         },
 
-        // Установить дату по умолчанию (сегодня) в форму добавления
-        _setDefaultDate: function() {
-            var field = document.getElementById('flowFieldDate');
-            if (field && !field.value) {
-                var now = new Date();
-                var y = now.getFullYear();
-                var m = String(now.getMonth() + 1).padStart(2, '0');
-                var d = String(now.getDate()).padStart(2, '0');
-                field.value = y + '-' + m + '-' + d;
+        // Открыть детальную карточку
+        openDetail: function(id) {
+            var m = null;
+            for (var i = 0; i < this._METERS.length; i++) {
+                if (this._METERS[i].id === id) { m = this._METERS[i]; break; }
             }
+            if (!m) return;
+
+            var titleEl = document.getElementById('flowDetailTitle');
+            if (titleEl) titleEl.textContent = m.hoz;
+
+            var consumption = m.curr - m.prev;
+            var consStr = this._fmtNum(Math.abs(consumption));
+            var tempStr = (m.temp !== null && m.temp !== undefined) ? m.temp.toFixed(1).replace('.', ',') + ' °C' : '—';
+
+            var html = '';
+            // Заголовок карточки
+            html += '<div class="flow-detail-header">';
+            html += '<div class="flow-detail-hoz">' + this._esc(m.hoz) + '</div>';
+            html += '<div class="flow-detail-param">' + this._esc(m.param) + '</div>';
+            html += '</div>';
+
+            // Период
+            html += '<div class="flow-detail-section">';
+            html += '<div class="flow-detail-section-title">Период</div>';
+            html += '<div class="flow-detail-row"><span class="flow-detail-label">Дата предыдущей передачи</span><span class="flow-detail-value">' + this._esc(m.datePrev) + '</span></div>';
+            html += '<div class="flow-detail-row"><span class="flow-detail-label">Дата текущей передачи</span><span class="flow-detail-value">' + this._esc(m.dateCurr) + '</span></div>';
+            html += '<div class="flow-detail-row"><span class="flow-detail-label">Периодичность</span><span class="flow-detail-value">' + this._esc(m.period) + '</span></div>';
+            html += '</div>';
+
+            // Показания
+            html += '<div class="flow-detail-section">';
+            html += '<div class="flow-detail-section-title">Показания</div>';
+            html += '<div class="flow-detail-row"><span class="flow-detail-label">Предыдущие показания</span><span class="flow-detail-value">' + this._fmtNum(m.prev) + '</span></div>';
+            html += '<div class="flow-detail-row"><span class="flow-detail-label">Текущие показания</span><span class="flow-detail-value">' + this._fmtNum(m.curr) + '</span></div>';
+            html += '<div class="flow-detail-row flow-detail-highlight"><span class="flow-detail-label">Расход</span><span class="flow-detail-value">' + consStr + ' ' + this._esc(m.unit) + '</span></div>';
+            html += '</div>';
+
+            // Параметры среды
+            html += '<div class="flow-detail-section">';
+            html += '<div class="flow-detail-section-title">Параметры среды</div>';
+            html += '<div class="flow-detail-row"><span class="flow-detail-label">Единицы измерения</span><span class="flow-detail-value">' + this._esc(m.unit) + '</span></div>';
+            html += '<div class="flow-detail-row"><span class="flow-detail-label">Температура среды</span><span class="flow-detail-value">' + tempStr + '</span></div>';
+            html += '</div>';
+
+            // Ссылка на таблицу
+            html += '<a class="flow-sheet-link" href="' + this._GOOGLE_SHEET_URL + '" target="_blank" rel="noopener" style="margin-top:16px;">Открыть Google Таблицу</a>';
+
+            var body = document.getElementById('flowDetailBody');
+            if (body) body.innerHTML = html;
+            navigateTo('flowmeter-detail');
         },
 
         // HTML-экранирование
