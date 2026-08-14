@@ -2975,6 +2975,47 @@
         display: none;
     }
     .cj-edit-error.show { display: block; }
+
+    /* ======================== РАСХОДОМЕРЫ ХОЗРАСЧЁТНЫЕ ======================== */
+    .flow-list { padding: 8px 14px 24px; }
+    .flow-empty { text-align: center; padding: 40px 20px; color: var(--text-secondary); }
+    .flow-empty-icon { font-size: 40px; margin-bottom: 10px; }
+    .flow-empty-text { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+    .flow-empty-hint { font-size: 12px; }
+    .flow-sheet-link {
+        display: block; text-align: center; padding: 10px 16px;
+        margin: 8px 14px 8px; border-radius: 8px;
+        background: rgba(74,143,199,0.1); border: 1px solid rgba(74,143,199,0.25);
+        color: #4a8fc7; font-size: 13px; font-weight: 600;
+        text-decoration: none;
+    }
+    .flow-sheet-link:hover { background: rgba(74,143,199,0.18); }
+    .flow-card {
+        background: var(--card-bg); border: 1px solid var(--card-border);
+        border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
+    }
+    .flow-card-header {
+        display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;
+    }
+    .flow-card-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+    .flow-card-date { font-size: 11px; color: var(--text-secondary); flex-shrink: 0; margin-left: 8px; }
+    .flow-card-location { font-size: 12px; color: #c87048; margin-bottom: 2px; }
+    .flow-card-serial { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; }
+    .flow-card-readings {
+        display: flex; align-items: center; gap: 6px;
+        padding: 6px 0 4px; border-top: 1px solid var(--border-color);
+    }
+    .flow-reading { display: flex; flex-direction: column; align-items: center; }
+    .flow-reading-label { font-size: 9px; color: var(--text-secondary); }
+    .flow-reading-val { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .flow-reading-arrow { color: var(--text-secondary); font-size: 14px; }
+    .flow-card-consumption { display: flex; align-items: center; gap: 6px; }
+    .flow-consumption-label { font-size: 11px; color: var(--text-secondary); }
+    .flow-consumption-val { font-size: 13px; font-weight: 700; color: #5ab870; }
+    .flow-card-note { font-size: 11px; color: var(--text-secondary); margin-top: 4px; font-style: italic; }
+    .flow-add-page-body { padding: 12px 14px 24px; }
+    [data-theme="light"] .flow-card { background: #fafaf8; border-color: rgba(0,0,0,0.08); }
+    [data-theme="light"] .flow-sheet-link { background: rgba(74,143,199,0.06); border-color: rgba(74,143,199,0.15); }
     .cj-field-input option, .cj-field-textarea option { background: #1a1f2e; color: #fff; }
     [data-theme="light"] .cj-field-input option, [data-theme="light"] .cj-field-textarea option { background: #fff; color: #1a1a1a; }
 
@@ -8526,8 +8567,78 @@
 
             <div class="kip-ios-block">
                 <div class="menu-btn-row">
-                    <!-- Подразделы будут добавлены здесь в дальнейшем -->
+                    <div class="menu-btn" onclick="navigateTo('flowmeter-data')" style="border-color:rgba(200,112,72,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#c87048;">Расходомеры хозрасчётные</div><div class="menu-btn-sublabel">Накопительные расходы и показания</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('flowmeter-data')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(200,112,72,0.4);">›</i></div>
                 </div>
+            </div>
+        </div>
+
+        <!-- ======================== РАСХОДОМЕРЫ ХОЗРАСЧЁТНЫЕ — список записей ======================== -->
+        <div id="page-flowmeter-data" class="page-content">
+            <div class="page-inline-header">
+                <div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div>
+                <div class="page-inline-header-title">Расходомеры хозрасчётные</div>
+                <button type="button" class="cj-add-btn-inline" id="flowAddBtn" onclick="navigateTo('flowmeter-add')" aria-label="Добавить запись">+</button>
+            </div>
+            <div id="flowList" class="flow-list">
+                <div class="admin-empty" id="flowEmpty">Загрузка…</div>
+            </div>
+        </div>
+
+        <!-- ======================== РАСХОДОМЕРЫ ХОЗРАСЧЁТНЫЕ — добавление записи ======================== -->
+        <div id="page-flowmeter-add" class="page-content">
+            <div class="page-inline-header">
+                <div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div>
+                <div class="page-inline-header-title">Новая запись</div>
+            </div>
+
+            <div class="flow-add-page-body">
+                <div class="cj-add-fields">
+                    <div class="cj-field-group">
+                        <label class="cj-field-label">Дата снятия показаний</label>
+                        <input type="date" class="cj-field-input" id="flowFieldDate">
+                    </div>
+                    <div class="cj-field-group">
+                        <label class="cj-field-label">Место установки</label>
+                        <input type="text" class="cj-field-input" id="flowFieldLocation" placeholder="Например: ТЭЦ-2, котёл №3">
+                    </div>
+                    <div class="cj-field-group">
+                        <label class="cj-field-label">Наименование расходомера / счётчика</label>
+                        <input type="text" class="cj-field-input" id="flowFieldName" placeholder="Например: СВК-15, КАРАТ-520">
+                    </div>
+                    <div class="cj-field-group">
+                        <label class="cj-field-label">Заводской номер</label>
+                        <input type="text" class="cj-field-input" id="flowFieldSerial" placeholder="Номер по паспорту">
+                    </div>
+                    <div class="cj-field-row">
+                        <div class="cj-field-group">
+                            <label class="cj-field-label">Предыдущие показания</label>
+                            <input type="number" step="0.01" class="cj-field-input" id="flowFieldPrev" placeholder="0.00" oninput="FlowmeterData._calcConsumption()">
+                        </div>
+                        <div class="cj-field-group">
+                            <label class="cj-field-label">Текущие показания</label>
+                            <input type="number" step="0.01" class="cj-field-input" id="flowFieldCurr" placeholder="0.00" oninput="FlowmeterData._calcConsumption()">
+                        </div>
+                    </div>
+                    <div class="cj-field-group">
+                        <label class="cj-field-label">Расход (автоматически)</label>
+                        <input type="text" class="cj-field-input" id="flowFieldConsumption" readonly style="background:rgba(23,33,43,0.35);color:var(--text-secondary);">
+                    </div>
+                    <div class="cj-field-group">
+                        <label class="cj-field-label">Единица измерения</label>
+                        <select class="cj-field-select" id="flowFieldUnit">
+                            <option value="м³">м³</option>
+                            <option value="т">т</option>
+                            <option value="Гкал">Гкал</option>
+                            <option value="кВт·ч">кВт·ч</option>
+                        </select>
+                    </div>
+                    <div class="cj-field-group">
+                        <label class="cj-field-label">Примечание</label>
+                        <input type="text" class="cj-field-input" id="flowFieldNote" placeholder="Необязательно">
+                    </div>
+                </div>
+                <div id="flowAddError" class="cj-edit-error"></div>
+                <button type="button" class="cj-save-btn" onclick="FlowmeterData.saveRecord()">Сохранить</button>
             </div>
         </div>
 
@@ -17581,6 +17692,8 @@
         if (page === 'kip-ios') { setTimeout(() => { if (typeof cablesInitEntryButton === 'function') cablesInitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof plan114InitEntryButton === 'function') plan114InitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof KipCharts !== 'undefined') KipCharts.initEntryButton(); }, 30); }
+        if (page === 'flowmeter-data') { setTimeout(() => { if (typeof FlowmeterData !== 'undefined') FlowmeterData.renderList(); }, 30); }
+        if (page === 'flowmeter-add') { setTimeout(() => { if (typeof FlowmeterData !== 'undefined') FlowmeterData._setDefaultDate(); }, 30); }
         if (page === 'plan-114') { setTimeout(() => { if (typeof plan114RenderList === 'function') plan114RenderList(); }, 30); }
         if (page === 'charts') { setTimeout(() => { if (typeof KipCharts !== 'undefined') KipCharts.onPageOpen(); }, 30); }
         if (TICKET_IDS.includes(page)) { setTimeout(() => initTicketsPage(page), 30); }
@@ -17664,7 +17777,7 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
         if (page === 'buoy-calc') { updateBuoyCalcTitle(); setCalibMethodOnForm(); }
         // Обернуть карточки подразделов для swipe-to-add на страницах меню подразделов
-        if (page === 'calculators' || page === 'calc-kipa' || page === 'calc-electro' || page === 'calc-geometry' || page === 'docs' || page === 'kip-ios' || page === 'docs-ios') {
+        if (page === 'calculators' || page === 'calc-kipa' || page === 'calc-electro' || page === 'calc-geometry' || page === 'docs' || page === 'kip-ios' || page === 'docs-ios' || page === 'flowmeter-data') {
             wrapSubsectionItems('page-' + page);
         }
         updateBottomNavActive(page);
@@ -17859,6 +17972,8 @@
         'library-electro':  'library-internal',
         'kip-ios':          'docs',
         'docs-ios':         'docs',
+        'flowmeter-data':   'docs-ios',
+        'flowmeter-add':    'flowmeter-data',
         // Экзаменационные билеты
         'tickets-1000v':    'exam-tickets',
         'tickets-4':        'exam-tickets',
@@ -17909,6 +18024,8 @@
         'calc-geometry':    'Геометрия',
         'kip-ios':          'КИП ИОС',
         'docs-ios':         'Документация ИОС',
+        'flowmeter-data':   'Расходомеры хозрасчётные',
+        'flowmeter-add':    'Новая запись',
         'exam-tickets':     'Экзаменационные билеты',
         'tickets-1000v':    'Билеты до 1000 В',
         'tickets-4':        'Билеты на 4 разряд',
@@ -18105,6 +18222,8 @@
         'library':       { label: 'Библиотека КИП и А',      sublabel: 'Документация, схемы, инструкции',                target: 'library',       category: 'docs' },
         'kip-ios':       { label: 'КИП ИОС',                  sublabel: 'Перечень приборов, документация',               target: 'kip-ios',       category: 'docs' },
         'docs-ios':      { label: 'Документация ИОС',         sublabel: 'Документация и оперативные данные',              target: 'docs-ios',      category: 'docs' },
+        // ===== Документация ИОС — подразделы (страница page-docs-ios) =====
+        'flowmeter-data': { label: 'Расходомеры хозрасчётные', sublabel: 'Накопительные расходы и показания',             target: 'flowmeter-data',category: 'docs' },
         // ===== КИП ИОС — подразделы (страница page-kip-ios) =====
         'devices':       { label: 'Приборы',                  sublabel: 'Перечень КИП ИОС — 1312 приборов',              target: 'devices',       category: 'docs' },
         'lockouts':      { label: 'Блокировки',               sublabel: 'По производствам',                               target: 'lockouts-prod', category: 'docs' },
@@ -23010,6 +23129,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                          'exam-tickets', 'tickets-4', 'tickets-5', 'tickets-6', 'tickets-1000v'],
         _KIP_IOS_PAGES: ['kip-ios',
                          'docs-ios',
+                         'flowmeter-data', 'flowmeter-add',
                          'devices-prod', 'devices-type', 'devices-name', 'device-detail', 'dev-group',
                          'device-favorites',
                          'lockouts-prod', 'lockout-detail', 'lock-group',
@@ -26548,6 +26668,161 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
     };
 
     // ============================================================
+    // ============================================================
+    // FlowmeterData — Расходомеры хозрасчётные: накопительные расходы
+    // Данные хранятся в Google Таблице (ссылка будет добавлена позже).
+    // Пока записи сохраняются в localStorage как черновики.
+    // ============================================================
+    var FlowmeterData = {
+        _STORAGE_KEY: 'flowmeterRecords',
+        _GOOGLE_SHEET_URL: null,  // Будет задана позже
+
+        // Вычислить расход = текущие − предыдущие
+        _calcConsumption: function() {
+            var prev = parseFloat(document.getElementById('flowFieldPrev').value) || 0;
+            var curr = parseFloat(document.getElementById('flowFieldCurr').value) || 0;
+            var diff = curr - prev;
+            var field = document.getElementById('flowFieldConsumption');
+            if (diff >= 0) {
+                field.value = diff.toFixed(2);
+            } else {
+                field.value = '−' + Math.abs(diff).toFixed(2);
+            }
+        },
+
+        // Получить записи из localStorage
+        _getRecords: function() {
+            try {
+                var raw = localStorage.getItem(this._STORAGE_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) { return []; }
+        },
+
+        // Сохранить записи в localStorage
+        _setRecords: function(records) {
+            localStorage.setItem(this._STORAGE_KEY, JSON.stringify(records));
+        },
+
+        // Сохранить новую запись
+        saveRecord: function() {
+            var date = document.getElementById('flowFieldDate').value;
+            var location = document.getElementById('flowFieldLocation').value.trim();
+            var name = document.getElementById('flowFieldName').value.trim();
+            var serial = document.getElementById('flowFieldSerial').value.trim();
+            var prev = document.getElementById('flowFieldPrev').value;
+            var curr = document.getElementById('flowFieldCurr').value;
+            var unit = document.getElementById('flowFieldUnit').value;
+            var note = document.getElementById('flowFieldNote').value.trim();
+
+            // Валидация
+            var errEl = document.getElementById('flowAddError');
+            if (!date) { errEl.textContent = 'Укажите дату снятия показаний'; errEl.style.display = 'block'; return; }
+            if (!location) { errEl.textContent = 'Укажите место установки'; errEl.style.display = 'block'; return; }
+            if (!name) { errEl.textContent = 'Укажите наименование расходомера / счётчика'; errEl.style.display = 'block'; return; }
+            if (prev === '' || curr === '') { errEl.textContent = 'Укажите предыдущие и текущие показания'; errEl.style.display = 'block'; return; }
+            errEl.textContent = '';
+            errEl.style.display = 'none';
+
+            var consumption = (parseFloat(curr) - parseFloat(prev)).toFixed(2);
+
+            var record = {
+                id: Date.now(),
+                date: date,
+                location: location,
+                name: name,
+                serial: serial,
+                prev: parseFloat(prev),
+                curr: parseFloat(curr),
+                consumption: parseFloat(consumption),
+                unit: unit,
+                note: note,
+                savedAt: new Date().toISOString()
+            };
+
+            var records = this._getRecords();
+            records.unshift(record);
+            this._setRecords(records);
+
+            if (typeof showToast === 'function') {
+                showToast('Запись сохранена (черновик)');
+            }
+            navigateTo('flowmeter-data');
+        },
+
+        // Рендер списка записей
+        renderList: function() {
+            var records = this._getRecords();
+            var container = document.getElementById('flowList');
+            if (!container) return;
+
+            if (records.length === 0) {
+                var html = '<div class="flow-empty">';
+                html += '<div class="flow-empty-icon">📊</div>';
+                html += '<div class="flow-empty-text">Нет записей</div>';
+                html += '<div class="flow-empty-hint">Нажмите + чтобы добавить показания расходомера или счётчика</div>';
+                if (this._GOOGLE_SHEET_URL) {
+                    html += '<a class="flow-sheet-link" href="' + this._GOOGLE_SHEET_URL + '" target="_blank" rel="noopener">Открыть Google Таблицу</a>';
+                }
+                html += '</div>';
+                container.innerHTML = html;
+                return;
+            }
+
+            var html = '';
+            // Ссылка на Google Таблицу (если задана)
+            if (this._GOOGLE_SHEET_URL) {
+                html += '<a class="flow-sheet-link" href="' + this._GOOGLE_SHEET_URL + '" target="_blank" rel="noopener">Открыть Google Таблицу</a>';
+            }
+
+            for (var i = 0; i < records.length; i++) {
+                var r = records[i];
+                var dateStr = r.date || '—';
+                var consStr = r.consumption >= 0 ? r.consumption.toFixed(2) : '−' + Math.abs(r.consumption).toFixed(2);
+                html += '<div class="flow-card">';
+                html += '<div class="flow-card-header">';
+                html += '<div class="flow-card-name">' + this._esc(r.name) + '</div>';
+                html += '<div class="flow-card-date">' + dateStr + '</div>';
+                html += '</div>';
+                html += '<div class="flow-card-location">' + this._esc(r.location) + '</div>';
+                if (r.serial) {
+                    html += '<div class="flow-card-serial">Зав. № ' + this._esc(r.serial) + '</div>';
+                }
+                html += '<div class="flow-card-readings">';
+                html += '<span class="flow-reading"><span class="flow-reading-label">Пред.</span><span class="flow-reading-val">' + r.prev.toFixed(2) + '</span></span>';
+                html += '<span class="flow-reading-arrow">→</span>';
+                html += '<span class="flow-reading"><span class="flow-reading-label">Тек.</span><span class="flow-reading-val">' + r.curr.toFixed(2) + '</span></span>';
+                html += '</div>';
+                html += '<div class="flow-card-consumption">';
+                html += '<span class="flow-consumption-label">Расход:</span>';
+                html += '<span class="flow-consumption-val">' + consStr + ' ' + this._esc(r.unit) + '</span>';
+                html += '</div>';
+                if (r.note) {
+                    html += '<div class="flow-card-note">' + this._esc(r.note) + '</div>';
+                }
+                html += '</div>';
+            }
+            container.innerHTML = html;
+        },
+
+        // Установить дату по умолчанию (сегодня) в форму добавления
+        _setDefaultDate: function() {
+            var field = document.getElementById('flowFieldDate');
+            if (field && !field.value) {
+                var now = new Date();
+                var y = now.getFullYear();
+                var m = String(now.getMonth() + 1).padStart(2, '0');
+                var d = String(now.getDate()).padStart(2, '0');
+                field.value = y + '-' + m + '-' + d;
+            }
+        },
+
+        // HTML-экранирование
+        _esc: function(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+    };
+
     // KipCharts — Графики и статистика КИП ИОС
     // ============================================================
     const KipCharts = {
@@ -27737,8 +28012,11 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         <div class="sidebar-group" data-group="docs-ios" data-requires="kip-ios">
         <div class="sidebar-group-title sidebar-group-title-docs" onclick="toggleSidebarGroup(this.parentElement)">
             <span class="sidebar-group-title-text">Документация ИОС</span>
-            <span class="sidebar-group-title-count">0</span>
+            <span class="sidebar-group-title-count">1</span>
             <svg class="sidebar-group-title-arrow" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="sidebar-item sidebar-item-extra" onclick="navigateTo('flowmeter-data'); toggleSidebar();">
+            <span style="color:rgba(200,112,72,0.9);">Расходомеры хозрасчётные</span>
         </div>
         </div>
 
