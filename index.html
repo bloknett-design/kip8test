@@ -2978,7 +2978,7 @@
     .cj-edit-error.show { display: block; }
 
     /* ======================== РАСХОДОМЕРЫ ХОЗРАСЧЁТНЫЕ ======================== */
-    .flow-list { padding: 8px 14px 24px; }
+    .flow-list { padding: 0; }
     .flow-empty { text-align: center; padding: 40px 20px; color: var(--text-secondary); }
     .flow-empty-icon { font-size: 40px; margin-bottom: 10px; }
     .flow-empty-text { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
@@ -2991,12 +2991,27 @@
         text-decoration: none;
     }
     .flow-sheet-link:hover { background: rgba(74,143,199,0.18); }
+    /* Карточка расходомера — без рамки, с разделителем снизу, зебра (как приборы/блокировки/регуляторы) */
     .flow-card {
-        background: var(--card-bg); border: 1px solid var(--card-border);
-        border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
-        cursor: pointer; transition: background 0.15s;
+        position: relative;
+        margin: 0;
+        border: none;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        border-radius: 0;
+        background: transparent;
+        padding: 10px 14px;
+        cursor: pointer;
+        transition: background 0.15s;
     }
-    .flow-card:active { background: rgba(200,112,72,0.08); }
+    .flow-card:last-child { border-bottom: none; }
+    /* Зебра: тёмная тема — тёплые тона в палитру расходомеров (#c87048) */
+    .flow-card:nth-child(odd)  { background: rgba(35, 30, 28, 0.96); }
+    .flow-card:nth-child(even) { background: rgba(48, 42, 38, 0.96); }
+    [data-theme="light"] .flow-card:nth-child(odd)  { background: rgba(248, 242, 238, 0.96); }
+    [data-theme="light"] .flow-card:nth-child(even) { background: rgba(252, 248, 244, 0.97); }
+    [data-theme="light"] .flow-card { border-bottom-color: rgba(20,20,19,0.08); }
+    .flow-card:active { background: rgba(200,112,72,0.12); }
+    [data-theme="light"] .flow-card:active { background: rgba(200,112,72,0.08); }
     .flow-card-header {
         display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;
     }
@@ -3036,11 +3051,11 @@
     .flow-detail-value { font-size: 16px; font-weight: 600; color: var(--text-primary); text-align: right; }
     .flow-detail-highlight { background: rgba(90,184,112,0.08); margin: 4px -12px; padding: 6px 12px; border-radius: 6px; }
     .flow-detail-highlight .flow-detail-value { color: #5ab870; font-weight: 700; }
-    [data-theme="light"] .flow-card { background: #fafaf8; border-color: rgba(0,0,0,0.08); }
+    /* [data-theme="light"] .flow-card — убрано: зебра задана выше */
     [data-theme="light"] .flow-sheet-link { background: rgba(74,143,199,0.06); border-color: rgba(74,143,199,0.15); }
     [data-theme="light"] .flow-detail-section { background: #fafaf8; border-color: rgba(0,0,0,0.08); }
     [data-theme="light"] .flow-detail-highlight { background: rgba(90,184,112,0.06); }
-    [data-theme="light"] .flow-card:active { background: rgba(200,112,72,0.06); }
+    /* [data-theme="light"] .flow-card:active — убрано: задано выше */
     .cj-field-input option, .cj-field-textarea option { background: #1a1f2e; color: #fff; }
     [data-theme="light"] .cj-field-input option, [data-theme="light"] .cj-field-textarea option { background: #fff; color: #1a1a1a; }
 
@@ -7603,8 +7618,8 @@
             border-color: var(--accent-blue, #4a8fc7) !important;
             box-shadow: 0 0 0 2px rgba(74, 143, 199, 0.25) !important;
         }
-        /* Расходомеры: компактный список в левой панели мастер-детали */
-        body:has(#detailPanel.active) .flow-list { padding: 8px 10px 24px; }
+        /* Расходомеры: список без отступов (зебра на всю ширину) */
+        body:has(#detailPanel.active) .flow-list { padding: 0; }
         /* Расходомеры: детальная карточка в правой панели */
         #detailPanelBody .flow-detail-body { padding: 0; }
         /* --- Билеты: мастер-деталь (десктоп) --- */
