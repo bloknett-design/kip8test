@@ -1682,3 +1682,27 @@ Stage Summary:
 - Десктоп: #page-docs-ios .kip-ios-block margin-top: 4px (было 0)
 - CACHE_VERSION: kipia-test-v329 -> kipia-test-v330
 - Коммит 8320e47 запушен в main
+
+---
+Task ID: 87
+Agent: AI Assistant (GLM / Super Z)
+Task: Карточки расходомеров — зебра, без подложки, на всю ширину (по образцу приборов/блокировок/регуляторов)
+
+Work Log:
+- Изучен стиль карточек приборов (.dev-card): transparent bg, border-bottom, border-radius:0, зебра nth-child(odd/even)
+- Изучен стиль блокировок (.lock-card) и регуляторов (.regulator-card): аналогичный подход
+- Найден текущий стиль .flow-card: card-bg, border, border-radius:10px, padding:10px 12px
+- Применены изменения:
+  - .flow-card: убраны background/border/border-radius, добавлен border-bottom разделитель
+  - Зебра nth-child(odd/even): тёплые тона в палитру #c87048 (rgba(35,30,28)/rgba(48,42,38) dark, rgba(248,242,238)/rgba(252,248,244) light)
+  - .flow-list: padding 8px 14px 24px -> 0 (на всю ширину)
+  - Десктоп: .flow-list padding 0 в мастер-детали
+  - Удалены дублирующие [data-theme=light] .flow-card и .flow-card:active
+- Инкрементирован CACHE_VERSION: kipia-test-v330 -> kipia-test-v331
+- Тесты: 207 passed, 0 failed
+- Коммит: bf7174e, push в main
+
+Stage Summary:
+- Карточки расходомеров теперь в стиле зебры, без задней подложки, на всю ширину экрана
+- CACHE_VERSION: kipia-test-v330 -> kipia-test-v331
+- Коммит bf7174e запушен в main
