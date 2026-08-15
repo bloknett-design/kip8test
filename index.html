@@ -27078,9 +27078,17 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     self._persistData(self._METERS);
                 }
                 self.renderList();
-                // Если открыт детальный вид — перерендерить его
+                // Если детальный вид сейчас видим — перерендерить его.
+                // Проверяем, что страница/панель реально открыты,
+                // иначе при возврате к списку load() снова откроет деталь.
                 if (window._flowDetailId) {
-                    self.openDetail(window._flowDetailId);
+                    var detailPage = document.getElementById('page-flowmeter-detail');
+                    var detailPanel = document.getElementById('detailPanel');
+                    var isDetailVisible = (detailPage && detailPage.classList.contains('active')) ||
+                                          (detailPanel && detailPanel.classList.contains('active'));
+                    if (isDetailVisible) {
+                        self.openDetail(window._flowDetailId);
+                    }
                 }
             }).catch(function(err) {
                 // При ошибке — рендерим fallback/кэш,
