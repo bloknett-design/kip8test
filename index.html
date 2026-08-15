@@ -7421,13 +7421,18 @@
     }
     [data-theme="light"] .sidebar-user-email { color: rgba(20,20,19,0.75); }
     [data-theme="light"] .sidebar-user-role { color: rgba(74,143,199,0.95); }
-    [data-theme="light"] .no-access-screen { color: rgba(20,20,19,0.5); }
-    [data-theme="light"] .no-access-screen h3 { color: rgba(20,20,19,0.85); }
-    [data-theme="light"] .no-access-screen p b { color: #4a8fc7; }
+    /* Light theme: no-access screen — те же цвета что и в тёмной теме,
+       т.к. фон #0d1117 (инлайн) остаётся тёмным в обеих темах */
+    [data-theme="light"] .no-access-screen { color: rgba(255,255,255,0.55); }
+    [data-theme="light"] .no-access-screen svg { stroke: rgba(255,107,107,0.6); }
+    [data-theme="light"] .no-access-screen h3 { color: rgba(255,255,255,0.85); }
+    [data-theme="light"] .no-access-screen p b { color: #6aa6e0; }
     [data-theme="light"] .no-access-screen button {
-        background: rgba(74,143,199,0.1);
-        color: #4a8fc7;
+        background: rgba(74,143,199,0.18);
+        border-color: rgba(74,143,199,0.4);
+        color: #6aa6e0;
     }
+    [data-theme="light"] .no-access-screen button:active { background: rgba(74,143,199,0.3); }
 
     /* ============================================================
        ДЕСКТОПНЫЙ ЛЕЙАУТ (min-width: 1024px)
