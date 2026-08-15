@@ -12,7 +12,7 @@
   1. Скачивает XLSX-экспорт напрямую из Google Sheets через export?format=xlsx.
      Google отдаёт файл без OAuth, если таблица доступна «у кого есть ссылка».
   2. Парсит лист "hozraschet_meters" — заголовки в 1-й строке, данные со 2-й.
-     Структура столбцов (A–J):
+     Структура столбцов (A–L):
        A: id         — номер позиции (1–12)
        B: hoz        — название (Хозрасчёт №1)
        C: param      — параметр (Расход пара в корпус 114)
@@ -23,6 +23,8 @@
        H: unit       — единица измерения (т, м³)
        I: temp       — температура среды (число или пусто)
        J: period     — периодичность (Ежедневно/Еженедельно/Ежемесячно)
+       K: modName    — имя пользователя, внёсшего последние изменения
+       L: modRole    — роль пользователя, внёсшего последние изменения
   3. Сохраняет результат в data/flowmeters.json.
 
 Переменные окружения:
@@ -176,14 +178,15 @@ def parse_flowmeters(xlsx_path, sheet_name):
 
     # Имена полей (маппинг столбцов → ключи клиента)
     FIELD_NAMES = ['id', 'hoz', 'param', 'datePrev', 'dateCurr',
-                   'prev', 'curr', 'unit', 'temp', 'period']
+                   'prev', 'curr', 'unit', 'temp', 'period',
+                   'modName', 'modRole']
 
     meters = []
     skipped = 0
     for row_idx in range(2, ws.max_row + 1):
-        # Читаем 10 колонок (A–J)
+        # Читаем 12 колонок (A–L)
         row_values = []
-        for col_idx in range(1, 11):
+        for col_idx in range(1, 13):
             cell = ws.cell(row=row_idx, column=col_idx)
             val = cell.value
             row_values.append(val)

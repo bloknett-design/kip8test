@@ -27160,6 +27160,16 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 html += '</div>';
             }
 
+            // Подпись: кто внёс последние изменения
+            if (m.modName || m.modRole) {
+                var modParts = [];
+                if (m.modName) modParts.push(this._esc(m.modName));
+                if (m.modRole) modParts.push(this._esc(m.modRole));
+                html += '<div class="flow-detail-section">';
+                html += '<div class="flow-detail-row"><span class="flow-detail-label" style="color:#7a8fa6;">Внёс изменения</span><span class="flow-detail-value" style="color:#5b7a96;">' + modParts.join(', ') + '</span></div>';
+                html += '</div>';
+            }
+
             return html;
         },
 
@@ -27333,6 +27343,12 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     if (tempVal !== null) {
                         meter.temp = tempVal;
                     }
+                    // Обновляем подпись — текущий пользователь
+                    try {
+                        var curUser = KipAuth._cachedUser || {};
+                        meter.modName = curUser.name || curUser.email || '';
+                        meter.modRole = curUser.role || '';
+                    } catch (e) { /* ignore */ }
                     break;
                 }
             }
