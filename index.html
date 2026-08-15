@@ -11218,7 +11218,7 @@
 <div id="flowInputSheet" class="flow-input-sheet">
     <div class="flow-input-sheet-handle"></div>
     <div class="flow-input-sheet-title" id="flowInputTitle">Ввести показания</div>
-    <input type="text" inputmode="decimal" id="flowInputField" class="flow-input-field" placeholder="Введите последние показания" autocomplete="off" enterkeyhint="done" onkeydown="if(event.key==='Enter')FlowmeterData.submitInput()">
+    <input type="text" inputmode="decimal" id="flowInputField" class="flow-input-field" placeholder="Текущие показания" autocomplete="off" enterkeyhint="done" onkeydown="if(event.key==='Enter')FlowmeterData.submitInput()">
     <div class="flow-input-row">
         <div class="flow-input-group">
             <label class="flow-input-label" for="flowInputTemp">Температура, °C</label>
@@ -27245,7 +27245,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             if (titleEl) titleEl.textContent = m.hoz + ' — ввести показания';
 
             var field = document.getElementById('flowInputField');
-            if (field) { field.value = ''; field.placeholder = 'Последние показания, ' + m.unit; }
+            if (field) { field.value = ''; field.placeholder = 'Текущие показания, ' + m.unit; }
 
             // Температура — предзаполнить текущим значением
             var tempField = document.getElementById('flowInputTemp');
