@@ -1906,3 +1906,29 @@ Stage Summary:
 - Периодичность: 13px, semi-bold, #c87048 (тёплый акцент расходомеров)
 - CACHE_VERSION: kipia-test-v340 -> kipia-test-v341
 - Коммит 4b53157 запушен в main
+
+---
+Task ID: 98
+Agent: AI Assistant (GLM / Super Z)
+Task: Кнопка «Ввести показания» в нижнем баре detail-карточки расходомера
+
+Work Log:
+- Мобильный: добавлен <div id="flowDetailBottomBar"> с кнопкой «Ввести показания»
+- Десктоп: кнопка рендерится в detail-panel-footer через _renderBottomBar()
+- HTML: bottom sheet для ввода (flowInputSheet + flowInputOverlay)
+- JS: openInput() — открывает sheet, устанавливает заголовок и placeholder
+- JS: closeInput() — закрывает sheet
+- JS: submitInput() — парсит значение, обновляет prev/curr/dates, перерендеривает
+- Валидация: подсветка красным при NaN, сброс через 1.5 сек
+- CSS: .flow-detail-bottom-bar, .flow-input-btn (с SVG-иконкой), .flow-input-sheet, .flow-input-field, .flow-input-submit, .flow-input-cancel
+- Светлая тема поддерживается
+- Инкрементирован CACHE_VERSION: kipia-test-v341 -> kipia-test-v342
+- Тесты: 207 passed, 0 failed
+- Коммит: 5346fe6, push в main
+
+Stage Summary:
+- Кнопка «Ввести показания» в нижнем баре (мобильный + десктоп)
+- Bottom sheet с полем ввода, валидацией и сохранением
+- При сохранении: prev←curr, curr←введённое, даты обновляются
+- CACHE_VERSION: kipia-test-v341 -> kipia-test-v342
+- Коммит 5346fe6 запушен в main
