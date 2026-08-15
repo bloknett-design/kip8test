@@ -690,6 +690,8 @@
     .dashboard-bottom-overflow:hover { background: rgba(199,150,74,0.15); }
     .dashboard-bottom-overflow:active { transform: scale(0.88); }
     [data-theme="light"] .dashboard-bottom-overflow { background: rgba(0,0,0,0.05); color: rgba(42,93,143,0.4); }
+    /* На мобильном скрываем overflow-кнопку (три точки) — pin/unpin доступен через долгий тап */
+    @media (max-width: 768px) { .dashboard-bottom-overflow { display: none; } }
     /* На дашборде добавляем нижний отступ, чтобы контент не перекрывался баром */
     body:has(#page-dashboard.active) #contentArea { padding-bottom: 88px; }
 

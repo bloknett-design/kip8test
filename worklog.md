@@ -1932,3 +1932,23 @@ Stage Summary:
 - При сохранении: prev←curr, curr←введённое, даты обновляются
 - CACHE_VERSION: kipia-test-v341 -> kipia-test-v342
 - Коммит 5346fe6 запушен в main
+
+---
+Task ID: 99
+Agent: AI Assistant (GLM / Super Z)
+Task: Текущие показания цветом, убраны заголовки секций в detail-карточке
+
+Work Log:
+- Текущие показания: добавлен класс .flow-detail-curr
+- CSS: .flow-detail-curr color: #6aa6e0, светлая тема: #1a5a8a
+- Убран заголовок «Показания» (flow-detail-section-title)
+- Убран заголовок «Параметры среды»
+- Инкрементирован CACHE_VERSION: kipia-test-v342 -> kipia-test-v343
+- Тесты: 207 passed, 0 failed
+- Коммит: 60ed17b, push в main
+
+Stage Summary:
+- Текущие показания выделены синим цветом (#6aa6e0)
+- Заголовки секций убраны — карточка компактнее
+- CACHE_VERSION: kipia-test-v342 -> kipia-test-v343
+- Коммит 60ed17b запушен в main
