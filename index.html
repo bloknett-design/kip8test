@@ -9271,6 +9271,8 @@
                     <option value="CABLE_JOURNAL_UPDATE">Каб. журнал: изменение</option>
                     <option value="CABLE_JOURNAL_DELETE">Каб. журнал: удаление</option>
                     <option value="CABLE_JOURNAL_ACCESS_DENIED">Каб. журнал: отказ в доступе</option>
+                    <option value="FLOWMETER_UPDATE_READING">Расходомеры: ввод показаний</option>
+                    <option value="FLOWMETER_ACCESS_DENIED">Расходомеры: отказ в доступе</option>
                 </select>
                 <button type="button" class="admin-refresh-btn" onclick="KipAdmin.loadLogs()">↻</button>
             </div>
@@ -26951,14 +26953,17 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         },
 
         // ============================================================
-        // Инициализация: восстановить кэш → загрузить свежие данные
+        // Инициализация: отрисовать fallback → кэш → свежие данные
         // ============================================================
         init: function() {
             var self = this;
-            // 1. Мгновенно восстановить кэш — чтобы пользователь
-            //    не смотрел на «Загрузка…» при каждом открытии.
+            // 1. Мгновенно отрисовать fallback (hardcoded _METERS),
+            //    чтобы пользователь сразу видел данные.
+            this.renderList();
+            // 2. Попробовать восстановить кэш — перерисовать свежее.
             this._restoreCache();
-            // 2. Фоново подгрузить свежие данные из Google Sheets.
+            // 3. Фоново подгрузить свежие данные из Google Sheets.
+            //    Если пользователь не авторизован — просто оставляем fallback/кэш.
             this.load();
         },
 
@@ -27020,11 +27025,15 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
         // ============================================================
         // Загрузить данные из Google Sheets через Apps Script
+        // Если нет токена (гостевой режим) — тихо оставляем fallback/кэш
         // ============================================================
         load: function() {
             var self = this;
-            // Не показываем «Загрузка…», если уже есть кэш — тихо обновляем в фоне
-            var hasCache = this._loaded;
+
+            // Если пользователь не авторизован — не трогаем сервер,
+            // показываем fallback (hardcoded _METERS) или кэш
+            var token = KipAuth.getToken();
+            if (!token) return;
 
             this._api('flowmeter.list', {}).then(function(data) {
                 if (data && Array.isArray(data.meters)) {
@@ -27038,15 +27047,9 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     }
                 }
             }).catch(function(err) {
-                // При ошибке — если кэш есть, оставляем его; иначе показываем ошибку
-                if (!hasCache) {
-                    var container = document.getElementById('flowList');
-                    if (container) {
-                        container.innerHTML =
-                            '<div style="padding:32px;text-align:center;color:var(--text-secondary,rgba(255,255,255,0.5));font-size:13px;">Ошибка: ' +
-                            self._esc(err.message) + '</div>';
-                    }
-                }
+                // При ошибке — оставляем fallback/кэш как есть,
+                // не показываем «Ошибка:…» поверх данных.
+                // Серверная ошибка залогирована в консоль.
                 console.error('FlowmeterData.load:', err);
             });
         },
