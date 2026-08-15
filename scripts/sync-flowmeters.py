@@ -179,7 +179,7 @@ def parse_flowmeters(xlsx_path, sheet_name):
     # Имена полей (маппинг столбцов → ключи клиента)
     FIELD_NAMES = ['id', 'hoz', 'param', 'datePrev', 'dateCurr',
                    'prev', 'curr', 'unit', 'temp', 'period',
-                   'modName', 'modRole']
+                   'modRole', 'modName']
 
     meters = []
     skipped = 0

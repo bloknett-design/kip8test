@@ -28,8 +28,8 @@
 //     H: unit       — единица измерения (т, м³)
 //     I: temp       — температура среды (/число или пусто)
 //     J: period     — периодичность (Ежедневно/Еженедельно/Ежемесячно)
-//     K: modName    — имя пользователя, внёсшего последние изменения
-//     L: modRole    — роль пользователя, внёсшего последние изменения
+//     K: modRole    — роль пользователя, внёсшего последние изменения
+//     L: modName    — имя пользователя, внёсшего последние изменения
 //
 //   Данные начинаются со строки 2 (строка 1 — заголовки).
 //   Строка 2 → id=1, строка 13 → id=12.
@@ -150,8 +150,8 @@ var Flowmeter = {
         unit:     String(row[7] || ''),
         temp:     this._parseTemp(row[8]),
         period:   String(row[9] || ''),
-        modName:  String(row[10] || ''),
-        modRole:  String(row[11] || '')
+        modRole:  String(row[10] || ''),
+        modName:  String(row[11] || '')
       };
       meters.push(meter);
     }
@@ -218,9 +218,9 @@ var Flowmeter = {
       sheet.getRange(rowNum, 9).setValue('');
     }
 
-    // Кто внёс изменения: K=11 (modName), L=12 (modRole)
-    sheet.getRange(rowNum, 11).setValue(user.name || user.email || '');
-    sheet.getRange(rowNum, 12).setValue(user.role || '');
+    // Кто внёс изменения: K=11 (modRole), L=12 (modName)
+    sheet.getRange(rowNum, 11).setValue(user.role || '');
+    sheet.getRange(rowNum, 12).setValue(user.name || user.email || '');
 
     // Аудит (по паттерну CableJournal → Utils.audit)
     try {
