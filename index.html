@@ -23306,6 +23306,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         //   _CALC_PAGES       — инженерные калькуляторы.
         //   _LIBRARY_PAGES    — библиотека: «Экзаменационные билеты» + «Библиотека КИП и А».
         //   _KIP_IOS_PAGES    — раздел КИП ИОС (включая кабельный журнал для просмотра).
+        //   _FLOWMETER_PAGES  — расходомеры хозрасчётные (просмотр).
+        //   _CHARTS_PAGES     — графики КИП ИОС (только Админ).
         //   _SECRET_PAGES     — секретные кнопки (сапёр + телефонный справочник).
         //   _WHATS_NEW_PAGES  — раздел «Что нового».
         //
@@ -23314,17 +23316,23 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         // в «Карта ролей.xlsx» и управляется серверным флагом canEdit
         // (см. раздел «Кабельный журнал — canEdit» ниже).
         //
-        // Карта ролей (из Excel):
-        //   Запрет         — нет доступа (только dashboard).
-        //   Общий доступ   — только калькуляторы. НЕ требует входа — гостевой режим.
-        //   КИП8           — калькуляторы + библиотека + секретные кнопки + Что нового.
-        //   КИП8 pro       — то же, что КИП8.
-        //   КИП ИОС        — калькуляторы + библиотека + КИП ИОС + секретные + Что нового.
-        //   КИП ИОС pro    — то же + canEdit (право записи в кабельный журнал).
-        //   ИТР8           — то же, что КИП ИОС.
-        //   ИТР8 pro       — то же, что КИП ИОС.
-        //   ИТР ИОС        — то же + canEdit (право записи в кабельный журнал).
-        //   Админ          — полный доступ ['*'] + админ-панель.
+        // Право ВВОДА ПОКАЗАНИЙ в расходомеры хозрасчётные
+        // определяется ОТДЕЛЬНО столбцом «Ввод показаний в расходомеры хозрасчётные»
+        // в «Карта ролей.xlsx» и управляется клиентским флагом _canInputReadings
+        // (роли: КИП ИОС дежурный, Админ).
+        //
+        // Карта ролей (из Excel, актуальная 2026-08-15):
+        //   Запрет           — нет доступа (только dashboard).
+        //   Общий доступ     — только калькуляторы. НЕ требует входа — гостевой режим.
+        //   КИП8             — калькуляторы + библиотека + секретные кнопки + Что нового.
+        //   КИП8 pro         — то же, что КИП8.
+        //   КИП ИОС          — калькуляторы + библиотека + КИП ИОС + секретные + Что нового.
+        //   КИП ИОС pro      — то же + canEdit (право записи в кабельный журнал).
+        //   КИП ИОС дежурный — КИП ИОС + расходомеры (просмотр) + canInputReadings.
+        //   ИТР8             — КИП ИОС + расходомеры (просмотр).
+        //   ИТР8 pro         — то же, что ИТР8.
+        //   ИТР ИОС          — ИТР8 + canEdit (право записи в кабельный журнал).
+        //   Админ            — полный доступ ['*'] + админ-панель.
         // ============================================================
         _BASE_PAGES: ['dashboard'],
         _CALC_PAGES: ['calculators', 'calc-kipa', 'calc-electro', 'calc-geometry',
@@ -23343,7 +23351,6 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                          'exam-tickets', 'tickets-4', 'tickets-5', 'tickets-6', 'tickets-1000v'],
         _KIP_IOS_PAGES: ['kip-ios',
                          'docs-ios',
-                         'flowmeter-data', 'flowmeter-detail',
                          'devices-prod', 'devices-type', 'devices-name', 'device-detail', 'dev-group',
                          'device-favorites',
                          'lockouts-prod', 'lockout-detail', 'lock-group',
@@ -23353,8 +23360,12 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                          'cable-journal-edit',
                          'cable-journal-add',
                          'cable-journal-view',
-                         'plan-114', 'plan-114-view',
-                         'charts'],
+                         'plan-114', 'plan-114-view'],
+        // Расходомеры хозрасчётные — отдельная группа доступа
+        // (просмотр: ИТР8+, КИП ИОС дежурный; НЕ входит в базовый КИП ИОС)
+        _FLOWMETER_PAGES: ['flowmeter-data', 'flowmeter-detail'],
+        // Графики КИП ИОС — отдельная группа доступа (только Админ)
+        _CHARTS_PAGES: ['charts'],
         _SECRET_PAGES: ['minesweeper', 'phonebook'],
         _WHATS_NEW_PAGES: ['whats-new'],
 
@@ -23372,10 +23383,15 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             const SECRET = this._SECRET_PAGES;
             const WHATS_NEW = this._WHATS_NEW_PAGES;
 
-            // Уровни доступа (по карте ролей из Excel):
+            // Уровни доступа (по карте ролей из Excel, актуальная 2026-08-15):
+            const FLOWMETER = this._FLOWMETER_PAGES;
+            const CHARTS = this._CHARTS_PAGES;
+
             const LVL_OBSHCHIJ = [].concat(BASE, CALC);
             const LVL_KIP8 = [].concat(BASE, CALC, LIB, SECRET, WHATS_NEW);
             const LVL_KIP_IOS = [].concat(BASE, CALC, LIB, KIP_IOS, SECRET, WHATS_NEW);
+            // ИТР8+ и КИП ИОС дежурный: КИП ИОС + расходомеры (просмотр)
+            const LVL_KIP_IOS_WITH_FLOW = [].concat(BASE, CALC, LIB, KIP_IOS, FLOWMETER, SECRET, WHATS_NEW);
 
             this.ROLE_ACCESS = {
                 'Запрет': BASE,                   // только главная
@@ -23384,9 +23400,10 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 'КИП8 pro': LVL_KIP8,
                 'КИП ИОС': LVL_KIP_IOS,
                 'КИП ИОС pro': LVL_KIP_IOS,       // + canEdit (право записи в каб. журнал)
-                'ИТР8': LVL_KIP_IOS,
-                'ИТР8 pro': LVL_KIP_IOS,
-                'ИТР ИОС': LVL_KIP_IOS,           // + canEdit (право записи в каб. журнал)
+                'КИП ИОС дежурный': LVL_KIP_IOS_WITH_FLOW,  // + canInputReadings (расходомеры)
+                'ИТР8': LVL_KIP_IOS_WITH_FLOW,
+                'ИТР8 pro': LVL_KIP_IOS_WITH_FLOW,
+                'ИТР ИОС': LVL_KIP_IOS_WITH_FLOW, // + canEdit (право записи в каб. журнал)
                 'Админ': ['*']
             };
         },
@@ -24135,6 +24152,14 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             // Просмотр кабельного журнала — всем ролям с доступом к КИП ИОС.
             // Право записи определяется сервером (canEdit в cableJournal.getColumns).
             // ============================================================
+
+            // ============================================================
+            // Обновить право ввода показаний в расходомеры хозрасчётные.
+            // Роли с правом: КИП ИОС дежурный, Админ.
+            // ============================================================
+            if (typeof FlowmeterData !== 'undefined') {
+                FlowmeterData._canInputReadings = FlowmeterData._computeCanInputReadings();
+            }
         },
 
         // ============================================================
@@ -26889,6 +26914,11 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
     var FlowmeterData = {
         _GOOGLE_SHEET_URL: 'https://docs.google.com/spreadsheets/d/1enZSq7K8pwJVzaAI_tbXZtvATqARTxH0lSU4c-wc1eY/edit?usp=sharing',
 
+        // Роли с правом ввода показаний в расходомеры хозрасчётные
+        // (по столбцу «Ввод показаний в расходомеры хозрасчётные» из «Карта ролей.xlsx»)
+        _INPUT_READINGS_ROLES: ['КИП ИОС дежурный', 'Админ'],
+        _canInputReadings: false,
+
         // 12 позиций хозрасчётных расходомеров из Google Таблицы
         _METERS: [
             { id: 1,  hoz: 'Хозрасчёт №1',  param: 'Расход пара в корпус 114',                         datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 73.60,     curr: 74.60,     unit: 'т',  temp: null,  period: 'Ежедневно' },
@@ -27037,8 +27067,24 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         },
 
+        // Вычислить право ввода показаний по текущей роли
+        _computeCanInputReadings: function() {
+            var role = null;
+            try {
+                if (typeof KipAuth !== 'undefined' && KipAuth._cachedRole) {
+                    role = KipAuth._cachedRole;
+                }
+            } catch (e) { /* ignore */ }
+            if (!role) return false;
+            // Админ всегда имеет доступ
+            if (role === 'Админ') return true;
+            return this._INPUT_READINGS_ROLES.indexOf(role) !== -1;
+        },
+
         // Рендер нижнего бара с кнопкой «Ввести показания»
+        // Кнопка видна только ролям с _canInputReadings
         _renderBottomBar: function(m) {
+            if (!this._canInputReadings) return '';
             var btnSvg = '<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
             return '<button type="button" class="flow-input-btn" onclick="FlowmeterData.openInput()">' + btnSvg + ' Ввести показания</button>';
         },
