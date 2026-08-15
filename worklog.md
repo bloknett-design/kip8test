@@ -1871,3 +1871,21 @@ Stage Summary:
 - Показания: «73,60 т, от 03.08.2026 г.» / «74,60 т, от 10.08.2026 г.»
 - CACHE_VERSION: kipia-test-v338 -> kipia-test-v339
 - Коммит 210bd2f запушен в main
+
+---
+Task ID: 96
+Agent: AI Assistant (GLM / Super Z)
+Task: Формат расхода «1,00 м³, за 7 дн.» в detail-карточке расходомера
+
+Work Log:
+- Строка расхода: значение + единица + «, за N дн.» (напр. «1,00 м³, за 7 дн.»)
+- Период вычисляется через _daysBetween(m.datePrev, m.dateCurr)
+- Дата выводится через .flow-detail-date (muted, 12px)
+- Инкрементирован CACHE_VERSION: kipia-test-v339 -> kipia-test-v340
+- Тесты: 207 passed, 0 failed
+- Коммит: 9dab589, push в main
+
+Stage Summary:
+- Расход в detail-карточке: «1,00 м³, за 7 дн.»
+- CACHE_VERSION: kipia-test-v339 -> kipia-test-v340
+- Коммит 9dab589 запушен в main
