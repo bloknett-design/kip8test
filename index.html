@@ -3039,22 +3039,77 @@
     .flow-consumption-val { font-size: 13px; font-weight: 700; color: #5ab870; }
     .flow-card-note { font-size: 11px; color: var(--text-secondary); margin-top: 4px; font-style: italic; }
     .flow-add-page-body { padding: 12px 14px 24px; }
-    /* Детальная карточка расходомера */
-    .flow-detail-body { padding: 12px 14px 24px; }
-    .flow-detail-header { margin-bottom: 12px; }
+    /* Детальная карточка расходомера — плоские строки с зеброй (как блокировки/регуляторы) */
+    .flow-detail-body { padding: 0; }
+    .flow-detail-header { padding: 12px 0 4px 16px; margin-bottom: 0; }
     .flow-detail-hoz { font-size: 17px; font-weight: 700; color: #c87048; margin-bottom: 2px; }
     .flow-detail-param { font-size: 14px; color: var(--text-primary); }
-    .flow-detail-section { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
-    .flow-detail-section-title { font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-    .flow-detail-row { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; }
-    .flow-detail-label { font-size: 12px; color: var(--text-secondary); }
-    .flow-detail-value { font-size: 16px; font-weight: 600; color: var(--text-primary); text-align: right; }
-    .flow-detail-highlight { background: rgba(90,184,112,0.08); margin: 4px -12px; padding: 6px 12px; border-radius: 6px; }
+    /* Заголовок группы полей — строка-разделитель */
+    .flow-detail-section {
+        padding: 0;
+        margin: 0;
+        border: none;
+        border-radius: 0;
+        background: transparent;
+    }
+    .flow-detail-section-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: rgba(200, 180, 170, 0.55);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        padding: 10px 0 4px 16px;
+        margin-bottom: 0;
+    }
+    [data-theme="light"] .flow-detail-section-title {
+        color: rgba(20, 20, 19, 0.45);
+    }
+    /* Строка «метка → значение» — колонка, на всю ширину, с разделителем снизу */
+    .flow-detail-row {
+        display: flex;
+        flex-direction: column;
+        padding: 8px 0 8px 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        gap: 2px;
+        font-size: 16px;
+        line-height: 1.4;
+    }
+    .flow-detail-row:last-child { border-bottom: none; }
+    [data-theme="light"] .flow-detail-row { border-bottom-color: rgba(20, 20, 19, 0.06); }
+    /* Зебра строк — тёплые тона палитры #c87048 */
+    .flow-detail-row.flow-row-group-1 { background: #372e2a; }
+    .flow-detail-row.flow-row-group-2 { background: #463e38; }
+    .flow-detail-row.flow-row-group-3 { background: #372e2a; }
+    .flow-detail-row.flow-row-group-4 { background: #463e38; }
+    .flow-detail-row.flow-row-group-5 { background: #3e3530; }
+    [data-theme="light"] .flow-detail-row.flow-row-group-1 { background: #fcf8f4; }
+    [data-theme="light"] .flow-detail-row.flow-row-group-2 { background: #e1dcd6; }
+    [data-theme="light"] .flow-detail-row.flow-row-group-3 { background: #fcf8f4; }
+    [data-theme="light"] .flow-detail-row.flow-row-group-4 { background: #e1dcd6; }
+    [data-theme="light"] .flow-detail-row.flow-row-group-5 { background: #eee8e2; }
+    .flow-detail-label {
+        font-size: 12px;
+        color: rgba(200, 180, 170, 0.45);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        margin-bottom: 2px;
+    }
+    [data-theme="light"] .flow-detail-label { color: rgba(20, 20, 19, 0.45); }
+    .flow-detail-value {
+        font-size: 16px;
+        color: #e0d8d0;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        line-height: 1.4;
+    }
+    [data-theme="light"] .flow-detail-value { color: #1a1a1a; }
+    /* Подсветка строки «Расход» */
+    .flow-detail-highlight { background: rgba(90,184,112,0.08) !important; }
+    .flow-detail-highlight .flow-detail-label { color: rgba(90,184,112,0.7); }
     .flow-detail-highlight .flow-detail-value { color: #5ab870; font-weight: 700; }
+    [data-theme="light"] .flow-detail-highlight { background: rgba(90,184,112,0.06) !important; }
     /* [data-theme="light"] .flow-card — убрано: зебра задана выше */
     [data-theme="light"] .flow-sheet-link { background: rgba(74,143,199,0.06); border-color: rgba(74,143,199,0.15); }
-    [data-theme="light"] .flow-detail-section { background: #fafaf8; border-color: rgba(0,0,0,0.08); }
-    [data-theme="light"] .flow-detail-highlight { background: rgba(90,184,112,0.06); }
     /* [data-theme="light"] .flow-card:active — убрано: задано выше */
     .cj-field-input option, .cj-field-textarea option { background: #1a1f2e; color: #fff; }
     [data-theme="light"] .cj-field-input option, [data-theme="light"] .cj-field-textarea option { background: #fff; color: #1a1a1a; }
@@ -26750,27 +26805,32 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             html += '<div class="flow-detail-param">' + this._esc(m.param) + '</div>';
             html += '</div>';
 
+            // Плоские строки с зеброй (как блокировки/регуляторы)
+            // Счётчик строк для зебра-фона (5 групп, цикл)
+            var ri = 0;
+            function flowGrpCls() { return ' flow-row-group-' + ((ri % 5) + 1); }
+
             // Период
             html += '<div class="flow-detail-section">';
             html += '<div class="flow-detail-section-title">Период</div>';
-            html += '<div class="flow-detail-row"><span class="flow-detail-label">Дата предыдущей передачи</span><span class="flow-detail-value">' + this._esc(m.datePrev) + '</span></div>';
-            html += '<div class="flow-detail-row"><span class="flow-detail-label">Дата текущей передачи</span><span class="flow-detail-value">' + this._esc(m.dateCurr) + '</span></div>';
-            html += '<div class="flow-detail-row"><span class="flow-detail-label">Периодичность</span><span class="flow-detail-value">' + this._esc(m.period) + '</span></div>';
+            html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Дата предыдущей передачи</span><span class="flow-detail-value">' + this._esc(m.datePrev) + '</span></div>'; ri++;
+            html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Дата текущей передачи</span><span class="flow-detail-value">' + this._esc(m.dateCurr) + '</span></div>'; ri++;
+            html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Периодичность</span><span class="flow-detail-value">' + this._esc(m.period) + '</span></div>'; ri++;
             html += '</div>';
 
             // Показания
             html += '<div class="flow-detail-section">';
             html += '<div class="flow-detail-section-title">Показания</div>';
-            html += '<div class="flow-detail-row"><span class="flow-detail-label">Предыдущие показания</span><span class="flow-detail-value">' + this._fmtNum(m.prev) + '</span></div>';
-            html += '<div class="flow-detail-row"><span class="flow-detail-label">Текущие показания</span><span class="flow-detail-value">' + this._fmtNum(m.curr) + '</span></div>';
-            html += '<div class="flow-detail-row flow-detail-highlight"><span class="flow-detail-label">Расход</span><span class="flow-detail-value">' + consStr + ' ' + this._esc(m.unit) + '</span></div>';
+            html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Предыдущие показания</span><span class="flow-detail-value">' + this._fmtNum(m.prev) + '</span></div>'; ri++;
+            html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Текущие показания</span><span class="flow-detail-value">' + this._fmtNum(m.curr) + '</span></div>'; ri++;
+            html += '<div class="flow-detail-row flow-detail-highlight' + flowGrpCls() + '"><span class="flow-detail-label">Расход</span><span class="flow-detail-value">' + consStr + ' ' + this._esc(m.unit) + '</span></div>'; ri++;
             html += '</div>';
 
             // Параметры среды
             html += '<div class="flow-detail-section">';
             html += '<div class="flow-detail-section-title">Параметры среды</div>';
-            html += '<div class="flow-detail-row"><span class="flow-detail-label">Единицы измерения</span><span class="flow-detail-value">' + this._esc(m.unit) + '</span></div>';
-            html += '<div class="flow-detail-row"><span class="flow-detail-label">Температура среды</span><span class="flow-detail-value">' + tempStr + '</span></div>';
+            html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Единицы измерения</span><span class="flow-detail-value">' + this._esc(m.unit) + '</span></div>'; ri++;
+            html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Температура среды</span><span class="flow-detail-value">' + tempStr + '</span></div>'; ri++;
             html += '</div>';
 
             return html;
