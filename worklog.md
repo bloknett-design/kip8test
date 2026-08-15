@@ -1752,3 +1752,24 @@ Stage Summary:
 - Правка применена и к списку карточек, и к подробной карточке (мобильная + десктоп)
 - CACHE_VERSION: kipia-test-v332 -> kipia-test-v333
 - Коммит 37710b6 запушен в main
+
+---
+Task ID: 90
+Agent: AI Assistant (GLM / Super Z)
+Task: Отображать период в полных днях справа от расхода в карточках расходомеров
+
+Work Log:
+- Изучён формат дат в _METERS: 'M/D/YYYY' (американский)
+- Добавлен метод _daysBetween(dateStr1, dateStr2): парсит M/D/YYYY, возвращает разницу полных дней
+- В renderList: вычисляется days = _daysBetween(m.datePrev, m.dateCurr), формируется daysStr = 'N дн.'
+- В HTML расхода: после значения добавлен <span class="flow-summary-days">N дн.</span> (если дней > 0)
+- CSS: .flow-summary-days — font-size: 12px, font-weight: 400, color: var(--text-secondary), margin-left: 8px
+- Инкрементирован CACHE_VERSION: kipia-test-v333 -> kipia-test-v334
+- Тесты: 207 passed, 0 failed
+- Коммит: a722cd3, push в main
+
+Stage Summary:
+- Справа от расхода в карточках расходомеров отображается период в полных днях (напр. «7 дн.»)
+- Формат дат M/D/YYYY, вычисление через _daysBetween
+- CACHE_VERSION: kipia-test-v333 -> kipia-test-v334
+- Коммит a722cd3 запушен в main
