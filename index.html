@@ -101,7 +101,7 @@
         transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         overflow-x: clip;
     }
-    .page-content.active { display: block; padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)); background-color: var(--bg-primary); }
+    .page-content.active { display: block; padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
     /* ВАЖНО: здесь намеренно НЕТ transform. Любой transform (даже translateY(0))
        создаёт содержащий блок для потомков с position: fixed, из-за чего
        .ticket-item.open (position: fixed; top: 0) позиционируется относительно
