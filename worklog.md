@@ -1889,3 +1889,20 @@ Stage Summary:
 - Расход в detail-карточке: «1,00 м³, за 7 дн.»
 - CACHE_VERSION: kipia-test-v339 -> kipia-test-v340
 - Коммит 9dab589 запушен в main
+
+---
+Task ID: 97
+Agent: AI Assistant (GLM / Super Z)
+Task: Периодичность выделена цветом в detail-карточке расходомера
+
+Work Log:
+- .flow-detail-period: 12px muted → 13px, font-weight: 600, color: #c87048
+- Периодичность теперь визуально выделена, как и название параметра
+- Инкрементирован CACHE_VERSION: kipia-test-v340 -> kipia-test-v341
+- Тесты: 207 passed, 0 failed
+- Коммит: 4b53157, push в main
+
+Stage Summary:
+- Периодичность: 13px, semi-bold, #c87048 (тёплый акцент расходомеров)
+- CACHE_VERSION: kipia-test-v340 -> kipia-test-v341
+- Коммит 4b53157 запушен в main

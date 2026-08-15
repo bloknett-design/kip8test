@@ -3042,6 +3042,25 @@
     .flow-add-page-body { padding: 12px 14px 24px; }
     /* Детальная карточка расходомера — плоские строки с зеброй (как блокировки/регуляторы) */
     .flow-detail-body { padding: 0; }
+    .flow-detail-bottom-bar {
+        display: flex; align-items: stretch;
+        border-top: 1px solid var(--card-border);
+        margin-top: 8px;
+    }
+    .flow-input-btn {
+        flex: 1;
+        display: flex; align-items: center; justify-content: center; gap: 6px;
+        padding: 13px 16px;
+        border: none; background: transparent;
+        font-size: 15px; font-weight: 600; color: #6aa6e0;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.15s;
+    }
+    .flow-input-btn:active { background: rgba(106,166,224,0.1); }
+    [data-theme="light"] .flow-input-btn { color: #1a5a8a; }
+    .flow-input-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     .flow-detail-header { padding: 12px 0 4px 16px; margin-bottom: 0; }
     .flow-detail-hoz { font-size: 17px; font-weight: 700; color: #c87048; margin-bottom: 2px; }
     .flow-detail-param { font-size: 17px; font-weight: 700; color: #c87048; margin-bottom: 2px; }
@@ -3108,6 +3127,51 @@
         font-size: 12px;
         font-weight: 400;
         color: var(--text-secondary);
+    }
+    /* Sheet ввода новых показаний расходомера */
+    .flow-input-sheet {
+        position: fixed; left: 0; right: 0; bottom: 0;
+        z-index: 201;
+        background: var(--bg-primary, #1a1f26);
+        border-top-left-radius: 18px; border-top-right-radius: 18px;
+        padding: 8px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 -8px 30px rgba(0,0,0,0.4);
+        max-width: 520px; margin: 0 auto;
+    }
+    .flow-input-sheet.active { transform: translateY(0); }
+    .flow-input-sheet-handle { width: 36px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin: 4px auto 14px; }
+    [data-theme="light"] .flow-input-sheet-handle { background: rgba(20,20,19,0.2); }
+    .flow-input-sheet-title { font-size: 17px; font-weight: 700; color: var(--text-primary); text-align: center; margin-bottom: 16px; }
+    .flow-input-field {
+        width: 100%; padding: 12px 14px;
+        border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
+        background: rgba(255,255,255,0.05);
+        color: var(--text-primary); font-size: 17px; font-family: 'Inter', sans-serif;
+        box-sizing: border-box; outline: none;
+        transition: border-color 0.15s;
+    }
+    .flow-input-field:focus { border-color: #6aa6e0; }
+    [data-theme="light"] .flow-input-field { border-color: rgba(0,0,0,0.15); background: rgba(0,0,0,0.03); }
+    .flow-input-submit {
+        display: flex; align-items: center; justify-content: center;
+        width: 100%; padding: 14px; margin-top: 14px;
+        border: none; border-radius: 12px;
+        background: linear-gradient(135deg, #c87048, #d4854f);
+        color: #fff; font-size: 15px; font-weight: 600;
+        font-family: 'Inter', sans-serif; cursor: pointer;
+        box-shadow: 0 3px 12px rgba(200,112,72,0.25);
+        -webkit-tap-highlight-color: transparent;
+        transition: all 0.2s;
+    }
+    .flow-input-submit:active { transform: scale(0.97); opacity: 0.9; }
+    .flow-input-cancel {
+        display: block; width: 100%; padding: 12px; margin-top: 8px;
+        border: none; background: transparent;
+        font-size: 15px; color: var(--text-secondary);
+        font-family: 'Inter', sans-serif; cursor: pointer;
+        text-align: center;
     }
     [data-theme="light"] .flow-detail-value { color: #1a1a1a; }
     /* Подсветка строки «Расход» */
@@ -8710,6 +8774,7 @@
                 <div class="page-inline-header-title" id="flowDetailTitle">Расходомер</div>
             </div>
             <div id="flowDetailBody" class="flow-detail-body"></div>
+            <div class="flow-detail-bottom-bar" id="flowDetailBottomBar"></div>
         </div>
 
         <!-- ======================== КИП ИОС (родительское меню) ======================== -->
@@ -11087,6 +11152,16 @@
     <div id="pinSheetExtraActions" class="pin-sheet-extra-actions" style="display:none;"></div>
     <button type="button" id="pinSheetAction" class="pin-sheet-action" onclick="executePinToggle()">Добавить на главную</button>
     <button type="button" class="pin-sheet-cancel" onclick="closePinSheet()">Отмена</button>
+</div>
+
+<!-- ===== Bottom sheet для ввода новых показаний расходомера ===== -->
+<div id="flowInputOverlay" class="pin-sheet-overlay" onclick="FlowmeterData.closeInput()"></div>
+<div id="flowInputSheet" class="flow-input-sheet">
+    <div class="flow-input-sheet-handle"></div>
+    <div class="flow-input-sheet-title" id="flowInputTitle">Ввести показания</div>
+    <input type="text" inputmode="decimal" id="flowInputField" class="flow-input-field" placeholder="Введите текущие показания" autocomplete="off" enterkeyhint="done">
+    <button type="button" class="flow-input-submit" onclick="FlowmeterData.submitInput()">Сохранить</button>
+    <button type="button" class="flow-input-cancel" onclick="FlowmeterData.closeInput()">Отмена</button>
 </div>
 
 <script>
@@ -26883,6 +26958,11 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             var html = this._buildDetailHtml(m);
             var body = document.getElementById('flowDetailBody');
             if (body) body.innerHTML = html;
+
+            // Нижний бар с кнопкой «Ввести показания»
+            var bar = document.getElementById('flowDetailBottomBar');
+            if (bar) bar.innerHTML = this._renderBottomBar(m);
+
             navigateTo('flowmeter-detail');
         },
 
@@ -26890,6 +26970,72 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         _esc: function(str) {
             if (!str) return '';
             return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        },
+
+        // Рендер нижнего бара с кнопкой «Ввести показания»
+        _renderBottomBar: function(m) {
+            var btnSvg = '<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+            return '<button type="button" class="flow-input-btn" onclick="FlowmeterData.openInput()">' + btnSvg + ' Ввести показания</button>';
+        },
+
+        // Открыть sheet ввода новых показаний
+        openInput: function() {
+            var id = window._flowDetailId;
+            var m = null;
+            for (var i = 0; i < this._METERS.length; i++) {
+                if (this._METERS[i].id === id) { m = this._METERS[i]; break; }
+            }
+            if (!m) return;
+
+            var titleEl = document.getElementById('flowInputTitle');
+            if (titleEl) titleEl.textContent = m.hoz + ' — ввести показания';
+
+            var field = document.getElementById('flowInputField');
+            if (field) { field.value = ''; field.placeholder = 'Текущие показания, ' + m.unit; }
+
+            document.getElementById('flowInputOverlay').classList.add('active');
+            document.getElementById('flowInputSheet').classList.add('active');
+
+            setTimeout(function() { if (field) field.focus(); }, 350);
+        },
+
+        // Закрыть sheet ввода
+        closeInput: function() {
+            document.getElementById('flowInputOverlay').classList.remove('active');
+            document.getElementById('flowInputSheet').classList.remove('active');
+        },
+
+        // Сохранить введённые показания
+        submitInput: function() {
+            var field = document.getElementById('flowInputField');
+            if (!field) return;
+
+            var val = field.value.replace(/\s/g, '').replace(',', '.');
+            var num = parseFloat(val);
+            if (isNaN(num)) {
+                field.style.borderColor = '#e55';
+                setTimeout(function() { field.style.borderColor = ''; }, 1500);
+                return;
+            }
+
+            var id = window._flowDetailId;
+            for (var i = 0; i < this._METERS.length; i++) {
+                if (this._METERS[i].id === id) {
+                    this._METERS[i].prev = this._METERS[i].curr;
+                    this._METERS[i].curr = num;
+                    // Обновить дату: предыдущая = текущая, текущая = сегодня
+                    var now = new Date();
+                    this._METERS[i].datePrev = this._METERS[i].dateCurr;
+                    this._METERS[i].dateCurr = (now.getMonth() + 1) + '/' + now.getDate() + '/' + now.getFullYear();
+                    break;
+                }
+            }
+
+            this.closeInput();
+
+            // Перерендерить список и текущую карточку
+            this.renderList();
+            this.openDetail(id);
         }
     };
 
@@ -26909,6 +27055,10 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
         // Рендерим HTML в панель
         bodyEl.innerHTML = FlowmeterData._buildDetailHtml(m);
+
+        // Кнопка ввода показаний — в нижний бар detail-panel-footer
+        var footerEl = document.getElementById('detailPanelFooter');
+        if (footerEl) footerEl.innerHTML = FlowmeterData._renderBottomBar(m);
 
         // Открываем панель
         var panel = document.getElementById('detailPanel');
