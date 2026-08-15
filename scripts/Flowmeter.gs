@@ -65,9 +65,10 @@ var Flowmeter = {
   // payload: { token }
   // Возвращает: { ok: true, data: { meters: [...] } }
   list: function(payload) {
-    // Авторизация
-    var user = Utils.verifyToken(payload.token);
-    if (!user) return { ok: false, error: 'no_session' };
+    // Авторизация — через Utils.getCurrentUser (та же функция, что в Code.gs)
+    var auth = Utils.getCurrentUser({ token: payload.token });
+    if (!auth || !auth.ok || !auth.data) return { ok: false, error: 'no_session' };
+    var user = auth.data;
 
     // Проверка роли
     var FLOWMETER_ROLES = ['КИП ИОС дежурный', 'ИТР8', 'ИТР8 pro', 'ИТР ИОС',
@@ -124,9 +125,10 @@ var Flowmeter = {
   //   D → datePrev (Date), E → dateCurr (Date),
   //   F → prev, G → curr, I → temp
   updateReading: function(payload) {
-    // Авторизация
-    var user = Utils.verifyToken(payload.token);
-    if (!user) return { ok: false, error: 'no_session' };
+    // Авторизация — через Utils.getCurrentUser (та же функция, что в Code.gs)
+    var auth = Utils.getCurrentUser({ token: payload.token });
+    if (!auth || !auth.ok || !auth.data) return { ok: false, error: 'no_session' };
+    var user = auth.data;
 
     // Только роли с правом ввода показаний могут писать
     var INPUT_ROLES = ['КИП ИОС дежурный', 'Админ'];
