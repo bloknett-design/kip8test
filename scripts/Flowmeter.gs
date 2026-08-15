@@ -3,11 +3,15 @@
 // в Google Таблицу hozraschet_meters
 // ============================================================
 // Развернуть в том же Apps Script проекте, где находятся
-// Code.gs, Utils.gs, CableJournal.gs.
+//   Code.gs, Utils.gs, CableJournal.gs.
 //
 // Эндпоинты (вызываются через doPost):
 //   flowmeter.list         — прочитать все позиции расходомеров
 //   flowmeter.updateReading — обновить показания одной позиции
+//
+// Авторизация — по тому же паттерну, что CableJournal.gs:
+//   Utils.findSessionByToken(token) → session
+//   Utils.findUserById(session.user_id) → user
 //
 // Структура листа «hozraschet_meters» в Google Таблице:
 //   Строка 1 — заголовки столбцов
@@ -45,18 +49,63 @@ var Flowmeter = {
   // Строка, с которой начинаются данные (1-based, после заголовков)
   DATA_START_ROW: 2,
 
+  // Роли с правом чтения расходомеров
+  READ_ROLES: ['КИП ИОС дежурный', 'ИТР8', 'ИТР8 pro', 'ИТР ИОС',
+               'КИП ИОС pro', 'Админ'],
+
+  // Роли с правом ввода показаний (запись)
+  INPUT_ROLES: ['КИП ИОС дежурный', 'Админ'],
+
   // ============================================================
   // Получить лист таблицы по имени, с fallback на первый лист
   // ============================================================
   _getSheet: function() {
     var ss = SpreadsheetApp.openById(this.SPREADSHEET_ID);
-    // Сначала пробуем по имени
     var sheet = ss.getSheetByName(this.SHEET_NAME);
     if (sheet) return sheet;
-    // Fallback: первый лист
     var sheets = ss.getSheets();
     if (sheets.length > 0) return sheets[0];
     return null;
+  },
+
+  // ============================================================
+  // Авторизация: чтение
+  // По паттерну CableJournal._requireRead, но без throw —
+  // возвращает { user } или { error: {ok:false,...} }
+  // ============================================================
+  _requireRead: function(token) {
+    if (!token) return { error: { ok: false, error: 'no_session' } };
+    var session = Utils.findSessionByToken(token);
+    if (!session) return { error: { ok: false, error: 'no_session' } };
+    var user = Utils.findUserById(session.user_id);
+    if (!user) return { error: { ok: false, error: 'no_session' } };
+
+    if (this.READ_ROLES.indexOf(user.role) === -1) {
+      return { error: { ok: false, error: 'access_denied' } };
+    }
+    return { user: user };
+  },
+
+  // ============================================================
+  // Авторизация: запись (ввод показаний)
+  // По паттерну CableJournal._requireEdit, но без throw —
+  // возвращает { user } или { error: {ok:false,...} }
+  // ============================================================
+  _requireEdit: function(token) {
+    if (!token) return { error: { ok: false, error: 'no_session' } };
+    var session = Utils.findSessionByToken(token);
+    if (!session) return { error: { ok: false, error: 'no_session' } };
+    var user = Utils.findUserById(session.user_id);
+    if (!user) return { error: { ok: false, error: 'no_session' } };
+
+    if (this.INPUT_ROLES.indexOf(user.role) === -1) {
+      try {
+        Utils.audit(user.email, 'FLOWMETER_ACCESS_DENIED', '', '',
+          'Роль "' + user.role + '" не имеет прав на ввод показаний расходомеров');
+      } catch (e) { /* ignore */ }
+      return { error: { ok: false, error: 'access_denied' } };
+    }
+    return { user: user };
   },
 
   // ============================================================
@@ -65,17 +114,8 @@ var Flowmeter = {
   // payload: { token }
   // Возвращает: { ok: true, data: { meters: [...] } }
   list: function(payload) {
-    // Авторизация — через Utils.getCurrentUser (та же функция, что в Code.gs)
-    var auth = Utils.getCurrentUser({ token: payload.token });
-    if (!auth || !auth.ok || !auth.data) return { ok: false, error: 'no_session' };
-    var user = auth.data;
-
-    // Проверка роли
-    var FLOWMETER_ROLES = ['КИП ИОС дежурный', 'ИТР8', 'ИТР8 pro', 'ИТР ИОС',
-                           'КИП ИОС pro', 'Админ'];
-    if (FLOWMETER_ROLES.indexOf(user.role) === -1) {
-      return { ok: false, error: 'access_denied' };
-    }
+    var auth = this._requireRead(payload.token);
+    if (auth.error) return auth.error;
 
     var sheet = this._getSheet();
     if (!sheet) {
@@ -125,16 +165,9 @@ var Flowmeter = {
   //   D → datePrev (Date), E → dateCurr (Date),
   //   F → prev, G → curr, I → temp
   updateReading: function(payload) {
-    // Авторизация — через Utils.getCurrentUser (та же функция, что в Code.gs)
-    var auth = Utils.getCurrentUser({ token: payload.token });
-    if (!auth || !auth.ok || !auth.data) return { ok: false, error: 'no_session' };
-    var user = auth.data;
-
-    // Только роли с правом ввода показаний могут писать
-    var INPUT_ROLES = ['КИП ИОС дежурный', 'Админ'];
-    if (INPUT_ROLES.indexOf(user.role) === -1) {
-      return { ok: false, error: 'access_denied' };
-    }
+    var auth = this._requireEdit(payload.token);
+    if (auth.error) return auth.error;
+    var user = auth.user;
 
     var id = parseInt(payload.id, 10);
     if (!id || id < 1) {
@@ -154,8 +187,6 @@ var Flowmeter = {
     }
 
     // Конвертируем даты: M/D/YYYY (клиент) → Date object (таблица)
-    // Записываем Date object, чтобы Google Sheets хранил дату
-    // корректно и отображал по локали без двусмысленности.
     var datePrevObj = this._clientToDateObj(payload.datePrev);
     var dateCurrObj = this._clientToDateObj(payload.dateCurr);
     var prevVal = parseFloat(payload.prev) || 0;
@@ -164,17 +195,17 @@ var Flowmeter = {
     // Обновляем ячейки:
     // D=4 (datePrev), E=5 (dateCurr), F=6 (prev), G=7 (curr), I=9 (temp)
     if (datePrevObj) {
-      sheet.getRange(rowNum, 4).setValue(datePrevObj);  // D: datePrev (Date)
+      sheet.getRange(rowNum, 4).setValue(datePrevObj);
     } else {
-      sheet.getRange(rowNum, 4).setValue(payload.datePrev || '');  // fallback: строка
+      sheet.getRange(rowNum, 4).setValue(payload.datePrev || '');
     }
     if (dateCurrObj) {
-      sheet.getRange(rowNum, 5).setValue(dateCurrObj);  // E: dateCurr (Date)
+      sheet.getRange(rowNum, 5).setValue(dateCurrObj);
     } else {
-      sheet.getRange(rowNum, 5).setValue(payload.dateCurr || '');  // fallback: строка
+      sheet.getRange(rowNum, 5).setValue(payload.dateCurr || '');
     }
-    sheet.getRange(rowNum, 6).setValue(prevVal);         // F: prev
-    sheet.getRange(rowNum, 7).setValue(currVal);         // G: curr
+    sheet.getRange(rowNum, 6).setValue(prevVal);
+    sheet.getRange(rowNum, 7).setValue(currVal);
 
     // Температура (I=9)
     if (payload.temp !== null && payload.temp !== undefined && payload.temp !== '') {
@@ -183,9 +214,9 @@ var Flowmeter = {
       sheet.getRange(rowNum, 9).setValue('');
     }
 
-    // Логирование в audit_log
+    // Аудит (по паттерну CableJournal → Utils.audit)
     try {
-      Utils.logAction(user.userId, 'FLOWMETER_UPDATE_READING',
+      Utils.audit(user.email, 'FLOWMETER_UPDATE_READING', '', '',
         'Расходомер id=' + id + ': показания ' + payload.prev + ' → ' + payload.curr);
     } catch (e) { /* audit log — не критично */ }
 
@@ -197,12 +228,8 @@ var Flowmeter = {
   // ============================================================
 
   // Дата из таблицы → формат клиента (M/D/YYYY)
-  // Google Sheets может хранить как Date object или как строку.
-  // Строка может быть в формате DD.MM.YYYY (русская локаль)
-  // или M/D/YYYY (если записана как текст).
   _sheetToClientDate: function(val) {
     if (!val) return '';
-    // Date object — надёжный способ (Google Sheets распознал дату)
     if (val instanceof Date) {
       return (val.getMonth() + 1) + '/' + val.getDate() + '/' + val.getFullYear();
     }
@@ -219,8 +246,6 @@ var Flowmeter = {
   },
 
   // Дата из клиента (M/D/YYYY) → Date object для записи в таблицу
-  // Запись Date object исключает двусмысленность при парсинге
-  // Google Sheets (проблема локали D/M/YYYY vs M/D/YYYY).
   _clientToDateObj: function(val) {
     if (!val) return null;
     var s = String(val).trim();
@@ -228,7 +253,6 @@ var Flowmeter = {
     var m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
     if (m) {
       var dateObj = new Date(+m[3], +m[1] - 1, +m[2]);
-      // Проверка валидности
       if (!isNaN(dateObj.getTime())) return dateObj;
     }
     // DD.MM.YYYY → new Date(year, month-1, day)
