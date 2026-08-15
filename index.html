@@ -3022,6 +3022,7 @@
     .flow-summary-item { display: flex; flex-direction: column; }
     .flow-summary-label { font-size: 11px; color: var(--text-secondary); }
     .flow-summary-val { font-size: 16px; font-weight: 700; color: #5ab870; }
+    .flow-summary-days { font-size: 12px; font-weight: 400; color: var(--text-secondary); margin-left: 8px; }
     .flow-card-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
     .flow-card-date { font-size: 11px; color: var(--text-secondary); flex-shrink: 0; margin-left: 8px; }
     .flow-card-location { font-size: 12px; color: #c87048; margin-bottom: 2px; }
@@ -26764,6 +26765,18 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             return intPart + ',' + parts[1];
         },
 
+        // Разница полных дней между двумя датами (формат M/D/YYYY)
+        _daysBetween: function(dateStr1, dateStr2) {
+            try {
+                var p1 = dateStr1.split('/');
+                var p2 = dateStr2.split('/');
+                var d1 = new Date(+p1[2], +p1[0] - 1, +p1[1]);
+                var d2 = new Date(+p2[2], +p2[0] - 1, +p2[1]);
+                var diff = Math.round((d2 - d1) / 86400000);
+                return (diff >= 0) ? diff : 0;
+            } catch (e) { return 0; }
+        },
+
         // Рендер списка карточек
         renderList: function() {
             var container = document.getElementById('flowList');
@@ -26776,6 +26789,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 var consumption = m.curr - m.prev;
                 var consStr = this._fmtNum(Math.abs(consumption));
                 var tempStr = (m.temp !== null && m.temp !== undefined) ? m.temp.toFixed(1).replace('.', ',') + ' °C' : '—';
+                var days = this._daysBetween(m.datePrev, m.dateCurr);
+                var daysStr = (days > 0) ? days + ' дн.' : '';
 
                 html += '<div class="flow-card" data-flow-id="' + m.id + '" onclick="FlowmeterData.openDetail(' + m.id + ')">';
                 html += '<div class="flow-card-header">';
@@ -26784,7 +26799,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 html += '</div>';
                 html += '<div class="flow-card-param">' + this._esc(m.param) + '</div>';
                 html += '<div class="flow-card-summary">';
-                html += '<span class="flow-summary-item"><span class="flow-summary-label">Расход</span><span class="flow-summary-val">' + consStr + ' ' + this._esc(m.unit) + '</span></span>';
+                html += '<span class="flow-summary-item"><span class="flow-summary-label">Расход</span><span class="flow-summary-val">' + consStr + ' ' + this._esc(m.unit) + (daysStr ? '<span class="flow-summary-days">' + daysStr + '</span>' : '') + '</span></span>';
                 if (m.temp !== null && m.temp !== undefined) { html += '<span class="flow-summary-item"><span class="flow-summary-label">T среды</span><span class="flow-summary-val">' + tempStr + '</span></span>'; }
                 html += '</div>';
                 html += '</div>';
