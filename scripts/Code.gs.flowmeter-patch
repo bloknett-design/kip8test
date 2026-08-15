@@ -1,0 +1,60 @@
+// ============================================================
+// Патч для Code.gs — добавить маршрутизацию flowmeter.*
+// ============================================================
+// В существующем Code.gs в функции doPost (или в обработчике action)
+// нужно добавить два новых case:
+//
+// В блоке switch/if, где обрабатываются action:
+//
+//   case 'flowmeter.list':
+//     return ContentService.createTextOutput(
+//       JSON.stringify(Flowmeter.list(payload))
+//     ).setMimeType(ContentService.MimeType.JSON);
+//
+//   case 'flowmeter.updateReading':
+//     return ContentService.createTextOutput(
+//       JSON.stringify(Flowmeter.updateReading(payload))
+//     ).setMimeType(ContentService.MimeType.JSON);
+//
+// ============================================================
+// ПРИМЕР полного блока маршрутизации (если используется if/else):
+// ============================================================
+/*
+  if (action === 'sendOTP') { ... }
+  else if (action === 'verifyOTP') { ... }
+  else if (action === 'getCurrentUser') { ... }
+  else if (action === 'heartbeat') { ... }
+  else if (action === 'logout') { ... }
+  // Cable Journal
+  else if (action === 'cableJournal.list') { ... }
+  else if (action === 'cableJournal.getColumns') { ... }
+  else if (action === 'cableJournal.appendRow') { ... }
+  else if (action === 'cableJournal.updateRow') { ... }
+  else if (action === 'cableJournal.deleteRow') { ... }
+  // ===== НОВОЕ: Расходомеры хозрасчётные =====
+  else if (action === 'flowmeter.list') {
+    return ContentService.createTextOutput(
+      JSON.stringify(Flowmeter.list(payload))
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+  else if (action === 'flowmeter.updateReading') {
+    return ContentService.createTextOutput(
+      JSON.stringify(Flowmeter.updateReading(payload))
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+  // ===== КОНЕЦ НОВОГО =====
+  // Admin
+  else if (action === 'adminListUsers') { ... }
+  ...
+*/
+// ============================================================
+// ПОРЯДОК ДЕПЛОЯ:
+// 1. Открыть Apps Script: https://script.google.com
+// 2. Создать новый файл Flowmeter.gs в проекте
+// 3. Скопировать содержимое scripts/Flowmeter.gs в этот файл
+// 4. Добавить маршрутизацию в Code.gs (как показано выше)
+// 5. Создать/проверить лист «hozraschet_meters» в Google Таблице
+//    (ID: 1enZSq7K8pwJVzaAI_tbXZtvATqARTxH0lSU4c-wc1eY)
+//    Структура листа — см. комментарий в Flowmeter.gs
+// 6. Deploy → New deployment (или обновить существующий)
+// ============================================================

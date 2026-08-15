@@ -17906,7 +17906,7 @@
         if (page === 'kip-ios') { setTimeout(() => { if (typeof cablesInitEntryButton === 'function') cablesInitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof plan114InitEntryButton === 'function') plan114InitEntryButton(); }, 30); }
         if (page === 'kip-ios') { setTimeout(() => { if (typeof KipCharts !== 'undefined') KipCharts.initEntryButton(); }, 30); }
-        if (page === 'flowmeter-data') { setTimeout(() => { if (typeof FlowmeterData !== 'undefined') FlowmeterData.renderList(); }, 30); }
+        if (page === 'flowmeter-data') { setTimeout(() => { if (typeof FlowmeterData !== 'undefined') FlowmeterData.init(); }, 30); }
         if (page === 'plan-114') { setTimeout(() => { if (typeof plan114RenderList === 'function') plan114RenderList(); }, 30); }
         if (page === 'charts') { setTimeout(() => { if (typeof KipCharts !== 'undefined') KipCharts.onPageOpen(); }, 30); }
         if (TICKET_IDS.includes(page)) { setTimeout(() => initTicketsPage(page), 30); }
@@ -26919,7 +26919,13 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         _INPUT_READINGS_ROLES: ['КИП ИОС дежурный', 'Админ'],
         _canInputReadings: false,
 
-        // 12 позиций хозрасчётных расходомеров из Google Таблицы
+        // Ключи localStorage для кэша данных
+        _cacheKey: 'kip8_flow_cache_v1',
+
+        // Флаг: данные загружены с сервера (true) или это hardcoded fallback
+        _loaded: false,
+
+        // 12 позиций хозрасчётных расходомеров (fallback, если сервер недоступен)
         _METERS: [
             { id: 1,  hoz: 'Хозрасчёт №1',  param: 'Расход пара в корпус 114',                         datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 73.60,     curr: 74.60,     unit: 'т',  temp: null,  period: 'Ежедневно' },
             { id: 2,  hoz: 'Хозрасчёт №2',  param: 'Расход воды речной в корпус 114',                  datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 381484.00, curr: 381485.00, unit: 'м³', temp: null,  period: 'Ежедневно' },
@@ -26934,6 +26940,53 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             { id: 11, hoz: 'Хозрасчёт №11', param: 'Расход воды речной в корпус 116',                   datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 105240.00,  curr: 105241.00, unit: 'м³', temp: null,  period: 'Еженедельно' },
             { id: 12, hoz: 'Хозрасчёт №12', param: 'Расход воздуха технологического в корпус 116',      datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 105240.00,  curr: 105241.00, unit: 'м³', temp: null,  period: 'Еженедельно' }
         ],
+
+        // ============================================================
+        // API вызовы (по паттерну KipCableJournal)
+        // ============================================================
+        _api: function(action, payload) {
+            var token = KipAuth.getToken();
+            if (!token) return Promise.reject(new Error('Нет токена — войдите в аккаунт'));
+            return KipAuth.api(action, Object.assign({ token: token }, payload || {}));
+        },
+
+        // ============================================================
+        // Инициализация: восстановить кэш → загрузить свежие данные
+        // ============================================================
+        init: function() {
+            var self = this;
+            // 1. Мгновенно восстановить кэш — чтобы пользователь
+            //    не смотрел на «Загрузка…» при каждом открытии.
+            this._restoreCache();
+            // 2. Фоново подгрузить свежие данные из Google Sheets.
+            this.load();
+        },
+
+        // ============================================================
+        // Восстановить кэш из localStorage (мгновенный рендер)
+        // ============================================================
+        _restoreCache: function() {
+            try {
+                var json = localStorage.getItem(this._cacheKey);
+                if (json) {
+                    var cached = JSON.parse(json);
+                    if (cached && Array.isArray(cached.meters)) {
+                        this._METERS = cached.meters;
+                        this._loaded = true;
+                        this.renderList();
+                    }
+                }
+            } catch (e) { /* ignore parse errors */ }
+        },
+
+        // ============================================================
+        // Сохранить данные в localStorage
+        // ============================================================
+        _persistData: function(meters) {
+            try {
+                localStorage.setItem(this._cacheKey, JSON.stringify({ meters: meters, ts: Date.now() }));
+            } catch (e) { /* quota or disabled */ }
+        },
 
         // Форматирование числа с разделителями
         _fmtNum: function(n) {
@@ -26963,6 +27016,39 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 var diff = Math.round((d2 - d1) / 86400000);
                 return (diff >= 0) ? diff : 0;
             } catch (e) { return 0; }
+        },
+
+        // ============================================================
+        // Загрузить данные из Google Sheets через Apps Script
+        // ============================================================
+        load: function() {
+            var self = this;
+            // Не показываем «Загрузка…», если уже есть кэш — тихо обновляем в фоне
+            var hasCache = this._loaded;
+
+            this._api('flowmeter.list', {}).then(function(data) {
+                if (data && Array.isArray(data.meters)) {
+                    self._METERS = data.meters;
+                    self._loaded = true;
+                    self._persistData(self._METERS);
+                    self.renderList();
+                    // Если открыт детальный вид — перерендерить его
+                    if (window._flowDetailId) {
+                        self.openDetail(window._flowDetailId);
+                    }
+                }
+            }).catch(function(err) {
+                // При ошибке — если кэш есть, оставляем его; иначе показываем ошибку
+                if (!hasCache) {
+                    var container = document.getElementById('flowList');
+                    if (container) {
+                        container.innerHTML =
+                            '<div style="padding:32px;text-align:center;color:var(--text-secondary,rgba(255,255,255,0.5));font-size:13px;">Ошибка: ' +
+                            self._esc(err.message) + '</div>';
+                    }
+                }
+                console.error('FlowmeterData.load:', err);
+            });
         },
 
         // Рендер списка карточек
@@ -27178,16 +27264,19 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             }
 
             var id = window._flowDetailId;
+            var self = this;
+
+            // Оптимистичное обновление UI: сразу обновляем в памяти
+            var meter = null;
             for (var i = 0; i < this._METERS.length; i++) {
                 if (this._METERS[i].id === id) {
-                    this._METERS[i].prev = this._METERS[i].curr;
-                    this._METERS[i].curr = num;
-                    // Обновить дату: предыдущая = текущая, текущая = выбранная
-                    this._METERS[i].datePrev = this._METERS[i].dateCurr;
-                    this._METERS[i].dateCurr = dateStr;
-                    // Обновить температуру (если введена)
+                    meter = this._METERS[i];
+                    meter.prev = meter.curr;
+                    meter.curr = num;
+                    meter.datePrev = meter.dateCurr;
+                    meter.dateCurr = dateStr;
                     if (tempVal !== null) {
-                        this._METERS[i].temp = tempVal;
+                        meter.temp = tempVal;
                     }
                     break;
                 }
@@ -27198,6 +27287,29 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             // Перерендерить список и текущую карточку
             this.renderList();
             this.openDetail(id);
+
+            // Отправить обновление на сервер (в Google Sheets через Apps Script)
+            if (meter) {
+                this._api('flowmeter.updateReading', {
+                    id: id,
+                    prev: meter.prev,
+                    curr: meter.curr,
+                    datePrev: meter.datePrev,
+                    dateCurr: meter.dateCurr,
+                    temp: meter.temp
+                }).then(function(res) {
+                    if (typeof KipToast !== 'undefined' && KipToast.show) {
+                        KipToast.show('Показания сохранены');
+                    }
+                    // Перезагрузить данные с сервера, чтобы убедиться в синхронизации
+                    setTimeout(function() { self.load(); }, 200);
+                }).catch(function(err) {
+                    console.error('flowmeter.updateReading:', err);
+                    if (typeof KipToast !== 'undefined' && KipToast.show) {
+                        KipToast.show('Ошибка сохранения: ' + (err.message || 'сеть'));
+                    }
+                });
+            }
         }
     };
 
