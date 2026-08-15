@@ -26945,25 +26945,35 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         // ============================================================
         // Инициализация: fallback JSON → кэш localStorage → свежие данные API
         // ============================================================
+        // Если пользователь авторизован — НЕ рендерим промежуточные данные
+        // (fallback/кэш), чтобы не показывать устаревшие показания.
+        // Ждём ответ API и рендерим сразу свежие данные.
+        // Если не авторизован — рендерим fallback/кэш (прогрессивный рендер).
+        // ============================================================
         init: function() {
             var self = this;
-            // 1. Мгновенно отрисовать текущее состояние _METERS (пустое при первой загрузке).
+            var token = KipAuth.getToken();
+            var silent = !!token; // авторизован → не рендерить промежуточные данные
+
+            // 1. Показать «Загрузка…» (_METERS пустой)
             this.renderList();
-            // 2. Загрузить data/flowmeters.json как начальный fallback
-            //    (по паттерну cables.json для кабельного журнала).
-            this._loadFallback();
-            // 3. Попробовать восстановить кэш localStorage — перерисовать свежее.
-            this._restoreCache();
-            // 4. Фоново подгрузить свежие данные из Google Sheets через API.
-            //    Если пользователь не авторизован — просто оставляем fallback/кэш.
+
+            // 2. Тихо заполнить _METERS из localStorage и data/flowmeters.json.
+            //    Если silent=true — populate без renderList().
+            this._restoreCache(silent);
+            this._loadFallback(silent);
+
+            // 3. Загрузить свежие данные с сервера.
+            //    load() всегда рендерит по завершении (успех или ошибка).
             this.load();
         },
 
         // ============================================================
         // Загрузить data/flowmeters.json как начальный fallback
         // (по паттерну cables.json для кабельного журнала)
+        // silent=true — заполнить _METERS без рендера (для авторизованных)
         // ============================================================
-        _loadFallback: function() {
+        _loadFallback: function(silent) {
             var self = this;
             try {
                 var bust = '?v=' + Date.now();
@@ -26974,8 +26984,11 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     })
                     .then(function(data) {
                         if (data && Array.isArray(data.meters) && data.meters.length > 0) {
-                            self._METERS = data.meters;
-                            self.renderList();
+                            // Не перезаписывать данные, уже загруженные с сервера
+                            if (!self._loaded) {
+                                self._METERS = data.meters;
+                            }
+                            if (!silent) self.renderList();
                         }
                     })
                     .catch(function() { /* ignore — fallback не критичен */ });
@@ -26984,16 +26997,19 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
         // ============================================================
         // Восстановить кэш из localStorage (мгновенный рендер)
+        // silent=true — заполнить _METERS без рендера (для авторизованных)
         // ============================================================
-        _restoreCache: function() {
+        _restoreCache: function(silent) {
             try {
                 var json = localStorage.getItem(this._cacheKey);
                 if (json) {
                     var cached = JSON.parse(json);
                     if (cached && Array.isArray(cached.meters)) {
-                        this._METERS = cached.meters;
-                        this._loaded = true;
-                        this.renderList();
+                        if (!this._loaded) {
+                            this._METERS = cached.meters;
+                            this._loaded = true;
+                        }
+                        if (!silent) this.renderList();
                     }
                 }
             } catch (e) { /* ignore parse errors */ }
@@ -27040,32 +27056,37 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
         // ============================================================
         // Загрузить данные из Google Sheets через Apps Script
-        // Если нет токена (гостевой режим) — тихо оставляем fallback/кэш
+        // Если нет токена (гостевой режим) — рендерим fallback/кэш
+        // Всегда рендерит по завершении (успех или ошибка),
+        // чтобы не оставлять «Загрузка…» навсегда.
         // ============================================================
         load: function() {
             var self = this;
 
             // Если пользователь не авторизован — не трогаем сервер,
-            // показываем fallback (hardcoded _METERS) или кэш
+            // рендерим fallback/кэш (если они ещё не отрендерены)
             var token = KipAuth.getToken();
-            if (!token) return;
+            if (!token) {
+                this.renderList();
+                return;
+            }
 
             this._api('flowmeter.list', {}).then(function(data) {
                 if (data && Array.isArray(data.meters)) {
                     self._METERS = data.meters;
                     self._loaded = true;
                     self._persistData(self._METERS);
-                    self.renderList();
-                    // Если открыт детальный вид — перерендерить его
-                    if (window._flowDetailId) {
-                        self.openDetail(window._flowDetailId);
-                    }
+                }
+                self.renderList();
+                // Если открыт детальный вид — перерендерить его
+                if (window._flowDetailId) {
+                    self.openDetail(window._flowDetailId);
                 }
             }).catch(function(err) {
-                // При ошибке — оставляем fallback/кэш как есть,
-                // не показываем «Ошибка:…» поверх данных.
-                // Серверная ошибка залогирована в консоль.
+                // При ошибке — рендерим fallback/кэш,
+                // чтобы не оставлять «Загрузка…» навсегда.
                 console.error('FlowmeterData.load:', err);
+                self.renderList();
             });
         },
 
