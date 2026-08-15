@@ -1662,3 +1662,23 @@ Work Log:
 Stage Summary:
 - Новый десктопный UI: верхний бар + бургер + скрытый sidebar
 - Коммит: 4bd6726, запушен в origin/main
+
+---
+Task ID: 86
+Agent: AI Assistant (GLM / Super Z)
+Task: Отступ 4px от бара с хлебными крошками для кнопки «Расходомеры хозрасчётные»
+
+Work Log:
+- Клонирован репозиторий kip8test (shallow clone, main)
+- Проверено состояние: CACHE_VERSION=kipia-test-v329, тесты 207 passed, 0 failed
+- Найдена десктопная CSS-правило #page-docs-ios .kip-ios-block (строка 7891) с margin: 0
+- Изменён margin: 0 -> margin: 4px 0 0 — отступ 4px сверху от бара с хлебными крошками
+- Добавлен комментарий CSS с описанием назначения отступа
+- Инкрементирован CACHE_VERSION: kipia-test-v329 -> kipia-test-v330
+- Тесты после изменений: 207 passed, 0 failed
+- Коммит: 8320e47, push в main
+
+Stage Summary:
+- Десктоп: #page-docs-ios .kip-ios-block margin-top: 4px (было 0)
+- CACHE_VERSION: kipia-test-v329 -> kipia-test-v330
+- Коммит 8320e47 запушен в main
