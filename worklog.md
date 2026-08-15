@@ -1854,3 +1854,20 @@ Stage Summary:
 - Секция «Период» убрана — карточка компактнее
 - CACHE_VERSION: kipia-test-v337 -> kipia-test-v338
 - Коммит a4c03a8 запушен в main
+
+---
+Task ID: 95
+Agent: AI Assistant (GLM / Super Z)
+Task: Формат показаний «73,60 т, от 03.08.2026 г.»
+
+Work Log:
+- Формат: значение + единица + «, от ДД.ММ.ГГГГ г.» (напр. «73,60 т, от 03.08.2026 г.»)
+- Убран margin-left: 6px у .flow-detail-date — запятая и пробел обеспечивают отступ
+- Инкрементирован CACHE_VERSION: kipia-test-v338 -> kipia-test-v339
+- Тесты: 207 passed, 0 failed
+- Коммит: 210bd2f, push в main
+
+Stage Summary:
+- Показания: «73,60 т, от 03.08.2026 г.» / «74,60 т, от 10.08.2026 г.»
+- CACHE_VERSION: kipia-test-v338 -> kipia-test-v339
+- Коммит 210bd2f запушен в main
