@@ -1706,3 +1706,29 @@ Stage Summary:
 - Карточки расходомеров теперь в стиле зебры, без задней подложки, на всю ширину экрана
 - CACHE_VERSION: kipia-test-v330 -> kipia-test-v331
 - Коммит bf7174e запушен в main
+
+---
+Task ID: 88
+Agent: AI Assistant (GLM / Super Z)
+Task: Подробные карточки расходомеров — плоские строки, зебра, без подложки (по образцу приборов/блокировок/регуляторов)
+
+Work Log:
+- Изучен стиль detail-карточек: lock-detail-row, regulator-detail-row — flex-column, padding 8px 0 8px 16px, border-bottom, зебра 5 групп
+- Изучен текущий стиль flow-detail: секции с background/border/border-radius, row justify-content:space-between
+- CSS: .flow-detail-section — убраны background/border/border-radius (прозрачный контейнер)
+- CSS: .flow-detail-row — flex-direction:column, padding 8px 0 8px 16px, border-bottom
+- CSS: .flow-detail-label — uppercase, 12px, muted
+- CSS: .flow-detail-value — 16px, left-aligned, word-wrap
+- CSS: зебра 5 групп flow-row-group-1..5: тёплые тона #c87048 (тёмная и светлая темы)
+- CSS: .flow-detail-highlight — !important, зелёная подсветка строки «Расход»
+- CSS: .flow-detail-body padding: 0 (было 12px 14px 24px)
+- JS: _buildDetailHtml — добавлены flow-row-group-N классы к каждой строке, счётчик ri с циклом 5
+- Удалены дублирующие [data-theme=light] правила для .flow-detail-section и .flow-detail-highlight
+- Инкрементирован CACHE_VERSION: kipia-test-v331 -> kipia-test-v332
+- Тесты: 207 passed, 0 failed
+- Коммит: c95fa72, push в main
+
+Stage Summary:
+- Подробные карточки расходомеров теперь в стиле блокировок/регуляторов: плоские строки, зебра, без подложки
+- CACHE_VERSION: kipia-test-v331 -> kipia-test-v332
+- Коммит c95fa72 запушен в main
