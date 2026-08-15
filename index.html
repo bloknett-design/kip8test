@@ -26785,7 +26785,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 html += '<div class="flow-card-param">' + this._esc(m.param) + '</div>';
                 html += '<div class="flow-card-summary">';
                 html += '<span class="flow-summary-item"><span class="flow-summary-label">Расход</span><span class="flow-summary-val">' + consStr + ' ' + this._esc(m.unit) + '</span></span>';
-                html += '<span class="flow-summary-item"><span class="flow-summary-label">T среды</span><span class="flow-summary-val">' + tempStr + '</span></span>';
+                if (m.temp !== null && m.temp !== undefined) { html += '<span class="flow-summary-item"><span class="flow-summary-label">T среды</span><span class="flow-summary-val">' + tempStr + '</span></span>'; }
                 html += '</div>';
                 html += '</div>';
             }
@@ -26830,7 +26830,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             html += '<div class="flow-detail-section">';
             html += '<div class="flow-detail-section-title">Параметры среды</div>';
             html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Единицы измерения</span><span class="flow-detail-value">' + this._esc(m.unit) + '</span></div>'; ri++;
-            html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Температура среды</span><span class="flow-detail-value">' + tempStr + '</span></div>'; ri++;
+            if (m.temp !== null && m.temp !== undefined) { html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Температура среды</span><span class="flow-detail-value">' + tempStr + '</span></div>'; ri++; }
             html += '</div>';
 
             return html;
