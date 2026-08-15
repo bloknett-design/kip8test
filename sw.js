@@ -11,7 +11,7 @@
 // свежие версии файлов из ASSETS.
 // ============================================================
 
-const CACHE_VERSION = 'kipia-test-v348';
+const CACHE_VERSION = 'kipia-test-v349';
 const CACHE_NAME = CACHE_VERSION;
 
 // Отдельный кэш для картинок Google Drive (превью + полные).
@@ -44,7 +44,8 @@ const ASSETS = [
   './data/devices.json',
   './data/valves.json',
   './data/projects.json',
-  './data/cables.json'
+  './data/cables.json',
+  './data/flowmeters.json'
 ];
 
 // App Shell — главный HTML-файл, который обслуживает все навигационные

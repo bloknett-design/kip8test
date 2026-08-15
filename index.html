@@ -26924,24 +26924,14 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         // Ключи localStorage для кэша данных
         _cacheKey: 'kip8_flow_cache_v1',
 
-        // Флаг: данные загружены с сервера (true) или это hardcoded fallback
+        // Флаг: данные загружены с сервера (true) или это fallback
         _loaded: false,
 
-        // 12 позиций хозрасчётных расходомеров (fallback, если сервер недоступен)
-        _METERS: [
-            { id: 1,  hoz: 'Хозрасчёт №1',  param: 'Расход пара в корпус 114',                         datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 73.60,     curr: 74.60,     unit: 'т',  temp: null,  period: 'Ежедневно' },
-            { id: 2,  hoz: 'Хозрасчёт №2',  param: 'Расход воды речной в корпус 114',                  datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 381484.00, curr: 381485.00, unit: 'м³', temp: null,  period: 'Ежедневно' },
-            { id: 3,  hoz: 'Хозрасчёт №3',  param: 'Расход воды пожарохозяйственной (ПХВ) в корпус 114', datePrev: '8/3/2026', dateCurr: '8/10/2026', prev: 381484.00, curr: 381485.00, unit: 'м³', temp: null,  period: 'Еженедельно' },
-            { id: 4,  hoz: 'Хозрасчёт №4',  param: 'Расход воздуха технологического в корпус 114',      datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 314737.00, curr: 314738.00, unit: 'м³', temp: null,  period: 'Ежедневно' },
-            { id: 5,  hoz: 'Хозрасчёт №5',  param: 'Расход воздуха КИП в корпус 114',                   datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 90738.00,  curr: 90739.00,  unit: 'м³', temp: null,  period: 'Ежедневно' },
-            { id: 6,  hoz: 'Хозрасчёт №6',  param: 'Расход природного газа общего в корпус 114',        datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 8457.20,   curr: 8458.20,   unit: 'м³', temp: 32.7,  period: 'Ежедневно' },
-            { id: 7,  hoz: 'Хозрасчёт №7',  param: 'Расход природного газа на печь поз. 704/1',         datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 0.00,      curr: 0.00,      unit: 'м³', temp: null,  period: 'Ежедневно' },
-            { id: 8,  hoz: 'Хозрасчёт №8',  param: 'Расход природного газа на печь поз. 704/2',         datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 8544.50,   curr: 8545.50,   unit: 'м³', temp: null,  period: 'Ежедневно' },
-            { id: 9,  hoz: 'Хозрасчёт №9',  param: 'Расход азота в корпус 114',                         datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 8544.50,   curr: 8545.50,   unit: 'м³', temp: null,  period: 'Ежемесячно' },
-            { id: 10, hoz: 'Хозрасчёт №10', param: 'Расход воздуха технологического в корпус 115',      datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 4604.40,   curr: 4605.40,   unit: 'м³', temp: null,  period: 'Ежедневно' },
-            { id: 11, hoz: 'Хозрасчёт №11', param: 'Расход воды речной в корпус 116',                   datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 105240.00,  curr: 105241.00, unit: 'м³', temp: null,  period: 'Еженедельно' },
-            { id: 12, hoz: 'Хозрасчёт №12', param: 'Расход воздуха технологического в корпус 116',      datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 105240.00,  curr: 105241.00, unit: 'м³', temp: null,  period: 'Еженедельно' }
-        ],
+        // 12 позиций хозрасчётных расходомеров
+        // Заполняются из data/flowmeters.json (_loadFallback),
+        // localStorage (_restoreCache) или сервера (load).
+        // Пустой массив до первой загрузки — рендер покажет заглушку.
+        _METERS: [],
 
         // ============================================================
         // API вызовы (по паттерну KipCableJournal)
@@ -26953,18 +26943,43 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         },
 
         // ============================================================
-        // Инициализация: отрисовать fallback → кэш → свежие данные
+        // Инициализация: fallback JSON → кэш localStorage → свежие данные API
         // ============================================================
         init: function() {
             var self = this;
-            // 1. Мгновенно отрисовать fallback (hardcoded _METERS),
-            //    чтобы пользователь сразу видел данные.
+            // 1. Мгновенно отрисовать текущее состояние _METERS (пустое при первой загрузке).
             this.renderList();
-            // 2. Попробовать восстановить кэш — перерисовать свежее.
+            // 2. Загрузить data/flowmeters.json как начальный fallback
+            //    (по паттерну cables.json для кабельного журнала).
+            this._loadFallback();
+            // 3. Попробовать восстановить кэш localStorage — перерисовать свежее.
             this._restoreCache();
-            // 3. Фоново подгрузить свежие данные из Google Sheets.
+            // 4. Фоново подгрузить свежие данные из Google Sheets через API.
             //    Если пользователь не авторизован — просто оставляем fallback/кэш.
             this.load();
+        },
+
+        // ============================================================
+        // Загрузить data/flowmeters.json как начальный fallback
+        // (по паттерну cables.json для кабельного журнала)
+        // ============================================================
+        _loadFallback: function() {
+            var self = this;
+            try {
+                var bust = '?v=' + Date.now();
+                fetch('data/flowmeters.json' + bust, { cache: 'no-store' })
+                    .then(function(resp) {
+                        if (!resp.ok) return null;
+                        return resp.json();
+                    })
+                    .then(function(data) {
+                        if (data && Array.isArray(data.meters) && data.meters.length > 0) {
+                            self._METERS = data.meters;
+                            self.renderList();
+                        }
+                    })
+                    .catch(function() { /* ignore — fallback не критичен */ });
+            } catch (e) { /* ignore */ }
         },
 
         // ============================================================
