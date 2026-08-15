@@ -1,126 +1,183 @@
-// ============================================================
-// Code.gs — Главный файл маршрутизации Apps Script (КИПиА)
-// ============================================================
-// Развёртывается в Apps Script проекте вместе с:
-//   Utils.gs, CableJournal.gs, Flowmeter.gs
-//
-// doPost(e) — единая точка входа для всех API-вызовов.
-// Клиент отправляет POST с query-параметром ?action=<action>
-// и JSON-телом { token, ...params }.
-// ============================================================
+/**
+ * Code.gs — Главный файл маршрутизации HTTP-запросов
+ * ============================================================
+ * Apps Script Web App для системы доступа PWA КИПиА.
+ * Принимает POST/GET запросы от PWA, маршрутизует по действиям.
+ *
+ * Деплой: Deploy → New deployment → Web app
+ *   Execute as: Me (владелец таблицы)
+ *   Who has access: Anyone (без авторизации Google)
+ *
+ * Безопасность: запросы публичные, но защищены логикой
+ * (rate limiting, валидация токенов, OTP-коды).
+ * ============================================================
+ *
+ * ВАЖНО: каждый модуль (Auth, Sessions, Admin, CableJournal)
+ * принимает индивидуальные параметры, извлечённые из payload.
+ * Flowmeter принимает payload целиком и сам извлекает поля.
+ *
+ * Сигнатуры методов:
+ *   Auth.sendOTP(email)                    → результат
+ *   Auth.verifyOTP(email, code)            → результат
+ *   Sessions.getCurrentUser(token)         → результат
+ *   Sessions.heartbeat(token)              → результат
+ *   Sessions.logout(token)                 → результат
+ *   Admin.listUsers(token)                 → результат
+ *   Admin.updateRole(token, userId, newRole) → результат
+ *   Admin.resetLogin(token, userId)        → результат
+ *   Admin.createUser(token, email, role)   → результат
+ *   Admin.listSessions(token)              → результат
+ *   Admin.listLogs(token, limit)           → результат
+ *   CableJournal.list(token, options)      → результат
+ *   CableJournal.getColumns(token)         → результат
+ *   CableJournal.getFilters(token)         → результат
+ *   CableJournal.appendRow(token, data)    → результат
+ *   CableJournal.updateRow(token, row, data) → результат
+ *   CableJournal.deleteRow(token, row)     → результат
+ *   Flowmeter.list(payload)                → {ok, data/error}
+ *   Flowmeter.updateReading(payload)       → {ok, data/error}
+ * ============================================================
+ */
 
-// ============================================================
-// doGet — редирект (не используется для API)
-// ============================================================
-function doGet(e) {
-  return HtmlService.createHtmlOutput('КИПиА API — используйте POST');
-}
+/** URL деплоя (заполните после первого деплоя). */
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbztmOJb_QVnjRk1GnvKe4X1TWcDgPSFVvGJiumm3y5RaGwgEiJX15PBiJVUX9mKJiWHzA/exec';
 
-// ============================================================
-// doPost — основной обработчик
-// ============================================================
+/**
+ * Обработка POST-запросов от PWA.
+ * Формат: ?action=NAME в URL, JSON в теле.
+ * Возвращает: JSON {ok: true, data: {...}} или {ok: false, error: "..."}
+ */
 function doPost(e) {
   try {
-    // Определяем action из query-параметра
-    var action = e.parameter.action || '';
-    // Парсим payload из тела запроса (JSON в text/plain)
-    var payload = {};
-    if (e.postData && e.postData.contents) {
-      try {
-        payload = JSON.parse(e.postData.contents);
-      } catch (parseErr) {
-        return jsonResponse({ ok: false, error: 'invalid_json' });
-      }
+    const action = (e.parameter.action || '').trim();
+    const payload = e.postData && e.postData.contents
+      ? JSON.parse(e.postData.contents)
+      : {};
+
+    let result;
+    switch (action) {
+
+      // === Публичные эндпоинты (для входа) ===
+      case 'sendOTP':
+        result = Auth.sendOTP(payload.email);
+        break;
+
+      case 'verifyOTP':
+        result = Auth.verifyOTP(payload.email, payload.code);
+        break;
+
+      // === Эндпоинты для авторизованных сессий ===
+      case 'getCurrentUser':
+        result = Sessions.getCurrentUser(payload.token);
+        break;
+
+      case 'heartbeat':
+        result = Sessions.heartbeat(payload.token);
+        break;
+
+      case 'logout':
+        result = Sessions.logout(payload.token);
+        break;
+
+      // === Админ-эндпоинты (требуют роль "Админ") ===
+      case 'adminListUsers':
+        result = Admin.listUsers(payload.token);
+        break;
+
+      case 'adminUpdateRole':
+        result = Admin.updateRole(payload.token, payload.userId, payload.newRole);
+        break;
+
+      case 'adminResetLogin':
+        result = Admin.resetLogin(payload.token, payload.userId);
+        break;
+
+      case 'adminCreateUser':
+        result = Admin.createUser(payload.token, payload.email, payload.role);
+        break;
+
+      case 'adminListSessions':
+        result = Admin.listSessions(payload.token);
+        break;
+
+      case 'adminListLogs':
+        result = Admin.listLogs(payload.token, payload.limit || 100);
+        break;
+
+      // === Кабельный журнал ===
+      case 'cableJournal.list':
+        result = CableJournal.list(payload.token, payload.options || {});
+        break;
+
+      case 'cableJournal.getColumns':
+        result = CableJournal.getColumns(payload.token);
+        break;
+
+      case 'cableJournal.getFilters':
+        result = CableJournal.getFilters(payload.token);
+        break;
+
+      case 'cableJournal.appendRow':
+        result = CableJournal.appendRow(payload.token, payload.data || {});
+        break;
+
+      case 'cableJournal.updateRow':
+        result = CableJournal.updateRow(payload.token, payload.row, payload.data || {});
+        break;
+
+      case 'cableJournal.deleteRow':
+        result = CableJournal.deleteRow(payload.token, payload.row);
+        break;
+
+      // === Расходомеры хозрасчётные (Flowmeter) ===
+      // Flowmeter.gs возвращает {ok, data/error} напрямую,
+      // поэтому оборачиваем через _json без дополнительной упаковки.
+      case 'flowmeter.list':
+        return _json(Flowmeter.list(payload));
+
+      case 'flowmeter.updateReading':
+        return _json(Flowmeter.updateReading(payload));
+
+      default:
+        return _json({ ok: false, error: 'Unknown action: ' + action });
     }
 
-    // ============================================================
-    // Маршрутизация по action
-    // ============================================================
-
-    // --- Авторизация / сессии ---
-    if (action === 'sendOTP') {
-      return jsonResponse(Utils.sendOTP(payload));
-    }
-    else if (action === 'verifyOTP') {
-      return jsonResponse(Utils.verifyOTP(payload));
-    }
-    else if (action === 'getCurrentUser') {
-      return jsonResponse(Utils.getCurrentUser(payload));
-    }
-    else if (action === 'heartbeat') {
-      return jsonResponse(Utils.heartbeat(payload));
-    }
-    else if (action === 'logout') {
-      return jsonResponse(Utils.logout(payload));
-    }
-
-    // --- Кабельный журнал ---
-    else if (action === 'cableJournal.list') {
-      return jsonResponse(CableJournal.list(payload));
-    }
-    else if (action === 'cableJournal.getColumns') {
-      return jsonResponse(CableJournal.getColumns(payload));
-    }
-    else if (action === 'cableJournal.getFilters') {
-      return jsonResponse(CableJournal.getFilters(payload));
-    }
-    else if (action === 'cableJournal.appendRow') {
-      return jsonResponse(CableJournal.appendRow(payload));
-    }
-    else if (action === 'cableJournal.updateRow') {
-      return jsonResponse(CableJournal.updateRow(payload));
-    }
-    else if (action === 'cableJournal.deleteRow') {
-      return jsonResponse(CableJournal.deleteRow(payload));
-    }
-
-    // --- Расходомеры хозрасчётные (Flowmeter) ---
-    else if (action === 'flowmeter.list') {
-      return jsonResponse(Flowmeter.list(payload));
-    }
-    else if (action === 'flowmeter.updateReading') {
-      return jsonResponse(Flowmeter.updateReading(payload));
-    }
-
-    // --- Админ-панель ---
-    else if (action === 'adminListUsers') {
-      return jsonResponse(Utils.adminListUsers(payload));
-    }
-    else if (action === 'adminListSessions') {
-      return jsonResponse(Utils.adminListSessions(payload));
-    }
-    else if (action === 'adminListLogs') {
-      return jsonResponse(Utils.adminListLogs(payload));
-    }
-    else if (action === 'adminUpdateRole') {
-      return jsonResponse(Utils.adminUpdateRole(payload));
-    }
-    else if (action === 'adminResetLogin') {
-      return jsonResponse(Utils.adminResetLogin(payload));
-    }
-    else if (action === 'adminCreateUser') {
-      return jsonResponse(Utils.adminCreateUser(payload));
-    }
-
-    // --- Неизвестный action ---
-    else {
-      return jsonResponse({ ok: false, error: 'unknown_action', action: action });
-    }
+    return _json({ ok: true, data: result });
 
   } catch (err) {
-    // Глобальный обработчик ошибок
-    return jsonResponse({
-      ok: false,
-      error: 'server_error',
-      message: err.toString()
-    });
+    console.error('doPost error:', err);
+    return _json({ ok: false, error: err.message || String(err) });
   }
 }
 
-// ============================================================
-// Вспомогательная: обёртка для JSON-ответа
-// ============================================================
-function jsonResponse(data) {
-  return ContentService.createTextOutput(JSON.stringify(data))
+/**
+ * Обработка GET-запросов (для проверки, что Web App работает).
+ * Откройте URL в браузере — увидите статус.
+ */
+function doGet(e) {
+  return _json({
+    ok: true,
+    data: {
+      service: 'KIP8 Access Control',
+      version: '1.0',
+      timestamp: new Date().toISOString()
+    }
+  });
+}
+
+/** JSON-ответ с правильным content-type. */
+function _json(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Cron-функция: запускать каждый час через Time-driven trigger.
+ * См. настройку триггеров в функции setupTriggers() ниже.
+ */
+function hourlyCleanup() {
+  Utils.cleanupExpiredSessions();
+  Utils.cleanupExpiredOtpCodes();
+  Utils.cleanupOldAuditLogs();
 }
