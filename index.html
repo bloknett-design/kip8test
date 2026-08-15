@@ -92,11 +92,8 @@
     @keyframes floatLine { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-6px); } }
     @keyframes pulseDot { 0%, 100% { opacity: 0.12; r: 2; } 50% { opacity: 0.3; r: 2.5; } }
     
-    .global-overlay {
-        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-        background: radial-gradient(ellipse at center, transparent 40%, rgba(23, 33, 43, 0.85) 95%);
-        z-index: 1; pointer-events: none;
-    }
+    /* global-overlay (виньетирование) удалён — затемнял низ экрана на мобильных */
+    /* .global-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(ellipse at center, transparent 40%, rgba(23, 33, 43, 0.85) 95%); z-index: 1; pointer-events: none; } */
     
     .page-content { 
         display: none; position: relative; z-index: 2;
@@ -3681,13 +3678,8 @@
             linear-gradient(90deg, rgba(20, 20, 19, 0.06) 1px, transparent 1px);
         background-size: 20px 20px, 20px 20px;
     }
-    [data-theme="light"] .global-overlay {
-        background: radial-gradient(ellipse at center, transparent 40%, rgba(240, 238, 230, 0.85) 95%);
-    }
-    /* Десктоп: убираем затуманивание по краям */
-    @media (min-width: 1024px) {
-        .global-overlay { display: none; }
-    }
+    /* [data-theme="light"] .global-overlay { background: radial-gradient(ellipse at center, transparent 40%, rgba(240, 238, 230, 0.85) 95%); } */
+    /* global-overlay удалён — виньетирование затемняло низ экрана */
 
     /* ============================================================
        Временные переопределения инлайн-стилей для светлой темы
@@ -8617,7 +8609,7 @@
     </svg>
 </div>
 
-<div class="global-overlay"></div>
+<!-- global-overlay removed: was causing dark band at bottom on mobile -->
 
 <div id="mainApp">
     <header class="app-header">
