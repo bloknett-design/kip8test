@@ -3093,7 +3093,7 @@
     .flow-detail-header { padding: 12px 0 4px 16px; margin-bottom: 0; }
     .flow-detail-hoz { font-size: 17px; font-weight: 700; color: #c87048; margin-bottom: 2px; }
     .flow-detail-param { font-size: 17px; font-weight: 700; color: #c87048; margin-bottom: 2px; }
-    .flow-detail-period { font-size: 13px; font-weight: 600; color: #c87048; }
+    .flow-detail-period { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
     /* Заголовок группы полей — строка-разделитель */
     .flow-detail-section {
         padding: 0;
@@ -3234,11 +3234,8 @@
     [data-theme="light"] .flow-detail-value { color: #1a1a1a; }
     .flow-detail-curr { color: #6aa6e0; }
     [data-theme="light"] .flow-detail-curr { color: #1a5a8a; }
-    /* Подсветка строки «Расход» */
-    .flow-detail-highlight { background: rgba(90,184,112,0.08) !important; }
-    .flow-detail-highlight .flow-detail-label { color: rgba(90,184,112,0.7); }
+    /* Подсветка строки «Расход» — фон и лейбл как у обычной строки, зелёным только значение */
     .flow-detail-highlight .flow-detail-value { color: #5ab870; font-weight: 700; }
-    [data-theme="light"] .flow-detail-highlight { background: rgba(90,184,112,0.06) !important; }
     /* [data-theme="light"] .flow-card — убрано: зебра задана выше */
     [data-theme="light"] .flow-sheet-link { background: rgba(74,143,199,0.06); border-color: rgba(74,143,199,0.15); }
     /* [data-theme="light"] .flow-card:active — убрано: задано выше */
