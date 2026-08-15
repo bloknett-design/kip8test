@@ -3044,7 +3044,8 @@
     .flow-detail-body { padding: 0; }
     .flow-detail-header { padding: 12px 0 4px 16px; margin-bottom: 0; }
     .flow-detail-hoz { font-size: 17px; font-weight: 700; color: #c87048; margin-bottom: 2px; }
-    .flow-detail-param { font-size: 17px; font-weight: 700; color: #c87048; }
+    .flow-detail-param { font-size: 17px; font-weight: 700; color: #c87048; margin-bottom: 2px; }
+    .flow-detail-period { font-size: 12px; color: var(--text-secondary); }
     /* Заголовок группы полей — строка-разделитель */
     .flow-detail-section {
         padding: 0;
@@ -26824,9 +26825,10 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             var tempStr = (m.temp !== null && m.temp !== undefined) ? m.temp.toFixed(1).replace('.', ',') + ' °C' : '—';
 
             var html = '';
-            // Заголовок карточки (только параметр, хозрасчёт — в хлебных крошках)
+            // Заголовок карточки (параметр + периодичность под ним)
             html += '<div class="flow-detail-header">';
             html += '<div class="flow-detail-param">' + this._esc(m.param) + '</div>';
+            html += '<div class="flow-detail-period">' + this._esc(m.period) + '</div>';
             html += '</div>';
 
             // Плоские строки с зеброй (как блокировки/регуляторы)
@@ -26839,7 +26841,6 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             html += '<div class="flow-detail-section-title">Период</div>';
             html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Дата предыдущей передачи</span><span class="flow-detail-value">' + this._fmtDate(m.datePrev) + '</span></div>'; ri++;
             html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Дата текущей передачи</span><span class="flow-detail-value">' + this._fmtDate(m.dateCurr) + '</span></div>'; ri++;
-            html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Периодичность</span><span class="flow-detail-value">' + this._esc(m.period) + '</span></div>'; ri++;
             html += '</div>';
 
             // Показания

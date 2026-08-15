@@ -1793,3 +1793,22 @@ Stage Summary:
 - Секция «Параметры среды» скрывается при отсутствии температуры
 - CACHE_VERSION: kipia-test-v334 -> kipia-test-v335
 - Коммит 0ead5ba запушен в main
+
+---
+Task ID: 92
+Agent: AI Assistant (GLM / Super Z)
+Task: Параметр крупнее+цвет, даты в формате ДД.ММ.ГГГГ в detail-карточках расходомеров
+
+Work Log:
+- CSS: .flow-detail-param — 14px → 17px, font-weight: 700, color: #c87048 (тёплый акцент)
+- Добавлен метод _fmtDate(dateStr): M/D/YYYY → ДД.ММ.ГГГГ (8/3/2026 → 03.08.2026)
+- Даты предыдущей/текущей передачи выводятся через _fmtDate
+- Инкрементирован CACHE_VERSION: kipia-test-v335 -> kipia-test-v336
+- Тесты: 207 passed, 0 failed
+- Коммит: 52fb1d5, push в main
+
+Stage Summary:
+- Название параметра в detail-карточке: 17px, bold, #c87048
+- Даты: формат ДД.ММ.ГГГГ (03.08.2026, 10.08.2026)
+- CACHE_VERSION: kipia-test-v335 -> kipia-test-v336
+- Коммит 52fb1d5 запушен в main
