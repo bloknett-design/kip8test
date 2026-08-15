@@ -2026,3 +2026,30 @@ Stage Summary:
 - ИТР8+ теперь видят расходомеры; КИП ИОС / КИП ИОС pro — НЕ видят
 - Графики КИП ИОС видны только Админу
 - Ввод показаний расходомеров — только КИП ИОС дежурный и Админ
+
+---
+Task ID: 86
+Agent: AI Assistant (GLM)
+Task: Реализовать синхронизацию раздела «Расходомеры хозрасчётные» с Google Таблицей hozraschet_meters.gsheet по паттерну Кабельного журнала
+
+Work Log:
+- Изучил паттерн KipCableJournal: _api, init, load, _restoreCache, _persistData, submitAdd/submitEdit/submitDelete
+- Изучил текущий FlowmeterData: hardcoded _METERS, submitInput без записи на сервер
+- Добавил FlowmeterData._api() — обёртка над KipAuth.api (inject token, Content-Type: text/plain)
+- Добавил FlowmeterData.init() — восстановление кэша из localStorage + фоновая загрузка с сервера
+- Добавил FlowmeterData.load() — вызов flowmeter.list через Apps Script, обновление _METERS, перерендер
+- Добавил _restoreCache()/_persistData() — кэш в localStorage (ключ kip8_flow_cache_v1)
+- Модифицировал submitInput(): оптимистичное обновление UI + вызов flowmeter.updateReading на сервер
+- Обновил навигацию: FlowmeterData.renderList() → FlowmeterData.init() (строка 17909)
+- Создал scripts/Flowmeter.gs — серверная часть Apps Script (flowmeter.list, flowmeter.updateReading)
+- Создал scripts/Code.gs.flowmeter-patch — инструкция по добавлению маршрутизации в Code.gs
+- Инкрементирован CACHE_VERSION: kipia-test-v347 → kipia-test-v348
+- Все 207 тестов пройдены
+- Закоммичен и запушен commit ea9dc37
+
+Stage Summary:
+- Клиентская часть: FlowmeterData теперь работает с Google Sheets через Apps Script (как Cable Journal)
+- Серверная часть: Flowmeter.gs готов к деплою в Apps Script проект
+- Данные расходомеров: при открытии страницы — загрузка с сервера + кэш в localStorage
+- Ввод показаний: оптимистичный UI + запись в Google Таблицу + toast-уведомление
+- Для завершения: нужно задеплоить Flowmeter.gs в Apps Script и добавить маршрутизацию в Code.gs

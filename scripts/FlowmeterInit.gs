@@ -1,0 +1,115 @@
+// ============================================================
+// FlowmeterInit.gs — Одноразовая инициализация листа
+// «hozraschet_meters» в Google Таблице из hardcoded данных
+// ============================================================
+// ИСПОЛЬЗОВАНИЕ:
+//   1. Скопировать этот файл в проект Apps Script
+//      (тот же проект, где Code.gs, Utils.gs, CableJournal.gs, Flowmeter.gs)
+//   2. В редакторе Apps Script выбрать функцию flowmeterInitSheet
+//   3. Нажать ▶ Run
+//   4. Проверить лог (Ctrl+Enter) — должно быть «Инициализация завершена»
+//   5. После инициализации этот файл можно удалить из проекта
+//
+// Функция:
+//   - Создаёт лист «hozraschet_meters», если его нет
+//   - Записывает заголовки (строка 1) и 12 строк данных (строки 2–13)
+//   - Если лист уже существует и содержит данные — СПРАШИВАЕТ
+//     подтверждение (в логе), перезаписывает только если force = true
+// ============================================================
+
+/**
+ * Инициализация листа hozraschet_meters в Google Таблице.
+ * Запускается один раз вручную из редактора Apps Script.
+ *
+ * @param {boolean} force - Если true, перезаписывает даже если лист уже есть
+ *                          с данными. По умолчанию false (безопасный режим).
+ */
+function flowmeterInitSheet(force) {
+  var SPREADSHEET_ID = '1enZSq7K8pwJVzaAI_tbXZtvATqARTxH0lSU4c-wc1eY';
+  var SHEET_NAME = 'hozraschet_meters';
+
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(SHEET_NAME);
+
+  // --- Создать лист, если не существует ---
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME);
+    Logger.log('Лист «' + SHEET_NAME + '» создан.');
+  } else {
+    // Лист уже есть — проверить, есть ли данные
+    var lastRow = sheet.getLastRow();
+    if (lastRow > 1 && !force) {
+      Logger.log('⚠️ Лист «' + SHEET_NAME + '» уже содержит ' + (lastRow - 1) +
+                 ' строк данных. Для перезаписи вызовите flowmeterInitSheet(true)');
+      return;
+    }
+    Logger.log('Лист «' + SHEET_NAME + '» уже существует. Очищаем...');
+    sheet.clear();
+  }
+
+  // --- Hardcoded данные (из FlowmeterData._METERS в index.html) ---
+  var METERS = [
+    { id: 1,  hoz: 'Хозрасчёт №1',  param: 'Расход пара в корпус 114',                         datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 73.60,     curr: 74.60,     unit: 'т',  temp: '',    period: 'Ежедневно' },
+    { id: 2,  hoz: 'Хозрасчёт №2',  param: 'Расход воды речной в корпус 114',                  datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 381484.00, curr: 381485.00, unit: 'м³', temp: '',    period: 'Ежедневно' },
+    { id: 3,  hoz: 'Хозрасчёт №3',  param: 'Расход воды пожарохозяйственной (ПХВ) в корпус 114', datePrev: '8/3/2026', dateCurr: '8/10/2026', prev: 381484.00, curr: 381485.00, unit: 'м³', temp: '',    period: 'Еженедельно' },
+    { id: 4,  hoz: 'Хозрасчёт №4',  param: 'Расход воздуха технологического в корпус 114',      datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 314737.00, curr: 314738.00, unit: 'м³', temp: '',    period: 'Ежедневно' },
+    { id: 5,  hoz: 'Хозрасчёт №5',  param: 'Расход воздуха КИП в корпус 114',                   datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 90738.00,  curr: 90739.00,  unit: 'м³', temp: '',    period: 'Ежедневно' },
+    { id: 6,  hoz: 'Хозрасчёт №6',  param: 'Расход природного газа общего в корпус 114',        datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 8457.20,   curr: 8458.20,   unit: 'м³', temp: 32.7,  period: 'Ежедневно' },
+    { id: 7,  hoz: 'Хозрасчёт №7',  param: 'Расход природного газа на печь поз. 704/1',         datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 0.00,      curr: 0.00,      unit: 'м³', temp: '',    period: 'Ежедневно' },
+    { id: 8,  hoz: 'Хозрасчёт №8',  param: 'Расход природного газа на печь поз. 704/2',         datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 8544.50,   curr: 8545.50,   unit: 'м³', temp: '',    period: 'Ежедневно' },
+    { id: 9,  hoz: 'Хозрасчёт №9',  param: 'Расход азота в корпус 114',                         datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 8544.50,   curr: 8545.50,   unit: 'м³', temp: '',    period: 'Ежемесячно' },
+    { id: 10, hoz: 'Хозрасчёт №10', param: 'Расход воздуха технологического в корпус 115',      datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 4604.40,   curr: 4605.40,   unit: 'м³', temp: '',    period: 'Ежедневно' },
+    { id: 11, hoz: 'Хозрасчёт №11', param: 'Расход воды речной в корпус 116',                   datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 105240.00,  curr: 105241.00, unit: 'м³', temp: '',    period: 'Еженедельно' },
+    { id: 12, hoz: 'Хозрасчёт №12', param: 'Расход воздуха технологического в корпус 116',      datePrev: '8/3/2026',  dateCurr: '8/10/2026', prev: 105240.00,  curr: 105241.00, unit: 'м³', temp: '',    period: 'Еженедельно' }
+  ];
+
+  // --- Заголовки (строка 1) ---
+  var headers = ['id', 'hoz', 'param', 'datePrev', 'dateCurr', 'prev', 'curr', 'unit', 'temp', 'period'];
+
+  // --- Формируем массив всех строк (заголовок + данные) ---
+  var allRows = [headers];
+  for (var i = 0; i < METERS.length; i++) {
+    var m = METERS[i];
+    allRows.push([
+      m.id,
+      m.hoz,
+      m.param,
+      m.datePrev,
+      m.dateCurr,
+      m.prev,
+      m.curr,
+      m.unit,
+      m.temp,
+      m.period
+    ]);
+  }
+
+  // --- Записываем все данные за один вызов ---
+  var range = sheet.getRange(1, 1, allRows.length, headers.length);
+  range.setValues(allRows);
+
+  // --- Форматирование ---
+  // Заголовки: жирный шрифт, фон
+  var headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange.setFontWeight('bold');
+  headerRange.setBackground('#4a86e8');
+  headerRange.setFontColor('#ffffff');
+
+  // Столбец F (prev) и G (curr): числовой формат с 2 знаками
+  sheet.getRange(2, 6, METERS.length, 2).setNumberFormat('#,##0.00');
+
+  // Столбец I (temp): числовой формат с 1 знаком
+  sheet.getRange(2, 9, METERS.length, 1).setNumberFormat('#,##0.0');
+
+  // Заморозить первую строку (заголовки)
+  sheet.setFrozenRows(1);
+
+  // Автоподбор ширины столбцов
+  for (var c = 1; c <= headers.length; c++) {
+    sheet.autoResizeColumn(c);
+  }
+
+  Logger.log('✅ Инициализация завершена: лист «' + SHEET_NAME + '», ' +
+             METERS.length + ' позиций расходомеров записано.');
+  Logger.log('Столбцы: ' + headers.join(', '));
+}
