@@ -1812,3 +1812,24 @@ Stage Summary:
 - Даты: формат ДД.ММ.ГГГГ (03.08.2026, 10.08.2026)
 - CACHE_VERSION: kipia-test-v335 -> kipia-test-v336
 - Коммит 52fb1d5 запушен в main
+
+---
+Task ID: 93
+Agent: AI Assistant (GLM / Super Z)
+Task: Периодичность под названием параметра в detail-карточке расходомера
+
+Work Log:
+- Периодичность (Ежедневно/Еженедельно/Ежемесячно) перенесена в заголовок карточки
+- Выводится под названием параметра как <div class="flow-detail-period">
+- Убрана строка «Периодичность» из секции «Период» (остались только даты)
+- CSS: .flow-detail-period — font-size: 12px, color: var(--text-secondary)
+- CSS: .flow-detail-param — добавлен margin-bottom: 2px для отступа до периодичности
+- Инкрементирован CACHE_VERSION: kipia-test-v336 -> kipia-test-v337
+- Тесты: 207 passed, 0 failed
+- Коммит: 1e5d78a, push в main
+
+Stage Summary:
+- В detail-карточке: параметр (крупный, цветной) → под ним периодичность (мелкая, muted)
+- Секция «Период» содержит только даты
+- CACHE_VERSION: kipia-test-v336 -> kipia-test-v337
+- Коммит 1e5d78a запушен в main

@@ -3104,6 +3104,12 @@
         overflow-wrap: break-word;
         line-height: 1.4;
     }
+    .flow-detail-date {
+        font-size: 12px;
+        font-weight: 400;
+        color: var(--text-secondary);
+        margin-left: 6px;
+    }
     [data-theme="light"] .flow-detail-value { color: #1a1a1a; }
     /* Подсветка строки «Расход» */
     .flow-detail-highlight { background: rgba(90,184,112,0.08) !important; }
@@ -26836,18 +26842,11 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             var ri = 0;
             function flowGrpCls() { return ' flow-row-group-' + ((ri % 5) + 1); }
 
-            // Период
-            html += '<div class="flow-detail-section">';
-            html += '<div class="flow-detail-section-title">Период</div>';
-            html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Дата предыдущей передачи</span><span class="flow-detail-value">' + this._fmtDate(m.datePrev) + '</span></div>'; ri++;
-            html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Дата текущей передачи</span><span class="flow-detail-value">' + this._fmtDate(m.dateCurr) + '</span></div>'; ri++;
-            html += '</div>';
-
             // Показания
             html += '<div class="flow-detail-section">';
             html += '<div class="flow-detail-section-title">Показания</div>';
-            html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Предыдущие показания</span><span class="flow-detail-value">' + this._fmtNum(m.prev) + ' ' + this._esc(m.unit) + '</span></div>'; ri++;
-            html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Текущие показания</span><span class="flow-detail-value">' + this._fmtNum(m.curr) + ' ' + this._esc(m.unit) + '</span></div>'; ri++;
+            html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Предыдущие показания</span><span class="flow-detail-value">' + this._fmtNum(m.prev) + ' ' + this._esc(m.unit) + '<span class="flow-detail-date">' + this._fmtDate(m.datePrev) + '</span></span></div>'; ri++;
+            html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Текущие показания</span><span class="flow-detail-value">' + this._fmtNum(m.curr) + ' ' + this._esc(m.unit) + '<span class="flow-detail-date">' + this._fmtDate(m.dateCurr) + '</span></span></div>'; ri++;
             html += '<div class="flow-detail-row flow-detail-highlight' + flowGrpCls() + '"><span class="flow-detail-label">Расход</span><span class="flow-detail-value">' + consStr + ' ' + this._esc(m.unit) + '</span></div>'; ri++;
             html += '</div>';
 
