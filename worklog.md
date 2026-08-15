@@ -1833,3 +1833,24 @@ Stage Summary:
 - Секция «Период» содержит только даты
 - CACHE_VERSION: kipia-test-v336 -> kipia-test-v337
 - Коммит 1e5d78a запушен в main
+
+---
+Task ID: 94
+Agent: AI Assistant (GLM / Super Z)
+Task: Даты рядом с показаниями, секция «Период» убрана из detail-карточки
+
+Work Log:
+- Секция «Период» полностью убрана (даты + периодичность)
+- Периодичность уже в заголовке (Task 93), даты перенесены к показаниям
+- Предыдущие показания: значение + единица + дата (напр. «73,60 т 03.08.2026»)
+- Текущие показания: значение + единица + дата (напр. «74,60 т 10.08.2026»)
+- CSS: .flow-detail-date — font-size: 12px, color: var(--text-secondary), margin-left: 6px
+- Инкрементирован CACHE_VERSION: kipia-test-v337 -> kipia-test-v338
+- Тесты: 207 passed, 0 failed
+- Коммит: a4c03a8, push в main
+
+Stage Summary:
+- Даты встроены в строки показаний как muted-суффикс
+- Секция «Период» убрана — карточка компактнее
+- CACHE_VERSION: kipia-test-v337 -> kipia-test-v338
+- Коммит a4c03a8 запушен в main
