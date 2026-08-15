@@ -27120,7 +27120,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 html += '</div>';
                 html += '<div class="flow-card-param">' + this._esc(m.param) + '</div>';
                 html += '<div class="flow-card-summary">';
-                html += '<span class="flow-summary-item"><span class="flow-summary-label">Текущие показания</span><span class="flow-summary-val">' + this._fmtNum(m.curr) + ' ' + this._esc(m.unit) + '</span></span>';
+                html += '<span class="flow-summary-item"><span class="flow-summary-label">Последние показания</span><span class="flow-summary-val">' + this._fmtNum(m.curr) + ' ' + this._esc(m.unit) + ',<span class="flow-detail-date"> от ' + this._fmtDate(m.dateCurr) + ' г.</span></span></span>';
                 if (m.temp !== null && m.temp !== undefined) { html += '<span class="flow-summary-item"><span class="flow-summary-label">T среды</span><span class="flow-summary-val">' + tempStr + '</span></span>'; }
                 html += '</div>';
                 html += '</div>';
