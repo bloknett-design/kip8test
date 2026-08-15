@@ -1952,3 +1952,24 @@ Stage Summary:
 - Заголовки секций убраны — карточка компактнее
 - CACHE_VERSION: kipia-test-v342 -> kipia-test-v343
 - Коммит 60ed17b запушен в main
+
+---
+Task ID: 100
+Agent: AI Assistant (GLM / Super Z)
+Task: Скрыть overflow-кнопку (три точки) с мобильного нижнего бара
+
+Work Log:
+- Изучен скриншот: кнопка .dashboard-bottom-overflow (три точки) в правом верхнем углу кнопок нижнего бара
+- Назначение: pin/unpin раздела на главную (openPinSheet)
+- На мобильном перекрывает кнопку «Документация» и занимает лишнее место
+- CSS: @media (max-width: 768px) { .dashboard-bottom-overflow { display: none; } }
+- На десктопе кнопка остаётся (там она не мешает)
+- Инкрементирован CACHE_VERSION: kipia-test-v343 -> kipia-test-v344
+- Тесты: 207 passed, 0 failed
+- Коммит: 5cf53e5, push в main
+
+Stage Summary:
+- Overflow-кнопка (три точки) скрыта на мобильном — не перекрывает «Документация»
+- На десктопе остаётся для pin/unpin
+- CACHE_VERSION: kipia-test-v343 -> kipia-test-v344
+- Коммит 5cf53e5 запушен в main

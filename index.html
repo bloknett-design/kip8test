@@ -3063,6 +3063,33 @@
     .flow-input-btn:active { background: rgba(106,166,224,0.1); }
     [data-theme="light"] .flow-input-btn { color: #1a5a8a; }
     .flow-input-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* === Расходомеры: нижний бар «Ввести показания» — прижат к низу экрана на мобильном === */
+    @media (max-width: 1023px) {
+        #page-flowmeter-detail .flow-detail-bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 90;
+            margin-top: 0;
+            border-top: 1px solid var(--card-border);
+            background: var(--bottom-nav-bg, rgba(23, 33, 43, 0.95));
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        #page-flowmeter-detail .flow-input-btn {
+            padding: 15px 16px;
+        }
+        #page-flowmeter-detail .flow-detail-body {
+            padding-bottom: 60px;
+        }
+        [data-theme="light"] #page-flowmeter-detail .flow-detail-bottom-bar {
+            background: var(--bottom-nav-bg, rgba(240, 238, 230, 0.96));
+        }
+    }
+
     .flow-detail-header { padding: 12px 0 4px 16px; margin-bottom: 0; }
     .flow-detail-hoz { font-size: 17px; font-weight: 700; color: #c87048; margin-bottom: 2px; }
     .flow-detail-param { font-size: 17px; font-weight: 700; color: #c87048; margin-bottom: 2px; }
@@ -3156,6 +3183,35 @@
     }
     .flow-input-field:focus { border-color: #6aa6e0; }
     [data-theme="light"] .flow-input-field { border-color: rgba(0,0,0,0.15); background: rgba(0,0,0,0.03); }
+    /* Дополнительные поля (температура, дата) в sheet ввода */
+    .flow-input-row {
+        display: flex; gap: 10px; margin-top: 10px;
+    }
+    .flow-input-group {
+        flex: 1; display: flex; flex-direction: column; gap: 4px;
+    }
+    .flow-input-label {
+        font-size: 12px; font-weight: 600; color: var(--text-secondary);
+        letter-spacing: 0.2px; text-transform: uppercase;
+    }
+    .flow-input-field-small {
+        width: 100%; padding: 10px 12px;
+        border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
+        background: rgba(255,255,255,0.05);
+        color: var(--text-primary); font-size: 15px; font-family: 'Inter', sans-serif;
+        box-sizing: border-box; outline: none;
+        transition: border-color 0.15s;
+    }
+    .flow-input-field-small:focus { border-color: #6aa6e0; }
+    [data-theme="light"] .flow-input-field-small { border-color: rgba(0,0,0,0.15); background: rgba(0,0,0,0.03); }
+    /* Нативный date-input: стилизация иконки календаря */
+    .flow-input-field-small::-webkit-calendar-picker-indicator {
+        filter: invert(0.7);
+        cursor: pointer;
+    }
+    [data-theme="light"] .flow-input-field-small::-webkit-calendar-picker-indicator {
+        filter: none;
+    }
     .flow-input-submit {
         display: flex; align-items: center; justify-content: center;
         width: 100%; padding: 14px; margin-top: 14px;
@@ -11164,6 +11220,16 @@
     <div class="flow-input-sheet-handle"></div>
     <div class="flow-input-sheet-title" id="flowInputTitle">Ввести показания</div>
     <input type="text" inputmode="decimal" id="flowInputField" class="flow-input-field" placeholder="Введите текущие показания" autocomplete="off" enterkeyhint="done">
+    <div class="flow-input-row">
+        <div class="flow-input-group">
+            <label class="flow-input-label" for="flowInputTemp">Температура, °C</label>
+            <input type="text" inputmode="decimal" id="flowInputTemp" class="flow-input-field-small" placeholder="— (необязательно)" autocomplete="off">
+        </div>
+        <div class="flow-input-group">
+            <label class="flow-input-label" for="flowInputDate">Дата снятия</label>
+            <input type="date" id="flowInputDate" class="flow-input-field-small">
+        </div>
+    </div>
     <button type="button" class="flow-input-submit" onclick="FlowmeterData.submitInput()">Сохранить</button>
     <button type="button" class="flow-input-cancel" onclick="FlowmeterData.closeInput()">Отмена</button>
 </div>
@@ -26995,6 +27061,27 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             var field = document.getElementById('flowInputField');
             if (field) { field.value = ''; field.placeholder = 'Текущие показания, ' + m.unit; }
 
+            // Температура — предзаполнить текущим значением
+            var tempField = document.getElementById('flowInputTemp');
+            if (tempField) {
+                if (m.temp !== null && m.temp !== undefined) {
+                    tempField.value = m.temp.toFixed(1).replace('.', ',');
+                } else {
+                    tempField.value = '';
+                }
+                tempField.placeholder = '— (необязательно)';
+            }
+
+            // Дата — предзаполнить сегодняшней датой (YYYY-MM-DD для type="date")
+            var dateField = document.getElementById('flowInputDate');
+            if (dateField) {
+                var now = new Date();
+                var yyyy = now.getFullYear();
+                var mm = (now.getMonth() + 1 < 10 ? '0' : '') + (now.getMonth() + 1);
+                var dd = (now.getDate() < 10 ? '0' : '') + now.getDate();
+                dateField.value = yyyy + '-' + mm + '-' + dd;
+            }
+
             document.getElementById('flowInputOverlay').classList.add('active');
             document.getElementById('flowInputSheet').classList.add('active');
 
@@ -27020,15 +27107,45 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 return;
             }
 
+            // Температура (необязательное поле)
+            var tempField = document.getElementById('flowInputTemp');
+            var tempVal = null;
+            if (tempField && tempField.value.trim() !== '') {
+                var tempRaw = tempField.value.replace(/\s/g, '').replace(',', '.');
+                var tempNum = parseFloat(tempRaw);
+                if (!isNaN(tempNum)) {
+                    tempVal = tempNum;
+                }
+            }
+
+            // Дата (YYYY-MM-DD → M/D/YYYY внутренний формат)
+            var dateField = document.getElementById('flowInputDate');
+            var dateStr = null;
+            if (dateField && dateField.value) {
+                // dateField.value = "YYYY-MM-DD"
+                var dp = dateField.value.split('-');
+                if (dp.length === 3) {
+                    dateStr = (+dp[1]) + '/' + (+dp[2]) + '/' + (+dp[0]);
+                }
+            }
+            // Если дата не указана — используем сегодня
+            if (!dateStr) {
+                var now = new Date();
+                dateStr = (now.getMonth() + 1) + '/' + now.getDate() + '/' + now.getFullYear();
+            }
+
             var id = window._flowDetailId;
             for (var i = 0; i < this._METERS.length; i++) {
                 if (this._METERS[i].id === id) {
                     this._METERS[i].prev = this._METERS[i].curr;
                     this._METERS[i].curr = num;
-                    // Обновить дату: предыдущая = текущая, текущая = сегодня
-                    var now = new Date();
+                    // Обновить дату: предыдущая = текущая, текущая = выбранная
                     this._METERS[i].datePrev = this._METERS[i].dateCurr;
-                    this._METERS[i].dateCurr = (now.getMonth() + 1) + '/' + now.getDate() + '/' + now.getFullYear();
+                    this._METERS[i].dateCurr = dateStr;
+                    // Обновить температуру (если введена)
+                    if (tempVal !== null) {
+                        this._METERS[i].temp = tempVal;
+                    }
                     break;
                 }
             }
