@@ -3044,7 +3044,7 @@
     .flow-detail-body { padding: 0; }
     .flow-detail-header { padding: 12px 0 4px 16px; margin-bottom: 0; }
     .flow-detail-hoz { font-size: 17px; font-weight: 700; color: #c87048; margin-bottom: 2px; }
-    .flow-detail-param { font-size: 14px; color: var(--text-primary); }
+    .flow-detail-param { font-size: 17px; font-weight: 700; color: #c87048; }
     /* Заголовок группы полей — строка-разделитель */
     .flow-detail-section {
         padding: 0;
@@ -26765,6 +26765,16 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             return intPart + ',' + parts[1];
         },
 
+        // Форматирование даты M/D/YYYY → ДД.ММ.ГГГГ
+        _fmtDate: function(dateStr) {
+            try {
+                var p = dateStr.split('/');
+                var d = (+p[1] < 10 ? '0' : '') + +p[1];
+                var m = (+p[0] < 10 ? '0' : '') + +p[0];
+                return d + '.' + m + '.' + p[2];
+            } catch (e) { return dateStr; }
+        },
+
         // Разница полных дней между двумя датами (формат M/D/YYYY)
         _daysBetween: function(dateStr1, dateStr2) {
             try {
@@ -26827,8 +26837,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             // Период
             html += '<div class="flow-detail-section">';
             html += '<div class="flow-detail-section-title">Период</div>';
-            html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Дата предыдущей передачи</span><span class="flow-detail-value">' + this._esc(m.datePrev) + '</span></div>'; ri++;
-            html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Дата текущей передачи</span><span class="flow-detail-value">' + this._esc(m.dateCurr) + '</span></div>'; ri++;
+            html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Дата предыдущей передачи</span><span class="flow-detail-value">' + this._fmtDate(m.datePrev) + '</span></div>'; ri++;
+            html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Дата текущей передачи</span><span class="flow-detail-value">' + this._fmtDate(m.dateCurr) + '</span></div>'; ri++;
             html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Периодичность</span><span class="flow-detail-value">' + this._esc(m.period) + '</span></div>'; ri++;
             html += '</div>';
 
