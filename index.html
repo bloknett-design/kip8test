@@ -27163,8 +27163,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             // Подпись: кто внёс последние изменения
             if (m.modName || m.modRole) {
                 var modParts = [];
-                if (m.modName) modParts.push(this._esc(m.modName));
                 if (m.modRole) modParts.push(this._esc(m.modRole));
+                if (m.modName) modParts.push(this._esc(m.modName));
                 html += '<div class="flow-detail-section">';
                 html += '<div class="flow-detail-row"><span class="flow-detail-label" style="color:#7a8fa6;">Внёс изменения</span><span class="flow-detail-value" style="color:#5b7a96;">' + modParts.join(', ') + '</span></div>';
                 html += '</div>';
