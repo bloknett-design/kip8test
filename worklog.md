@@ -1997,3 +1997,32 @@ Stage Summary:
 - Строка «Расход»: общий формат карточки, зелёным только значение
 - Период: цвет text-secondary вместо оранжевого
 - CACHE_VERSION: kipia-test-v344 -> kipia-test-v345
+
+---
+Task ID: 86
+Agent: AI Assistant (GLM)
+Task: Обновить права доступа согласно изменённой «Карта ролей.xlsx»
+
+Work Log:
+- Прочитан файл «Карта ролей.xlsx» (11 столбцов, 10 ролей) — выявлены отличия от текущей реализации
+- Ключевые отличия: новая роль «КИП ИОС дежурный», расходомеры — отдельный доступ, графики — только Админ, ввод показаний — отдельное право
+- _KIP_IOS_PAGES: удалены flowmeter-data/detail и charts
+- Добавлены _FLOWMETER_PAGES (flowmeter-data, flowmeter-detail) и _CHARTS_PAGES (charts)
+- Добавлен LVL_KIP_IOS_WITH_FLOW для ИТР8+ и КИП ИОС дежурный
+- ROLE_ACCESS: добавлена роль «КИП ИОС дежурный» → LVL_KIP_IOS_WITH_FLOW
+- ИТР8, ИТР8 pro, ИТР ИОС: переведены с LVL_KIP_IOS на LVL_KIP_IOS_WITH_FLOW (теперь видят расходомеры)
+- FlowmeterData: добавлены _INPUT_READINGS_ROLES, _canInputReadings, _computeCanInputReadings()
+- _renderBottomBar: кнопка «Ввести показания» видна только при _canInputReadings (КИП ИОС дежурный, Админ)
+- _applyRoleToUI: добавлено обновление FlowmeterData._canInputReadings при смене роли
+- Обновлены комментарии к карте доступа с актуальной картой ролей
+- CACHE_VERSION: kipia-test-v346 → kipia-test-v347
+- Тесты: 207 passed, 0 failed
+- Коммит b2bf409 запушен в main
+
+Stage Summary:
+- RBAC полностью обновлён по новой Карте ролей
+- 3 новых группы доступа: _FLOWMETER_PAGES, _CHARTS_PAGES, _INPUT_READINGS_ROLES
+- Новая роль «КИП ИОС дежурный» добавлена в ROLE_ACCESS
+- ИТР8+ теперь видят расходомеры; КИП ИОС / КИП ИОС pro — НЕ видят
+- Графики КИП ИОС видны только Админу
+- Ввод показаний расходомеров — только КИП ИОС дежурный и Админ
