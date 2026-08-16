@@ -3264,7 +3264,7 @@
         color: var(--text-secondary);
     }
 
-    /* --- Мини-график расхода (горизонтальные CSS-бары) --- */
+    /* --- График расхода — вертикальные бары (даты X, расход Y) --- */
     .flow-archive-chart {
         padding: 8px 16px 4px;
     }
@@ -3272,42 +3272,101 @@
         font-size: 11px;
         font-weight: 600;
         color: var(--text-secondary);
-        margin-bottom: 6px;
+        margin-bottom: 8px;
     }
-    .flow-archive-bar-row {
+    .flow-archive-days-hint {
+        font-weight: 400;
+        font-size: 10px;
+        opacity: 0.6;
+    }
+    .flow-archive-chart-body {
         display: flex;
-        align-items: center;
-        gap: 6px;
-        margin-bottom: 3px;
+        gap: 0;
+        height: 120px;
     }
-    .flow-archive-bar-label {
-        font-size: 10px;
-        color: var(--text-secondary);
-        width: 36px;
-        text-align: right;
+    /* Y-ось: подписи */
+    .flow-archive-y-axis {
+        display: flex;
+        flex-direction: column-reverse;
+        justify-content: space-between;
+        padding-right: 6px;
         flex-shrink: 0;
+        width: 42px;
     }
-    .flow-archive-bar-track {
+    .flow-archive-y-label {
+        font-size: 9px;
+        color: var(--text-secondary);
+        text-align: right;
+        line-height: 1;
+    }
+    /* Область графика */
+    .flow-archive-chart-area {
         flex: 1;
-        height: 10px;
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        gap: 3px;
+        padding-bottom: 18px; /* место для X-подписей */
+        min-width: 0;
+    }
+    /* Линии сетки */
+    .flow-archive-grid-lines {
+        position: absolute;
+        inset: 0 0 18px 0;
+        pointer-events: none;
+    }
+    .flow-archive-grid-line {
+        position: absolute;
+        left: 0; right: 0;
+        height: 1px;
         background: rgba(255,255,255,0.06);
-        border-radius: 3px;
-        overflow: hidden;
     }
-    .flow-archive-bar-fill {
-        display: block;
+    /* Вертикальный бар */
+    .flow-archive-vbar-col {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        position: relative;
         height: 100%;
-        background: linear-gradient(90deg, #c87048, #d4854f);
-        border-radius: 3px;
-        transition: width 0.4s ease;
+        min-height: 0;
     }
-    .flow-archive-bar-val {
-        font-size: 10px;
+    .flow-archive-vbar {
+        width: 70%;
+        max-width: 28px;
+        min-width: 6px;
+        background: linear-gradient(0deg, #c87048, #d4854f);
+        border-radius: 3px 3px 0 0;
+        position: relative;
+        transition: height 0.4s ease;
+    }
+    .flow-archive-vbar-tip {
+        position: absolute;
+        top: -16px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 8px;
         font-weight: 600;
         color: #c87048;
-        width: 52px;
-        text-align: left;
-        flex-shrink: 0;
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.15s;
+    }
+    .flow-archive-vbar-col:hover .flow-archive-vbar-tip,
+    .flow-archive-vbar-col:active .flow-archive-vbar-tip {
+        opacity: 1;
+    }
+    .flow-archive-vbar-xlabel {
+        position: absolute;
+        bottom: 0;
+        font-size: 8px;
+        color: var(--text-secondary);
+        white-space: nowrap;
+        line-height: 1;
+        margin-top: 4px;
     }
 
     /* --- Таблица хронологии --- */
@@ -3386,13 +3445,13 @@
     [data-theme="light"] .flow-archive-title {
         color: rgba(20, 20, 19, 0.45);
     }
-    [data-theme="light"] .flow-archive-bar-track {
+    [data-theme="light"] .flow-archive-grid-line {
         background: rgba(20,20,19,0.06);
     }
-    [data-theme="light"] .flow-archive-bar-fill {
-        background: linear-gradient(90deg, #c87048, #b85e38);
+    [data-theme="light"] .flow-archive-vbar {
+        background: linear-gradient(0deg, #c87048, #b85e38);
     }
-    [data-theme="light"] .flow-archive-bar-val {
+    [data-theme="light"] .flow-archive-vbar-tip {
         color: #b85e38;
     }
     [data-theme="light"] .flow-archive-table thead th {
@@ -3409,14 +3468,20 @@
 
     /* --- Десктоп: архив в правой панели --- */
     @media (min-width: 1024px) {
+        .flow-archive-chart-body {
+            height: 140px;
+        }
+        .flow-archive-y-axis {
+            width: 50px;
+        }
+        .flow-archive-y-label {
+            font-size: 10px;
+        }
+        .flow-archive-vbar-xlabel {
+            font-size: 9px;
+        }
         .flow-archive-table {
             font-size: 12px;
-        }
-        .flow-archive-bar-label {
-            width: 40px;
-        }
-        .flow-archive-bar-val {
-            width: 58px;
         }
         .flow-archive-chart {
             padding: 6px 12px 2px;
@@ -27649,7 +27714,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             });
         },
 
-        // Рендер секции хронологии (таблица + мини-график)
+        // Рендер секции хронологии (таблица + график)
         _buildArchiveHtml: function(records, meter) {
             if (!records || records.length === 0) {
                 return '<div class="flow-archive-section">' +
@@ -27658,12 +27723,33 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                        '</div>';
             }
 
+            // Фильтрация по дням: моб — 7 дн., десктоп — 31 дн.
+            var dayLimit = (window.matchMedia('(min-width: 1024px)').matches) ? 31 : 7;
+            var nowMs = Date.now();
+            var filtered = [];
+            for (var fi = 0; fi < records.length; fi++) {
+                var rec = records[fi];
+                // Парсим дату записи (dateCurr в формате M/D/YYYY)
+                try {
+                    var dp = rec.dateCurr.split('/');
+                    var recDate = new Date(+dp[2], +dp[0] - 1, +dp[1]);
+                    var diffDays = Math.floor((nowMs - recDate.getTime()) / 86400000);
+                    if (diffDays <= dayLimit) {
+                        filtered.push(rec);
+                    }
+                } catch (e) {
+                    filtered.push(rec); // если дата не парсится — показываем
+                }
+            }
+            // Если после фильтра пусто — показываем все (чтобы не было пусто при старых данных)
+            var displayRecords = filtered.length > 0 ? filtered : records;
+
             var html = '';
             html += '<div class="flow-archive-section">';
-            html += '<div class="flow-archive-title">Хронология показаний</div>';
+            html += '<div class="flow-archive-title">Хронология показаний <span class="flow-archive-days-hint">(' + dayLimit + ' дн.)</span></div>';
 
-            // Мини-график расхода (CSS-бары)
-            html += this._buildArchiveChart(records, meter);
+            // График расхода (вертикальные бары: даты по X, расход по Y)
+            html += this._buildArchiveChart(displayRecords, meter);
 
             // Таблица
             html += '<div class="flow-archive-table-wrap">';
@@ -27672,22 +27758,22 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             html += '<th>Дата</th>';
             html += '<th>Показания</th>';
             html += '<th>Расход</th>';
-            if (records[0] && records[0].temp !== null && records[0].temp !== undefined) {
+            if (displayRecords[0] && displayRecords[0].temp !== null && displayRecords[0].temp !== undefined) {
                 html += '<th>T</th>';
             }
             html += '<th>Внёс</th>';
             html += '</tr></thead>';
             html += '<tbody>';
 
-            for (var i = 0; i < records.length; i++) {
-                var r = records[i];
+            for (var i = 0; i < displayRecords.length; i++) {
+                var r = displayRecords[i];
                 var consAbs = Math.abs(r.consumption || 0);
                 html += '<tr>';
                 html += '<td class="flow-archive-date">' + this._fmtDate(r.dateCurr) + '</td>';
                 html += '<td class="flow-archive-val">' + this._fmtNum(r.curr) + '</td>';
                 html += '<td class="flow-archive-cons">' + this._fmtNum(consAbs) + '</td>';
                 // Температура — показываем колонку только если хоть в одной записи есть
-                if (records[0] && records[0].temp !== null && records[0].temp !== undefined) {
+                if (displayRecords[0] && displayRecords[0].temp !== null && displayRecords[0].temp !== undefined) {
                     var tStr = (r.temp !== null && r.temp !== undefined) ? r.temp.toFixed(1).replace('.', ',') : '—';
                     html += '<td class="flow-archive-temp">' + tStr + '</td>';
                 }
@@ -27703,7 +27789,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             return html;
         },
 
-        // Мини-график расхода (горизонтальные CSS-бары)
+        // График расхода — вертикальные бары (даты по X, расход по Y)
         _buildArchiveChart: function(records, meter) {
             if (records.length < 2) return '';
 
@@ -27715,26 +27801,58 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             }
             if (maxCons === 0) return '';
 
+            // Записи от старых к новым (по X слева направо)
+            var chartRecords = records.slice(0, 31).reverse();
+
+            // Рассчитаем шаг сетки Y (4–5 линий)
+            var yStep = maxCons / 4;
+            // Округляем шаг до «красивого» числа
+            var mag = Math.pow(10, Math.floor(Math.log10(Math.max(yStep, 0.001))));
+            yStep = Math.ceil(yStep / mag) * mag;
+            var yMax = yStep * 4;
+            if (yMax < maxCons) yMax = yStep * 5;
+
             var html = '';
             html += '<div class="flow-archive-chart">';
             html += '<div class="flow-archive-chart-title">Расход, ' + this._esc(unit) + '</div>';
+            html += '<div class="flow-archive-chart-body">';
 
-            // Показать последние 15 записей (от старых к новым для графика)
-            var chartRecords = records.slice(0, 15).reverse();
+            // Y-ось: линии сетки + подписи (снизу вверх)
+            html += '<div class="flow-archive-y-axis">';
+            for (var yi = 0; yi <= 4; yi++) {
+                var yVal = yStep * yi;
+                html += '<div class="flow-archive-y-label">' + this._fmtNum(yVal) + '</div>';
+            }
+            html += '</div>';
 
+            // Область графика с сеткой + барами
+            html += '<div class="flow-archive-chart-area">';
+
+            // Горизонтальные линии сетки
+            html += '<div class="flow-archive-grid-lines">';
+            for (var gi = 0; gi <= 4; gi++) {
+                var gridPct = (gi / 4) * 100;
+                html += '<div class="flow-archive-grid-line" style="bottom:' + gridPct.toFixed(1) + '%"></div>';
+            }
+            html += '</div>';
+
+            // Бары
             for (var j = 0; j < chartRecords.length; j++) {
                 var r = chartRecords[j];
                 var cons = Math.abs(r.consumption || 0);
-                var pct = Math.max(2, (cons / maxCons) * 100);
+                var barPct = Math.max(1, (cons / yMax) * 100);
                 var dateShort = this._fmtDateShort(r.dateCurr);
-                html += '<div class="flow-archive-bar-row">';
-                html += '<span class="flow-archive-bar-label">' + dateShort + '</span>';
-                html += '<span class="flow-archive-bar-track"><span class="flow-archive-bar-fill" style="width:' + pct.toFixed(1) + '%"></span></span>';
-                html += '<span class="flow-archive-bar-val">' + this._fmtNum(cons) + '</span>';
+                html += '<div class="flow-archive-vbar-col">';
+                html += '<div class="flow-archive-vbar" style="height:' + barPct.toFixed(1) + '%">';
+                html += '<span class="flow-archive-vbar-tip">' + this._fmtNum(cons) + '</span>';
+                html += '</div>';
+                html += '<span class="flow-archive-vbar-xlabel">' + dateShort + '</span>';
                 html += '</div>';
             }
 
-            html += '</div>';
+            html += '</div>'; // .flow-archive-chart-area
+            html += '</div>'; // .flow-archive-chart-body
+            html += '</div>'; // .flow-archive-chart
             return html;
         },
 
