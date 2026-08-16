@@ -222,9 +222,10 @@
     [data-theme="light"] .connection-indicator.refreshing {
         color: #d49a5a;
     }
-    .header-title svg.led-display {
-        height: 44px; width: auto;
-        transform: skewX(-9deg);
+    .header-logo-img {
+        height: 44px; width: 44px;
+        border-radius: 50%;
+        object-fit: cover;
         filter: drop-shadow(0 0 3px rgba(74,143,199,0.4)) drop-shadow(0 0 7px rgba(74,143,199,0.15));
         animation: segmentGlow 3s ease-in-out infinite;
     }
@@ -251,12 +252,16 @@
     [data-theme="light"] .led-seg-on { fill: url(#ledGradient); }
     [data-theme="light"] .led-seg-off { fill: rgba(198, 97, 63, 0.05); }
     [data-theme="light"] .led-seg-blink-on { fill: url(#ledGradient); }
-    [data-theme="light"] .header-title svg.led-display {
-        filter: drop-shadow(0 0 3px rgba(198,97,63,0.3)) drop-shadow(0 0 7px rgba(198,97,63,0.1));
+    [data-theme="light"] .header-logo-img {
+        animation-name: segmentGlowLight;
     }
     @keyframes segmentGlow {
         0%, 100% { filter: drop-shadow(0 0 3px rgba(74,143,199,0.4)) drop-shadow(0 0 7px rgba(74,143,199,0.15)); }
         50% { filter: drop-shadow(0 0 5px rgba(74,143,199,0.55)) drop-shadow(0 0 11px rgba(74,143,199,0.22)); }
+    }
+    @keyframes segmentGlowLight {
+        0%, 100% { filter: drop-shadow(0 0 3px rgba(198,97,63,0.3)) drop-shadow(0 0 7px rgba(198,97,63,0.1)); }
+        50% { filter: drop-shadow(0 0 5px rgba(198,97,63,0.45)) drop-shadow(0 0 11px rgba(198,97,63,0.15)); }
     }
 
     .header-btn {
@@ -1206,7 +1211,7 @@
         .buoy-card-body { padding: 10px 12px; }
         .buoy-card-formula { padding: 6px 12px; }
         .buoy-card-formula .formula-inline { font-size: 15px; }
-        .header-title svg.led-display { height: 36px; }
+        .header-logo-img { height: 36px; width: 36px; }
     }
     @media (max-width: 400px) {
         .menu-btn { width: 100%; margin: 0; padding: 5px 12px; min-height: 57px; }
@@ -1230,7 +1235,7 @@
         .buoy-card-formula { padding: 5px 10px; }
         .buoy-card-formula .formula-inline { font-size: 13px; }
         .buoy-select-container { flex-direction: column; padding: 6px 0; gap: 8px; }
-        .header-title svg.led-display { height: 28px; }
+        .header-logo-img { height: 28px; width: 28px; }
     }
 
     /* === Балансировка высоты кнопок главного меню на узких экранах === */
@@ -7175,7 +7180,7 @@
         -webkit-touch-callout: none; touch-action: manipulation;
         display: flex; align-items: center;
     }
-    .header-title.hint-pulse svg.led-display {
+    .header-title.hint-pulse .header-logo-img {
         filter: drop-shadow(0 0 5px rgba(199,150,74,0.55)) drop-shadow(0 0 10px rgba(199,150,74,0.22)) !important;
     }
     .header-title.hint-pulse .led-seg-on {
@@ -7257,7 +7262,7 @@
             animation-iteration-count: 1 !important;
             transition-duration: 0.01ms !important;
         }
-        .header-title svg.led-display, .header-title svg.led-display * {
+        .header-logo-img {
             animation: none !important;
         }
         .bg-network svg * {
@@ -8936,71 +8941,7 @@
     <svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:rgba(74,143,199,0.9);fill:none;stroke-width:2;stroke-linecap:round;"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
 </div>
             </div>
-<div class="header-title"><svg class="led-display" viewBox="0 0 362 88" xmlns="http://www.w3.org/2000/svg">
-<defs>
-  <linearGradient id="ledGradient" x1="0" y1="0" x2="362" y2="0" gradientUnits="userSpaceOnUse">
-    <stop offset="0%" stop-color="#4a8fc7"><animate attributeName="stop-color" values="#4a8fc7;#7ab8e0;#7ae0a0;#c77ae0;#4ac771;#4a8fc7" dur="10s" repeatCount="indefinite"/></stop>
-    <stop offset="25%" stop-color="#7ae0a0"><animate attributeName="stop-color" values="#7ae0a0;#c77ae0;#4ac771;#4a8fc7;#7ab8e0;#7ae0a0" dur="10s" repeatCount="indefinite"/></stop>
-    <stop offset="50%" stop-color="#c77ae0"><animate attributeName="stop-color" values="#c77ae0;#4ac771;#4a8fc7;#7ab8e0;#7ae0a0;#c77ae0" dur="10s" repeatCount="indefinite"/></stop>
-    <stop offset="75%" stop-color="#4ac771"><animate attributeName="stop-color" values="#4ac771;#4a8fc7;#7ab8e0;#7ae0a0;#c77ae0;#4ac771" dur="10s" repeatCount="indefinite"/></stop>
-    <stop offset="100%" stop-color="#7ab8e0"><animate attributeName="stop-color" values="#7ab8e0;#7ae0a0;#c77ae0;#4ac771;#4a8fc7;#7ab8e0" dur="10s" repeatCount="indefinite"/></stop>
-  </linearGradient>
-</defs>
-<!-- К: 1+2+4+7+8 (лев.верх, лев.низ, сред.гориз, прав.низ, верх.диаг) -->
-<g transform="translate(2,0)">
-  <polygon points="14,0 46,0 51,5 46,10 14,10 9,5" class="led-seg-off"/>
-  <polygon points="52,12 57,7 61,12 61,34 57,39 52,34" class="led-seg-off"/>
-  <polygon points="52,49 57,44 61,49 61,71 57,76 52,71" class="led-seg-on"/>
-  <polygon points="14,78 46,78 51,83 46,88 14,88 9,83" class="led-seg-off"/>
-  <polygon points="0,49 5,44 10,49 10,71 5,76 0,71" class="led-seg-on"/>
-  <polygon points="0,12 5,7 10,12 10,34 5,39 0,34" class="led-seg-on"/>
-  <polygon points="14,39 46,39 51,44 46,49 14,49 9,44" class="led-seg-on"/>
-  <polygon points="12,44 12,37 46,14 52,14 52,21 18,44" class="led-seg-on"/>
-</g>
-<!-- И: 1+2+6+7+9 (лев.верх, лев.низ, прав.верх, прав.низ, ниж.диаг) -->
-<g transform="translate(80,0)">
-  <polygon points="14,0 46,0 51,5 46,10 14,10 9,5" class="led-seg-off"/>
-  <polygon points="52,12 57,7 61,12 61,34 57,39 52,34" class="led-seg-on"/>
-  <polygon points="52,49 57,44 61,49 61,71 57,76 52,71" class="led-seg-on"/>
-  <polygon points="14,78 46,78 51,83 46,88 14,88 9,83" class="led-seg-off"/>
-  <polygon points="0,49 5,44 10,49 10,71 5,76 0,71" class="led-seg-on"/>
-  <polygon points="0,12 5,7 10,12 10,34 5,39 0,34" class="led-seg-on"/>
-  <polygon points="14,39 46,39 51,44 46,49 14,49 9,44" class="led-seg-off"/>
-  <polygon points="12,78 12,71 46,44 52,44 52,51 18,78" class="led-seg-on"/>
-</g>
-<!-- П: 1+2+3+6+7 (лев.верх, лев.низ, верх.гориз, прав.верх, прав.низ) -->
-<g transform="translate(158,0)">
-  <polygon points="14,0 46,0 51,5 46,10 14,10 9,5" class="led-seg-on"/>
-  <polygon points="52,12 57,7 61,12 61,34 57,39 52,34" class="led-seg-on"/>
-  <polygon points="52,49 57,44 61,49 61,71 57,76 52,71" class="led-seg-on"/>
-  <polygon points="14,78 46,78 51,83 46,88 14,88 9,83" class="led-seg-off"/>
-  <polygon points="0,49 5,44 10,49 10,71 5,76 0,71" class="led-seg-on"/>
-  <polygon points="0,12 5,7 10,12 10,34 5,39 0,34" class="led-seg-on"/>
-  <polygon points="14,39 46,39 51,44 46,49 14,49 9,44" class="led-seg-off"/>
-</g>
-<!-- и: 2+7+9 (лев.низ, прав.низ, ниж.диаг) (narrow) -->
-<g transform="translate(236,0)">
-  <polygon points="14,0 32,0 37,5 32,10 14,10 9,5" class="led-seg-off"/>
-  <polygon points="38,12 43,7 47,12 47,34 43,39 38,34" class="led-seg-off"/>
-  <polygon points="38,49 43,44 47,49 47,71 43,76 38,71" class="led-seg-on"/>
-  <polygon points="14,78 32,78 37,83 32,88 14,88 9,83" class="led-seg-off"/>
-  <polygon points="0,49 5,44 10,49 10,71 5,76 0,71" class="led-seg-on"/>
-  <polygon points="0,12 5,7 10,12 10,34 5,39 0,34" class="led-seg-off"/>
-  <polygon points="14,39 32,39 37,44 32,49 14,49 9,44" class="led-seg-off"/>
-  <polygon points="12,78 12,71 32,44 38,44 38,51 18,78" class="led-seg-on"/>
-</g>
-<!-- А: a+b+c+e+f+g -->
-<g transform="translate(300,0)">
-  <polygon points="14,0 46,0 51,5 46,10 14,10 9,5" class="led-seg-on"/>
-  <polygon points="52,12 57,7 61,12 61,34 57,39 52,34" class="led-seg-on"/>
-  <polygon points="52,49 57,44 61,49 61,71 57,76 52,71" class="led-seg-on"/>
-  <polygon points="14,78 46,78 51,83 46,88 14,88 9,83" class="led-seg-off"/>
-  <polygon points="14,78 46,78 51,83 46,88 14,88 9,83" class="led-seg-blink-on"/>
-  <polygon points="0,49 5,44 10,49 10,71 5,76 0,71" class="led-seg-on"/>
-  <polygon points="0,12 5,7 10,12 10,34 5,39 0,34" class="led-seg-on"/>
-  <polygon points="14,39 46,39 51,44 46,49 14,49 9,44" class="led-seg-on"/>
-</g>
-</svg></div>
+<div class="header-title"><img id="headerLogoMain" src="images/logo_black.png" alt="КИПиА" class="header-logo-img"></div>
 
             <div class="header-right">
                 <!-- Кнопка «Что нового» / Справка -->
@@ -9034,7 +8975,7 @@
                 <svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             </button>
             <div class="desktop-top-bar-brand" onclick="navigateTo('dashboard')">
-                <img src="images/logo_black.png" alt="КИПиА" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">
+                <img id="headerLogoDesktop" src="images/logo_black.png" alt="КИПиА" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">
                 <span class="desktop-top-bar-title">КИПиА</span>
             </div>
             <span class="desktop-top-bar-divider"></span>
@@ -23191,8 +23132,13 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
     function updateLogoImage() {
         var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        var logoSrc = isLight ? 'images/logo.png' : 'images/logo_black.png';
         var logo = document.getElementById('headerLogo');
-        if (logo) logo.src = isLight ? 'images/logo.png' : 'images/logo_black.png';
+        if (logo) logo.src = logoSrc;
+        var logoMain = document.getElementById('headerLogoMain');
+        if (logoMain) logoMain.src = logoSrc;
+        var logoDesktop = document.getElementById('headerLogoDesktop');
+        if (logoDesktop) logoDesktop.src = logoSrc;
     }
 
     // Apply saved theme on load
