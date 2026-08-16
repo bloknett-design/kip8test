@@ -226,9 +226,21 @@
         height: 44px; width: 44px;
         border-radius: 50%;
         object-fit: cover;
+        flex-shrink: 0;
+    }
+    .header-logo-text {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        color: #e0e0e0;
+        margin-left: 8px;
+        white-space: nowrap;
     }
     [data-theme="light"] .header-logo-img {
         box-shadow: 0 0 0 1px rgba(198,97,63,0.15);
+    }
+    [data-theme="light"] .header-logo-text {
+        color: #141413;
     }
     .led-seg-on {
         fill: url(#ledGradient);
@@ -1204,6 +1216,7 @@
         .buoy-card-formula { padding: 6px 12px; }
         .buoy-card-formula .formula-inline { font-size: 15px; }
         .header-logo-img { height: 36px; width: 36px; }
+        .header-logo-text { font-size: 17px; margin-left: 6px; }
     }
     @media (max-width: 400px) {
         .menu-btn { width: 100%; margin: 0; padding: 5px 12px; min-height: 57px; }
@@ -1228,6 +1241,7 @@
         .buoy-card-formula .formula-inline { font-size: 13px; }
         .buoy-select-container { flex-direction: column; padding: 6px 0; gap: 8px; }
         .header-logo-img { height: 28px; width: 28px; }
+        .header-logo-text { font-size: 15px; margin-left: 5px; }
     }
 
     /* === Балансировка высоты кнопок главного меню на узких экранах === */
@@ -8933,7 +8947,7 @@
     <svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:rgba(74,143,199,0.9);fill:none;stroke-width:2;stroke-linecap:round;"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
 </div>
             </div>
-<div class="header-title"><img id="headerLogoMain" src="images/logo_black.png" alt="КИПиА" class="header-logo-img"></div>
+<div class="header-title"><img id="headerLogoMain" src="images/logo_black.png" alt="КИПиА" class="header-logo-img"><span class="header-logo-text">КИПиА</span></div>
 
             <div class="header-right">
                 <!-- Кнопка «Что нового» / Справка -->
