@@ -24264,6 +24264,18 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 }
             }
 
+            // ============================================================
+            // Кнопка «Графики» в КИП ИОС (chartsEntryBtn):
+            // onclick назначается через JS (btn.onclick), поэтому
+            // общий цикл .menu-btn по getAttribute('onclick') её не ловит.
+            // Скрыть для пользователей без доступа к charts.
+            // ============================================================
+            const chartsBtn = document.getElementById('chartsEntryBtn');
+            if (chartsBtn) {
+                const hasChartsAccess = isAll || allowed.indexOf('charts') !== -1;
+                chartsBtn.style.display = hasChartsAccess ? '' : 'none';
+            }
+
             // Скрыть кнопки "Сапёр" и "Телефонный справочник" на главной,
             // если нет доступа.
             const minesweeperBtn = document.getElementById('minesweeperBtn');
