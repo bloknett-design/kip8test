@@ -2074,3 +2074,32 @@ Stage Summary:
 - FlowmeterData полностью готов к работе с Google Sheets
 - 3-уровневый fallback обеспечивает мгновенный рендер в любой ситуации
 - Audit log позволяет отслеживать ввод показаний через админ-панель
+
+---
+Task ID: 88
+Agent: Z.ai Code (kip-bot)
+Task: Расходомеры хозрасчётные — избранное, порядок, скрытие (Вариант 1)
+
+Work Log:
+- Изучена текущая реализация FlowmeterData (строки 27345–27981)
+- Изучен паттерн KipFav (строки 24865+) для переиспользования подходов
+- Добавлен модуль FlowUserView (строка ~27452) — localStorage kip8test:flow_user_view
+  - Избранное (favs), скрытые (hidden), порядок (order)
+  - Методы: isFav, toggleFav, isHidden, toggleHidden, restoreAll, sortMeters, setOrder
+  - UI: updateToolbar, updateDetailFavBtn, toggleFavFromDetail
+  - Drag-and-drop: initDrag (долгое зажатие 500 мс + touchmove/touchend)
+  - Свайп: initSwipe (вправо = избранное, влево = скрыть)
+- CSS (~100 строк): .flow-toolbar, .flow-card-fav, .flow-detail-fav-btn, .flow-card-wrap, .flow-swipe-bg, .dragging/.drag-over, светлая тема
+- HTML: тулбар фильтров (Все/Избранное/Скрытые) на page-flowmeter-data, звёздочка в page-flowmeter-detail хедере
+- FlowmeterData.renderList переписан: сортировка по порядку, фильтрация, свайп-обёртки, звёздочка
+- FlowmeterData.openDetail: добавлен вызов FlowUserView.updateDetailFavBtn()
+- CACHE_VERSION: kipia-test-v367 → kipia-test-v368
+- Тесты: 207 passed, 0 failed
+- Коммит 6177bd1 запушен в main
+
+Stage Summary:
+- Расходомеры: каждый пользователь может настроить список под себя
+- Избранное (★), порядок (drag), скрытие (свайп влево) — всё в localStorage
+- Тулбар фильтров с счётчиками
+- Светлая тема полностью поддержана
+- index.html: +590/-6 строк, sw.js: +1/-1
