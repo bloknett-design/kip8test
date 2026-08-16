@@ -8797,16 +8797,17 @@
 
     /* ====== План корпуса 114: поворот картинок отм.00/06/12/18 влево (горизонтально) на десктопе ====== */
     @media (min-width: 1024px) {
-        #plan114Img[data-plan-id="otm-00"],
-        #plan114Img[data-plan-id="otm-06"],
-        #plan114Img[data-plan-id="otm-12"],
-        #plan114Img[data-plan-id="otm-18"] {
+        #plan114ImgContainer.plan114-rotated {
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: 0;
+            text-align: left;
+        }
+        #plan114ImgContainer.plan114-rotated #plan114Img {
             transform: rotate(-90deg);
-            transform-origin: center center;
+            transform-origin: top left;
             max-width: none;
-            width: auto;
-            height: 100vh;
-            object-fit: contain;
         }
     }
 
@@ -17152,8 +17153,24 @@
         const imgEl = document.getElementById('plan114Img');
         const errorEl = document.getElementById('plan114Error');
         if (loadingEl) loadingEl.style.display = '';
-        if (imgEl) { imgEl.style.display = 'none'; imgEl.removeAttribute('src'); }
+        if (imgEl) {
+            imgEl.style.display = 'none';
+            imgEl.removeAttribute('src');
+            imgEl.style.transform = '';
+            imgEl.style.transformOrigin = '';
+            imgEl.style.width = '';
+            imgEl.style.height = '';
+            imgEl.style.maxWidth = '';
+        }
         if (errorEl) errorEl.style.display = 'none';
+        // Сбросить стили поворота контейнера
+        const containerEl = document.getElementById('plan114ImgContainer');
+        if (containerEl) {
+            containerEl.classList.remove('plan114-rotated');
+            containerEl.style.height = '';
+            const spacer = containerEl.querySelector('.plan114-rotate-spacer');
+            if (spacer) spacer.remove();
+        }
 
         try {
             // Прямой URL картинки Google Drive.
@@ -17181,6 +17198,60 @@
             }
             if (loadingEl) loadingEl.style.display = 'none';
             if (origLink) origLink.style.display = ''; // показать кнопку «Открыть оригинал»
+
+            // На десктопе: для планов отм-00/06/12/18 повернуть картинку влево
+            // и сделать контейнер горизонтально прокручиваемым.
+            const rotatedPlans = ['otm-00', 'otm-06', 'otm-12', 'otm-18'];
+            const containerEl = document.getElementById('plan114ImgContainer');
+            if (rotatedPlans.indexOf(item.id) !== -1 && containerEl && window.matchMedia('(min-width: 1024px)').matches) {
+                // Дождаться, когда imgEl узнает свои naturalWidth/naturalHeight
+                requestAnimationFrame(function() {
+                    const nw = imgEl.naturalWidth || 1;
+                    const nh = imgEl.naturalHeight || 1;
+                    // Доступная высота экрана (вычитаем заголовок ~48px и отступы)
+                    const availH = window.innerHeight - 48 - 16;
+                    // Масштаб: вписать по высоте (после поворота высота = nw)
+                    const scale = availH / nw;
+                    const renderedH = Math.round(nw * scale);  // высота после поворота
+                    const renderedW = Math.round(nh * scale);  // ширина после поворота
+                    // Установить размеры img до поворота:
+                    //   width = renderedH (после rotate станет высотой)
+                    //   height = renderedW (после rotate станет шириной, но layout не меняется)
+                    imgEl.style.width = renderedH + 'px';
+                    imgEl.style.height = renderedW + 'px';
+                    imgEl.style.maxWidth = 'none';
+                    // transform-origin: top left → после rotate(-90deg)
+                    // картинка визуально уходит вверх от верхней левой точки.
+                    // Сдвигаем вниз на renderedH, чтобы выровнять по верху контейнера.
+                    imgEl.style.transform = 'rotate(-90deg) translateY(' + renderedH + 'px)';
+                    imgEl.style.transformOrigin = 'top left';
+                    // Контейнер: прокрутка по горизонтали, высота = renderedH
+                    containerEl.classList.add('plan114-rotated');
+                    containerEl.style.height = renderedH + 'px';
+                    containerEl.style.minWidth = '0';
+                    // Чтобы контейнер знал реальную ширину прокручиваемого контента,
+                    // создаём невидимый spacer шириной renderedW
+                    let spacer = containerEl.querySelector('.plan114-rotate-spacer');
+                    if (!spacer) {
+                        spacer = document.createElement('div');
+                        spacer.className = 'plan114-rotate-spacer';
+                        spacer.style.cssText = 'display:block;height:0;pointer-events:none;';
+                        containerEl.appendChild(spacer);
+                    }
+                    spacer.style.width = renderedW + 'px';
+                });
+            } else if (containerEl) {
+                // Не отм-план или мобильный — сбросить стили поворота
+                containerEl.classList.remove('plan114-rotated');
+                containerEl.style.height = '';
+                imgEl.style.transform = '';
+                imgEl.style.transformOrigin = '';
+                imgEl.style.width = '';
+                imgEl.style.height = '';
+                imgEl.style.maxWidth = '';
+                const spacer = containerEl.querySelector('.plan114-rotate-spacer');
+                if (spacer) spacer.remove();
+            }
         } catch (err) {
             // Офлайн или ошибка загрузки — показать ошибку
             if (loadingEl) loadingEl.style.display = 'none';
