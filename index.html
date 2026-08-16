@@ -23202,9 +23202,19 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
     (function() {
         let savedTheme = localStorage.getItem('app-theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
+        // Update theme-dependent UI (label, logos, buoy images).
+        // Some DOM elements (#themeLabel, #headerLogo) may not be parsed yet
+        // because this script runs before those elements in the HTML.
+        // Call immediately (for elements that already exist) AND on
+        // DOMContentLoaded (to catch elements that are still pending).
         updateThemeLabel();
         updateBuoyImages();
         updateLogoImage();
+        document.addEventListener('DOMContentLoaded', function() {
+            updateThemeLabel();
+            updateBuoyImages();
+            updateLogoImage();
+        });
     })();
 
     // Auto-detect system color scheme preference
@@ -23214,6 +23224,13 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
             if (typeof updateThemeLabel === 'function') updateThemeLabel();
+            if (typeof updateLogoImage === 'function') updateLogoImage();
+            // Re-apply after DOM is ready for elements not yet parsed
+            document.addEventListener('DOMContentLoaded', function() {
+                if (typeof updateThemeLabel === 'function') updateThemeLabel();
+                if (typeof updateBuoyImages === 'function') updateBuoyImages();
+                if (typeof updateLogoImage === 'function') updateLogoImage();
+            });
         }
         // Listen for system theme changes
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
