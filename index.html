@@ -3357,27 +3357,32 @@
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         padding: 0 0 8px;
+        touch-action: pan-x pinch-zoom;
     }
     .flow-archive-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 13px;
+        font-size: var(--archive-table-fs, 13px);
+        table-layout: fixed;
     }
     .flow-archive-table thead th {
-        font-size: 10px;
+        font-size: calc(var(--archive-table-fs, 13px) * 0.77);
         font-weight: 700;
         color: rgba(200, 180, 170, 0.5);
         text-transform: uppercase;
         letter-spacing: 0.3px;
-        padding: 8px 8px 6px 16px;
+        padding: 8px 4px 6px 8px;
         text-align: left;
         position: sticky;
         top: 0;
         background: var(--bg-primary, #1a1f26);
         z-index: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     .flow-archive-table thead th:last-child {
-        padding-right: 16px;
+        padding-right: 8px;
     }
     .flow-archive-table tbody tr {
         border-bottom: 1px solid rgba(255,255,255,0.04);
@@ -3389,11 +3394,13 @@
     .flow-archive-table tbody tr:nth-child(odd)  { background: #372e2a; }
     .flow-archive-table tbody tr:nth-child(even) { background: #463e38; }
     .flow-archive-table td {
-        padding: 7px 8px 7px 16px;
+        padding: 7px 4px 7px 8px;
         white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     .flow-archive-table td:last-child {
-        padding-right: 16px;
+        padding-right: 8px;
     }
     .flow-archive-date {
         color: var(--text-secondary);
@@ -3470,7 +3477,7 @@
             font-size: 8px;
         }
         .flow-archive-table {
-            font-size: 12px;
+            font-size: var(--archive-table-fs, 12px);
         }
         .flow-archive-chart {
             padding: 6px 12px 2px;
@@ -27800,6 +27807,54 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             } catch (e) { return dateStr; }
         }
     };
+
+    // Pinch-to-zoom для таблицы архива расходомеров
+    (function() {
+        var wrap = null;
+        var initialDist = 0;
+        var currentFs = 13;
+
+        function getDist(touches) {
+            var dx = touches[0].clientX - touches[1].clientX;
+            var dy = touches[0].clientY - touches[1].clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        function applyFs(fs) {
+            fs = Math.max(10, Math.min(28, fs));
+            currentFs = fs;
+            if (wrap) wrap.style.setProperty('--archive-table-fs', fs + 'px');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('touchstart', function(e) {
+                if (e.touches.length === 2) {
+                    var t = e.target.closest('.flow-archive-table-wrap');
+                    if (t) {
+                        wrap = t;
+                        initialDist = getDist(e.touches);
+                        e.preventDefault();
+                    }
+                }
+            }, { passive: false });
+
+            document.addEventListener('touchmove', function(e) {
+                if (e.touches.length === 2 && wrap && initialDist > 0) {
+                    var dist = getDist(e.touches);
+                    var scale = dist / initialDist;
+                    var newFs = Math.round(currentFs * scale);
+                    applyFs(newFs);
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            document.addEventListener('touchend', function(e) {
+                if (e.touches.length < 2) {
+                    initialDist = 0;
+                }
+            }, { passive: true });
+        });
+    })();
 
     // flowmeterRenderDetailInPanel — рендер детальной карточки расходомера
     // в правую панель (#detailPanel) на десктопе
