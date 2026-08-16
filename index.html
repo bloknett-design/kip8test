@@ -3284,64 +3284,76 @@
         flex: 1;
         position: relative;
         display: flex;
-        align-items: flex-end;
+        align-items: stretch;
         gap: 0;
-        padding-bottom: 12px; /* место для вертикальных X-подписей */
-        padding-top: 4px;
         min-width: 0;
     }
-    /* Вертикальный бар */
+    /* Вертикальный бар-колонка */
     .flow-archive-vbar-col {
         flex: 1;
         min-width: 0;
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: flex-end;
         position: relative;
-        height: 100%;
         min-height: 0;
     }
-    .flow-archive-vbar {
+    /* Зона значения над баром */
+    .flow-archive-vbar-tip-zone {
+        flex-shrink: 0;
+        height: 16px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+    }
+    /* Зона самого бара */
+    .flow-archive-vbar-bar-zone {
+        flex: 1;
+        min-height: 0;
+        position: relative;
         width: 100%;
-        min-width: 0;
+    }
+    .flow-archive-vbar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
         background: linear-gradient(0deg, #c87048, #d4854f);
         border-radius: 2px 2px 0 0;
-        position: relative;
         transition: height 0.4s ease;
     }
     /* Зебра: чётные бары темнее */
     .flow-archive-vbar-col:nth-child(even) .flow-archive-vbar {
         background: linear-gradient(0deg, #a85a38, #b86e42);
     }
-    /* Значение расхода над баром — вертикально под углом (как на скрине) */
+    /* Значение расхода над баром — вертикально под углом */
     .flow-archive-vbar-tip {
-        position: absolute;
-        top: 2px;
-        left: 50%;
         font-size: 7px;
         font-weight: 600;
         color: #c87048;
         white-space: nowrap;
         pointer-events: none;
-        opacity: 1;
-        transform: translateX(-50%) rotate(-90deg);
-        transform-origin: top center;
+        writing-mode: vertical-lr;
+        line-height: 1;
     }
     .flow-archive-vbar-col:nth-child(even) .flow-archive-vbar-tip {
         color: #a85a38;
     }
-    /* Дата под баром — вертикально под углом (как на скрине) */
+    /* Зона даты под баром */
+    .flow-archive-vbar-xlabel-zone {
+        flex-shrink: 0;
+        height: 16px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+    }
+    /* Дата под баром — вертикально под углом */
     .flow-archive-vbar-xlabel {
-        position: absolute;
-        bottom: 0;
-        left: 50%;
         font-size: 7px;
         color: var(--text-secondary);
         white-space: nowrap;
         line-height: 1;
-        transform: translateX(-50%) rotate(-90deg);
-        transform-origin: bottom center;
+        writing-mode: vertical-lr;
     }
 
     /* --- Таблица хронологии --- */
@@ -27792,10 +27804,9 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 var barPct = Math.max(1, (cons / maxCons) * 100);
                 var dateShort = this._fmtDateShort(r.dateCurr);
                 html += '<div class="flow-archive-vbar-col">';
-                html += '<div class="flow-archive-vbar" style="height:' + barPct.toFixed(1) + '%">';
-                html += '<span class="flow-archive-vbar-tip">' + this._fmtNum(cons) + '</span>';
-                html += '</div>';
-                html += '<span class="flow-archive-vbar-xlabel">' + dateShort + '</span>';
+                html += '<div class="flow-archive-vbar-tip-zone"><span class="flow-archive-vbar-tip">' + this._fmtNum(cons) + '</span></div>';
+                html += '<div class="flow-archive-vbar-bar-zone"><div class="flow-archive-vbar" style="height:' + barPct.toFixed(1) + '%"></div></div>';
+                html += '<div class="flow-archive-vbar-xlabel-zone"><span class="flow-archive-vbar-xlabel">' + dateShort + '</span></div>';
                 html += '</div>';
             }
 
