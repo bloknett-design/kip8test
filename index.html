@@ -3314,35 +3314,34 @@
     .flow-archive-vbar-col:nth-child(even) .flow-archive-vbar {
         background: linear-gradient(0deg, #a85a38, #b86e42);
     }
-    /* Значение расхода над баром — вертикально (снизу-вверх, слева-направо) */
+    /* Значение расхода над баром — вертикально под углом (как на скрине) */
     .flow-archive-vbar-tip {
         position: absolute;
-        top: -4px;
+        top: 2px;
         left: 50%;
-        transform: translateX(-50%);
         font-size: 7px;
         font-weight: 600;
         color: #c87048;
         white-space: nowrap;
         pointer-events: none;
         opacity: 1;
-        writing-mode: vertical-lr;
-        transform: translateX(-50%) rotate(180deg);
+        transform: translateX(-50%) rotate(-90deg);
+        transform-origin: top center;
     }
     .flow-archive-vbar-col:nth-child(even) .flow-archive-vbar-tip {
         color: #a85a38;
     }
-    /* Дата под баром — вертикально (снизу-вверх, слева-направо) */
+    /* Дата под баром — вертикально под углом (как на скрине) */
     .flow-archive-vbar-xlabel {
         position: absolute;
         bottom: 0;
+        left: 50%;
         font-size: 7px;
         color: var(--text-secondary);
         white-space: nowrap;
         line-height: 1;
-        margin-top: 2px;
-        writing-mode: vertical-lr;
-        transform: rotate(180deg);
+        transform: translateX(-50%) rotate(-90deg);
+        transform-origin: bottom center;
     }
 
     /* --- Таблица хронологии --- */
