@@ -17241,8 +17241,9 @@
                 requestAnimationFrame(function() {
                     const nw = imgEl.naturalWidth || 1;
                     const nh = imgEl.naturalHeight || 1;
-                    // Доступная высота экрана (вычитаем заголовок ~48px и отступы)
-                    const availH = window.innerHeight - 48 - 16;
+                    // Доступная высота: вычитаем desktopTopBar (56px),
+                    // page-inline-header (56px) и запас на скроллбар (~12px).
+                    const availH = window.innerHeight - 56 - 56 - 12;
                     // Масштаб: вписать по высоте (после поворота высота = nw)
                     const scale = availH / nw;
                     const renderedH = Math.round(nw * scale);  // высота после поворота
@@ -17261,7 +17262,9 @@
                     imgEl.style.transform = 'rotate(-90deg) translateX(' + (-renderedH) + 'px)';
                     imgEl.style.transformOrigin = 'top left';
                     // Контейнер: прокрутка по горизонтали, высота = renderedH
+                    // Явно убрать padding (inline-стиль padding:12px перебивает CSS-правило).
                     containerEl.classList.add('plan114-rotated');
+                    containerEl.style.padding = '0';
                     containerEl.style.height = renderedH + 'px';
                     containerEl.style.minWidth = '0';
                     // Чтобы контейнер знал реальную ширину прокручиваемого контента,
@@ -17278,6 +17281,7 @@
             } else if (containerEl) {
                 // Не отм-план или мобильный — сбросить стили поворота
                 containerEl.classList.remove('plan114-rotated');
+                containerEl.style.padding = '12px';
                 containerEl.style.height = '';
                 imgEl.style.transform = '';
                 imgEl.style.transformOrigin = '';
