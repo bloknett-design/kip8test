@@ -20636,9 +20636,7 @@
         if (footerEl) {
             if (KipCableJournal._canEdit) {
                 footerEl.innerHTML =
-                    '<button type="button" class="detail-footer-btn detail-footer-btn-edit" onclick="KipCableJournal.openEdit()">Править</button>' +
-                    '<div class="detail-footer-divider"></div>' +
-                    '<button type="button" class="detail-footer-btn detail-footer-btn-delete" onclick="KipCableJournal.confirmDelete()">Удалить</button>';
+                    '<button type="button" class="detail-footer-btn detail-footer-btn-edit" onclick="KipCableJournal.openEdit()">Править</button>';
             } else {
                 footerEl.innerHTML = '';
             }
@@ -26506,9 +26504,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             if (bottomBar) {
                 if (this._canEdit) {
                     bottomBar.innerHTML =
-                        '<button type="button" class="cj-view-bottom-bar-btn cj-view-bottom-bar-btn-edit" onclick="KipCableJournal.openEdit()">Править</button>' +
-                        '<div class="cj-view-bottom-bar-divider"></div>' +
-                        '<button type="button" class="cj-view-bottom-bar-btn cj-view-bottom-bar-btn-delete" onclick="KipCableJournal.confirmDelete()">Удалить</button>';
+                        '<button type="button" class="cj-view-bottom-bar-btn cj-view-bottom-bar-btn-edit" onclick="KipCableJournal.openEdit()">Править</button>';
                 } else {
                     bottomBar.innerHTML = '';
                 }
@@ -26720,7 +26716,9 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     addBar.innerHTML =
                         '<button type="button" id="cjAddSubmitBtn" class="cj-add-bottom-bar-btn cj-add-bottom-bar-btn-save" onclick="KipCableJournal.submitEdit()">Сохранить</button>' +
                         '<div class="cj-add-bottom-bar-divider"></div>' +
-                        '<button type="button" class="cj-add-bottom-bar-btn cj-add-bottom-bar-btn-cancel" onclick="KipCableJournal.cancelEdit()">Отмена</button>';
+                        '<button type="button" class="cj-add-bottom-bar-btn cj-add-bottom-bar-btn-cancel" onclick="KipCableJournal.cancelEdit()">Отмена</button>' +
+                        '<div class="cj-add-bottom-bar-divider"></div>' +
+                        '<button type="button" class="cj-add-bottom-bar-btn cj-view-bottom-bar-btn-delete" onclick="KipCableJournal.confirmDelete()">Удалить</button>';
                 } else {
                     addBar.innerHTML =
                         '<button type="button" id="cjAddSubmitBtn" class="cj-add-bottom-bar-btn cj-add-bottom-bar-btn-save" onclick="KipCableJournal.submitAdd()">Добавить запись</button>' +
@@ -26900,7 +26898,9 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 footerEl.innerHTML =
                     '<button type="button" id="cjEditSubmitBtn" class="detail-footer-btn detail-footer-btn-edit" onclick="KipCableJournal.submitEdit()">Сохранить</button>' +
                     '<div class="detail-footer-divider"></div>' +
-                    '<button type="button" class="detail-footer-btn" style="color:var(--text-secondary,rgba(255,255,255,0.65));" onclick="KipCableJournal.cancelEdit()">Отмена</button>';
+                    '<button type="button" class="detail-footer-btn" style="color:var(--text-secondary,rgba(255,255,255,0.65));" onclick="KipCableJournal.cancelEdit()">Отмена</button>' +
+                    '<div class="detail-footer-divider"></div>' +
+                    '<button type="button" class="detail-footer-btn detail-footer-btn-delete" onclick="KipCableJournal.confirmDelete()">Удалить</button>';
             }
         },
 
