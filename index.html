@@ -3352,13 +3352,13 @@
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         padding: 0 0 8px;
-        touch-action: pan-x pinch-zoom;
+        /* touch-action задаётся классом .pinch-zoom-target */
     }
     .flow-archive-table {
         width: 100%;
         border-collapse: collapse;
         font-size: var(--archive-table-fs, 13px);
-        table-layout: fixed;
+        table-layout: auto;
     }
     .flow-archive-table thead th {
         font-size: calc(var(--archive-table-fs, 13px) * 0.77);
@@ -27722,7 +27722,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             html += this._buildArchiveChart(displayRecords, meter);
 
             // Таблица
-            html += '<div class="flow-archive-table-wrap">';
+            html += '<div class="flow-archive-table-wrap pinch-zoom-target">';
             html += '<table class="flow-archive-table">';
             html += '<thead><tr>';
             html += '<th>Дата</th>';
@@ -27811,53 +27811,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         }
     };
 
-    // Pinch-to-zoom для таблицы архива расходомеров
-    (function() {
-        var wrap = null;
-        var initialDist = 0;
-        var currentFs = 13;
-
-        function getDist(touches) {
-            var dx = touches[0].clientX - touches[1].clientX;
-            var dy = touches[0].clientY - touches[1].clientY;
-            return Math.sqrt(dx * dx + dy * dy);
-        }
-
-        function applyFs(fs) {
-            fs = Math.max(10, Math.min(28, fs));
-            currentFs = fs;
-            if (wrap) wrap.style.setProperty('--archive-table-fs', fs + 'px');
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.addEventListener('touchstart', function(e) {
-                if (e.touches.length === 2) {
-                    var t = e.target.closest('.flow-archive-table-wrap');
-                    if (t) {
-                        wrap = t;
-                        initialDist = getDist(e.touches);
-                        e.preventDefault();
-                    }
-                }
-            }, { passive: false });
-
-            document.addEventListener('touchmove', function(e) {
-                if (e.touches.length === 2 && wrap && initialDist > 0) {
-                    var dist = getDist(e.touches);
-                    var scale = dist / initialDist;
-                    var newFs = Math.round(currentFs * scale);
-                    applyFs(newFs);
-                    e.preventDefault();
-                }
-            }, { passive: false });
-
-            document.addEventListener('touchend', function(e) {
-                if (e.touches.length < 2) {
-                    initialDist = 0;
-                }
-            }, { passive: true });
-        });
-    })();
+    // Pinch-to-zoom для таблицы архива — используется универсальная система
+    // (класс pinch-zoom-target назначается при генерации HTML в _buildArchiveHtml)
 
     // flowmeterRenderDetailInPanel — рендер детальной карточки расходомера
     // в правую панель (#detailPanel) на десктопе
