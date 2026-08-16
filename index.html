@@ -3274,40 +3274,35 @@
         gap: 0;
         height: 150px;
     }
-    /* Область графика */
+    /* Область графика — CSS Grid: 3 строки (tip / bar / xlabel), колонки по числу баров */
     .flow-archive-chart-area {
         flex: 1;
         position: relative;
-        display: flex;
-        align-items: stretch;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
         gap: 0;
         min-width: 0;
     }
-    /* Вертикальный бар-колонка */
+    /* Вертикальный бар-колонка — display:contents чтобы дети участвовали в grid */
     .flow-archive-vbar-col {
-        flex: 1;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        position: relative;
-        min-height: 0;
-        overflow: hidden;
+        display: contents;
     }
-    /* Зона значения над баром */
+    /* Зона значения над баром — grid-строка auto */
     .flow-archive-vbar-tip-zone {
-        flex-shrink: 0;
         display: flex;
         align-items: flex-end;
         justify-content: center;
         padding: 2px 0;
+        overflow: hidden;
     }
-    /* Зона самого бара — растягивается одинаково во всех колонках */
+    /* Зона самого бара — grid-строка 1fr, одинаковая высота во всех колонках */
     .flow-archive-vbar-bar-zone {
-        flex: 1 1 0;
         min-height: 0;
         position: relative;
         width: 100%;
+        overflow: hidden;
     }
     .flow-archive-vbar {
         position: absolute;
@@ -3335,13 +3330,13 @@
     .flow-archive-vbar-col:nth-child(even) .flow-archive-vbar-tip {
         color: #a85a38;
     }
-    /* Зона даты под баром */
+    /* Зона даты под баром — grid-строка auto */
     .flow-archive-vbar-xlabel-zone {
-        flex-shrink: 0;
         display: flex;
         align-items: flex-start;
         justify-content: center;
         padding: 2px 0;
+        overflow: hidden;
     }
     /* Дата под баром — вертикально под углом */
     .flow-archive-vbar-xlabel {
@@ -3447,8 +3442,12 @@
     [data-theme="light"] .flow-archive-vbar-col:nth-child(even) .flow-archive-vbar-tip {
         color: #984e30;
     }
-    [data-theme="light"] .flow-archive-vbar-col:nth-child(odd)  { background: #f5f0eb; }
-    [data-theme="light"] .flow-archive-vbar-col:nth-child(even) { background: #ebe5de; }
+    [data-theme="light"] .flow-archive-vbar-col:nth-child(odd) .flow-archive-vbar-tip-zone,
+    [data-theme="light"] .flow-archive-vbar-col:nth-child(odd) .flow-archive-vbar-bar-zone,
+    [data-theme="light"] .flow-archive-vbar-col:nth-child(odd) .flow-archive-vbar-xlabel-zone { background: #f5f0eb; }
+    [data-theme="light"] .flow-archive-vbar-col:nth-child(even) .flow-archive-vbar-tip-zone,
+    [data-theme="light"] .flow-archive-vbar-col:nth-child(even) .flow-archive-vbar-bar-zone,
+    [data-theme="light"] .flow-archive-vbar-col:nth-child(even) .flow-archive-vbar-xlabel-zone { background: #ebe5de; }
     [data-theme="light"] .flow-archive-table thead th {
         color: rgba(20, 20, 19, 0.4);
         background: var(--bg-primary, #f5f2ed);
@@ -3462,8 +3461,12 @@
     [data-theme="light"] .flow-archive-cons { color: #2a8a4a; }
 
     /* --- Мобильный: зебра-фон на графике и таблице --- */
-    .flow-archive-vbar-col:nth-child(odd)  { background: #372e2a; }
-    .flow-archive-vbar-col:nth-child(even) { background: #463e38; }
+    .flow-archive-vbar-col:nth-child(odd) .flow-archive-vbar-tip-zone,
+    .flow-archive-vbar-col:nth-child(odd) .flow-archive-vbar-bar-zone,
+    .flow-archive-vbar-col:nth-child(odd) .flow-archive-vbar-xlabel-zone { background: #372e2a; }
+    .flow-archive-vbar-col:nth-child(even) .flow-archive-vbar-tip-zone,
+    .flow-archive-vbar-col:nth-child(even) .flow-archive-vbar-bar-zone,
+    .flow-archive-vbar-col:nth-child(even) .flow-archive-vbar-xlabel-zone { background: #463e38; }
 
     /* --- Десктоп: архив в правой панели --- */
     @media (min-width: 1024px) {
