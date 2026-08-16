@@ -9068,7 +9068,7 @@
 
             <div class="kip-ios-block">
                 <div class="menu-btn-row">
-                    <div class="menu-btn" onclick="navigateTo('flowmeter-data')" style="cursor: pointer;"><div class="menu-btn-text"><div class="menu-btn-label">Расходомеры хозрасчётные</div><div class="menu-btn-sublabel">Накопительные расходы и показания</div></div><svg class="menu-btn-arrow" viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: rgba(255,255,255,0.12); fill: none; stroke-width: 2; stroke-linecap: round;"><polyline points="9 18 15 12 9 6"/></svg></div>
+                    <div id="flowmeterMenuBtn" class="menu-btn" onclick="navigateTo('flowmeter-data')" style="cursor: pointer;"><div class="menu-btn-text"><div class="menu-btn-label">Расходомеры хозрасчётные</div><div class="menu-btn-sublabel">Накопительные расходы и показания</div></div><svg class="menu-btn-arrow" viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: rgba(255,255,255,0.12); fill: none; stroke-width: 2; stroke-linecap: round;"><polyline points="9 18 15 12 9 6"/></svg></div>
                 </div>
             </div>
         </div>
@@ -24241,6 +24241,28 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 const allowedForPage = isAll || allowed.indexOf(page) !== -1;
                 btn.style.display = allowedForPage ? '' : 'none';
             });
+
+            // ============================================================
+            // Кнопка «Расходомеры хозрасчётные» в Документации ИОС:
+            // скрыть для пользователей без доступа к flowmeter-data,
+            // а также скрыть родительский .kip-ios-block, если внутри
+            // не осталось видимых кнопок.
+            // ============================================================
+            const flowmeterBtn = document.getElementById('flowmeterMenuBtn');
+            if (flowmeterBtn) {
+                const hasFlowAccess = isAll || allowed.indexOf('flowmeter-data') !== -1;
+                flowmeterBtn.style.display = hasFlowAccess ? '' : 'none';
+                // Скрыть родительский .kip-ios-block целиком, если все .menu-btn скрыты
+                const kipBlock = flowmeterBtn.closest('.kip-ios-block');
+                if (kipBlock) {
+                    const visibleBtns = kipBlock.querySelectorAll('.menu-btn');
+                    let anyVisible = false;
+                    visibleBtns.forEach(function(b) {
+                        if (b.style.display !== 'none') anyVisible = true;
+                    });
+                    kipBlock.style.display = anyVisible ? '' : 'none';
+                }
+            }
 
             // Скрыть кнопки "Сапёр" и "Телефонный справочник" на главной,
             // если нет доступа.
