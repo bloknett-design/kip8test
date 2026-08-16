@@ -3087,10 +3087,11 @@
         }
     }
 
-    .flow-detail-header { margin-bottom: 0; }
+    .flow-detail-header { margin-bottom: 0; background: #372e2a; padding: 8px 0; }
+    [data-theme="light"] .flow-detail-header { background: #f5f0eb; }
     .flow-detail-hoz { font-size: 17px; font-weight: 700; color: #c87048; margin-bottom: 2px; }
-    .flow-detail-param { font-size: 17px; font-weight: 700; color: #c87048; padding: 10px 0 2px 16px; }
-    .flow-detail-period { font-size: 13px; font-weight: 600; color: var(--text-secondary); padding: 0 0 8px 16px; }
+    .flow-detail-param { font-size: 17px; font-weight: 700; color: #c87048; padding: 2px 0 2px 16px; }
+    .flow-detail-period { font-size: 13px; font-weight: 600; color: var(--text-secondary); padding: 0 0 2px 16px; }
     /* Заголовок группы полей — строка-разделитель */
     .flow-detail-section {
         padding: 0;
@@ -3124,15 +3125,10 @@
     .flow-detail-row:last-child { border-bottom: none; }
     [data-theme="light"] .flow-detail-row { border-bottom-color: rgba(20, 20, 19, 0.06); }
     /* Зебра строк данных — непрозрачный фон */
-    .flow-detail-row:nth-child(odd)  { background: #372e2a; }
-    .flow-detail-row:nth-child(even) { background: #463e38; }
-    [data-theme="light"] .flow-detail-row:nth-child(odd)  { background: #f5f0eb; }
-    [data-theme="light"] .flow-detail-row:nth-child(even) { background: #ebe5de; }
-    /* Зебра param / period */
-    .flow-detail-param-row:nth-child(odd)  { background: #372e2a; }
-    .flow-detail-param-row:nth-child(even) { background: #463e38; }
-    [data-theme="light"] .flow-detail-param-row:nth-child(odd)  { background: #f5f0eb; }
-    [data-theme="light"] .flow-detail-param-row:nth-child(even) { background: #ebe5de; }
+    .flow-detail-row:nth-child(odd)  { background: #463e38; }
+    .flow-detail-row:nth-child(even) { background: #372e2a; }
+    [data-theme="light"] .flow-detail-row:nth-child(odd)  { background: #ebe5de; }
+    [data-theme="light"] .flow-detail-row:nth-child(even) { background: #f5f0eb; }
     .flow-detail-label {
         font-size: 12px;
         color: rgba(200, 180, 170, 0.45);
@@ -27388,9 +27384,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             var tempStr = (m.temp !== null && m.temp !== undefined) ? m.temp.toFixed(1).replace('.', ',') + ' °C' : '—';
 
             var html = '';
-            // Заголовок карточки — param и period как отдельные зебра-строки
-            html += '<div class="flow-detail-param-row flow-detail-row"><div class="flow-detail-param">' + this._esc(m.param) + '</div></div>';
-            html += '<div class="flow-detail-param-row flow-detail-row"><div class="flow-detail-period">' + this._esc(m.period) + '</div></div>';
+            // Заголовок карточки — param + period внутри одного div с зеброй
+            html += '<div class="flow-detail-header"><div class="flow-detail-param">' + this._esc(m.param) + '</div><div class="flow-detail-period">' + this._esc(m.period) + '</div></div>';
 
             // Показания
             html += '<div class="flow-detail-section">';
