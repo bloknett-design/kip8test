@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
@@ -9034,7 +9034,7 @@
                 <svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             </button>
             <div class="desktop-top-bar-brand" onclick="navigateTo('dashboard')">
-                <img id="headerLogoDesktop" src="images/logo_black.png" alt="КИПиА" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">
+                <img id="headerLogoDesktop" src="images/logo.png" alt="КИПиА" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">
                 <span class="desktop-top-bar-title">КИПиА</span>
             </div>
             <span class="desktop-top-bar-divider"></span>
@@ -23164,7 +23164,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
     // Theme toggle functionality
     function toggleTheme() {
-        let currentTheme = localStorage.getItem('app-theme') || 'dark';
+        let currentTheme = localStorage.getItem('app-theme') || 'light';
         let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', newTheme);
         localStorage.setItem('app-theme', newTheme);
@@ -23176,7 +23176,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
     function updateThemeLabel() {
         let label = document.getElementById('themeLabel');
         if (label) {
-            let currentTheme = localStorage.getItem('app-theme') || 'dark';
+            let currentTheme = localStorage.getItem('app-theme') || 'light';
             label.textContent = currentTheme === 'dark' ? 'Светлая тема' : 'Тёмная тема';
         }
     }
@@ -23200,7 +23200,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
     // Apply saved theme on load
     (function() {
-        let savedTheme = localStorage.getItem('app-theme') || 'dark';
+        let savedTheme = localStorage.getItem('app-theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
         updateThemeLabel();
         updateBuoyImages();
@@ -29058,7 +29058,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
 <div id="sidebar" class="sidebar">
     <div class="sidebar-header">
-        <img id="headerLogo" src="images/logo_black.png" alt="КИПиА" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+        <img id="headerLogo" src="images/logo.png" alt="КИПиА" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">
         <div class="sidebar-title">Меню</div>
         <div class="header-btn" onclick="toggleSidebar()" style="width:32px;height:32px;border-radius:8px;background:transparent;border:none;">
             <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:rgba(74,143,199,0.9);fill:none;stroke-width:2;stroke-linecap:round;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
