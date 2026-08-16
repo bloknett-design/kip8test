@@ -3292,6 +3292,7 @@
         align-items: center;
         position: relative;
         min-height: 0;
+        overflow: hidden;
     }
     /* Зона значения над баром */
     .flow-archive-vbar-tip-zone {
@@ -3301,9 +3302,9 @@
         justify-content: center;
         padding: 2px 0;
     }
-    /* Зона самого бара */
+    /* Зона самого бара — растягивается одинаково во всех колонках */
     .flow-archive-vbar-bar-zone {
-        flex: 1;
+        flex: 1 1 0;
         min-height: 0;
         position: relative;
         width: 100%;
