@@ -1597,6 +1597,7 @@
     }
     .admin-search {
         flex: 1;
+        min-width: 0;
         padding: 10px 14px;
         background: rgba(30, 35, 50, 0.6);
         border: 1px solid rgba(255,255,255,0.12);
@@ -1620,6 +1621,8 @@
         outline: none;
         cursor: pointer;
         max-width: 50%;
+        min-width: 0;
+        flex: 0 1 auto;
     }
     .admin-select option { background: #1a1f2e; color: #fff; }
     .admin-refresh-btn {
@@ -1694,6 +1697,7 @@
         align-items: center;
         gap: 10px;
         flex-wrap: wrap;
+        min-width: 0;
     }
     .admin-item-email {
         font-size: 14px;
@@ -1709,6 +1713,8 @@
         color: rgba(255,255,255,0.5);
         margin-top: 6px;
         line-height: 1.5;
+        word-break: break-word;
+        overflow-wrap: break-word;
     }
     [data-theme="light"] .admin-item-meta { color: rgba(20,20,19,0.55); }
     .admin-item-actions {
@@ -1716,6 +1722,7 @@
         gap: 6px;
         margin-top: 10px;
         flex-wrap: wrap;
+        min-width: 0;
     }
 
     /* Бейджи статуса/роли */
@@ -1773,6 +1780,8 @@
         font-family: inherit;
         cursor: pointer;
         outline: none;
+        max-width: 100%;
+        min-width: 0;
     }
     .admin-role-select option { background: #1a1f2e; color: #fff; }
     [data-theme="light"] .admin-role-select {
@@ -1813,6 +1822,7 @@
         border-radius: 12px;
         padding: 14px 16px;
         text-align: center;
+        min-width: 0;
     }
     .admin-stat-card.full-width { grid-column: 1 / -1; }
     .admin-stat-value {
@@ -1827,6 +1837,7 @@
         margin-top: 4px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        overflow-wrap: break-word;
     }
     .admin-stat-breakdown {
         margin-top: 8px;
@@ -1853,11 +1864,33 @@
     }
     [data-theme="light"] .admin-empty { color: rgba(20,20,19,0.45); }
 
+    @media (max-width: 480px) {
+        .admin-toolbar { gap: 6px; padding: 6px 8px 8px; }
+        .admin-search { min-width: 50px; padding: 8px 10px; font-size: 13px; }
+        .admin-select { max-width: 45%; padding: 8px 10px; font-size: 12px; }
+        .admin-refresh-btn { padding: 8px 12px; font-size: 13px; }
+        .admin-add-btn { padding: 8px 10px; font-size: 12px; }
+        .admin-role-select { max-width: 100%; font-size: 11px; padding: 5px 8px; }
+        .admin-action-btn { font-size: 11px; padding: 5px 8px; }
+        .admin-item { padding: 10px 12px; }
+        .admin-item-email { font-size: 13px; }
+        .admin-badge { font-size: 10px; padding: 2px 6px; }
+    }
+
     @media (max-width: 400px) {
         .admin-grid { padding: 8px 6px; }
         .admin-card { padding: 12px 14px; }
         .admin-card-label { font-size: 14px; }
         .admin-stats-container { grid-template-columns: 1fr 1fr; padding: 8px 6px; }
+        .admin-toolbar { gap: 4px; padding: 4px 6px 6px; }
+        .admin-search { min-width: 36px; padding: 7px 8px; font-size: 12px; }
+        .admin-select { max-width: 42%; padding: 7px 8px; font-size: 11px; }
+        .admin-refresh-btn { padding: 7px 10px; font-size: 12px; }
+        .admin-add-btn { padding: 7px 8px; font-size: 11px; }
+        .admin-item { padding: 8px 10px; }
+        .admin-item-actions { gap: 4px; }
+        .admin-role-select { font-size: 10px; padding: 4px 6px; }
+        .admin-action-btn { font-size: 10px; padding: 4px 6px; }
     }
 
     @media (max-width: 400px) {
@@ -17222,8 +17255,10 @@
                     imgEl.style.maxWidth = 'none';
                     // transform-origin: top left → после rotate(-90deg)
                     // картинка визуально уходит вверх от верхней левой точки.
-                    // Сдвигаем вниз на renderedH, чтобы выровнять по верху контейнера.
-                    imgEl.style.transform = 'rotate(-90deg) translateY(' + renderedH + 'px)';
+                    // translateX(-renderedH) в доповоротной системе → после rotate(-90deg)
+                    // даёт сдвиг вниз на renderedH в экранных координатах,
+                    // выравнивая верхний край картинки с верхом контейнера.
+                    imgEl.style.transform = 'rotate(-90deg) translateX(' + (-renderedH) + 'px)';
                     imgEl.style.transformOrigin = 'top left';
                     // Контейнер: прокрутка по горизонтали, высота = renderedH
                     containerEl.classList.add('plan114-rotated');
