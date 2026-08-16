@@ -2102,4 +2102,23 @@ Stage Summary:
 - Избранное (★), порядок (drag), скрытие (свайп влево) — всё в localStorage
 - Тулбар фильтров с счётчиками
 - Светлая тема полностью поддержана
-- index.html: +590/-6 строк, sw.js: +1/-1
+
+---
+Task ID: 89
+Agent: AI Assistant
+Task: Вернуть зебру (чередование фона) в список карточек хозрасчётных расходомеров, сохранив новый функционал (★, drag, swipe)
+
+Work Log:
+- Обнаружена причина пропажи зебры: после добавления .flow-card-wrap (Task 88) селекторы :nth-child на .flow-card перестали работать — каждая .flow-card стала 3-м ребёнком своего wrap, а не чередующимся
+- Заменены селекторы зебры CSS:
+  - Было: .flow-card:nth-child(odd/even)
+  - Стало: .flow-card-wrap:nth-child(odd/even) .flow-card
+- Палитры зебры сохранены: тёмная тема rgba(35,30,28)/rgba(48,42,38), светлая rgba(248,242,238)/rgba(252,248,244)
+- Проверена совместимость: .flow-hidden (opacity), .detail-highlight (!important), :active — конфликтов нет
+- CACHE_VERSION: kipia-test-v368 → kipia-test-v369
+- Тесты: 207 passed, 0 failed
+
+Stage Summary:
+- Зебра восстановлена в списке хозрасчётных расходомеров
+- Работает с обёртками .flow-card-wrap (свайп/drag)
+- Весь функционал Task 88 (★, drag, swipe, фильтры) сохранён

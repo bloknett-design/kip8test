@@ -3138,10 +3138,11 @@
     }
     .flow-card:last-child { border-bottom: none; }
     /* Зебра: тёмная тема — тёплые тона в палитру расходомеров (#c87048) */
-    .flow-card:nth-child(odd)  { background: rgba(35, 30, 28, 0.96); }
-    .flow-card:nth-child(even) { background: rgba(48, 42, 38, 0.96); }
-    [data-theme="light"] .flow-card:nth-child(odd)  { background: rgba(248, 242, 238, 0.96); }
-    [data-theme="light"] .flow-card:nth-child(even) { background: rgba(252, 248, 244, 0.97); }
+    /* Селекторы через .flow-card-wrap — карточки обёрнуты в wrap для свайпа */
+    .flow-card-wrap:nth-child(odd)  .flow-card { background: rgba(35, 30, 28, 0.96); }
+    .flow-card-wrap:nth-child(even) .flow-card { background: rgba(48, 42, 38, 0.96); }
+    [data-theme="light"] .flow-card-wrap:nth-child(odd)  .flow-card { background: rgba(248, 242, 238, 0.96); }
+    [data-theme="light"] .flow-card-wrap:nth-child(even) .flow-card { background: rgba(252, 248, 244, 0.97); }
     [data-theme="light"] .flow-card { border-bottom-color: rgba(20,20,19,0.08); }
     .flow-card:active { background: rgba(200,112,72,0.12); }
     [data-theme="light"] .flow-card:active { background: rgba(200,112,72,0.08); }
