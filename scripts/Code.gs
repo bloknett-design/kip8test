@@ -36,6 +36,7 @@
  *   CableJournal.deleteRow(token, row)     → результат
  *   Flowmeter.list(payload)                → {ok, data/error}
  *   Flowmeter.updateReading(payload)       → {ok, data/error}
+ *   FlowmeterArchive.listArchive(payload)  → {ok, data/error}
  * ============================================================
  */
 
@@ -137,6 +138,9 @@ function doPost(e) {
 
       case 'flowmeter.updateReading':
         return _json(Flowmeter.updateReading(payload));
+
+      case 'flowmeter.archive':
+        return _json(FlowmeterArchive.listArchive(payload));
 
       default:
         return _json({ ok: false, error: 'Unknown action: ' + action });

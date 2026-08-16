@@ -3239,6 +3239,205 @@
     .cj-field-input option, .cj-field-textarea option { background: #1a1f2e; color: #fff; }
     [data-theme="light"] .cj-field-input option, [data-theme="light"] .cj-field-textarea option { background: #fff; color: #1a1a1a; }
 
+    /* ========== Расходомеры: архив хронологии показаний ========== */
+    .flow-archive-loading {
+        padding: 20px 16px;
+        font-size: 13px;
+        color: var(--text-secondary);
+        text-align: center;
+    }
+    .flow-archive-section {
+        margin-top: 12px;
+        border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .flow-archive-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: rgba(200, 180, 170, 0.55);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        padding: 12px 0 6px 16px;
+    }
+    .flow-archive-empty {
+        padding: 12px 16px;
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    /* --- Мини-график расхода (горизонтальные CSS-бары) --- */
+    .flow-archive-chart {
+        padding: 8px 16px 4px;
+    }
+    .flow-archive-chart-title {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 6px;
+    }
+    .flow-archive-bar-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 3px;
+    }
+    .flow-archive-bar-label {
+        font-size: 10px;
+        color: var(--text-secondary);
+        width: 36px;
+        text-align: right;
+        flex-shrink: 0;
+    }
+    .flow-archive-bar-track {
+        flex: 1;
+        height: 10px;
+        background: rgba(255,255,255,0.06);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    .flow-archive-bar-fill {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, #c87048, #d4854f);
+        border-radius: 3px;
+        transition: width 0.4s ease;
+    }
+    .flow-archive-bar-val {
+        font-size: 10px;
+        font-weight: 600;
+        color: #c87048;
+        width: 52px;
+        text-align: left;
+        flex-shrink: 0;
+    }
+
+    /* --- Таблица хронологии --- */
+    .flow-archive-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 0 0 8px;
+    }
+    .flow-archive-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+    .flow-archive-table thead th {
+        font-size: 10px;
+        font-weight: 700;
+        color: rgba(200, 180, 170, 0.5);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        padding: 8px 8px 6px 16px;
+        text-align: left;
+        position: sticky;
+        top: 0;
+        background: var(--bg-primary, #1a1f26);
+        z-index: 1;
+    }
+    .flow-archive-table thead th:last-child {
+        padding-right: 16px;
+    }
+    .flow-archive-table tbody tr {
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .flow-archive-table tbody tr:last-child {
+        border-bottom: none;
+    }
+    /* Зебра строк архива */
+    .flow-archive-table tbody tr:nth-child(odd)  { background: rgba(35, 30, 28, 0.5); }
+    .flow-archive-table tbody tr:nth-child(even) { background: rgba(48, 42, 38, 0.5); }
+    .flow-archive-table td {
+        padding: 7px 8px 7px 16px;
+        white-space: nowrap;
+    }
+    .flow-archive-table td:last-child {
+        padding-right: 16px;
+    }
+    .flow-archive-date {
+        color: var(--text-secondary);
+        font-size: 12px;
+    }
+    .flow-archive-val {
+        color: #e0d8d0;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+    }
+    .flow-archive-cons {
+        color: #5ab870;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+    .flow-archive-temp {
+        color: var(--text-secondary);
+        font-size: 12px;
+    }
+    .flow-archive-mod {
+        color: var(--text-secondary);
+        font-size: 11px;
+        max-width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* --- Светлая тема: архив --- */
+    [data-theme="light"] .flow-archive-section {
+        border-top-color: rgba(20,20,19,0.06);
+    }
+    [data-theme="light"] .flow-archive-title {
+        color: rgba(20, 20, 19, 0.45);
+    }
+    [data-theme="light"] .flow-archive-bar-track {
+        background: rgba(20,20,19,0.06);
+    }
+    [data-theme="light"] .flow-archive-bar-fill {
+        background: linear-gradient(90deg, #c87048, #b85e38);
+    }
+    [data-theme="light"] .flow-archive-bar-val {
+        color: #b85e38;
+    }
+    [data-theme="light"] .flow-archive-table thead th {
+        color: rgba(20, 20, 19, 0.4);
+        background: var(--bg-primary, #f5f2ed);
+    }
+    [data-theme="light"] .flow-archive-table tbody tr {
+        border-bottom-color: rgba(20,20,19,0.04);
+    }
+    [data-theme="light"] .flow-archive-table tbody tr:nth-child(odd)  { background: rgba(248, 242, 238, 0.6); }
+    [data-theme="light"] .flow-archive-table tbody tr:nth-child(even) { background: rgba(252, 248, 244, 0.7); }
+    [data-theme="light"] .flow-archive-val { color: #1a1a1a; }
+    [data-theme="light"] .flow-archive-cons { color: #2a8a4a; }
+
+    /* --- Десктоп: архив в правой панели --- */
+    @media (min-width: 1024px) {
+        .flow-archive-table {
+            font-size: 12px;
+        }
+        .flow-archive-bar-label {
+            width: 40px;
+        }
+        .flow-archive-bar-val {
+            width: 58px;
+        }
+        .flow-archive-chart {
+            padding: 6px 12px 2px;
+        }
+        .flow-archive-title {
+            padding-left: 12px;
+        }
+        .flow-archive-table thead th {
+            padding-left: 12px;
+        }
+        .flow-archive-table td {
+            padding-left: 12px;
+        }
+        .flow-archive-table thead th:last-child {
+            padding-right: 12px;
+        }
+        .flow-archive-table td:last-child {
+            padding-right: 12px;
+        }
+    }
+
     /* ========== Кабельный журнал — страница добавления записи ==========
        Открывается как обычная page-content из cable-journal-edit по кнопке '+'.
        Поля идут вертикально по одному в строке (полная ширина контейнера),
@@ -27167,6 +27366,9 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 html += '</div>';
             }
 
+            // Placeholder для архива (загрузится асинхронно)
+            html += '<div id="flowArchiveContainer" class="flow-archive-loading">Загрузка архива…</div>';
+
             return html;
         },
 
@@ -27197,6 +27399,15 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             // Нижний бар с кнопкой «Ввести показания»
             var bar = document.getElementById('flowDetailBottomBar');
             if (bar) bar.innerHTML = this._renderBottomBar(m);
+
+            // Загрузить архив асинхронно
+            this.loadArchive(id, function(records) {
+                var container = document.getElementById('flowArchiveContainer');
+                if (container) {
+                    container.className = '';
+                    container.innerHTML = FlowmeterData._buildArchiveHtml(records, m);
+                }
+            });
 
             navigateTo('flowmeter-detail');
         },
@@ -27378,6 +27589,163 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     }
                 });
             }
+        },
+
+        // ============================================================
+        // АРХИВ ПОКАЗАНИЙ
+        // ============================================================
+
+        // Кэш архива в localStorage: key = 'kip8_flow_archive_v1_{meterId}'
+        _archiveCacheKey: function(meterId) {
+            return 'kip8_flow_archive_v1_' + meterId;
+        },
+
+        // Восстановить архив из localStorage
+        _restoreArchiveCache: function(meterId) {
+            try {
+                var json = localStorage.getItem(this._archiveCacheKey(meterId));
+                if (json) {
+                    var cached = JSON.parse(json);
+                    if (cached && Array.isArray(cached.records)) {
+                        return cached.records;
+                    }
+                }
+            } catch (e) { /* ignore */ }
+            return null;
+        },
+
+        // Сохранить архив в localStorage
+        _persistArchive: function(meterId, records) {
+            try {
+                localStorage.setItem(this._archiveCacheKey(meterId),
+                    JSON.stringify({ records: records, ts: Date.now() }));
+            } catch (e) { /* quota or disabled */ }
+        },
+
+        // Загрузить архив с сервера
+        loadArchive: function(meterId, callback) {
+            var self = this;
+            var token = KipAuth.getToken();
+
+            // Если нет токена — попробовать кэш
+            if (!token) {
+                var cached = this._restoreArchiveCache(meterId);
+                if (callback) callback(cached || []);
+                return;
+            }
+
+            this._api('flowmeter.archive', { id: meterId, limit: 200 }).then(function(data) {
+                if (data && Array.isArray(data.records)) {
+                    self._persistArchive(meterId, data.records);
+                    if (callback) callback(data.records);
+                } else {
+                    if (callback) callback([]);
+                }
+            }).catch(function(err) {
+                console.error('FlowmeterData.loadArchive:', err);
+                // Fallback: вернуть кэш
+                var cached = self._restoreArchiveCache(meterId);
+                if (callback) callback(cached || []);
+            });
+        },
+
+        // Рендер секции хронологии (таблица + мини-график)
+        _buildArchiveHtml: function(records, meter) {
+            if (!records || records.length === 0) {
+                return '<div class="flow-archive-section">' +
+                       '<div class="flow-archive-title">Хронология показаний</div>' +
+                       '<div class="flow-archive-empty">Записей ещё нет</div>' +
+                       '</div>';
+            }
+
+            var html = '';
+            html += '<div class="flow-archive-section">';
+            html += '<div class="flow-archive-title">Хронология показаний</div>';
+
+            // Мини-график расхода (CSS-бары)
+            html += this._buildArchiveChart(records, meter);
+
+            // Таблица
+            html += '<div class="flow-archive-table-wrap">';
+            html += '<table class="flow-archive-table">';
+            html += '<thead><tr>';
+            html += '<th>Дата</th>';
+            html += '<th>Показания</th>';
+            html += '<th>Расход</th>';
+            if (records[0] && records[0].temp !== null && records[0].temp !== undefined) {
+                html += '<th>T</th>';
+            }
+            html += '<th>Внёс</th>';
+            html += '</tr></thead>';
+            html += '<tbody>';
+
+            for (var i = 0; i < records.length; i++) {
+                var r = records[i];
+                var consAbs = Math.abs(r.consumption || 0);
+                html += '<tr>';
+                html += '<td class="flow-archive-date">' + this._fmtDate(r.dateCurr) + '</td>';
+                html += '<td class="flow-archive-val">' + this._fmtNum(r.curr) + '</td>';
+                html += '<td class="flow-archive-cons">' + this._fmtNum(consAbs) + '</td>';
+                // Температура — показываем колонку только если хоть в одной записи есть
+                if (records[0] && records[0].temp !== null && records[0].temp !== undefined) {
+                    var tStr = (r.temp !== null && r.temp !== undefined) ? r.temp.toFixed(1).replace('.', ',') : '—';
+                    html += '<td class="flow-archive-temp">' + tStr + '</td>';
+                }
+                var modStr = r.modName || r.modRole || '';
+                html += '<td class="flow-archive-mod">' + this._esc(modStr) + '</td>';
+                html += '</tr>';
+            }
+
+            html += '</tbody></table>';
+            html += '</div>'; // .flow-archive-table-wrap
+            html += '</div>'; // .flow-archive-section
+
+            return html;
+        },
+
+        // Мини-график расхода (горизонтальные CSS-бары)
+        _buildArchiveChart: function(records, meter) {
+            if (records.length < 2) return '';
+
+            var unit = meter ? meter.unit : (records[0].unit || '');
+            var maxCons = 0;
+            for (var i = 0; i < records.length; i++) {
+                var c = Math.abs(records[i].consumption || 0);
+                if (c > maxCons) maxCons = c;
+            }
+            if (maxCons === 0) return '';
+
+            var html = '';
+            html += '<div class="flow-archive-chart">';
+            html += '<div class="flow-archive-chart-title">Расход, ' + this._esc(unit) + '</div>';
+
+            // Показать последние 15 записей (от старых к новым для графика)
+            var chartRecords = records.slice(0, 15).reverse();
+
+            for (var j = 0; j < chartRecords.length; j++) {
+                var r = chartRecords[j];
+                var cons = Math.abs(r.consumption || 0);
+                var pct = Math.max(2, (cons / maxCons) * 100);
+                var dateShort = this._fmtDateShort(r.dateCurr);
+                html += '<div class="flow-archive-bar-row">';
+                html += '<span class="flow-archive-bar-label">' + dateShort + '</span>';
+                html += '<span class="flow-archive-bar-track"><span class="flow-archive-bar-fill" style="width:' + pct.toFixed(1) + '%"></span></span>';
+                html += '<span class="flow-archive-bar-val">' + this._fmtNum(cons) + '</span>';
+                html += '</div>';
+            }
+
+            html += '</div>';
+            return html;
+        },
+
+        // Сокращённая дата: M/D/YYYY → ДД.ММ
+        _fmtDateShort: function(dateStr) {
+            try {
+                var p = dateStr.split('/');
+                var d = (+p[1] < 10 ? '0' : '') + +p[1];
+                var m = (+p[0] < 10 ? '0' : '') + +p[0];
+                return d + '.' + m;
+            } catch (e) { return dateStr; }
         }
     };
 
@@ -27401,6 +27769,15 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         // Кнопка ввода показаний — в нижний бар detail-panel-footer
         var footerEl = document.getElementById('detailPanelFooter');
         if (footerEl) footerEl.innerHTML = FlowmeterData._renderBottomBar(m);
+
+        // Загрузить архив асинхронно
+        FlowmeterData.loadArchive(flowId, function(records) {
+            var container = document.getElementById('flowArchiveContainer');
+            if (container) {
+                container.className = '';
+                container.innerHTML = FlowmeterData._buildArchiveHtml(records, m);
+            }
+        });
 
         // Открываем панель
         var panel = document.getElementById('detailPanel');

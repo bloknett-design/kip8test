@@ -228,6 +228,23 @@ var Flowmeter = {
         'Расходомер id=' + id + ': показания ' + payload.prev + ' → ' + payload.curr);
     } catch (e) { /* audit log — не критично */ }
 
+    // Архив: добавить запись в лист hozraschet_archive
+    // (не блокирует основной ответ — ошибка архива тихо логируется)
+    try {
+      var hozName = String(sheet.getRange(rowNum, 2).getValue() || '');
+      var unitVal = String(sheet.getRange(rowNum, 8).getValue() || '');
+      var periodVal = String(sheet.getRange(rowNum, 10).getValue() || '');
+      FlowmeterArchive.appendToArchive(
+        id, hozName,
+        prevVal, currVal,
+        payload.datePrev, payload.dateCurr,
+        payload.temp, unitVal, periodVal,
+        user.role || '', user.name || user.email || ''
+      );
+    } catch (archiveErr) {
+      Logger.log('Archive write failed (non-critical): ' + archiveErr.message);
+    }
+
     return { ok: true, data: { id: id } };
   },
 
