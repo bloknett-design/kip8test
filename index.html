@@ -3286,8 +3286,8 @@
         display: flex;
         align-items: flex-end;
         gap: 0;
-        padding-bottom: 18px; /* место для X-подписей */
-        padding-top: 18px; /* место для значений над барами */
+        padding-bottom: 12px; /* место для вертикальных X-подписей */
+        padding-top: 4px;
         min-width: 0;
     }
     /* Вертикальный бар */
@@ -3314,30 +3314,35 @@
     .flow-archive-vbar-col:nth-child(even) .flow-archive-vbar {
         background: linear-gradient(0deg, #a85a38, #b86e42);
     }
-    /* Значение расхода над баром (всегда видно) */
+    /* Значение расхода над баром — вертикально (снизу-вверх, слева-направо) */
     .flow-archive-vbar-tip {
         position: absolute;
-        top: -16px;
+        top: -4px;
         left: 50%;
         transform: translateX(-50%);
-        font-size: 8px;
+        font-size: 7px;
         font-weight: 600;
         color: #c87048;
         white-space: nowrap;
         pointer-events: none;
         opacity: 1;
+        writing-mode: vertical-lr;
+        transform: translateX(-50%) rotate(180deg);
     }
     .flow-archive-vbar-col:nth-child(even) .flow-archive-vbar-tip {
         color: #a85a38;
     }
+    /* Дата под баром — вертикально (снизу-вверх, слева-направо) */
     .flow-archive-vbar-xlabel {
         position: absolute;
         bottom: 0;
-        font-size: 8px;
+        font-size: 7px;
         color: var(--text-secondary);
         white-space: nowrap;
         line-height: 1;
-        margin-top: 4px;
+        margin-top: 2px;
+        writing-mode: vertical-lr;
+        transform: rotate(180deg);
     }
 
     /* --- Таблица хронологии --- */
@@ -3428,6 +3433,8 @@
     [data-theme="light"] .flow-archive-vbar-col:nth-child(even) .flow-archive-vbar-tip {
         color: #984e30;
     }
+    [data-theme="light"] .flow-archive-vbar-col:nth-child(odd)  { background: rgba(248, 242, 238, 0.5); }
+    [data-theme="light"] .flow-archive-vbar-col:nth-child(even) { background: rgba(252, 248, 244, 0.6); }
     [data-theme="light"] .flow-archive-table thead th {
         color: rgba(20, 20, 19, 0.4);
         background: var(--bg-primary, #f5f2ed);
@@ -3440,16 +3447,29 @@
     [data-theme="light"] .flow-archive-val { color: #1a1a1a; }
     [data-theme="light"] .flow-archive-cons { color: #2a8a4a; }
 
+    /* --- Мобильный: зебра-фон на графике и таблице --- */
+    .flow-archive-vbar-col:nth-child(odd)  { background: rgba(35, 30, 28, 0.35); }
+    .flow-archive-vbar-col:nth-child(even) { background: rgba(48, 42, 38, 0.35); }
+
     /* --- Десктоп: архив в правой панели --- */
     @media (min-width: 1024px) {
+        /* На десктопе убираем зебра-фон колонок (фон прозрачный) */
+        .flow-archive-vbar-col:nth-child(odd),
+        .flow-archive-vbar-col:nth-child(even) {
+            background: none;
+        }
+        [data-theme="light"] .flow-archive-vbar-col:nth-child(odd),
+        [data-theme="light"] .flow-archive-vbar-col:nth-child(even) {
+            background: none;
+        }
         .flow-archive-chart-body {
             height: 150px;
         }
         .flow-archive-vbar-xlabel {
-            font-size: 9px;
+            font-size: 8px;
         }
         .flow-archive-vbar-tip {
-            font-size: 9px;
+            font-size: 8px;
         }
         .flow-archive-table {
             font-size: 12px;
