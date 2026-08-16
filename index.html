@@ -23202,19 +23202,12 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
     (function() {
         let savedTheme = localStorage.getItem('app-theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
-        // Update theme-dependent UI (label, logos, buoy images).
-        // Some DOM elements (#themeLabel, #headerLogo) may not be parsed yet
-        // because this script runs before those elements in the HTML.
-        // Call immediately (for elements that already exist) AND on
-        // DOMContentLoaded (to catch elements that are still pending).
+        // Перезапись UI (label, logos, buoy) выполняется в последнем
+        // <script> блоке, когда все DOM-элементы уже существуют.
+        // Здесь вызываем для элементов, которые уже разобраны к этому моменту.
         updateThemeLabel();
         updateBuoyImages();
         updateLogoImage();
-        document.addEventListener('DOMContentLoaded', function() {
-            updateThemeLabel();
-            updateBuoyImages();
-            updateLogoImage();
-        });
     })();
 
     // Auto-detect system color scheme preference
@@ -23225,12 +23218,6 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
             if (typeof updateThemeLabel === 'function') updateThemeLabel();
             if (typeof updateLogoImage === 'function') updateLogoImage();
-            // Re-apply after DOM is ready for elements not yet parsed
-            document.addEventListener('DOMContentLoaded', function() {
-                if (typeof updateThemeLabel === 'function') updateThemeLabel();
-                if (typeof updateBuoyImages === 'function') updateBuoyImages();
-                if (typeof updateLogoImage === 'function') updateLogoImage();
-            });
         }
         // Listen for system theme changes
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
@@ -29641,6 +29628,13 @@ function whatsNewUpdateBtnState() {
 
 // При загрузке страницы — обновить состояние кнопки
 whatsNewUpdateBtnState();
+
+// Применить тему к UI-элементам, которые ещё не существовали
+// в DOM на момент первого вызова updateThemeLabel/updateLogoImage
+// (скрипт темы выполняется до парсинга #themeLabel и #headerLogo).
+if (typeof updateThemeLabel === 'function') updateThemeLabel();
+if (typeof updateBuoyImages === 'function') updateBuoyImages();
+if (typeof updateLogoImage === 'function') updateLogoImage();
 </script>
 
 <!-- Cable Journal: модалка редактирования удалена (Task 57).
