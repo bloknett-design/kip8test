@@ -3011,6 +3011,107 @@
 
     /* ======================== РАСХОДОМЕРЫ ХОЗРАСЧЁТНЫЕ ======================== */
     .flow-list { padding: 0; }
+
+    /* === Тулбар расходомеров: Все / Избранное / Скрытые === */
+    .flow-toolbar {
+        display: flex; align-items: center; gap: 8px;
+        padding: 8px 14px; border-bottom: 1px solid rgba(255,255,255,0.06);
+        background: rgba(30,26,24,0.98);
+        position: sticky; top: 56px; z-index: 5;
+    }
+    [data-theme="light"] .flow-toolbar {
+        background: rgba(255,255,255,0.98);
+        border-bottom-color: rgba(20,20,19,0.08);
+    }
+    .flow-toolbar-btn {
+        font-size: 13px; font-weight: 600; padding: 5px 12px;
+        border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);
+        background: transparent; color: var(--text-secondary);
+        cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    }
+    .flow-toolbar-btn:hover { background: rgba(200,112,72,0.08); }
+    .flow-toolbar-btn.active {
+        background: rgba(200,112,72,0.15); color: #c87048;
+        border-color: rgba(200,112,72,0.3);
+    }
+    [data-theme="light"] .flow-toolbar-btn { border-color: rgba(20,20,19,0.1); }
+    [data-theme="light"] .flow-toolbar-btn.active { background: rgba(200,112,72,0.1); color: #b85a3a; border-color: rgba(200,112,72,0.25); }
+    .flow-toolbar-count {
+        font-size: 11px; font-weight: 700; min-width: 18px; text-align: center;
+        padding: 1px 5px; border-radius: 10px;
+        background: rgba(200,112,72,0.15); color: #c87048;
+    }
+    [data-theme="light"] .flow-toolbar-count { background: rgba(200,112,72,0.1); color: #b85a3a; }
+    .flow-toolbar-spacer { flex: 1; }
+    .flow-toolbar-restore {
+        font-size: 12px; font-weight: 600; padding: 4px 10px;
+        border-radius: 6px; border: none; cursor: pointer;
+        background: rgba(90,184,112,0.12); color: #5ab870;
+        transition: all 0.15s;
+    }
+    .flow-toolbar-restore:hover { background: rgba(90,184,112,0.2); }
+    [data-theme="light"] .flow-toolbar-restore { background: rgba(90,184,112,0.08); color: #3a8a5a; }
+
+    /* === Звёздочка избранного в карточке расходомера === */
+    .flow-card-fav {
+        position: absolute; top: 8px; right: 8px; z-index: 2;
+        width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+        border-radius: 6px; cursor: pointer; transition: all 0.15s;
+        background: transparent; border: none; padding: 0;
+    }
+    .flow-card-fav svg { width: 18px; height: 18px; fill: none; stroke: rgba(255,255,255,0.15); stroke-width: 2; transition: all 0.15s; }
+    .flow-card-fav.active svg { fill: #c87048; stroke: #c87048; }
+    .flow-card-fav:active { transform: scale(0.8); }
+    [data-theme="light"] .flow-card-fav svg { stroke: rgba(20,20,19,0.15); }
+    [data-theme="light"] .flow-card-fav.active svg { fill: #b85a3a; stroke: #b85a3a; }
+
+    /* === Звёздочка избранного в детальной карточке === */
+    .flow-detail-fav-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 32px; height: 32px; margin-left: 8px;
+        border-radius: 8px; cursor: pointer; transition: all 0.15s;
+        background: rgba(200,112,72,0.08); border: none; padding: 0;
+    }
+    .flow-detail-fav-btn svg { width: 20px; height: 20px; fill: none; stroke: rgba(200,112,72,0.4); stroke-width: 2; transition: all 0.15s; }
+    .flow-detail-fav-btn.active svg { fill: #c87048; stroke: #c87048; filter: drop-shadow(0 0 4px rgba(200,112,72,0.4)); }
+    .flow-detail-fav-btn:active { transform: scale(0.85); }
+    [data-theme="light"] .flow-detail-fav-btn { background: rgba(200,112,72,0.06); }
+    [data-theme="light"] .flow-detail-fav-btn svg { stroke: rgba(180,90,58,0.4); }
+    [data-theme="light"] .flow-detail-fav-btn.active svg { fill: #b85a3a; stroke: #b85a3a; }
+
+    /* === Свайп-подложка для скрытия расходомера === */
+    .flow-card-wrap {
+        position: relative; overflow: hidden;
+    }
+    .flow-card-wrap:last-child .flow-card { border-bottom: none; }
+    .flow-card-wrap .flow-swipe-bg {
+        position: absolute; inset: 0; display: flex; align-items: center;
+        padding: 0 20px; opacity: 0; transition: opacity 0.15s; pointer-events: none;
+        z-index: 0;
+    }
+    .flow-card-wrap .flow-swipe-bg-left { justify-content: flex-start; background: linear-gradient(135deg, #5ab870, #4a9a5a); }
+    .flow-card-wrap .flow-swipe-bg-right { justify-content: flex-end; background: linear-gradient(135deg, #C6613F, #D97757); }
+    .flow-card-wrap .flow-swipe-bg svg { width: 20px; height: 20px; fill: #fff; margin-right: 6px; }
+    .flow-card-wrap .flow-swipe-bg span { color: #fff; font-size: 13px; font-weight: 700; }
+    .flow-card-wrap.swiping-left .flow-swipe-bg-right { opacity: 1; }
+    .flow-card-wrap.swiping-right .flow-swipe-bg-left { opacity: 1; }
+    /* Если карточка в избранном — свайп вправо = убрать из избранного (красная), влево = скрыть (жёлтая) */
+    .flow-card-wrap.is-fav .flow-swipe-bg-left { background: linear-gradient(135deg, #C6613F, #D97757); }
+    .flow-card-wrap.is-fav .flow-swipe-bg-right { background: linear-gradient(135deg, #b8860b, #d4a017); }
+    [data-theme="light"] .flow-card-wrap .flow-swipe-bg-left { background: linear-gradient(135deg, #3a8a5a, #4da66a); }
+    [data-theme="light"] .flow-card-wrap .flow-swipe-bg-right { background: linear-gradient(135deg, #C6613F, #D97757); }
+    [data-theme="light"] .flow-card-wrap.is-fav .flow-swipe-bg-left { background: linear-gradient(135deg, #C6613F, #D97757); }
+    [data-theme="light"] .flow-card-wrap.is-fav .flow-swipe-bg-right { background: linear-gradient(135deg, #b8860b, #d4a017); }
+
+    /* Drag-and-drop: состояние перетаскивания */
+    .flow-card.dragging { opacity: 0.5; transform: scale(0.97); z-index: 10; }
+    .flow-card.drag-over { border-top: 2px solid #c87048; }
+    .flow-card.drag-placeholder { background: rgba(200,112,72,0.08); border: 1px dashed rgba(200,112,72,0.3); }
+
+    /* Скрытые карточки — приглушённые */
+    .flow-card.flow-hidden { opacity: 0.4; }
+    .flow-card.flow-hidden .flow-card-hoz { text-decoration: line-through; }
+
     .flow-empty { text-align: center; padding: 40px 20px; color: var(--text-secondary); }
     .flow-empty-icon { font-size: 40px; margin-bottom: 10px; }
     .flow-empty-text { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
@@ -9128,6 +9229,13 @@
                 <div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div>
                 <div class="page-inline-header-title">Расходомеры хозрасчётные</div>
             </div>
+            <div class="flow-toolbar" id="flowToolbar">
+                <button type="button" class="flow-toolbar-btn active" data-flow-filter="all" onclick="FlowUserView.setFilter('all')">Все</button>
+                <button type="button" class="flow-toolbar-btn" data-flow-filter="fav" onclick="FlowUserView.setFilter('fav')">Избранное <span class="flow-toolbar-count" id="flowFavCount">0</span></button>
+                <button type="button" class="flow-toolbar-btn" data-flow-filter="hidden" onclick="FlowUserView.setFilter('hidden')">Скрытые <span class="flow-toolbar-count" id="flowHiddenCount">0</span></button>
+                <div class="flow-toolbar-spacer"></div>
+                <button type="button" class="flow-toolbar-restore" id="flowRestoreBtn" onclick="FlowUserView.restoreAll()" style="display:none;">Показать все</button>
+            </div>
             <div id="flowList" class="flow-list">
                 <div class="admin-empty" id="flowEmpty">Загрузка…</div>
             </div>
@@ -9138,6 +9246,9 @@
             <div class="page-inline-header">
                 <div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div>
                 <div class="page-inline-header-title" id="flowDetailTitle">Расходомер</div>
+                <button type="button" class="flow-detail-fav-btn" id="flowDetailFavBtn" onclick="FlowUserView.toggleFavFromDetail()">
+                    <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </button>
             </div>
             <div id="flowDetailBody" class="flow-detail-body"></div>
             <div class="flow-detail-bottom-bar" id="flowDetailBottomBar"></div>
@@ -27339,6 +27450,423 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
     // ============================================================
     // ============================================================
+    // FlowUserView — пользовательские настройки расходомеров: избранное, порядок, скрытые
+    // Хранится в localStorage (kip8test:flow_user_view), персонально для каждого пользователя
+    // ============================================================
+    var FlowUserView = {
+
+        _STORAGE_KEY: 'kip8test:flow_user_view',
+        _data: null,  // ленивый кэш: { favs: {id: addedAt}, hidden: {id: hiddenAt}, order: [id,...] }
+        _currentFilter: 'all',  // 'all' | 'fav' | 'hidden'
+
+        // SVG-иконка звёздочки
+        _STAR_SVG: '<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+        _HIDE_SVG: '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+
+        // ----------------------------------------------------------
+        // Хранилище
+        // ----------------------------------------------------------
+        _load: function() {
+            if (this._data !== null) return;
+            try {
+                var raw = localStorage.getItem(this._STORAGE_KEY);
+                this._data = raw ? JSON.parse(raw) : { favs: {}, hidden: {}, order: [] };
+            } catch (e) { this._data = { favs: {}, hidden: {}, order: [] }; }
+            // Гарантировать структуру
+            if (!this._data.favs) this._data.favs = {};
+            if (!this._data.hidden) this._data.hidden = {};
+            if (!Array.isArray(this._data.order)) this._data.order = [];
+        },
+
+        _save: function() {
+            try { localStorage.setItem(this._STORAGE_KEY, JSON.stringify(this._data)); } catch (e) {}
+        },
+
+        _esc: function(s) {
+            return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        },
+
+        // ----------------------------------------------------------
+        // Избранное
+        // ----------------------------------------------------------
+        isFav: function(id) {
+            this._load();
+            return this._data.favs.hasOwnProperty(String(id));
+        },
+
+        toggleFav: function(id) {
+            this._load();
+            id = String(id);
+            if (this._data.favs.hasOwnProperty(id)) {
+                delete this._data.favs[id];
+                // Убрать из порядка, если есть
+                var idx = this._data.order.indexOf(id);
+                if (idx !== -1) this._data.order.splice(idx, 1);
+            } else {
+                this._data.favs[id] = new Date().toISOString();
+                // Добавить в конец порядка, если нет
+                if (this._data.order.indexOf(id) === -1) {
+                    this._data.order.push(id);
+                }
+            }
+            this._save();
+            this.updateToolbar();
+            this.updateDetailFavBtn();
+        },
+
+        favCount: function() {
+            this._load();
+            return Object.keys(this._data.favs).length;
+        },
+
+        // ----------------------------------------------------------
+        // Скрытые
+        // ----------------------------------------------------------
+        isHidden: function(id) {
+            this._load();
+            return this._data.hidden.hasOwnProperty(String(id));
+        },
+
+        toggleHidden: function(id) {
+            this._load();
+            id = String(id);
+            if (this._data.hidden.hasOwnProperty(id)) {
+                delete this._data.hidden[id];
+            } else {
+                this._data.hidden[id] = new Date().toISOString();
+                // Убрать из избранного при скрытии
+                if (this._data.favs.hasOwnProperty(id)) {
+                    delete this._data.favs[id];
+                }
+            }
+            this._save();
+            this.updateToolbar();
+        },
+
+        hiddenCount: function() {
+            this._load();
+            return Object.keys(this._data.hidden).length;
+        },
+
+        restoreAll: function() {
+            this._load();
+            this._data.hidden = {};
+            this._save();
+            this.updateToolbar();
+            if (typeof FlowmeterData !== 'undefined') FlowmeterData.renderList();
+        },
+
+        // ----------------------------------------------------------
+        // Пользовательский порядок
+        // ----------------------------------------------------------
+        getOrder: function() {
+            this._load();
+            return this._data.order.slice();
+        },
+
+        setOrder: function(arr) {
+            this._load();
+            this._data.order = arr.map(String);
+            this._save();
+        },
+
+        /** Отсортировать массив расходомеров по пользовательскому порядку.
+         *  Расходомеры с порядком идут первыми (по индексу), без — в конце по id. */
+        sortMeters: function(meters) {
+            this._load();
+            var order = this._data.order;
+            if (!order || order.length === 0) return meters;  // Нет порядка — как есть
+            var orderMap = {};
+            order.forEach(function(id, i) { orderMap[String(id)] = i; });
+            var sorted = meters.slice().sort(function(a, b) {
+                var ai = orderMap[String(a.id)];
+                var bi = orderMap[String(b.id)];
+                if (ai !== undefined && bi !== undefined) return ai - bi;
+                if (ai !== undefined) return -1;
+                if (bi !== undefined) return 1;
+                return a.id - b.id;  // Fallback: по id
+            });
+            return sorted;
+        },
+
+        // ----------------------------------------------------------
+        // Фильтр тулбара
+        // ----------------------------------------------------------
+        setFilter: function(filter) {
+            this._currentFilter = filter;
+            // Обновить активную кнопку
+            var btns = document.querySelectorAll('.flow-toolbar-btn');
+            btns.forEach(function(btn) {
+                btn.classList.toggle('active', btn.getAttribute('data-flow-filter') === filter);
+            });
+            // Перерендерить список
+            if (typeof FlowmeterData !== 'undefined') FlowmeterData.renderList();
+        },
+
+        // ----------------------------------------------------------
+        // UI: тулбар
+        // ----------------------------------------------------------
+        updateToolbar: function() {
+            var favC = this.favCount();
+            var hidC = this.hiddenCount();
+            var favEl = document.getElementById('flowFavCount');
+            var hidEl = document.getElementById('flowHiddenCount');
+            var restEl = document.getElementById('flowRestoreBtn');
+            if (favEl) favEl.textContent = favC;
+            if (hidEl) hidEl.textContent = hidC;
+            if (restEl) restEl.style.display = hidC > 0 ? '' : 'none';
+        },
+
+        // ----------------------------------------------------------
+        // UI: звёздочка в детальной карточке
+        // ----------------------------------------------------------
+        updateDetailFavBtn: function() {
+            var btn = document.getElementById('flowDetailFavBtn');
+            if (!btn) return;
+            var id = window._flowDetailId;
+            btn.classList.toggle('active', id ? this.isFav(id) : false);
+        },
+
+        toggleFavFromDetail: function() {
+            var id = window._flowDetailId;
+            if (!id) return;
+            if (navigator.vibrate) navigator.vibrate(10);
+            var wasFav = this.isFav(id);
+            this.toggleFav(id);
+            if (!wasFav) {
+                if (typeof showToast === 'function') showToast('Добавлено в избранное');
+            } else {
+                if (typeof showToast === 'function') showToast('Убрано из избранного');
+            }
+        },
+
+        // ----------------------------------------------------------
+        // Drag-and-drop
+        // ----------------------------------------------------------
+        _dragState: null,
+
+        initDrag: function() {
+            var list = document.getElementById('flowList');
+            if (!list) return;
+
+            var self = this;
+            var longPressTimer = null;
+            var longPressFired = false;
+            var startX = 0, startY = 0;
+            var dragEl = null, dragWrap = null;
+
+            list.addEventListener('touchstart', function(e) {
+                var wrap = e.target.closest('.flow-card-wrap');
+                if (!wrap) return;
+                var card = wrap.querySelector('.flow-card');
+                if (!card) return;
+
+                longPressFired = false;
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                dragWrap = wrap;
+                dragEl = card;
+
+                // Долгое зажатие 500 мс → начать перетаскивание
+                longPressTimer = setTimeout(function() {
+                    longPressFired = true;
+                    card.classList.add('dragging');
+                    if (navigator.vibrate) navigator.vibrate(30);
+                    self._dragState = { id: card.getAttribute('data-flow-id'), el: card, wrap: wrap };
+                }, 500);
+            }, { passive: true });
+
+            list.addEventListener('touchmove', function(e) {
+                if (longPressTimer && !longPressFired) {
+                    var dx = Math.abs(e.touches[0].clientX - startX);
+                    var dy = Math.abs(e.touches[0].clientY - startY);
+                    // Если палец ушёл далеко до срабатывания long-press — отменить
+                    if (dy > 15 || dx > 15) {
+                        clearTimeout(longPressTimer);
+                        longPressTimer = null;
+                    }
+                }
+                if (!longPressFired || !self._dragState) return;
+
+                // Предотвратить прокрутку при перетаскивании
+                e.preventDefault();
+
+                // Найти элемент под пальцем
+                var touch = e.touches[0];
+                var allWraps = list.querySelectorAll('.flow-card-wrap');
+                allWraps.forEach(function(w) {
+                    var c = w.querySelector('.flow-card');
+                    if (c) c.classList.remove('drag-over');
+                });
+                var elUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+                if (elUnder) {
+                    var wrapUnder = elUnder.closest('.flow-card-wrap');
+                    if (wrapUnder && wrapUnder !== self._dragState.wrap) {
+                        var cardUnder = wrapUnder.querySelector('.flow-card');
+                        if (cardUnder) cardUnder.classList.add('drag-over');
+                    }
+                }
+            }, { passive: false });
+
+            list.addEventListener('touchend', function(e) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+
+                if (!longPressFired || !self._dragState) {
+                    // Свайп (если не долгое нажатие)
+                    if (!longPressFired && dragEl) {
+                        self._handleSwipe(e, dragWrap, dragEl);
+                    }
+                    if (dragEl) dragEl.classList.remove('dragging');
+                    self._dragState = null;
+                    longPressFired = false;
+                    return;
+                }
+
+                // Завершить перетаскивание — переставить элемент
+                var overCard = list.querySelector('.flow-card.drag-over');
+                if (overCard && self._dragState) {
+                    var fromWrap = self._dragState.wrap;
+                    var toWrap = overCard.closest('.flow-card-wrap');
+                    if (toWrap && fromWrap !== toWrap) {
+                        // Переставить DOM-элемент
+                        if (fromWrap.nextSibling === toWrap) {
+                            list.insertBefore(fromWrap, toWrap.nextSibling);
+                        } else {
+                            list.insertBefore(fromWrap, toWrap);
+                        }
+                        // Сохранить новый порядок
+                        self._saveOrderFromDOM();
+                        if (navigator.vibrate) navigator.vibrate(15);
+                    }
+                }
+
+                // Очистить
+                list.querySelectorAll('.flow-card').forEach(function(c) {
+                    c.classList.remove('dragging', 'drag-over');
+                });
+                self._dragState = null;
+                longPressFired = false;
+            }, { passive: true });
+        },
+
+        /** Сохранить порядок из текущего DOM в localStorage. */
+        _saveOrderFromDOM: function() {
+            var list = document.getElementById('flowList');
+            if (!list) return;
+            var ids = [];
+            list.querySelectorAll('.flow-card').forEach(function(card) {
+                var id = card.getAttribute('data-flow-id');
+                if (id) ids.push(String(id));
+            });
+            this.setOrder(ids);
+        },
+
+        // ----------------------------------------------------------
+        // Свайп
+        // ----------------------------------------------------------
+        _swipeState: null,
+
+        _handleSwipe: function(e, wrap, card) {
+            // Свайп уже обработан touchmove/touchend ниже
+            // Этот метод вызывается из touchend, если не было long-press
+        },
+
+        initSwipe: function() {
+            var list = document.getElementById('flowList');
+            if (!list) return;
+
+            var self = this;
+            var startX = 0, startY = 0, currentX = 0;
+            var swipeWrap = null, swipeCard = null;
+            var swiping = false;
+            var THRESHOLD = 60;  // Порог свайпа в px
+            var BLOCK_Y = 30;    // Блокировка вертикального скролла
+
+            list.addEventListener('touchstart', function(e) {
+                var wrap = e.target.closest('.flow-card-wrap');
+                if (!wrap) return;
+                // Не начинать свайп по звёздочке
+                if (e.target.closest('.flow-card-fav')) return;
+                swipeWrap = wrap;
+                swipeCard = wrap.querySelector('.flow-card');
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                currentX = startX;
+                swiping = false;
+            }, { passive: true });
+
+            list.addEventListener('touchmove', function(e) {
+                if (!swipeWrap || !swipeCard) return;
+                currentX = e.touches[0].clientX;
+                var dx = currentX - startX;
+                var dy = Math.abs(e.touches[0].clientY - startY);
+
+                if (!swiping && dy > BLOCK_Y) return;  // Вертикальный скролл — не свайп
+                if (!swiping && Math.abs(dx) > 10) {
+                    swiping = true;
+                }
+                if (!swiping) return;
+
+                e.preventDefault();
+
+                // Визуальная обратная связь: сдвиг карточки
+                var maxShift = 80;
+                var shift = Math.max(-maxShift, Math.min(maxShift, dx));
+                swipeCard.style.transform = 'translateX(' + shift + 'px)';
+                swipeCard.style.transition = 'none';
+
+                // Подложка
+                swipeWrap.classList.remove('swiping-left', 'swiping-right');
+                if (dx > 20) swipeWrap.classList.add('swiping-right');
+                else if (dx < -20) swipeWrap.classList.add('swiping-left');
+            }, { passive: false });
+
+            list.addEventListener('touchend', function(e) {
+                if (!swipeWrap || !swipeCard) { swipeWrap = null; swipeCard = null; return; }
+
+                var dx = currentX - startX;
+                var id = swipeCard.getAttribute('data-flow-id');
+                var isFav = self.isFav(id);
+
+                // Сбросить визуальное состояние
+                swipeCard.style.transform = '';
+                swipeCard.style.transition = '';
+                swipeWrap.classList.remove('swiping-left', 'swiping-right');
+
+                if (swiping && Math.abs(dx) >= THRESHOLD) {
+                    if (dx > 0) {
+                        // Свайп вправо:
+                        // Если не в избранном → добавить в избранное
+                        // Если в избранном → убрать из избранного
+                        if (!isFav) {
+                            self.toggleFav(id);
+                            if (typeof showToast === 'function') showToast('Добавлено в избранное');
+                        } else {
+                            self.toggleFav(id);
+                            if (typeof showToast === 'function') showToast('Убрано из избранного');
+                        }
+                    } else {
+                        // Свайп влево: скрыть / показать
+                        if (!self.isHidden(id)) {
+                            self.toggleHidden(id);
+                            if (typeof showToast === 'function') showToast('Скрыто', 'Отмена', function() { self.toggleHidden(id); });
+                        } else {
+                            self.toggleHidden(id);
+                            if (typeof showToast === 'function') showToast('Восстановлено');
+                        }
+                    }
+                    // Перерендерить список после действия
+                    if (typeof FlowmeterData !== 'undefined') FlowmeterData.renderList();
+                }
+
+                swipeWrap = null;
+                swipeCard = null;
+                swiping = false;
+            }, { passive: true });
+        }
+    };
+
     // FlowmeterData — Расходомеры хозрасчётные: накопительные расходы
     // Источник: Google Таблица
     // ============================================================
@@ -27532,17 +28060,62 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             var container = document.getElementById('flowList');
             if (!container) return;
 
-            var html = '';
+            // Сортировка по пользовательскому порядку
+            var meters = FlowUserView.sortMeters(this._METERS);
 
-            for (var i = 0; i < this._METERS.length; i++) {
-                var m = this._METERS[i];
+            // Фильтрация по текущему фильтру тулбара
+            var filter = FlowUserView._currentFilter;
+            var filtered = [];
+            for (var i = 0; i < meters.length; i++) {
+                var m = meters[i];
+                var isFav = FlowUserView.isFav(m.id);
+                var isHidden = FlowUserView.isHidden(m.id);
+                if (filter === 'fav' && !isFav) continue;
+                if (filter === 'hidden' && !isHidden) continue;
+                if (filter === 'all' && isHidden) continue;  // В режиме «Все» скрытые не показываются
+                filtered.push({ meter: m, isFav: isFav, isHidden: isHidden });
+            }
+
+            // Пусто?
+            if (filtered.length === 0 && this._METERS.length > 0) {
+                var emptyMsg = filter === 'fav' ? 'Нет избранных расходомеров' :
+                               filter === 'hidden' ? 'Нет скрытых расходомеров' : '';
+                container.innerHTML = '<div class="flow-empty"><div class="flow-empty-text">' + this._esc(emptyMsg) + '</div><div class="flow-empty-hint">Свайп вправо — в избранное, влево — скрыть</div></div>';
+                FlowUserView.updateToolbar();
+                return;
+            }
+
+            var html = '';
+            // SVG для подложек свайпа
+            var starSvg = '<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+            var hideSvg = '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+
+            for (var i = 0; i < filtered.length; i++) {
+                var item = filtered[i];
+                var m = item.meter;
+                var isFav = item.isFav;
+                var isHidden = item.isHidden;
                 var consumption = m.curr - m.prev;
                 var consStr = this._fmtNum(Math.abs(consumption));
                 var tempStr = (m.temp !== null && m.temp !== undefined) ? m.temp.toFixed(1).replace('.', ',') + ' °C' : '—';
                 var days = this._daysBetween(m.datePrev, m.dateCurr);
                 var daysStr = (days > 0) ? days + ' дн.' : '';
 
-                html += '<div class="flow-card" data-flow-id="' + m.id + '" onclick="FlowmeterData.openDetail(' + m.id + ')">';
+                // Обёртка для свайпа
+                html += '<div class="flow-card-wrap' + (isFav ? ' is-fav' : '') + '" data-flow-wrap-id="' + m.id + '">';
+
+                // Подложка свайпа: влево = скрыть, вправо = в избранное (или убрать)
+                html += '<div class="flow-swipe-bg flow-swipe-bg-left">' + hideSvg + '<span>Скрыть</span></div>';
+                html += '<div class="flow-swipe-bg flow-swipe-bg-right">' + starSvg + '<span>' + (isFav ? 'Убрать' : 'В избранное') + '</span></div>';
+
+                // Карточка
+                html += '<div class="flow-card' + (isHidden ? ' flow-hidden' : '') + '" data-flow-id="' + m.id + '" onclick="FlowmeterData.openDetail(' + m.id + ')">';
+
+                // Звёздочка избранного
+                html += '<button type="button" class="flow-card-fav' + (isFav ? ' active' : '') + '" onclick="event.stopPropagation(); FlowUserView.toggleFav(' + m.id + '); FlowmeterData.renderList();" aria-label="Избранное">';
+                html += '<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+                html += '</button>';
+
                 html += '<div class="flow-card-header">';
                 html += '<div class="flow-card-hoz">' + this._esc(m.hoz) + '</div>';
                 html += '<div class="flow-card-period">' + this._esc(m.period) + '</div>';
@@ -27552,9 +28125,17 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 html += '<span class="flow-summary-item"><span class="flow-summary-label">Последние показания</span><span class="flow-summary-val">' + this._fmtNum(m.curr) + ' ' + this._esc(m.unit) + ',<span class="flow-detail-date"> от ' + this._fmtDate(m.dateCurr) + ' г.</span></span></span>';
                 if (m.temp !== null && m.temp !== undefined) { html += '<span class="flow-summary-item"><span class="flow-summary-label">T среды</span><span class="flow-summary-val">' + tempStr + '</span></span>'; }
                 html += '</div>';
-                html += '</div>';
+                html += '</div>';  // .flow-card
+                html += '</div>';  // .flow-card-wrap
             }
             container.innerHTML = html;
+
+            // Обновить тулбар
+            FlowUserView.updateToolbar();
+
+            // Инициализировать drag-and-drop и свайп
+            FlowUserView.initDrag();
+            FlowUserView.initSwipe();
         },
 
         // Построить HTML детальной карточки
@@ -27602,6 +28183,9 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             if (!m) return;
 
             window._flowDetailId = id;
+
+            // Обновить звёздочку избранного в хедере
+            FlowUserView.updateDetailFavBtn();
 
             // На десктопе — рендерим в правую панель
             if (isDesktop()) {
