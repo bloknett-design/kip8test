@@ -3123,17 +3123,11 @@
     }
     .flow-detail-row:last-child { border-bottom: none; }
     [data-theme="light"] .flow-detail-row { border-bottom-color: rgba(20, 20, 19, 0.06); }
-    /* Зебра строк — тёплые тона палитры #c87048 */
-    .flow-detail-row.flow-row-group-1 { background: #372e2a; }
-    .flow-detail-row.flow-row-group-2 { background: #463e38; }
-    .flow-detail-row.flow-row-group-3 { background: #372e2a; }
-    .flow-detail-row.flow-row-group-4 { background: #463e38; }
-    .flow-detail-row.flow-row-group-5 { background: #3e3530; }
-    [data-theme="light"] .flow-detail-row.flow-row-group-1 { background: #fcf8f4; }
-    [data-theme="light"] .flow-detail-row.flow-row-group-2 { background: #e1dcd6; }
-    [data-theme="light"] .flow-detail-row.flow-row-group-3 { background: #fcf8f4; }
-    [data-theme="light"] .flow-detail-row.flow-row-group-4 { background: #e1dcd6; }
-    [data-theme="light"] .flow-detail-row.flow-row-group-5 { background: #eee8e2; }
+    /* Зебра строк данных */
+    .flow-detail-row:nth-child(odd)  { background: rgba(35, 30, 28, 0.5); }
+    .flow-detail-row:nth-child(even) { background: rgba(48, 42, 38, 0.5); }
+    [data-theme="light"] .flow-detail-row:nth-child(odd)  { background: rgba(248, 242, 238, 0.6); }
+    [data-theme="light"] .flow-detail-row:nth-child(even) { background: rgba(252, 248, 244, 0.7); }
     .flow-detail-label {
         font-size: 12px;
         color: rgba(200, 180, 170, 0.45);
@@ -27395,22 +27389,17 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             html += '<div class="flow-detail-period">' + this._esc(m.period) + '</div>';
             html += '</div>';
 
-            // Плоские строки с зеброй (как блокировки/регуляторы)
-            // Счётчик строк для зебра-фона (5 групп, цикл)
-            var ri = 0;
-            function flowGrpCls() { return ' flow-row-group-' + ((ri % 5) + 1); }
-
             // Показания
             html += '<div class="flow-detail-section">';
-            html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Предыдущие показания</span><span class="flow-detail-value">' + this._fmtNum(m.prev) + ' ' + this._esc(m.unit) + ',<span class="flow-detail-date"> от ' + this._fmtDate(m.datePrev) + ' г.</span></span></div>'; ri++;
-            html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Последние показания</span><span class="flow-detail-value flow-detail-curr">' + this._fmtNum(m.curr) + ' ' + this._esc(m.unit) + ',<span class="flow-detail-date"> от ' + this._fmtDate(m.dateCurr) + ' г.</span></span></div>'; ri++;
-            html += '<div class="flow-detail-row flow-detail-highlight' + flowGrpCls() + '"><span class="flow-detail-label">Расход</span><span class="flow-detail-value">' + consStr + ' ' + this._esc(m.unit) + ',<span class="flow-detail-date"> за ' + this._daysBetween(m.datePrev, m.dateCurr) + ' дн.</span></span></div>'; ri++;
+            html += '<div class="flow-detail-row"><span class="flow-detail-label">Предыдущие показания</span><span class="flow-detail-value">' + this._fmtNum(m.prev) + ' ' + this._esc(m.unit) + ',<span class="flow-detail-date"> от ' + this._fmtDate(m.datePrev) + ' г.</span></span></div>';
+            html += '<div class="flow-detail-row"><span class="flow-detail-label">Последние показания</span><span class="flow-detail-value flow-detail-curr">' + this._fmtNum(m.curr) + ' ' + this._esc(m.unit) + ',<span class="flow-detail-date"> от ' + this._fmtDate(m.dateCurr) + ' г.</span></span></div>';
+            html += '<div class="flow-detail-row flow-detail-highlight"><span class="flow-detail-label">Расход</span><span class="flow-detail-value">' + consStr + ' ' + this._esc(m.unit) + ',<span class="flow-detail-date"> за ' + this._daysBetween(m.datePrev, m.dateCurr) + ' дн.</span></span></div>';
             html += '</div>';
 
             // Параметры среды (только если есть температура)
             if (m.temp !== null && m.temp !== undefined) {
                 html += '<div class="flow-detail-section">';
-                html += '<div class="flow-detail-row' + flowGrpCls() + '"><span class="flow-detail-label">Температура среды</span><span class="flow-detail-value">' + tempStr + '</span></div>'; ri++;
+                html += '<div class="flow-detail-row"><span class="flow-detail-label">Температура среды</span><span class="flow-detail-value">' + tempStr + '</span></div>';
                 html += '</div>';
             }
 
