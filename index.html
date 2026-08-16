@@ -23176,7 +23176,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
     function updateThemeLabel() {
         let label = document.getElementById('themeLabel');
         if (label) {
-            let currentTheme = localStorage.getItem('app-theme') || 'light';
+            let currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
             label.textContent = currentTheme === 'dark' ? 'Светлая тема' : 'Тёмная тема';
         }
     }
