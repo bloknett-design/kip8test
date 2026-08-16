@@ -3296,10 +3296,10 @@
     /* Зона значения над баром */
     .flow-archive-vbar-tip-zone {
         flex-shrink: 0;
-        height: 20px;
         display: flex;
         align-items: flex-end;
         justify-content: center;
+        padding: 2px 0;
     }
     /* Зона самого бара */
     .flow-archive-vbar-bar-zone {
@@ -3337,10 +3337,10 @@
     /* Зона даты под баром */
     .flow-archive-vbar-xlabel-zone {
         flex-shrink: 0;
-        height: 20px;
         display: flex;
         align-items: flex-start;
         justify-content: center;
+        padding: 2px 0;
     }
     /* Дата под баром — вертикально под углом */
     .flow-archive-vbar-xlabel {
@@ -27772,20 +27772,14 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             html += '<div class="flow-archive-chart-area">';
 
             // Бары вплотную, зебра через CSS :nth-child(even)
-            // Пропуск подписей: показываем значение/дату только на каждом labelStep-м баре
-            var labelStep = 1;
-            if (chartRecords.length > 20) labelStep = 3;
-            else if (chartRecords.length > 10) labelStep = 2;
-
             for (var j = 0; j < chartRecords.length; j++) {
                 var r = chartRecords[j];
                 var cons = Math.abs(r.consumption || 0);
                 var barPct = Math.max(1, (cons / maxCons) * 100);
-                var showLabel = (j % labelStep === 0);
                 html += '<div class="flow-archive-vbar-col">';
-                html += '<div class="flow-archive-vbar-tip-zone">' + (showLabel ? '<span class="flow-archive-vbar-tip">' + this._fmtNum(cons) + '</span>' : '') + '</div>';
+                html += '<div class="flow-archive-vbar-tip-zone"><span class="flow-archive-vbar-tip">' + this._fmtNum(cons) + '</span></div>';
                 html += '<div class="flow-archive-vbar-bar-zone"><div class="flow-archive-vbar" style="height:' + barPct.toFixed(1) + '%"></div></div>';
-                html += '<div class="flow-archive-vbar-xlabel-zone">' + (showLabel ? '<span class="flow-archive-vbar-xlabel">' + this._fmtDateShort(r.dateCurr) + '</span>' : '') + '</div>';
+                html += '<div class="flow-archive-vbar-xlabel-zone"><span class="flow-archive-vbar-xlabel">' + this._fmtDateShort(r.dateCurr) + '</span></div>';
                 html += '</div>';
             }
 
