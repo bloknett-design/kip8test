@@ -226,8 +226,9 @@
         height: 44px; width: 44px;
         border-radius: 50%;
         object-fit: cover;
-        filter: drop-shadow(0 0 3px rgba(74,143,199,0.4)) drop-shadow(0 0 7px rgba(74,143,199,0.15));
-        animation: segmentGlow 3s ease-in-out infinite;
+    }
+    [data-theme="light"] .header-logo-img {
+        box-shadow: 0 0 0 1px rgba(198,97,63,0.15);
     }
     .led-seg-on {
         fill: url(#ledGradient);
@@ -252,17 +253,8 @@
     [data-theme="light"] .led-seg-on { fill: url(#ledGradient); }
     [data-theme="light"] .led-seg-off { fill: rgba(198, 97, 63, 0.05); }
     [data-theme="light"] .led-seg-blink-on { fill: url(#ledGradient); }
-    [data-theme="light"] .header-logo-img {
-        animation-name: segmentGlowLight;
-    }
-    @keyframes segmentGlow {
-        0%, 100% { filter: drop-shadow(0 0 3px rgba(74,143,199,0.4)) drop-shadow(0 0 7px rgba(74,143,199,0.15)); }
-        50% { filter: drop-shadow(0 0 5px rgba(74,143,199,0.55)) drop-shadow(0 0 11px rgba(74,143,199,0.22)); }
-    }
-    @keyframes segmentGlowLight {
-        0%, 100% { filter: drop-shadow(0 0 3px rgba(198,97,63,0.3)) drop-shadow(0 0 7px rgba(198,97,63,0.1)); }
-        50% { filter: drop-shadow(0 0 5px rgba(198,97,63,0.45)) drop-shadow(0 0 11px rgba(198,97,63,0.15)); }
-    }
+
+
 
     .header-btn {
         min-width: 44px; min-height: 44px; width: 44px; height: 44px; border-radius: 10px;
@@ -7181,7 +7173,7 @@
         display: flex; align-items: center;
     }
     .header-title.hint-pulse .header-logo-img {
-        filter: drop-shadow(0 0 5px rgba(199,150,74,0.55)) drop-shadow(0 0 10px rgba(199,150,74,0.22)) !important;
+        box-shadow: 0 0 6px 2px rgba(199,150,74,0.4) !important;
     }
     .header-title.hint-pulse .led-seg-on {
         fill: #c7964a !important;
