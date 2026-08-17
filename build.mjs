@@ -1,18 +1,20 @@
 #!/usr/bin/env node
 // ============================================================
 // Build-скрипт для kip8test — два режима:
-//   node build.js mobile   → PWA-бандл (base.css + mobile.css)
-//   node build.js desktop  → Electron-бандл (base.css + desktop.css)
+//   node build.mjs mobile   → PWA-бандл (base.css + mobile.css)
+//   node build.mjs desktop  → Electron-бандл (base.css + desktop.css)
 //
-// Стратегия: CSS-файлы собираются в один <style> блок,
-// инлайнятся в index.html. Изображения и данные копируются как есть.
-// Результат — автономный index.html для offline.
+// Стратегия:
+//   1. CSS-файлы → один <style> блок (инлайн в HTML)
+//   2. JS-модули → esbuild bundle → один <script> блок (инлайн в HTML)
+//   3. Изображения и данные копируются как есть
+// Результат — автономный index.html для offline PWA.
 // ============================================================
 
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, readdirSync, existsSync, rmSync } from 'fs';
 import { resolve, dirname, join } from 'path';
 import { fileURLToPath } from 'url';
-import { minify } from 'terser';
+import * as esbuild from 'esbuild';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -21,7 +23,7 @@ const mode = process.argv[2] || 'mobile';
 const isDesktop = mode === 'desktop';
 
 if (!['mobile', 'desktop'].includes(mode)) {
-    console.error('Usage: node build.js [mobile|desktop]');
+    console.error('Usage: node build.mjs [mobile|desktop]');
     process.exit(1);
 }
 
@@ -49,12 +51,33 @@ for (const file of cssFiles) {
 }
 console.log(`  → Total CSS: ${combinedCss.split('\n').length} lines (${(combinedCss.length / 1024).toFixed(1)} KB)`);
 
-// --- 3. Прочитать HTML-шаблон ---
+// --- 3. Собрать JS через esbuild ---
+const appEntry = resolve(srcDir, 'js', 'app.js');
+console.log(`  Bundling JS with esbuild...`);
+
+const jsResult = await esbuild.build({
+    entryPoints: [appEntry],
+    bundle: true,
+    minify: false,           // TODO: включить минификацию после валидации
+    target: ['es2020'],
+    format: 'iife',          // IIFE — самовызывающаяся функция (не ESM, т.к. инлайнится в HTML)
+    define: {
+        '__IS_DESKTOP_BUILD__': String(isDesktop),
+    },
+    write: false,            // не писать на диск — вернём в памяти
+    logLevel: 'warning',
+    // Внешние зависимости — нет (всё инлайнится)
+});
+
+const bundledJs = jsResult.outputFiles[0].text;
+console.log(`  ✓ JS bundled: ${bundledJs.split('\n').length} lines (${(bundledJs.length / 1024).toFixed(1)} KB)`);
+
+// --- 4. Прочитать HTML-шаблон ---
 const htmlPath = resolve(srcDir, 'index.html');
 let html = readFileSync(htmlPath, 'utf-8');
-console.log(`  ✓ HTML template: ${(html.length / 1024).toFixed(1)} KB`);
+console.log(`  ✓ HTML template: ${(html.length / 1024).toFixed(1)} KB (${html.split('\n').length} lines)`);
 
-// --- 4. Заменить <link> на инлайн <style> ---
+// --- 5. Заменить <link> на инлайн <style> ---
 // Убираем все <link> на CSS-файлы
 html = html.replace(/<link[^>]*href=["']\.\/css\/(?:base|mobile|desktop)\.css["'][^>]*>\n?/g, '');
 // Вставляем инлайн <style> после <title>
@@ -64,20 +87,25 @@ html = html.replace(
 );
 console.log(`  ✓ CSS inlined into HTML`);
 
-// --- 5. Установить константу __IS_DESKTOP_BUILD__ в JS ---
-// Заменяем все вхождения __IS_DESKTOP_BUILD__ на true/false
-// (для future use когда JS будет модульным)
+// --- 6. Заменить <script type="module"> на инлайн <script> ---
+// Убираем module-ссылку на app.js
+html = html.replace(/<script\s+type="module"\s+src="\.\/js\/app\.js"><\/script>/, '');
+// Вставляем инлайн <script> перед </body>
+html = html.replace(
+    /(<\/body>)/,
+    `<script>\n${bundledJs}\n</script>\n$1`
+);
+console.log(`  ✓ JS inlined into HTML`);
+
+// --- 7. Установить константу __IS_DESKTOP_BUILD__ в HTML (если осталась) ---
 html = html.replace(/__IS_DESKTOP_BUILD__/g, String(isDesktop));
 
-// --- 6. Минификация HTML (опционально) ---
-// Пока оставляем как есть — для отладки
-
-// --- 7. Записать index.html ---
+// --- 8. Записать index.html ---
 writeFileSync(resolve(outDir, 'index.html'), html, 'utf-8');
 const htmlSize = Buffer.byteLength(html, 'utf-8');
-console.log(`  ✓ Written index.html: ${(htmlSize / 1024).toFixed(1)} KB`);
+console.log(`  ✓ Written index.html: ${(htmlSize / 1024).toFixed(1)} KB (${html.split('\n').length} lines)`);
 
-// --- 8. Скопировать статические файлы ---
+// --- 9. Скопировать статические файлы ---
 function copyDirRecursive(src, dest) {
     if (!existsSync(src)) return;
     mkdirSync(dest, { recursive: true });
@@ -120,10 +148,11 @@ if (isDesktop) {
     console.log(`  ✓ Copied electron/`);
 }
 
-// --- 9. Итого ---
+// --- 10. Итого ---
 console.log(`\n✅ ${mode.toUpperCase()} build complete → ${outDir}`);
-console.log(`   index.html: ${(htmlSize / 1024).toFixed(1)} KB`);
+console.log(`   index.html: ${(htmlSize / 1024).toFixed(1)} KB (${html.split('\n').length} lines)`);
 console.log(`   CSS: base.css + ${mode}.css (inlined)`);
+console.log(`   JS: esbuild IIFE bundle from src/js/app.js (inlined)`);
 if (isDesktop) {
     console.log(`   ❌ Excluded: mobile.css (${readFileSync(resolve(srcDir, 'css/mobile.css'), 'utf-8').split('\n').length} lines)`);
 } else {

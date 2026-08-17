@@ -1,6 +1,55 @@
 # Журнал работы ИИ-ассистентов — kip8test
 
 ---
+Task ID: 2-2
+Agent: AI Assistant (Z.ai)
+Task: Variant A Stage 2 — Extract CORE utility modules from src/index.html into ES modules
+
+Work Log:
+- Read worklog and analyzed src/index.html structure (21344 lines)
+- Identified exact line ranges for all target functions and globals
+- Created directory src/js/core/
+
+- **src/js/core/utils.js** (248 lines):
+  - `isDesktop()` — matchMedia-based desktop detection (orig line 9223)
+  - `isTablet()` — matchMedia-based tablet detection (orig line 9228)
+  - `showToast(msg, actionText, actionFn)` — toast notification (orig line 12099)
+  - `_kipDialogOverlay()`, `_kipDialogClose()` — dialog helpers (orig lines 12125, 12136)
+  - `kipConfirm(msg, opts)` — custom confirm dialog (orig line 12148)
+  - `kipPrompt(msg, defaultVal)` — custom prompt dialog (orig line 12174)
+  - `parseLocaleNumber(s)` — locale-aware number parser (orig line 12213)
+  - `formatNumber(n)` — Russian-locale number formatter (orig line 12291)
+  - `roundNumber(n)` — 2-sig-fig rounding (orig line 12304)
+  - `validateField()`, `validateNumericField()`, `validatePositiveField()`, `validateNonNegativeField()`, `validateRangeField()` — input validation (orig lines 12230–12272)
+  - `clearFieldError()`, `hasValidationErrors()` — validation helpers (orig lines 12275, 12284)
+  - All functions exported with `export`
+
+- **src/js/core/local-storage.js** (27 lines):
+  - Self-executing localStorage isolation with 'kip8test:' prefix
+  - Converted from IIFE (orig lines 8526–8534) to top-level module code
+  - Binds original getItem/setItem/removeItem, overrides with prefixed versions
+
+- **src/js/core/sw-register.js** (49 lines):
+  - Self-executing Service Worker registration
+  - Extracted from separate `<script>` block (orig lines 20960–20999)
+  - Includes: SW registration, 30-min update interval, Background Sync, message listener, controllerchange reload
+
+- **src/js/core/state.js** (102 lines):
+  - Centralized `detailState` and `groupState` objects replacing scattered `window._*` globals
+  - Covers: devDetailId, lockDetailId, valveDetailId, regulatorDetailId, projectDetailId, flowDetailId, ticketDetailCatId, ticketDetailIndex
+  - Covers: devGroupCtx, lockGroupCtx, valveGroupCtx, regulatorGroupCtx, projectGroupCtx
+  - Convenience setters (also set window._* for backward compat)
+  - Convenience getters (fallback to window._*)
+  - `resetAllDetailIds()` and `resetAllGroupCtxs()` utility functions
+
+Stage Summary:
+- 4 ES module files created in src/js/core/
+- All function bodies preserved character-for-character from original source
+- All public functions/objects exported
+- JSDoc @module tags added to each file
+- Backward compatibility maintained via window._* dual-write in state.js
+
+---
 Task ID: 85
 Agent: AI Assistant (GLM)
 Task: Добавить графики ППР на 2026 год в Приборы и Блокировки
@@ -2246,3 +2295,72 @@ Stage Summary:
 - Десктопный бандл: 1764.6 KB (без mobile.css — экономия ~8 KB CSS)
 - JS пока общий — следующий этап: извлечение JS в модули
 - Структура: src/index.html + src/css/{base,mobile,desktop}.css → build.js → dist-{mobile,desktop}/
+---
+Task ID: 2-3b
+Agent: AI Assistant
+Task: Extract PHONEBOOK module from src/index.html into src/js/modules/phonebook.js
+
+Work Log:
+- Read lines 3053–3675 from src/index.html (~623 lines of phonebook code)
+- Created src/js/modules/phonebook.js as ES module
+- Preserved exact function bodies character-for-character from original source
+- Added @module phonebook header comment
+- Added `export` keyword to 9 public API functions: pbInit, pbRender, pbToggleFavorite, pbEditNote, pbToggleSection, pbToggleSubgroup, pbToggleFavFilter, pbIsFavorite, pbGetFavoritesCount
+- Internal functions (pbMakeId, pbLoadFavorites, pbSaveFavorites, pbLoadNotes, pbSaveNotes, pbGetNote, pbCleanupStaleFavorites, pbNorm, pbEsc, pbMark, pbLoad, pbFlatten, pbUpdateFilterButton, pbScrollToTop, pbScrollToTopDelayed, pbPlural) are NOT exported
+- Bridged external dependency: kipPrompt → window.kipPrompt (in pbEditNote)
+- No showToast or navigateTo references found in phonebook code
+- Verified: node -c syntax check passes
+- Verified: all 9 exports present, window.kipPrompt bridge OK, no bare kipPrompt, module header OK
+- Total lines: 629
+
+Stage Summary:
+- Phonebook module extracted as ES module at src/js/modules/phonebook.js
+- Public API: 9 exported functions
+- External bridge: window.kipPrompt for prompt dialogs
+- Ready for import via: import { pbInit, pbRender, ... } from './modules/phonebook.js';
+
+---
+Task ID: 2-3
+Agent: AI Assistant (Code)
+Task: Extract small independent JS modules from src/index.html (Variant A Stage 2)
+
+Work Log:
+- Read worklog.md and src/index.html source (lines 2749-3051, 8300-8506, 10641-10792, 21289-21337)
+- Created src/js/modules/ directory
+- Extracted 4 ES modules with character-for-character preserved function bodies:
+
+1. **minesweeper.js** (319 lines) — lines ~2749-3051
+   - All ms* variables and functions: msCols, msRows, msMines, msBoard, msRevealed, msFlagged, msGameOver, msFirstClick, msTimerInterval, msSeconds, msLongPressTimer, msLongPressFired
+   - msDifficulties const, msSetDifficulty, msInit, msPlaceMines, msCalcCellSize, msRender, msReveal, msFloodReveal, msToggleFlag, msRevealAllMines, msCheckWin, msShowOverlay
+   - Secret tap: secretTapCount, secretTapTimer, SECRET_TAP_THRESHOLD, secretTouchHandled, SECRET_BUTTON_IDS, secretTapHandler + IIFE registration
+   - Exported: msInit, msSetDifficulty, msRender, secretTapHandler
+
+2. **geometry.js** (174 lines) — lines ~10641-10792
+   - calcGeoCircle, calcGeoRing, calcGeoCylinder, calcGeoHorizCyl, calcGeoSphere, calcGeoCone
+   - Uses window bridges: parseLocaleNumber, formatNumber, showToast
+   - Exported: all 6 calculator functions
+
+3. **plan114.js** (218 lines) — lines ~8308-8506
+   - PLAN114_ITEMS const (6 building plans with Google Drive IDs)
+   - plan114InitEntryButton(), plan114RenderList(), plan114OpenView() (async, with image preloading, rotation logic)
+   - plan114ListRendered flag
+   - Uses window bridge: navigateTo
+   - Exported: plan114InitEntryButton, plan114RenderList, PLAN114_ITEMS
+
+4. **whats-new.js** (67 lines) — lines ~21289-21337
+   - showAboutModal, closeAboutModal
+   - WHATS_NEW_VERSION, WHATS_NEW_READ_KEY constants
+   - whatsNewMarkRead, whatsNewHasUnread, whatsNewUpdateBtnState
+   - Self-initializes: whatsNewUpdateBtnState() on load
+   - Exported: all functions and constants
+
+- All modules use `window.functionName` as temporary bridges for external dependencies
+- Each module has @module JSDoc tag header with description and dependency notes
+- Internal functions are NOT exported — only the public API surface
+- Logic is preserved exactly — no modifications beyond module restructuring
+
+Stage Summary:
+- 4 ES modules extracted from monolithic index.html (774 total lines)
+- All modules verified: syntax valid, exports present, correct line counts
+- Temporary window bridges in place for navigateTo, showToast, parseLocaleNumber, formatNumber
+- Ready for Stage 2 integration: these modules can be imported once the main script is modularized
