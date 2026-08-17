@@ -1,0 +1,53 @@
+
+        <!-- ======================== Документация ИОС ======================== -->
+        <div id="page-docs-ios" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Документация ИОС</div></div>
+
+            <div class="kip-ios-block">
+                <div class="menu-btn-row">
+                    <div id="flowmeterMenuBtn" class="menu-btn" onclick="navigateTo('flowmeter-data')" style="cursor: pointer;"><div class="menu-btn-text"><div class="menu-btn-label">Расходомеры хозрасчётные</div><div class="menu-btn-sublabel">Накопительные расходы и показания</div></div><svg class="menu-btn-arrow" viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: rgba(255,255,255,0.12); fill: none; stroke-width: 2; stroke-linecap: round;"><polyline points="9 18 15 12 9 6"/></svg></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== РАСХОДОМЕРЫ ХОЗРАСЧЁТНЫЕ — список записей ======================== -->
+        <div id="page-flowmeter-data" class="page-content">
+            <div class="page-inline-header">
+                <div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div>
+                <div class="page-inline-header-title">Расходомеры хозрасчётные</div>
+                <!-- Десктоп: фильтры в хедере (справа от хлебных крошек) -->
+                <div class="flow-header-filters" id="flowHeaderFilters">
+                    <button type="button" class="flow-header-filter-btn active" data-flow-filter="all" onclick="FlowUserView.setFilter('all')">Все</button>
+                    <button type="button" class="flow-header-filter-btn" data-flow-filter="fav" onclick="FlowUserView.setFilter('fav')">Избранное <span class="flow-header-filter-count" id="flowHeaderFavCount">0</span></button>
+                    <button type="button" class="flow-header-filter-btn" data-flow-filter="hidden" onclick="FlowUserView.setFilter('hidden')">Скрытые <span class="flow-header-filter-count" id="flowHeaderHiddenCount">0</span></button>
+                    <button type="button" class="flow-header-restore-btn" id="flowHeaderRestoreBtn" onclick="FlowUserView.restoreAll()" style="display:none;">Показать все</button>
+                </div>
+            </div>
+            <div id="flowList" class="flow-list">
+                <div class="admin-empty" id="flowEmpty">Загрузка…</div>
+            </div>
+        </div>
+
+        <!-- Расходомеры: нижний бар фильтров -->
+        <div class="flow-filter-bar" id="flowFilterBar">
+            <button type="button" class="flow-filter-btn active" data-flow-filter="all" onclick="FlowUserView.setFilter('all')">Все</button>
+            <div class="flow-filter-divider"></div>
+            <button type="button" class="flow-filter-btn" data-flow-filter="fav" onclick="FlowUserView.setFilter('fav')">Избранное <span class="flow-filter-count" id="flowFavCount">0</span></button>
+            <div class="flow-filter-divider"></div>
+            <button type="button" class="flow-filter-btn" data-flow-filter="hidden" onclick="FlowUserView.setFilter('hidden')">Скрытые <span class="flow-filter-count" id="flowHiddenCount">0</span></button>
+            <div class="flow-filter-divider" id="flowRestoreDivider" style="display:none;"></div>
+            <button type="button" class="flow-filter-restore" id="flowRestoreBtn" onclick="FlowUserView.restoreAll()" style="display:none;">Показать все</button>
+        </div>
+
+        <!-- ======================== РАСХОДОМЕРЫ ХОЗРАСЧЁТНЫЕ — детальная карточка ======================== -->
+        <div id="page-flowmeter-detail" class="page-content">
+            <div class="page-inline-header">
+                <div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div>
+                <div class="page-inline-header-title" id="flowDetailTitle">Расходомер</div>
+                <button type="button" class="flow-detail-fav-btn" id="flowDetailFavBtn" onclick="FlowUserView.toggleFavFromDetail()">
+                    <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </button>
+            </div>
+            <div id="flowDetailBody" class="flow-detail-body"></div>
+            <div class="flow-detail-bottom-bar" id="flowDetailBottomBar"></div>
+        </div>

@@ -1,0 +1,97 @@
+
+<div id="toast" class="toast"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg><span id="toastMessage"></span><span id="toastAction" class="toast-action" style="display:none;"></span></div>
+
+<!-- ===== Нижний бар быстрого доступа (только на главной) ===== -->
+<div id="dashboardBottomBar" class="dashboard-bottom-bar">
+    <button type="button" class="dashboard-bottom-btn" onclick="navigateTo('calculators')">
+        <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/></svg>
+        <span>Инженерные калькуляторы</span>
+        <button type="button" class="dashboard-bottom-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('calculators')"><svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
+    </button>
+    <button type="button" class="dashboard-bottom-btn dashboard-bottom-btn-docs" onclick="navigateTo('docs')">
+        <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span>Документация</span>
+        <button type="button" class="dashboard-bottom-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('docs')"><svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
+    </button>
+</div>
+
+<!-- ===== Bottom sheet для pin/unpin подраздела ===== -->
+<div id="pinSheetOverlay" class="pin-sheet-overlay" onclick="closePinSheet()"></div>
+<div id="pinSheet" class="pin-sheet">
+    <div class="pin-sheet-handle"></div>
+    <div id="pinSheetTitle" class="pin-sheet-title">Подраздел</div>
+    <div id="pinSheetSublabel" class="pin-sheet-sublabel"></div>
+    <!-- Дополнительные кнопки перемещения (видны только для закреплённых пунктов) -->
+    <div id="pinSheetExtraActions" class="pin-sheet-extra-actions" style="display:none;"></div>
+    <button type="button" id="pinSheetAction" class="pin-sheet-action" onclick="executePinToggle()">Добавить на главную</button>
+    <button type="button" class="pin-sheet-cancel" onclick="closePinSheet()">Отмена</button>
+</div>
+
+<!-- ===== Bottom sheet для ввода новых показаний расходомера ===== -->
+<div id="flowInputOverlay" class="pin-sheet-overlay" onclick="FlowmeterData.closeInput()"></div>
+<div id="flowInputSheet" class="flow-input-sheet">
+    <div class="flow-input-sheet-handle"></div>
+    <div class="flow-input-sheet-title" id="flowInputTitle">Ввести показания</div>
+    <input type="text" inputmode="decimal" id="flowInputField" class="flow-input-field" placeholder="Текущие показания" autocomplete="off" enterkeyhint="done" onkeydown="if(event.key==='Enter')FlowmeterData.submitInput()">
+    <div class="flow-input-row">
+        <div class="flow-input-group">
+            <label class="flow-input-label" for="flowInputTemp">Температура, °C</label>
+            <input type="text" inputmode="decimal" id="flowInputTemp" class="flow-input-field-small" placeholder="— (необязательно)" autocomplete="off" enterkeyhint="done" onkeydown="if(event.key==='Enter')FlowmeterData.submitInput()">
+        </div>
+        <div class="flow-input-group">
+            <label class="flow-input-label" for="flowInputDate">Дата снятия</label>
+            <input type="date" id="flowInputDate" class="flow-input-field-small">
+        </div>
+    </div>
+    <button type="button" class="flow-input-submit" onclick="FlowmeterData.submitInput()">Сохранить</button>
+    <button type="button" class="flow-input-cancel" onclick="FlowmeterData.closeInput()">Отмена</button>
+</div>
+
+
+
+
+<!-- Кнопка обновления: статус подключения + действие по клику -->
+
+<!-- About Modal -->
+<div class="about-modal-overlay" id="aboutModalOverlay" onclick="closeAboutModal()">
+    <div class="about-modal" onclick="event.stopPropagation()">
+        <div class="about-modal-close" onclick="closeAboutModal()">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:rgba(140,170,200,0.7);fill:none;stroke-width:2;stroke-linecap:round;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+        <img class="about-modal-logo" src="images/icon-192.png" alt="КИПиА">
+        <div class="about-modal-title">КИПиА</div>
+        <div class="about-modal-version">Версия 3.1.0</div>
+        <div class="about-modal-desc">Справочник и калькулятор контрольно-измерительных приборов и автоматики</div>
+        <div class="about-modal-divider"></div>
+        <div class="about-modal-row"><span class="about-modal-row-label">Платформа</span><span class="about-modal-row-value">PWA / TWA</span></div>
+        <div class="about-modal-row"><span class="about-modal-row-label">Движок</span><span class="about-modal-row-value">Chromium WebView</span></div>
+        <div class="about-modal-row"><span class="about-modal-row-label">Разработчик</span><span class="about-modal-row-value">bloknett-design</span></div>
+    </div>
+</div>
+
+<!-- Create User Modal (Админ: добавить пользователя) -->
+<div class="create-user-overlay" id="createUserOverlay" onclick="KipAdmin.closeCreateUser()">
+    <div class="create-user-modal" onclick="event.stopPropagation()">
+        <div class="create-user-close" onclick="KipAdmin.closeCreateUser()">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke-width:2;stroke-linecap:round;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+        <div class="create-user-title">Новый пользователь</div>
+        <div class="create-user-subtitle">После создания пользователь сможет запросить код входа на свой email</div>
+        <label class="create-user-label" for="createUserEmail">Email</label>
+        <input type="email" id="createUserEmail" class="create-user-field" placeholder="user@example.com" autocomplete="off" enterkeyhint="next">
+        <label class="create-user-label" for="createUserRole">Роль</label>
+        <select id="createUserRole" class="create-user-field"></select>
+        <button type="button" id="createUserBtn" class="create-user-btn" onclick="KipAdmin.createUser()">Создать пользователя</button>
+        <div id="createUserError" class="create-user-error"></div>
+        <div class="create-user-hint">Пользователь добавится с состоянием «вход не выполнен». После первого входа он появится в списке сессий.</div>
+    </div>
+</div>
+
+
+<!-- Cable Journal: модалка редактирования удалена (Task 57).
+     Просмотр записей теперь ведёт на отдельную страницу page-cable-journal-view.
+     Редактирование и удаление сохранённых записей в приложении запрещены. -->
+
+<script type="module" src="./js/app.js"></script>
+</body>
+</html>

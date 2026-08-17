@@ -1,0 +1,175 @@
+
+        <!-- ======================== КИП ИОС (родительское меню) ======================== -->
+        <div id="page-kip-ios" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">КИП ИОС</div></div>
+
+            <div class="kip-ios-block">
+                <div class="kip-ios-block-update">
+                    <span class="kip-ios-block-update-label">Последние изменения:</span>
+                    <span class="kip-ios-block-update-date" id="kip-ios-last-update">—</span>
+                </div>
+                <div class="menu-btn-row">
+                    <div class="dev-swipe-cell" id="devSwipeCell">
+                        <div class="dev-swipe-bg dev-swipe-bg-left"><span>По наименованию</span></div>
+                        <div class="dev-swipe-bg dev-swipe-bg-right"><span>По типу</span></div>
+                        <div class="menu-btn" id="devicesEntryBtn"><div class="menu-btn-text"><div class="menu-btn-label">Приборы</div><div class="menu-btn-sublabel">1312 приборов КИП ИОС</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('devices')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow">›</i></div>
+                    </div>
+                    <div class="menu-btn" id="lockoutsEntryBtn" style="border-color:rgba(184,90,122,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#b85a7a;">Блокировки</div><div class="menu-btn-sublabel">По производствам</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('lockouts')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(184,90,122,0.4);">›</i></div>
+                    <div class="dev-swipe-cell valve-swipe-cell" id="valveSwipeCell">
+                        <div class="dev-swipe-bg dev-swipe-bg-left valve-swipe-bg"><span>По DN</span></div>
+                        <div class="dev-swipe-bg dev-swipe-bg-right valve-swipe-bg"><span>По типу</span></div>
+                        <div class="menu-btn" id="valvesEntryBtn" style="border-color:rgba(74,138,140,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#4a8a8c;">Клапана</div><div class="menu-btn-sublabel">По производствам</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('valves')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(74,138,140,0.4);">›</i></div>
+                    </div>
+                    <div class="menu-btn" id="regulatorsEntryBtn" style="border-color:rgba(126,90,184,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#7e5ab8;">Регуляторы</div><div class="menu-btn-sublabel">По производствам</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('regulators')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(126,90,184,0.4);">›</i></div>
+                    <div class="menu-btn" id="chartsEntryBtn" style="border-color:rgba(58,162,136,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#3aa288;">Графики</div><div class="menu-btn-sublabel">Статистика КИП ИОС</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('charts')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(58,162,136,0.4);">›</i></div>
+                </div>
+            </div>
+
+            <div class="menu-btn-row">
+                <div class="menu-btn" id="projectsEntryBtn" style="border-color:rgba(176,128,72,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#b08048;">Проекты</div><div class="menu-btn-sublabel">По отделениям</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('projects')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(176,128,72,0.4);">›</i></div>
+            </div>
+            <div class="menu-btn-row">
+                <div class="menu-btn" id="cablesEntryBtn" style="border-color:rgba(120,144,100,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#8aa070;">Кабельный журнал</div><div class="menu-btn-sublabel">Журнал КИП пр-ва ИОС</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('cables')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(120,144,100,0.4);">›</i></div>
+            </div>
+            <div class="menu-btn-row">
+                <div class="menu-btn" id="plan114EntryBtn" style="border-color:rgba(120,140,170,0.35);"><div class="menu-btn-text"><div class="menu-btn-label" style="color:#7896b0;">План корпуса 114</div><div class="menu-btn-sublabel">6 планов помещений</div></div><button type="button" class="menu-btn-overflow" aria-label="Действия" onclick="event.stopPropagation(); openPinSheet('plan-114')"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button><i class="menu-btn-arrow" style="color:rgba(120,140,170,0.4);">›</i></div>
+            </div>
+        </div>
+
+        <!-- ======================== ПРИБОРЫ — ПО ТИПУ ======================== -->
+        <div id="page-devices-type" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Приборы по типу</div><input type="search" id="devTypeSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="devRenderSorted('type')"></div>
+            <div class="pb-info" id="devTypeInfo">Загрузка…</div>
+            <div id="devTypeList"></div>
+        </div>
+
+        <!-- ======================== ПРИБОРЫ — ПО НАИМЕНОВАНИЮ ======================== -->
+        <div id="page-devices-name" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Приборы по наименованию</div><input type="search" id="devNameSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="devRenderSorted('name')"></div>
+            <div class="pb-info" id="devNameInfo">Загрузка…</div>
+            <div id="devNameList"></div>
+        </div>
+
+        <!-- ======================== ПРИБОРЫ — ПО ПРОИЗВОДСТВАМ ======================== -->
+        <div id="page-devices-prod" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Приборы по производствам</div><input type="search" id="devProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="devRenderSorted('prod')"></div>
+            <div class="pb-info" id="devProdInfo">Загрузка…</div>
+            <div id="devProdList"></div>
+        </div>
+
+        
+        <!-- ======================== КАРТОЧКА ПРИБОРА ======================== -->
+        <div id="page-device-detail" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="deviceDetailTitle">Прибор</div><button type="button" id="deviceFavBtn" class="dev-fav-header-btn" onclick="KipFav.toggleFromDetail()" aria-label="Избранное" title="Добавить/убрать из избранного"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div>
+            <div id="deviceDetailContent"></div>
+        </div>
+
+        <!-- ======================== ИЗБРАННОЕ ======================== -->
+        <div id="page-device-favorites" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Избранное</div><span id="favHeaderCount" class="fav-header-count" style="display:none;"></span><button type="button" id="favHeaderClearBtn" class="fav-header-clear-btn" style="display:none;" onclick="KipFav.clearAll()">Удалить все</button></div>
+            <div id="deviceFavoritesContent"></div>
+        </div>
+
+        <!-- ======================== БЛОКИРОВКИ ======================== -->
+        <div id="page-lockouts-prod" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Блокировки по производствам</div><input type="search" id="lockProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="lockRenderSorted('prod')"></div>
+            <div id="lockProdInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
+            <div id="lockProdList"></div>
+        </div>
+
+        <!-- ======================== КАРТОЧКА БЛОКИРОВКИ ======================== -->
+        <div id="page-lockout-detail" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="lockoutDetailTitle">Блокировка</div><button type="button" id="lockFavBtn" class="dev-fav-header-btn" onclick="KipFav.toggleFromDetailByType('lock')" aria-label="Избранное" title="Добавить/убрать из избранного"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div>
+            <div id="lockoutDetailContent"></div>
+        </div>
+
+        <!-- ======================== КЛАПАНЫ — ПО ТИПУ (свайп справа налево) ======================== -->
+        <div id="page-valves-type" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Клапана по типу</div><input type="search" id="valveTypeSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="valveRenderSorted('type')"></div>
+            <div class="pb-info" id="valveTypeInfo">Загрузка…</div>
+            <div id="valveTypeList"></div>
+        </div>
+
+        <!-- ======================== КЛАПАНЫ — ПО DN (свайп слева направо) ======================== -->
+        <div id="page-valves-name" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Клапана по DN</div><input type="search" id="valveNameSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="valveRenderSorted('name')"></div>
+            <div class="pb-info" id="valveNameInfo">Загрузка…</div>
+            <div id="valveNameList"></div>
+        </div>
+
+        <!-- ======================== КЛАПАНЫ — ПО ПРОИЗВОДСТВАМ (тап) ======================== -->
+        <div id="page-valves-prod" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Клапана по производствам</div><input type="search" id="valveProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="valveRenderSorted('prod')"></div>
+            <div id="valveProdInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
+            <div id="valveProdList"></div>
+        </div>
+
+        <!-- ======================== КАРТОЧКА КЛАПАНА ======================== -->
+        <div id="page-valve-detail" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="valveDetailTitle">Клапан</div><button type="button" id="valveFavBtn" class="dev-fav-header-btn" onclick="KipFav.toggleFromDetailByType('valve')" aria-label="Избранное" title="Добавить/убрать из избранного"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div>
+            <div id="valveDetailContent"></div>
+        </div>
+
+        <!-- ======================== РЕГУЛЯТОРЫ — ПО ПРОИЗВОДСТВАМ ======================== -->
+        <div id="page-regulators-prod" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Регуляторы по производствам</div><input type="search" id="regulatorProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="regulatorRenderSorted('prod')"></div>
+            <div id="regulatorProdInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
+            <div id="regulatorProdList"></div>
+        </div>
+
+        <!-- ======================== КАРТОЧКА РЕГУЛЯТОРА ======================== -->
+        <div id="page-regulator-detail" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="regulatorDetailTitle">Регулятор</div><button type="button" id="regulatorFavBtn" class="dev-fav-header-btn" onclick="KipFav.toggleFromDetailByType('reg')" aria-label="Избранное" title="Добавить/убрать из избранного"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div>
+            <div id="regulatorDetailContent"></div>
+        </div>
+
+        <!-- ======================== СПИСОК ПРИБОРОВ ВНУТРИ ГРУППЫ ======================== -->
+        <div id="page-dev-group" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="devGroupTitle">Приборы</div></div>
+            <div id="devGroupList"></div>
+        </div>
+
+        <!-- ======================== СПИСОК БЛОКИРОВОК ВНУТРИ ГРУППЫ ======================== -->
+        <div id="page-lock-group" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="lockGroupTitle">Блокировки</div></div>
+            <div id="lockGroupList"></div>
+        </div>
+
+        <!-- ======================== СПИСОК КЛАПАНОВ ВНУТРИ ГРУППЫ ======================== -->
+        <div id="page-valve-group" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="valveGroupTitle">Клапаны</div></div>
+            <div id="valveGroupList"></div>
+        </div>
+
+        <!-- ======================== СПИСОК РЕГУЛЯТОРОВ ВНУТРИ ГРУППЫ ======================== -->
+        <div id="page-regulator-group" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="regulatorGroupTitle">Регуляторы</div></div>
+            <div id="regulatorGroupList"></div>
+        </div>
+
+        <!-- ======================== ПРОЕКТЫ — ПО ОТДЕЛЕНИЯМ ======================== -->
+        <div id="page-projects-prod" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Проекты по отделениям</div><input type="search" id="projectProdSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="projectsRenderSorted('prod')"></div>
+            <div id="projectProdInfo" class="pb-info-bar" style="padding:6px 14px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">Загрузка…</div>
+            <div id="projectProdList"></div>
+        </div>
+
+        <!-- ======================== КАРТОЧКА ПРОЕКТА ======================== -->
+        <div id="page-project-detail" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="projectDetailTitle">Проект</div><button type="button" id="projectFavBtn" class="dev-fav-header-btn" onclick="KipFav.toggleFromDetailByType('proj')" aria-label="Избранное" title="Добавить/убрать из избранного"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div>
+            <div id="projectDetailContent"></div>
+        </div>
+
+        <!-- ======================== СПИСОК ПРОЕКТОВ ВНУТРИ ГРУППЫ ======================== -->
+        <div id="page-project-group" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title" id="projectGroupTitle">Проекты</div></div>
+            <div id="projectGroupList"></div>
+        </div>
+
+        <!-- ======================== ПРИБОРЫ (КИП ИОС) ======================== -->
+        <div id="page-devices" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Приборы</div><input type="search" id="devSearchInput" class="dev-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="devRender()"></div>
+
+            <div class="pb-info" id="devInfo">Загрузка…</div>
+            <div id="devList"></div>
+        </div>

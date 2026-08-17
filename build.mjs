@@ -5,9 +5,10 @@
 //   node build.mjs desktop  → Electron-бандл (base.css + desktop.css)
 //
 // Стратегия:
-//   1. CSS-файлы → один <style> блок (инлайн в HTML)
-//   2. JS-модули → esbuild bundle → один <script> блок (инлайн в HTML)
-//   3. Изображения и данные копируются как есть
+//   1. HTML-паршалы: <!-- @include html/xxx.html --> → содержимое файла
+//   2. CSS-файлы → один <style> блок (инлайн в HTML)
+//   3. JS-модули → esbuild bundle → один <script> блок (инлайн в HTML)
+//   4. Изображения и данные копируются как есть
 // Результат — автономный index.html для offline PWA.
 // ============================================================
 
@@ -72,12 +73,27 @@ const jsResult = await esbuild.build({
 const bundledJs = jsResult.outputFiles[0].text;
 console.log(`  ✓ JS bundled: ${bundledJs.split('\n').length} lines (${(bundledJs.length / 1024).toFixed(1)} KB)`);
 
-// --- 4. Прочитать HTML-шаблон ---
+// --- 4. Прочитать HTML-шаблон и раскрыть @include ---
 const htmlPath = resolve(srcDir, 'index.html');
 let html = readFileSync(htmlPath, 'utf-8');
 console.log(`  ✓ HTML template: ${(html.length / 1024).toFixed(1)} KB (${html.split('\n').length} lines)`);
 
+// --- 4b. Раскрыть <!-- @include html/xxx.html --> директивы ---
+const includeRegex = /<!--\s*@include\s+(\S+)\s*-->/g;
+let includeCount = 0;
+html = html.replace(includeRegex, (match, relPath) => {
+    const incPath = resolve(srcDir, relPath);
+    if (!existsSync(incPath)) {
+        console.warn(`  ⚠ Include not found: ${relPath}`);
+        return match; // оставляем как есть если файл не найден
+    }
+    includeCount++;
+    return readFileSync(incPath, 'utf-8');
+});
+console.log(`  ✓ @include resolved: ${includeCount} partials`);
+
 // --- 5. Заменить <link> на инлайн <style> ---
+// (работает после раскрытия @include — CSS <link> из head.html)
 // Убираем все <link> на CSS-файлы
 html = html.replace(/<link[^>]*href=["']\.\/css\/(?:base|mobile|desktop)\.css["'][^>]*>\n?/g, '');
 // Вставляем инлайн <style> после <title>

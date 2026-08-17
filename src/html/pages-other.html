@@ -1,0 +1,253 @@
+
+        <!-- ======================== ГРАФИКИ КИП ИОС ======================== -->
+        <div id="page-charts" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Графики КИП ИОС</div></div>
+            <!-- Вкладки -->
+            <div class="charts-tabs">
+                <button class="charts-tab charts-tab-active" data-chart-tab="devices" onclick="KipCharts.switchTab('devices')">Приборы</button>
+                <button class="charts-tab" data-chart-tab="lockouts" onclick="KipCharts.switchTab('lockouts')">Блокировки</button>
+                <button class="charts-tab" data-chart-tab="valves" onclick="KipCharts.switchTab('valves')">Клапана</button>
+                <button class="charts-tab" data-chart-tab="regulators" onclick="KipCharts.switchTab('regulators')">Регуляторы</button>
+            </div>
+            <!-- Содержимое вкладки -->
+            <div id="chartsContent" class="charts-content">
+                <div class="charts-loading">Загрузка…</div>
+            </div>
+        </div>
+
+        <!-- ======================== ИГРА САПЁР ======================== -->
+        <div id="page-minesweeper" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Сапёр</div></div>
+
+            <div class="ms-container">
+                <div class="ms-header">
+                    <div class="ms-left">
+                        <div class="ms-counter"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg><span id="msMineCount">10</span></div>
+                        <div class="ms-face-btn" id="msFaceBtn" onclick="msInit()">😊</div>
+                        <div class="ms-timer"><span id="msTimer">000</span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+                    </div>
+                    <select class="form-field" id="msDiffSelect" style="flex-shrink:0; width:auto; min-width:90px; margin-bottom:0;" onchange="msSetDifficulty(this.value)">
+                        <option value="easy" selected>9x9</option>
+                        <option value="medium">9x16</option>
+                        <option value="hard">9x28</option>
+                    </select>
+                </div>
+                <div style="display:flex;">
+                    <div class="ms-board-center" style="position:relative; flex-shrink:0;">
+                        <div class="ms-board" id="msBoard"></div>
+                        <div class="ms-game-over-overlay" id="msOverlay" style="display:none;">
+                            <div class="ms-game-over-text" id="msGameOverText"></div>
+                            <div class="ms-game-over-sub" id="msGameOverSub"></div>
+                            <button class="ms-restart-btn" onclick="msInit()">Новая игра</button>
+                        </div>
+                    </div>
+                    <div class="ms-board-scroll-spacer"></div>
+                </div>
+                <div class="ms-hint">Нажмите — открыть клетку · Долгое нажатие — поставить флаг</div>
+            </div>
+        </div>
+
+        <!-- ======================== ТЕЛЕФОННЫЙ СПРАВОЧНИК ======================== -->
+        <div id="page-phonebook" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Телефонный справочник</div></div>
+
+            <div class="pb-search-wrap">
+                <input type="search" id="pbSearchInput" class="pb-search-input" placeholder="Поиск: имя, должность, телефон…" autocomplete="off" enterkeyhint="search" oninput="pbRender()">
+                <div class="pb-toolbar">
+                    <button type="button" id="pbFilterFav" class="pb-filter-btn" onclick="pbToggleFavFilter()">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <span id="pbFilterFavLabel">Только избранные</span>
+                    </button>
+                </div>
+            </div>
+            <div class="pb-info" id="pbInfo">Загрузка…</div>
+            <div id="pbList" class="pb-list"></div>
+        </div>
+
+        <!-- ======================== ЧТО НОВОГО / СПРАВКА ======================== -->
+        <div id="page-whats-new" class="page-content">
+            <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Что нового</div></div>
+            <div class="whats-new-page">
+                <!-- Версия -->
+                <div class="wn-version-badge">Версия 3.1.0</div>
+
+                <!-- === ОБНОВЛЕНИЯ === -->
+                <div class="wn-section">
+                    <div class="wn-section-title"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin$"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> Последние обновления</div>
+
+                    <div class="wn-update-card wn-update-single">
+                        <div class="wn-update-date">Версия 3.1.0</div>
+                        <ul class="wn-update-list">
+                            <li><b>Настраиваемый дашборд</b> — закрепляйте разделы на главной, перетаскивайте карточки для изменения порядка, удаляйте свайпом.</li>
+                            <li><b>Избранное для всех каталогов</b> — закладка доступна не только в приборах, но и в блокировках, клапанах и регуляторах. Список избранного можно перетаскивать и очищать свайпом.</li>
+                            <li><b>Десктоп: разделённый экран</b> — на широких экранах список и карточка деталей показываются рядом; кнопка ⇄ меняет панели местами.</li>
+                            <li><b>Перетаскивание и свайпы</b> — долгое зажатие + перетаскивание для смены порядка; свайп по карточке — удаление из закреплённых / избранного или добавление в каталогах.</li>
+                            <li><b>Страница обновлений и справки</b> — раздел «Что нового» с возможностями и инструкциями; значок <b>?</b> в верхнем баре подсвечивается красным при непрочитанных обновлениях.</li>
+                            <li><b>Расходомеры хозрасчётные</b> — новый раздел для просмотра и ввода показаний расходомеров. Данные загружаются из архива в реальном времени, дежурный КИП ИОС и администратор могут вводить текущие показания из приложения.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- === ВОЗМОЖНОСТИ === -->
+                <div class="wn-section">
+                    <div class="wn-section-title"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Возможности приложения</div>
+
+                    <div class="wn-feature-grid">
+                        <div class="wn-feature-card">
+                            <div class="wn-feature-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+                            <div class="wn-feature-name">Настраиваемый дашборд</div>
+                            <div class="wn-feature-desc">Закрепляйте нужные разделы на главной, перетаскивайте и удаляйте свайпом. Порядок сохраняется между сессиями.</div>
+                        </div>
+
+                        <div class="wn-feature-card">
+                            <div class="wn-feature-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+                            <div class="wn-feature-name">Избранное</div>
+                            <div class="wn-feature-desc">Добавляйте приборы, блокировки, клапаны и регуляторы в избранное. Перетаскивайте для изменения порядка, удаляйте свайпом.</div>
+                        </div>
+
+                        <div class="wn-feature-card">
+                            <div class="wn-feature-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+                            <div class="wn-feature-name">Поиск и фильтрация</div>
+                            <div class="wn-feature-desc">Мгновенный поиск по наименованию, номеру прибора, месту установки и другим полям. Фильтрация по производствам и типам.</div>
+                        </div>
+
+                        <div class="wn-feature-card">
+                            <div class="wn-feature-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg></div>
+                            <div class="wn-feature-name">Каталоги КИПиА</div>
+                            <div class="wn-feature-desc">Приборы, блокировки, клапаны, регуляторы — с полными техническими данными, связями по номерам СБС и САРиРУ, ссылками на проекты.</div>
+                        </div>
+
+                        <div class="wn-feature-card">
+                            <div class="wn-feature-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+                            <div class="wn-feature-name">Инженерные калькуляторы</div>
+                            <div class="wn-feature-desc">Расчёт КИПиА, электрических цепей, геометрических параметров. Перевод единиц, расчёт погрешностей, подбор диафрагм и буйковых уровнемеров.</div>
+                        </div>
+
+                        <div class="wn-feature-card">
+                            <div class="wn-feature-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
+                            <div class="wn-feature-name">Документация</div>
+                            <div class="wn-feature-desc">Библиотека нормативных документов, экзаменационные билеты для проверки знаний, справочники по ошибкам измерений.</div>
+                        </div>
+
+                        <div class="wn-feature-card">
+                            <div class="wn-feature-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
+                            <div class="wn-feature-name">Проекты и журналы</div>
+                            <div class="wn-feature-desc">Просмотр проектов с привязанными приборами. Журнал кабельных трасс с добавлением и редактированием записей. Расходомеры хозрасчётные — просмотр и ввод показаний.</div>
+                        </div>
+
+                        <div class="wn-feature-card">
+                            <div class="wn-feature-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></div>
+                            <div class="wn-feature-name">Тёмная и светлая темы</div>
+                            <div class="wn-feature-desc">Переключение между тёмной и светлой темой через боковое меню. Выбор сохраняется и восстанавливается при следующем визите.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- === ИНСТРУКЦИЯ === -->
+                <div class="wn-section">
+                    <div class="wn-section-title"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Как пользоваться</div>
+
+                    <div class="wn-instruction-group">
+                        <div class="wn-instruction-title">Навигация</div>
+                        <div class="wn-instruction-item">
+                            <div class="wn-instruction-anim wn-anim-nav">
+                                <div class="wn-anim-phone">
+                                    <div class="wn-anim-sidebar"></div>
+                                    <div class="wn-anim-content"></div>
+                                </div>
+                            </div>
+                            <div class="wn-instruction-text">
+                                <b>Боковое меню</b> — нажмите значок ☰ (гамбургер) в левом верхнем углу, чтобы открыть навигацию по разделам. На десктопе меню всегда видно слева.
+                            </div>
+                        </div>
+                        <div class="wn-instruction-item">
+                            <div class="wn-instruction-anim wn-anim-back">
+                                <div class="wn-anim-phone">
+                                    <div class="wn-anim-chevron"></div>
+                                    <div class="wn-anim-page"></div>
+                                </div>
+                            </div>
+                            <div class="wn-instruction-text">
+                                <b>Назад</b> — шеврон ◀ в заголовке страницы или свайп от левого края возвращает на предыдущий экран. Кнопка «Назад» устройства тоже работает.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="wn-instruction-group">
+                        <div class="wn-instruction-title">Перетаскивание и свайпы</div>
+                        <div class="wn-instruction-item">
+                            <div class="wn-instruction-anim wn-anim-drag">
+                                <div class="wn-anim-card wn-anim-card-1"></div>
+                                <div class="wn-anim-card wn-anim-card-2"></div>
+                                <div class="wn-anim-card wn-anim-card-3"></div>
+                                <div class="wn-anim-finger"></div>
+                            </div>
+                            <div class="wn-instruction-text">
+                                <b>Долгое зажатие + перетаскивание</b> — удерживайте палец на карточке ~0,5 секунды, затем двигайте. Отпустите над другой карточкой, чтобы поменять их местами. Работает на главной (закреплённые разделы) и в списке избранного.
+                            </div>
+                        </div>
+                        <div class="wn-instruction-item">
+                            <div class="wn-instruction-anim wn-anim-swipe">
+                                <div class="wn-anim-card-full"></div>
+                                <div class="wn-anim-arrow"></div>
+                            </div>
+                            <div class="wn-instruction-text">
+                                <b>Свайп влево/вправо</b> — быстрое горизонтальное движение по карточке удаляет её из закреплённых или из избранного (с красной подложкой «Убрать»). На страницах каталогов свайп добавляет карточку в избранное (зелёная подложка).
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="wn-instruction-group">
+                        <div class="wn-instruction-title">Избранное и закреплённые</div>
+                        <div class="wn-instruction-item">
+                            <div class="wn-instruction-anim wn-anim-fav">
+                                <div class="wn-anim-card-fav"></div>
+                                <div class="wn-anim-bookmark"></div>
+                            </div>
+                            <div class="wn-instruction-text">
+                                <b>Значок закладки</b> — нажмите значок <svg viewBox="0 0 24 32" width="13" height="17" style="vertical-align: middle; fill: rgba(199,150,74,0.85);"><path d="M2 0h20v32l-10-7-10 7z"/></svg> в заголовке карточки (мобильный) или в правом верхнем углу (десктоп), чтобы добавить запись в избранное. Значок становится золотым. Повторное нажатие убирает из избранного.
+                            </div>
+                        </div>
+                        <div class="wn-instruction-item">
+                            <div class="wn-instruction-anim wn-anim-pin">
+                                <div class="wn-anim-pinned"></div>
+                            </div>
+                            <div class="wn-instruction-text">
+                                <b>Закреплённые разделы</b> — на главной странице нажмите «⋯» (три точки) на карточке раздела, чтобы закрепить или открепить её. Закреплённые карточки можно перетаскивать для изменения порядка.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="wn-instruction-group">
+                        <div class="wn-instruction-title">Десктоп (широкий экран)</div>
+                        <div class="wn-instruction-item">
+                            <div class="wn-instruction-anim wn-anim-split">
+                                <div class="wn-anim-master"></div>
+                                <div class="wn-anim-detail"></div>
+                            </div>
+                            <div class="wn-instruction-text">
+                                <b>Разделённый экран</b> — на экранах от 1024 px список и карточка деталей показываются рядом. Клик по карточке в списке открывает её справа. Кнопка ⇄ в заголовке меняет панели местами.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="wn-instruction-group">
+                        <div class="wn-instruction-title">Поиск</div>
+                        <div class="wn-instruction-item">
+                            <div class="wn-instruction-anim wn-anim-search">
+                                <div class="wn-anim-search-bar"></div>
+                                <div class="wn-anim-results"></div>
+                            </div>
+                            <div class="wn-instruction-text">
+                                <b>Строка поиска</b> — на страницах списков введите название, номер или место установки. Результаты фильтруются мгновенно. Очистите поле, чтобы показать все записи.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Кнопка «Понятно» -->
+                <div class="wn-footer">
+                    <button type="button" class="wn-ok-btn" onclick="whatsNewMarkRead(); goBack();">Понятно!</button>
+                </div>
+            </div>
+        </div>

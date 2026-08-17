@@ -1,0 +1,78 @@
+<body>
+
+<!-- ============================================================
+     АВТОРИЗАЦИЯ: Экран входа (email + OTP)
+     Показывается поверх приложения при отсутствии валидного токена.
+     ============================================================ -->
+<div id="loginScreen" class="auth-login-screen">
+    <div class="auth-login-card">
+        <img src="images/icon-192.png" alt="КИПиА" class="auth-login-logo" onerror="this.style.display='none'">
+        <div class="auth-login-title">КИПиА</div>
+        <div class="auth-login-subtitle">Система доступа</div>
+
+        <!-- Шаг 1: ввод email -->
+        <div id="authStep1" class="auth-step active">
+            <input type="email" id="authEmail" class="auth-field" placeholder="Ваш email" autocomplete="email" inputmode="email" autocapitalize="none">
+            <button type="button" class="auth-btn" id="authSendBtn" onclick="KipAuth.sendOTP()">
+                Отправить код
+            </button>
+            <button type="button" class="auth-btn auth-btn-secondary" onclick="KipAuth.cancelLogin()">
+                ← Назад
+            </button>
+            <div class="auth-info">
+                Код подтверждения будет отправлен на вашу почту.<br>
+                Если у вас нет доступа — обратитесь к администратору.
+            </div>
+        </div>
+
+        <!-- Шаг 2: ввод OTP-кода -->
+        <div id="authStep2" class="auth-step">
+            <div class="auth-login-subtitle">Код отправлен на</div>
+            <div id="authEmailDisplay" class="auth-email-display"></div>
+            <div class="auth-otp-row">
+                <input type="text" id="otp1" class="auth-otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
+                <input type="text" id="otp2" class="auth-otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" id="otp3" class="auth-otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" id="otp4" class="auth-otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" id="otp5" class="auth-otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" id="otp6" class="auth-otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]">
+            </div>
+            <button type="button" class="auth-btn" id="authVerifyBtn" onclick="KipAuth.verifyOTP()">
+                Войти
+            </button>
+            <button type="button" class="auth-btn auth-btn-secondary" onclick="KipAuth.backToStep1()">
+                ← Назад
+            </button>
+            <div class="auth-resend">
+                Не получили код? <a id="authResendLink" onclick="KipAuth.resendOTP()">Отправить повторно</a>
+            </div>
+            <div class="auth-hint">
+                Не пришёл код? Проверьте папку <b>«Спам»</b> и <b>«Промоакции»</b> (на Яндекс.Почте и Mail.ru письма от Apps Script часто туда попадают).<br>
+                Если кода нет и в спаме — возможно, ваш email ещё не зарегистрирован в системе. Обратитесь к администратору.
+            </div>
+        </div>
+
+        <div id="authError" class="auth-error"></div>
+    </div>
+</div>
+
+<div class="bg-network">
+    <svg viewBox="0 0 1000 1000" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <g>
+            <line class="line" x1="0" y1="200" x2="1000" y2="200" style="animation: floatLine 8s ease-in-out infinite;"/>
+            <line class="line" x1="0" y1="400" x2="1000" y2="400" style="animation: floatLine 10s ease-in-out infinite 1s;"/>
+            <line class="line" x1="0" y1="600" x2="1000" y2="600" style="animation: floatLine 12s ease-in-out infinite 2s;"/>
+            <line class="line" x1="0" y1="800" x2="1000" y2="800" style="animation: floatLine 9s ease-in-out infinite 0.5s;"/>
+            <line class="line" x1="200" y1="0" x2="200" y2="1000" style="animation: floatLine 11s ease-in-out infinite 1.5s;"/>
+            <line class="line" x1="400" y1="0" x2="400" y2="1000" style="animation: floatLine 7s ease-in-out infinite 3s;"/>
+            <line class="line" x1="600" y1="0" x2="600" y2="1000" style="animation: floatLine 13s ease-in-out infinite 2s;"/>
+            <line class="line" x1="800" y1="0" x2="800" y2="1000" style="animation: floatLine 8s ease-in-out infinite 4s;"/>
+            <circle class="dot" cx="200" cy="200" r="2" style="animation: pulseDot 3s ease-in-out infinite;"/>
+            <circle class="dot" cx="400" cy="400" r="2" style="animation: pulseDot 4s ease-in-out infinite 0.5s;"/>
+            <circle class="dot" cx="600" cy="600" r="2" style="animation: pulseDot 3.5s ease-in-out infinite 1s;"/>
+            <circle class="dot" cx="800" cy="200" r="2" style="animation: pulseDot 4.5s ease-in-out infinite 1.5s;"/>
+            <circle class="dot" cx="200" cy="600" r="2" style="animation: pulseDot 3s ease-in-out infinite 2s;"/>
+            <circle class="dot" cx="800" cy="800" r="2" style="animation: pulseDot 5s ease-in-out infinite 0.8s;"/>
+        </g>
+    </svg>
+</div>

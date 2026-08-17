@@ -1,0 +1,60 @@
+
+        <!-- ======================== КАБЕЛЬНЫЙ ЖУРНАЛ (РЕДАКТИРОВАНИЕ) ========================
+             Доступ: Админ, ИТР ИОС, КИП ИОС pro.
+             Данные: напрямую из Google Sheets "Кабельный журнал" через Apps Script. -->
+        <div id="page-cable-journal-edit" class="page-content">
+            <div class="page-inline-header">
+                <div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div>
+                <div class="page-inline-header-title">Кабельный журнал</div>
+                <input type="search" id="cjSearchInput" class="dev-header-search cj-header-search" placeholder="Поиск…" autocomplete="off" enterkeyhint="search" oninput="KipCableJournal.handleSearchInput()" hidden>
+                <button type="button" id="cjSearchToggleBtn" class="cj-icon-btn-inline" aria-label="Поиск" onclick="KipCableJournal.toggleSearch()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </button>
+                <button type="button" class="cj-add-btn-inline" id="cjAddBtn" onclick="KipCableJournal.openAdd()" style="display:none;" aria-label="Добавить запись">+</button>
+            </div>
+
+            <div id="cjList" class="cj-list"></div>
+        </div>
+
+        <!-- ======================== КАБЕЛЬНЫЙ ЖУРНАЛ — ДОБАВЛЕНИЕ ЗАПИСИ ========================
+             Открывается из cable-journal-edit по кнопке "+ Добавить".
+             Доступ: Админ, ИТР ИОС, КИП ИОС pro (как и кнопка добавления).
+             Поля расположены вертикально (по одному в строке).
+             Поля с options (из data validation Google Sheets или fallback
+             для department/purpose) рендерятся как <select>. -->
+        <div id="page-cable-journal-add" class="page-content">
+            <div class="page-inline-header">
+                <div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div>
+                <div class="page-inline-header-title">Новая запись</div>
+            </div>
+
+            <div class="cj-add-page-body">
+                <div id="cjAddFields" class="cj-add-fields">
+                    <div class="admin-empty">Загрузка полей…</div>
+                </div>
+                <div id="cjAddError" class="cj-edit-error"></div>
+            </div>
+
+            <!-- Нижний бар с кнопками Сохранить / Отмена -->
+            <div id="cjAddBottomBar" class="cj-add-bottom-bar"></div>
+        </div>
+
+        <!-- ======================== КАБЕЛЬНЫЙ ЖУРНАЛ — ПРОСМОТР ЗАПИСИ ========================
+             Открывается из cable-journal-edit по клику на карточку кабеля.
+             Доступ: чтение — всем авторизованным; правка/удаление — только роли с canEdit.
+             Поля расположены вертикально (по одному в строке) как текстовые значения. -->
+        <div id="page-cable-journal-view" class="page-content">
+            <div class="page-inline-header">
+                <div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div>
+                <div class="page-inline-header-title" id="cjViewTitle">Запись</div>
+            </div>
+
+            <div class="cj-view-page-body">
+                <div id="cjViewFields" class="cj-view-fields">
+                    <div class="admin-empty">Загрузка…</div>
+                </div>
+            </div>
+
+            <!-- Нижний бар с кнопками Править / Удалить (только для canEdit) -->
+            <div id="cjViewBottomBar" class="cj-view-bottom-bar"></div>
+        </div>
