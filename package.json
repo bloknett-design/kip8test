@@ -2,7 +2,6 @@
   "name": "kipia-desktop",
   "version": "1.0.7",
   "description": "КИПиА — справочник инженера (десктопное приложение)",
-  "type": "module",
   "main": "electron/main.js",
   "scripts": {
     "start": "electron .",
@@ -13,9 +12,9 @@
     "dev": "vite --mode mobile",
     "dev:mobile": "vite --mode mobile",
     "dev:desktop": "vite --mode desktop",
-    "build:mobile": "node build.js mobile",
-    "build:desktop": "node build.js desktop",
-    "build:all": "node build.js mobile && node build.js desktop"
+    "build:mobile": "node build.mjs mobile",
+    "build:desktop": "node build.mjs desktop",
+    "build:all": "node build.mjs mobile && node build.mjs desktop"
   },
   "author": {
     "name": "bloknett-design",
