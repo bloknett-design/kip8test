@@ -58,7 +58,7 @@ console.log(`  Bundling JS with esbuild...`);
 const jsResult = await esbuild.build({
     entryPoints: [appEntry],
     bundle: true,
-    minify: false,           // TODO: включить минификацию после валидации
+    minify: true,            // Минификация включена (после валидации Etap 2)
     target: ['es2020'],
     format: 'iife',          // IIFE — самовызывающаяся функция (не ESM, т.к. инлайнится в HTML)
     define: {
