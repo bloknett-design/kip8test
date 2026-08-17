@@ -2203,3 +2203,46 @@ Stage Summary:
 - Релиз v1.0.6 запущен через GitHub Actions (тег v1.0.6)
 - SW cache v372 — старый кэш будет удалён при активации нового SW
 - electron-updater подхватит новый релиз из GitHub Releases
+
+---
+Task ID: 94
+Agent: AI Assistant
+Task: Фильтры «Все / Избранное / Скрытые» должны оставаться в строке крошек при открытой detail-панели расходомера (десктоп)
+
+Work Log:
+- Добавлен HTML: .flow-bc-filters (id=flowBcFilters) в #detailBreadcrumbBar с кнопками .flow-header-filter-btn
+- CSS: .flow-bc-filters скрыт по умолчанию; показывается только при body:has(#page-flowmeter-data.active):has(#detailPanel.active) на десктопе (min-width:1024px)
+- JS: updateToolbar() обновляет счётчики flowBcFavCount, flowBcHiddenCount, flowBcRestoreBtn
+- JS: setFilter() уже обновляет все .flow-header-filter-btn через querySelectorAll
+- CACHE_VERSION: kipia-test-v372 → kipia-test-v373
+- Версия: 1.0.6 → 1.0.7
+- Тег v1.0.7 → GitHub Actions Build Desktop App → success
+- Релиз v1.0.7 опубликован (exe, AppImage, deb, dmg)
+
+Stage Summary:
+- При открытии карточки расходомера на десктопе фильтры отображаются справа от крошек в #detailBreadcrumbBar
+- На мобильном — без изменений (нижний бар)
+- Релиз v1.0.7 доступен для автообновления
+
+---
+Task ID: 95
+Agent: AI Assistant
+Task: Реализация Варианта A — разделение CSS на base/mobile/desktop, build-скрипт для условной сборки
+
+Work Log:
+- Создана структура src/css/ с base.css (7282 строки), mobile.css (674 строки), desktop.css (1029 строк)
+- Из index.html извлечён весь инлайн-CSS (8982 строки) → 3 файла
+- Создан build.js — скрипт условной сборки (mobile/desktop)
+- Мобильная сборка: base.css + mobile.css инлайнятся в index.html (desktop.css исключён)
+- Десктопная сборка: base.css + desktop.css инлайнятся в index.html (mobile.css исключён)
+- Настроен Vite dev-сервер с плагином conditional-css для разработки
+- Корневой index.html заменён на мобильную сборку
+- CACHE_VERSION: kipia-test-v373 → kipia-test-v374
+- Добавлены npm-скрипты: build:mobile, build:desktop, build:all, dev, dev:mobile, dev:desktop
+
+Stage Summary:
+- Архитектура «один исходник → два бандла» реализована для CSS
+- Мобильный бандл: 1755.8 KB (без desktop.css — экономия ~30 KB CSS)
+- Десктопный бандл: 1764.6 KB (без mobile.css — экономия ~8 KB CSS)
+- JS пока общий — следующий этап: извлечение JS в модули
+- Структура: src/index.html + src/css/{base,mobile,desktop}.css → build.js → dist-{mobile,desktop}/
