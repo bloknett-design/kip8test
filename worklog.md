@@ -2364,3 +2364,34 @@ Stage Summary:
 - All modules verified: syntax valid, exports present, correct line counts
 - Temporary window bridges in place for navigateTo, showToast, parseLocaleNumber, formatNumber
 - Ready for Stage 2 integration: these modules can be imported once the main script is modularized
+
+---
+Task ID: 96
+Agent: AI Assistant (Super Z)
+Task: Реализация Варианта A — Этап 2: извлечение JS в ES-модули
+
+Work Log:
+- Проанализирована структура JS в src/index.html: 18 343 строк, 429 функций, 33 логических модуля
+- Создана карта зависимостей: глобальные переменные, window.* мосты, порядок инициализации
+- Создана структура src/js/: core/ (12), modules/ (10), catalogs/ (7), calculators/ (8), app.js (1)
+- Извлечены 40 JS-модулей (19 715 строк):
+  - core/: utils.js, state.js, local-storage.js, sw-register.js, navigation.js, desktop.js, sidebar.js, pinned.js, pin-sheet.js, scroll-audit.js, custom-select.js, refresh.js
+  - modules/: auth.js, favorites.js, cable-journal.js, flowmeter.js, charts.js, admin.js, minesweeper.js, phonebook.js, exams.js, geometry.js, plan114.js, whats-new.js
+  - catalogs/: devices.js, lockouts.js, valves.js, regulators.js, projects.js, crossrefs.js, cable-entry.js
+  - calculators/: converters.js, rtd-tc.js, buoy.js, orifice.js, circuit-breaker.js, error-kit.js, electro.js, theme.js
+- Создан app.js: entry point с ~270 window-экспортами для обратной совместимости с inline onclick
+- Обновлён src/index.html: 21 343 → 2 997 строк (весь инлайн JS убран, добавлен <script type="module">)
+- Обновлён build.mjs: добавлен esbuild bundler (ES modules → IIFE → inline <script>)
+- Исправлены ошибки сборки: дублирующийся импорт flowmeterRenderDetailInPanel, custom-select.js IIFE → module
+- Сборка mobile: 1559.7 KB (27 296 строк), desktop: 1568.4 KB (27 651 строк)
+- Оригинал: 1.8 MB (29 300 строк) → новый mobile: 1.6 MB (−11%)
+- Тесты: 207 passed, 0 failed
+- Коммит 3226eb7 запушен в main
+
+Stage Summary:
+- JS модуляризован: 1 монолитный <script> → 40 ES-модулей
+- src/index.html сокращён с 21 343 до 2 997 строк (только HTML + <script type="module">)
+- build.mjs: esbuild bundler для условной сборки (mobile/desktop)
+- window.* мосты обеспечивают обратную совместимость с inline onclick handlers
+- Добавлен esbuild@0.28.2 в devDependencies
+- Структура: src/index.html + src/css/{base,mobile,desktop}.css + src/js/**/*.js → build.mjs → dist-{mobile,desktop}/
