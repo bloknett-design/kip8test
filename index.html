@@ -3012,7 +3012,7 @@
     /* ======================== РАСХОДОМЕРЫ ХОЗРАСЧЁТНЫЕ ======================== */
     .flow-list { padding: 0; }
 
-    /* === Расходомеры: нижний бар фильтров (Все / Избранное / Скрытые) === */
+    /* === Расходомеры: нижний бар фильтров (Все / Избранное / Скрытые) — мобильный === */
     .flow-filter-bar {
         position: fixed; bottom: 0; left: 0; right: 0; z-index: 80;
         display: none; /* скрыт по умолчанию; показывается через body:has() */
@@ -3056,6 +3056,48 @@
     [data-theme="light"] .flow-filter-restore { background: rgba(90,184,112,0.08); color: #3a8a5a; }
     [data-theme="light"] .flow-filter-bar {
         background: var(--bottom-nav-bg, rgba(240, 238, 230, 0.96));
+    }
+
+    /* === Расходомеры: фильтры в хедере — десктоп === */
+    .flow-header-filters {
+        display: none; /* скрыты на мобильном; показываются на десктопе */
+        align-items: center; gap: 6px; flex-shrink: 0; margin-left: auto;
+    }
+    .flow-header-filter-btn {
+        font-size: 13px; font-weight: 600; padding: 5px 12px;
+        border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);
+        background: transparent; color: var(--text-secondary);
+        cursor: pointer; transition: all 0.15s; white-space: nowrap;
+        font-family: 'Inter', sans-serif;
+    }
+    .flow-header-filter-btn:hover { background: rgba(200,112,72,0.08); }
+    .flow-header-filter-btn.active {
+        background: rgba(200,112,72,0.15); color: #c87048;
+        border-color: rgba(200,112,72,0.3);
+    }
+    [data-theme="light"] .flow-header-filter-btn { border-color: rgba(20,20,19,0.1); }
+    [data-theme="light"] .flow-header-filter-btn.active { background: rgba(200,112,72,0.1); color: #b85a3a; border-color: rgba(200,112,72,0.25); }
+    .flow-header-filter-count {
+        font-size: 11px; font-weight: 700; min-width: 18px; text-align: center;
+        padding: 1px 5px; border-radius: 10px;
+        background: rgba(200,112,72,0.15); color: #c87048;
+    }
+    [data-theme="light"] .flow-header-filter-count { background: rgba(200,112,72,0.1); color: #b85a3a; }
+    .flow-header-restore-btn {
+        font-size: 12px; font-weight: 600; padding: 4px 10px;
+        border-radius: 6px; border: none; cursor: pointer;
+        background: rgba(90,184,112,0.12); color: #5ab870;
+        transition: all 0.15s;
+    }
+    .flow-header-restore-btn:hover { background: rgba(90,184,112,0.2); }
+    [data-theme="light"] .flow-header-restore-btn { background: rgba(90,184,112,0.08); color: #3a8a5a; }
+
+    /* Десктоп: фильтры в хедере, нижний бар скрыт */
+    @media (min-width: 1024px) {
+        body:has(#page-flowmeter-data.active) .flow-filter-bar { display: none; }
+        body:has(#page-flowmeter-data.active) .flow-list { padding-bottom: 0; }
+        .flow-header-filters { display: flex; }
+        #page-flowmeter-data .page-inline-header-title { width: auto; }
     }
 
     /* === Звёздочка избранного в карточке расходомера === */
@@ -9235,6 +9277,13 @@
             <div class="page-inline-header">
                 <div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div>
                 <div class="page-inline-header-title">Расходомеры хозрасчётные</div>
+                <!-- Десктоп: фильтры в хедере (справа от хлебных крошек) -->
+                <div class="flow-header-filters" id="flowHeaderFilters">
+                    <button type="button" class="flow-header-filter-btn active" data-flow-filter="all" onclick="FlowUserView.setFilter('all')">Все</button>
+                    <button type="button" class="flow-header-filter-btn" data-flow-filter="fav" onclick="FlowUserView.setFilter('fav')">Избранное <span class="flow-header-filter-count" id="flowHeaderFavCount">0</span></button>
+                    <button type="button" class="flow-header-filter-btn" data-flow-filter="hidden" onclick="FlowUserView.setFilter('hidden')">Скрытые <span class="flow-header-filter-count" id="flowHeaderHiddenCount">0</span></button>
+                    <button type="button" class="flow-header-restore-btn" id="flowHeaderRestoreBtn" onclick="FlowUserView.restoreAll()" style="display:none;">Показать все</button>
+                </div>
             </div>
             <div id="flowList" class="flow-list">
                 <div class="admin-empty" id="flowEmpty">Загрузка…</div>
@@ -27605,8 +27654,8 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         // ----------------------------------------------------------
         setFilter: function(filter) {
             this._currentFilter = filter;
-            // Обновить активную кнопку
-            var btns = document.querySelectorAll('.flow-filter-btn');
+            // Обновить активную кнопку в обоих наборах (нижний бар + хедер)
+            var btns = document.querySelectorAll('.flow-filter-btn, .flow-header-filter-btn');
             btns.forEach(function(btn) {
                 btn.classList.toggle('active', btn.getAttribute('data-flow-filter') === filter);
             });
@@ -27620,6 +27669,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         updateToolbar: function() {
             var favC = this.favCount();
             var hidC = this.hiddenCount();
+            // Нижний бар (мобильный)
             var favEl = document.getElementById('flowFavCount');
             var hidEl = document.getElementById('flowHiddenCount');
             var restEl = document.getElementById('flowRestoreBtn');
@@ -27629,6 +27679,13 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             var show = hidC > 0 ? '' : 'none';
             if (restEl) restEl.style.display = show;
             if (restDiv) restDiv.style.display = show;
+            // Хедер (десктоп)
+            var hFavEl = document.getElementById('flowHeaderFavCount');
+            var hHidEl = document.getElementById('flowHeaderHiddenCount');
+            var hRestEl = document.getElementById('flowHeaderRestoreBtn');
+            if (hFavEl) hFavEl.textContent = favC;
+            if (hHidEl) hHidEl.textContent = hidC;
+            if (hRestEl) hRestEl.style.display = show;
         },
 
         // ----------------------------------------------------------

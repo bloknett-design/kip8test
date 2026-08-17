@@ -2166,3 +2166,24 @@ Stage Summary:
 - Релиз v1.0.5 опубликован: https://github.com/bloknett-design/kip8test/releases/tag/v1.0.5
 - 9 артефактов: .exe (89 MB), .AppImage, .deb, .dmg, blockmap-файлы, latest.yml
 - Автообновление: пользователи v1.0.4 получат предложение обновиться при запуске приложения
+
+---
+Task ID: 92
+Agent: AI Assistant
+Task: В десктопной версии перенести фильтры «Все / Избранное / Скрытые» из нижнего бара справа от хлебных крошек; на мобильном — оставить в нижнем баре
+
+Work Log:
+- Добавлен HTML: .flow-header-filters в page-inline-header (id=flowHeaderFilters) с кнопками .flow-header-filter-btn
+- CSS: .flow-header-filters скрыт по умолчанию (display:none), показывается на десктопе (min-width:1024px)
+- CSS: на десктопе .page-inline-header-title { width:auto } вместо width:100% — заголовок не занимает весь ряд
+- CSS: на десктопе нижний бар .flow-filter-bar скрывается, padding-bottom:0 на .flow-list
+- CSS: .flow-header-filter-btn — pill-кнопки с рамкой, hover, active (#c87048) — как бывший тулбар
+- JS: setFilter() обновляет оба набора кнопок (.flow-filter-btn + .flow-header-filter-btn)
+- JS: updateToolbar() обновляет оба набора счётчиков (flowFavCount/flowHiddenCount + flowHeaderFavCount/flowHeaderHiddenCount)
+- CACHE_VERSION: kipia-test-v370 → kipia-test-v371
+- Тесты: 207 passed, 0 failed
+
+Stage Summary:
+- Десктоп: фильтры «Все / Избранное / Скрытые» справа от хлебных крошек в хедере
+- Мобильный: фильтры остаются в нижнем баре (без изменений)
+- JS синхронизирует оба набора кнопок
