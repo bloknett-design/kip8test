@@ -2122,3 +2122,26 @@ Stage Summary:
 - Зебра восстановлена в списке хозрасчётных расходомеров
 - Работает с обёртками .flow-card-wrap (свайп/drag)
 - Весь функционал Task 88 (★, drag, swipe, фильтры) сохранён
+
+---
+Task ID: 90
+Agent: AI Assistant
+Task: Перенести кнопки «Все / Избранное / Скрытые» из верхнего тулбара в нижний бар в стиле приложения
+
+Work Log:
+- Удалён верхний sticky-тулбар (.flow-toolbar): убран из HTML и CSS
+- Создан нижний бар (.flow-filter-bar): fixed bottom, blur, backdrop-filter, var(--bottom-nav-bg), safe-area-inset
+- Стиль кнопок (.flow-filter-btn): flex:1, цвет #c87048 при active, без рамок — как в cj-add-bottom-bar / flow-detail-bottom-bar
+- Разделители между кнопками (.flow-filter-divider) — 1px var(--card-border)
+- Кнопка «Показать все» (.flow-filter-restore) появляется динамически через flowRestoreDivider/flowRestoreBtn
+- Видимость: body:has(#page-flowmeter-data.active) — бар показывается только на странице расходомеров
+- padding-bottom: 56px на .flow-list при активной странице — список не уходит под бар
+- JS: селектор .flow-toolbar-btn → .flow-filter-btn, updateToolbar обновляет flowRestoreDivider
+- Светлая тема поддержана
+- CACHE_VERSION: kipia-test-v369 → kipia-test-v370
+- Тесты: 207 passed, 0 failed
+
+Stage Summary:
+- Фильтры «Все / Избранное / Скрытые» перенесены в нижний бар
+- Стиль совпадает с другими нижними барами приложения (cj-add, flow-detail)
+- Верхний тулбар полностью убран

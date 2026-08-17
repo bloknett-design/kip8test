@@ -3012,45 +3012,51 @@
     /* ======================== РАСХОДОМЕРЫ ХОЗРАСЧЁТНЫЕ ======================== */
     .flow-list { padding: 0; }
 
-    /* === Тулбар расходомеров: Все / Избранное / Скрытые === */
-    .flow-toolbar {
-        display: flex; align-items: center; gap: 8px;
-        padding: 8px 14px; border-bottom: 1px solid rgba(255,255,255,0.06);
-        background: rgba(30,26,24,0.98);
-        position: sticky; top: 56px; z-index: 5;
+    /* === Расходомеры: нижний бар фильтров (Все / Избранное / Скрытые) === */
+    .flow-filter-bar {
+        position: fixed; bottom: 0; left: 0; right: 0; z-index: 80;
+        display: none; /* скрыт по умолчанию; показывается через body:has() */
+        align-items: stretch;
+        background: var(--bottom-nav-bg, rgba(23, 33, 43, 0.95));
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid var(--card-border);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
     }
-    [data-theme="light"] .flow-toolbar {
-        background: rgba(255,255,255,0.98);
-        border-bottom-color: rgba(20,20,19,0.08);
-    }
-    .flow-toolbar-btn {
-        font-size: 13px; font-weight: 600; padding: 5px 12px;
-        border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);
-        background: transparent; color: var(--text-secondary);
+    body:has(#page-flowmeter-data.active) .flow-filter-bar { display: flex; }
+    body:has(#page-flowmeter-data.active) .flow-list { padding-bottom: 56px; }
+    .flow-filter-btn {
+        flex: 1;
+        display: flex; align-items: center; justify-content: center; gap: 6px;
+        padding: 14px 8px;
+        border: none; background: transparent;
+        font-size: 14px; font-weight: 600; color: var(--text-secondary);
+        font-family: 'Inter', sans-serif;
         cursor: pointer; transition: all 0.15s; white-space: nowrap;
+        -webkit-tap-highlight-color: transparent;
     }
-    .flow-toolbar-btn:hover { background: rgba(200,112,72,0.08); }
-    .flow-toolbar-btn.active {
-        background: rgba(200,112,72,0.15); color: #c87048;
-        border-color: rgba(200,112,72,0.3);
-    }
-    [data-theme="light"] .flow-toolbar-btn { border-color: rgba(20,20,19,0.1); }
-    [data-theme="light"] .flow-toolbar-btn.active { background: rgba(200,112,72,0.1); color: #b85a3a; border-color: rgba(200,112,72,0.25); }
-    .flow-toolbar-count {
+    .flow-filter-btn:active { background: rgba(200,112,72,0.08); }
+    .flow-filter-btn.active { color: #c87048; }
+    [data-theme="light"] .flow-filter-btn.active { color: #b85a3a; }
+    .flow-filter-count {
         font-size: 11px; font-weight: 700; min-width: 18px; text-align: center;
         padding: 1px 5px; border-radius: 10px;
         background: rgba(200,112,72,0.15); color: #c87048;
     }
-    [data-theme="light"] .flow-toolbar-count { background: rgba(200,112,72,0.1); color: #b85a3a; }
-    .flow-toolbar-spacer { flex: 1; }
-    .flow-toolbar-restore {
+    [data-theme="light"] .flow-filter-count { background: rgba(200,112,72,0.1); color: #b85a3a; }
+    .flow-filter-divider {
+        width: 1px; background: var(--card-border); flex-shrink: 0;
+    }
+    .flow-filter-restore {
         font-size: 12px; font-weight: 600; padding: 4px 10px;
         border-radius: 6px; border: none; cursor: pointer;
         background: rgba(90,184,112,0.12); color: #5ab870;
         transition: all 0.15s;
     }
-    .flow-toolbar-restore:hover { background: rgba(90,184,112,0.2); }
-    [data-theme="light"] .flow-toolbar-restore { background: rgba(90,184,112,0.08); color: #3a8a5a; }
+    .flow-filter-restore:hover { background: rgba(90,184,112,0.2); }
+    [data-theme="light"] .flow-filter-restore { background: rgba(90,184,112,0.08); color: #3a8a5a; }
+    [data-theme="light"] .flow-filter-bar {
+        background: var(--bottom-nav-bg, rgba(240, 238, 230, 0.96));
+    }
 
     /* === Звёздочка избранного в карточке расходомера === */
     .flow-card-fav {
@@ -9230,16 +9236,20 @@
                 <div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div>
                 <div class="page-inline-header-title">Расходомеры хозрасчётные</div>
             </div>
-            <div class="flow-toolbar" id="flowToolbar">
-                <button type="button" class="flow-toolbar-btn active" data-flow-filter="all" onclick="FlowUserView.setFilter('all')">Все</button>
-                <button type="button" class="flow-toolbar-btn" data-flow-filter="fav" onclick="FlowUserView.setFilter('fav')">Избранное <span class="flow-toolbar-count" id="flowFavCount">0</span></button>
-                <button type="button" class="flow-toolbar-btn" data-flow-filter="hidden" onclick="FlowUserView.setFilter('hidden')">Скрытые <span class="flow-toolbar-count" id="flowHiddenCount">0</span></button>
-                <div class="flow-toolbar-spacer"></div>
-                <button type="button" class="flow-toolbar-restore" id="flowRestoreBtn" onclick="FlowUserView.restoreAll()" style="display:none;">Показать все</button>
-            </div>
             <div id="flowList" class="flow-list">
                 <div class="admin-empty" id="flowEmpty">Загрузка…</div>
             </div>
+        </div>
+
+        <!-- Расходомеры: нижний бар фильтров -->
+        <div class="flow-filter-bar" id="flowFilterBar">
+            <button type="button" class="flow-filter-btn active" data-flow-filter="all" onclick="FlowUserView.setFilter('all')">Все</button>
+            <div class="flow-filter-divider"></div>
+            <button type="button" class="flow-filter-btn" data-flow-filter="fav" onclick="FlowUserView.setFilter('fav')">Избранное <span class="flow-filter-count" id="flowFavCount">0</span></button>
+            <div class="flow-filter-divider"></div>
+            <button type="button" class="flow-filter-btn" data-flow-filter="hidden" onclick="FlowUserView.setFilter('hidden')">Скрытые <span class="flow-filter-count" id="flowHiddenCount">0</span></button>
+            <div class="flow-filter-divider" id="flowRestoreDivider" style="display:none;"></div>
+            <button type="button" class="flow-filter-restore" id="flowRestoreBtn" onclick="FlowUserView.restoreAll()" style="display:none;">Показать все</button>
         </div>
 
         <!-- ======================== РАСХОДОМЕРЫ ХОЗРАСЧЁТНЫЕ — детальная карточка ======================== -->
@@ -27596,7 +27606,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         setFilter: function(filter) {
             this._currentFilter = filter;
             // Обновить активную кнопку
-            var btns = document.querySelectorAll('.flow-toolbar-btn');
+            var btns = document.querySelectorAll('.flow-filter-btn');
             btns.forEach(function(btn) {
                 btn.classList.toggle('active', btn.getAttribute('data-flow-filter') === filter);
             });
@@ -27605,7 +27615,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         },
 
         // ----------------------------------------------------------
-        // UI: тулбар
+        // UI: нижний бар фильтров
         // ----------------------------------------------------------
         updateToolbar: function() {
             var favC = this.favCount();
@@ -27613,9 +27623,12 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             var favEl = document.getElementById('flowFavCount');
             var hidEl = document.getElementById('flowHiddenCount');
             var restEl = document.getElementById('flowRestoreBtn');
+            var restDiv = document.getElementById('flowRestoreDivider');
             if (favEl) favEl.textContent = favC;
             if (hidEl) hidEl.textContent = hidC;
-            if (restEl) restEl.style.display = hidC > 0 ? '' : 'none';
+            var show = hidC > 0 ? '' : 'none';
+            if (restEl) restEl.style.display = show;
+            if (restDiv) restDiv.style.display = show;
         },
 
         // ----------------------------------------------------------
