@@ -1,6 +1,6 @@
 {
   "name": "kipia-desktop",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "КИПиА — справочник инженера (десктопное приложение)",
   "main": "electron/main.js",
   "scripts": {
