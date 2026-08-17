@@ -3098,6 +3098,10 @@
         body:has(#page-flowmeter-data.active) .flow-list { padding-bottom: 0; }
         .flow-header-filters { display: flex; }
         #page-flowmeter-data .page-inline-header-title { width: auto; }
+        /* Фильтры в #detailBreadcrumbBar — скрыты по умолчанию;
+           показываются только когда detail-панель открыта на странице расходомеров */
+        .flow-bc-filters { display: none !important; }
+        body:has(#page-flowmeter-data.active):has(#detailPanel.active) .flow-bc-filters { display: flex !important; }
     }
 
     /* === Звёздочка избранного в карточке расходомера === */
@@ -9211,6 +9215,13 @@
             <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
         </div>
         <div id="detailBreadcrumbContent"></div>
+        <!-- Десктоп: фильтры расходомеров в строке крошек (показываются только на странице расходомеров) -->
+        <div class="flow-header-filters flow-bc-filters" id="flowBcFilters">
+            <button type="button" class="flow-header-filter-btn active" data-flow-filter="all" onclick="FlowUserView.setFilter('all')">Все</button>
+            <button type="button" class="flow-header-filter-btn" data-flow-filter="fav" onclick="FlowUserView.setFilter('fav')">Избранное <span class="flow-header-filter-count" id="flowBcFavCount">0</span></button>
+            <button type="button" class="flow-header-filter-btn" data-flow-filter="hidden" onclick="FlowUserView.setFilter('hidden')">Скрытые <span class="flow-header-filter-count" id="flowBcHiddenCount">0</span></button>
+            <button type="button" class="flow-header-restore-btn" id="flowBcRestoreBtn" onclick="FlowUserView.restoreAll()" style="display:none;">Показать все</button>
+        </div>
         <button type="button" class="detail-breadcrumb-close" onclick="closeDetailPanel()" aria-label="Закрыть панель">
             <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:rgba(74,143,199,0.9);fill:none;stroke-width:2;stroke-linecap:round;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
@@ -27686,6 +27697,13 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             if (hFavEl) hFavEl.textContent = favC;
             if (hHidEl) hHidEl.textContent = hidC;
             if (hRestEl) hRestEl.style.display = show;
+            // Breadcrumb bar (десктоп, при открытой detail-панели)
+            var bcFavEl = document.getElementById('flowBcFavCount');
+            var bcHidEl = document.getElementById('flowBcHiddenCount');
+            var bcRestEl = document.getElementById('flowBcRestoreBtn');
+            if (bcFavEl) bcFavEl.textContent = favC;
+            if (bcHidEl) bcHidEl.textContent = hidC;
+            if (bcRestEl) bcRestEl.style.display = show;
         },
 
         // ----------------------------------------------------------
