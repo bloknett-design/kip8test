@@ -2145,3 +2145,24 @@ Stage Summary:
 - Фильтры «Все / Избранное / Скрытые» перенесены в нижний бар
 - Стиль совпадает с другими нижними барами приложения (cj-add, flow-detail)
 - Верхний тулбар полностью убран
+
+---
+Task ID: 91
+Agent: AI Assistant
+Task: Выпустить релиз v1.0.5 десктопного приложения (KIPiA-Setup-1.0.5.exe)
+
+Work Log:
+- Обновлена version в package.json: 1.0.4 → 1.0.5
+- Закоммичен и запушен bump версии в main (ca91c62)
+- Создан и запушен тег v1.0.5 — триггернул GitHub Actions workflow «Build Desktop App»
+- Workflow собрал все платформы:
+  - build-win (windows-latest): NSIS инсталлер KIPiA-Setup-1.0.5.exe (89,347 KB) ✅
+  - build-linux (ubuntu-latest): AppImage + deb ✅
+  - build-mac (macos-latest): dmg ✅
+  - release: GitHub Release v1.0.5 создан со всеми артефактами + latest.yml ✅
+- latest.yml содержит SHA512, size, url — electron-updater корректно обнаружит обновление
+
+Stage Summary:
+- Релиз v1.0.5 опубликован: https://github.com/bloknett-design/kip8test/releases/tag/v1.0.5
+- 9 артефактов: .exe (89 MB), .AppImage, .deb, .dmg, blockmap-файлы, latest.yml
+- Автообновление: пользователи v1.0.4 получат предложение обновиться при запуске приложения
