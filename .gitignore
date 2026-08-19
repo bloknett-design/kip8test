@@ -35,8 +35,6 @@ node_modules/
 
 # === Electron build output ===
 dist/
-dist-mobile/
-dist-desktop/
 
 # === IDE и редакторы ===
 .vscode/

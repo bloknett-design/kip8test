@@ -11,8 +11,11 @@
 <link rel="apple-touch-icon" href="images/icon.png">
 <link rel="manifest" href="manifest.json">
 <title>КИПиА</title>
-<style>
-/* === base.css === */
+<!-- Tailwind CSS removed: unused (saved ~2.8 MB) -->
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@4.5.15/index.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://cdn.jsdelivr.net/npm/@fontsource/inter@4.5.15/index.min.css" rel="stylesheet"></noscript>
+<link rel="preload" href="https://fonts.googleapis.com/css2?family=Jura:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Jura:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
 <style>
     :root {
         --bg-primary: #1a2233;
@@ -325,6 +328,9 @@
         gap: 4px !important;
     }
     /* На узких экранах кнопки могут стать слишком маленькими — переключаем в 1 колонку */
+    @media (max-width: 360px) {
+        .menu-btn-row-secret-pair { grid-template-columns: 1fr !important; }
+    }
     /* На телефонах горизонтальные кнопки должны переносить текст аккуратно */
     .menu-btn-row-secret-pair .menu-btn { min-width: 0; }
     .menu-btn-row-secret-pair .menu-btn-label { font-size: 13px; line-height: 1.2; }
@@ -338,6 +344,9 @@
     /* ===== Группы блоков на главной странице ===== */
 
     /* --- Десктоп: плитки основных разделов (скрыты на мобильном) --- */
+    .dashboard-desktop-nav {
+        display: none; /* скрыты на мобильном */
+    }
     .dashboard-tile {
         display: flex;
         flex-direction: column;
@@ -455,7 +464,48 @@
     #page-dashboard .menu-btn-sublabel { font-size: 16px; }
 
     /* Мобильная версия: кнопки разделов дашборда — утопленный эффект с широким бортом */
+    @media (max-width: 1023px) {
+        #page-dashboard .menu-btn {
+            border: 3px solid rgba(74, 143, 199, 0.22);
+            border-top-color: rgba(74, 143, 199, 0.32);
+            border-left-color: rgba(74, 143, 199, 0.30);
+            border-bottom-color: rgba(74, 143, 199, 0.12);
+            border-right-color: rgba(74, 143, 199, 0.10);
+            border-radius: 16px;
+            box-shadow:
+                inset 2px 2px 4px rgba(0, 0, 0, 0.18),
+                inset -1px -1px 3px rgba(255, 255, 255, 0.04),
+                0 1px 2px rgba(0, 0, 0, 0.12);
+        }
+        #page-dashboard .menu-btn:active {
+            box-shadow:
+                inset 3px 3px 6px rgba(0, 0, 0, 0.25),
+                inset -1px -1px 2px rgba(255, 255, 255, 0.02);
+            border-color: rgba(74, 143, 199, 0.18);
+        }
+    }
     /* Светлая тема: молочный фон + утопленный бортик */
+    @media (max-width: 1023px) {
+        [data-theme="light"] #page-dashboard .menu-btn {
+            background: rgba(248, 244, 236, 0.92);
+            border: 3px solid rgba(180, 170, 150, 0.30);
+            border-top-color: rgba(200, 190, 170, 0.45);
+            border-left-color: rgba(195, 185, 165, 0.40);
+            border-bottom-color: rgba(140, 130, 115, 0.25);
+            border-right-color: rgba(135, 125, 110, 0.22);
+            box-shadow:
+                inset 2px 2px 5px rgba(0, 0, 0, 0.07),
+                inset -1px -1px 3px rgba(255, 255, 255, 0.35),
+                0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+        [data-theme="light"] #page-dashboard .menu-btn:active {
+            background: rgba(242, 238, 228, 0.95);
+            box-shadow:
+                inset 3px 3px 7px rgba(0, 0, 0, 0.10),
+                inset -1px -1px 2px rgba(255, 255, 255, 0.20);
+            border-color: rgba(160, 150, 130, 0.30);
+        }
+    }
 
     .warning-banner {
         display: flex; align-items: center; gap: 12px;
@@ -594,14 +644,83 @@
     /* ============================================================
        НИЖНИЙ БАР ГЛАВНОЙ СТРАНИЦЫ (фиксированный, не прокручивается)
        ============================================================ */
+    .dashboard-bottom-bar {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        z-index: 80;
+        display: none; /* по умолчанию скрыт, показывается только на дашборде */
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+        padding: 0;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        background: var(--bottom-nav-bg, rgba(23, 33, 43, 0.95));
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid var(--card-border);
+    }
     /* Вертикальная линия-разделитель между двумя кнопками.
        Не доходит до верхнего и нижнего краёв бара на 14px (с учётом safe-area). */
+    .dashboard-bottom-bar::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 14px;
+        bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+        width: 1px;
+        background: var(--card-border, rgba(74, 143, 199, 0.18));
+        transform: translateX(-50%);
+        pointer-events: none;
+        z-index: 1;
+    }
     /* Показываем нижний бар только когда активна главная страница */
+    body:has(#page-dashboard.active) .dashboard-bottom-bar { display: grid; }
     /* Кнопка ⋮ (действия) внутри нижнего бара дашборда */
+    .dashboard-bottom-overflow {
+        position: absolute;
+        top: 6px; right: 6px;
+        width: 24px; height: 24px;
+        display: flex; align-items: center; justify-content: center;
+        border: none; background: rgba(255,255,255,0.08);
+        color: rgba(140,170,200,0.5); border-radius: 6px;
+        cursor: pointer; padding: 0;
+        transition: background 0.15s;
+    }
+    .dashboard-bottom-overflow:hover { background: rgba(199,150,74,0.15); }
+    .dashboard-bottom-overflow:active { transform: scale(0.88); }
+    [data-theme="light"] .dashboard-bottom-overflow { background: rgba(0,0,0,0.05); color: rgba(42,93,143,0.4); }
     /* На мобильном скрываем overflow-кнопку (три точки) — pin/unpin доступен через долгий тап */
+    @media (max-width: 768px) { .dashboard-bottom-overflow { display: none; } }
+    /* На дашборде добавляем нижний отступ, чтобы контент не перекрывался баром */
     body:has(#page-dashboard.active) #contentArea { padding-bottom: 88px; }
 
+    .dashboard-bottom-btn {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        padding: 16px 10px calc(16px + env(safe-area-inset-bottom, 0px));
+        border: none; border-radius: 0;
+        background: transparent;
+        color: var(--accent-blue, #4a8fc7); font-size: 14px; font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer; pointer-events: auto;
+        touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+        box-shadow: none;
+        transition: background 0.2s, opacity 0.2s;
+        min-height: 56px;
+        position: relative;
+        z-index: 2;
+    }
+    .dashboard-bottom-btn:active { background: rgba(255,255,255,0.05); opacity: 0.75; }
+    .dashboard-bottom-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+    .dashboard-bottom-btn span { line-height: 1.2; }
     /* Кнопка «Документация» — золотистый цвет текста и иконки */
+    .dashboard-bottom-btn-docs {
+        color: var(--accent-gold, #c7964a);
+    }
+    [data-theme="light"] .dashboard-bottom-btn { color: #4a8fc7; }
+    [data-theme="light"] .dashboard-bottom-btn-docs { color: #b8842e; }
+    [data-theme="light"] .dashboard-bottom-btn:active { background: rgba(20,20,19,0.05); }
+    @media (max-width: 400px) {
+        .dashboard-bottom-btn { font-size: 12px; padding: 14px 8px calc(14px + env(safe-area-inset-bottom, 0px)); gap: 6px; }
+        .dashboard-bottom-btn svg { width: 18px; height: 18px; }
+    }
 
     /* ============================================================
        ЗАКРЕПЛЁННЫЕ ПОДРАЗДЕЛЫ НА ГЛАВНОЙ
@@ -657,11 +776,122 @@
     /* ============================================================
        BOTTOM SHEET ДЛЯ PIN/UNPIN
        ============================================================ */
+    .pin-sheet-overlay {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 200;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+    }
+    .pin-sheet-overlay.active { opacity: 1; pointer-events: auto; }
 
+    .pin-sheet {
+        position: fixed;
+        left: 0; right: 0; bottom: 0;
+        z-index: 201;
+        background: var(--bg-primary, #1a1f26);
+        border-top-left-radius: 18px;
+        border-top-right-radius: 18px;
+        padding: 8px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: none;
+        max-width: 520px;
+        margin: 0 auto;
+    }
+    .pin-sheet.active { transform: translateY(0); box-shadow: 0 -8px 30px rgba(0,0,0,0.4); }
+    .pin-sheet-handle {
+        width: 36px; height: 4px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 2px;
+        margin: 4px auto 14px;
+    }
+    [data-theme="light"] .pin-sheet-handle { background: rgba(20,20,19,0.2); }
+    .pin-sheet-title {
+        font-size: 17px; font-weight: 700;
+        color: var(--text-primary, #e0e0e0);
+        text-align: center;
+        margin-bottom: 4px;
+    }
+    .pin-sheet-sublabel {
+        font-size: 13px;
+        color: var(--text-muted, rgba(255,255,255,0.4));
+        text-align: center;
+        margin-bottom: 18px;
+        line-height: 1.4;
+    }
+    .pin-sheet-action {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        width: 100%;
+        padding: 14px;
+        border: none; border-radius: 12px;
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        color: #fff; font-size: 15px; font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        box-shadow: 0 3px 12px rgba(37, 99, 235, 0.25);
+        -webkit-tap-highlight-color: transparent;
+        transition: all 0.2s;
+    }
+    .pin-sheet-action:active { transform: scale(0.97); opacity: 0.9; }
+    .pin-sheet-action svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .pin-sheet-action.is-pinned {
+        background: linear-gradient(135deg, #c74a4a, #d9634a);
+        box-shadow: 0 3px 12px rgba(199, 74, 74, 0.25);
+    }
+    [data-theme="light"] .pin-sheet-action {
+        background: linear-gradient(135deg, #C6613F, #D97757);
+        box-shadow: 0 3px 12px rgba(198, 97, 63, 0.25);
+    }
+    [data-theme="light"] .pin-sheet-action.is-pinned {
+        background: linear-gradient(135deg, #C6613F, #D97757);
+        box-shadow: 0 3px 12px rgba(198, 97, 63, 0.25);
+    }
+    .pin-sheet-cancel {
+        display: block;
+        width: 100%;
+        padding: 13px;
+        margin-top: 8px;
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        background: transparent;
+        color: var(--text-secondary, rgba(255,255,255,0.6));
+        font-size: 14px; font-weight: 500;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: all 0.2s;
+    }
+    .pin-sheet-cancel:active { background: rgba(255,255,255,0.05); }
+    [data-theme="light"] .pin-sheet-cancel:active { background: rgba(20,20,19,0.05); }
 
     /* Дополнительные кнопки перемещения в bottom sheet (для закреплённых пунктов) */
+    .pin-sheet-extra-actions {
+        display: flex; flex-direction: column; gap: 8px;
+        margin-bottom: 8px;
+    }
     /* Вторичная кнопка — контурная, легче основной */
+    .pin-sheet-action-secondary {
+        background: transparent !important;
+        border: 1px solid var(--card-border);
+        color: var(--text-secondary, rgba(255,255,255,0.7));
+        box-shadow: none !important;
+    }
+    .pin-sheet-action-secondary:active { background: rgba(255,255,255,0.05) !important; }
+    [data-theme="light"] .pin-sheet-action-secondary {
+        color: var(--text-secondary, rgba(20,20,19,0.7));
+        border-color: rgba(20,20,19,0.15);
+    }
+    [data-theme="light"] .pin-sheet-action-secondary:active { background: rgba(20,20,19,0.05) !important; }
     /* Отключённое состояние (первый пункт — кнопка «вверх», последний — «вниз») */
+    .pin-sheet-action:disabled,
+    .pin-sheet-action-secondary:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+        pointer-events: none;
+        box-shadow: none !important;
+    }
 
     /* ============================================================
        ПЕРЕТАСКИВАНИЕ ЗАКРЕПЛЁННЫХ ПУНКТОВ (long-press + drag)
@@ -922,8 +1152,86 @@
     input[type="radio"] + div { pointer-events: none; }
     input[type="radio"] + div > * { pointer-events: none; }
     
+    .bottom-nav {
+        position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+        background: var(--bottom-nav-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(74, 143, 199, 0.15); padding: 8px; padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
+    .bottom-nav-inner { display: flex; justify-content: space-around; align-items: center; }
+    .bottom-nav-item {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        padding: 6px 4px; cursor: pointer; transition: all 0.2s; border-radius: 10px; min-width: 60px; min-height: 44px;
+        -webkit-tap-highlight-color: transparent; touch-action: manipulation; pointer-events: auto;
+    }
+    .bottom-nav-item:active { transform: scale(0.92); background: rgba(255,255,255,0.05); }
+    .bottom-nav-icon { width: 22px; height: 22px; margin-bottom: 3px; display: flex; align-items: center; justify-content: center; }
+    .bottom-nav-icon svg {
+        width: 18px; height: 18px; stroke: rgba(255,255,255,0.35); fill: none; stroke-width: 1.8;
+        stroke-linecap: round; stroke-linejoin: round; transition: stroke 0.2s;
+    }
+    .bottom-nav-icon svg {
+        filter: drop-shadow(0 0 2px rgba(74, 143, 199, 0.25));
+    }
+    .bottom-nav-item.active .bottom-nav-icon svg {
+        stroke: rgba(74, 143, 199, 0.95);
+        filter: drop-shadow(0 0 5px rgba(74, 143, 199, 0.6)) drop-shadow(0 0 10px rgba(74, 143, 199, 0.3));
+    }
+    .bottom-nav-item.active .bottom-nav-label {
+        color: rgba(74, 143, 199, 0.95);
+        text-shadow: 0 0 5px rgba(74, 143, 199, 0.4);
+    }
+    .bottom-nav-item:active .bottom-nav-icon svg { stroke: rgba(74, 143, 199, 0.8); }
+    .bottom-nav-label {
+        font-size: 11px; color: rgba(255,255,255,0.35); text-align: center; line-height: 1.2;
+        white-space: nowrap; transition: color 0.2s;
+    }
+    .bottom-nav-item:active .bottom-nav-label { color: rgba(74, 143, 199, 0.8); }
     
 
+    @media (max-width: 480px) {
+        .menu-btn { width: 100%; margin: 0; padding: 6px 14px; min-height: 61px; }
+        .menu-btn-label { font-size: 17px; } .menu-btn-sublabel { font-size: 13px; }
+        #page-dashboard .menu-btn-label { font-size: 21px; }
+        #page-dashboard .menu-btn-sublabel { font-size: 15px; }
+        
+        .nav-btn { padding: 9px 14px; font-size: 13px; }
+        .form-field, .scale-field { padding: 9px 12px; font-size: 14px; height: 40px; }
+        select.scale-field, select.form-field { font-size: 13px; height: 40px; min-height: 40px; padding-top: 9px; padding-bottom: 9px; }
+        .kit-dev-form .scale-field { height: 36px !important; padding: 6px 8px !important; font-size: 12px !important; }
+        .kit-dev-form select.scale-field { min-height: 36px !important; height: 36px !important; font-size: 12px !important; }
+        select.scale-field option, select.form-field option { font-size: 13px; }
+        .warning-banner { margin: 8px 0 0; padding: 10px 12px; }
+        .buoy-card-title { font-size: 22px; }
+        .buoy-card-desc { font-size: 12px; }
+        .buoy-card-body { padding: 10px 12px; }
+        .buoy-card-formula { padding: 6px 12px; }
+        .buoy-card-formula .formula-inline { font-size: 15px; }
+        .header-title svg.led-display { height: 36px; }
+    }
+    @media (max-width: 400px) {
+        .menu-btn { width: 100%; margin: 0; padding: 5px 12px; min-height: 57px; }
+        .menu-btn-label { font-size: 16px; } .menu-btn-sublabel { font-size: 12px; }
+        #page-dashboard .menu-btn-label { font-size: 19px; }
+        #page-dashboard .menu-btn-sublabel { font-size: 14px; }
+        
+        /* На 375-400px все тексты умещаются в 1 строку — текущий min-height: 57px достаточен */
+        .nav-btn { padding: 8px 12px; font-size: 12px; gap: 5px; }
+        .nav-btn svg { width: 12px; height: 12px; }
+        .form-field, .scale-field { padding: 8px 10px; font-size: 13px; height: 38px; }
+        select.scale-field, select.form-field { font-size: 12px; height: 38px; min-height: 38px; padding-top: 8px; padding-bottom: 8px; }
+        .kit-dev-form .scale-field { height: 34px !important; padding: 5px 8px !important; font-size: 11px !important; }
+        .kit-dev-form select.scale-field { min-height: 34px !important; height: 34px !important; font-size: 11px !important; }
+        select.scale-field option, select.form-field option { font-size: 12px; }
+        .bottom-nav-item { min-width: 52px; padding: 5px 2px; }
+        .bottom-nav-label { font-size: 10px; }
+        .buoy-card-title { font-size: 20px; }
+        .buoy-card-desc { font-size: 11px; }
+        .buoy-card-body { padding: 8px 10px; }
+        .buoy-card-formula { padding: 5px 10px; }
+        .buoy-card-formula .formula-inline { font-size: 13px; }
+        .buoy-select-container { flex-direction: column; padding: 6px 0; gap: 8px; }
+        .header-title svg.led-display { height: 28px; }
+    }
 
     /* === Балансировка высоты кнопок главного меню на узких экранах === */
     /* Проблема: на узких экранах длинные тексты переносятся на 2 строки, создавая разную высоту кнопок.
@@ -932,13 +1240,26 @@
 
     /* 341–374px: подзаголовки типа "ГОСТ 8.401-80, ГОСТ OIML R 76-1-2011, ТС, ТП" переносятся на 2 строки.
        min-height: 75px вмещает 1 строку заголовка + 2 строки подзаголовка (padding 5px×2). */
+    @media (max-width: 374px) {
+        .menu-btn { min-height: 70px; }
+    }
 
     /* ≤340px: заголовок "Автоматический выключатель" тоже переносится на 2 строки.
        Уменьшаем шрифт до 17/12px (с 19/14px), чтобы сократить количество переносов и пустое пространство.
        min-height: 68px вмещает 1 строку заголовка + 2 строки подзаголовка при уменьшенном шрифте. */
+    @media (max-width: 340px) {
+        .menu-btn { min-height: 68px; }
+        #page-dashboard .menu-btn-label { font-size: 17px; }
+        #page-dashboard .menu-btn-sublabel { font-size: 12px; }
+    }
 
     /* ≤300px: на очень узких экранах (280-300px) даже с уменьшенным шрифтом "Автоматический выключатель"
        переносится на 2 строки + 2 строки подзаголовка. min-height: 89px для баланса. */
+    @media (max-width: 300px) {
+        .menu-btn { min-height: 75px; }
+    }
+
+    @media (min-width: 481px) { .menu-btn { max-width: 480px; } }
 
     .page-inline-header {
         position: sticky; top: 0; z-index: 60;
@@ -1543,8 +1864,39 @@
     }
     [data-theme="light"] .admin-empty { color: rgba(20,20,19,0.45); }
 
+    @media (max-width: 480px) {
+        .admin-toolbar { gap: 6px; padding: 6px 8px 8px; }
+        .admin-search { min-width: 50px; padding: 8px 10px; font-size: 13px; }
+        .admin-select { max-width: 45%; padding: 8px 10px; font-size: 12px; }
+        .admin-refresh-btn { padding: 8px 12px; font-size: 13px; }
+        .admin-add-btn { padding: 8px 10px; font-size: 12px; }
+        .admin-role-select { max-width: 100%; font-size: 11px; padding: 5px 8px; }
+        .admin-action-btn { font-size: 11px; padding: 5px 8px; }
+        .admin-item { padding: 10px 12px; }
+        .admin-item-email { font-size: 13px; }
+        .admin-badge { font-size: 10px; padding: 2px 6px; }
+    }
 
+    @media (max-width: 400px) {
+        .admin-grid { padding: 8px 6px; }
+        .admin-card { padding: 12px 14px; }
+        .admin-card-label { font-size: 14px; }
+        .admin-stats-container { grid-template-columns: 1fr 1fr; padding: 8px 6px; }
+        .admin-toolbar { gap: 4px; padding: 4px 6px 6px; }
+        .admin-search { min-width: 36px; padding: 7px 8px; font-size: 12px; }
+        .admin-select { max-width: 42%; padding: 7px 8px; font-size: 11px; }
+        .admin-refresh-btn { padding: 7px 10px; font-size: 12px; }
+        .admin-add-btn { padding: 7px 8px; font-size: 11px; }
+        .admin-item { padding: 8px 10px; }
+        .admin-item-actions { gap: 4px; }
+        .admin-role-select { font-size: 10px; padding: 4px 6px; }
+        .admin-action-btn { font-size: 10px; padding: 4px 6px; }
+    }
 
+    @media (max-width: 400px) {
+        .sidebar { width: 260px; }
+        .sidebar-item { padding: 8px 16px; font-size: 13px; }
+    }
 
     /* Light theme text color overrides */
     [data-theme="light"] body {
@@ -1604,6 +1956,18 @@
     [data-theme="light"] .scale-field:focus {
         border-color: rgba(198, 97, 63, 0.4);
         box-shadow: 0 0 0 3px rgba(198, 97, 63, 0.1);
+    }
+    [data-theme="light"] .bottom-nav-label {
+        color: rgba(20, 20, 19, 0.4);
+    }
+    [data-theme="light"] .bottom-nav-item.active .bottom-nav-label {
+        color: #C6613F;
+    }
+    [data-theme="light"] .bottom-nav-icon svg {
+        stroke: rgba(20, 20, 19, 0.35);
+    }
+    [data-theme="light"] .bottom-nav-item.active .bottom-nav-icon svg {
+        stroke: #C6613F;
     }
     [data-theme="light"] .converter-result-label {
         color: rgba(20, 20, 19, 0.55);
@@ -2371,6 +2735,14 @@
     .page-content.scrolled .page-inline-header:has(.cj-icon-btn-inline) .page-inline-header-title {
         padding: 0 92px 0 40px;
     }
+    @media (max-width: 359px) {
+        .page-inline-header:has(.cj-icon-btn-inline) .page-inline-header-title {
+            padding: 0 84px 0 36px;
+        }
+        .page-content.scrolled .page-inline-header:has(.cj-icon-btn-inline) .page-inline-header-title {
+            padding: 0 84px 0 36px;
+        }
+    }
     /* Когда поиск раскрыт — title прячем, чтобы не было наложения. */
     .page-inline-header:has(.cj-header-search.search-open) .page-inline-header-title {
         opacity: 0;
@@ -2639,74 +3011,6 @@
 
     /* ======================== РАСХОДОМЕРЫ ХОЗРАСЧЁТНЫЕ ======================== */
     .flow-list { padding: 0; }
-
-    /* === Расходомеры: нижний бар фильтров (Все / Избранное / Скрытые) — мобильный === */
-    body:has(#page-flowmeter-data.active) .flow-list { padding-bottom: 56px; }
-
-    /* === Расходомеры: фильтры в хедере — десктоп === */
-
-    /* Десктоп: фильтры в хедере, нижний бар скрыт */
-
-    /* === Звёздочка избранного в карточке расходомера === */
-    .flow-card-fav {
-        position: absolute; top: 8px; right: 8px; z-index: 2;
-        width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
-        border-radius: 6px; cursor: pointer; transition: all 0.15s;
-        background: transparent; border: none; padding: 0;
-    }
-    .flow-card-fav svg { width: 18px; height: 18px; fill: none; stroke: rgba(255,255,255,0.15); stroke-width: 2; transition: all 0.15s; }
-    .flow-card-fav.active svg { fill: #c87048; stroke: #c87048; }
-    .flow-card-fav:active { transform: scale(0.8); }
-    [data-theme="light"] .flow-card-fav svg { stroke: rgba(20,20,19,0.15); }
-    [data-theme="light"] .flow-card-fav.active svg { fill: #b85a3a; stroke: #b85a3a; }
-
-    /* === Звёздочка избранного в детальной карточке === */
-    .flow-detail-fav-btn {
-        display: inline-flex; align-items: center; justify-content: center;
-        width: 32px; height: 32px; margin-left: 8px;
-        border-radius: 8px; cursor: pointer; transition: all 0.15s;
-        background: rgba(200,112,72,0.08); border: none; padding: 0;
-    }
-    .flow-detail-fav-btn svg { width: 20px; height: 20px; fill: none; stroke: rgba(200,112,72,0.4); stroke-width: 2; transition: all 0.15s; }
-    .flow-detail-fav-btn.active svg { fill: #c87048; stroke: #c87048; filter: drop-shadow(0 0 4px rgba(200,112,72,0.4)); }
-    .flow-detail-fav-btn:active { transform: scale(0.85); }
-    [data-theme="light"] .flow-detail-fav-btn { background: rgba(200,112,72,0.06); }
-    [data-theme="light"] .flow-detail-fav-btn svg { stroke: rgba(180,90,58,0.4); }
-    [data-theme="light"] .flow-detail-fav-btn.active svg { fill: #b85a3a; stroke: #b85a3a; }
-
-    /* === Свайп-подложка для скрытия расходомера === */
-    .flow-card-wrap {
-        position: relative; overflow: hidden;
-    }
-    .flow-card-wrap:last-child .flow-card { border-bottom: none; }
-    .flow-card-wrap .flow-swipe-bg {
-        position: absolute; inset: 0; display: flex; align-items: center;
-        padding: 0 20px; opacity: 0; transition: opacity 0.15s; pointer-events: none;
-        z-index: 0;
-    }
-    .flow-card-wrap .flow-swipe-bg-left { justify-content: flex-start; background: linear-gradient(135deg, #5ab870, #4a9a5a); }
-    .flow-card-wrap .flow-swipe-bg-right { justify-content: flex-end; background: linear-gradient(135deg, #C6613F, #D97757); }
-    .flow-card-wrap .flow-swipe-bg svg { width: 20px; height: 20px; fill: #fff; margin-right: 6px; }
-    .flow-card-wrap .flow-swipe-bg span { color: #fff; font-size: 13px; font-weight: 700; }
-    .flow-card-wrap.swiping-left .flow-swipe-bg-right { opacity: 1; }
-    .flow-card-wrap.swiping-right .flow-swipe-bg-left { opacity: 1; }
-    /* Если карточка в избранном — свайп вправо = убрать из избранного (красная), влево = скрыть (жёлтая) */
-    .flow-card-wrap.is-fav .flow-swipe-bg-left { background: linear-gradient(135deg, #C6613F, #D97757); }
-    .flow-card-wrap.is-fav .flow-swipe-bg-right { background: linear-gradient(135deg, #b8860b, #d4a017); }
-    [data-theme="light"] .flow-card-wrap .flow-swipe-bg-left { background: linear-gradient(135deg, #3a8a5a, #4da66a); }
-    [data-theme="light"] .flow-card-wrap .flow-swipe-bg-right { background: linear-gradient(135deg, #C6613F, #D97757); }
-    [data-theme="light"] .flow-card-wrap.is-fav .flow-swipe-bg-left { background: linear-gradient(135deg, #C6613F, #D97757); }
-    [data-theme="light"] .flow-card-wrap.is-fav .flow-swipe-bg-right { background: linear-gradient(135deg, #b8860b, #d4a017); }
-
-    /* Drag-and-drop: состояние перетаскивания */
-    .flow-card.dragging { opacity: 0.5; transform: scale(0.97); z-index: 10; }
-    .flow-card.drag-over { border-top: 2px solid #c87048; }
-    .flow-card.drag-placeholder { background: rgba(200,112,72,0.08); border: 1px dashed rgba(200,112,72,0.3); }
-
-    /* Скрытые карточки — приглушённые */
-    .flow-card.flow-hidden { opacity: 0.4; }
-    .flow-card.flow-hidden .flow-card-hoz { text-decoration: line-through; }
-
     .flow-empty { text-align: center; padding: 40px 20px; color: var(--text-secondary); }
     .flow-empty-icon { font-size: 40px; margin-bottom: 10px; }
     .flow-empty-text { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
@@ -2733,11 +3037,10 @@
     }
     .flow-card:last-child { border-bottom: none; }
     /* Зебра: тёмная тема — тёплые тона в палитру расходомеров (#c87048) */
-    /* Селекторы через .flow-card-wrap — карточки обёрнуты в wrap для свайпа */
-    .flow-card-wrap:nth-child(odd)  .flow-card { background: rgba(35, 30, 28, 0.96); }
-    .flow-card-wrap:nth-child(even) .flow-card { background: rgba(48, 42, 38, 0.96); }
-    [data-theme="light"] .flow-card-wrap:nth-child(odd)  .flow-card { background: rgba(248, 242, 238, 0.96); }
-    [data-theme="light"] .flow-card-wrap:nth-child(even) .flow-card { background: rgba(252, 248, 244, 0.97); }
+    .flow-card:nth-child(odd)  { background: rgba(35, 30, 28, 0.96); }
+    .flow-card:nth-child(even) { background: rgba(48, 42, 38, 0.96); }
+    [data-theme="light"] .flow-card:nth-child(odd)  { background: rgba(248, 242, 238, 0.96); }
+    [data-theme="light"] .flow-card:nth-child(even) { background: rgba(252, 248, 244, 0.97); }
     [data-theme="light"] .flow-card { border-bottom-color: rgba(20,20,19,0.08); }
     .flow-card:active { background: rgba(200,112,72,0.12); }
     [data-theme="light"] .flow-card:active { background: rgba(200,112,72,0.08); }
@@ -2771,6 +3074,11 @@
     .flow-add-page-body { padding: 12px 14px 24px; }
     /* Детальная карточка расходомера — плоские строки с зеброй (как блокировки/регуляторы) */
     .flow-detail-body { padding: 0; }
+    .flow-detail-bottom-bar {
+        display: flex; align-items: stretch;
+        border-top: 1px solid var(--card-border);
+        margin-top: 8px;
+    }
     .flow-input-btn {
         flex: 1;
         display: flex; align-items: center; justify-content: center; gap: 6px;
@@ -2787,6 +3095,30 @@
     .flow-input-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
     /* === Расходомеры: нижний бар «Ввести показания» — прижат к низу экрана на мобильном === */
+    @media (max-width: 1023px) {
+        #page-flowmeter-detail .flow-detail-bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 90;
+            margin-top: 0;
+            border-top: 1px solid var(--card-border);
+            background: var(--bottom-nav-bg, rgba(23, 33, 43, 0.95));
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        #page-flowmeter-detail .flow-input-btn {
+            padding: 15px 16px;
+        }
+        #page-flowmeter-detail .flow-detail-body {
+            padding-bottom: 60px;
+        }
+        [data-theme="light"] #page-flowmeter-detail .flow-detail-bottom-bar {
+            background: var(--bottom-nav-bg, rgba(240, 238, 230, 0.96));
+        }
+    }
 
     .flow-detail-header { margin-bottom: 0; background: #372e2a; padding: 8px 0; }
     [data-theme="light"] .flow-detail-header { background: #f5f0eb; }
@@ -2851,6 +3183,31 @@
         color: var(--text-secondary);
     }
     /* Sheet ввода новых показаний расходомера */
+    .flow-input-sheet {
+        position: fixed; left: 0; right: 0; bottom: 0;
+        z-index: 201;
+        background: var(--bg-primary, #1a1f26);
+        border-top-left-radius: 18px; border-top-right-radius: 18px;
+        padding: 8px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: none;
+        max-width: 520px; margin: 0 auto;
+    }
+    .flow-input-sheet.active { transform: translateY(0); box-shadow: 0 -8px 30px rgba(0,0,0,0.4); }
+    .flow-input-sheet-handle { width: 36px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin: 4px auto 14px; }
+    [data-theme="light"] .flow-input-sheet-handle { background: rgba(20,20,19,0.2); }
+    .flow-input-sheet-title { font-size: 17px; font-weight: 700; color: var(--text-primary); text-align: center; margin-bottom: 16px; }
+    .flow-input-field {
+        width: 100%; padding: 12px 14px;
+        border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
+        background: rgba(255,255,255,0.05);
+        color: var(--text-primary); font-size: 17px; font-family: 'Inter', sans-serif;
+        box-sizing: border-box; outline: none;
+        transition: border-color 0.15s;
+    }
+    .flow-input-field:focus { border-color: #6aa6e0; }
+    [data-theme="light"] .flow-input-field { border-color: rgba(0,0,0,0.15); background: rgba(0,0,0,0.03); }
     /* Дополнительные поля (температура, дата) в sheet ввода */
     .flow-input-row {
         display: flex; gap: 10px; margin-top: 10px;
@@ -2862,7 +3219,36 @@
         font-size: 12px; font-weight: 600; color: var(--text-secondary);
         letter-spacing: 0.2px; text-transform: uppercase;
     }
+    .flow-input-field-small {
+        width: 100%; padding: 10px 12px;
+        border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
+        background: rgba(255,255,255,0.05);
+        color: var(--text-primary); font-size: 15px; font-family: 'Inter', sans-serif;
+        box-sizing: border-box; outline: none;
+        transition: border-color 0.15s;
+    }
+    .flow-input-field-small:focus { border-color: #6aa6e0; }
+    [data-theme="light"] .flow-input-field-small { border-color: rgba(0,0,0,0.15); background: rgba(0,0,0,0.03); }
     /* Нативный date-input: стилизация иконки календаря */
+    .flow-input-field-small::-webkit-calendar-picker-indicator {
+        filter: invert(0.7);
+        cursor: pointer;
+    }
+    [data-theme="light"] .flow-input-field-small::-webkit-calendar-picker-indicator {
+        filter: none;
+    }
+    .flow-input-submit {
+        display: flex; align-items: center; justify-content: center;
+        width: 100%; padding: 14px; margin-top: 14px;
+        border: none; border-radius: 12px;
+        background: linear-gradient(135deg, #c87048, #d4854f);
+        color: #fff; font-size: 15px; font-weight: 600;
+        font-family: 'Inter', sans-serif; cursor: pointer;
+        box-shadow: 0 3px 12px rgba(200,112,72,0.25);
+        -webkit-tap-highlight-color: transparent;
+        transition: all 0.2s;
+    }
+    .flow-input-submit:active { transform: scale(0.97); opacity: 0.9; }
     .flow-input-cancel {
         display: block; width: 100%; padding: 12px; margin-top: 8px;
         border: none; background: transparent;
@@ -3116,6 +3502,38 @@
     .flow-archive-vbar-col:nth-child(even) .flow-archive-vbar-xlabel-zone { background: #463e38; }
 
     /* --- Десктоп: архив в правой панели --- */
+    @media (min-width: 1024px) {
+        .flow-archive-chart-body {
+            height: 170px;
+        }
+        .flow-archive-vbar-xlabel {
+            font-size: 8px;
+        }
+        .flow-archive-vbar-tip {
+            font-size: 8px;
+        }
+        .flow-archive-table {
+            font-size: var(--archive-table-fs, 12px);
+        }
+        .flow-archive-chart {
+            padding: 6px 12px 2px;
+        }
+        .flow-archive-title {
+            padding-left: 12px;
+        }
+        .flow-archive-table thead th {
+            padding-left: 12px;
+        }
+        .flow-archive-table td {
+            padding-left: 12px;
+        }
+        .flow-archive-table thead th:last-child {
+            padding-right: 12px;
+        }
+        .flow-archive-table td:last-child {
+            padding-right: 12px;
+        }
+    }
 
     /* ========== Кабельный журнал — страница добавления записи ==========
        Открывается как обычная page-content из cable-journal-edit по кнопке '+'.
@@ -3525,6 +3943,24 @@
     }
     [data-theme="light"] .header-btn:active {
         background: rgba(20, 20, 19, 0.1);
+    }
+    [data-theme="light"] .bottom-nav {
+        border-top-color: rgba(20, 20, 19, 0.1);
+    }
+    [data-theme="light"] .bottom-nav-item:active {
+        background: rgba(20, 20, 19, 0.05);
+    }
+    [data-theme="light"] .bottom-nav-item.active .bottom-nav-icon svg {
+        filter: drop-shadow(0 0 5px rgba(198, 97, 63, 0.5)) drop-shadow(0 0 10px rgba(198, 97, 63, 0.25));
+    }
+    [data-theme="light"] .bottom-nav-item.active .bottom-nav-label {
+        text-shadow: 0 0 5px rgba(198, 97, 63, 0.35);
+    }
+    [data-theme="light"] .bottom-nav-item:active .bottom-nav-icon svg {
+        stroke: rgba(198, 97, 63, 0.7);
+    }
+    [data-theme="light"] .bottom-nav-item:active .bottom-nav-label {
+        color: rgba(198, 97, 63, 0.7);
     }
     [data-theme="light"] .bg-network .line {
         stroke: rgba(20, 20, 19, 0.05);
@@ -5613,6 +6049,18 @@
     [data-theme="light"] .dev-header-search::placeholder { color: rgba(20,20,19,0.4); }
     /* На узких экранах (< 360px) уменьшаем search input, чтобы оставить
        больше места под заголовок. */
+    @media (max-width: 359px) {
+        .dev-header-search {
+            width: 100px;
+            max-width: 35vw;
+        }
+        .page-inline-header:has(.dev-header-search) .page-inline-header-title {
+            padding: 0 110px 0 36px;
+        }
+        .page-content.scrolled .page-inline-header:has(.dev-header-search) .page-inline-header-title {
+            padding: 0 92px 0 36px;
+        }
+    }
     .page-content.scrolled .dev-header-search {
         width: 100px;
         padding: 4px 8px 4px 26px;
@@ -6316,6 +6764,9 @@
         color: #c7964a;
         filter: drop-shadow(0 0 4px rgba(199,150,74,0.5));
     }
+    @media (min-width: 1024px) {
+        .dev-detail-fav-btn { display: flex; }
+    }
     [data-theme="light"] .dev-detail-fav-btn { color: rgba(42,93,143,0.45); background: rgba(0,0,0,0.06); }
     [data-theme="light"] .dev-detail-fav-btn.active { color: #b8860b; filter: drop-shadow(0 0 4px rgba(184,134,11,0.4)); }
 
@@ -6383,6 +6834,9 @@
     .project-card-fav-btn.active {
         color: #c7964a;
         background: rgba(199,150,74,0.1);
+    }
+    @media (min-width: 1024px) {
+        .project-card-fav-btn { display: flex; }
     }
     [data-theme="light"] .project-card-fav-btn { background: rgba(0,0,0,0.04); color: rgba(42,93,143,0.4); }
     [data-theme="light"] .project-card-fav-btn:hover { background: rgba(184,134,11,0.08); }
@@ -6792,6 +7246,9 @@
     [data-theme="light"] .ms-hint { background: rgba(232,230,220,0.5); color: rgba(20,20,19,0.45); }
     [data-theme="light"] .ms-face-btn { background: rgba(255,255,255,0.5); border-color: rgba(20,20,19,0.12); }
 
+    @media (max-width: 400px) {
+        .ms-board { padding: 4px; }
+    }
 
     /* Prefers-reduced-motion: disable animations */
     @media (prefers-reduced-motion: reduce) {
@@ -6946,10 +7403,28 @@
     [data-theme="light"] .cs-option.cs-selected .cs-option-hint { color: rgba(198, 97, 63, 0.4); }
 
     /* Mobile responsive custom selects */
+    @media (max-width: 480px) {
+        .cs-trigger { font-size: 13px; height: 40px; min-height: 40px; padding-top: 9px; padding-bottom: 9px; }
+        .cs-dropdown { max-height: 200px; }
+        .cs-option { font-size: 13px; padding: 8px 10px; }
+        .cs-option-hint { font-size: 10px; }
+    }
+    @media (max-width: 400px) {
+        .cs-trigger { font-size: 12px; height: 38px; min-height: 38px; padding-top: 8px; padding-bottom: 8px; }
+        .cs-dropdown { max-height: 180px; }
+        .cs-option { font-size: 12px; padding: 7px 10px; }
+        .cs-option-hint { font-size: 10px; }
+    }
 
     /* kit-dev-form custom selects */
     .kit-dev-form .cs-wrapper { margin-bottom: 0 !important; }
     .kit-dev-form .cs-trigger { min-height: 36px !important; height: 36px !important; font-size: 13px !important; border-radius: 8px !important; padding: 6px 28px 6px 10px !important; }
+    @media (max-width: 480px) {
+        .kit-dev-form .cs-trigger { min-height: 36px !important; height: 36px !important; font-size: 12px !important; }
+    }
+    @media (max-width: 400px) {
+        .kit-dev-form .cs-trigger { min-height: 34px !important; height: 34px !important; font-size: 11px !important; }
+    }
 
     /* ============================================================
        СИСТЕМА ДОСТУПА: Login screen + sidebar user info + no-access
@@ -7261,9 +7736,19 @@
        ============================================================ */
 
     /* Утилита: скрыть элемент на десктопе */
+    @media (min-width: 1024px) {
+        .desktop-hide { display: none !important; }
+    }
     /* Утилита: показать элемент только на десктопе */
+    .desktop-only { display: none !important; }
+    @media (min-width: 1024px) {
+        .desktop-only { display: flex !important; }
+    }
 
     /* --- Detail Panel: скрыт на мобильном по умолчанию --- */
+    #detailPanel {
+        display: none;
+    }
     /* --- Sidebar toggle button: скрыт везде (мёртвый элемент, заменён десктопным бургером) --- */
     #sidebarToggleBtn {
         display: none !important;
@@ -7274,571 +7759,6 @@
        Явные стили, гарантирующие, что десктопный код не «протекает»
        при resize или при инлайн-стилях от JS.
        ============================================================ */
-
-
-    /* Tablet: 768-1023px — частичная адаптация */
-
-    /* Подсветка активной карточки при открытом detail-panel (мобильная / базовая) */
-
-    /* ===== Десктопный верхний бар (mobile: hidden) ===== */
-
-
-
-
-
-
-
-
-
-
-
-    /* ====== План корпуса 114: поворот картинок отм.00/06/12/18 влево (горизонтально) на десктопе ====== */
-
-
-/* === mobile.css === */
-    @media (max-width: 360px) {
-        .menu-btn-row-secret-pair { grid-template-columns: 1fr !important; }
-    }
-    @media (max-width: 1023px) {
-        #page-dashboard .menu-btn {
-            border: 3px solid rgba(74, 143, 199, 0.22);
-            border-top-color: rgba(74, 143, 199, 0.32);
-            border-left-color: rgba(74, 143, 199, 0.30);
-            border-bottom-color: rgba(74, 143, 199, 0.12);
-            border-right-color: rgba(74, 143, 199, 0.10);
-            border-radius: 16px;
-            box-shadow:
-                inset 2px 2px 4px rgba(0, 0, 0, 0.18),
-                inset -1px -1px 3px rgba(255, 255, 255, 0.04),
-                0 1px 2px rgba(0, 0, 0, 0.12);
-        }
-        #page-dashboard .menu-btn:active {
-            box-shadow:
-                inset 3px 3px 6px rgba(0, 0, 0, 0.25),
-                inset -1px -1px 2px rgba(255, 255, 255, 0.02);
-            border-color: rgba(74, 143, 199, 0.18);
-        }
-    }
-    @media (max-width: 1023px) {
-        [data-theme="light"] #page-dashboard .menu-btn {
-            background: rgba(248, 244, 236, 0.92);
-            border: 3px solid rgba(180, 170, 150, 0.30);
-            border-top-color: rgba(200, 190, 170, 0.45);
-            border-left-color: rgba(195, 185, 165, 0.40);
-            border-bottom-color: rgba(140, 130, 115, 0.25);
-            border-right-color: rgba(135, 125, 110, 0.22);
-            box-shadow:
-                inset 2px 2px 5px rgba(0, 0, 0, 0.07),
-                inset -1px -1px 3px rgba(255, 255, 255, 0.35),
-                0 1px 3px rgba(0, 0, 0, 0.06);
-        }
-        [data-theme="light"] #page-dashboard .menu-btn:active {
-            background: rgba(242, 238, 228, 0.95);
-            box-shadow:
-                inset 3px 3px 7px rgba(0, 0, 0, 0.10),
-                inset -1px -1px 2px rgba(255, 255, 255, 0.20);
-            border-color: rgba(160, 150, 130, 0.30);
-        }
-    }
-    .dashboard-bottom-bar {
-        position: fixed;
-        bottom: 0; left: 0; right: 0;
-        z-index: 80;
-        display: none; /* по умолчанию скрыт, показывается только на дашборде */
-        grid-template-columns: 1fr 1fr;
-        gap: 0;
-        padding: 0;
-        padding-bottom: env(safe-area-inset-bottom, 0px);
-        background: var(--bottom-nav-bg, rgba(23, 33, 43, 0.95));
-        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-        border-top: 1px solid var(--card-border);
-    }
-    .dashboard-bottom-bar::before {
-        content: '';
-        position: absolute;
-        left: 50%;
-        top: 14px;
-        bottom: calc(14px + env(safe-area-inset-bottom, 0px));
-        width: 1px;
-        background: var(--card-border, rgba(74, 143, 199, 0.18));
-        transform: translateX(-50%);
-        pointer-events: none;
-        z-index: 1;
-    }
-    body:has(#page-dashboard.active) .dashboard-bottom-bar { display: grid; }
-    .dashboard-bottom-overflow {
-        position: absolute;
-        top: 6px; right: 6px;
-        width: 24px; height: 24px;
-        display: flex; align-items: center; justify-content: center;
-        border: none; background: rgba(255,255,255,0.08);
-        color: rgba(140,170,200,0.5); border-radius: 6px;
-        cursor: pointer; padding: 0;
-        transition: background 0.15s;
-    }
-    .dashboard-bottom-overflow:hover { background: rgba(199,150,74,0.15); }
-    .dashboard-bottom-overflow:active { transform: scale(0.88); }
-    [data-theme="light"] .dashboard-bottom-overflow { background: rgba(0,0,0,0.05); color: rgba(42,93,143,0.4); }
-    @media (max-width: 768px) { .dashboard-bottom-overflow { display: none; } }
-    /* На дашборде добавляем нижний отступ, чтобы контент не перекрывался баром */
-    .dashboard-bottom-btn {
-        display: flex; align-items: center; justify-content: center; gap: 8px;
-        padding: 16px 10px calc(16px + env(safe-area-inset-bottom, 0px));
-        border: none; border-radius: 0;
-        background: transparent;
-        color: var(--accent-blue, #4a8fc7); font-size: 14px; font-weight: 600;
-        font-family: 'Inter', sans-serif;
-        cursor: pointer; pointer-events: auto;
-        touch-action: manipulation; -webkit-tap-highlight-color: transparent;
-        box-shadow: none;
-        transition: background 0.2s, opacity 0.2s;
-        min-height: 56px;
-        position: relative;
-        z-index: 2;
-    }
-    .dashboard-bottom-btn:active { background: rgba(255,255,255,0.05); opacity: 0.75; }
-    .dashboard-bottom-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
-    .dashboard-bottom-btn span { line-height: 1.2; }
-    .dashboard-bottom-btn-docs {
-        color: var(--accent-gold, #c7964a);
-    }
-    [data-theme="light"] .dashboard-bottom-btn { color: #4a8fc7; }
-    [data-theme="light"] .dashboard-bottom-btn-docs { color: #b8842e; }
-    [data-theme="light"] .dashboard-bottom-btn:active { background: rgba(20,20,19,0.05); }
-    @media (max-width: 400px) {
-        .dashboard-bottom-btn { font-size: 12px; padding: 14px 8px calc(14px + env(safe-area-inset-bottom, 0px)); gap: 6px; }
-        .dashboard-bottom-btn svg { width: 18px; height: 18px; }
-    }
-    .pin-sheet-overlay {
-        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0,0,0,0.5);
-        z-index: 200;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.25s ease;
-    }
-    .pin-sheet-overlay.active { opacity: 1; pointer-events: auto; }
-    .pin-sheet {
-        position: fixed;
-        left: 0; right: 0; bottom: 0;
-        z-index: 201;
-        background: var(--bg-primary, #1a1f26);
-        border-top-left-radius: 18px;
-        border-top-right-radius: 18px;
-        padding: 8px 16px calc(16px + env(safe-area-inset-bottom, 0px));
-        transform: translateY(100%);
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: none;
-        max-width: 520px;
-        margin: 0 auto;
-    }
-    .pin-sheet.active { transform: translateY(0); box-shadow: 0 -8px 30px rgba(0,0,0,0.4); }
-    .pin-sheet-handle {
-        width: 36px; height: 4px;
-        background: rgba(255,255,255,0.2);
-        border-radius: 2px;
-        margin: 4px auto 14px;
-    }
-    [data-theme="light"] .pin-sheet-handle { background: rgba(20,20,19,0.2); }
-    .pin-sheet-title {
-        font-size: 17px; font-weight: 700;
-        color: var(--text-primary, #e0e0e0);
-        text-align: center;
-        margin-bottom: 4px;
-    }
-    .pin-sheet-sublabel {
-        font-size: 13px;
-        color: var(--text-muted, rgba(255,255,255,0.4));
-        text-align: center;
-        margin-bottom: 18px;
-        line-height: 1.4;
-    }
-    .pin-sheet-action {
-        display: flex; align-items: center; justify-content: center; gap: 8px;
-        width: 100%;
-        padding: 14px;
-        border: none; border-radius: 12px;
-        background: linear-gradient(135deg, #2563eb, #3b82f6);
-        color: #fff; font-size: 15px; font-weight: 600;
-        font-family: 'Inter', sans-serif;
-        cursor: pointer;
-        box-shadow: 0 3px 12px rgba(37, 99, 235, 0.25);
-        -webkit-tap-highlight-color: transparent;
-        transition: all 0.2s;
-    }
-    .pin-sheet-action:active { transform: scale(0.97); opacity: 0.9; }
-    .pin-sheet-action svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .pin-sheet-action.is-pinned {
-        background: linear-gradient(135deg, #c74a4a, #d9634a);
-        box-shadow: 0 3px 12px rgba(199, 74, 74, 0.25);
-    }
-    [data-theme="light"] .pin-sheet-action {
-        background: linear-gradient(135deg, #C6613F, #D97757);
-        box-shadow: 0 3px 12px rgba(198, 97, 63, 0.25);
-    }
-    [data-theme="light"] .pin-sheet-action.is-pinned {
-        background: linear-gradient(135deg, #C6613F, #D97757);
-        box-shadow: 0 3px 12px rgba(198, 97, 63, 0.25);
-    }
-    .pin-sheet-cancel {
-        display: block;
-        width: 100%;
-        padding: 13px;
-        margin-top: 8px;
-        border: 1px solid var(--card-border);
-        border-radius: 12px;
-        background: transparent;
-        color: var(--text-secondary, rgba(255,255,255,0.6));
-        font-size: 14px; font-weight: 500;
-        font-family: 'Inter', sans-serif;
-        cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-        transition: all 0.2s;
-    }
-    .pin-sheet-cancel:active { background: rgba(255,255,255,0.05); }
-    [data-theme="light"] .pin-sheet-cancel:active { background: rgba(20,20,19,0.05); }
-    .pin-sheet-extra-actions {
-        display: flex; flex-direction: column; gap: 8px;
-        margin-bottom: 8px;
-    }
-    .pin-sheet-action-secondary {
-        background: transparent !important;
-        border: 1px solid var(--card-border);
-        color: var(--text-secondary, rgba(255,255,255,0.7));
-        box-shadow: none !important;
-    }
-    .pin-sheet-action-secondary:active { background: rgba(255,255,255,0.05) !important; }
-    [data-theme="light"] .pin-sheet-action-secondary {
-        color: var(--text-secondary, rgba(20,20,19,0.7));
-        border-color: rgba(20,20,19,0.15);
-    }
-    [data-theme="light"] .pin-sheet-action-secondary:active { background: rgba(20,20,19,0.05) !important; }
-    .pin-sheet-action:disabled,
-    .pin-sheet-action-secondary:disabled {
-        opacity: 0.35;
-        cursor: not-allowed;
-        pointer-events: none;
-        box-shadow: none !important;
-    }
-    .bottom-nav {
-        position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
-        background: var(--bottom-nav-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-        border-top: 1px solid rgba(74, 143, 199, 0.15); padding: 8px; padding-bottom: max(8px, env(safe-area-inset-bottom));
-    }
-    .bottom-nav-inner { display: flex; justify-content: space-around; align-items: center; }
-    .bottom-nav-item {
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        padding: 6px 4px; cursor: pointer; transition: all 0.2s; border-radius: 10px; min-width: 60px; min-height: 44px;
-        -webkit-tap-highlight-color: transparent; touch-action: manipulation; pointer-events: auto;
-    }
-    .bottom-nav-item:active { transform: scale(0.92); background: rgba(255,255,255,0.05); }
-    .bottom-nav-icon { width: 22px; height: 22px; margin-bottom: 3px; display: flex; align-items: center; justify-content: center; }
-    .bottom-nav-icon svg {
-        width: 18px; height: 18px; stroke: rgba(255,255,255,0.35); fill: none; stroke-width: 1.8;
-        stroke-linecap: round; stroke-linejoin: round; transition: stroke 0.2s;
-    }
-    .bottom-nav-icon svg {
-        filter: drop-shadow(0 0 2px rgba(74, 143, 199, 0.25));
-    }
-    .bottom-nav-item.active .bottom-nav-icon svg {
-        stroke: rgba(74, 143, 199, 0.95);
-        filter: drop-shadow(0 0 5px rgba(74, 143, 199, 0.6)) drop-shadow(0 0 10px rgba(74, 143, 199, 0.3));
-    }
-    .bottom-nav-item.active .bottom-nav-label {
-        color: rgba(74, 143, 199, 0.95);
-        text-shadow: 0 0 5px rgba(74, 143, 199, 0.4);
-    }
-    .bottom-nav-item:active .bottom-nav-icon svg { stroke: rgba(74, 143, 199, 0.8); }
-    .bottom-nav-label {
-        font-size: 11px; color: rgba(255,255,255,0.35); text-align: center; line-height: 1.2;
-        white-space: nowrap; transition: color 0.2s;
-    }
-    .bottom-nav-item:active .bottom-nav-label { color: rgba(74, 143, 199, 0.8); }
-    @media (max-width: 480px) {
-        .menu-btn { width: 100%; margin: 0; padding: 6px 14px; min-height: 61px; }
-        .menu-btn-label { font-size: 17px; } .menu-btn-sublabel { font-size: 13px; }
-        #page-dashboard .menu-btn-label { font-size: 21px; }
-        #page-dashboard .menu-btn-sublabel { font-size: 15px; }
-        
-        .nav-btn { padding: 9px 14px; font-size: 13px; }
-        .form-field, .scale-field { padding: 9px 12px; font-size: 14px; height: 40px; }
-        select.scale-field, select.form-field { font-size: 13px; height: 40px; min-height: 40px; padding-top: 9px; padding-bottom: 9px; }
-        .kit-dev-form .scale-field { height: 36px !important; padding: 6px 8px !important; font-size: 12px !important; }
-        .kit-dev-form select.scale-field { min-height: 36px !important; height: 36px !important; font-size: 12px !important; }
-        select.scale-field option, select.form-field option { font-size: 13px; }
-        .warning-banner { margin: 8px 0 0; padding: 10px 12px; }
-        .buoy-card-title { font-size: 22px; }
-        .buoy-card-desc { font-size: 12px; }
-        .buoy-card-body { padding: 10px 12px; }
-        .buoy-card-formula { padding: 6px 12px; }
-        .buoy-card-formula .formula-inline { font-size: 15px; }
-        .header-title svg.led-display { height: 36px; }
-    }
-    @media (max-width: 400px) {
-        .menu-btn { width: 100%; margin: 0; padding: 5px 12px; min-height: 57px; }
-        .menu-btn-label { font-size: 16px; } .menu-btn-sublabel { font-size: 12px; }
-        #page-dashboard .menu-btn-label { font-size: 19px; }
-        #page-dashboard .menu-btn-sublabel { font-size: 14px; }
-        
-        /* На 375-400px все тексты умещаются в 1 строку — текущий min-height: 57px достаточен */
-        .nav-btn { padding: 8px 12px; font-size: 12px; gap: 5px; }
-        .nav-btn svg { width: 12px; height: 12px; }
-        .form-field, .scale-field { padding: 8px 10px; font-size: 13px; height: 38px; }
-        select.scale-field, select.form-field { font-size: 12px; height: 38px; min-height: 38px; padding-top: 8px; padding-bottom: 8px; }
-        .kit-dev-form .scale-field { height: 34px !important; padding: 5px 8px !important; font-size: 11px !important; }
-        .kit-dev-form select.scale-field { min-height: 34px !important; height: 34px !important; font-size: 11px !important; }
-        select.scale-field option, select.form-field option { font-size: 12px; }
-        .bottom-nav-item { min-width: 52px; padding: 5px 2px; }
-        .bottom-nav-label { font-size: 10px; }
-        .buoy-card-title { font-size: 20px; }
-        .buoy-card-desc { font-size: 11px; }
-        .buoy-card-body { padding: 8px 10px; }
-        .buoy-card-formula { padding: 5px 10px; }
-        .buoy-card-formula .formula-inline { font-size: 13px; }
-        .buoy-select-container { flex-direction: column; padding: 6px 0; gap: 8px; }
-        .header-title svg.led-display { height: 28px; }
-    }
-    @media (max-width: 374px) {
-        .menu-btn { min-height: 70px; }
-    }
-    @media (max-width: 340px) {
-        .menu-btn { min-height: 68px; }
-        #page-dashboard .menu-btn-label { font-size: 17px; }
-        #page-dashboard .menu-btn-sublabel { font-size: 12px; }
-    }
-    @media (max-width: 300px) {
-        .menu-btn { min-height: 75px; }
-    }
-    @media (min-width: 481px) { .menu-btn { max-width: 480px; } }
-
-    @media (max-width: 480px) {
-        .admin-toolbar { gap: 6px; padding: 6px 8px 8px; }
-        .admin-search { min-width: 50px; padding: 8px 10px; font-size: 13px; }
-        .admin-select { max-width: 45%; padding: 8px 10px; font-size: 12px; }
-        .admin-refresh-btn { padding: 8px 12px; font-size: 13px; }
-        .admin-add-btn { padding: 8px 10px; font-size: 12px; }
-        .admin-role-select { max-width: 100%; font-size: 11px; padding: 5px 8px; }
-        .admin-action-btn { font-size: 11px; padding: 5px 8px; }
-        .admin-item { padding: 10px 12px; }
-        .admin-item-email { font-size: 13px; }
-        .admin-badge { font-size: 10px; padding: 2px 6px; }
-    }
-    @media (max-width: 400px) {
-        .admin-grid { padding: 8px 6px; }
-        .admin-card { padding: 12px 14px; }
-        .admin-card-label { font-size: 14px; }
-        .admin-stats-container { grid-template-columns: 1fr 1fr; padding: 8px 6px; }
-        .admin-toolbar { gap: 4px; padding: 4px 6px 6px; }
-        .admin-search { min-width: 36px; padding: 7px 8px; font-size: 12px; }
-        .admin-select { max-width: 42%; padding: 7px 8px; font-size: 11px; }
-        .admin-refresh-btn { padding: 7px 10px; font-size: 12px; }
-        .admin-add-btn { padding: 7px 8px; font-size: 11px; }
-        .admin-item { padding: 8px 10px; }
-        .admin-item-actions { gap: 4px; }
-        .admin-role-select { font-size: 10px; padding: 4px 6px; }
-        .admin-action-btn { font-size: 10px; padding: 4px 6px; }
-    }
-    @media (max-width: 400px) {
-        .sidebar { width: 260px; }
-        .sidebar-item { padding: 8px 16px; font-size: 13px; }
-    }
-    [data-theme="light"] .bottom-nav-label {
-        color: rgba(20, 20, 19, 0.4);
-    }
-    [data-theme="light"] .bottom-nav-item.active .bottom-nav-label {
-        color: #C6613F;
-    }
-    [data-theme="light"] .bottom-nav-icon svg {
-        stroke: rgba(20, 20, 19, 0.35);
-    }
-    [data-theme="light"] .bottom-nav-item.active .bottom-nav-icon svg {
-        stroke: #C6613F;
-    }
-    @media (max-width: 359px) {
-        .page-inline-header:has(.cj-icon-btn-inline) .page-inline-header-title {
-            padding: 0 84px 0 36px;
-        }
-        .page-content.scrolled .page-inline-header:has(.cj-icon-btn-inline) .page-inline-header-title {
-            padding: 0 84px 0 36px;
-        }
-    }
-    .flow-filter-bar {
-        position: fixed; bottom: 0; left: 0; right: 0; z-index: 80;
-        display: none; /* скрыт по умолчанию; показывается через body:has() */
-        align-items: stretch;
-        background: var(--bottom-nav-bg, rgba(23, 33, 43, 0.95));
-        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-        border-top: 1px solid var(--card-border);
-        padding-bottom: env(safe-area-inset-bottom, 0px);
-    }
-    body:has(#page-flowmeter-data.active) .flow-filter-bar { display: flex; }
-    .flow-filter-btn {
-        flex: 1;
-        display: flex; align-items: center; justify-content: center; gap: 6px;
-        padding: 14px 8px;
-        border: none; background: transparent;
-        font-size: 14px; font-weight: 600; color: var(--text-secondary);
-        font-family: 'Inter', sans-serif;
-        cursor: pointer; transition: all 0.15s; white-space: nowrap;
-        -webkit-tap-highlight-color: transparent;
-    }
-    .flow-filter-btn:active { background: rgba(200,112,72,0.08); }
-    .flow-filter-btn.active { color: #c87048; }
-    [data-theme="light"] .flow-filter-btn.active { color: #b85a3a; }
-    .flow-filter-count {
-        font-size: 11px; font-weight: 700; min-width: 18px; text-align: center;
-        padding: 1px 5px; border-radius: 10px;
-        background: rgba(200,112,72,0.15); color: #c87048;
-    }
-    [data-theme="light"] .flow-filter-count { background: rgba(200,112,72,0.1); color: #b85a3a; }
-    .flow-filter-divider {
-        width: 1px; background: var(--card-border); flex-shrink: 0;
-    }
-    .flow-filter-restore {
-        font-size: 12px; font-weight: 600; padding: 4px 10px;
-        border-radius: 6px; border: none; cursor: pointer;
-        background: rgba(90,184,112,0.12); color: #5ab870;
-        transition: all 0.15s;
-    }
-    .flow-filter-restore:hover { background: rgba(90,184,112,0.2); }
-    [data-theme="light"] .flow-filter-restore { background: rgba(90,184,112,0.08); color: #3a8a5a; }
-    [data-theme="light"] .flow-filter-bar {
-        background: var(--bottom-nav-bg, rgba(240, 238, 230, 0.96));
-    }
-    .flow-detail-bottom-bar {
-        display: flex; align-items: stretch;
-        border-top: 1px solid var(--card-border);
-        margin-top: 8px;
-    }
-    @media (max-width: 1023px) {
-        #page-flowmeter-detail .flow-detail-bottom-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            z-index: 90;
-            margin-top: 0;
-            border-top: 1px solid var(--card-border);
-            background: var(--bottom-nav-bg, rgba(23, 33, 43, 0.95));
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding-bottom: env(safe-area-inset-bottom, 0px);
-        }
-        #page-flowmeter-detail .flow-input-btn {
-            padding: 15px 16px;
-        }
-        #page-flowmeter-detail .flow-detail-body {
-            padding-bottom: 60px;
-        }
-        [data-theme="light"] #page-flowmeter-detail .flow-detail-bottom-bar {
-            background: var(--bottom-nav-bg, rgba(240, 238, 230, 0.96));
-        }
-    }
-    .flow-input-sheet {
-        position: fixed; left: 0; right: 0; bottom: 0;
-        z-index: 201;
-        background: var(--bg-primary, #1a1f26);
-        border-top-left-radius: 18px; border-top-right-radius: 18px;
-        padding: 8px 16px calc(16px + env(safe-area-inset-bottom, 0px));
-        transform: translateY(100%);
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: none;
-        max-width: 520px; margin: 0 auto;
-    }
-    .flow-input-sheet.active { transform: translateY(0); box-shadow: 0 -8px 30px rgba(0,0,0,0.4); }
-    .flow-input-sheet-handle { width: 36px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin: 4px auto 14px; }
-    [data-theme="light"] .flow-input-sheet-handle { background: rgba(20,20,19,0.2); }
-    .flow-input-sheet-title { font-size: 17px; font-weight: 700; color: var(--text-primary); text-align: center; margin-bottom: 16px; }
-    .flow-input-field {
-        width: 100%; padding: 12px 14px;
-        border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
-        background: rgba(255,255,255,0.05);
-        color: var(--text-primary); font-size: 17px; font-family: 'Inter', sans-serif;
-        box-sizing: border-box; outline: none;
-        transition: border-color 0.15s;
-    }
-    .flow-input-field:focus { border-color: #6aa6e0; }
-    [data-theme="light"] .flow-input-field { border-color: rgba(0,0,0,0.15); background: rgba(0,0,0,0.03); }
-    .flow-input-field-small {
-        width: 100%; padding: 10px 12px;
-        border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
-        background: rgba(255,255,255,0.05);
-        color: var(--text-primary); font-size: 15px; font-family: 'Inter', sans-serif;
-        box-sizing: border-box; outline: none;
-        transition: border-color 0.15s;
-    }
-    .flow-input-field-small:focus { border-color: #6aa6e0; }
-    [data-theme="light"] .flow-input-field-small { border-color: rgba(0,0,0,0.15); background: rgba(0,0,0,0.03); }
-    .flow-input-field-small::-webkit-calendar-picker-indicator {
-        filter: invert(0.7);
-        cursor: pointer;
-    }
-    [data-theme="light"] .flow-input-field-small::-webkit-calendar-picker-indicator {
-        filter: none;
-    }
-    .flow-input-submit {
-        display: flex; align-items: center; justify-content: center;
-        width: 100%; padding: 14px; margin-top: 14px;
-        border: none; border-radius: 12px;
-        background: linear-gradient(135deg, #c87048, #d4854f);
-        color: #fff; font-size: 15px; font-weight: 600;
-        font-family: 'Inter', sans-serif; cursor: pointer;
-        box-shadow: 0 3px 12px rgba(200,112,72,0.25);
-        -webkit-tap-highlight-color: transparent;
-        transition: all 0.2s;
-    }
-    .flow-input-submit:active { transform: scale(0.97); opacity: 0.9; }
-    [data-theme="light"] .bottom-nav {
-        border-top-color: rgba(20, 20, 19, 0.1);
-    }
-    [data-theme="light"] .bottom-nav-item:active {
-        background: rgba(20, 20, 19, 0.05);
-    }
-    [data-theme="light"] .bottom-nav-item.active .bottom-nav-icon svg {
-        filter: drop-shadow(0 0 5px rgba(198, 97, 63, 0.5)) drop-shadow(0 0 10px rgba(198, 97, 63, 0.25));
-    }
-    [data-theme="light"] .bottom-nav-item.active .bottom-nav-label {
-        text-shadow: 0 0 5px rgba(198, 97, 63, 0.35);
-    }
-    [data-theme="light"] .bottom-nav-item:active .bottom-nav-icon svg {
-        stroke: rgba(198, 97, 63, 0.7);
-    }
-    [data-theme="light"] .bottom-nav-item:active .bottom-nav-label {
-        color: rgba(198, 97, 63, 0.7);
-    }
-    @media (max-width: 359px) {
-        .dev-header-search {
-            width: 100px;
-            max-width: 35vw;
-        }
-        .page-inline-header:has(.dev-header-search) .page-inline-header-title {
-            padding: 0 110px 0 36px;
-        }
-        .page-content.scrolled .page-inline-header:has(.dev-header-search) .page-inline-header-title {
-            padding: 0 92px 0 36px;
-        }
-    }
-    @media (max-width: 400px) {
-        .ms-board { padding: 4px; }
-    }
-    @media (max-width: 480px) {
-        .cs-trigger { font-size: 13px; height: 40px; min-height: 40px; padding-top: 9px; padding-bottom: 9px; }
-        .cs-dropdown { max-height: 200px; }
-        .cs-option { font-size: 13px; padding: 8px 10px; }
-        .cs-option-hint { font-size: 10px; }
-    }
-    @media (max-width: 400px) {
-        .cs-trigger { font-size: 12px; height: 38px; min-height: 38px; padding-top: 8px; padding-bottom: 8px; }
-        .cs-dropdown { max-height: 180px; }
-        .cs-option { font-size: 12px; padding: 7px 10px; }
-        .cs-option-hint { font-size: 10px; }
-    }
-    @media (max-width: 480px) {
-        .kit-dev-form .cs-trigger { min-height: 36px !important; height: 36px !important; font-size: 12px !important; }
-    }
-    @media (max-width: 400px) {
-        .kit-dev-form .cs-trigger { min-height: 34px !important; height: 34px !important; font-size: 11px !important; }
-    }
     @media (max-width: 1023px) {
         /* КЛЮЧЕВОЕ: html — единственный scroll-контейнер на мобильном.
            body НЕ должен иметь overflow-x:hidden, иначе он создаёт
@@ -7941,6 +7861,652 @@
             display: none !important; /* .desktop-active не действует на мобильном */
         }
     }
+
+    @media (min-width: 1024px) {
+        /* --- Основной лейаут: top bar + main + detail --- */
+        /* (определён в блоке .desktop-top-bar ниже) */
+
+        /* Отключить прокрутку body на десктопе — всё прокручивается внутри панелей */
+        html, body {
+            overflow: hidden;
+            height: 100%;
+            overscroll-behavior: contain;
+        }
+
+        /* Шапка приложения — скрыта на десктопе (top bar заменяет) */
+        .app-header {
+            display: none !important;
+        }
+
+        /* --- Detail Breadcrumb Bar (полноэкранная строка пути) --- */
+        /* Стилизована как page-inline-header: шеврон слева, крошки по центру, ✕ справа */
+        /* position: relative (не sticky) — в flex-столбце #mainApp без скролла
+           sticky не нужен и может вызывать наложение на #desktopTopBar */
+        #detailBreadcrumbBar {
+            display: none;
+            position: relative;
+            z-index: 25;
+            background: var(--header-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color, rgba(74, 143, 199, 0.15));
+            padding: 0 20px 0 8px;
+            align-items: center;
+            gap: 6px;
+            height: 56px;
+            width: 100%;
+            flex-shrink: 0;
+        }
+        #detailBreadcrumbBar.active {
+            display: flex;
+        }
+        /* Шеврон «назад» в строке крошек — как в page-inline-header */
+        .detail-breadcrumb-chevron {
+            position: absolute;
+            top: 0; bottom: 0; left: 4px;
+            display: flex; align-items: center;
+            cursor: pointer;
+            -webkit-user-select: none; user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            padding: 0 6px 0 8px;
+            border-radius: 6px;
+            transition: background 0.15s;
+            z-index: 2;
+        }
+        .detail-breadcrumb-chevron:active { background: rgba(74, 143, 199, 0.15); }
+        .detail-breadcrumb-chevron svg {
+            width: 14px; height: 14px;
+            stroke: rgba(140, 170, 200, 0.85);
+            fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round;
+            pointer-events: none;
+        }
+        [data-theme="light"] .detail-breadcrumb-chevron svg {
+            stroke: rgba(42, 93, 143, 0.7);
+        }
+        #detailBreadcrumbContent {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: normal;
+            line-height: 1.4;
+            padding: 0 16px 0 40px;
+            min-width: 0;
+        }
+        .detail-breadcrumb-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .detail-breadcrumb-close:hover {
+            background: rgba(74, 143, 199, 0.15);
+        }
+        /* Кнопка «поменять панели местами» в строке крошек */
+        .detail-breadcrumb-swap {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.15s, transform 0.2s;
+        }
+        .detail-breadcrumb-swap:hover {
+            background: rgba(74, 143, 199, 0.15);
+        }
+        .detail-breadcrumb-swap:active {
+            transform: scale(0.88);
+        }
+        /* Когда панели поменяли местами: детальная панель слева, список справа */
+        #contentArea.panels-swapped {
+            flex-direction: row-reverse;
+        }
+        #contentArea.panels-swapped > .page-content.active {
+            /* Список справа — рамка слева вместо справа */
+        }
+        #contentArea.panels-swapped > #detailPanel {
+            border-left: none;
+            border-right: 2px solid var(--border-color, rgba(74, 143, 199, 0.25));
+        }
+
+        /* --- Detail Panel (правая панель) --- */
+        #detailPanel {
+            display: none;
+            width: 50%;
+            min-width: 400px;
+            max-width: none;
+            border-left: 2px solid var(--border-color, rgba(74, 143, 199, 0.25));
+            background: var(--bg-primary);
+            overflow: hidden;
+            position: relative;
+            flex-shrink: 0;
+        }
+        #detailPanel.active {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        /* Header внутри detailPanel скрыт — breadcrumbs теперь в #detailBreadcrumbBar */
+        #detailPanel .detail-panel-header {
+            display: none;
+        }
+        #detailPanel .detail-panel-body {
+            padding: 16px;
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+        }
+        #detailPanel .detail-panel-footer {
+            display: none;  /* показывается только когда есть содержимое */
+            flex-shrink: 0;
+            padding: 0;
+            border-top: 1px solid var(--card-border);
+            background: inherit;
+        }
+        #detailPanel .detail-panel-footer:not(:empty) {
+            display: flex;
+            align-items: stretch;
+        }
+        .detail-footer-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .detail-footer-btn:active { background: rgba(199,150,74,0.12); }
+        .detail-footer-btn-edit { color: #6aa6e0; }
+        .detail-footer-btn-delete { color: #e55; }
+        .detail-footer-divider {
+            width: 1px;
+            background: var(--card-border);
+            flex-shrink: 0;
+        }
+        [data-theme="light"] .detail-footer-btn-edit { color: #1a5a8a; }
+        [data-theme="light"] .detail-footer-btn-delete { color: #c33; }
+
+        /* --- Master-detail: когда detail-panel открыт --- */
+        /* Левая панель (список карточек) — ограничиваем ширину и добавляем скролл */
+        #detailPanel.active ~ .page-content.active,
+        #contentArea > .page-content.active:has(~ #detailPanel.active) {
+            /* page-content занимает оставшееся место (flex:1 уже задан) */
+        }
+        /* Когда detail-panel открыт — левая панель получает фон и разделитель */
+        body:has(#detailPanel.active) #contentArea > .page-content.active {
+            background: var(--bg-tertiary);
+            border-right: 1px solid var(--border-color, rgba(74, 143, 199, 0.1));
+        }
+        /* Когда detail-panel открыт — скрываем page-inline-header в левой панели,
+           т.к. полная строка крошек (#detailBreadcrumbBar) уже показывает путь */
+        body:has(#detailPanel.active) #contentArea > .page-content.active > .page-inline-header {
+            display: none;
+        }
+        /* Когда page-inline-header скрыт (detail-panel открыт),
+           sticky-заголовки групп должны прилипать к top:0, а не top:56px */
+        body:has(#detailPanel.active) .cj-group-header {
+            top: 0;
+        }
+        /* Карточки в левой панели переключаются на 1 колонку для мастер-детали */
+        body:has(#detailPanel.active) .dev-group-body,
+        body:has(#detailPanel.active) .lock-group-body,
+        body:has(#detailPanel.active) .valve-group-body,
+        body:has(#detailPanel.active) .regulator-group-body,
+        body:has(#detailPanel.active) .project-group-body {
+            grid-template-columns: 1fr;
+        }
+        /* Карточки в левой панели — компактнее в мастер-детали */
+        body:has(#detailPanel.active) .dev-card,
+        body:has(#detailPanel.active) .lock-card,
+        body:has(#detailPanel.active) .valve-card,
+        body:has(#detailPanel.active) .regulator-card,
+        body:has(#detailPanel.active) .project-card,
+        body:has(#detailPanel.active) .flow-card {
+            padding: 8px 10px;
+        }
+        /* Detail-подсветка карточки — более заметная */
+        .dev-card.detail-highlight,
+        .lock-card.detail-highlight,
+        .valve-card.detail-highlight,
+        .regulator-card.detail-highlight,
+        .project-card.detail-highlight,
+        .ticket-list-item.detail-highlight,
+        .flow-card.detail-highlight {
+            background: rgba(74, 143, 199, 0.08) !important;
+            border-color: var(--accent-blue, #4a8fc7) !important;
+            box-shadow: 0 0 0 2px rgba(74, 143, 199, 0.25) !important;
+        }
+        /* Расходомеры: список без отступов (зебра на всю ширину) */
+        body:has(#detailPanel.active) .flow-list { padding: 0; }
+        /* Расходомеры: детальная карточка в правой панели */
+        #detailPanelBody .flow-detail-body { padding: 0; }
+        /* --- Билеты: мастер-деталь (десктоп) --- */
+        /* Компактный список билетов в левой панели */
+        .ticket-master-list { padding: 0; }
+        .ticket-list-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.06);
+            transition: background .15s; -webkit-tap-highlight-color: transparent;
+        }
+        .ticket-list-item:nth-child(odd) { background: rgba(40, 50, 65, 0.96); }
+        .ticket-list-item:nth-child(even) { background: rgba(55, 68, 85, 0.96); }
+        [data-theme="light"] .ticket-list-item:nth-child(odd) { background: rgba(220, 213, 200, 0.94); }
+        [data-theme="light"] .ticket-list-item:nth-child(even) { background: rgba(252, 248, 240, 0.97); }
+        .ticket-list-item:last-child { border-bottom: none; }
+        .ticket-list-item:hover { background: rgba(74, 143, 199, 0.12); }
+        .ticket-list-item:active { background: rgba(74, 143, 199, 0.18); }
+        .ticket-list-item-num { font-size: 16px; font-weight: 600; color: var(--accent-blue); }
+        .ticket-list-item-count { font-size: 13px; color: rgba(255,255,255,0.35); }
+        [data-theme="light"] .ticket-list-item-count { color: rgba(0,0,0,0.35); }
+        /* Карточка деталей билета в правой панели */
+        .ticket-detail-card {
+            padding: 0;
+        }
+        .ticket-detail-title {
+            font-size: 20px; font-weight: 700; color: var(--accent-blue);
+            padding: 0 0 12px 0; border-bottom: 1px solid var(--card-border);
+            margin-bottom: 12px;
+        }
+        /* Когда detail-panel открыт на странице билетов — левая панель компактна */
+        body:has(#detailPanel.active) .ticket-master-list {
+            /* Список билетов остаётся в левой панели — скролл внутри */
+        }
+        /* Навигация между билетами в detail-панели */
+        .ticket-detail-nav {
+            display: flex; align-items: stretch; border-top: 1px solid var(--card-border);
+            margin-top: 16px; background: var(--card-bg);
+        }
+        .ticket-detail-nav-btn {
+            display: flex; align-items: center; flex: 1; padding: 12px 14px;
+            cursor: pointer; transition: background .15s; -webkit-tap-highlight-color: transparent;
+        }
+        .ticket-detail-nav-btn:active { background: var(--active-bg); }
+
+        /* --- Дашборд: сетка кнопок --- */
+        #page-dashboard .menu-btn-row {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            padding: 12px 16px;
+            max-width: 100%;
+        }
+        #page-dashboard .menu-btn {
+            max-width: none;
+        }
+        #page-dashboard .pinned-items-container {
+            max-width: 100%;
+        }
+
+        /* --- Калькуляторы / Документация: 2-3 колонки --- */
+        #page-calculators .menu-btn-row,
+        #page-calc-kipa .menu-btn-row,
+        #page-calc-electro .menu-btn-row,
+        #page-calc-geometry .menu-btn-row,
+        #page-docs .menu-btn-row {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            padding: 12px 16px;
+        }
+        #page-calculators .menu-btn,
+        #page-calc-kipa .menu-btn,
+        #page-calc-electro .menu-btn,
+        #page-calc-geometry .menu-btn,
+        #page-docs .menu-btn {
+            max-width: none;
+        }
+
+        /* --- КИП ИОС / Библиотека: стили заданы выше (3 колонки, прямоугольные кнопки) --- */
+
+        /* --- Группы в списках каталогов: 2 колонки карточек --- */
+        .dev-group-body {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+
+        /* --- Секретные кнопки: в одну строку --- */
+        .menu-btn-row-secret-pair {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px;
+        }
+
+        /* --- Кнопки разделов: прямоугольные (квадраты), сетка слева направо, сверху вниз --- */
+        #page-calculators .menu-btn-row,
+        #page-docs .menu-btn-row {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 12px 16px;
+        }
+        #page-calculators .menu-btn,
+        #page-docs .menu-btn {
+            max-width: none;
+            border-radius: 4px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 100px;
+            padding: 16px 12px;
+        }
+        #page-calculators .menu-btn-text,
+        #page-docs .menu-btn-text {
+            text-align: center;
+            flex: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #page-calculators .menu-btn-arrow,
+        #page-docs .menu-btn-arrow {
+            display: none;
+        }
+
+        /* --- Подразделы внутри разделов: 3 колонки, прямоугольные кнопки --- */
+        #page-calc-kipa .menu-btn-row,
+        #page-calc-electro .menu-btn-row,
+        #page-calc-geometry .menu-btn-row,
+        #page-kip-ios .kip-ios-block .menu-btn-row,
+        #page-docs-ios .kip-ios-block .menu-btn-row,
+        #page-library-internal .menu-btn-row,
+        #page-library-electro .menu-btn-row {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        #page-calc-kipa .menu-btn,
+        #page-calc-electro .menu-btn,
+        #page-calc-geometry .menu-btn,
+        #page-kip-ios .kip-ios-block .menu-btn,
+        #page-docs-ios .kip-ios-block .menu-btn,
+        #page-library-internal .menu-btn,
+        #page-library-electro .menu-btn {
+            max-width: none;
+            border-radius: 4px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 100px;
+            padding: 16px 12px;
+        }
+        #page-calc-kipa .menu-btn-text,
+        #page-calc-electro .menu-btn-text,
+        #page-calc-geometry .menu-btn-text,
+        #page-kip-ios .kip-ios-block .menu-btn-text,
+        #page-docs-ios .kip-ios-block .menu-btn-text,
+        #page-library-internal .menu-btn-text,
+        #page-library-electro .menu-btn-text {
+            text-align: center;
+            flex: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #page-calc-kipa .menu-btn-arrow,
+        #page-calc-electro .menu-btn-arrow,
+        #page-calc-geometry .menu-btn-arrow,
+        #page-kip-ios .kip-ios-block .menu-btn-arrow,
+        #page-docs-ios .kip-ios-block .menu-btn-arrow,
+        #page-library-internal .menu-btn-arrow,
+        #page-library-electro .menu-btn-arrow {
+            display: none;
+        }
+
+        /* --- Экзаменационные билеты: 3 колонки как Библиотека, с картинками --- */
+        .ticket-cat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 0 16px;
+        }
+        .ticket-cat-card {
+            border-radius: 4px;
+            min-height: 160px;
+            margin-bottom: 0;
+        }
+        .ticket-cat-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+        .ticket-cat-card img {
+            /* Картинка остаётся фоновым cover — как на мобильном, но компактнее */
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .ticket-cat-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            min-height: 0;
+            padding: 20px 8px 8px 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: stretch;
+            background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.3) 60%, transparent 100%);
+        }
+        .ticket-cat-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 0;
+            background: rgba(255,255,255,0.18);
+            color: #fff;
+            padding: 8px 6px;
+            border-radius: 8px;
+            align-self: stretch;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        }
+        [data-theme="light"] .ticket-cat-title {
+            background: rgba(255, 255, 255, 0.65);
+            color: #1a1a1a;
+            text-shadow: none;
+        }
+
+        /* --- КИП ИОС: отдельные кнопки под блоком (Проекты, Кабельный журнал, План) --- */
+        #page-kip-ios > .menu-btn-row {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 0 16px;
+        }
+        #page-kip-ios > .menu-btn-row .menu-btn {
+            max-width: none;
+            border-radius: 4px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 80px;
+            padding: 14px 12px;
+        }
+        #page-kip-ios > .menu-btn-row .menu-btn-text {
+            text-align: center;
+            flex: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #page-kip-ios > .menu-btn-row .menu-btn-arrow {
+            display: none;
+        }
+
+        /* --- Кнопка переполнения (три точки) в квадратных кнопках --- */
+        #page-calculators .menu-btn-overflow,
+        #page-docs .menu-btn-overflow,
+        #page-calc-kipa .menu-btn-overflow,
+        #page-calc-electro .menu-btn-overflow,
+        #page-calc-geometry .menu-btn-overflow,
+        #page-kip-ios .menu-btn-overflow,
+        #page-docs-ios .menu-btn-overflow,
+        #page-library-internal .menu-btn-overflow,
+        #page-library-electro .menu-btn-overflow {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+        }
+
+        /* --- dev-swipe-cell: прямоугольная форма на десктопе --- */
+        #page-kip-ios .kip-ios-block .dev-swipe-cell {
+            border-radius: 4px;
+            margin-bottom: 0;
+        }
+        /* На десктопе блок КИП ИОС с отступами от краёв панели */
+        #page-kip-ios .kip-ios-block {
+            margin: 12px 16px 6px;
+            padding: 14px 14px 8px;
+            border-radius: 14px;
+        }
+        /* На десктопе блок Документация ИОС — без фона и лишних отступов */
+        /* Отступ 4px от бара с хлебными крошками до кнопки «Расходомеры хозрасчётные» */
+        #page-docs-ios .kip-ios-block {
+            margin: 4px 0 0;
+            padding: 0;
+            border-radius: 0;
+            background: transparent;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+        }
+
+        /* --- Нижний бар дашборда: скрыт на десктопе --- */
+        .dashboard-bottom-bar {
+            display: none !important;
+        }
+        /* Убрать отступ для нижнего бара */
+        body:has(#page-dashboard.active) #contentArea {
+            padding-bottom: 0;
+        }
+        #page-dashboard.active {
+            padding-bottom: 16px !important;
+        }
+
+        /* --- Десктоп: закреплённые пункты — плитки-карточки (3 колонки) --- */
+        #page-dashboard .pinned-items-container .menu-btn-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            padding: 16px 20px;
+        }
+        #page-dashboard .pinned-items-container .menu-btn {
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: flex-start;
+            text-align: left;
+            min-height: auto;
+            padding: 20px 16px;
+            border-radius: 14px;
+            max-width: none;
+            background: var(--card-bg, rgba(255,255,255,0.06));
+            border: 1px solid var(--card-border, rgba(255,255,255,0.08)) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            position: relative;
+        }
+        #page-dashboard .pinned-items-container .menu-btn:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+        [data-theme="light"] #page-dashboard .pinned-items-container .menu-btn {
+            background: #FFFFFF;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        [data-theme="light"] #page-dashboard .pinned-items-container .menu-btn:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+        #page-dashboard .pinned-items-container .menu-btn-text {
+            text-align: left;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            min-width: 0;
+        }
+        #page-dashboard .pinned-items-container .menu-btn-label {
+            font-size: 17px;
+            font-weight: 600;
+            color: #c7964a !important;
+            line-height: 1.3;
+            margin-bottom: 4px;
+        }
+        #page-dashboard .pinned-items-container .menu-btn-sublabel {
+            font-size: 13px;
+            color: var(--text-secondary, rgba(255,255,255,0.45));
+            line-height: 1.4;
+        }
+        #page-dashboard .pinned-items-container .menu-btn-arrow {
+            display: none;
+        }
+        #page-dashboard .pinned-items-container .menu-btn-overflow {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        /* Секретные кнопки — тоже в сетке */
+        #page-dashboard .menu-btn-row-secret-pair {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
+            gap: 10px !important;
+            padding: 4px 16px 8px !important;
+        }
+        #page-dashboard .menu-btn-row-secret-pair .menu-btn {
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 70px;
+            padding: 12px 10px;
+        }
+        #page-dashboard .menu-btn-row-secret-pair .menu-btn-text {
+            text-align: center;
+            flex: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #page-dashboard .menu-btn-row-secret-pair .menu-btn-arrow {
+            display: none;
+        }
+
+        /* --- Контент страниц: ограничение ширины --- */
+        .page-content {
+            max-width: 100%;
+        }
+
+        /* --- Админ-панель: 4 колонки вместо 2 --- */
+        .admin-grid {
+            grid-template-columns: repeat(4, 1fr) !important;
+        }
+
+        /* --- Админ-списки: сетка --- */
+        .admin-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 12px;
+        }
+    }
+
+    /* Tablet: 768-1023px — частичная адаптация */
     @media (min-width: 768px) and (max-width: 1023px) {
         #page-dashboard .menu-btn-row {
             grid-template-columns: repeat(2, 1fr);
@@ -7970,14 +8536,316 @@
         }
     }
 
+    /* Подсветка активной карточки при открытом detail-panel (мобильная / базовая) */
+    .dev-card.detail-highlight,
+    .lock-card.detail-highlight,
+    .valve-card.detail-highlight,
+    .regulator-card.detail-highlight,
+    .project-card.detail-highlight {
+        border-color: var(--accent-blue, #4a8fc7) !important;
+        box-shadow: 0 0 0 2px rgba(74, 143, 199, 0.3) !important;
+    }
+
+    /* ===== Десктопный верхний бар (mobile: hidden) ===== */
+    .desktop-top-bar {
+        display: none;
+    }
+
+    @media (min-width: 1024px) {
+        /* --- Верхний бар --- */
+        .desktop-top-bar {
+            display: flex;
+            position: sticky;
+            top: 0;
+            z-index: 70;
+            height: 56px;
+            align-items: center;
+            background: var(--header-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color, rgba(74, 143, 199, 0.15));
+            padding: 0 16px;
+            gap: 16px;
+            flex-shrink: 0;
+        }
+        .desktop-top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            flex-shrink: 0;
+        }
+        #desktopBurgerBtn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: transparent;
+            border: 1px solid var(--border-color, rgba(74, 143, 199, 0.15));
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-blue, #4a8fc7);
+            transition: background 0.2s, border-color 0.2s;
+            margin-right: 8px;
+        }
+        #desktopBurgerBtn:hover {
+            background: rgba(74, 143, 199, 0.12);
+            border-color: rgba(74, 143, 199, 0.3);
+        }
+        .desktop-top-bar-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+            margin-right: 8px;
+        }
+        .desktop-top-bar-title {
+            font-family: 'Jura', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent-blue, #4a8fc7);
+            letter-spacing: 1px;
+        }
+        .desktop-top-bar-center {
+            display: none; /* табы перемещены в desktop-top-bar-left */
+        }
+        .desktop-top-bar-divider {
+            display: inline-block;
+            width: 1px;
+            height: 24px;
+            background: var(--border-color, rgba(74, 143, 199, 0.25));
+            margin: 0 6px;
+            flex-shrink: 0;
+            align-self: center;
+        }
+        .desktop-top-bar-tab {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary, rgba(255, 255, 255, 0.55));
+            font-size: 13px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .desktop-top-bar-tab:hover {
+            background: rgba(74, 143, 199, 0.08);
+            color: var(--text-primary);
+        }
+        .desktop-top-bar-tab.active {
+            background: rgba(74, 143, 199, 0.12);
+            color: var(--accent-blue, #4a8fc7);
+        }
+        .desktop-top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            justify-content: flex-end;
+            flex-shrink: 0;
+            min-width: 44px;
+        }
+        /* Connection indicator — в десктопном баре */
+        .connection-indicator {
+            position: static !important;
+            z-index: auto !important;
+        }
+        /* Move connection indicator into top bar on desktop */
+        .desktop-top-bar-right .connection-indicator {
+            position: static !important;
+        }
+
+        /* --- Sidebar: скрыт по умолчанию на десктопе --- */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            transform: translateX(-100%) !important;
+            width: 280px;
+            min-width: 280px;
+            max-width: 280px;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 150;
+            flex-shrink: 0;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        /* Sidebar развёрнут (через класс .active) */
+        #sidebar.desktop-open {
+            transform: translateX(0) !important;
+        }
+        #sidebarOverlay.desktop-active {
+            display: block !important;
+            opacity: 1;
+        }
+        /* Убрать старый sidebar-collapsed / sidebarToggleBtn */
+        #sidebarToggleBtn {
+            display: none !important;
+        }
+        body.sidebar-collapsed #sidebar {
+            /* больше не используется — sidebar управляется через .desktop-open */
+        }
+        body.sidebar-collapsed #sidebarToggleBtn {
+            /* больше не используется */
+        }
+        body:not(.sidebar-collapsed) #sidebarToggleBtn {
+            /* больше не используется */
+        }
+
+        /* --- Основной лейаут: top bar + main + detail --- */
+        #mainApp {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #contentArea {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+            overflow: hidden;
+        }
+        /* Мобильное поведение: page-content.active занимает всю ширину */
+        #contentArea > .page-content.active {
+            flex: 1;
+            overflow-y: auto;
+            min-width: 0;
+            min-height: 0;
+        }
+    }
+
+
+    @media (min-width: 1024px) {
+        .connection-indicator {
+            position: static !important;
+            top: auto !important;
+            right: auto !important;
+            z-index: auto !important;
+            margin: 0;
+        }
+    }
+
+
+    @media (min-width: 1024px) {
+        #sidebarOverlay.desktop-active {
+            display: block !important;
+            opacity: 1 !important;
+        }
+    }
+
+
+    @media (min-width: 1024px) {
+        /* Кнопка закрытия sidebar — видна на десктопе */
+        #sidebar .sidebar-header .header-btn {
+            display: flex !important;
+        }
+    }
+
+
+    @media (min-width: 1024px) {
+        /* Карточки в detail-panel — адаптация для десктопа */
+        #detailPanel .dev-detail-card {
+            max-width: 100%;
+            padding-left: 0;  /* картинка вплотную к левому краю */
+        }
+        /* Верхний блок: картинка квадратная слева, №/Место справа */
+        #detailPanel .dev-detail-top {
+            flex-direction: row;  /* ряд: картинка + мета */
+            margin-bottom: 14px;
+        }
+        /* Квадратный блок картинки на десктопе */
+        #detailPanel .dev-detail-image-wrap {
+            width: 160px;
+            height: 160px;
+            border-radius: 0;  /* без скруглений */
+        }
+        #detailPanel .dev-detail-image {
+            object-fit: cover;  /* заполнить квадрат */
+        }
+        /* Мета-блок справа от картинки */
+        #detailPanel .dev-detail-meta {
+            padding-left: 14px;
+            padding-right: 14px;
+        }
+        /* Строки данных — во всю ширину без отступов */
+        #detailPanel .dev-detail-rows {
+            margin-left: 0;
+            margin-right: 0;
+        }
+        /* Inline-заголовок страницы скрываем на десктопе (есть top bar) */
+        #contentArea > .page-content.active > .page-inline-header {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            background: var(--header-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    }
+
+    @media (min-width: 1024px) {
+        /* --- Хлебные крошки (breadcrumb) в заголовке страницы --- */
+        .breadcrumb-sep {
+            color: rgba(140, 170, 200, 0.45);
+            font-weight: 400;
+            margin: 0 3px;
+            font-size: 14px;
+        }
+        .breadcrumb-link {
+            color: rgba(140, 170, 200, 0.8);
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 0.15s;
+            text-shadow: none;
+            font-size: 14px;
+        }
+        .breadcrumb-link:hover {
+            color: var(--accent-blue, #4a8fc7);
+        }
+        .breadcrumb-current {
+            color: #e0e0e0;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        [data-theme="light"] .breadcrumb-sep {
+            color: rgba(42, 93, 143, 0.35);
+        }
+        [data-theme="light"] .breadcrumb-link {
+            color: rgba(42, 93, 143, 0.65);
+        }
+        [data-theme="light"] .breadcrumb-link:hover {
+            color: var(--accent-blue, #4a8fc7);
+        }
+        [data-theme="light"] .breadcrumb-current {
+            color: #1a1a1a;
+        }
+    }
+
+    /* ====== План корпуса 114: поворот картинок отм.00/06/12/18 влево (горизонтально) на десктопе ====== */
+    @media (min-width: 1024px) {
+        #plan114ImgContainer.plan114-rotated {
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: 0;
+            text-align: left;
+        }
+        #plan114ImgContainer.plan114-rotated #plan114Img {
+            transform: rotate(-90deg);
+            transform-origin: top left;
+            max-width: none;
+        }
+    }
+
 </style>
-<!-- Tailwind CSS removed: unused (saved ~2.8 MB) -->
-<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@4.5.15/index.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link href="https://cdn.jsdelivr.net/npm/@fontsource/inter@4.5.15/index.min.css" rel="stylesheet"></noscript>
-<link rel="preload" href="https://fonts.googleapis.com/css2?family=Jura:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link href="https://fonts.googleapis.com/css2?family=Jura:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
-    <!-- === Внешние CSS-файлы (Vite обрабатывает условное включение) === -->
-            <!-- base target removed: not needed for SPA, causes issues with in-page navigation -->
+<!-- base target removed: not needed for SPA, causes issues with in-page navigation -->
 </head>
 <body>
 
@@ -8193,13 +9061,6 @@
             <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
         </div>
         <div id="detailBreadcrumbContent"></div>
-        <!-- Десктоп: фильтры расходомеров в строке крошек (показываются только на странице расходомеров) -->
-        <div class="flow-header-filters flow-bc-filters" id="flowBcFilters">
-            <button type="button" class="flow-header-filter-btn active" data-flow-filter="all" onclick="FlowUserView.setFilter('all')">Все</button>
-            <button type="button" class="flow-header-filter-btn" data-flow-filter="fav" onclick="FlowUserView.setFilter('fav')">Избранное <span class="flow-header-filter-count" id="flowBcFavCount">0</span></button>
-            <button type="button" class="flow-header-filter-btn" data-flow-filter="hidden" onclick="FlowUserView.setFilter('hidden')">Скрытые <span class="flow-header-filter-count" id="flowBcHiddenCount">0</span></button>
-            <button type="button" class="flow-header-restore-btn" id="flowBcRestoreBtn" onclick="FlowUserView.restoreAll()" style="display:none;">Показать все</button>
-        </div>
         <button type="button" class="detail-breadcrumb-close" onclick="closeDetailPanel()" aria-label="Закрыть панель">
             <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:rgba(74,143,199,0.9);fill:none;stroke-width:2;stroke-linecap:round;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
@@ -8266,28 +9127,10 @@
             <div class="page-inline-header">
                 <div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div>
                 <div class="page-inline-header-title">Расходомеры хозрасчётные</div>
-                <!-- Десктоп: фильтры в хедере (справа от хлебных крошек) -->
-                <div class="flow-header-filters" id="flowHeaderFilters">
-                    <button type="button" class="flow-header-filter-btn active" data-flow-filter="all" onclick="FlowUserView.setFilter('all')">Все</button>
-                    <button type="button" class="flow-header-filter-btn" data-flow-filter="fav" onclick="FlowUserView.setFilter('fav')">Избранное <span class="flow-header-filter-count" id="flowHeaderFavCount">0</span></button>
-                    <button type="button" class="flow-header-filter-btn" data-flow-filter="hidden" onclick="FlowUserView.setFilter('hidden')">Скрытые <span class="flow-header-filter-count" id="flowHeaderHiddenCount">0</span></button>
-                    <button type="button" class="flow-header-restore-btn" id="flowHeaderRestoreBtn" onclick="FlowUserView.restoreAll()" style="display:none;">Показать все</button>
-                </div>
             </div>
             <div id="flowList" class="flow-list">
                 <div class="admin-empty" id="flowEmpty">Загрузка…</div>
             </div>
-        </div>
-
-        <!-- Расходомеры: нижний бар фильтров -->
-        <div class="flow-filter-bar" id="flowFilterBar">
-            <button type="button" class="flow-filter-btn active" data-flow-filter="all" onclick="FlowUserView.setFilter('all')">Все</button>
-            <div class="flow-filter-divider"></div>
-            <button type="button" class="flow-filter-btn" data-flow-filter="fav" onclick="FlowUserView.setFilter('fav')">Избранное <span class="flow-filter-count" id="flowFavCount">0</span></button>
-            <div class="flow-filter-divider"></div>
-            <button type="button" class="flow-filter-btn" data-flow-filter="hidden" onclick="FlowUserView.setFilter('hidden')">Скрытые <span class="flow-filter-count" id="flowHiddenCount">0</span></button>
-            <div class="flow-filter-divider" id="flowRestoreDivider" style="display:none;"></div>
-            <button type="button" class="flow-filter-restore" id="flowRestoreBtn" onclick="FlowUserView.restoreAll()" style="display:none;">Показать все</button>
         </div>
 
         <!-- ======================== РАСХОДОМЕРЫ ХОЗРАСЧЁТНЫЕ — детальная карточка ======================== -->
@@ -8295,9 +9138,6 @@
             <div class="page-inline-header">
                 <div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div>
                 <div class="page-inline-header-title" id="flowDetailTitle">Расходомер</div>
-                <button type="button" class="flow-detail-fav-btn" id="flowDetailFavBtn" onclick="FlowUserView.toggleFavFromDetail()">
-                    <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                </button>
             </div>
             <div id="flowDetailBody" class="flow-detail-body"></div>
             <div class="flow-detail-bottom-bar" id="flowDetailBottomBar"></div>
@@ -10457,21 +11297,20 @@
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Что нового</div></div>
             <div class="whats-new-page">
                 <!-- Версия -->
-                <div class="wn-version-badge">Версия 3.1.0</div>
+                <div class="wn-version-badge">Версия 3.0.0</div>
 
                 <!-- === ОБНОВЛЕНИЯ === -->
                 <div class="wn-section">
                     <div class="wn-section-title"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin$"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> Последние обновления</div>
 
                     <div class="wn-update-card wn-update-single">
-                        <div class="wn-update-date">Версия 3.1.0</div>
+                        <div class="wn-update-date">Версия 3.0.0</div>
                         <ul class="wn-update-list">
                             <li><b>Настраиваемый дашборд</b> — закрепляйте разделы на главной, перетаскивайте карточки для изменения порядка, удаляйте свайпом.</li>
                             <li><b>Избранное для всех каталогов</b> — закладка доступна не только в приборах, но и в блокировках, клапанах и регуляторах. Список избранного можно перетаскивать и очищать свайпом.</li>
                             <li><b>Десктоп: разделённый экран</b> — на широких экранах список и карточка деталей показываются рядом; кнопка ⇄ меняет панели местами.</li>
                             <li><b>Перетаскивание и свайпы</b> — долгое зажатие + перетаскивание для смены порядка; свайп по карточке — удаление из закреплённых / избранного или добавление в каталогах.</li>
                             <li><b>Страница обновлений и справки</b> — раздел «Что нового» с возможностями и инструкциями; значок <b>?</b> в верхнем баре подсвечивается красным при непрочитанных обновлениях.</li>
-                            <li><b>Расходомеры хозрасчётные</b> — новый раздел для просмотра и ввода показаний расходомеров. Данные загружаются из архива в реальном времени, дежурный КИП ИОС и администратор могут вводить текущие показания из приложения.</li>
                         </ul>
                     </div>
                 </div>
@@ -10520,7 +11359,7 @@
                         <div class="wn-feature-card">
                             <div class="wn-feature-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
                             <div class="wn-feature-name">Проекты и журналы</div>
-                            <div class="wn-feature-desc">Просмотр проектов с привязанными приборами. Журнал кабельных трасс с добавлением и редактированием записей. Расходомеры хозрасчётные — просмотр и ввод показаний.</div>
+                            <div class="wn-feature-desc">Просмотр проектов с привязанными приборами. Журнал кабельных трасс с добавлением и редактированием записей.</div>
                         </div>
 
                         <div class="wn-feature-card">
@@ -26499,441 +27338,6 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
 
     // ============================================================
     // ============================================================
-    // FlowUserView — пользовательские настройки расходомеров: избранное, порядок, скрытые
-    // Хранится в localStorage (kip8test:flow_user_view), персонально для каждого пользователя
-    // ============================================================
-    var FlowUserView = {
-
-        _STORAGE_KEY: 'kip8test:flow_user_view',
-        _data: null,  // ленивый кэш: { favs: {id: addedAt}, hidden: {id: hiddenAt}, order: [id,...] }
-        _currentFilter: 'all',  // 'all' | 'fav' | 'hidden'
-
-        // SVG-иконка звёздочки
-        _STAR_SVG: '<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
-        _HIDE_SVG: '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
-
-        // ----------------------------------------------------------
-        // Хранилище
-        // ----------------------------------------------------------
-        _load: function() {
-            if (this._data !== null) return;
-            try {
-                var raw = localStorage.getItem(this._STORAGE_KEY);
-                this._data = raw ? JSON.parse(raw) : { favs: {}, hidden: {}, order: [] };
-            } catch (e) { this._data = { favs: {}, hidden: {}, order: [] }; }
-            // Гарантировать структуру
-            if (!this._data.favs) this._data.favs = {};
-            if (!this._data.hidden) this._data.hidden = {};
-            if (!Array.isArray(this._data.order)) this._data.order = [];
-        },
-
-        _save: function() {
-            try { localStorage.setItem(this._STORAGE_KEY, JSON.stringify(this._data)); } catch (e) {}
-        },
-
-        _esc: function(s) {
-            return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-        },
-
-        // ----------------------------------------------------------
-        // Избранное
-        // ----------------------------------------------------------
-        isFav: function(id) {
-            this._load();
-            return this._data.favs.hasOwnProperty(String(id));
-        },
-
-        toggleFav: function(id) {
-            this._load();
-            id = String(id);
-            if (this._data.favs.hasOwnProperty(id)) {
-                delete this._data.favs[id];
-                // Убрать из порядка, если есть
-                var idx = this._data.order.indexOf(id);
-                if (idx !== -1) this._data.order.splice(idx, 1);
-            } else {
-                this._data.favs[id] = new Date().toISOString();
-                // Добавить в конец порядка, если нет
-                if (this._data.order.indexOf(id) === -1) {
-                    this._data.order.push(id);
-                }
-            }
-            this._save();
-            this.updateToolbar();
-            this.updateDetailFavBtn();
-        },
-
-        favCount: function() {
-            this._load();
-            return Object.keys(this._data.favs).length;
-        },
-
-        // ----------------------------------------------------------
-        // Скрытые
-        // ----------------------------------------------------------
-        isHidden: function(id) {
-            this._load();
-            return this._data.hidden.hasOwnProperty(String(id));
-        },
-
-        toggleHidden: function(id) {
-            this._load();
-            id = String(id);
-            if (this._data.hidden.hasOwnProperty(id)) {
-                delete this._data.hidden[id];
-            } else {
-                this._data.hidden[id] = new Date().toISOString();
-                // Убрать из избранного при скрытии
-                if (this._data.favs.hasOwnProperty(id)) {
-                    delete this._data.favs[id];
-                }
-            }
-            this._save();
-            this.updateToolbar();
-        },
-
-        hiddenCount: function() {
-            this._load();
-            return Object.keys(this._data.hidden).length;
-        },
-
-        restoreAll: function() {
-            this._load();
-            this._data.hidden = {};
-            this._save();
-            this.updateToolbar();
-            if (typeof FlowmeterData !== 'undefined') FlowmeterData.renderList();
-        },
-
-        // ----------------------------------------------------------
-        // Пользовательский порядок
-        // ----------------------------------------------------------
-        getOrder: function() {
-            this._load();
-            return this._data.order.slice();
-        },
-
-        setOrder: function(arr) {
-            this._load();
-            this._data.order = arr.map(String);
-            this._save();
-        },
-
-        /** Отсортировать массив расходомеров по пользовательскому порядку.
-         *  Расходомеры с порядком идут первыми (по индексу), без — в конце по id. */
-        sortMeters: function(meters) {
-            this._load();
-            var order = this._data.order;
-            if (!order || order.length === 0) return meters;  // Нет порядка — как есть
-            var orderMap = {};
-            order.forEach(function(id, i) { orderMap[String(id)] = i; });
-            var sorted = meters.slice().sort(function(a, b) {
-                var ai = orderMap[String(a.id)];
-                var bi = orderMap[String(b.id)];
-                if (ai !== undefined && bi !== undefined) return ai - bi;
-                if (ai !== undefined) return -1;
-                if (bi !== undefined) return 1;
-                return a.id - b.id;  // Fallback: по id
-            });
-            return sorted;
-        },
-
-        // ----------------------------------------------------------
-        // Фильтр тулбара
-        // ----------------------------------------------------------
-        setFilter: function(filter) {
-            this._currentFilter = filter;
-            // Обновить активную кнопку в обоих наборах (нижний бар + хедер)
-            var btns = document.querySelectorAll('.flow-filter-btn, .flow-header-filter-btn');
-            btns.forEach(function(btn) {
-                btn.classList.toggle('active', btn.getAttribute('data-flow-filter') === filter);
-            });
-            // Перерендерить список
-            if (typeof FlowmeterData !== 'undefined') FlowmeterData.renderList();
-        },
-
-        // ----------------------------------------------------------
-        // UI: нижний бар фильтров
-        // ----------------------------------------------------------
-        updateToolbar: function() {
-            var favC = this.favCount();
-            var hidC = this.hiddenCount();
-            // Нижний бар (мобильный)
-            var favEl = document.getElementById('flowFavCount');
-            var hidEl = document.getElementById('flowHiddenCount');
-            var restEl = document.getElementById('flowRestoreBtn');
-            var restDiv = document.getElementById('flowRestoreDivider');
-            if (favEl) favEl.textContent = favC;
-            if (hidEl) hidEl.textContent = hidC;
-            var show = hidC > 0 ? '' : 'none';
-            if (restEl) restEl.style.display = show;
-            if (restDiv) restDiv.style.display = show;
-            // Хедер (десктоп)
-            var hFavEl = document.getElementById('flowHeaderFavCount');
-            var hHidEl = document.getElementById('flowHeaderHiddenCount');
-            var hRestEl = document.getElementById('flowHeaderRestoreBtn');
-            if (hFavEl) hFavEl.textContent = favC;
-            if (hHidEl) hHidEl.textContent = hidC;
-            if (hRestEl) hRestEl.style.display = show;
-            // Breadcrumb bar (десктоп, при открытой detail-панели)
-            var bcFavEl = document.getElementById('flowBcFavCount');
-            var bcHidEl = document.getElementById('flowBcHiddenCount');
-            var bcRestEl = document.getElementById('flowBcRestoreBtn');
-            if (bcFavEl) bcFavEl.textContent = favC;
-            if (bcHidEl) bcHidEl.textContent = hidC;
-            if (bcRestEl) bcRestEl.style.display = show;
-        },
-
-        // ----------------------------------------------------------
-        // UI: звёздочка в детальной карточке
-        // ----------------------------------------------------------
-        updateDetailFavBtn: function() {
-            var btn = document.getElementById('flowDetailFavBtn');
-            if (!btn) return;
-            var id = window._flowDetailId;
-            btn.classList.toggle('active', id ? this.isFav(id) : false);
-        },
-
-        toggleFavFromDetail: function() {
-            var id = window._flowDetailId;
-            if (!id) return;
-            if (navigator.vibrate) navigator.vibrate(10);
-            var wasFav = this.isFav(id);
-            this.toggleFav(id);
-            if (!wasFav) {
-                if (typeof showToast === 'function') showToast('Добавлено в избранное');
-            } else {
-                if (typeof showToast === 'function') showToast('Убрано из избранного');
-            }
-        },
-
-        // ----------------------------------------------------------
-        // Drag-and-drop
-        // ----------------------------------------------------------
-        _dragState: null,
-
-        initDrag: function() {
-            var list = document.getElementById('flowList');
-            if (!list) return;
-
-            var self = this;
-            var longPressTimer = null;
-            var longPressFired = false;
-            var startX = 0, startY = 0;
-            var dragEl = null, dragWrap = null;
-
-            list.addEventListener('touchstart', function(e) {
-                var wrap = e.target.closest('.flow-card-wrap');
-                if (!wrap) return;
-                var card = wrap.querySelector('.flow-card');
-                if (!card) return;
-
-                longPressFired = false;
-                startX = e.touches[0].clientX;
-                startY = e.touches[0].clientY;
-                dragWrap = wrap;
-                dragEl = card;
-
-                // Долгое зажатие 500 мс → начать перетаскивание
-                longPressTimer = setTimeout(function() {
-                    longPressFired = true;
-                    card.classList.add('dragging');
-                    if (navigator.vibrate) navigator.vibrate(30);
-                    self._dragState = { id: card.getAttribute('data-flow-id'), el: card, wrap: wrap };
-                }, 500);
-            }, { passive: true });
-
-            list.addEventListener('touchmove', function(e) {
-                if (longPressTimer && !longPressFired) {
-                    var dx = Math.abs(e.touches[0].clientX - startX);
-                    var dy = Math.abs(e.touches[0].clientY - startY);
-                    // Если палец ушёл далеко до срабатывания long-press — отменить
-                    if (dy > 15 || dx > 15) {
-                        clearTimeout(longPressTimer);
-                        longPressTimer = null;
-                    }
-                }
-                if (!longPressFired || !self._dragState) return;
-
-                // Предотвратить прокрутку при перетаскивании
-                e.preventDefault();
-
-                // Найти элемент под пальцем
-                var touch = e.touches[0];
-                var allWraps = list.querySelectorAll('.flow-card-wrap');
-                allWraps.forEach(function(w) {
-                    var c = w.querySelector('.flow-card');
-                    if (c) c.classList.remove('drag-over');
-                });
-                var elUnder = document.elementFromPoint(touch.clientX, touch.clientY);
-                if (elUnder) {
-                    var wrapUnder = elUnder.closest('.flow-card-wrap');
-                    if (wrapUnder && wrapUnder !== self._dragState.wrap) {
-                        var cardUnder = wrapUnder.querySelector('.flow-card');
-                        if (cardUnder) cardUnder.classList.add('drag-over');
-                    }
-                }
-            }, { passive: false });
-
-            list.addEventListener('touchend', function(e) {
-                clearTimeout(longPressTimer);
-                longPressTimer = null;
-
-                if (!longPressFired || !self._dragState) {
-                    // Свайп (если не долгое нажатие)
-                    if (!longPressFired && dragEl) {
-                        self._handleSwipe(e, dragWrap, dragEl);
-                    }
-                    if (dragEl) dragEl.classList.remove('dragging');
-                    self._dragState = null;
-                    longPressFired = false;
-                    return;
-                }
-
-                // Завершить перетаскивание — переставить элемент
-                var overCard = list.querySelector('.flow-card.drag-over');
-                if (overCard && self._dragState) {
-                    var fromWrap = self._dragState.wrap;
-                    var toWrap = overCard.closest('.flow-card-wrap');
-                    if (toWrap && fromWrap !== toWrap) {
-                        // Переставить DOM-элемент
-                        if (fromWrap.nextSibling === toWrap) {
-                            list.insertBefore(fromWrap, toWrap.nextSibling);
-                        } else {
-                            list.insertBefore(fromWrap, toWrap);
-                        }
-                        // Сохранить новый порядок
-                        self._saveOrderFromDOM();
-                        if (navigator.vibrate) navigator.vibrate(15);
-                    }
-                }
-
-                // Очистить
-                list.querySelectorAll('.flow-card').forEach(function(c) {
-                    c.classList.remove('dragging', 'drag-over');
-                });
-                self._dragState = null;
-                longPressFired = false;
-            }, { passive: true });
-        },
-
-        /** Сохранить порядок из текущего DOM в localStorage. */
-        _saveOrderFromDOM: function() {
-            var list = document.getElementById('flowList');
-            if (!list) return;
-            var ids = [];
-            list.querySelectorAll('.flow-card').forEach(function(card) {
-                var id = card.getAttribute('data-flow-id');
-                if (id) ids.push(String(id));
-            });
-            this.setOrder(ids);
-        },
-
-        // ----------------------------------------------------------
-        // Свайп
-        // ----------------------------------------------------------
-        _swipeState: null,
-
-        _handleSwipe: function(e, wrap, card) {
-            // Свайп уже обработан touchmove/touchend ниже
-            // Этот метод вызывается из touchend, если не было long-press
-        },
-
-        initSwipe: function() {
-            var list = document.getElementById('flowList');
-            if (!list) return;
-
-            var self = this;
-            var startX = 0, startY = 0, currentX = 0;
-            var swipeWrap = null, swipeCard = null;
-            var swiping = false;
-            var THRESHOLD = 60;  // Порог свайпа в px
-            var BLOCK_Y = 30;    // Блокировка вертикального скролла
-
-            list.addEventListener('touchstart', function(e) {
-                var wrap = e.target.closest('.flow-card-wrap');
-                if (!wrap) return;
-                // Не начинать свайп по звёздочке
-                if (e.target.closest('.flow-card-fav')) return;
-                swipeWrap = wrap;
-                swipeCard = wrap.querySelector('.flow-card');
-                startX = e.touches[0].clientX;
-                startY = e.touches[0].clientY;
-                currentX = startX;
-                swiping = false;
-            }, { passive: true });
-
-            list.addEventListener('touchmove', function(e) {
-                if (!swipeWrap || !swipeCard) return;
-                currentX = e.touches[0].clientX;
-                var dx = currentX - startX;
-                var dy = Math.abs(e.touches[0].clientY - startY);
-
-                if (!swiping && dy > BLOCK_Y) return;  // Вертикальный скролл — не свайп
-                if (!swiping && Math.abs(dx) > 10) {
-                    swiping = true;
-                }
-                if (!swiping) return;
-
-                e.preventDefault();
-
-                // Визуальная обратная связь: сдвиг карточки
-                var maxShift = 80;
-                var shift = Math.max(-maxShift, Math.min(maxShift, dx));
-                swipeCard.style.transform = 'translateX(' + shift + 'px)';
-                swipeCard.style.transition = 'none';
-
-                // Подложка
-                swipeWrap.classList.remove('swiping-left', 'swiping-right');
-                if (dx > 20) swipeWrap.classList.add('swiping-right');
-                else if (dx < -20) swipeWrap.classList.add('swiping-left');
-            }, { passive: false });
-
-            list.addEventListener('touchend', function(e) {
-                if (!swipeWrap || !swipeCard) { swipeWrap = null; swipeCard = null; return; }
-
-                var dx = currentX - startX;
-                var id = swipeCard.getAttribute('data-flow-id');
-                var isFav = self.isFav(id);
-
-                // Сбросить визуальное состояние
-                swipeCard.style.transform = '';
-                swipeCard.style.transition = '';
-                swipeWrap.classList.remove('swiping-left', 'swiping-right');
-
-                if (swiping && Math.abs(dx) >= THRESHOLD) {
-                    if (dx > 0) {
-                        // Свайп вправо:
-                        // Если не в избранном → добавить в избранное
-                        // Если в избранном → убрать из избранного
-                        if (!isFav) {
-                            self.toggleFav(id);
-                            if (typeof showToast === 'function') showToast('Добавлено в избранное');
-                        } else {
-                            self.toggleFav(id);
-                            if (typeof showToast === 'function') showToast('Убрано из избранного');
-                        }
-                    } else {
-                        // Свайп влево: скрыть / показать
-                        if (!self.isHidden(id)) {
-                            self.toggleHidden(id);
-                            if (typeof showToast === 'function') showToast('Скрыто', 'Отмена', function() { self.toggleHidden(id); });
-                        } else {
-                            self.toggleHidden(id);
-                            if (typeof showToast === 'function') showToast('Восстановлено');
-                        }
-                    }
-                    // Перерендерить список после действия
-                    if (typeof FlowmeterData !== 'undefined') FlowmeterData.renderList();
-                }
-
-                swipeWrap = null;
-                swipeCard = null;
-                swiping = false;
-            }, { passive: true });
-        }
-    };
-
     // FlowmeterData — Расходомеры хозрасчётные: накопительные расходы
     // Источник: Google Таблица
     // ============================================================
@@ -27127,62 +27531,17 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             var container = document.getElementById('flowList');
             if (!container) return;
 
-            // Сортировка по пользовательскому порядку
-            var meters = FlowUserView.sortMeters(this._METERS);
-
-            // Фильтрация по текущему фильтру тулбара
-            var filter = FlowUserView._currentFilter;
-            var filtered = [];
-            for (var i = 0; i < meters.length; i++) {
-                var m = meters[i];
-                var isFav = FlowUserView.isFav(m.id);
-                var isHidden = FlowUserView.isHidden(m.id);
-                if (filter === 'fav' && !isFav) continue;
-                if (filter === 'hidden' && !isHidden) continue;
-                if (filter === 'all' && isHidden) continue;  // В режиме «Все» скрытые не показываются
-                filtered.push({ meter: m, isFav: isFav, isHidden: isHidden });
-            }
-
-            // Пусто?
-            if (filtered.length === 0 && this._METERS.length > 0) {
-                var emptyMsg = filter === 'fav' ? 'Нет избранных расходомеров' :
-                               filter === 'hidden' ? 'Нет скрытых расходомеров' : '';
-                container.innerHTML = '<div class="flow-empty"><div class="flow-empty-text">' + this._esc(emptyMsg) + '</div><div class="flow-empty-hint">Свайп вправо — в избранное, влево — скрыть</div></div>';
-                FlowUserView.updateToolbar();
-                return;
-            }
-
             var html = '';
-            // SVG для подложек свайпа
-            var starSvg = '<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
-            var hideSvg = '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 
-            for (var i = 0; i < filtered.length; i++) {
-                var item = filtered[i];
-                var m = item.meter;
-                var isFav = item.isFav;
-                var isHidden = item.isHidden;
+            for (var i = 0; i < this._METERS.length; i++) {
+                var m = this._METERS[i];
                 var consumption = m.curr - m.prev;
                 var consStr = this._fmtNum(Math.abs(consumption));
                 var tempStr = (m.temp !== null && m.temp !== undefined) ? m.temp.toFixed(1).replace('.', ',') + ' °C' : '—';
                 var days = this._daysBetween(m.datePrev, m.dateCurr);
                 var daysStr = (days > 0) ? days + ' дн.' : '';
 
-                // Обёртка для свайпа
-                html += '<div class="flow-card-wrap' + (isFav ? ' is-fav' : '') + '" data-flow-wrap-id="' + m.id + '">';
-
-                // Подложка свайпа: влево = скрыть, вправо = в избранное (или убрать)
-                html += '<div class="flow-swipe-bg flow-swipe-bg-left">' + hideSvg + '<span>Скрыть</span></div>';
-                html += '<div class="flow-swipe-bg flow-swipe-bg-right">' + starSvg + '<span>' + (isFav ? 'Убрать' : 'В избранное') + '</span></div>';
-
-                // Карточка
-                html += '<div class="flow-card' + (isHidden ? ' flow-hidden' : '') + '" data-flow-id="' + m.id + '" onclick="FlowmeterData.openDetail(' + m.id + ')">';
-
-                // Звёздочка избранного
-                html += '<button type="button" class="flow-card-fav' + (isFav ? ' active' : '') + '" onclick="event.stopPropagation(); FlowUserView.toggleFav(' + m.id + '); FlowmeterData.renderList();" aria-label="Избранное">';
-                html += '<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
-                html += '</button>';
-
+                html += '<div class="flow-card" data-flow-id="' + m.id + '" onclick="FlowmeterData.openDetail(' + m.id + ')">';
                 html += '<div class="flow-card-header">';
                 html += '<div class="flow-card-hoz">' + this._esc(m.hoz) + '</div>';
                 html += '<div class="flow-card-period">' + this._esc(m.period) + '</div>';
@@ -27192,17 +27551,9 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 html += '<span class="flow-summary-item"><span class="flow-summary-label">Последние показания</span><span class="flow-summary-val">' + this._fmtNum(m.curr) + ' ' + this._esc(m.unit) + ',<span class="flow-detail-date"> от ' + this._fmtDate(m.dateCurr) + ' г.</span></span></span>';
                 if (m.temp !== null && m.temp !== undefined) { html += '<span class="flow-summary-item"><span class="flow-summary-label">T среды</span><span class="flow-summary-val">' + tempStr + '</span></span>'; }
                 html += '</div>';
-                html += '</div>';  // .flow-card
-                html += '</div>';  // .flow-card-wrap
+                html += '</div>';
             }
             container.innerHTML = html;
-
-            // Обновить тулбар
-            FlowUserView.updateToolbar();
-
-            // Инициализировать drag-and-drop и свайп
-            FlowUserView.initDrag();
-            FlowUserView.initSwipe();
         },
 
         // Построить HTML детальной карточки
@@ -27250,9 +27601,6 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             if (!m) return;
 
             window._flowDetailId = id;
-
-            // Обновить звёздочку избранного в хедере
-            FlowUserView.updateDetailFavBtn();
 
             // На десктопе — рендерим в правую панель
             if (isDesktop()) {
@@ -29216,7 +29564,7 @@ window.addEventListener('load', function() {
         </div>
         <img class="about-modal-logo" src="images/icon-192.png" alt="КИПиА">
         <div class="about-modal-title">КИПиА</div>
-        <div class="about-modal-version">Версия 3.1.0</div>
+        <div class="about-modal-version">Версия 3.0.0</div>
         <div class="about-modal-desc">Справочник и калькулятор контрольно-измерительных приборов и автоматики</div>
         <div class="about-modal-divider"></div>
         <div class="about-modal-row"><span class="about-modal-row-label">Платформа</span><span class="about-modal-row-value">PWA / TWA</span></div>
@@ -29255,7 +29603,7 @@ function closeAboutModal() {
 // «ЧТО НОВОГО» — отслеживание прочитанных обновлений
 // ============================================================
 // Текущая версия приложения (при обновлении — увеличить, чтобы значок стал красным)
-const WHATS_NEW_VERSION = '3.1.0';
+const WHATS_NEW_VERSION = '3.0.0';
 const WHATS_NEW_READ_KEY = 'kip8_whats_new_read_v';
 
 /** Пометить текущую версию как прочитанную */
