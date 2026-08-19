@@ -4,11 +4,12 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'src/**'
-      - 'build.mjs'
+      - 'index.html'
       - 'electron/**'
       - 'package.json'
       - 'package-lock.json'
+      - 'data/**'
+      - 'images/**'
       - '.github/workflows/build-desktop.yml'
     tags: [ 'v*' ]
   workflow_dispatch:
@@ -31,12 +32,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Build desktop bundle
-        run: node build.mjs desktop
-
-      - name: Copy built HTML to root
-        run: cp dist-desktop/index.html index.html
 
       - name: Build Linux (AppImage + deb)
         run: npx electron-builder --linux --publish onTagOrDraft
@@ -73,12 +68,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build desktop bundle
-        run: node build.mjs desktop
-
-      - name: Copy built HTML to root
-        run: cp dist-desktop/index.html index.html
-
       - name: Build Windows (NSIS) + publish update metadata
         run: npx electron-builder --win --publish onTagOrDraft
         env:
@@ -113,12 +102,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Build desktop bundle
-        run: node build.mjs desktop
-
-      - name: Copy built HTML to root
-        run: cp dist-desktop/index.html index.html
 
       - name: Build macOS (dmg) + publish update metadata
         run: npx electron-builder --mac --publish onTagOrDraft
