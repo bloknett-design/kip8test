@@ -17,6 +17,7 @@ on:
       - 'images/**'
       - 'data/**'
       - '.well-known/**'
+      - '.nojekyll'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 
