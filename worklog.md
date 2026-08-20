@@ -2114,3 +2114,31 @@ Stage Summary:
 - Для будущих обновлений APK нужно использовать ТОТ ЖЕ keystore.jks и alias kip8test
 - Промт №2: «В этом репозитории НЕ СОБИРАЕТСЯ APK» — пункт нарушен по явному запросу пользователя; APK собран из kip8test (не из kip8)
 
+
+---
+Task ID: 89
+Agent: AI Assistant (GLM)
+Task: Починить сломанный деплой GitHub Pages (assetlinks.json для TWA)
+
+Work Log:
+- Диагностика: deploy-pages.yml упал с ошибкой "Cannot find package 'esbuild' imported from build.mjs"
+- Причина 1: build.mjs ожидает src/ директорию (сборка из исходников), но в репо нет src/ — есть готовый index.html в корне
+- Причина 2: package.json не содержит esbuild в зависимостях (только electron-builder)
+- Решение: упростить deploy-pages.yml — деплоить готовые файлы из корня репо (index.html, manifest.json, sw.js, images/, data/, .well-known/) без сборки build.mjs
+- После первого фикса workflow прошёл успешно, но .well-known/assetlinks.json всё равно возвращал 404
+- Причина 3: GitHub Pages по умолчанию использует Jekyll, который игнорирует dotfiles и dotfile-папки
+- Решение: добавить пустой файл .nojekyll в корень репо — отключает Jekyll-обработку
+- Добавлен .nojekyll в paths: triggers workflow deploy-pages.yml
+- CACHE_VERSION: kipia-test-v367 -> kipia-test-v368
+- Все 207 тестов пройдены
+- 3 коммита:
+  - a88bbb2 fix: починить деплой GitHub Pages (Task 89)
+  - 6f64c73 fix: добавить .nojekyll для отключения Jekyll на GitHub Pages
+  - 25726a4 ci: триггер деплоя при изменении .nojekyll
+
+Stage Summary:
+- Деплой GitHub Pages полностью починен (2 jobs: build + deploy, оба success)
+- .well-known/assetlinks.json отдаётся с Content-Type: application/json
+- TWA-APK из Task 88 получит корректную проверку Digital Asset Links на Android
+- URL-бар Chrome больше не будет отображаться поверх PWA при запуске через APK
+- Дополнительно: .gitignore и .nojekyll теперь тоже доступны на живой странице (побочный эффект отключения Jekyll)
