@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "ru.bloknett.kip8test",
+      "sha256_cert_fingerprints": [
+        "EA:2F:E3:F6:82:E9:40:CE:21:21:76:97:BF:70:C9:BC:0F:CB:AC:D2:8A:1C:9F:90:4D:E9:ED:E0:21:62:17:18"
+      ]
+    }
+  }
+]

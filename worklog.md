@@ -2074,3 +2074,43 @@ Stage Summary:
 - FlowmeterData полностью готов к работе с Google Sheets
 - 3-уровневый fallback обеспечивает мгновенный рендер в любой ситуации
 - Audit log позволяет отслеживать ввод показаний через админ-панель
+
+---
+Task ID: 88
+Agent: AI Assistant (GLM)
+Task: Сборка APK-файла для установки PWA «КИПиА» на Android из репозитория kip8test
+
+Work Log:
+- Установлен JDK 17 (Temurin 17.0.13) в /home/z/my-project/jdk17
+- Установлен Android cmdline-tools 12.0 + platform-tools + platform-34 + build-tools 34.0.0 в /home/z/my-project/android-sdk
+- Установлен Bubblewrap CLI (@bubblewrap/cli) глобально через npm
+- Создан симлинк android-sdk/tools -> cmdline-tools/latest для валидатора Bubblewrap
+- Настроен ~/.bubblewrap/config.json с путями к JDK и Android SDK
+- Сгенерирован keystore.jks (alias=kip8test, RSA 2048, validity 25 лет до 2051-08-14)
+  - SHA-256 сертификата: EA:2F:E3:F6:82:E9:40:CE:21:21:76:97:BF:70:C9:BC:0F:CB:AC:D2:8A:1C:9F:90:4D:E9:ED:E0:21:62:17:18
+  - Пароли сохранены в /home/z/my-project/keystore/passwords.txt (chmod 600)
+- Создан .well-known/assetlinks.json с SHA-256 отпечатком для пакета ru.bloknett.kip8test
+- Создан twa-manifest.json вручную (package ru.bloknett.kip8test, host bloknett-design.github.io, startUrl /kip8test/?source=pwa, launcherName "КИПиА", themeColor #FAF9F5, 9 shortcuts)
+- Скрипт /home/z/my-project/scripts/gen-twa-project.js — генерирует Android TWA-проект через @bubblewrap/core напрямую (минуя интерактивные промпты bubblewrap init)
+- Применён патч к build.js: hasManifestChanged всегда возвращает false (для неинтерактивной сборки)
+- Запущена сборка: bubblewrap build (gradle assembleRelease + bundleRelease + apksigner)
+- Получены файлы:
+  - app-release-signed.apk (2.7 МБ) — подписанный APK
+  - app-release-bundle.aab (2.8 МБ) — подписанный App Bundle для Google Play
+- Файлы скопированы в /home/z/my-project/download/:
+  - kip8test-v1.0.0.apk — для установки на Android
+  - kip8test-v1.0.0.aab — для Google Play
+  - kip8test-keystore.jks — keystore для будущих обновлений
+  - kip8test-keystore-passwords.txt — пароли от keystore
+- Коммит и пуш .well-known/assetlinks.json в репо kip8test (Task ID: 88)
+
+Stage Summary:
+- APK готов и подписан
+- Package name: ru.bloknett.kip8test
+- Version: 1.0.0 (versionCode=1)
+- Min SDK: 21 (Android 5.0 Lollipop)
+- Target SDK: 36
+- URL-бар будет скрыт благодаря assetlinks.json (после публикации на GitHub Pages)
+- Для будущих обновлений APK нужно использовать ТОТ ЖЕ keystore.jks и alias kip8test
+- Промт №2: «В этом репозитории НЕ СОБИРАЕТСЯ APK» — пункт нарушен по явному запросу пользователя; APK собран из kip8test (не из kip8)
+
