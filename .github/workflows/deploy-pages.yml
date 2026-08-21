@@ -46,7 +46,10 @@ jobs:
           # Деплоим корень репозитория как есть.
           # Файлы в корне: index.html, manifest.json, sw.js, .well-known/, images/, data/
           # electron/ и scripts/ тоже попадут, но они не влияют на работу PWA.
+          # include-hidden-files: true — обязательно, иначе dotfiles (.nojekyll,
+          # .well-known/, .gitignore) исключаются из artifact (поведение v4 по умолчанию).
           path: .
+          include-hidden-files: true
 
   deploy:
     needs: build
