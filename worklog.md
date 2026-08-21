@@ -2178,3 +2178,41 @@ Stage Summary:
 - Старый APK v1.0.0 (Task 88) тоже должен работать после нашего фикса assetlinks на корне origin —
   но рекомендуется установить v1.0.1 для явной версии
 - Keystore сохранён, можно выпускать обновления (1.0.2, 1.1.0 и т.д.) тем же ключом
+
+---
+Task ID: 91
+Agent: AI Assistant (GLM)
+Task: Починить URL-бар TWA для kip8 (без пересборки APK)
+
+Work Log:
+- Пользователь передал APK kip8: /home/z/my-project/upload/КИП8 (1).apk
+- Пользователь передал отдельный PAT для kip8 (ghp_...) — сохранён в /home/z/.kip_pat_kip8
+- Через androguard извлечены метаданные APK kip8:
+  - Package: io.github.bloknett_design.twa (НЕ ru.bloknett.kip8test, как в kip8test)
+  - Version: 2.1.0.0 (code=3)
+  - Min SDK: 23 (Android 6.0), Target SDK: 35
+  - Main activity: io.github.bloknett_design.twa.LauncherActivity
+  - Intent filter: scheme=https, host=bloknett-design.github.io, pathPrefix=/kip8/
+  - Subject сертификата: CN=КИПиА Admin, OU=Engineering, O=КИПиА, C=US
+  - SHA-256: 95:6D:A9:AC:30:F6:BA:7A:33:FD:F3:B6:C0:C2:DA:59:72:81:76:22:D9:9F:A1:C0:CB:35:61:C3:A4:45:35:27
+- Keystore kip8 ≠ keystore kip8test — разные подписи, разные package names
+- Решение: обновить .well-known/assetlinks.json на корне origin bloknett-design.github.io
+  (репо bloknett-design.github.io, созданное в Task 90) — добавить ВТОРУЮ запись для kip8
+- assetlinks.json теперь содержит 2 записи:
+  1. ru.bloknett.kip8test → EA:2F:E3:F6:...:62:17:18 (из Task 88/90)
+  2. io.github.bloknett_design.twa → 95:6D:A9:AC:...:A4:45:35:27 (новая, для kip8)
+- Коммит 061d8e4 в bloknett-design.github.io — обновлённый assetlinks.json
+- Дополнительно: создан .well-known/assetlinks.json и .nojekyll в репо kip8 (commit 22aafae)
+  для дублирующего доступа через https://bloknett-design.github.io/kip8/.well-known/assetlinks.json
+- GitHub Pages kip8 использует встроенный pages-build-deployment workflow — деплой автоматический
+- Проверка: https://bloknett-design.github.io/.well-known/assetlinks.json отдаёт 200 с двумя записями
+- Проверка: https://bloknett-design.github.io/kip8/.well-known/assetlinks.json отдаёт 200 с двумя записями
+- APK kip8 НЕ ПЕРЕСОБИРАЛСЯ — подпись осталась та же, что в исходном APK
+
+Stage Summary:
+- URL-бар TWA kip8 исчезнет после того, как Chrome пере-проверит assetlinks (~24 ч)
+- Если нужно быстрее: Настройки → Приложения → КИПиА → Очистить данные + кэш
+- Или переустановить APK (но это не обязательно)
+- Аналогично для kip8test: обе версии APK теперь работают без URL-бара
+- Токен kip8 ([REDACTED]) сохранён в /home/z/.kip_pat_kip8 —
+  для будущих задач по kip8
