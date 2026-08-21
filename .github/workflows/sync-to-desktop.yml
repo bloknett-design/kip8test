@@ -1,0 +1,90 @@
+name: Sync index.html to kip8test-desktop
+
+# Автосинхронизация index.html из kip8test в kip8test-desktop.
+# При пуше в main, меняющем index.html, этот workflow:
+#   1. Скачивает свежий index.html из текущего репозитория
+#   2. Создаёт коммит в kip8test-desktop/index.html с тем же содержимым
+#   3. Пушит через PAT (секрет DESKTOP_SYNC_TOKEN)
+#
+# Это позволяет держать index.html синхронным между mobile (kip8test) и desktop (kip8test-desktop)
+# без ручного копирования. data/ и images/ синхронизируются вручную при релизе.
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'index.html'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync-to-desktop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout kip8test (только index.html)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Получить информацию о последнем коммите
+        id: commit_info
+        run: |
+          echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "msg=$(git log -1 --pretty=%s | head -c 100)" >> $GITHUB_OUTPUT
+          echo "author=$(git log -1 --pretty='%an'" >> $GITHUB_OUTPUT
+
+      - name: Клонировать kip8test-desktop
+        env:
+          DESKTOP_SYNC_TOKEN: ${{ secrets.DESKTOP_SYNC_TOKEN }}
+        run: |
+          git clone --depth 1 "https://x-access-token:${DESKTOP_SYNC_TOKEN}@github.com/bloknett-design/kip8test-desktop.git" /tmp/kip8test-desktop
+
+      - name: Скопировать index.html
+        run: |
+          cp index.html /tmp/kip8test-desktop/index.html
+
+      - name: Проверить, есть ли изменения
+        id: changes
+        run: |
+          cd /tmp/kip8test-desktop
+          if git diff --quiet; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "Нет изменений — пропускаем коммит"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Изменения обнаружены — коммитим"
+          fi
+
+      - name: Коммит и пуш в kip8test-desktop
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          DESKTOP_SYNC_TOKEN: ${{ secrets.DESKTOP_SYNC_TOKEN }}
+          SOURCE_SHA: ${{ steps.commit_info.outputs.sha }}
+          SOURCE_MSG: ${{ steps.commit_info.outputs.msg }}
+        run: |
+          cd /tmp/kip8test-desktop
+          git config user.email "bot@kip8test.local"
+          git config user.name "kip-bot"
+          git add index.html
+          # Коммит-сообщение: показываем, что это автосинхронизация и из какого SHA
+          git commit -m "auto: sync index.html from kip8test@${SOURCE_SHA}
+
+          Source commit: ${SOURCE_SHA}
+          Source message: ${SOURCE_MSG}
+
+          Автоматически синхронизировано через GitHub Action sync-to-desktop.yml"
+          git push origin main
+          echo "✓ index.html синхронизирован в kip8test-desktop"
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Sync summary"
+          echo ""
+          if [ "${{ steps.changes.outputs.changed }}" = "true" ]; then
+            echo "✅ index.html обновлён в kip8test-desktop (source: kip8test@${{ steps.commit_info.outputs.sha }})"
+          else
+            echo "ℹ️ index.html уже был актуален в kip8test-desktop"
+          fi
