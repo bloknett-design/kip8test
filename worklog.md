@@ -2216,3 +2216,104 @@ Stage Summary:
 - Аналогично для kip8test: обе версии APK теперь работают без URL-бара
 - Токен kip8 ([REDACTED]) сохранён в /home/z/.kip_pat_kip8 —
   для будущих задач по kip8
+
+---
+Task ID: 92
+Agent: AI Assistant (GLM)
+Task: Создание репозитория kip8test-desktop — выделение десктопной тестовой сборки
+
+Work Log:
+- Создан пустой репозиторий kip8test-desktop через GitHub API (public, no issues/wiki/projects)
+- URL: https://github.com/bloknett-design/kip8test-desktop
+- Из kip8test скопированы файлы, нужные только для десктопной сборки:
+  - index.html (полная копия)
+  - electron/main.js (точка входа Electron с autoUpdater)
+  - package.json, package-lock.json, bun.lock, vite.config.mjs
+  - build.mjs (для будущего реального разделения mobile/desktop кода через src/)
+  - data/ (статическая копия для офлайн-работы)
+  - images/ (копия)
+  - .github/workflows/build-desktop.yml (сборка Win/Linux/macOS + релиз на тег v*)
+  - .github/workflows/ci.yml (тесты)
+- НЕ скопированы (не нужны десктопу):
+  - manifest.json, sw.js (PWA-файлы)
+  - .nojekyll, .well-known/ (нет GitHub Pages)
+  - scripts/sync-*.py (данные статичные)
+  - .github/workflows/deploy-pages.yml, sync-*.yml (нет GitHub Pages, нет cron)
+- Адаптирован package.json:
+  - name: kipia-desktop → kipia-desktop-test
+  - version: 1.0.4 → 2.0.0 (новая нумерация релизов)
+  - appId: com.bloknett.kipia → com.bloknett.kipia.test (чтобы не конфликтовал с prod)
+  - productName: КИПиА → КИПиА (Test)
+  - publish.repo: kip8test → kip8test-desktop
+  - win/nsis/linux/mac artifactName: KIPiA-* → KIPiA-Test-*
+  - files: убраны sw.js и manifest.json
+- Создан README.md с описанием назначения и инструкциями
+- Создан .gitignore (исключает node_modules/, dist/, *.exe, *.AppImage, *.deb, *.dmg и т.д.)
+- Создан worklog.md с записью Task 92
+- Initial commit и push в kip8test-desktop
+
+Stage Summary:
+- Репозиторий kip8test-desktop создан и готов к первому релизу v2.0.0
+- Конфликтов с prod-приложением (kip8) не будет: другой appId, другое productName, другой publish repo
+- Автообновление electron-updater будет проверять именно kip8test-desktop/releases
+- data/ и images/ — статические копии, устаревают между релизами (для test-репо это OK)
+- Синхронизация index.html из kip8test будет настроена в Task 93
+
+---
+Task ID: 93
+Agent: AI Assistant (GLM)
+Task: Очистка kip8test от десктопных файлов + настройка автосинхронизации index.html
+
+Work Log:
+- Из kip8test удалены (переехали в kip8test-desktop):
+  - electron/main.js
+  - package.json, package-lock.json, bun.lock, vite.config.mjs
+  - .github/workflows/build-desktop.yml
+- Оставлено в kip8test (нужно для PWA):
+  - index.html, manifest.json, sw.js
+  - data/, images/, scripts/sync-*.py
+  - .well-known/, .nojekyll
+  - .github/workflows/{ci,deploy-pages,sync-*,update-exam-tickets}.yml
+  - tests/ (207 тестов)
+  - build.mjs (для будущего реального разделения кода)
+  - worklog.md, README.md, Системный_промт...md
+- Запущены тесты: 207 passed, 0 failed
+- Инкрементирован CACHE_VERSION: kipia-test-v368 → kipia-test-v369 → kipia-test-v370
+- Коммиты:
+  - d800462 refactor: выделить десктоп в отдельный репо (удаление файлов)
+  - c06bb62 fix: include-hidden-files: true в upload-pages-artifact
+  - d4dc107 feat: GitHub Action sync-to-desktop.yml (первая версия)
+  - 547a61b fix: синтаксис в sync-to-desktop.yml (кавычка в bash)
+  - 4785eec test: проверка автосинхронизации (добавил комментарий)
+  - 43d1135 chore: bump CACHE_VERSION v370
+  - 3aafd08 chore: убран тестовый комментарий
+- Обнаружен и исправлен баг: actions/upload-pages-artifact@v4 по умолчанию
+  исключает dotfiles (.nojekyll, .well-known/, .gitignore) из artifact.
+  Решение: include-hidden-files: true в deploy-pages.yml
+- Создан GitHub Secret DESKTOP_SYNC_TOKEN в kip8test (PAT с правом repo,
+  зашифрован через libsodium, ключ key_id 3380204578043523366)
+- Создан .github/workflows/sync-to-desktop.yml:
+  - Триггер: push в main, меняющий index.html + workflow_dispatch
+  - Шаги: checkout kip8test → clone kip8test-desktop → скопировать index.html →
+    проверить diff → коммит и пуш через DESKTOP_SYNC_TOKEN
+  - Автор коммитов: kip-bot <bot@kip8test.local>
+  - Если изменений нет — пропускает коммит
+- Тест автосинхронизации:
+  - Добавил тестовый HTML-комментарий в kip8test/index.html
+  - Push в kip8test → автоматически создался коммит cf991a0 в kip8test-desktop
+  - Комментарий синхронизирован (проверено через GitHub API)
+  - Убрал комментарий в kip8test → автоматически синхронизировалось в kip8test-desktop
+  - Подтверждено: автосинхронизация работает корректно в обе стороны
+
+Stage Summary:
+- kip8test — теперь чисто мобильный PWA-репозиторий (без Electron-файлов)
+- kip8test-desktop — чисто десктопный Electron-репозиторий (без PWA-файлов)
+- index.html автоматически синхронизируется при пуше в kip8test (без ручного копирования)
+- data/ и images/ синхронизируются вручную при релизе (раз в неделю/месяц)
+- GitHub Pages kip8test продолжает работать: PWA доступна, assetlinks.json отдаётся
+- Все 207 тестов проходят
+- CACHE_VERSION: kipia-test-v370
+- Следующие возможные задачи:
+  - Создать kip8-desktop (боевой десктоп) — по аналогии, когда пользователь захочет
+  - Реальное разделение кода mobile/desktop через src/ + build.mjs (Шаг 3)
+  - Настроить cron для ежемесячной/еженедельной сборки релиза (если нужно)
