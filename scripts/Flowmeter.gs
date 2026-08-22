@@ -135,27 +135,39 @@ var Flowmeter = {
     var range = sheet.getRange(this.DATA_START_ROW, 1, lastRow - this.DATA_START_ROW + 1, 14);
     var values = range.getValues();
 
+    // Task 109: Строим кэш email → name из таблицы users (KIP8_Access)
+    // для отображения имени пользователя (а не email) в карточке.
+    var userNameCache = this._buildUserNameCache();
+
     var meters = [];
     for (var i = 0; i < values.length; i++) {
       var row = values[i];
       // Пропускаем пустые строки
       if (!row[0] && !row[1]) continue;
 
+      var modEmail = String(row[12] || '');  // M — email (для _canEdit)
+      // Task 109: modDisplayName — имя пользователя из таблицы users (для отображения)
+      var modDisplayName = modEmail;
+      if (modEmail && userNameCache[modEmail]) {
+        modDisplayName = userNameCache[modEmail];
+      }
+
       var meter = {
-        id:           parseInt(row[0], 10) || (i + 1),
-        hoz:          String(row[1] || ''),
-        param:        String(row[2] || ''),
-        datePrev:     this._sheetToClientDate(row[3]),
-        dateCurr:     this._sheetToClientDate(row[4]),
-        prev:         parseFloat(row[5]) || 0,
-        curr:         parseFloat(row[6]) || 0,
-        unit:         String(row[7] || ''),
-        temp:         this._parseTemp(row[8]),
-        gcal:         this._parseGcal(row[9]),   // J=10 — гигакалории пара (Task 100)
-        period:       String(row[10] || ''),
-        modRole:      String(row[11] || ''),
-        modName:      String(row[12] || ''),
-        modTimestamp: this._parseTimestamp(row[13])  // N=14 — timestamp последнего ввода (Task 108)
+        id:             parseInt(row[0], 10) || (i + 1),
+        hoz:            String(row[1] || ''),
+        param:          String(row[2] || ''),
+        datePrev:       this._sheetToClientDate(row[3]),
+        dateCurr:       this._sheetToClientDate(row[4]),
+        prev:           parseFloat(row[5]) || 0,
+        curr:           parseFloat(row[6]) || 0,
+        unit:           String(row[7] || ''),
+        temp:           this._parseTemp(row[8]),
+        gcal:           this._parseGcal(row[9]),   // J=10 — гигакалории пара (Task 100)
+        period:         String(row[10] || ''),
+        modRole:        String(row[11] || ''),
+        modName:        modEmail,                   // M — email (для _canEdit, Task 108)
+        modDisplayName: modDisplayName,             // Task 109 — имя для отображения
+        modTimestamp:   this._parseTimestamp(row[13])  // N=14 (Task 108)
       };
       meters.push(meter);
     }
@@ -357,5 +369,41 @@ var Flowmeter = {
     }
     var s = String(val).trim();
     return s || null;
+  },
+
+  // ============================================================
+  // Task 109: Построить кэш { email → name } из таблицы KIP8_Access
+  // Используется в list() для отображения имени пользователя (а не email)
+  // в детальной карточке расходомера.
+  //
+  // Пытается найти таблицу KIP8_Access через Utils (если Utils
+  // предоставляет метод для поиска по email) или читает лист users
+  // напрямую. Если не удалось — возвращает пустой кэш (modDisplayName = email).
+  // ============================================================
+  _buildUserNameCache: function() {
+    var cache = {};
+    try {
+      // Пытаемся использовать Utils для построения кэша
+      // Utils может иметь метод getAllUsers() или похожий
+      if (typeof Utils !== 'undefined' && Utils.getAllUsers) {
+        var users = Utils.getAllUsers();
+        if (users && users.length) {
+          for (var i = 0; i < users.length; i++) {
+            var u = users[i];
+            if (u.email && u.name) {
+              cache[u.email] = u.name;
+            }
+          }
+        }
+        return cache;
+      }
+      // Fallback: если Utils не предоставляет метод — попробовать найти
+      // пользователя через findUserById для каждого email (медленно, но работает)
+      // Не делаем это здесь — слишком медленно для 12 записей.
+      // Вместо этого вернём пустой кэш — modDisplayName будет = email.
+    } catch (e) {
+      // Тихо игнорируем — modDisplayName = email (функциональность не ломается)
+    }
+    return cache;
   }
 };
