@@ -2634,3 +2634,91 @@ Stage Summary:
 - Кнопки «Все» и «Избранные» в нижнем баре стали крупнее (17px вместо 14px)
 - Все правки применены только для мобильной версии; на десктопе ничего не изменилось
   (там всё ещё скрыто через @media (min-width: 1024px) из Task 98)
+
+---
+Task ID: 100
+Agent: AI Assistant (GLM)
+Task: Добавить поле Gcal (гигакалории пара) для расходомеров пара
+
+Work Log:
+- Пользователь добавил новый столбец Gcal в Google Sheets hozraschet_meters
+  (столбец J, после temp). Это гигакалории пара — поле нужно только для
+  расходомеров пара (param содержит «пара»).
+- По текущим данным: только один расходомер пара (id=1, «Расход пара в корпус 114», unit='т').
+  Все остальные 11 — вода/газ/воздух/азот (unit='м³').
+
+Диагностика (скачал XLSX напрямую):
+- Лист hozraschet_meters: 13 столбцов (A-M), заголовки:
+  id, hoz, param, datePrev, dateCurr, prev, curr, unit, temp, Gcal, period, modRole, modName
+- Лист hozraschet_archive: 15 столбцов (A-O), заголовки:
+  meterId, hoz, prev, curr, consumption, datePrev, dateCurr, daysBetween, unit, temp, Gcal,
+  period, modRole, modName, timestamp
+- В архиве Gcal уже был (столбец K), но appendToArchive его не записывал — добавил.
+
+Изменения:
+
+1. scripts/sync-flowmeters.py:
+   - FIELD_NAMES обновлён: добавлен 'gcal' (столбец J=10, индекс 9 в массиве)
+   - Парсинг столбца Gcal: число или null (как temp)
+   - Читает 13 столбцов (A-M) вместо 12 (A-L)
+   - Комментарий обновлён: A-M, J=Gcal
+   - Запущен локально: data/flowmeters.json обновлён, поле gcal добавлено во все 12 записей
+
+2. scripts/Flowmeter.gs (серверный код Apps Script):
+   - list(): читает 13 столбцов (A-M), добавляет gcal в объект meter
+     (row[9] = столбец J = Gcal)
+   - updateReading(): пишет gcal в столбец J=10
+     (payload.gcal — если undefined, не трогает ячейку; если null/'' — очищает)
+   - modRole/modName сдвинуты: K=11 → L=12, L=12 → M=13
+   - Добавлен _parseGcal(val) — число или null
+   - Комментарий структуры столбцов обновлён: A-M
+
+3. scripts/FlowmeterArchive.gs:
+   - appendToArchive(): добавлен параметр gcal (после temp, перед unit)
+   - Структура архива: K=Gcal (Task 100), L=period, M=modRole, N=modName, O=timestamp
+   - Читает 15 столбцов (A-O) вместо 14 (A-N)
+   - listArchive(): добавлен gcal в record (row[10] = столбец K)
+   - Комментарий структуры архива обновлён
+   - Logger.log в appendToArchive добавляет gcal=...
+
+4. index.html — клиентский JS:
+   - _buildDetailHtml: добавлена строка «Гигакалории пара» (только для расходомеров пара,
+     если m.gcal не null), по примеру температуры
+     - gcalStr: m.gcal.toFixed(3).replace('.', ',') + ' Гкал'
+   - Добавлен метод _isSteamMeter(m): String(m.param).toLowerCase().indexOf('пара') !== -1
+   - HTML: добавлено поле «Гкал» (#flowInputGcal) в форму ввода, обёрнуто в #flowInputGcalGroup
+     (по умолчанию display:none, label «Гкал», placeholder «— (необязательно)»)
+   - openInput(): показывает/скрывает поле Гкал в зависимости от типа расходомера,
+     предзаполняет текущим значением (3 знака после запятой)
+   - closeInput(): сбрасывает фокус с gcalField
+   - submitInput(): считывает gcal из поля (как temp), добавляет в apiPayload
+     только для расходомеров пара (this._isSteamMeter(meter))
+   - Оптимистичное обновление: meter.gcal обновляется только для расходомеров пара
+     и если gcalVal !== null
+   - _buildArchiveHtml: добавлена колонка «Гкал» в таблицу архива (только для расходомеров
+     пара и если в первой записи есть значение gcal)
+
+Признак расходомера пара:
+- _isSteamMeter(m) = String(m.param).toLowerCase().indexOf('пара') !== -1
+- По текущим данным это однозначно «Расход пара в корпус 114» (id=1, unit='т')
+- Все остальные 11 расходомеров имеют unit='м³' и param без «пара»
+
+Тесты: 207 passed, 0 failed
+JS-синтаксис чистый
+CACHE_VERSION: kipia-test-v375 -> kipia-test-v376
+Коммит ad0fe95 в kip8test
+data/flowmeters.json обновлён: поле gcal добавлено во все 12 записей (пока null)
+
+Stage Summary:
+- Поле Gcal полностью интегрировано: чтение из Google Sheets, отображение в карточке,
+  ввод через форму (только для расходомеров пара), запись на сервер, архив
+- Поле ввода Гкал показывается только когда открыт расходомер пара (param содержит «пара»)
+- В детальной карточке «Гигакалории пара» отображается с 3 знаками после запятой + « Гкал»
+- В архиве «Гкал» — отдельная колонка, только для расходомеров пара
+- Все остальные расходомеры (вода, газ, воздух, азот) не затронуты — у них gcal=null
+- Серверные .gs файлы — справочные копии, нужно задеплоить в Apps Script:
+  1. Открыть https://script.google.com и найти проект по URL WEB_APP_URL
+  2. Обновить Flowmeter.gs (list + updateReading + _parseGcal + комментарий)
+  3. Обновить FlowmeterArchive.gs (appendToArchive + listArchive + комментарий)
+  4. Deploy → New deployment → Update existing web app (тот же URL)
+  5. Версия: «New version» (важно — иначе изменения не применятся)
