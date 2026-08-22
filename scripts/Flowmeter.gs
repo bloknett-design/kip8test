@@ -206,8 +206,8 @@ var Flowmeter = {
       var existingModName = String(sheet.getRange(rowNum, 13).getValue() || '');  // M=13
       var existingTs = sheet.getRange(rowNum, 14).getValue();  // N=14 — modTimestamp
 
-      // Проверка: тот же пользователь?
-      var currentUser = user.name || user.email || '';
+      // Проверка: тот же пользователь? Сравниваем по email (Task 108)
+      var currentUser = user.email || '';
       if (existingModName !== currentUser) {
         return { ok: false, error: 'not_your_input',
                  message: 'Редактировать может только тот, кто вводил показания' };
@@ -261,8 +261,9 @@ var Flowmeter = {
     // Если payload.gcal === undefined — не трогаем ячейку (старое значение остаётся)
 
     // Кто внёс изменения: L=12 (modRole), M=13 (modName)
+    // Task 108: пишем email (не user.name) — чтобы клиент мог сравнить с KipAuth._cachedEmail
     sheet.getRange(rowNum, 12).setValue(user.role || '');
-    sheet.getRange(rowNum, 13).setValue(user.name || user.email || '');
+    sheet.getRange(rowNum, 13).setValue(user.email || '');
 
     // Task 108: Записываем timestamp текущего ввода в N=14 (modTimestamp)
     sheet.getRange(rowNum, 14).setValue(new Date());
@@ -284,7 +285,7 @@ var Flowmeter = {
         prevVal, currVal,
         payload.datePrev, payload.dateCurr,
         payload.temp, payload.gcal, unitVal, periodVal,
-        user.role || '', user.name || user.email || ''
+        user.role || '', user.email || ''  // Task 108: email вместо name
       );
     } catch (archiveErr) {
       Logger.log('Archive write failed (non-critical): ' + archiveErr.message);
