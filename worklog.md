@@ -2989,3 +2989,49 @@ Stage Summary:
 - История навигации больше не ломается после submitInput или load()
 - Шевроны «назад» показывают правильное количество стрелок
 - Кнопка «Назад» на телефоне корректно проходит: карточка → список → главная
+
+---
+Task ID: 108
+Agent: AI Assistant (GLM)
+Task: Редактирование введённых показаний в течение 1 часа
+
+Work Log:
+- Пользователь добавил столбец N: modTimestamp в Google Sheets hozraschet_meters
+- Реализована возможность редактирования: только тот же пользователь + < 1 часа после ввода
+
+1. scripts/sync-flowmeters.py:
+   - FIELD_NAMES: добавлен 'modTimestamp' (столбец N=14)
+   - Читает 14 столбцов (A-N)
+   - Парсит modTimestamp: datetime → ISO-строка, иначе null
+
+2. scripts/Flowmeter.gs (серверный код Apps Script):
+   - list(): читает 14 столбцов, возвращает modTimestamp (ISO-строка через _parseTimestamp)
+   - updateReading(): при каждом вводе/редактировании пишет new Date() в N=14
+   - updateReading(): при payload.isEdit=true:
+     * Проверяет: modName (M=13) == user.name/email → если нет, error 'not_your_input'
+     * Проверяет: (new Date() - modTimestamp) < 60 минут → если нет, error 'edit_window_expired'
+     * Если modTimestamp пустой → error 'edit_window_expired'
+   - Добавлен _parseTimestamp(val): Date → ISO-строка
+
+3. index.html — клиентский JS:
+   - _canEdit(m): проверяет право ввода + тот же modName + modTimestamp < 1 часа
+   - _renderBottomBar(m): если _canEdit(m) → «Изменить показания» (вместо «Ввести показания»)
+   - openInput(isEdit): при isEdit=true — предзаполняет форму (curr, temp, gcal), заголовок «изменить показания»
+   - submitInput():
+     * Определяет isEdit по заголовку формы
+     * При isEdit: НЕ сдвигает prev→curr, НЕ сдвигает datePrev→dateCurr (перезапись)
+     * Добавляет isEdit в apiPayload
+     * Обновляет meter.modTimestamp = new Date().toISOString()
+     * Обрабатывает серверные ошибки: toast с сообщением + load() для отката
+
+data/flowmeters.json перегенерирован (modTimestamp=null — сервер ещё не записал)
+Тесты: 207 passed, 0 failed
+CACHE_VERSION: kipia-test-v382 -> kipia-test-v383
+Коммит 74ae931 в kip8test
+
+⚠️ Нужно задеплоить обновлённый Flowmeter.gs в Apps Script:
+   - list() теперь читает 14 столбцов (A-N)
+   - updateReading() пишет modTimestamp в N=14
+   - updateReading() проверяет isEdit (1 час + тот же пользователь)
+   - Добавлен _parseTimestamp()
+   Без деплоя: modTimestamp не будет записываться → _canEdit всегда false → «Изменить» не появится
