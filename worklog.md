@@ -2722,3 +2722,68 @@ Stage Summary:
   3. Обновить FlowmeterArchive.gs (appendToArchive + listArchive + комментарий)
   4. Deploy → New deployment → Update existing web app (тот же URL)
   5. Версия: «New version» (важно — иначе изменения не применятся)
+
+---
+Task ID: 101
+Agent: AI Assistant (GLM)
+Task: Исправить несоответствие отображения данных после добавления столбца Gcal
+
+Work Log:
+- Пользователь сообщил: после добавления столбца Gcal в Google Sheets
+  изменилось расположение остальных столбцов, в приложении данные отображаются
+  неправильно (например, на месте period — данные из Gcal).
+- Диагностика:
+  1. Скачал живую Google Таблицу, проверил заголовки hozraschet_meters:
+     A id, B hoz, C param, D datePrev, E dateCurr, F prev, G curr, H unit,
+     I temp, J Gcal, K period, L modRole, M modName
+  2. Сравнил с data/flowmeters.json (id=1):
+     - В таблице:    gcal=60.46, modRole=Админ,         modName=desktop_work_test
+     - В JSON (баг): gcal=None,  modRole=desktop_work_test, modName=Админ
+  3. Проверил все файлы:
+     - sync-flowmeters.py: FIELD_NAMES = ['period', 'modName', 'modRole'] ← БАГ!
+       (modName и modRole перепутаны местами)
+     - Flowmeter.gs list(): modRole=row[11], modName=row[12] ✓ корректно
+     - Flowmeter.gs updateReading(): пишет modRole в L=12, modName в M=13 ✓ корректно
+     - FlowmeterArchive.gs appendToArchive()/listArchive(): ОК ✓
+     - index.html: gcal/period нигде не перепутаны ✓
+
+Корневая причина:
+- В Task 100 при добавлении столбца Gcal в FIELD_NAMES sync-flowmeters.py
+  я ошибочно указал порядок ['period', 'modName', 'modRole']
+  вместо правильного ['period', 'modRole', 'modName'].
+- Это привело к тому, что в flowmeters.json:
+  - modRole получал значение из столбца M (modName в таблице)
+  - modName получал значение из столбца L (modRole в таблице)
+- Пользователь увидел в приложении modRole=desktop_work_test (вместо «Админ»)
+  и modName=Админ (вместо desktop_work_test).
+- Также gcal=None, потому что мой запуск sync-flowmeters.py в Task 100
+  был ДО того, как пользователь заполнил Gcal=60.46 для id=1.
+
+Исправление:
+- scripts/sync-flowmeters.py:
+  - FIELD_NAMES: ['period', 'modName', 'modRole'] → ['period', 'modRole', 'modName']
+  - Комментарий в docstring: L modRole, M modName (а не наоборот)
+  - Добавлен комментарий с предупреждением о причине бага
+- data/flowmeters.json перегенерирован — теперь правильные значения
+
+Проверка id=1 после фикса (соответствует Google Sheets):
+  gcal=60.46, period=Ежедневно, modRole=Админ, modName=desktop_work_test
+
+Тесты: 207 passed, 0 failed
+JSON валиден
+Python: scripts/sync-flowmeters.py компилируется без ошибок
+CACHE_VERSION: kipia-test-v376 -> kipia-test-v377
+Коммит 5455f31 в kip8test
+Живая страница обновлена (деплой success)
+
+Stage Summary:
+- Баг был только в sync-flowmeters.py (Python-скрипт синхронизации)
+- Серверный код Apps Script (Flowmeter.gs, FlowmeterArchive.gs) был корректным
+- Клиентский код (index.html) был корректным
+- После фикса данные в flowmeters.json соответствуют Google Sheets
+- В детальной карточке расходомера пара (id=1) теперь отображается:
+  - Период: Ежедневно (правильно)
+  - Гигакалории пара: 60,460 Гкал (новое поле, подтянулось)
+  - Внёс изменения: Админ, desktop_work_test (правильно)
+- В архиве тоже корректные данные
+- На других расходомерах (id=2-12) изменений нет — у них gcal=null
