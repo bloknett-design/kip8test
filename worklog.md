@@ -2787,3 +2787,65 @@ Stage Summary:
   - Внёс изменения: Админ, desktop_work_test (правильно)
 - В архиве тоже корректные данные
 - На других расходомерах (id=2-12) изменений нет — у них gcal=null
+
+---
+Task ID: 102
+Agent: AI Assistant (GLM)
+Task: Диагностика «неверное отображение данных из столбцов» (после Task 101)
+
+Work Log:
+- Пользователь прислал файл hozraschet_meters.xlsx с текущей структурой таблицы
+- Структура подтверждена (13 столбцов A-M):
+  A id, B hoz, C param, D datePrev, E dateCurr, F prev, G curr, H unit,
+  I temp, J Gcal, K period, L modRole, M modName
+- Сравнил с живой страницей data/flowmeters.json — ВСЕ 12 записей совпадают
+  поле-за-полем с присланным файлом (id=1: gcal=60.46, period=Ежедневно,
+  modRole=Админ, modName=desktop_work_test).
+- Проверил index.html (renderList + _buildDetailHtml) — маппинг корректный,
+  нигде ничего не перепутано.
+- Проверил scripts/Flowmeter.gs — list() и updateReading() корректно
+  маппят столбцы (gcal=row[9], period=row[10], modRole=row[11], modName=row[12]).
+- Проверил scripts/FlowmeterArchive.gs — корректно.
+
+Корневая причина симптомов пользователя:
+- data/flowmeters.json (офлайн-PWA) — корректный
+- Код в репозитории (Flowmeter.gs, FlowmeterArchive.gs, index.html) — корректный
+- Сервер Apps Script (script.google.com) — НЕ ОБНОВЛЁН, работает старая версия
+  Flowmeter.gs БЕЗ поддержки Gcal
+
+Что происходит, когда пользователь авторизован:
+1. FlowmeterData.load() вызывает flowmeter.list на сервере Apps Script
+2. Сервер возвращает данные со СТАРЫМ маппингом (где period = row[9] = столбец J)
+3. После добавления столбца Gcal в J — сервер возвращает в поле period
+   значение из Gcal (для расходомера пара — 60.46)
+4. В клиенте m.period = 60.46 → в карточке отображается «60.46» вместо «Ежедневно»
+5. И m.modRole = значение из K (period в новой таблице — «Ежедневно»)
+6. И m.modName = значение из L (modRole в новой таблице — «Админ»)
+
+Решение: задеплоить обновлённые Flowmeter.gs и FlowmeterArchive.gs в Apps Script.
+
+Инструкция для пользователя:
+1. Открыть https://script.google.com → найти проект по URL WEB_APP_URL
+   (из index.html, ~строка 27680, KipAuth.WEB_APP_URL)
+2. Открыть файл Flowmeter.gs (в редакторе Apps Script):
+   - Заменить ВСЁ содержимое на scripts/Flowmeter.gs из репозитория kip8test
+3. Открыть файл FlowmeterArchive.gs:
+   - Заменить ВСЁ содержимое на scripts/FlowmeterArchive.gs
+4. Deploy → New deployment → Update existing web app
+   - ВАЖНО: выбрать «New version» (иначе изменения не применятся)
+   - Тип: Web app
+   - Who has access: Anyone (как было)
+5. После деплоя проверить: открыть расходомер id=1 в приложении,
+   в карточке должно быть period=Ежедневно (а не 60.46)
+6. Если не авторизован — приложение использует data/flowmeters.json,
+   который уже корректный (после Task 101)
+
+В коде kip8test изменений НЕ требуется — всё уже корректно после Task 101.
+Проблема исключительно в том, что сервер Apps Script не обновлён.
+
+Stage Summary:
+- Код kip8test полностью корректен (sync-flowmeters.py, Flowmeter.gs,
+  FlowmeterArchive.gs, index.html — все соответствуют присланному файлу)
+- Симптомы пользователя объясняются тем, что сервер Apps Script работает
+  со старой версией Flowmeter.gs (без Gcal, со старым маппингом столбцов)
+- Решение: деплой обновлённого Flowmeter.gs и FlowmeterArchive.gs в Apps Script
