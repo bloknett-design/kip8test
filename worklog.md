@@ -3035,3 +3035,51 @@ CACHE_VERSION: kipia-test-v382 -> kipia-test-v383
    - updateReading() проверяет isEdit (1 час + тот же пользователь)
    - Добавлен _parseTimestamp()
    Без деплоя: modTimestamp не будет записываться → _canEdit всегда false → «Изменить» не появится
+
+
+---
+Task ID: 122
+Agent: AI Assistant (GLM)
+Task: Релиз kip8test-desktop v2.1.0 — починить автообновление десктоп-приложения
+
+Симптом:
+- Пользователь сообщил, что десктоп-приложение не обновляется
+
+Корневая причина:
+- electron-updater (electron/main.js) проверяет GitHub Releases репо kip8test-desktop
+- latest.yml генерируется только при пуше git-тега v* (build-desktop.yml
+  использует --publish onTagOrDraft)
+- После v2.0.0 (21 августа) за сутки в kip8test-desktop сделано 27 коммитов
+  (sync из kip8test по Task 118-121), но нового тега создано НЕ было
+- 25 скачиваний latest.yml = 25 проверок обновлений клиентами → все
+  возвращались с version: 2.0.0 → electron-updater: «обновлений нет»
+
+Work Log:
+1. Сохранён GitHub PAT в /home/z/.kip_pat (по запросу пользователя)
+2. Склонированы оба репо: kip8test + kip8test-desktop
+3. Проверены компоненты:
+   - sync-to-desktop.yml в kip8test работает (success при каждом пуше)
+   - секрет DESKTOP_SYNC_TOKEN на месте (updated 2026-08-21)
+   - index.html в обоих репо полностью идентичны (md5 e199e7e5…)
+   - все 9 файлов data/*.json синхронизированы (md5 совпадают)
+   - тесты в kip8test-desktop: 207 passed, 0 failed
+4. В kip8test-desktop/package.json: version 2.0.0 → 2.1.0 (SemVer minor —
+   добавлены новые фичи Task 118-120)
+5. Создан аннотированный git-тег v2.1.0
+6. Push main + тег → запустился build-desktop.yml на теге v2.1.0
+7. Workflow завершился успешно: build-linux ✓, build-mac ✓, build-win ✓,
+   release ✓ — релиз v2.1.0 опубликован (draft=False, prerelease=False)
+8. 9 assets в релизе: AppImage, deb, dmg, exe + latest.yml, latest-linux.yml,
+   latest-mac.yml + blockmap'ы
+9. latest.yml обновлён: version: 2.1.0 (было 2.0.0)
+10. Полная запись в kip8test-desktop/worklog.md (Task 122)
+
+Stage Summary:
+- Установленные клиенты (v2.0.0) при следующем запуске увидят предложение
+  обновиться до v2.1.0
+- autoUpdater.on('update-available') → диалог «Скачать / Позже»
+- После скачивания → «Установить / Позже» → перезапуск с новой версией
+- На будущее: для публикации обновлений десктопа ВСЕГДА создавать новый тег v*
+  (обычные пуши в main только собирают артефакты, но НЕ публикуют релиз)
+- Коммит в kip8test-desktop: dfe0b8a
+- Релиз: https://github.com/bloknett-design/kip8test-desktop/releases/tag/v2.1.0
