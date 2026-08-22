@@ -12,7 +12,7 @@
   1. Скачивает XLSX-экспорт напрямую из Google Sheets через export?format=xlsx.
      Google отдаёт файл без OAuth, если таблица доступна «у кого есть ссылка».
   2. Парсит лист "hozraschet_meters" — заголовки в 1-й строке, данные со 2-й.
-     Структура столбцов (A–M):
+     Структура столбцов (A–N):
        A: id         — номер позиции (1–12)
        B: hoz        — название (Хозрасчёт №1)
        C: param      — параметр (Расход пара в корпус 114)
@@ -26,6 +26,7 @@
        K: period     — периодичность (Ежедневно/Еженедельно/Ежемесячно)
        L: modRole    — роль пользователя, внёсшего последние изменения
        M: modName    — имя пользователя, внёсшего последние изменения
+       N: modTimestamp — timestamp последнего ввода (Task 108 — для проверки «1 час на редактирование»)
   3. Сохраняет результат в data/flowmeters.json.
 
 Переменные окружения:
@@ -178,22 +179,23 @@ def parse_flowmeters(xlsx_path, sheet_name):
     log(f'Заголовки ({len(headers)}): {headers}')
 
     # Имена полей (маппинг столбцов → ключи клиента).
-    # Строго соответствует заголовкам Google Sheets (A–M):
+    # Строго соответствует заголовкам Google Sheets (A–N):
     #   A id, B hoz, C param, D datePrev, E dateCurr, F prev, G curr,
-    #   H unit, I temp, J Gcal (Task 100), K period, L modRole, M modName
+    #   H unit, I temp, J Gcal (Task 100), K period, L modRole, M modName,
+    #   N modTimestamp (Task 108 — timestamp последнего ввода, для редактирования)
     # ВНИМАНИЕ: modRole идёт ПЕРЕД modName (как в заголовках таблицы).
     # В Task 100 они были перепутаны — это приводило к тому, что в flowmeters.json
     # modRole получал значение modName и наоборот (Task 101 — фикс).
     FIELD_NAMES = ['id', 'hoz', 'param', 'datePrev', 'dateCurr',
                    'prev', 'curr', 'unit', 'temp', 'gcal',
-                   'period', 'modRole', 'modName']
+                   'period', 'modRole', 'modName', 'modTimestamp']
 
     meters = []
     skipped = 0
     for row_idx in range(2, ws.max_row + 1):
-        # Читаем 13 колонок (A–M)
+        # Читаем 14 колонок (A–N)
         row_values = []
-        for col_idx in range(1, 14):
+        for col_idx in range(1, 15):
             cell = ws.cell(row=row_idx, column=col_idx)
             val = cell.value
             row_values.append(val)
@@ -253,6 +255,16 @@ def parse_flowmeters(xlsx_path, sheet_name):
                         meter[field] = float(val)
                     except (ValueError, TypeError):
                         meter[field] = None
+                else:
+                    meter[field] = None
+
+            elif field == 'modTimestamp':
+                # Timestamp последнего ввода (Task 108): ISO-строка или null
+                # Используется для проверки «1 час на редактирование»
+                if val is not None and isinstance(val, (datetime, ddate)):
+                    meter[field] = val.isoformat()
+                elif val is not None and str(val).strip() != '':
+                    meter[field] = str(val).strip()
                 else:
                     meter[field] = None
 

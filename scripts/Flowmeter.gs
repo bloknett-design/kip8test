@@ -17,7 +17,7 @@
 //   Строка 1 — заголовки столбцов
 //   Строки 2+ — данные (12 позиций, строки 2–13)
 //
-//   Столбцы (A–M):
+//   Столбцы (A–N):
 //     A: id         — номер позиции (1–12)
 //     B: hoz        — название (Хозрасчёт №1)
 //     C: param      — параметр (Расход пара в корпус 114)
@@ -31,6 +31,7 @@
 //     K: period     — периодичность (Ежедневно/Еженедельно/Ежемесячно)
 //     L: modRole    — роль пользователя, внёсшего последние изменения
 //     M: modName    — имя пользователя, внёсшего последние изменения
+//     N: modTimestamp — timestamp последнего ввода (Task 108 — для редактирования в течение 1 часа)
 //
 //   Данные начинаются со строки 2 (строка 1 — заголовки).
 //   Строка 2 → id=1, строка 13 → id=12.
@@ -130,8 +131,8 @@ var Flowmeter = {
       return { ok: true, data: { meters: [] } };
     }
 
-    // Читаем данные (строка DATA_START_ROW до lastRow, столбцы A–M = 13 столбцов)
-    var range = sheet.getRange(this.DATA_START_ROW, 1, lastRow - this.DATA_START_ROW + 1, 13);
+    // Читаем данные (строка DATA_START_ROW до lastRow, столбцы A–N = 14 столбцов)
+    var range = sheet.getRange(this.DATA_START_ROW, 1, lastRow - this.DATA_START_ROW + 1, 14);
     var values = range.getValues();
 
     var meters = [];
@@ -141,19 +142,20 @@ var Flowmeter = {
       if (!row[0] && !row[1]) continue;
 
       var meter = {
-        id:       parseInt(row[0], 10) || (i + 1),
-        hoz:      String(row[1] || ''),
-        param:    String(row[2] || ''),
-        datePrev: this._sheetToClientDate(row[3]),
-        dateCurr: this._sheetToClientDate(row[4]),
-        prev:     parseFloat(row[5]) || 0,
-        curr:     parseFloat(row[6]) || 0,
-        unit:     String(row[7] || ''),
-        temp:     this._parseTemp(row[8]),
-        gcal:     this._parseGcal(row[9]),   // J=10 — гигакалории пара (Task 100)
-        period:   String(row[10] || ''),
-        modRole:  String(row[11] || ''),
-        modName:  String(row[12] || '')
+        id:           parseInt(row[0], 10) || (i + 1),
+        hoz:          String(row[1] || ''),
+        param:        String(row[2] || ''),
+        datePrev:     this._sheetToClientDate(row[3]),
+        dateCurr:     this._sheetToClientDate(row[4]),
+        prev:         parseFloat(row[5]) || 0,
+        curr:         parseFloat(row[6]) || 0,
+        unit:         String(row[7] || ''),
+        temp:         this._parseTemp(row[8]),
+        gcal:         this._parseGcal(row[9]),   // J=10 — гигакалории пара (Task 100)
+        period:       String(row[10] || ''),
+        modRole:      String(row[11] || ''),
+        modName:      String(row[12] || ''),
+        modTimestamp: this._parseTimestamp(row[13])  // N=14 — timestamp последнего ввода (Task 108)
       };
       meters.push(meter);
     }
@@ -198,6 +200,33 @@ var Flowmeter = {
     var prevVal = parseFloat(payload.prev) || 0;
     var currVal = parseFloat(payload.curr) || 0;
 
+    // Task 108: Если isEdit=true — проверяем, что прошёл менее 1 часа
+    // и что текущий пользователь — тот, кто вводил последние показания.
+    if (payload.isEdit) {
+      var existingModName = String(sheet.getRange(rowNum, 13).getValue() || '');  // M=13
+      var existingTs = sheet.getRange(rowNum, 14).getValue();  // N=14 — modTimestamp
+
+      // Проверка: тот же пользователь?
+      var currentUser = user.name || user.email || '';
+      if (existingModName !== currentUser) {
+        return { ok: false, error: 'not_your_input',
+                 message: 'Редактировать может только тот, кто вводил показания' };
+      }
+
+      // Проверка: прошёл менее 1 часа?
+      if (existingTs instanceof Date) {
+        var elapsedMin = (new Date() - existingTs) / 1000 / 60;
+        if (elapsedMin > 60) {
+          return { ok: false, error: 'edit_window_expired',
+                   message: 'Прошло более 1 часа — редактирование недоступно' };
+        }
+      } else {
+        // modTimestamp пустой — редактирование недоступно (старые данные без timestamp)
+        return { ok: false, error: 'edit_window_expired',
+                 message: 'Нет данных о времени ввода — редактирование недоступно' };
+      }
+    }
+
     // Обновляем ячейки:
     // D=4 (datePrev), E=5 (dateCurr), F=6 (prev), G=7 (curr), I=9 (temp)
     if (datePrevObj) {
@@ -234,6 +263,9 @@ var Flowmeter = {
     // Кто внёс изменения: L=12 (modRole), M=13 (modName)
     sheet.getRange(rowNum, 12).setValue(user.role || '');
     sheet.getRange(rowNum, 13).setValue(user.name || user.email || '');
+
+    // Task 108: Записываем timestamp текущего ввода в N=14 (modTimestamp)
+    sheet.getRange(rowNum, 14).setValue(new Date());
 
     // Аудит (по паттерну CableJournal → Utils.audit)
     try {
@@ -314,5 +346,15 @@ var Flowmeter = {
     if (val === '' || val === null || val === undefined) return null;
     var n = parseFloat(val);
     return isNaN(n) ? null : n;
+  },
+
+  // Парсинг timestamp последнего ввода (Date → ISO-строка, Task 108)
+  _parseTimestamp: function(val) {
+    if (val === '' || val === null || val === undefined) return null;
+    if (val instanceof Date) {
+      return val.toISOString();
+    }
+    var s = String(val).trim();
+    return s || null;
   }
 };
