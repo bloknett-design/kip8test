@@ -2317,3 +2317,70 @@ Stage Summary:
   - Создать kip8-desktop (боевой десктоп) — по аналогии, когда пользователь захочет
   - Реальное разделение кода mobile/desktop через src/ + build.mjs (Шаг 3)
   - Настроить cron для ежемесячной/еженедельной сборки релиза (если нужно)
+
+---
+Task ID: 95
+Agent: AI Assistant (GLM)
+Task: Добавить избранное + drag-and-drop для расходомеров хозрасчётных
+
+Work Log:
+- Пользователь запросил: переключатель «Все / Избранные», избранные карточки, перемещение их местами
+- Подтверждены параметры: drag-and-drop только в режиме «Избранные», fav-btn справа сверху карточки,
+  отдельный localStorage-ключ kip8_flow_fav_order_v1 (не смешивать с KipFav._ORDER_KEY)
+- CSS добавлен после стилей .flow-archive-table (строки ~3538):
+  - .flow-tabs + .flow-tab.active + .flow-tab-count — тулбар с переключателем
+  - .flow-card-fav-btn — кнопка-звёздочка в карточке (☆/★)
+  - .flow-card-drag-handle — drag-гриппер (⋮⋮), отображается только в режиме избранных
+  - .flow-card.dragging + .flow-card.drag-over — состояния перетаскивания
+  - .flow-list.fav-mode .flow-card — отступы под drag-handle + fav-btn
+  - .flow-empty-fav — заглушка «Нет избранных расходомеров» с подсказкой
+  - #flowFavBtn — кнопка-звёздочка в хедере детальной карточки
+- HTML обновлён:
+  - В page-flowmeter-data добавлен .flow-tabs с двумя .flow-tab кнопками (Все/Избранные)
+    со счётчиками #flowAllCount и #flowFavCount
+  - В page-flowmeter-detail добавлена кнопка #flowFavBtn в хедер
+- FlowmeterData расширен новыми полями и методами:
+  - _FLOW_FAV_ORDER_KEY = 'kip8_flow_fav_order_v1' (отдельный от KipFav._ORDER_KEY)
+  - _activeTab = 'all' | 'fav'
+  - _drag (состояние drag-and-drop)
+  - _favKey(id) — обёртка над KipFav._favKey('flow', id)
+  - setTab(tab) — переключатель вкладок
+  - _getVisibleMeters() — фильтр + сортировка по kip8_flow_fav_order_v1
+  - _updateTabCounts() — обновление счётчиков в табах
+  - _getFavOrder() / _setFavOrder(arr) — работа с localStorage
+  - toggleFav(id) — переключение избранного (с сохранением порядка)
+  - toggleFavFromDetail() — переключение из детальной карточки
+  - _updateDetailFavBtn() — обновление состояния flowFavBtn в хедере
+  - _attachDragHandlers() / _attachDragToCard(card) — drag-and-drop
+  - _moveFav(draggedCard, targetCard) — переупорядочивание
+- renderList() полностью переработан:
+  - Учитывает _activeTab
+  - Рисует drag-handle + fav-btn в каждой карточке
+  - Показывает заглушку .flow-empty-fav в режиме избранных при пустом списке
+  - Навешивает drag-handlers в режиме fav
+- openDetail() — добавлен вызов _updateDetailFavBtn() после открытия карточки
+- KipFav.updateHeaderIcon() расширен для поддержки flow:
+  - Вызывает FlowmeterData._updateDetailFavBtn() для мобильного хедера
+  - На десктопе: detailPanelFavBtn виден и активен при _flowDetailId
+  - data-fav-type='flow' устанавливается на detailPanelFavBtn
+  - Внутри карточки .dev-detail-fav-btn тоже обновляется
+- KipFav.toggleFromDetailByType(type) — добавлена ветка type='flow':
+  - Делегирует в FlowmeterData.toggleFav(id) (которая перерисует список)
+  - Показывает toast «Добавлено в избранное» / «Убрано из избранного»
+- Все 207 тестов пройдены
+- CACHE_VERSION: kipia-test-v370 -> kipia-test-v371
+- Коммит 06aa527 в kip8test
+- Автосинхронизация сработала: в kip8test-desktop автоматически создан коммит 6ef0e4e
+  от kip-bot с сообщением "auto: sync index.html from kip8test@06aa527"
+
+Stage Summary:
+- Раздел «Расходомеры хозрасчётные» теперь имеет:
+  * Тулбар «Все | Избранные» с счётчиками
+  * Кнопку ☆/★ на каждой карточке (справа сверху)
+  * Кнопку ☆/★ в хедере детальной карточки
+  * Drag-and-drop в режиме «Избранные» (long-press 500мс + движение)
+  * Заглушку «Нет избранных расходомеров» с подсказкой
+  * Сохранение порядка в отдельном localStorage-ключе kip8_flow_fav_order_v1
+- На десктопе: detailPanelFavBtn (правый верхний угол detailPanel) работает для расходомеров
+- Touch и mouse: универсальные обработчики drag-and-drop
+- Подсветка карточки-цели (.drag-over) при перетаскивании
