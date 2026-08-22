@@ -29,10 +29,10 @@
       "curr": 91.11,
       "unit": "т",
       "temp": null,
-      "gcal": null,
+      "gcal": 60.46,
       "period": "Ежедневно",
-      "modName": "Админ",
-      "modRole": "desktop_work_test"
+      "modRole": "Админ",
+      "modName": "desktop_work_test"
     },
     {
       "id": 2,
@@ -46,8 +46,8 @@
       "temp": null,
       "gcal": null,
       "period": "Ежедневно",
-      "modName": "Админ",
-      "modRole": "desktop_work_test"
+      "modRole": "Админ",
+      "modName": "desktop_work_test"
     },
     {
       "id": 3,
@@ -61,8 +61,8 @@
       "temp": null,
       "gcal": null,
       "period": "Еженедельно",
-      "modName": "Админ",
-      "modRole": "mobile_test"
+      "modRole": "Админ",
+      "modName": "mobile_test"
     },
     {
       "id": 4,
@@ -76,8 +76,8 @@
       "temp": null,
       "gcal": null,
       "period": "Ежедневно",
-      "modName": "Админ",
-      "modRole": "desktop_work_test"
+      "modRole": "Админ",
+      "modName": "desktop_work_test"
     },
     {
       "id": 5,
@@ -91,8 +91,8 @@
       "temp": null,
       "gcal": null,
       "period": "Ежедневно",
-      "modName": "Админ",
-      "modRole": "desktop_work_test"
+      "modRole": "Админ",
+      "modName": "desktop_work_test"
     },
     {
       "id": 6,
@@ -106,8 +106,8 @@
       "temp": 32.0,
       "gcal": null,
       "period": "Ежедневно",
-      "modName": "Админ",
-      "modRole": "desktop_work_test"
+      "modRole": "Админ",
+      "modName": "desktop_work_test"
     },
     {
       "id": 7,
@@ -121,8 +121,8 @@
       "temp": null,
       "gcal": null,
       "period": "Ежедневно",
-      "modName": "Админ",
-      "modRole": "desktop_home_test"
+      "modRole": "Админ",
+      "modName": "desktop_home_test"
     },
     {
       "id": 8,
@@ -136,8 +136,8 @@
       "temp": null,
       "gcal": null,
       "period": "Ежедневно",
-      "modName": "Админ",
-      "modRole": "desktop_work_test"
+      "modRole": "Админ",
+      "modName": "desktop_work_test"
     },
     {
       "id": 9,
@@ -151,8 +151,8 @@
       "temp": null,
       "gcal": null,
       "period": "Ежемесячно",
-      "modName": "Админ",
-      "modRole": "desktop_home_test"
+      "modRole": "Админ",
+      "modName": "desktop_home_test"
     },
     {
       "id": 10,
@@ -166,8 +166,8 @@
       "temp": null,
       "gcal": null,
       "period": "Ежедневно",
-      "modName": "Админ",
-      "modRole": "desktop_work_test"
+      "modRole": "Админ",
+      "modName": "desktop_work_test"
     },
     {
       "id": 11,
@@ -181,8 +181,8 @@
       "temp": null,
       "gcal": null,
       "period": "Еженедельно",
-      "modName": "Админ",
-      "modRole": "desktop_home_test"
+      "modRole": "Админ",
+      "modName": "desktop_home_test"
     },
     {
       "id": 12,
@@ -196,8 +196,8 @@
       "temp": null,
       "gcal": null,
       "period": "Еженедельно",
-      "modName": "Админ",
-      "modRole": "desktop_work_test"
+      "modRole": "Админ",
+      "modName": "desktop_work_test"
     }
   ]
 }

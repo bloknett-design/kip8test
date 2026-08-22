@@ -24,8 +24,8 @@
        I: temp       — температура среды (число или пусто)
        J: Gcal       — гигакалории пара (число или пусто; только для расходомеров пара, Task 100)
        K: period     — периодичность (Ежедневно/Еженедельно/Ежемесячно)
-       L: modName    — имя пользователя, внёсшего последние изменения
-       M: modRole    — роль пользователя, внёсшего последние изменения
+       L: modRole    — роль пользователя, внёсшего последние изменения
+       M: modName    — имя пользователя, внёсшего последние изменения
   3. Сохраняет результат в data/flowmeters.json.
 
 Переменные окружения:
@@ -177,12 +177,16 @@ def parse_flowmeters(xlsx_path, sheet_name):
         headers.pop()
     log(f'Заголовки ({len(headers)}): {headers}')
 
-    # Имена полей (маппинг столбцов → ключи клиента)
-    # Столбцы A-M (13): id, hoz, param, datePrev, dateCurr, prev, curr, unit, temp,
-    # Gcal (Task 100 — гигакалории пара), period, modName, modRole
+    # Имена полей (маппинг столбцов → ключи клиента).
+    # Строго соответствует заголовкам Google Sheets (A–M):
+    #   A id, B hoz, C param, D datePrev, E dateCurr, F prev, G curr,
+    #   H unit, I temp, J Gcal (Task 100), K period, L modRole, M modName
+    # ВНИМАНИЕ: modRole идёт ПЕРЕД modName (как в заголовках таблицы).
+    # В Task 100 они были перепутаны — это приводило к тому, что в flowmeters.json
+    # modRole получал значение modName и наоборот (Task 101 — фикс).
     FIELD_NAMES = ['id', 'hoz', 'param', 'datePrev', 'dateCurr',
                    'prev', 'curr', 'unit', 'temp', 'gcal',
-                   'period', 'modName', 'modRole']
+                   'period', 'modRole', 'modName']
 
     meters = []
     skipped = 0
