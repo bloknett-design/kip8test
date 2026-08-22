@@ -297,7 +297,7 @@ var Flowmeter = {
         prevVal, currVal,
         payload.datePrev, payload.dateCurr,
         payload.temp, payload.gcal, unitVal, periodVal,
-        user.role || '', user.email || ''  // Task 108: email вместо name
+        user.role || '', user.name || user.email || ''  // Task 109: имя (если есть) или email
       );
     } catch (archiveErr) {
       Logger.log('Archive write failed (non-critical): ' + archiveErr.message);
@@ -372,35 +372,31 @@ var Flowmeter = {
   },
 
   // ============================================================
-  // Task 109: Построить кэш { email → name } из таблицы KIP8_Access
+  // Task 109: Построить кэш { email → name } из листа users (KIP8_Access)
   // Используется в list() для отображения имени пользователя (а не email)
   // в детальной карточке расходомера.
   //
-  // Пытается найти таблицу KIP8_Access через Utils (если Utils
-  // предоставляет метод для поиска по email) или читает лист users
-  // напрямую. Если не удалось — возвращает пустой кэш (modDisplayName = email).
+  // Использует Utils.getRows('users') — возвращает массив объектов
+  // с ключами из строки 4 заголовков листа users.
+  // Если в таблице есть столбец 'name' — используем его.
+  // Если нет — modDisplayName = email (fallback).
   // ============================================================
   _buildUserNameCache: function() {
     var cache = {};
     try {
-      // Пытаемся использовать Utils для построения кэша
-      // Utils может иметь метод getAllUsers() или похожий
-      if (typeof Utils !== 'undefined' && Utils.getAllUsers) {
-        var users = Utils.getAllUsers();
+      if (typeof Utils !== 'undefined' && Utils.getRows) {
+        var users = Utils.getRows('users');
         if (users && users.length) {
           for (var i = 0; i < users.length; i++) {
             var u = users[i];
-            if (u.email && u.name) {
-              cache[u.email] = u.name;
+            var email = String(u.email || '').toLowerCase().trim();
+            var name = String(u.name || '').trim();
+            if (email && name) {
+              cache[email] = name;
             }
           }
         }
-        return cache;
       }
-      // Fallback: если Utils не предоставляет метод — попробовать найти
-      // пользователя через findUserById для каждого email (медленно, но работает)
-      // Не делаем это здесь — слишком медленно для 12 записей.
-      // Вместо этого вернём пустой кэш — modDisplayName будет = email.
     } catch (e) {
       // Тихо игнорируем — modDisplayName = email (функциональность не ломается)
     }
