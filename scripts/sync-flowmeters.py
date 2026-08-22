@@ -12,7 +12,7 @@
   1. Скачивает XLSX-экспорт напрямую из Google Sheets через export?format=xlsx.
      Google отдаёт файл без OAuth, если таблица доступна «у кого есть ссылка».
   2. Парсит лист "hozraschet_meters" — заголовки в 1-й строке, данные со 2-й.
-     Структура столбцов (A–L):
+     Структура столбцов (A–M):
        A: id         — номер позиции (1–12)
        B: hoz        — название (Хозрасчёт №1)
        C: param      — параметр (Расход пара в корпус 114)
@@ -22,9 +22,10 @@
        G: curr       — текущие показания (число)
        H: unit       — единица измерения (т, м³)
        I: temp       — температура среды (число или пусто)
-       J: period     — периодичность (Ежедневно/Еженедельно/Ежемесячно)
-       K: modName    — имя пользователя, внёсшего последние изменения
-       L: modRole    — роль пользователя, внёсшего последние изменения
+       J: Gcal       — гигакалории пара (число или пусто; только для расходомеров пара, Task 100)
+       K: period     — периодичность (Ежедневно/Еженедельно/Ежемесячно)
+       L: modName    — имя пользователя, внёсшего последние изменения
+       M: modRole    — роль пользователя, внёсшего последние изменения
   3. Сохраняет результат в data/flowmeters.json.
 
 Переменные окружения:
@@ -177,16 +178,18 @@ def parse_flowmeters(xlsx_path, sheet_name):
     log(f'Заголовки ({len(headers)}): {headers}')
 
     # Имена полей (маппинг столбцов → ключи клиента)
+    # Столбцы A-M (13): id, hoz, param, datePrev, dateCurr, prev, curr, unit, temp,
+    # Gcal (Task 100 — гигакалории пара), period, modName, modRole
     FIELD_NAMES = ['id', 'hoz', 'param', 'datePrev', 'dateCurr',
-                   'prev', 'curr', 'unit', 'temp', 'period',
-                   'modRole', 'modName']
+                   'prev', 'curr', 'unit', 'temp', 'gcal',
+                   'period', 'modName', 'modRole']
 
     meters = []
     skipped = 0
     for row_idx in range(2, ws.max_row + 1):
-        # Читаем 12 колонок (A–L)
+        # Читаем 13 колонок (A–M)
         row_values = []
-        for col_idx in range(1, 13):
+        for col_idx in range(1, 14):
             cell = ws.cell(row=row_idx, column=col_idx)
             val = cell.value
             row_values.append(val)
@@ -230,6 +233,17 @@ def parse_flowmeters(xlsx_path, sheet_name):
 
             elif field == 'temp':
                 # Температура: число или null
+                if val is not None and str(val).strip() != '':
+                    try:
+                        meter[field] = float(val)
+                    except (ValueError, TypeError):
+                        meter[field] = None
+                else:
+                    meter[field] = None
+
+            elif field == 'gcal':
+                # Гигакалории пара (Task 100): число или null
+                # Заполняется только для расходомеров пара; для остальных = null
                 if val is not None and str(val).strip() != '':
                     try:
                         meter[field] = float(val)

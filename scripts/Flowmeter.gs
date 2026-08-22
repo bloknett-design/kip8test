@@ -17,7 +17,7 @@
 //   Строка 1 — заголовки столбцов
 //   Строки 2+ — данные (12 позиций, строки 2–13)
 //
-//   Столбцы (A–L):
+//   Столбцы (A–M):
 //     A: id         — номер позиции (1–12)
 //     B: hoz        — название (Хозрасчёт №1)
 //     C: param      — параметр (Расход пара в корпус 114)
@@ -27,9 +27,10 @@
 //     G: curr       — текущие показания (число)
 //     H: unit       — единица измерения (т, м³)
 //     I: temp       — температура среды (/число или пусто)
-//     J: period     — периодичность (Ежедневно/Еженедельно/Ежемесячно)
-//     K: modRole    — роль пользователя, внёсшего последние изменения
-//     L: modName    — имя пользователя, внёсшего последние изменения
+//     J: Gcal       — гигакалории пара (число или пусто; только для расходомеров пара, Task 100)
+//     K: period     — периодичность (Ежедневно/Еженедельно/Ежемесячно)
+//     L: modRole    — роль пользователя, внёсшего последние изменения
+//     M: modName    — имя пользователя, внёсшего последние изменения
 //
 //   Данные начинаются со строки 2 (строка 1 — заголовки).
 //   Строка 2 → id=1, строка 13 → id=12.
@@ -129,8 +130,8 @@ var Flowmeter = {
       return { ok: true, data: { meters: [] } };
     }
 
-    // Читаем данные (строка DATA_START_ROW до lastRow, столбцы A–L)
-    var range = sheet.getRange(this.DATA_START_ROW, 1, lastRow - this.DATA_START_ROW + 1, 12);
+    // Читаем данные (строка DATA_START_ROW до lastRow, столбцы A–M = 13 столбцов)
+    var range = sheet.getRange(this.DATA_START_ROW, 1, lastRow - this.DATA_START_ROW + 1, 13);
     var values = range.getValues();
 
     var meters = [];
@@ -149,9 +150,10 @@ var Flowmeter = {
         curr:     parseFloat(row[6]) || 0,
         unit:     String(row[7] || ''),
         temp:     this._parseTemp(row[8]),
-        period:   String(row[9] || ''),
-        modRole:  String(row[10] || ''),
-        modName:  String(row[11] || '')
+        gcal:     this._parseGcal(row[9]),   // J=10 — гигакалории пара (Task 100)
+        period:   String(row[10] || ''),
+        modRole:  String(row[11] || ''),
+        modName:  String(row[12] || '')
       };
       meters.push(meter);
     }
@@ -162,12 +164,12 @@ var Flowmeter = {
   // ============================================================
   // flowmeter.updateReading — обновить показания одной позиции
   // ============================================================
-  // payload: { token, id, prev, curr, datePrev, dateCurr, temp }
+  // payload: { token, id, prev, curr, datePrev, dateCurr, temp, gcal }
   // Возвращает: { ok: true, data: { id: N } }
   //
   // Записывает в строку (id + 1):
   //   D → datePrev (Date), E → dateCurr (Date),
-  //   F → prev, G → curr, I → temp
+  //   F → prev, G → curr, I → temp, J → gcal (Task 100)
   updateReading: function(payload) {
     var auth = this._requireEdit(payload.token);
     if (auth.error) return auth.error;
@@ -218,9 +220,20 @@ var Flowmeter = {
       sheet.getRange(rowNum, 9).setValue('');
     }
 
-    // Кто внёс изменения: K=11 (modRole), L=12 (modName)
-    sheet.getRange(rowNum, 11).setValue(user.role || '');
-    sheet.getRange(rowNum, 12).setValue(user.name || user.email || '');
+    // Гигакалории пара (J=10, Task 100)
+    // Записываются только для расходомеров пара (клиент отправляет gcal только для них).
+    // Для остальных расходомеров поле gcal не отправляется — не трогаем ячейку J.
+    if (payload.gcal !== null && payload.gcal !== undefined && payload.gcal !== '') {
+      sheet.getRange(rowNum, 10).setValue(parseFloat(payload.gcal));
+    } else if (payload.gcal === '' || payload.gcal === null) {
+      // Явно послана пустая строка/null — очищаем ячейку
+      sheet.getRange(rowNum, 10).setValue('');
+    }
+    // Если payload.gcal === undefined — не трогаем ячейку (старое значение остаётся)
+
+    // Кто внёс изменения: L=12 (modRole), M=13 (modName)
+    sheet.getRange(rowNum, 12).setValue(user.role || '');
+    sheet.getRange(rowNum, 13).setValue(user.name || user.email || '');
 
     // Аудит (по паттерну CableJournal → Utils.audit)
     try {
@@ -233,12 +246,12 @@ var Flowmeter = {
     try {
       var hozName = String(sheet.getRange(rowNum, 2).getValue() || '');
       var unitVal = String(sheet.getRange(rowNum, 8).getValue() || '');
-      var periodVal = String(sheet.getRange(rowNum, 10).getValue() || '');
+      var periodVal = String(sheet.getRange(rowNum, 11).getValue() || '');
       FlowmeterArchive.appendToArchive(
         id, hozName,
         prevVal, currVal,
         payload.datePrev, payload.dateCurr,
-        payload.temp, unitVal, periodVal,
+        payload.temp, payload.gcal, unitVal, periodVal,
         user.role || '', user.name || user.email || ''
       );
     } catch (archiveErr) {
@@ -291,6 +304,13 @@ var Flowmeter = {
 
   // Парсинг температуры (число или null)
   _parseTemp: function(val) {
+    if (val === '' || val === null || val === undefined) return null;
+    var n = parseFloat(val);
+    return isNaN(n) ? null : n;
+  },
+
+  // Парсинг гигакалорий пара (число или null) — Task 100
+  _parseGcal: function(val) {
     if (val === '' || val === null || val === undefined) return null;
     var n = parseFloat(val);
     return isNaN(n) ? null : n;

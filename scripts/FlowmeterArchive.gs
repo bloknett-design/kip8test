@@ -23,10 +23,11 @@
 //   H: daysBetween   — кол-во дней между датами
 //   I: temp          — температура среды (число или пусто)
 //   J: unit          — единица измерения (т, м³)
-//   K: period        — периодичность
-//   L: modRole       — роль пользователя, внёсшего показания
-//   M: modName       — имя пользователя, внёсшего показания
-//   N: timestamp     — метка времени записи (Date object)
+//   K: Gcal          — гигакалории пара (число или пусто; Task 100)
+//   L: period        — периодичность
+//   M: modRole       — роль пользователя, внёсшего показания
+//   N: modName       — имя пользователя, внёсшего показания
+//   O: timestamp     — метка времени записи (Date object)
 // ============================================================
 
 var FlowmeterArchive = {
@@ -76,12 +77,13 @@ var FlowmeterArchive = {
   //   datePrev  — дата предыдущих показаний (M/D/YYYY строка)
   //   dateCurr  — дата текущих показаний (M/D/YYYY строка)
   //   temp      — температура (число или null)
+  //   gcal      — гигакалории пара (число или null; Task 100, только для расходомеров пара)
   //   unit      — единица (т, м³)
   //   period    — периодичность
   //   role      — роль пользователя
   //   name      — имя пользователя
   // ============================================================
-  appendToArchive: function(meterId, hoz, prev, curr, datePrev, dateCurr, temp, unit, period, role, name) {
+  appendToArchive: function(meterId, hoz, prev, curr, datePrev, dateCurr, temp, gcal, unit, period, role, name) {
     var sheet = this._getSheet();
     if (!sheet) {
       // Лист архива не создан — тихо пропускаем (не блокируем основной flow)
@@ -100,25 +102,30 @@ var FlowmeterArchive = {
       if (daysBetween < 0) daysBetween = 0;
     }
 
-    // Добавляем строку в конец листа
+    // Добавляем строку в конец листа.
+    // Структура (15 столбцов A–O, Task 100 добавил K=Gcal):
+    //   A meterId, B hoz, C prev, D curr, E consumption,
+    //   F datePrev, G dateCurr, H daysBetween, I unit, J temp,
+    //   K Gcal (Task 100), L period, M modRole, N modName, O timestamp
     sheet.appendRow([
-      meterId,                                    // A: meterId
-      hoz || '',                                  // B: hoz
-      prev || 0,                                  // C: prev
-      curr || 0,                                  // D: curr
-      consumption,                                // E: consumption
-      datePrevObj || '',                          // F: datePrev (Date object)
-      dateCurrObj || '',                          // G: dateCurr (Date object)
-      daysBetween,                                // H: daysBetween
-      (temp !== null && temp !== undefined && temp !== '') ? parseFloat(temp) : '',  // I: temp
-      unit || '',                                 // J: unit
-      period || '',                               // K: period
-      role || '',                                 // L: modRole
-      name || '',                                 // M: modName
-      new Date()                                  // N: timestamp
+      meterId,                                                                    // A: meterId
+      hoz || '',                                                                  // B: hoz
+      prev || 0,                                                                  // C: prev
+      curr || 0,                                                                  // D: curr
+      consumption,                                                                // E: consumption
+      datePrevObj || '',                                                          // F: datePrev (Date object)
+      dateCurrObj || '',                                                          // G: dateCurr (Date object)
+      daysBetween,                                                                // H: daysBetween
+      unit || '',                                                                 // I: unit (раньше было в J, но в архиве порядок другой — см. заголовки)
+      (temp !== null && temp !== undefined && temp !== '') ? parseFloat(temp) : '',  // J: temp
+      (gcal !== null && gcal !== undefined && gcal !== '') ? parseFloat(gcal) : '',  // K: Gcal (Task 100)
+      period || '',                                                               // L: period
+      role || '',                                                                 // M: modRole
+      name || '',                                                                 // N: modName
+      new Date()                                                                  // O: timestamp
     ]);
 
-    Logger.log('Archive: meterId=' + meterId + ', prev=' + prev + ', curr=' + curr + ', consumption=' + consumption);
+    Logger.log('Archive: meterId=' + meterId + ', prev=' + prev + ', curr=' + curr + ', consumption=' + consumption + ', gcal=' + (gcal || '—'));
   },
 
   // ============================================================
@@ -152,8 +159,8 @@ var FlowmeterArchive = {
       return { ok: true, data: { records: [], meterId: meterId } };
     }
 
-    // Читаем все данные ( столбцы A–N)
-    var range = sheet.getRange(this.DATA_START_ROW, 1, lastRow - this.DATA_START_ROW + 1, 14);
+    // Читаем все данные ( столбцы A–O, 15 столбцов; Task 100 добавил K=Gcal)
+    var range = sheet.getRange(this.DATA_START_ROW, 1, lastRow - this.DATA_START_ROW + 1, 15);
     var values = range.getValues();
 
     var records = [];
@@ -171,14 +178,15 @@ var FlowmeterArchive = {
         datePrev:    Flowmeter._sheetToClientDate(row[5]),
         dateCurr:    Flowmeter._sheetToClientDate(row[6]),
         daysBetween: parseInt(row[7], 10) || 0,
-        temp:        Flowmeter._parseTemp(row[8]),
-        unit:        String(row[9] || ''),
-        period:      String(row[10] || ''),
-        modRole:     String(row[11] || ''),
-        modName:     String(row[12] || ''),
-        timestamp:   (row[13] instanceof Date)
-                       ? row[13].toISOString()
-                       : String(row[13] || '')
+        unit:        String(row[8] || ''),
+        temp:        Flowmeter._parseTemp(row[9]),
+        gcal:        Flowmeter._parseGcal(row[10]),   // K=11 — гигакалории пара (Task 100)
+        period:      String(row[11] || ''),
+        modRole:     String(row[12] || ''),
+        modName:     String(row[13] || ''),
+        timestamp:   (row[14] instanceof Date)
+                       ? row[14].toISOString()
+                       : String(row[14] || '')
       };
       records.push(record);
     }
