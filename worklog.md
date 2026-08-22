@@ -2944,3 +2944,48 @@ CACHE_VERSION: kipia-test-v379 -> kipia-test-v380
 Stage Summary:
 - Форма ввода теперь гарантированно закрывается при любой навигации
 - Сценарий: открыть форму → свайп назад → форма закрывается, страница меняется
+
+---
+Task ID: 106
+Agent: AI Assistant (GLM)
+Task: Фикс — сбиваются шевроны «назад» после открытия/закрытия формы ввода
+
+Work Log:
+- Пользователь сообщил: после открытия и закрытия формы ввода данных
+  хозрасчётных расходомеров из вкладки «Избранные», сбиваются шевроны
+  назад по страницам. Приложение закрывается со страницы «Расходомеры
+  хозрасчётные» при нажатии на телефоне «Назад», хотя должно переходить
+  на главную страницу.
+
+Корневая причина:
+- openDetail(id) всегда вызывал navigateTo('flowmeter-detail') с
+  addToHistory=true (по умолчанию). Это добавляло ЛИШНИЕ записи в
+  history браузера (pushState), которые не соответствовали внутреннему
+  pageHistory.
+- После submitInput и load() openDetail вызывался повторно (для
+  перерисовки карточки) — и каждый раз добавлял лишний pushState.
+
+History браузера: [dashboard, flowmeter-data, flowmeter-detail, flowmeter-detail(дубликат)]
+pageHistory:       [dashboard, flowmeter-data]
+
+При нажатии «Назад»: popstate → pageHistory.pop() → navigateTo — но в
+history браузера оставалась лишняя запись, и в итоге приложение закрывалось
+раньше, чем pageHistory доходил до 'dashboard'.
+
+Решение:
+- openDetail(id, addToHistory) — добавлен второй параметр.
+- Вызовы из submitInput (строка ~28576): openDetail(id, false) —
+  перерисовать карточку без navigateTo/pushState.
+- Вызовы из load() (строка ~27925): openDetail(window._flowDetailId, false) —
+  то же самое.
+- Вызовы из renderList (HTML onclick): openDetail(id) — без аргумента,
+  addToHistory = undefined !== false → navigateTo вызывается (как раньше).
+
+Тесты: 207 passed, 0 failed
+CACHE_VERSION: kipia-test-v380 -> kipia-test-v381
+Коммит e2a983f в kip8test
+
+Stage Summary:
+- История навигации больше не ломается после submitInput или load()
+- Шевроны «назад» показывают правильное количество стрелок
+- Кнопка «Назад» на телефоне корректно проходит: карточка → список → главная
