@@ -2457,3 +2457,77 @@ Stage Summary:
   через KipFav с составным ключом 'flow:ID') НЕ перенесутся автоматически в новый FlowFav —
   их нужно добавить заново через UI. Это правильно, потому что Task 95 был короткоживущим
   (только что добавлен) и реальных пользователей с избранными расходомерами ещё нет.
+
+---
+Task ID: 97
+Agent: AI Assistant (GLM)
+Task: Нижний бар + клон-drag-and-drop + период внизу карточки расходомеров
+
+Work Log:
+- Пользователь запросил:
+  1. Кнопки «Все / Избранные» переместить в нижний бар (стиль dashboardBottomBar)
+  2. Перемещение карточек по принципу pinnedItems (long-press + drag с клоном)
+  3. Период перенести в нижнюю часть карточки (чтобы не накладывался на звёздочку)
+
+1. Нижний бар (стиль dashboardBottomBar):
+   - Создан новый #flowBottomBar div с классом .flow-bottom-bar (position: fixed; bottom: 0)
+   - Удалён верхний .flow-tabs из page-flowmeter-data
+   - CSS: position: fixed; bottom: 0; left: 0; right: 0; z-index: 80;
+     grid-template-columns: 1fr 1fr; background: var(--bottom-nav-bg);
+     backdrop-filter: blur(20px); border-top: 1px solid var(--card-border);
+   - Вертикальная линия-разделитель ::before между двумя кнопками (как в dashboard-bottom-bar)
+   - Показывается только когда активна page-flowmeter-data:
+     body:has(#page-flowmeter-data.active) .flow-bottom-bar { display: grid; }
+   - padding-bottom: env(safe-area-inset-bottom) для iPhone notch
+   - flowList получает padding-bottom: 88px чтобы контент не перекрывался баром
+   - .flow-tab: padding 16px, min-height 56px, font-weight 600, color rgba(200,112,72,0.6)
+   - .flow-tab.active: color #c87048
+
+2. Drag-and-drop по принципу pinnedItems (Pointer Events + клон):
+   - Полностью переписаны _attachDragHandlers, _attachDragToCard → на Pointer Events
+   - Удалены методы _attachDragToCard, _moveFav (логика перенесена в _onPointerUp)
+   - Добавлены методы: _onPointerDown, _onPointerMove, _onPointerUp, _startDrag, _cleanupDrag, _onTouchMove
+   - Поля: _DRAG_DELAY=500, _DRAG_THRESHOLD=10, _IDLE_SCROLL_THRESHOLD=15
+   - Алгоритм:
+     * pointerdown → запоминаем startX/Y, запускаем таймер 500мс
+     * Если за 500мс палец сдвинулся <10px по X и <15px по Y → старт drag:
+       - Создаём клон карточки (cloneNode(true)) в position:fixed
+       - Клон следует за пальцем с точным grabOffset (без скачка к центру)
+       - Оригинал: .flow-card-dragging (opacity:0.3, scale:0.97)
+       - Карточка-цель: .flow-card-drag-over (медно-оранжевая подсветка, scale:1.01)
+     * Если вертикальное движение >15px в idle-фазе → режим scroll
+       (window.scrollBy(0, -deltaY)) — не блокирует прокрутку списка
+     * touchmove-перехватчик блокирует скролл только в режиме drag
+     * pointerup: если был перенос — обновляем FlowFav.setOrder() и ре-рендер
+   - Удалён drag-handle (⋮⋮) — теперь long-press работает по всей карточке
+   - Тактильный отклик: navigator.vibrate(30) при старте, vibrate(15) при переносе
+
+3. Период перенесён в нижнюю часть карточки:
+   - Раньше: в .flow-card-header рядом с .flow-card-hoz (бейджем справа сверху)
+   - Теперь: отдельной строкой после .flow-card-summary
+   - Причина: не накладывается на .flow-card-fav-btn в правом верхнем углу карточки
+   - Стиль .flow-card-period: убран дублирующий margin-left: 8px, добавлен margin-top: 4px
+   - Сохранился бейдж-стиль (медно-оранжевый фон rgba(200,112,72,0.10))
+
+Удалено (больше не нужно):
+- Старый верхний .flow-tabs (sticky top: 56px)
+- .flow-card-drag-handle (⋮⋮)
+- .flow-list.fav-mode (отступы под drag-handle)
+- Старые методы _attachDragToCard, _moveFav
+- Дублирующие стили .flow-card-period
+
+Дополнительно:
+- В режиме «Избранные» при >1 карточке показывается подсказка
+  .flow-fav-hint «Зажмите карточку и перетащите для изменения порядка»
+- Тесты: 207 passed, 0 failed
+- JS-синтаксис чистый
+- CACHE_VERSION: kipia-test-v372 -> kipia-test-v373
+- Коммит 93ee22f в kip8test
+- Автосинхронизация: коммит 7a8b710 в kip8test-desktop от kip-bot
+
+Stage Summary:
+- Нижний бар «Все / Избранные» теперь в стиле dashboardBottomBar (фиксированный внизу)
+- Drag-and-drop работает по принципу закреплённых на главной (long-press + клон)
+- Период перенесён вниз карточки, не накладывается на звёздочку
+- Прокрутка списка не блокируется в idle-фазе (вертикальное движение → scroll)
+- Тактильный отклик на старте drag и при успешном переносе
