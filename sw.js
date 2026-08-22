@@ -11,7 +11,7 @@
 // свежие версии файлов из ASSETS.
 // ============================================================
 
-const CACHE_VERSION = 'kipia-test-v393';
+const CACHE_VERSION = 'kipia-test-v394';
 const CACHE_NAME = CACHE_VERSION;
 
 // Отдельный кэш для картинок Google Drive (превью + полные).
