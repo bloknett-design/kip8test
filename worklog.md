@@ -2849,3 +2849,32 @@ Stage Summary:
 - Симптомы пользователя объясняются тем, что сервер Apps Script работает
   со старой версией Flowmeter.gs (без Gcal, со старым маппингом столбцов)
 - Решение: деплой обновлённого Flowmeter.gs и FlowmeterArchive.gs в Apps Script
+
+---
+Task ID: 103
+Agent: AI Assistant (GLM)
+Task: Дата рядом с температурой и Гкал + поле temp только для Хозрасчёта №6
+
+Work Log:
+1. В _buildDetailHtml добавлена дата рядом с температурой и Гкал:
+   - Температура среды: tempStr + ',<span class="flow-detail-date"> от {dateCurr} г.</span>'
+     (было: просто tempStr без даты)
+   - Гигакалории пара: gcalStr + ',<span class="flow-detail-date"> от {dateCurr} г.</span>'
+     (было: просто gcalStr без даты)
+   - Формат как в «Последних показаниях» — через .flow-detail-date
+
+2. В openInput() поле «Температура, °C» показывается только для Хозрасчёта №6:
+   - Добавлен tempGroup = tempField.closest('.flow-input-group')
+   - if (m.id === 6) → показываем, предзаполняем
+   - else → tempGroup.style.display = 'none', tempField.value = ''
+   - Хозрасчёт №6 (id=6, «Расход природного газа общего в корпус 114») —
+     единственный расходомер с температурой среды (temp=32.0)
+   - Для остальных 11 расходомеров поле скрыто
+
+Тесты: 207 passed, 0 failed
+CACHE_VERSION: kipia-test-v377 -> kipia-test-v378
+Коммит 73999df в kip8test
+
+Stage Summary:
+- В детальной карточке: температура и Гкал теперь с датой (как показания)
+- В форме ввода: поле «Температура, °C» только для Хозрасчёта №6
