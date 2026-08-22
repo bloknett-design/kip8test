@@ -2384,3 +2384,76 @@ Stage Summary:
 - На десктопе: detailPanelFavBtn (правый верхний угол detailPanel) работает для расходомеров
 - Touch и mouse: универсальные обработчики drag-and-drop
 - Подсветка карточки-цели (.drag-over) при перетаскивании
+
+---
+Task ID: 96
+Agent: AI Assistant (GLM)
+Task: Изолировать избранное расходомеров от KipFav (полное разделение кода и данных)
+
+Work Log:
+- Пользователь запросил: список избранных карточек расходомеров должен формироваться
+  отдельно от списка избранного из раздела КИП ИОС на главной странице
+- В Task 95 избранное расходомеров было реализовано через KipFav (составной ключ 'flow:ID',
+  общий localStorage-ключ kip8_device_fav_v1). Это создавало функциональную и кодовую связь.
+- Решение: создать полностью отдельный модуль FlowFav с собственным хранилищем
+
+Создан новый модуль FlowFav (вставлен перед FlowmeterData):
+- _STORAGE_KEY = 'kip8_flow_fav_v1' (НЕ общий с KipFav._STORAGE_KEY 'kip8_device_fav_v1')
+- _ORDER_KEY = 'kip8_flow_fav_order_v1' (перенесён из FlowmeterData._FLOW_FAV_ORDER_KEY)
+- _data: null (ленивый кэш, как в KipFav)
+- _load() / _save() — собственные, не делегируют в KipFav
+- API: has(id), add(id), remove(id), toggle(id), count(), all(), getOrder(), setOrder(arr)
+- Ключи — просто ID расходомера (как число/строка), без составных префиксов 'flow:ID'
+- Комментарии в коде явно описывают, почему это намеренное дублирование кода
+
+Изменения FlowmeterData:
+- Удалено поле _FLOW_FAV_ORDER_KEY (переехало в FlowFav._ORDER_KEY)
+- Удалён метод _favKey(id) — больше не нужен, ID хранится напрямую
+- Удалены методы _getFavOrder() / _setFavOrder() — заменены на FlowFav.getOrder()/setOrder()
+- renderList(): KipFav.hasItem(favKey) → FlowFav.has(m.id)
+- _getVisibleMeters(): KipFav.hasItem(this._favKey(m.id)) → FlowFav.has(m.id);
+  this._getFavOrder() → FlowFav.getOrder()
+- _updateTabCounts(): цикл по _METERS с KipFav.hasItem → просто FlowFav.count()
+- toggleFav(): ручная работа с KipFav._load/_data/_save → FlowFav.toggle(id)
+- _updateDetailFavBtn(): KipFav.hasItem(this._favKey(window._flowDetailId)) → FlowFav.has(window._flowDetailId)
+- _moveFav(): this._getFavOrder()/_setFavOrder() → FlowFav.getOrder()/setOrder()
+
+Откат изменений KipFav из Task 95 (полное возвращение к исходному состоянию):
+- updateHeaderIcon():
+  * Убран вызов FlowmeterData._updateDetailFavBtn()
+  * Убраны переменные isFlowDetail и ветка 'flow' в showFav
+  * Убрана ветка 'flow' в isActive (dpBtn)
+  * Убрано dpBtn.setAttribute('data-fav-type', 'flow')
+  * Убрана ветка 'flow' в cardBtn (.dev-detail-fav-btn)
+- toggleFromDetailByType():
+  * Убрана ветка type === 'flow' с делегированием в FlowmeterData.toggleFav
+  * Документация JSDoc возвращена к 'lock' | 'valve' | 'reg' | 'proj'
+
+Проверка изоляции:
+- В блоке FlowmeterData (строки 27678-28570) НЕТ ни одного вызова KipFav.*
+- Только 2 комментария упоминают KipFav (в документации модуля FlowFav и в комментарии
+  к drag-and-drop "как в KipFav" — не функциональная связь)
+- 7 вызовов функций идут через FlowFav.* (has, count, toggle, getOrder, setOrder)
+- KipFav не знает о FlowFav — они полностью независимы
+
+Результат изоляции:
+- ✓ Избранное расходомеров НЕ появляется в общем списке избранных (page-device-favorites)
+- ✓ Кнопка на дашборде НЕ считает расходомеры (KipFav.count() возвращает только приборы/блокировки/клапаны/регуляторы/проекты)
+- ✓ Изменения в KipFav не повлияют на FlowFav, и наоборот
+- ✓ localStorage-ключи не пересекаются (kip8_device_fav_v1 vs kip8_flow_fav_v1)
+- ✓ Code-level dependency: 0 (FlowmeterData не импортирует/вызывает KipFav)
+- ✓ Тесты: 207 passed, 0 failed
+- ✓ JS-синтаксис чистый (проверено через new Function())
+- CACHE_VERSION: kipia-test-v371 -> kipia-test-v372
+- Коммит 2912ce7 в kip8test
+- Автосинхронизация: в kip8test-desktop автоматически создан коммит f2b64b5 от kip-bot
+
+Stage Summary:
+- Создан полностью независимый модуль FlowFav с собственным localStorage
+- FlowmeterData больше не вызывает KipFav — только FlowFav
+- KipFav полностью откатан к исходному состоянию (как до Task 95)
+- Избранное расходомеров и избранное КИП ИОС теперь изолированы функционально и кодово
+- Пользовательская миграция: старые избранные расходомеры (если были добавлены в Task 95
+  через KipFav с составным ключом 'flow:ID') НЕ перенесутся автоматически в новый FlowFav —
+  их нужно добавить заново через UI. Это правильно, потому что Task 95 был короткоживущим
+  (только что добавлен) и реальных пользователей с избранными расходомерами ещё нет.
