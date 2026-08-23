@@ -4257,3 +4257,45 @@ Stage Summary:
   страницу), переустановка — только при изменении оболочки
 - Для будущих сборок: kip8-android/ проект + gen-twa-project.js +
   keystore сохранены; инструкция в промте (раздел APK)
+
+---
+Task ID: 146
+Agent: AI Assistant (GLM)
+Task: Убрать раздел «Графики» из мобильного kip8test — раздел работает и отображается ТОЛЬКО в десктопной версии (kip8test-desktop). Условие прописать в промтах обоих приложений
+
+Реализация (общий index.html + рантайм-детекция Electron по User-Agent,
+IS_ELECTRON из Task 131 — мобильная и десктопная версии делят один файл,
+разделение возможно только в рантайме):
+1. KipAuth.canAccess('charts') -> false вне Electron: прямая навигация
+   #charts в мобильной PWA/браузере -> «Нет доступа» (даже у Админа)
+2. _applyRoleToUI chartsEntryBtn: hasChartsAccess = isElectronApp &&
+   (isAll || allowed.indexOf('charts')) — в Electron видна только
+   Админу (фильтр 9 сохранён), вне Electron скрыта всегда
+3. Цикл .menu-btn: закреплённый ярлык charts и все кнопки-входы
+   скрываются вне Electron
+4. Фильтр 9 (карта ролей) не менялся: charts в allowed только у Админа
+
+Верификация (headless Chromium):
+- Браузер (без Electron UA), Админ: кнопка скрыта, ярлык скрыт,
+  navigateTo('charts') -> «Нет доступа», страница не активируется
+- Electron UA, Админ: кнопка видна, страница открывается,
+  ярлык закрепляется
+- Electron UA, КИП ИОС: скрыта (фильтр 9)
+- Тесты: 255 passed, 0 failed (+4 теста Task 146)
+
+Промты (условие прописано в ОБОИХ репозиториях):
+- kip8test: rev. 26 — раздел «Графики — раздел только десктопного
+  приложения (Task 146)» + фильтр 9 в таблице актуализирован
+- kip8test-desktop: та же секция (промт копируется из kip8test)
+
+Work Log:
+- index.html: canAccess + chartsEntryBtn + цикл .menu-btn (Task 146)
+- tests/test-role-access.js: +4 теста (255 total)
+- sw.js: CACHE_VERSION kipia-test-v411 -> kipia-test-v412
+- Системный_промт_для_приложения_КИПиА.md: rev. 25 -> rev. 26 (Task 146)
+- Тесты: 255 passed, 0 failed
+
+Stage Summary:
+- Мобильная PWA kip8test: «Графики» полностью скрыты и заблокированы
+- Десктоп kip8test-desktop: «Графики» работают у Админа (как раньше)
+- Активация: перезагрузить страницу 2 раза (PWA) / перезапустить десктоп

@@ -497,3 +497,35 @@ describe('Аудит ролей: перестроение сетки при фи
             'нет скрытия пустых .menu-btn-row');
     });
 });
+
+// ------------------------------------------------------------
+// Task 146: «Графики» — раздел только десктопного приложения (Electron)
+// ------------------------------------------------------------
+describe('Аудит ролей: «Графики» только в десктопе (Task 146)', function () {
+
+    test('canAccess блокирует charts вне Electron (даже у Админа)', function () {
+        // Статическая проверка: в canAccess есть условие IS_ELECTRON для charts
+        assertTrue(/canAccess[\s\S]{0,600}page === 'charts'[\s\S]{0,200}IS_ELECTRON[\s\S]{0,120}return false/.test(html),
+            'в canAccess нет блокировки charts для не-Electron окружений');
+    });
+
+    test('Кнопка «Графики» на КИП ИОС скрывается вне Electron', function () {
+        // chartsEntryBtn: условие isElectronApp в _applyRoleToUI
+        assertTrue(/chartsEntryBtn[\s\S]{0,400}isElectronApp[\s\S]{0,200}hasChartsAccess = isElectronApp/.test(html),
+            'нет проверки IS_ELECTRON для chartsEntryBtn');
+    });
+
+    test('Закреплённый ярлык «Графики» скрывается вне Electron (цикл .menu-btn)', function () {
+        // Цикл .menu-btn: charts + IS_ELECTRON
+        assertTrue(/page === 'charts'[\s\S]{0,200}IS_ELECTRON[\s\S]{0,100}allowedForPage = false/.test(html),
+            'нет скрытия ярлыка charts вне Electron в цикле .menu-btn');
+    });
+
+    test('Фильтр 9 (Графики) в матрице: только Админ — сохранено на уровне allowed', function () {
+        // charts остаётся в allowed только у Админа; видимость поверх — Electron
+        ROLES.forEach(function (role) {
+            assertEqual(hasPage(role, 'charts'), role === 'Админ',
+                '«Графики» в allowed: только Админ, роль «' + role + '»');
+        });
+    });
+});
