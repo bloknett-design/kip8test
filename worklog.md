@@ -3147,3 +3147,71 @@ Stage Summary:
   SW и cacheStorage будут автоматически очищаться при изменении версии
 - Коммит в kip8test-desktop: a910904
 - Релиз: https://github.com/bloknett-design/kip8test-desktop/releases/tag/v2.1.1
+
+
+---
+Task ID: 124
+Agent: AI Assistant (GLM)
+Task: Фикс #2 — после v2.1.1 новый код всё ещё не появился
+
+Симптом:
+- Пользователь установил v2.1.1 (Task 123)
+- Но переключатель «Все / Избранные» и drag-and-drop (Task 119-120) НЕ появились
+
+Анализ причины почему Task 123 не сработал:
+1. session.clearStorageData() без указания origin может НЕ очистить SW
+   для HTTPS origin, когда приложение грузится через https://
+2. HTTP-кэш Chromium может отдать старый index.html через условный
+   запрос (304 Not Modified) — SW видит «тот же ответ», не обновляет свой кэш
+3. sw.js для navigate-запросов идёт в сеть через fetch(request), но если
+   HTTP-кэш Chromium перехватывает fetch и отдаёт старую версию — SW
+   использует её и обновляет кэш тем же старым index.html
+
+Решение Task 124 — ДВУХУРОВНЕВАЯ очистка:
+
+Уровень 1 (ДО загрузки страницы — cleanCacheOnVersionChange):
+- session.clearCache() — очистка HTTP-кэша Chromium (для всех origin)
+- session.clearStorageData({ origin: 'https://bloknett-design.github.io',
+  storages: ['serviceworkers', 'cachestorage'] }) — с указанием origin
+- Дополнительно: clearStorageData без origin (для всех origin на всякий случай)
+- pendingDeepClean = true — флаг для второго уровня
+
+Уровень 2 (ПОСЛЕ dom-ready — deepCleanAfterLoad через executeJavaScript):
+- navigator.serviceWorker.getRegistrations() + unregister() — JS API,
+  гарантированно работает на origin'е страницы
+- caches.keys() + caches.delete() — очищает Cache Storage через JS API
+- window.location.replace(url + '?_nocache=' + Date.now()) — перезагрузка
+  с cache-busting параметром: Chromium HTTP-кэш видит URL с query как
+  НОВЫЙ ресурс → идёт в сеть → получает свежий index.html
+
+Work Log:
+- electron/main.js: + pendingDeepClean флаг, + deepCleanAfterLoad функция,
+  + вызов в dom-ready хуке (только если pendingDeepClean=true)
+- cleanCacheOnVersionChange: + origin: 'https://bloknett-design.github.io'
+  в clearStorageData (важно!)
+- package.json: version 2.1.1 → 2.1.2
+- Тесты: 207 passed, 0 failed
+- Push main + тег v2.1.2 → workflow build-desktop.yml завершился успешно
+  (build-linux ✓, build-mac ✓, build-win ✓, release ✓)
+- Релиз v2.1.2 опубликован: https://github.com/bloknett-design/kip8test-desktop/releases/tag/v2.1.2
+- latest.yml обновлён: version: 2.1.2 (было 2.1.1)
+
+Stage Summary:
+- После установки v2.1.2 поверх v2.1.1:
+  1. autoUpdater видит latest.yml (version: 2.1.2) → предлагает обновиться
+  2. cleanCacheOnVersionChange: last="2.1.1" → current="2.1.2" →
+     session.clearCache + clearStorageData с origin (Уровень 1)
+     + pendingDeepClean = true
+  3. loadApp() → Electron грузит GitHub Pages → dom-ready
+  4. deepCleanAfterLoad (Уровень 2):
+     - navigator.serviceWorker.getRegistrations() + unregister() всех SW
+     - caches.keys() + caches.delete() всех cacheStorage
+     - window.location.replace('https://...?_nocache=1734567890')
+  5. Страница перезагружается с cache-busting:
+     - Chromium HTTP-кэш не находит ?_nocache=... → идёт в сеть
+     - GitHub Pages отдаёт свежий index.html (md5 e199e7e5…, v395, Task 119-120)
+     - Свежий index.html регистрирует новый SW (v395)
+  6. Пользователь видит переключатель «Все / Избранные» + drag-and-drop
+
+- Коммит в kip8test-desktop: 4d1202a
+- Релиз: https://github.com/bloknett-design/kip8test-desktop/releases/tag/v2.1.2
