@@ -4177,3 +4177,37 @@ Stage Summary:
 - APK пересборка НЕ требуется (TWA грузит живую страницу)
 - Версия «Что нового» осталась 3.0.0 (как в kip8test) — при желании
   обновить отдельно
+
+---
+Task ID: 144
+Agent: AI Assistant (GLM)
+Task: Создание репозитория kip8-desktop (рабочее десктопное приложение) по образцу kip8test-desktop + наладка связей с kip8
+
+Что сделано:
+1. Репозиторий https://github.com/bloknett-design/kip8-desktop создан (public,
+   API, токен kip8 с правами repo/workflow)
+2. Структура из kip8test-desktop, адаптирована:
+   - electron/main.js: REMOTE_APP_URL -> https://bloknett-design.github.io/kip8/
+   - package.json: kipia-desktop / com.bloknett.kipia / KIPiA /
+     publish kip8-desktop / ярлык «КИПиА» / артефакты KIPiA-* (без Test)
+   - index.html + data/ + images/ + tests/ — из kip8@2f27982 (v371)
+   - README.md (продакшн), worklog.md (Task 1)
+   - НЕ перенесено: Системный_промт (специфика kip8test), build.mjs,
+     vite.config.mjs, bun.lock (не используются)
+3. Связь kip8 -> kip8-desktop:
+   - kip8/.github/workflows/sync-to-desktop.yml (по образцу kip8test) —
+     автокоммит index.html в kip8-desktop при пуше в main
+   - Секрет DESKTOP_SYNC_TOKEN установлен в kip8 (Actions Secrets API,
+     PyNaCl-шифрование)
+   - Проверено: workflow_dispatch -> success; автосинк подтвердил
+     идентичность index.html (коммит не потребовался)
+4. Релиз: тег v2.1.7 в kip8-desktop -> build-desktop.yml собирает
+   Windows NSIS + Linux AppImage/deb + macOS dmg -> GitHub Releases
+
+Stage Summary:
+- kip8-desktop полностью повторяет схему kip8test-desktop:
+  живой контент из GitHub Pages kip8, автообновления electron-updater,
+  офлайн-fallback app://, автосинк index.html
+- Установщики появятся в Releases kip8-desktop (сборка ~10-15 мин)
+- Свежий контент десктопу не требует релизов — только при изменениях
+  electron/main.js или package.json
