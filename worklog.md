@@ -3414,3 +3414,43 @@ Stage Summary:
       заполнены (Task 128 JS, без зависимости от isDesktop())
     * Крошки кликабельные — можно вернуться на главную/документацию/документацию ИОС
   - При открытии карточки крошки продолжат работать (через updateDesktopBreadcrumb())
+
+
+---
+Task ID: 129
+Agent: AI Assistant (GLM)
+Task: Автоматическая очистка SW + cacheStorage при каждом запуске (без переустановки)
+
+Контекст:
+- Пользователь спросил: почему в мобильной версии достаточно «Обновить» в приложении,
+  а в десктопной каждый раз нужно устанавливать новую версию?
+- Причина: cleanCacheOnVersionChange() (Task 122-124) очищал SW ТОЛЬКО при
+  изменении версии Electron-приложения (через last-version.txt)
+
+Решение Task 129 — cleanCacheOnStartup():
+- Убрана проверка last-version.txt / app.getVersion()
+- ВСЕГДА очищает SW + cacheStorage при запуске (~500 мс задержка)
+- pendingDeepClean = true всегда → deepCleanAfterLoad() завершает очистку через JS API
+  + перезагрузка с ?_nocache=ts (cache-busting)
+
+В kip8test изменения НЕ нужны — только в kip8test-desktop/electron/main.js.
+
+Work Log:
+- kip8test-desktop/electron/main.js: cleanCacheOnVersionChange → cleanCacheOnStartup
+  (убрана проверка версии, убрано сохранение в last-version.txt)
+- kip8test-desktop/package.json: version 2.1.6 → 2.1.7
+- Тесты: 207 passed, 0 failed
+- Push main + тег v2.1.7 → workflow завершился успешно
+- Релиз v2.1.7 опубликован: https://github.com/bloknett-design/kip8test-desktop/releases/tag/v2.1.7
+
+Stage Summary:
+- После установки v2.1.7 (последняя переустановка для этого функционала):
+  - При каждом запуске: cleanCacheOnStartup() очищает SW + cacheStorage
+  - deepCleanAfterLoad() завершает очистку + cache-busting reload
+- В дальнейшем (после обновлений kip8test/index.html):
+  - Пользователь просто перезапускает десктоп
+  - Без переустановки Electron-приложения
+  - Аналогично мобильной PWA: «Обновить» → свежий контент
+- Переустановка нужна ТОЛЬКО при изменениях в electron/main.js или package.json
+- Коммит в kip8test-desktop: e5cc2f3
+- Релиз: https://github.com/bloknett-design/kip8test-desktop/releases/tag/v2.1.7
