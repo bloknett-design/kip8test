@@ -15,6 +15,7 @@ on:
     paths:
       - 'index.html'
       - 'charts-desktop.js'
+      - 'devices-table-desktop.js'
   workflow_dispatch:
 
 permissions:
@@ -47,6 +48,8 @@ jobs:
           cp index.html /tmp/kip8test-desktop/index.html
           # Task 147: модуль графиков (только десктоп) — нужен для офлайн-fallback app://
           cp charts-desktop.js /tmp/kip8test-desktop/charts-desktop.js
+          # Task 148: таблица приборов (только десктоп)
+          cp devices-table-desktop.js /tmp/kip8test-desktop/devices-table-desktop.js
 
       - name: Проверить, есть ли изменения
         id: changes
@@ -70,7 +73,7 @@ jobs:
           cd /tmp/kip8test-desktop
           git config user.email "bot@kip8test.local"
           git config user.name "kip-bot"
-          git add index.html charts-desktop.js
+          git add index.html charts-desktop.js devices-table-desktop.js
           # Коммит-сообщение: показываем, что это автосинхронизация и из какого SHA
           git commit -m "auto: sync index.html from kip8test@${SOURCE_SHA}
 

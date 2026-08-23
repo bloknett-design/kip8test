@@ -529,3 +529,30 @@ describe('Аудит ролей: «Графики» только в дескто
         });
     });
 });
+
+// ------------------------------------------------------------
+// Task 147/148: десктоп-модули (только Electron)
+// ------------------------------------------------------------
+describe('Десктоп-модули (Task 147/148)', function () {
+
+    test('Файлы десктоп-модулей существуют', function () {
+        assertTrue(fs.existsSync(path.resolve(__dirname, '..', 'charts-desktop.js')),
+            'charts-desktop.js отсутствует');
+        assertTrue(fs.existsSync(path.resolve(__dirname, '..', 'devices-table-desktop.js')),
+            'devices-table-desktop.js отсутствует');
+    });
+
+    test('Loader подключает модули только внутри IS_ELECTRON', function () {
+        // Блок if (IS_ELECTRON) ... forEach(['charts-desktop.js', 'devices-table-desktop.js'])
+        const re = /if \(IS_ELECTRON\) \{[\s\S]{0,400}'charts-desktop\.js', 'devices-table-desktop\.js'[\s\S]{0,300}forEach/;
+        assertTrue(re.test(html), 'loader десктоп-модулей не найден или вне IS_ELECTRON');
+    });
+
+    test('Код таблицы не содержится в index.html (только в модуле)', function () {
+        // CSS/логика таблицы не должны попасть в мобильный index.html
+        assertEqual(html.indexOf('dev-table-toggle-btn') === -1, true,
+            'класс кнопки таблицы не должен быть в index.html');
+        assertEqual(html.indexOf('dev-table-wrap') === -1, true,
+            'CSS таблицы не должен быть в index.html');
+    });
+});
