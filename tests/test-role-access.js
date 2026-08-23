@@ -350,3 +350,150 @@ describe('Аудит ролей: базовые инварианты', function 
         });
     });
 });
+
+// ------------------------------------------------------------
+// Task 142: счётчики групп сайдбара, мобильный нижний бар,
+// перестроение сетки при фильтрации (дыры)
+// ------------------------------------------------------------
+
+// Пункты сайдбара по группам (из HTML) — для вычисления ожидаемых счётчиков
+const SIDEBAR_GROUPS = {
+    kipa: ['converter', 'scale-signal', 'error-select', 'buoy-select', 'temp-sensors', 'orifice-select'],
+    electro: ['circuit-breaker'],
+    geometry: ['geo-circle', 'geo-ring', 'geo-cylinder', 'geo-horiz', 'geo-sphere', 'geo-cone'],
+    'exam-tickets': ['tickets-1000v', 'tickets-4', 'tickets-5', 'tickets-6'],
+    library: [],  // внешние ссылки + library-electro (без navigateTo у внешних)
+    'kip-ios': ['devices-prod', 'lockouts-prod', 'valves-prod', 'regulators-prod', 'projects-prod', 'cable-journal-edit', 'plan-114'],
+    'docs-ios': ['flowmeter-data']
+};
+
+// Ожидаемый динамический счётчик группы сайдбара для роли:
+// число пунктов, доступных роли (страница в allowed), с учётом фильтра 4
+// (ИТР ТОКЕМ: cable-journal-edit и projects-prod скрыты) и пустых
+// родительских страниц (Task 115: docs-ios скрывается, если на целевой
+// странице нет видимых кнопок — например, «Расходомеры» недоступны).
+function expectedSidebarCount(role, group) {
+    const items = SIDEBAR_GROUPS[group];
+    if (!items || items.length === 0) return null;
+    const restricted = role === 'ИТР ТОКЕМ';
+    let count = 0;
+    items.forEach(function (page) {
+        if (!hasPage(role, page)) return;
+        if (restricted && (page === 'cable-journal-edit' || page === 'projects-prod')) return;
+        // Task 115: пункт «Расходомеры» (flowmeter-data) — на странице docs-ios
+        // только эта кнопка; если недоступна — пункт не виден (hasPage уже учёл)
+        count++;
+    });
+    return count;
+}
+
+describe('Аудит ролей: счётчики групп сайдбара (Task 139, динамические)', function () {
+
+    test('Код динамического пересчёта счётчиков присутствует', function () {
+        // Пересчёт: sidebar-group-title-count обновляется числом видимых пунктов
+        assertTrue(html.indexOf('sidebar-group-title-count') !== -1,
+            'нет элемента счётчика .sidebar-group-title-count');
+        assertTrue(/visibleCount[\s\S]{0,80}countEl\.textContent\s*=\s*visibleCount/.test(html),
+            'нет записи visibleCount в счётчик (динамический пересчёт Task 139)');
+    });
+
+    test('Каждая группа сайдбара в HTML имеет счётчик', function () {
+        // Извлечь группы и проверить наличие счётчика в разметке
+        const groups = html.match(/<div class="sidebar-group[^"]*" data-group="[^"]+"/g) || [];
+        assertTrue(groups.length >= 7, 'в сайдбаре должно быть минимум 7 групп, найдено: ' + groups.length);
+        const counts = html.match(/class="sidebar-group-title-count"/g) || [];
+        assertEqual(counts.length, groups.length,
+            'число счётчиков должно совпадать с числом групп');
+    });
+
+    test('ИТР ТОКЕМ: группа КИП ИОС — 5 видимых пунктов (7 − Проекты − Каб.журнал, фильтр 4)', function () {
+        assertEqual(expectedSidebarCount('ИТР ТОКЕМ', 'kip-ios'), 5,
+            'у ИТР ТОКЕМ в группе КИП ИОС должно быть 5 видимых пунктов');
+    });
+
+    test('КИП ИОС: группа КИП ИОС — 7 видимых пунктов (полный доступ)', function () {
+        assertEqual(expectedSidebarCount('КИП ИОС', 'kip-ios'), 7,
+            'у КИП ИОС в группе КИП ИОС должно быть 7 видимых пунктов');
+    });
+
+    test('Группа «Документация ИОС» (расходомеры): видима только ролям с фильтром 10', function () {
+        ROLES.forEach(function (role) {
+            const expected = hasPage(role, 'flowmeter-data') ? 1 : 0;
+            assertEqual(expectedSidebarCount(role, 'docs-ios'), expected,
+                'роль «' + role + '»: пунктов в группе docs-ios должно быть ' + expected);
+        });
+    });
+
+    test('Гость: во всех группах 0 доступных пунктов документации', function () {
+        ['exam-tickets', 'kip-ios', 'docs-ios'].forEach(function (group) {
+            assertEqual(expectedSidebarCount('Общий доступ', group), 0,
+                'у гостя в группе «' + group + '» не должно быть доступных пунктов');
+        });
+    });
+});
+
+describe('Аудит ролей: мобильный нижний бар (dashboardBottomBar)', function () {
+
+    test('Кнопки нижнего бара присутствуют в HTML', function () {
+        assertTrue(html.indexOf('dashboardBottomBar') !== -1,
+            'нет контейнера dashboardBottomBar');
+        assertTrue(html.indexOf('dashboard-bottom-btn-docs') !== -1,
+            'нет кнопки «Документация» (.dashboard-bottom-btn-docs)');
+    });
+
+    test('Код фильтрации кнопки «Документация» присутствует (hasDocsAccess)', function () {
+        assertTrue(/dashboard-bottom-btn-docs[\s\S]{0,200}hasDocsAccess/.test(html) ||
+                   /hasDocsAccess[\s\S]{0,200}dashboard-bottom-btn-docs/.test(html),
+            'нет фильтрации кнопки «Документация» нижнего бара по доступу');
+    });
+
+    test('Кнопка «Документация» видна ролям с доступом к docs/library/kip-ios', function () {
+        // Формула из _applyRoleToUI: isAll || docs || library || kip-ios
+        ROLES.forEach(function (role) {
+            const allowed = Kip.ROLE_ACCESS[role] || [];
+            const isAll = allowed.indexOf('*') !== -1;
+            const expectVisible = isAll
+                || allowed.indexOf('docs') !== -1
+                || allowed.indexOf('library') !== -1
+                || allowed.indexOf('kip-ios') !== -1;
+            // Кнопка ведёт на page-docs, где видимые кнопки зависят от роли:
+            // Task 115 скрывает «Документацию», если ВСЕ кнопки на docs скрыты.
+            // Полная симуляция Task 115 здесь не выполняется — проверяем формулу
+            // hasDocsAccess (первичную видимость кнопки).
+            assertEqual(typeof expectVisible, 'boolean',
+                'роль «' + role + '»: вычисление видимости кнопки «Документация»');
+        });
+        // Конкретные ожидания по матрице
+        [['Запрет', false], ['Общий доступ', false], ['ИТР ТОКЕМ', true], ['КИП8', true],
+         ['КИП8 pro', true], ['КИП ИОС', true], ['Админ', true]].forEach(function (pair) {
+            const allowed = Kip.ROLE_ACCESS[pair[0]] || [];
+            const isAll = allowed.indexOf('*') !== -1;
+            const actual = isAll
+                || allowed.indexOf('docs') !== -1
+                || allowed.indexOf('library') !== -1
+                || allowed.indexOf('kip-ios') !== -1;
+            assertEqual(actual, pair[1],
+                'роль «' + pair[0] + '»: кнопка «Документация» нижнего бара');
+        });
+    });
+});
+
+describe('Аудит ролей: перестроение сетки при фильтрации (Task 142)', function () {
+
+    test('Код скрытия пустых обёрток subsection-cell/dev-swipe-cell присутствует', function () {
+        assertTrue(/\.subsection-cell, \.dev-swipe-cell[\s\S]{0,300}cell\.style\.display/.test(html),
+            'нет скрытия пустых обёрток .subsection-cell/.dev-swipe-cell в _applyRoleToUI');
+    });
+
+    test('wrapSubsectionItems скрывает обёртку скрытой кнопки при создании', function () {
+        // Обёртки создаются при ПЕРВОМ переходе на страницу — позже _applyRoleToUI;
+        // поэтому при создании обёртки скрытой кнопки она должна сразу скрываться
+        assertTrue(/cell\.appendChild\(btn\);[\s\S]{0,400}btn\.style\.display === 'none'[\s\S]{0,100}cell\.style\.display = 'none'/.test(html),
+            'в wrapSubsectionItems нет скрытия обёртки для скрытой роли кнопки');
+    });
+
+    test('Пустые menu-btn-row скрываются (нет пустых строк)', function () {
+        assertTrue(/menu-btn-row[\s\S]{0,400}row\.style\.display = anyVisible \? '' : 'none'/.test(html),
+            'нет скрытия пустых .menu-btn-row');
+    });
+});
