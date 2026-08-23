@@ -4497,3 +4497,42 @@ Stage Summary:
 - Кабельный журнал: поиск работает в оригинальном стиле (без артефактов)
 - devices-prod: «поле -> лупа -> Таблица» без наложений
 - Активация: перезагрузить страницу 2 раза / перезапустить десктоп
+
+---
+Task ID: 150b
+Agent: AI Assistant (GLM)
+Task: Баг поиска в Кабельном журнале не устранён — иконки лупы размножались внутри поля (по скриншоту: 7 подряд)
+
+Диагноз (computed styles + каскадный анализ):
+- cjSearchInput имеет классы dev-header-search + cj-header-search
+- Базовое .dev-header-search: фон shorthand background: rgba(...) url(лупа)
+  no-repeat 8px center / 13px
+- .cj-header-search.search-open перезаписывал фон shorthand'ом
+  background: #1a2233 -> СБРАСЫВАЛ repeat/position/size к дефолту
+  (repeat, 0% 0%, auto)
+- Итог: иконка лупы из базового правила (активно для cj через класс
+  dev-header-search) размножалась по ширине поля — «7 иконок подряд»
+
+Фикс:
+1. .cj-header-search.search-open: полная раздельная спецификация фона
+   (background-color/-image/-repeat: no-repeat/-position: 8px center/
+   -size: 13px) + padding-left: 30px
+2. Светлая тема: только background-color (не сбрасывает остальное)
+3. .cj-header-search:not(.search-open) { background-image: none }
+
+Верификация:
+- Мобильный: repeat=no-repeat, size=13px, position=8px 50%,
+  одна url-иконка; VLM: одна иконка слева, поле аккуратное
+- Десктоп: repeat=no-repeat, urls=1
+- Открытие/закрытие штатно; Тесты: 258 passed, 0 failed
+
+Work Log:
+- index.html: изоляция фона cj-поля (раздельная спецификация)
+- sw.js: CACHE_VERSION kipia-test-v416 -> kipia-test-v417
+- Системный_промт_для_приложения_КИПиА.md: rev. 30 -> rev. 31 (Task 150b)
+- Тесты: 258 passed, 0 failed
+
+Stage Summary:
+- В Кабельном журнале поиск снова в оригинальном виде: одна иконка
+  слева, no-repeat, обе темы
+- Активация: перезагрузить страницу 2 раза / перезапустить десктоп
