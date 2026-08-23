@@ -3264,3 +3264,51 @@ Stage Summary:
 - После анализа будет выпущен v2.1.4 с правильным фиксом
 - Коммит: a097440
 - Релиз: https://github.com/bloknett-design/kip8test-desktop/releases/tag/v2.1.3
+
+
+---
+Task ID: 126
+Agent: AI Assistant (GLM)
+Task: Фикс #3 — CSS-only показ flowDesktopTabs (обходит баг isDesktop() в Electron)
+
+Симптом:
+- После v2.1.3 (диагностическая) VLM-анализ показал:
+  * URL: https://bloknett-design.github.io/kip8test/ ✓
+  * #flowDesktopTabs: true (элемент в DOM есть)
+  * Cache Storage: ["kipia-test-v395"] ✓
+  * SW controller активен
+
+Вывод: HTML свежий, SW работает, элементы в DOM ЕСТЬ, но табы скрыты.
+
+Корневая причина:
+- inline style="display:none;" на #flowDesktopTabs в HTML
+- В navigateTo() код Task 120 сбрасывает inline display только если isDesktop()=true
+- isDesktop() = window.matchMedia('(min-width: 1024px)').matches
+- В Electron эта проверка иногда возвращает false
+- Поэтому JS-блок не срабатывает → display:none остаётся → табы невидимы
+- Звёздочки .flow-card-fav-btn видны, потому что CSS @media display:none для них
+  ЗАКОММЕНТИРОВАНО в Task 119 — они показываются ВСЕГДА
+
+Решение Task 126 — CSS-only показ через @media + :has():
+1. .flow-desktop-tabs: display: none по умолчанию
+2. @media (min-width: 1024px) { body:has(#page-flowmeter-data.active) #flowDesktopTabs { display: flex !important; } }
+3. Убран inline style="display:none;" с #flowDesktopTabs
+4. Аналогично для #detailBreadcrumbBar
+
+Work Log:
+- index.html: CSS для .flow-desktop-tabs — display: none по умолчанию + @media + :has()
+- index.html: убран inline style="display:none;" с #flowDesktopTabs
+- index.html: @media (min-width: 1024px) + body:has(#page-flowmeter-data.active) для #detailBreadcrumbBar
+- sw.js: CACHE_VERSION kipia-test-v395 → kipia-test-v396
+- Тесты: 207 passed, 0 failed
+
+Stage Summary:
+- После установки v2.1.4 и обновления GitHub Pages (CACHE_VERSION v396):
+  1. SW обновится до v396
+  2. Грузится свежий index.html с CSS-фиксом Task 126
+  3. При переходе на страницу расходомеров:
+     - CSS @media (min-width: 1024px) + :has() показывает #detailBreadcrumbBar
+     - CSS @media (min-width: 1024px) + :has() показывает #flowDesktopTabs
+     - Не зависит от isDesktop() в JS
+  4. Пользователь видит переключатель «Все / Избранные»
+  5. Drag-and-drop работает через Pointer Events
