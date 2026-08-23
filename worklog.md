@@ -3882,3 +3882,43 @@ Stage Summary:
 - Коэффициент обрезки вынесен в --kip-img-crop: 1.35 (:root) —
   меняется в одном месте, действует на группировки/карточки/избранное
 - Активация: перезагрузить страницу 2 раза (PWA) / перезапустить десктоп
+
+---
+Task ID: 138
+Agent: AI Assistant (GLM)
+Task: Картинку в «Избранном» сделать немного больше и сместить в верхний левый угол карточки с небольшими равными отступами от краёв
+
+Реализация (Task 138):
+1. .fav-card-img: 48 -> 64px (высота calc(64px / var(--kip-img-crop))
+   ~ 47px, центрирование прибора из Task 137 сохранено)
+2. Прижим к верхнему левому углу: margin: 6px (равные отступы,
+   было 6/8/6/6) + align-self: flex-start (было center)
+3. Заглушка fav-card-img-ph: 64x64 contain
+4. Бейдж типов .fav-card-type-badge — тоже margin: 6px +
+   align-self: flex-start (единый вид)
+
+Верификация (headless Chromium, localhost):
+- Фото: 64x47, cover, 50% 0%, align flex-start, margin 6px
+- Отступы от рамки карточки: ровно 6px слева и сверху
+- Заглушки: 64x64 contain
+- Тесты: 207 passed, 0 failed
+
+Нюанс тестирования (зафиксирован в промте):
+- Гонка при вызове initFavoritesPage из eval сразу после navigateTo:
+  30мс-таймаут navigateTo запускает рендер до загрузки данных ->
+  все заглушки. Правильно: await KipFav.initFavoritesPage() и замер
+  сразу. В реальном приложении гонки нет.
+
+Work Log:
+- index.html: .fav-card-img 64px + margin: 6px + align-self: flex-start
+- index.html: .fav-card-type-badge margin: 6px + align-self: flex-start
+- index.html: .fav-card-img-ph height 64px
+- sw.js: CACHE_VERSION kipia-test-v406 -> kipia-test-v407
+- Системный_промт_для_приложения_КИПиА.md: rev. 20 -> rev. 21 (Task 138)
+- Тесты: 207 passed, 0 failed
+
+Stage Summary:
+- Картинка в «Избранном» больше (64px) и прижата к верхнему левому
+  углу карточки с равными отступами 6px; центрирование прибора
+  на фото сохранено (--kip-img-crop)
+- Активация: перезагрузить страницу 2 раза (PWA) / перезапустить десктоп
