@@ -3312,3 +3312,51 @@ Stage Summary:
      - Не зависит от isDesktop() в JS
   4. Пользователь видит переключатель «Все / Избранные»
   5. Drag-and-drop работает через Pointer Events
+
+
+---
+Task ID: 127
+Agent: AI Assistant (GLM)
+Task: Фикс — после Task 126 на странице расходомеров два header'а один под другим
+
+Симптом:
+- Пользователь установил v2.1.4 (Task 126 — CSS-only показ flowDesktopTabs)
+- Изменения появились, переключатель «Все / Избранные» виден
+- НО «все кнопки в отдельной строке» — то есть два header'а один под другим
+
+VLM-анализ скриншота показал:
+- detailBreadcrumbBar виден: < шеврон + крошки + переключатель + ✕ + ⇄
+- Также виден page-inline-header (стандартный): < шеврон + «Расходомеры хозрасчётные»
+- Два header'а занимают 2 строки — это и есть «кнопки в отдельной строке»
+
+Причина:
+- В HTML на странице #page-flowmeter-data есть page-inline-header (стандартный заголовок)
+- Task 126 добавил CSS-показ detailBreadcrumbBar через @media + :has()
+- НО не скрыл page-inline-header, когда detailBreadcrumbBar уже виден
+- Для других detail-страниц (device-detail, valve-detail и т.д.) это уже сделано
+  через body:has(#detailPanel.active) — но на странице расходомеров detail-panel не активен
+
+Решение Task 127:
+1. Скрыть #page-flowmeter-data > .page-inline-header на десктопе (когда detailBreadcrumbBar виден):
+   body:has(#page-flowmeter-data.active) #page-flowmeter-data > .page-inline-header { display: none; }
+
+2. Скрыть кнопки ✕ (close) и ⇄ (swap) в detailBreadcrumbBar, когда detail-panel НЕ открыт:
+   body:not(:has(#detailPanel.active)) #detailBreadcrumbBar .detail-breadcrumb-close,
+   body:not(:has(#detailPanel.active)) #detailBreadcrumbBar .detail-breadcrumb-swap {
+     display: none;
+   }
+   (Эти кнопки нужны только когда detail-panel открыт — для управления panel.
+   На странице расходомеров detail-panel не активен, кнопки не нужны.)
+
+Work Log:
+- index.html: добавлены 2 CSS-правила в @media (min-width: 1024px) блок
+- sw.js: CACHE_VERSION kipia-test-v396 → kipia-test-v397
+- Тесты: 207 passed, 0 failed
+
+Stage Summary:
+- После обновления GitHub Pages (CACHE_VERSION v397) и установки v2.1.5:
+  - SW обновится до v397
+  - На странице расходомеров будет виден ТОЛЬКО detailBreadcrumbBar:
+    < шеврон + крошки + переключатель «Все / Избранные»
+  - page-inline-header скрыт (не будет занимать отдельную строку)
+  - Кнопки ✕ и ⇄ скрыты (они для detail-panel, который не открыт)
