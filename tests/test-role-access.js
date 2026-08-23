@@ -653,3 +653,53 @@ describe('Гибкий поиск kipSearchFilter (Task 151)', function () {
         assertEqual(r2.length, items.length);
     });
 });
+
+// ------------------------------------------------------------
+// Task 152: кабельный журнал — единый поиск + клиентская фильтрация
+// ------------------------------------------------------------
+describe('Кабельный журнал: единый поиск (Task 152)', function () {
+
+    test('cj-поле использует единый класс (без cj-header-search)', function () {
+        // Класс cj-header-search удалён из HTML — поле на общих правилах
+        const m = html.match(/id="cjSearchInput"[^>]*/);
+        assertTrue(!!m, 'cjSearchInput не найден');
+        assertEqual(m[0].indexOf('cj-header-search') === -1, true,
+            'cjSearchInput не должен иметь класс cj-header-search (единый стиль)');
+        assertEqual(m[0].indexOf('dev-header-search') !== -1, true,
+            'cjSearchInput должен иметь класс dev-header-search');
+    });
+
+    test('Кнопка поиска cj — единый класс dev-search-toggle-btn', function () {
+        const m = html.match(/id="cjSearchToggleBtn"[^>]*/);
+        assertTrue(!!m, 'cjSearchToggleBtn не найден');
+        assertEqual(m[0].indexOf('dev-search-toggle-btn') !== -1, true,
+            'кнопка должна использовать единый класс dev-search-toggle-btn');
+        assertEqual(m[0].indexOf('data-search-input="cjSearchInput"') !== -1, true,
+            'кнопка должна ссылаться на cjSearchInput через data-search-input');
+    });
+
+    test('Собственные cj-header-search CSS-правила удалены', function () {
+        assertEqual(/\.cj-header-search\s*\{/.test(html), false,
+            'CSS-правило .cj-header-search не должно существовать');
+    });
+
+    test('Клиентская фильтрация: kipSearchFilter подключён к cj', function () {
+        // _applyClientSearch использует kipSearchFilter
+        assertTrue(/_applyClientSearch[\s\S]{0,600}kipSearchFilter/.test(html),
+            '_applyClientSearch должен вызывать kipSearchFilter');
+        // load() больше не шлёт search на сервер: в опциях запроса только limit
+        const loadIdx = html.indexOf("_api('cableJournal.list'");
+        assertTrue(loadIdx !== -1, 'вызов cableJournal.list не найден');
+        // Блок опций после вызова (в пределах 300 символов)
+        const opts = html.slice(loadIdx, loadIdx + 300);
+        assertEqual(opts.indexOf('search:') === -1, true,
+            'load() не должен отправлять search на сервер (клиентская фильтрация)');
+        assertEqual(opts.indexOf('limit:') !== -1, true,
+            'load() должен запрашивать полный список (limit)');
+    });
+
+    test('Кэш полного списка: _allRows сохраняется при загрузке', function () {
+        assertTrue(/_allRows = self\._rows\.slice\(\)/.test(html),
+            'после load полный список должен копироваться в _allRows');
+    });
+});
