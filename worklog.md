@@ -3454,3 +3454,59 @@ Stage Summary:
 - Переустановка нужна ТОЛЬКО при изменениях в electron/main.js или package.json
 - Коммит в kip8test-desktop: e5cc2f3
 - Релиз: https://github.com/bloknett-design/kip8test-desktop/releases/tag/v2.1.7
+
+
+---
+Task ID: 130
+Agent: AI Assistant (GLM)
+Task: Фикс — крошки всё ещё не отображаются на странице списка расходомеров
+
+Симптом (повторный):
+- После v2.1.6 (Task 128) пользователь сообщает:
+  «хлебные крошки не отображаются на странице со списком карточек»
+- VLM-анализ нового скриншота подтвердил: крошек нет вообще,
+  только < шеврон + переключатель «Все/Избранные» в правом верхнем углу
+
+Корневая причина (найдена в Task 130):
+- В navigateTo() в строке 18723: if (isDesktop()) closeDetailPanel();
+- closeDetailPanel() в строке 18395: bcContent.innerHTML = '';
+  (полностью очищает #detailBreadcrumbContent)
+- В Electron isDesktop() возвращает false (баг Task 126)
+- Если пользователь ПЕРЕЗАПУСТИЛ приложение и сразу идёт на flowmeter-data:
+  * closeDetailPanel() НЕ вызывается (isDesktop()=false)
+  * Но #detailBreadcrumbBar имеет CSS display: none по умолчанию
+  * CSS :has() правило (Task 126) должно показать bar, но не сработало
+  * Вероятная причина: :has() не поддерживается в старом Chromium
+    или detailBreadcrumbBar.active класс не добавлен
+
+Решение Task 130:
+1. Убрано if (isDesktop()) — closeDetailPanel() вызывается ВСЕГДА при навигации
+   (раньше только если isDesktop()=true). Это безопасно: на мобильном
+   detailPanel не активен, closeDetailPanel() ничего не ломает
+2. Сразу ПОСЛЕ closeDetailPanel() добавлен код для flowmeter-data:
+   - Восстановить .active класс на #detailBreadcrumbBar
+   - Заново заполнить #detailBreadcrumbContent крошками
+   - Показать #flowDesktopTabs (убрать inline display:none)
+3. CSS правила Task 126/127 усилены !important:
+   - body:has(#page-flowmeter-data.active) #detailBreadcrumbBar { display: flex !important }
+   - body:has(#page-flowmeter-data.active) #page-flowmeter-data > .page-inline-header { display: none !important }
+4. Старый код Task 128 убран (он дублировал новый, и не срабатывал из-за
+   того, что closeDetailPanel() очищал крошки ПОСЛЕ его выполнения)
+
+Work Log:
+- index.html: убрано if (isDesktop()) перед closeDetailPanel() в navigateTo()
+- index.html: добавлен блок восстановления крошек для flowmeter-data
+- index.html: CSS правила Task 126/127 усилены !important
+- index.html: убран дублирующий код Task 128 (он был ниже в navigateTo)
+- sw.js: CACHE_VERSION kipia-test-v398 → kipia-test-v399
+- Тесты: 207 passed, 0 failed
+
+Stage Summary:
+- После перезапуска десктопа (v2.1.7 уже установлен, кэш очистится через cleanCacheOnStartup):
+  - SW обновится до v399
+  - Грузится свежий index.html с Task 130
+  - При переходе на flowmeter-data:
+    * closeDetailPanel() очищает крошки
+    * СРАЗУ после этого крошки восстанавливаются с .active классом
+    * CSS !important показывает detailBreadcrumbBar даже без :has()
+  - Пользователь видит: < Главная / Документация / Документация ИОС / Расходомеры хозрасчётные | Все | Избранные
