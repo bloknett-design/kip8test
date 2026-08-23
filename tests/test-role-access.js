@@ -703,3 +703,25 @@ describe('Кабельный журнал: единый поиск (Task 152)', 
             'после load полный список должен копироваться в _allRows');
     });
 });
+
+// ------------------------------------------------------------
+// Task 154: автосворачивание поиска при смене страницы
+// ------------------------------------------------------------
+describe('Автосворачивание поиска (Task 154)', function () {
+
+    test('Функция kipCollapseSearch определена', function () {
+        assertTrue(html.indexOf('window.kipCollapseSearch = function') !== -1,
+            'нет window.kipCollapseSearch в контроллере поиска');
+    });
+
+    test('navigateTo вызывает kipCollapseSearch при смене страницы', function () {
+        // Вызов сразу после деактивации страниц
+        assertTrue(/querySelectorAll\('\.page-content'\)\.forEach\(el => \{ el\.classList\.remove\('active', 'visible'\); \}\);[\s\S]{0,300}kipCollapseSearch[\s\S]{0,60}\(\)/.test(html),
+            'navigateTo должен вызывать kipCollapseSearch при деактивации страниц');
+    });
+
+    test('Сворачивание сбрасывает запрос (dispatch input)', function () {
+        assertTrue(/kipCollapseSearch[\s\S]{0,1100}input\.value = ''[\s\S]{0,120}dispatchEvent\(new Event\('input'/.test(html),
+            'при сворачивании запрос должен сбрасываться с перерендером');
+    });
+});
