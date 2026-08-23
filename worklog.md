@@ -4211,3 +4211,49 @@ Stage Summary:
 - Установщики появятся в Releases kip8-desktop (сборка ~10-15 мин)
 - Свежий контент десктопу не требует релизов — только при изменениях
   electron/main.js или package.json
+
+---
+Task ID: 145
+Agent: AI Assistant (GLM)
+Task: Релиз APK мобильной версии в kip8 (установочный файл для Android)
+
+Что сделано:
+1. Инфраструктура сборки (в сессии, /home/z/tools/):
+   - Android SDK (cmdline-tools, platform-tools, build-tools 34, android-34/36)
+   - JDK 17 (Temurin 17.0.20) — bubblewrap требует именно 17
+   - @bubblewrap/core 1.25.0 (локально в kip8-android/node_modules)
+2. Keystore: kip8-keystore.jks (RSA 2048, 25 лет, alias kip8)
+   - SHA-256: 3C:F3:5D:B6:8D:69:94:D9:E4:8B:EE:C0:DF:77:82:29:29:D6:D3:54:08:2A:61:75:48:70:BD:FA:EA:71:64:96
+   - Пароли: /home/z/my-project/download/kip8-keystore-passwords.txt
+3. TWA-проект: /home/z/my-project/kip8-android/
+   - twa-manifest.json: io.github.bloknett_design.twa, host
+     bloknett-design.github.io, startUrl /kip8/?source=pwa, v1.1.0 (code 2)
+   - Генерация: scripts/gen-twa-project.js через @bubblewrap/core API
+     (bubblewrap CLI виснет на интерактивных промптах JDK; API-метод
+     createTwaProject(targetDir, twaManifest, log))
+   - minSdk 19 -> 21 (требование androidbrowserhelper 2.6.2)
+   - Подпись: signingConfigs.release (пароль через env KIP8_STORE_PASSWORD)
+4. Сборка: ./gradlew assembleRelease -> BUILD SUCCESSFUL
+   - KIPiA-1.1.0.apk (2.7 MB), подпись проверена apksigner
+   - aapt2: КИПиА — справочник инженера, v1.1.0, minSdk 21, targetSdk 36
+5. Assetlinks (новый отпечаток добавлен, старые сохранены):
+   - kip8/.well-known/assetlinks.json (commit db3b0e0)
+   - bloknett-design.github.io/.well-known/assetlinks.json (77536fa)
+   - Без этого TWA показывал бы URL-бар (Digital Asset Links)
+6. Релиз: https://github.com/bloknett-design/kip8/releases/tag/v1.1.0
+   - KIPiA-1.1.0.apk — скачивание подтверждено (HTTP 200)
+   - Описание: функции, установка, требования
+
+Нюансы:
+- Окружение сессии пересоздаётся (исчезали JDK/SDK/npm/токены) —
+  инструменты вынесены в /home/z/tools/, артефакты в my-project/download/
+- Фоновые процессы (nohup/setsid) не переживают таймаут команд Bash —
+  сборка gradlew в переднем режиме с timeout 540 укладывается (реально ~1 мин)
+- Токены передавались повторно после пересоздания окружения
+
+Stage Summary:
+- KIPiA-1.1.0.apk опубликован в Releases kip8 — готов к установке
+- Обновления контента приходят в APK автоматически (TWA грузит живую
+  страницу), переустановка — только при изменении оболочки
+- Для будущих сборок: kip8-android/ проект + gen-twa-project.js +
+  keystore сохранены; инструкция в промте (раздел APK)
