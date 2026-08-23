@@ -3215,3 +3215,52 @@ Stage Summary:
 
 - Коммит в kip8test-desktop: 4d1202a
 - Релиз: https://github.com/bloknett-design/kip8test-desktop/releases/tag/v2.1.2
+
+
+---
+Task ID: 125
+Agent: AI Assistant (GLM)
+Task: Диагностическая сборка v2.1.3 — почему Task 120 не виден после v2.1.2
+
+Симптом:
+- Пользователь установил v2.1.2 (Task 124 — двухуровневая очистка SW)
+- VLM-анализ скриншота показал:
+  * Звёздочки избранного видны на карточках (Task 119 работает)
+  * Переключатель «Все / Избранные» в breadcrumb bar НЕ виден (Task 120)
+  * Drag-and-drop индикаторов нет
+- Это противоречие: если index.html обновился, должны работать оба Task'а
+
+Гипотезы:
+1. Electron грузит локальный index.html (app://), а не с GitHub Pages —
+   локальный index.html может быть старым
+2. Service Worker контролирует страницу, но не обновился
+3. CSS скрывает flowDesktopTabs
+4. JS не вызывает показ flowDesktopTabs при navigateTo('flowmeter-data')
+
+Решение — диагностическая сборка v2.1.3:
+1. devTools: true в webPreferences + openDevTools({mode:'detach'})
+2. autoHideMenuBar: false (видно меню bar)
+3. Через 3 сек после dom-ready: dialog.showMessageBox с диагностикой:
+   - URL (локальный app:// vs https:// GitHub Pages)
+   - origin
+   - Service Worker: count, scriptURLs, controller
+   - Cache Storage: список имён
+   - CACHE_VERSION из sw.js (fetch с cache-busting)
+   - DOM: #flowDesktopTabs, #flowFavBtn, .flow-card-fav-btn count
+   - Активная страница, viewport, UserAgent
+
+Work Log:
+- electron/main.js: + devTools, + openDevTools, + diag-блок в dom-ready (3 сек)
+- package.json: version 2.1.2 → 2.1.3
+- Тесты: 207 passed, 0 failed
+- Push main + тег v2.1.3 → workflow завершился успешно
+- Релиз v2.1.3 опубликован: https://github.com/bloknett-design/kip8test-desktop/releases/tag/v2.1.3
+- latest.yml обновлён: version: 2.1.3
+
+Stage Summary:
+- v2.1.3 — ДИАГНОСТИЧЕСКАЯ сборка (не боевая)
+- При запуске автоматически открывается DevTools + появляется dialog с диагностикой
+- Пользователь должен прислать скриншот диалога (или текст диагностики)
+- После анализа будет выпущен v2.1.4 с правильным фиксом
+- Коммит: a097440
+- Релиз: https://github.com/bloknett-design/kip8test-desktop/releases/tag/v2.1.3
