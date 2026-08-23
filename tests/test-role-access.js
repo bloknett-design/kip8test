@@ -549,10 +549,107 @@ describe('Десктоп-модули (Task 147/148)', function () {
     });
 
     test('Код таблицы не содержится в index.html (только в модуле)', function () {
-        // CSS/логика таблицы не должны попасть в мобильный index.html
-        assertEqual(html.indexOf('dev-table-toggle-btn') === -1, true,
-            'класс кнопки таблицы не должен быть в index.html');
-        assertEqual(html.indexOf('dev-table-wrap') === -1, true,
-            'CSS таблицы не должен быть в index.html');
+        // CSS-ПРАВИЛА и логика таблицы не должны попасть в мобильный index.html.
+        // Упоминания селекторов в index.html допустимы: Task 149/150
+        // используют .dev-table-toggle-btn для позиционирования иконки
+        // поиска левее кнопки «Таблица» (это НЕ код таблицы).
+        assertEqual(/\.dev-table-wrap\s*\{/.test(html), false,
+            'CSS-правило .dev-table-wrap не должно быть в index.html');
+        assertEqual(/\.dev-table\s*\{/.test(html), false,
+            'CSS-правило .dev-table не должно быть в index.html');
+        assertEqual(/\.dev-table-td\s*\{|\.dev-table-th\s*\{/.test(html), false,
+            'CSS-правила ячеек таблицы не должны быть в index.html');
+        assertEqual(html.indexOf('buildTableHtml') === -1, true,
+            'функция buildTableHtml не должна быть в index.html');
+    });
+});
+
+// ------------------------------------------------------------
+// Task 151: гибкий поиск (слова AND + транслит + нечёткий fallback)
+// ------------------------------------------------------------
+describe('Гибкий поиск kipSearchFilter (Task 151)', function () {
+
+    // Извлечь поисковые функции из index.html через vm
+    const vm = require('vm');
+    const searchFns = (function () {
+        const startM = html.indexOf('Task 151: ГИБКИЙ ПОИСК');
+        const start = html.indexOf('var _TRANSLIT_RU2EN', startM);
+        const endM = html.indexOf('function devEsc', start);
+        const code = html.slice(start, endM);
+        const sandbox = {};
+        vm.runInNewContext(code + '\n;({kipSearchWords, kipTranslit, kipEditDistance, kipWordMatches, kipMatchAll, kipSearchFilter});', sandbox, 'search.vm');
+        // kipSearchFilter объявлена как function — достаём из контекста
+        return vm.runInNewContext(code + '\n;({kipSearchWords: kipSearchWords, kipEditDistance: kipEditDistance, kipMatchAll: kipMatchAll, kipSearchFilter: kipSearchFilter});', {}, 'search2.vm');
+    })();
+
+    // Тестовые записи (как приборы)
+    const items = [
+        { name: 'Счетчик воды турбинный', type: 'СТВУ-100' },
+        { name: 'Метран-150CD', type: 'преобразователь давления' },
+        { name: 'Регистратор безбумажный', type: 'Regigraf Ф1771-АД' },
+        { name: 'ЭМИС-ПУЛЬС 530', type: 'расходомер' },
+        { name: 'Датчик разности давления', type: 'Метран-100' }
+    ];
+    const getter = function (d) { return d.name + ' ' + d.type; };
+
+    test('Точный поиск работает как раньше (подстрока)', function () {
+        const r = searchFns.kipSearchFilter(items, 'метран', getter);
+        assertEqual(r.length >= 2, true, '«метран» должен найти Метран-150CD и Метран-100');
+    });
+
+    test('Этап 1: слова в любом порядке (AND-логика)', function () {
+        // «воды счетчик» должен найти «Счетчик воды турбинный»
+        const r = searchFns.kipSearchFilter(items, 'воды счетчик', getter);
+        assertEqual(r.length, 1, '«воды счетчик» → Счетчик воды турбинный');
+        assertEqual(r[0].name, 'Счетчик воды турбинный');
+    });
+
+    test('Этап 1: дефис/пробел нормализуются', function () {
+        const r = searchFns.kipSearchFilter(items, 'метран 150', getter);
+        assertEqual(r.length >= 1, true, '«метран 150» должен найти «Метран-150CD»');
+    });
+
+    test('Этап 1: транслитерация en→ru («metran» находит «Метран»)', function () {
+        const r = searchFns.kipSearchFilter(items, 'metran', getter);
+        assertEqual(r.length >= 2, true, '«metran» должен найти Метран-150CD и Метран-100');
+    });
+
+    test('Этап 1: транслитерация ru→en («региграф» находит «Regigraf»)', function () {
+        const r = searchFns.kipSearchFilter(items, 'региграф', getter);
+        assertEqual(r.length, 1, '«региграф» → Regigraf Ф1771-АД');
+    });
+
+    test('Этап 2: опечатка одной буквы (только если нет точных)', function () {
+        // «Регисратор» (пропущена «т») — точных нет, нечёткий найдёт
+        const r = searchFns.kipSearchFilter(items, 'Регисратор', getter);
+        assertEqual(r.length >= 1, true, '«Регисратор» → Регистратор безбумажный');
+    });
+
+    test('Этап 2: порог по длине — короткие слова не размываются', function () {
+        // «датик» (опечатка в «датчик», 5 букв — 1 опечатка допускается)
+        const r = searchFns.kipSearchFilter(items, 'датик', getter);
+        assertEqual(r.length >= 1, true, '«датик» → Датчик разности давления');
+        // «клапн» (4 буквы) — порог 0, не должен ничего найти
+        const r2 = searchFns.kipSearchFilter(items, 'клапн', getter);
+        assertEqual(r2.length, 0, '«клапн» (4 буквы) — без нечёткости');
+    });
+
+    test('AND: лишнее слово исключает запись (и в нечётком)', function () {
+        // «счетчик урановый» — слова «счетчик» есть, «урановый» нет нигде
+        const r = searchFns.kipSearchFilter(items, 'счетчик урановый', getter);
+        assertEqual(r.length, 0, '«счетчик урановый» не должен ничего найти');
+    });
+
+    test('Дамерау-Левенштейн: перестановка = 1 операция', function () {
+        assertEqual(searchFns.kipEditDistance('метран', 'метрана'), 1);
+        assertEqual(searchFns.kipEditDistance('abc', 'acb'), 1, 'перестановка соседних = 1');
+        assertEqual(searchFns.kipEditDistance('регисратор', 'регистратор'), 1);
+    });
+
+    test('Пустой запрос возвращает всё', function () {
+        const r = searchFns.kipSearchFilter(items, '', getter);
+        assertEqual(r.length, items.length);
+        const r2 = searchFns.kipSearchFilter(items, '   ', getter);
+        assertEqual(r2.length, items.length);
     });
 });
