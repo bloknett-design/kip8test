@@ -783,3 +783,45 @@ describe('Поиск с разделителями и короткими сло�
         }
     });
 });
+
+// ------------------------------------------------------------
+// Task 156: счётчик результатов поиска
+// ------------------------------------------------------------
+describe('Счётчик результатов поиска (Task 156)', function () {
+
+    test('Функция kipRenderSearchCounter определена', function () {
+        assertTrue(html.indexOf('window.kipRenderSearchCounter = function') !== -1,
+            'нет kipRenderSearchCounter');
+    });
+
+    test('Все 6 рендеров вызывают счётчик (__searchTotal + вызов)', function () {
+        ['devRender', 'devRenderSorted', 'lockRenderSorted', 'valveRenderSorted',
+         'regulatorRenderSorted', 'projectsRenderSorted'].forEach(function (fn) {
+            const m = html.match(new RegExp('function ' + fn + '\\('));
+            assertTrue(!!m, fn + ' не найдена');
+            // Сегмент функции: до следующей function на верхнем уровне
+            const start = m.index;
+            const end = html.indexOf('\n    function ', start + 10);
+            const seg = html.slice(start, end === -1 ? html.length : end);
+            assertEqual(seg.indexOf('__searchTotal') !== -1, true,
+                fn + ': нет __searchTotal');
+            assertEqual(seg.indexOf('kipRenderSearchCounter(list') !== -1, true,
+                fn + ': нет вызова kipRenderSearchCounter');
+        });
+    });
+
+    test('cj: счётчик после _render в _applyClientSearch', function () {
+        assertTrue(/_applyClientSearch[\s\S]{0,1600}this\._render\(\);[\s\S]{0,300}kipRenderSearchCounter/.test(html),
+            'cj: счётчик должен вызываться после _render');
+    });
+
+    test('CSS счётчика определён (обе темы)', function () {
+        assertEqual(/\.kip-search-counter\s*\{/.test(html), true, 'нет .kip-search-counter');
+        assertEqual(/\[data-theme="light"\] \.kip-search-counter\s*\{/.test(html), true, 'нет светлой темы');
+    });
+
+    test('Без запроса счётчик удаляется', function () {
+        assertTrue(/kipRenderSearchCounter[\s\S]{0,700}if \(!query\) return;/.test(html),
+            'helper должен удалять счётчик при пустом запросе');
+    });
+});
