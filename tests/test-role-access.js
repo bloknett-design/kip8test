@@ -884,3 +884,34 @@ describe('Карточки клапанов: назначение в загол�
             'старый порядок (Марка в заголовке) не должен остаться');
     });
 });
+
+// ------------------------------------------------------------
+// Task 161: счётчики расходомеров в десктопных табах «Все / Избранные»
+// ------------------------------------------------------------
+describe('Расходомеры: счётчики в десктопных табах (Task 161)', function () {
+
+    test('flowDesktopTabs: кнопки содержат счётчики flowAllCountDesk / flowFavCountDesk', function () {
+        const m = html.match(/<div id="flowDesktopTabs"[\s\S]*?<\/div>/);
+        assertTrue(!!m, 'блок #flowDesktopTabs должен существовать');
+        assertTrue(m[0].indexOf('id="flowAllCountDesk"') !== -1,
+            'кнопка «Все» должна содержать span#flowAllCountDesk');
+        assertTrue(m[0].indexOf('id="flowFavCountDesk"') !== -1,
+            'кнопка «Избранные» должна содержать span#flowFavCountDesk');
+    });
+
+    test('_updateTabCounts обновляет счётчики обоих баров (мобильного и десктопного)', function () {
+        const m = html.match(/_updateTabCounts: function\(\) \{[\s\S]*?\n        \},/);
+        assertTrue(!!m, 'функция _updateTabCounts должна существовать');
+        ['flowAllCount', 'flowFavCount', 'flowAllCountDesk', 'flowFavCountDesk'].forEach(function (id) {
+            assertTrue(m[0].indexOf("'" + id + "'") !== -1,
+                '_updateTabCounts должен обновлять #' + id);
+        });
+    });
+
+    test('CSS: компактный стиль счётчиков для десктопных табов', function () {
+        const m = html.match(/\.flow-desktop-tabs \.flow-tab-count \{[\s\S]*?\}/);
+        assertTrue(!!m, 'должен быть переопределён .flow-desktop-tabs .flow-tab-count');
+        assertTrue(m[0].indexOf('font-size: 10px') !== -1,
+            'компактный размер шрифта (10px) для десктопных табов');
+    });
+});
