@@ -725,3 +725,61 @@ describe('Автосворачивание поиска (Task 154)', function ()
             'при сворачивании запрос должен сбрасываться с перерендером');
     });
 });
+
+// ------------------------------------------------------------
+// Task 155: запросы с разделителями (позиции «8м/1») + шум коротких слов
+// ------------------------------------------------------------
+describe('Поиск с разделителями и короткими словами (Task 155)', function () {
+
+    // Извлечь движок заново (включая glued-форму)
+    const vm2 = require('vm');
+    const engine = (function () {
+        const startM = html.indexOf('Task 151: ГИБКИЙ ПОИСК');
+        const start = html.indexOf('var _TRANSLIT_RU2EN', startM);
+        const endM = html.indexOf('function devEsc', start);
+        const code = html.slice(start, endM);
+        return vm2.runInNewContext(code + '\n;({kipSearchFilter: kipSearchFilter, kipMatchForms: kipMatchForms});', {}, 't155.vm');
+    })();
+
+    test('Запрос с разделителем «8м/1» находит запись «поз. 8м/1»', function () {
+        const items = [
+            { f: 'Состояние мешалок поз. 8м/1' },
+            { f: 'Давление в аппарате 40м/2' },
+            { f: 'Расход в поз. 8м/1-3' }
+        ];
+        const r = engine.kipSearchFilter(items, '8м/1', function (d) { return d.f; });
+        assertEqual(r.length, 2, 'должны найтись «поз. 8м/1» и «8м/1-3»');
+    });
+
+    test('Glued-форма: «8м1» (слитый запрос) находит «8м/1»', function () {
+        const items = [{ f: 'поз. 8м/1' }, { f: 'поз. 7м/2' }];
+        const r = engine.kipSearchFilter(items, '8м1', function (d) { return d.f; });
+        assertEqual(r.length, 1);
+    });
+
+    test('Разные разделители: «8 м/1» и «8м-1» находят «8м/1»', function () {
+        const items = [{ f: 'поз. 8м/1' }];
+        const a = engine.kipSearchFilter(items, '8 м/1', function (d) { return d.f; });
+        const b = engine.kipSearchFilter(items, '8м-1', function (d) { return d.f; });
+        assertEqual(a.length, 1, 'пробел-вариация');
+        assertEqual(b.length, 1, 'дефис-вариация');
+    });
+
+    test('Короткие слова не дают шума: «8» не матчит «8мм»/«18»', function () {
+        const items = [
+            { f: 'Труба 8мм' },        // «8» — часть слова «8мм», НЕ отдельное слово
+            { f: 'Клапан 18' },        // «8» — часть «18»
+            { f: 'Позиция 8 сама' }    // «8» — отдельное слово → находится
+        ];
+        const r = engine.kipSearchFilter(items, '8', function (d) { return d.f; });
+        assertEqual(r.length, 1, 'только запись с отдельным словом «8»');
+    });
+
+    test('Сырой запрос: списки передают rawQuery (не norm-слитый)', function () {
+        // lockRenderSorted и др.: kipSearchFilter(filtered, rawQuery, ...)
+        for (const f of ['LOCK_FIELDS', 'VALVE_FIELDS', 'REGULATOR_FIELDS', 'PROJECT_FIELDS']) {
+            const re = new RegExp('kipSearchFilter\\(filtered, rawQuery, function \\(d\\) \\{[\\s\\S]{0,120}' + f);
+            assertTrue(re.test(html), f + ' фильтр должен использовать rawQuery');
+        }
+    });
+});
