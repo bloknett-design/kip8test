@@ -1193,3 +1193,29 @@ describe('Разделитель лупы и «Таблица» (Task 166)', fun
             'кнопка должна быть position: relative для позиционирования ::before');
     });
 });
+
+// ------------------------------------------------------------
+// Task 167: багфикс — лупа наезжала на «Таблица» при старте приложения
+// (модуль инициализировался при скрытой странице, offsetWidth = 0,
+// переменная --devt-group-w получала значение 16px)
+// ------------------------------------------------------------
+describe('Багфикс: лупа наезжала на «Таблица» при старте (Task 167)', function () {
+    const devTableJs = fs.readFileSync(path.resolve(__dirname, '..', 'devices-table-desktop.js'), 'utf-8');
+
+    test('updateHeaderGroup не ставит переменную при скрытой странице (offsetWidth = 0)', function () {
+        const iW = devTableJs.indexOf('var w = group.offsetWidth');
+        const iIf = devTableJs.indexOf('if (w > 0)', iW);
+        const iSet = devTableJs.indexOf("header.style.setProperty('--devt-group-w', (w + 16) + 'px')", iIf);
+        assertTrue(iW !== -1, 'width читается в переменную w');
+        assertTrue(iIf !== -1 && iIf - iW < 60, 'проверка w > 0 сразу после чтения ширины');
+        assertTrue(iSet !== -1 && iSet - iIf < 120, 'переменная ставится только внутри if (w > 0)');
+        // Регресс: старый безусловный setProperty по group.offsetWidth удалён
+        const iOld = devTableJs.indexOf("header.style.setProperty('--devt-group-w', (group.offsetWidth + 16) + 'px')");
+        assertTrue(iOld === -1, 'безусловная установка переменной (баг Task 166) не должна остаться');
+    });
+
+    test('Пересчёт ширины группы при каждом рендере страницы (патч devRenderSorted)', function () {
+        const m = devTableJs.match(/window\.devRenderSorted = function \(mode\) \{\s*\n\s*origDevRenderSorted\.apply\(window, arguments\);\s*\n\s*if \(mode === 'prod'\) \{\s*\n\s*\/\/ Task 167[\s\S]{0,200}?updateHeaderGroup\(\);/);
+        assertTrue(!!m, 'патч devRenderSorted должен вызывать updateHeaderGroup() для mode=prod');
+    });
+});
