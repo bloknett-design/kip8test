@@ -1400,3 +1400,64 @@ describe('Таблица: одна sticky-колонка + квадратная 
         assertTrue(devTableJs.indexOf('синхронизировать состояние «Выделить всё»') !== -1, 'синхронизация при клике по значению');
     });
 });
+
+
+// ------------------------------------------------------------
+// Task 172: рамка «№» жирнее, сброс всех фильтров, карточка только по клику на «№»
+// ------------------------------------------------------------
+describe('Таблица: рамка №, сброс всех фильтров, карточка по «№» (Task 172)', function () {
+    const devTableJs = fs.readFileSync(path.resolve(__dirname, '..', 'devices-table-desktop.js'), 'utf-8');
+
+    test('Правая рамка столбца «№» — жирнее остальных (2px, обе темы)', function () {
+        const th = devTableJs.match(/\.dev-table th\.dev-table-col-num \{ border-right: 2px solid [^;]+; \}/);
+        const td = devTableJs.match(/\.dev-table td\.dev-table-col-num \{ border-right: 2px solid [^;]+; \}/);
+        assertTrue(!!th, 'th «№»: border-right 2px');
+        assertTrue(!!td, 'td «№»: border-right 2px');
+        assertTrue(devTableJs.indexOf('[data-theme="light"] .dev-table th.dev-table-col-num') !== -1, 'светлая тема: th');
+        assertTrue(devTableJs.indexOf('[data-theme="light"] .dev-table td.dev-table-col-num') !== -1, 'светлая тема: td');
+    });
+
+    test('Класс dev-table-col-num — на th и td колонки «№»', function () {
+        const occ = devTableJs.match(/if \(col\.key === '__num__'\) cls \+= ' dev-table-col-num';/g);
+        assertEqual(occ ? occ.length : 0, 2, 'и в buildTableHtml (th), и в rowHtml (td)');
+        assertTrue(devTableJs.indexOf('td.dev-table-col-num { cursor: pointer; }') !== -1, 'курсор-рука на ячейках «№»');
+    });
+
+    test('Кнопка «Сбросить все фильтры» — слева от «Метки строк»', function () {
+        assertTrue(devTableJs.indexOf("clearBtn.id = 'devTableClearFiltersBtn'") !== -1, 'кнопка сброса создаётся');
+        assertTrue(devTableJs.indexOf("marksBtn.id = 'devTableMarksBtn'") !== -1, 'кнопка меток создаётся');
+        const iAppend = devTableJs.indexOf('group.appendChild(clearBtn)');
+        const iAppendM = devTableJs.indexOf('group.appendChild(marksBtn)');
+        assertTrue(iAppend !== -1 && iAppendM !== -1 && iAppend < iAppendM, 'в DOM кнопка сброса — левее «Метки строк»');
+        assertTrue(devTableJs.indexOf('function resetAllColumnFilters') !== -1, 'функция сброса всех фильтров');
+        assertTrue(/colFilters = \{\};/.test(devTableJs), 'очистка всех фильтров разом');
+        assertTrue(devTableJs.indexOf('resetAllColumnFilters();') !== -1, 'кнопка вызывает сброс');
+        // видна только в табличном виде, как «Метки строк»
+        assertTrue(devTableJs.indexOf('.dev-table-header-group.table-active .dev-table-clear-btn { display: inline-flex; }') !== -1, 'видимость в табличном виде');
+    });
+
+    test('Сброс всех фильтров: подсветка кнопки + счётчик установленных', function () {
+        assertTrue(devTableJs.indexOf('function activeFilterCount') !== -1, 'подсчёт активных фильтров');
+        assertTrue(devTableJs.indexOf('function updateClearFiltersBtn') !== -1, 'обновление состояния кнопки');
+        assertTrue(/btn\.classList\.toggle\('has-filters', n > 0\)/.test(devTableJs), 'янтарная подсветка при фильтрах');
+        assertTrue(/badge\.textContent = n > 0 \? String\(n\) : ''/.test(devTableJs), 'счётчик установленных фильтров');
+        // вызывается в buildTableHtml ДО замера ширины группы (счётчик меняет ширину)
+        const iBuild = devTableJs.indexOf('function buildTableHtml');
+        const iEnd = devTableJs.indexOf('function colLabel', iBuild);
+        const seg = devTableJs.slice(iBuild, iEnd);
+        const iCall = seg.indexOf('updateClearFiltersBtn();');
+        const iUhg = seg.indexOf('updateHeaderGroup(rows.length, devices.length);');
+        assertTrue(iCall !== -1 && iUhg !== -1 && iCall < iUhg, 'updateClearFiltersBtn вызывается в buildTableHtml до updateHeaderGroup');
+    });
+
+    test('Карточка прибора — ТОЛЬКО по клику на ячейки столбца «№»', function () {
+        const m = devTableJs.match(/var numTd = e\.target\.closest \? e\.target\.closest\('td\.dev-table-col-num'\) : null;/);
+        assertTrue(!!m, 'клик ищет ячейку «№»');
+        const m2 = devTableJs.match(/if \(numTd && numTd\.closest\('\.dev-table-row'\) === row &&[\s\S]{0,80}?typeof window\.devOpenDetail === 'function'\) \{\s*\n\s*window\.devOpenDetail\(row\.getAttribute\('data-dev-id'\)\);/);
+        assertTrue(!!m2, 'devOpenDetail — только при клике на ячейку «№»');
+        // выделение строки сохраняется при клике на любую ячейку
+        assertTrue(devTableJs.indexOf("row.classList.add('dev-table-row-selected');") !== -1, 'выделение строки при любом клике');
+        // клавиатурный Enter по-прежнему открывает карточку (навигация)
+        assertTrue(/key === 'Enter'[\s\S]{0,200}?devOpenDetail\(String\(currentRows\[focusIndex\]\['ID'\]\)\);/.test(devTableJs), 'Enter открывает карточку (клавиатура)');
+    });
+});
