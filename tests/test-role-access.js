@@ -1461,3 +1461,73 @@ describe('Таблица: рамка №, сброс всех фильтров, 
         assertTrue(/key === 'Enter'[\s\S]{0,200}?devOpenDetail\(String\(currentRows\[focusIndex\]\['ID'\]\)\);/.test(devTableJs), 'Enter открывает карточку (клавиатура)');
     });
 });
+
+
+// ------------------------------------------------------------
+// Task 173: поиск в строке крошек detail-панели (слева от ✕, с разделителем)
+// ------------------------------------------------------------
+describe('Поиск в строке крошек detail-панели (Task 173)', function () {
+    const html = fs.readFileSync(path.resolve(__dirname, '..', 'index.html'), 'utf-8');
+
+    test('Кнопка-лупа и разделитель — в detailBreadcrumbBar слева от ✕', function () {
+        const iBar = html.indexOf('<div id="detailBreadcrumbBar">');
+        const iBarEnd = html.indexOf('</div>\n\n    <div id="contentArea">', iBar);
+        const bar = html.slice(iBar, iBarEnd !== -1 ? iBarEnd : iBar + 2000);
+        const iSearch = bar.indexOf('id="detailBarSearchToggleBtn"');
+        const iClose = bar.indexOf('class="detail-breadcrumb-close"');
+        const iDivider = bar.indexOf('detail-breadcrumb-divider');
+        assertTrue(iSearch !== -1, 'кнопка поиска в строке крошек');
+        assertTrue(iClose !== -1, 'кнопка ✕ в строке крошек');
+        assertTrue(iSearch < iClose, 'кнопка поиска — ЛЕВЕЕ ✕ в DOM');
+        assertTrue(iDivider > iSearch && iDivider < iClose, 'разделитель между поиском и ✕');
+        // поле поиска тоже в баре
+        assertTrue(bar.indexOf('id="detailBarSearchInput"') !== -1, 'поле поиска в строке крошек');
+    });
+
+    test('Разделитель — вертикальная линия 1px×24px (как top-bar-divider)', function () {
+        const m = html.match(/\.detail-breadcrumb-divider \{\s*\n\s*width: 1px;\s*\n\s*height: 24px;\s*\n\s*flex-shrink: 0;\s*\n\s*align-self: center;\s*\n\s*background: var\(--border-color[^;]+;/);
+        assertTrue(!!m, '.detail-breadcrumb-divider: 1px x 24px, var(--border-color)');
+    });
+
+    test('Кнопка поиска и разделитель скрыты без открытой detail-панели', function () {
+        // Task 127 расширен: вместе с ✕ и ⇄
+        const m = html.match(/body:not\(:has\(#detailPanel\.active\)\) #detailBreadcrumbBar \.detail-breadcrumb-close,\s*\n\s*body:not\(:has\(#detailPanel\.active\)\) #detailBreadcrumbBar \.detail-breadcrumb-swap,\s*\n\s*body:not\(:has\(#detailPanel\.active\)\) #detailBreadcrumbBar \.detail-breadcrumb-search,\s*\n\s*body:not\(:has\(#detailPanel\.active\)\) #detailBreadcrumbBar \.detail-breadcrumb-divider \{\s*\n\s*display: none !important;/);
+        assertTrue(!!m, 'CSS-правило скрытия поиска/разделителя при закрытой панели');
+    });
+
+    test('JS: привязка к поиску активной страницы + forwarding', function () {
+        assertTrue(html.indexOf('function detailBarGetPageSearchInput') !== -1, 'поиск input активной страницы');
+        assertTrue(html.indexOf("page.querySelector('.dev-header-search')") !== -1, 'ищет .dev-header-search в активной странице');
+        assertTrue(html.indexOf('function detailBarUpdateSearchBtn') !== -1, 'обновление видимости кнопки');
+        assertTrue(html.indexOf('function detailBarSearchForward') !== -1, 'функция перенаправления запроса');
+        const m = html.match(/pageInput\.value = value;\s*\n\s*pageInput\.dispatchEvent\(new Event\('input', \{ bubbles: true \}\)\);/);
+        assertTrue(!!m, 'запрос копируется в поле страницы + dispatch input');
+        // закрытие сбрасывает запрос страницы
+        const m2 = html.match(/function detailBarCloseSearch\(\)[\s\S]{0,900}?pageInput\.value = '';/);
+        assertTrue(!!m2, 'закрытие поиска сбрасывает запрос списка');
+    });
+
+    test('JS: хуки во всех точках открытия detail-панели', function () {
+        // openDetailPanel
+        const iOpen = html.indexOf('function openDetailPanel');
+        const seg = html.slice(iOpen, iOpen + 900);
+        assertTrue(seg.indexOf('detailBarUpdateSearchBtn();') !== -1, 'openDetailPanel вызывает обновление');
+        // closeDetailPanel
+        const iClose = html.indexOf('function closeDetailPanel');
+        const seg2 = html.slice(iClose, iClose + 600);
+        assertTrue(seg2.indexOf('detailBarCloseSearch();') !== -1, 'closeDetailPanel сворачивает поиск');
+        // все InPanel-рендереры (9 прямых открытий бара + openDetailPanel + fallback)
+        const n = html.split("detailBarUpdateSearchBtn();").length - 1;
+        assertTrue(n >= 11, 'хуков обновления кнопки >= 11 (фактически: ' + n + ')');
+        // Escape закрывает
+        const m = html.match(/e\.key !== 'Escape'[\s\S]{0,200}?detailBarCloseSearch\(\);/);
+        assertTrue(!!m, 'Escape сворачивает поиск в строке крошек');
+    });
+
+    test('Поле поиска разворачивается на месте крошек', function () {
+        const m = html.match(/#detailBarSearchInput\.search-open \{\s*\n\s*display: block;\s*\n\s*flex: 1;/);
+        assertTrue(!!m, 'flex:1 — поле занимает место крошек');
+        assertTrue(html.indexOf('#detailBreadcrumbBar.search-open #detailBreadcrumbContent { display: none; }') !== -1, 'крошки скрыты при открытом поиске');
+        assertTrue(html.indexOf('#detailBreadcrumbBar.search-open #flowDesktopTabs { visibility: hidden; }') !== -1, 'табы расходомеров скрыты при поиске');
+    });
+});
