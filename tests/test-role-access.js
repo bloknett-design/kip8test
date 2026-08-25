@@ -1700,3 +1700,111 @@ describe('Подложка кнопок фильтра + поиск не пер�
         assertTrue(m[0].indexOf('min-width: 150px') !== -1, 'минимальная ширина поля 150px');
     });
 });
+
+// ------------------------------------------------------------
+// Task 177: конвертер давления — рабочая область из трёх равных
+// частей на десктопе (ввод+перевод+результаты | таблица | информация)
+// ------------------------------------------------------------
+describe('Конвертер давления: три равные колонки (Task 177)', function () {
+    const html = fs.readFileSync(path.resolve(__dirname, '..', 'index.html'), 'utf-8');
+
+    function pressureBlock() {
+        const i = html.indexOf('<div id="page-conv-pressure" class="page-content">');
+        const j = html.indexOf('<!-- Расход -->', i);
+        return html.slice(i, j);
+    }
+
+    test('Структура: .conv-columns с тремя .conv-col после шапки', function () {
+        const b = pressureBlock();
+        const iHeader = b.indexOf('page-inline-header');
+        const iCols = b.indexOf('<div class="conv-columns">');
+        const iCol1 = b.indexOf('<div class="conv-col conv-col-input">');
+        const iCol2 = b.indexOf('<div class="conv-col conv-col-table">');
+        const iCol3 = b.indexOf('<div class="conv-col conv-col-info">');
+        assertTrue(iCols !== -1, 'обёртка .conv-columns');
+        assertTrue(iHeader !== -1 && iHeader < iCols, 'колонки после шапки (шапка вне грида — sticky сохранён)');
+        assertTrue(iCol1 !== -1 && iCol2 !== -1 && iCol3 !== -1, 'три колонки-обёртки');
+        assertTrue(iCol1 < iCol2 && iCol2 < iCol3, 'порядок слева направо: ввод → таблица → информация');
+    });
+
+    test('Колонка 1 — поля ввода, кнопка «Перевести», результаты', function () {
+        const b = pressureBlock();
+        const iCol1 = b.indexOf('<div class="conv-col conv-col-input">');
+        const iCol2 = b.indexOf('<div class="conv-col conv-col-table">');
+        const col1 = b.slice(iCol1, iCol2);
+        assertTrue(col1.indexOf('id="conv-pressure-input"') !== -1, 'поле значения');
+        assertTrue(col1.indexOf('id="conv-pressure-unit"') !== -1, 'выбор единицы измерения');
+        assertTrue(col1.indexOf("convertUnits('pressure')") !== -1, 'кнопка «Перевести»');
+        assertTrue(col1.indexOf('id="conv-pressure-results"') !== -1, 'результаты по давлениям');
+    });
+
+    test('Колонка 2 — заглушка + расчётная таблица; колонка 3 — инфоблок', function () {
+        const b = pressureBlock();
+        const iCol2 = b.indexOf('<div class="conv-col conv-col-table">');
+        const iCol3 = b.indexOf('<div class="conv-col conv-col-info">');
+        const col2 = b.slice(iCol2, iCol3);
+        const iPh = col2.indexOf('conv-table-placeholder');
+        const iTbl = col2.indexOf('id="conv-pressure-table"');
+        assertTrue(iPh !== -1, 'заглушка средней колонки');
+        assertTrue(iTbl !== -1, 'таблица перевода');
+        assertTrue(iPh < iTbl, 'заглушка перед таблицей');
+        const col3 = b.slice(iCol3);
+        assertTrue(col3.indexOf('conv-info-block') !== -1, 'инфоблок с классом');
+        assertTrue(col3.indexOf('Справочная информация') !== -1, 'заголовок блока информации');
+    });
+
+    test('Десктоп: грид трёх равных колонок + независимая прокрутка', function () {
+        const m = html.match(/#page-conv-pressure \.conv-columns \{[\s\S]*?\}/);
+        assertTrue(!!m, 'правило .conv-columns');
+        assertTrue(m[0].indexOf('grid-template-columns: repeat(3, 1fr)') !== -1, '3 равные доли');
+        assertTrue(m[0].indexOf('flex: 1') !== -1, 'рабочая область — весь экран под шапкой');
+        const col = html.match(/#page-conv-pressure \.conv-col \{[\s\S]*?\}/);
+        assertTrue(!!col, 'правило .conv-col');
+        assertTrue(col[0].indexOf('overflow-y: auto') !== -1, 'прокрутка внутри каждой колонки');
+        const page = html.match(/#contentArea > #page-conv-pressure\.active \{[\s\S]*?\}/);
+        assertTrue(!!page, 'правило страницы конвертера давления');
+        assertTrue(page[0].indexOf('overflow: hidden') !== -1, 'страница целиком не скроллится');
+        // грид-правило — только внутри десктопного media-блока
+        const iRule = html.indexOf('grid-template-columns: repeat(3, 1fr)');
+        const iMedia = html.lastIndexOf('@media (min-width: 1024px)', iRule);
+        assertTrue(iMedia !== -1, 'мобильный вид не затронут: грид в media >= 1024px');
+    });
+
+    test('Заглушка видна только пока таблица скрыта (:has по style)', function () {
+        assertTrue(html.indexOf('.conv-table-placeholder { display: none; }') !== -1, 'скрыта по умолчанию');
+        const m = html.match(/#page-conv-pressure:has\(#conv-pressure-table\[style\*="none"\]\) \.conv-table-placeholder \{[\s\S]*?\}/);
+        assertTrue(!!m, 'правило показа заглушки через :has');
+        assertTrue(m[0].indexOf('display: flex') !== -1, 'заглушка показана при скрытой таблице');
+        assertTrue(m[0].indexOf('dashed') !== -1, 'пунктирная рамка-подсказка');
+    });
+
+    test('JS: на десктопе таблица не прокручивает страницу (три колонки)', function () {
+        const m = html.match(/var skipScroll = \(cat === 'pressure'\)[\s\S]{0,140}?matchMedia\('\(min-width: 1024px\)'\)/);
+        assertTrue(!!m, 'проверка ширины окна для конвертера давления в showConverterTable');
+        const iFn = html.indexOf('function showConverterTable');
+        const iSkip = html.indexOf('var skipScroll = (cat');
+        const iTemp = html.indexOf('function showTempTable');
+        assertTrue(iFn !== -1 && iSkip > iFn && iSkip < iTemp, 'проверка внутри showConverterTable');
+    });
+
+    test('Инфоблок: цвета через CSS-переменные (читаемость в светлой теме)', function () {
+        const b = pressureBlock();
+        assertTrue(b.indexOf('color:var(--conv-info-text)') !== -1, 'текст инфоблока через --conv-info-text');
+        assertTrue(b.indexOf('color:var(--conv-info-bold)') !== -1, 'жирные акценты через --conv-info-bold');
+        assertTrue(b.indexOf('color:rgba(255,255,255,0.5)') === -1, 'жёсткий белый текст удалён из блока давления');
+        const iRoot = html.indexOf(':root {');
+        assertTrue(html.slice(iRoot, iRoot + 1600).indexOf('--conv-info-text: rgba(255,255,255,0.5)') !== -1,
+            'тёмная тема определяет переменные');
+        const iLight = html.indexOf('[data-theme="light"] {');
+        assertTrue(html.slice(iLight, iLight + 1600).indexOf('--conv-info-text: rgba(20,20,19,0.55)') !== -1,
+            'светлая тема переопределяет переменные инфоблока');
+    });
+
+    test('Другие конвертеры не затронуты (одноколоночный вид сохранён)', function () {
+        const iFlow = html.indexOf('<div id="page-conv-flow" class="page-content">');
+        const jMass = html.indexOf('<!-- Вес и масса -->', iFlow);
+        const flow = html.slice(iFlow, jMass);
+        assertTrue(flow.indexOf('conv-columns') === -1, 'страница расхода без трёхколоночной обёртки');
+        assertTrue(flow.indexOf('rgba(255,255,255,0.5)') !== -1, 'разметка расхода не изменилась');
+    });
+});
