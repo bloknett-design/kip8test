@@ -1347,3 +1347,22 @@ describe('Таблица приборов: статистика по колон�
         assertTrue(/e\.key === 'Escape'[\s\S]{0,200}?closeMarksDropdown\(\);/.test(devTableJs), 'Escape закрывает все панели');
     });
 });
+
+// ------------------------------------------------------------
+// Task 170: багфиксы статистики — бары не рендерились, «Показать все» закрывала панель
+// ------------------------------------------------------------
+describe('Багфиксы статистики по колонке (Task 170)', function () {
+    const devTableJs = fs.readFileSync(path.resolve(__dirname, '..', 'devices-table-desktop.js'), 'utf-8');
+
+    test('Бар статистики — display:block (span inline игнорировал width)', function () {
+        const m = devTableJs.match(/\.dts-bar \{ display: block; height: 100%;/);
+        assertTrue(!!m, '.dts-bar должен быть display:block — иначе width игнорируется и бары одинаковые (виден только фон-трек)');
+    });
+
+    test('«Показать все N значений»: stopPropagation — панель не закрывается', function () {
+        // Регресс: expand.remove() внутри обработчика отсоединял кнопку до всплытия,
+        // statsEl.contains(e.target) = false → document-слушатель закрывал панель
+        const m = devTableJs.match(/expand\.addEventListener\('click', function \(e\) \{\s*\n\s*e\.stopPropagation\(\);[\s\S]{0,300}?expand\.remove\(\);/);
+        assertTrue(!!m, 'клик по «Показать все» не должен закрывать панель (stopPropagation)');
+    });
+});
