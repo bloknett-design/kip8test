@@ -964,17 +964,17 @@ describe('Master-detail: перетаскиваемая граница пане�
 describe('Таблица приборов: счётчик и CSV в шапке (Task 163)', function () {
     const devTableJs = fs.readFileSync(path.resolve(__dirname, '..', 'devices-table-desktop.js'), 'utf-8');
 
-    test('Группа в шапке: [Таблица][счётчик][Экспорт CSV] одним рядом', function () {
+    test('Группа в шапке: ряд кнопок + счётчик (Task 175: счётчик под кнопками)', function () {
         assertTrue(devTableJs.indexOf('dev-table-header-group') !== -1,
             'группа .dev-table-header-group должна существовать');
-        // Порядок внутри ensureButton: группа → кнопка «Таблица» → счётчик → CSV
+        // Порядок внутри ensureButton: группа → ряд → «Таблица» → счётчик → CSV
         const iGroup = devTableJs.indexOf("group.className = 'dev-table-header-group'");
         const iCount = devTableJs.indexOf("count.id = 'devTableCount'");
         const iCsv = devTableJs.indexOf("csvBtn.id = 'devTableCsvBtn'");
         assertTrue(iGroup !== -1 && iCount !== -1 && iCsv !== -1,
             'группа, счётчик и CSV должны создаваться в ensureButton');
         assertTrue(iGroup < iCount && iCount < iCsv,
-            'порядок в группе: «Таблица» → счётчик → «Экспорт CSV»');
+            'порядок создания: группа → «Таблица» → счётчик → CSV');
     });
 
     test('Счётчик и CSV видны только в табличном виде (.table-active)', function () {
@@ -1426,9 +1426,9 @@ describe('Таблица: рамка №, сброс всех фильтров, 
     test('Кнопка «Сбросить все фильтры» — слева от «Метки строк»', function () {
         assertTrue(devTableJs.indexOf("clearBtn.id = 'devTableClearFiltersBtn'") !== -1, 'кнопка сброса создаётся');
         assertTrue(devTableJs.indexOf("marksBtn.id = 'devTableMarksBtn'") !== -1, 'кнопка меток создаётся');
-        const iAppend = devTableJs.indexOf('group.appendChild(clearBtn)');
-        const iAppendM = devTableJs.indexOf('group.appendChild(marksBtn)');
-        assertTrue(iAppend !== -1 && iAppendM !== -1 && iAppend < iAppendM, 'в DOM кнопка сброса — левее «Метки строк»');
+        const iAppend = devTableJs.indexOf('btnRow.appendChild(clearBtn)');
+        const iAppendM = devTableJs.indexOf('btnRow.appendChild(marksBtn)');
+        assertTrue(iAppend !== -1 && iAppendM !== -1 && iAppend < iAppendM, 'в ряду кнопок сброс — левее «Метки строк»');
         assertTrue(devTableJs.indexOf('function resetAllColumnFilters') !== -1, 'функция сброса всех фильтров');
         assertTrue(/colFilters = \{\};/.test(devTableJs), 'очистка всех фильтров разом');
         assertTrue(devTableJs.indexOf('resetAllColumnFilters();') !== -1, 'кнопка вызывает сброс');
@@ -1570,5 +1570,82 @@ describe('Кнопки фильтра по колонке — ярче (Task 174
         const light = devTableJs.match(/\[data-theme="light"\] \.dev-table-filter-btn\.has-filter \{[^}]*\}/);
         assertTrue(!!light, 'has-filter светлой темы');
         assertTrue(light[0].indexOf('rgba(199,126,0,0.16)') !== -1, 'фон плашки светлой темы 0.16');
+    });
+});
+
+// ------------------------------------------------------------
+// Task 175: шапка таблицы — два ряда (кнопки сверху, счётчик под ними),
+// единая высота кнопок 28px, квадратные «сброс фильтров» и «метки строк»
+// ------------------------------------------------------------
+describe('Шапка таблицы: два ряда + квадратные кнопки (Task 175)', function () {
+    const devTableJs = fs.readFileSync(path.resolve(__dirname, '..', 'devices-table-desktop.js'), 'utf-8');
+
+    test('Табличный вид: кнопки подняты вверх, счётчик — под ними', function () {
+        const m = devTableJs.match(/\.dev-table-header-group\.table-active \{[\s\S]*?\}/);
+        assertTrue(!!m, 'правило .dev-table-header-group.table-active');
+        assertTrue(m[0].indexOf('flex-direction: column') !== -1, 'колонка: ряд кнопок сверху, счётчик ниже');
+        assertTrue(m[0].indexOf('align-items: flex-end') !== -1, 'выравнивание по правому краю');
+        assertTrue(m[0].indexOf('top: 4px') !== -1, 'группа поднята к верхней половине бара');
+        assertTrue(m[0].indexOf('transform: none') !== -1, 'вертикальное центрирование снято');
+        assertTrue(m[0].indexOf('gap: 3px') !== -1, 'межрядный зазор 3px');
+        const row = devTableJs.match(/\.dev-table-btn-row \{[^}]*\}/);
+        assertTrue(!!row, 'обёртка .dev-table-btn-row');
+        assertTrue(row[0].indexOf('display: flex') !== -1, 'ряд кнопок — flex');
+        assertTrue(row[0].indexOf('gap: 8px') !== -1, 'зазор между кнопками 8px');
+    });
+
+    test('Все четыре кнопки бара — единая высота 28px', function () {
+        ['dev-table-toggle-btn', 'dev-table-csv-btn', 'dev-table-clear-btn', 'dev-table-marks-btn'].forEach(function (cls) {
+            // якорь ' (начало строкового литерала CSS-массива) — чтобы не
+            // зацепить селектор .dev-table-header-group .<cls> { display: none; }
+            const m = devTableJs.match(new RegExp("'\\." + cls + " \\{[\\s\\S]*?\\}'"));
+            assertTrue(!!m, 'правило .' + cls);
+            assertTrue(m[0].indexOf('height: 28px') !== -1, cls + ': height 28px');
+            assertTrue(m[0].indexOf('box-sizing: border-box') !== -1, cls + ': box-sizing border-box');
+        });
+    });
+
+    test('«Сброс фильтров» и «Метки строк» — квадратные 28x28 без паддингов', function () {
+        const clear = devTableJs.match(/'\.dev-table-clear-btn \{[\s\S]*?\}'/);
+        assertTrue(!!clear, 'правило .dev-table-clear-btn');
+        assertTrue(clear[0].indexOf('width: 28px') !== -1, 'clear: width 28px');
+        assertTrue(clear[0].indexOf('padding: 0') !== -1, 'clear: без внутренних отступов');
+        assertTrue(clear[0].indexOf('justify-content: center') !== -1, 'clear: содержимое по центру');
+        const marks = devTableJs.match(/'\.dev-table-marks-btn \{[\s\S]*?\}'/);
+        assertTrue(!!marks, 'правило .dev-table-marks-btn');
+        assertTrue(marks[0].indexOf('width: 28px') !== -1, 'marks: width 28px');
+        assertTrue(marks[0].indexOf('padding: 0') !== -1, 'marks: без внутренних отступов');
+        assertTrue(marks[0].indexOf('display: inline-flex') !== -1, 'marks: flex-центрирование глифа');
+    });
+
+    test('Разделитель лупы в табличном виде — по центру группы (напротив лупы)', function () {
+        const m = devTableJs.match(/\.dev-table-header-group\.table-active::before \{[\s\S]*?\}/);
+        assertTrue(!!m, 'полоса ::before у группы в табличном виде');
+        assertTrue(m[0].indexOf('height: 24px') !== -1, 'высота 24px (как в верхнем баре)');
+        assertTrue(m[0].indexOf('var(--border-color') !== -1, 'цвет var(--border-color)');
+        assertTrue(devTableJs.indexOf('.dev-table-header-group.table-active .dev-table-toggle-btn::before { display: none; }') !== -1,
+            'полоса кнопки «Таблица» отключена в табличном виде');
+    });
+
+    test('DOM: ряд кнопок [Таблица][сброс][метки][CSV], счётчик после ряда', function () {
+        const iRow = devTableJs.indexOf("btnRow.className = 'dev-table-btn-row'");
+        const iCnt = devTableJs.indexOf("count.id = 'devTableCount'");
+        assertTrue(iRow !== -1 && iRow < iCnt, 'ряд создаётся раньше счётчика');
+        assertTrue(devTableJs.indexOf('group.appendChild(btnRow)') !== -1, 'ряд — первый ребёнок группы');
+        ['btn', 'clearBtn', 'marksBtn', 'csvBtn'].forEach(function (v) {
+            assertTrue(devTableJs.indexOf('btnRow.appendChild(' + v + ')') !== -1, v + ' — в ряду кнопок');
+        });
+        const iBtn = devTableJs.indexOf('btnRow.appendChild(btn)');
+        const iClear = devTableJs.indexOf('btnRow.appendChild(clearBtn)');
+        const iMarks = devTableJs.indexOf('btnRow.appendChild(marksBtn)');
+        const iCsv = devTableJs.indexOf('btnRow.appendChild(csvBtn)');
+        assertTrue(iBtn < iClear && iClear < iMarks && iMarks < iCsv, 'порядок в ряду: Таблица → сброс → метки → CSV');
+    });
+
+    test('Бейдж счётчика фильтров пустой — не занимает место в квадрате', function () {
+        assertTrue(devTableJs.indexOf('.dev-table-clear-btn .dev-table-clear-count:empty { display: none; }') !== -1,
+            ':empty скрывает пустой бейдж');
+        const svg = devTableJs.match(/clearBtn\.innerHTML = '<svg width="14" height="14"/);
+        assertTrue(!!svg, 'svg уменьшен до 14x14 под квадратную кнопку');
     });
 });
