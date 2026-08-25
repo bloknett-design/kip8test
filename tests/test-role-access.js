@@ -915,3 +915,45 @@ describe('Расходомеры: счётчики в десктопных та�
             'компактный размер шрифта (10px) для десктопных табов');
     });
 });
+
+// ------------------------------------------------------------
+// Task 162: перетаскиваемая граница разделения панелей master-detail
+// (клэмп 1/4 .. 3/4 ширины области разделения)
+// ------------------------------------------------------------
+describe('Master-detail: перетаскиваемая граница панелей (Task 162)', function () {
+
+    test('detailPanel содержит разделитель #detailPanelResizer', function () {
+        const m = html.match(/<div id="detailPanel">[\s\S]{0,400}?<div id="detailPanelResizer"/);
+        assertTrue(!!m, 'разделитель должен быть первым ребёнком #detailPanel');
+    });
+
+    test('Клэмп границы: от 1/4 до 3/4 ширины области разделения', function () {
+        const mMin = html.match(/DETAIL_RESIZER_MIN = 0\.25/);
+        const mMax = html.match(/DETAIL_RESIZER_MAX = 0\.75/);
+        assertTrue(!!mMin, 'минимум — 1/4 ширины (DETAIL_RESIZER_MIN = 0.25)');
+        assertTrue(!!mMax, 'максимум — 3/4 ширины (DETAIL_RESIZER_MAX = 0.75)');
+        // Сами клэмпы применяются в pointerMove
+        const mClamp = html.match(/Math\.max\(minW, Math\.min\(maxW, width\)\)/);
+        assertTrue(!!mClamp, 'ширина панели должна клэмпиться между minW и maxW');
+    });
+
+    test('Ширина сохраняется в localStorage и восстанавливается при загрузке', function () {
+        const mSave = html.match(/localStorage\.setItem\(DETAIL_RESIZER_KEY, pct \+ '%'\)/);
+        assertTrue(!!mSave, 'после перетаскивания ширина сохраняется в процентах');
+        const mRestore = html.match(/initDetailPanelResizer\(\);[\s\S]{0,200}/) ||
+                         html.match(/_detailPanelApplyWidth\(\);/);
+        assertTrue(!!mRestore, 'при инициализации сохранённая ширина применяется');
+    });
+
+    test('Swap-режим: разделитель переходит на правую грань панели', function () {
+        const m = html.match(/#contentArea\.panels-swapped > #detailPanel \.detail-panel-resizer \{[\s\S]*?left: auto;[\s\S]*?right: -3px;/);
+        assertTrue(!!m, 'в swap-режиме разделитель должен сидеть на правой грани');
+    });
+
+    test('Двойной клик по разделителю сбрасывает ширину к CSS-умолчанию', function () {
+        const m = html.match(/addEventListener\('dblclick', dblClickReset\)/);
+        assertTrue(!!m, 'dblclick должен вызывать сброс');
+        const mReset = html.match(/dblClickReset[\s\S]{0,300}?localStorage\.removeItem\(DETAIL_RESIZER_KEY\)/);
+        assertTrue(!!mReset, 'сброс удаляет сохранённую ширину из localStorage');
+    });
+});
