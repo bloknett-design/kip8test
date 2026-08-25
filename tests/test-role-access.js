@@ -957,3 +957,59 @@ describe('Master-detail: перетаскиваемая граница пане�
         assertTrue(!!mReset, 'сброс удаляет сохранённую ширину из localStorage');
     });
 });
+
+// ------------------------------------------------------------
+// Task 163: таблица приборов — счётчик и CSV в шапке, таблица на всю площадь
+// ------------------------------------------------------------
+describe('Таблица приборов: счётчик и CSV в шапке (Task 163)', function () {
+    const devTableJs = fs.readFileSync(path.resolve(__dirname, '..', 'devices-table-desktop.js'), 'utf-8');
+
+    test('Группа в шапке: [Таблица][счётчик][Экспорт CSV] одним рядом', function () {
+        assertTrue(devTableJs.indexOf('dev-table-header-group') !== -1,
+            'группа .dev-table-header-group должна существовать');
+        // Порядок внутри ensureButton: группа → кнопка «Таблица» → счётчик → CSV
+        const iGroup = devTableJs.indexOf("group.className = 'dev-table-header-group'");
+        const iCount = devTableJs.indexOf("count.id = 'devTableCount'");
+        const iCsv = devTableJs.indexOf("csvBtn.id = 'devTableCsvBtn'");
+        assertTrue(iGroup !== -1 && iCount !== -1 && iCsv !== -1,
+            'группа, счётчик и CSV должны создаваться в ensureButton');
+        assertTrue(iGroup < iCount && iCount < iCsv,
+            'порядок в группе: «Таблица» → счётчик → «Экспорт CSV»');
+    });
+
+    test('Счётчик и CSV видны только в табличном виде (.table-active)', function () {
+        const m = devTableJs.match(/\.dev-table-header-group \.dev-table-count,[\s\S]{0,120}?\.dev-table-header-group \.dev-table-csv-btn \{ display: none; \}/);
+        assertTrue(!!m, 'по умолчанию счётчик и CSV скрыты');
+        const m2 = devTableJs.match(/\.dev-table-header-group\.table-active \.dev-table-count \{ display: inline-block; \}/);
+        assertTrue(!!m2, 'в табличном виде (.table-active) счётчик показывается');
+    });
+
+    test('Тулбар над таблицей удалён (счётчик/CSV больше не в таблице)', function () {
+        assertEqual(devTableJs.indexOf('dev-table-toolbar') === -1, true,
+            'класс .dev-table-toolbar должен быть удалён из модуля');
+    });
+
+    test('Таблица на всю свободную площадь: без отступов, рамки и скруглений', function () {
+        const m = devTableJs.match(/\.dev-table-wrap \{[\s\S]*?\}/);
+        assertTrue(!!m, '.dev-table-wrap должен существовать');
+        assertTrue(m[0].indexOf('margin: 0') !== -1, 'margin: 0 — без отступов от краёв');
+        assertTrue(m[0].indexOf('border: none') !== -1, 'border: none — без рамки');
+        assertTrue(m[0].indexOf('border-radius: 0') !== -1, 'border-radius: 0 — без скруглений');
+    });
+
+    test('fitTableHeight подгоняет высоту (resize + detail-панель)', function () {
+        assertTrue(devTableJs.indexOf('function fitTableHeight') !== -1,
+            'функция fitTableHeight должна существовать');
+        assertTrue(devTableJs.indexOf("addEventListener('resize', fitTableHeight)") !== -1,
+            'пересчёт при resize окна');
+        assertTrue(devTableJs.indexOf('MutationObserver(fitTableHeight)') !== -1,
+            'пересчёт при открытии/закрытии detail-панели');
+    });
+
+    test('Лупа и поле поиска сдвигаются левее группы (--devt-group-w)', function () {
+        assertTrue(devTableJs.indexOf('.dev-table-header-group.table-active') !== -1,
+            'правила для табличного вида через .table-active');
+        assertTrue(devTableJs.indexOf('--devt-group-w') !== -1,
+            'CSS-переменная --devt-group-w для сдвига лупы/поиска');
+    });
+});
