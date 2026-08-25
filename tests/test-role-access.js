@@ -1248,11 +1248,10 @@ describe('Таблица приборов: фильтры, ширины, кла�
         assertTrue(devTableJs.indexOf('Math.max(40,') !== -1, 'минимальная ширина 40px');
     });
 
-    test('Ресайз sticky-колонок корректен (сдвиг второй колонки)', function () {
-        // При изменении ширины первой колонки все sticky-2 ячейки сдвигаются
-        const m = devTableJs.match(/if \(_resize\.key === COLUMNS\[0\]\.key\) \{[\s\S]{0,250}?querySelectorAll\('\.dev-table-sticky-2'\)/);
-        assertTrue(!!m, 'при ресайзе № обновляется сдвиг sticky-2');
+    test('Ресайз: клик после перетаскивания не сортирует', function () {
+        // Task 171: sticky-2 «Наименование» откреплена — сдвига больше нет
         assertTrue(devTableJs.indexOf('_suppressSort') !== -1, 'клик после перетаскивания не сортирует');
+        assertEqual(devTableJs.indexOf('sticky: 2'), -1, 'sticky-2 откреплена (Task 171)');
     });
 
     test('Клавиатурная навигация: стрелки/Enter/Home/End + фокус-строка', function () {
@@ -1364,5 +1363,40 @@ describe('Багфиксы статистики по колонке (Task 170)',
         // statsEl.contains(e.target) = false → document-слушатель закрывал панель
         const m = devTableJs.match(/expand\.addEventListener\('click', function \(e\) \{\s*\n\s*e\.stopPropagation\(\);[\s\S]{0,300}?expand\.remove\(\);/);
         assertTrue(!!m, 'клик по «Показать все» не должен закрывать панель (stopPropagation)');
+    });
+});
+
+
+// ------------------------------------------------------------
+// Task 171: откреплена «Наименование», квадратная кнопка фильтра, «Выделить всё»
+// ------------------------------------------------------------
+describe('Таблица: одна sticky-колонка + квадратная кнопка фильтра + Выделить всё (Task 171)', function () {
+    const devTableJs = fs.readFileSync(path.resolve(__dirname, '..', 'devices-table-desktop.js'), 'utf-8');
+
+    test('Закреплена ТОЛЬКО колонка «№» (sticky-2 «Наименование» откреплена)', function () {
+        assertEqual(devTableJs.indexOf('sticky: 2'), -1, 'в COLUMNS не должно быть sticky: 2');
+        const mNum = devTableJs.match(/\{ key: '__num__',[^}]*sticky: 1[^}]*\}/);
+        assertTrue(!!mNum, 'колонка № остаётся закреплённой (sticky: 1)');
+        const mName = devTableJs.match(/\{ key: 'Наименование',\s*label: 'Наименование',\s*width: 240 \}/);
+        assertTrue(!!mName, '«Наименование» — без sticky');
+        assertEqual(devTableJs.indexOf('.dev-table .dev-table-sticky-2 {'), -1, 'CSS sticky-2 удалён');
+    });
+
+    test('Кнопка фильтра — квадрат справа во всю высоту шапки, без отступов', function () {
+        const m = devTableJs.match(/\.dev-table-filter-btn \{[\s\S]*?\}/);
+        assertTrue(!!m, 'правило .dev-table-filter-btn');
+        assertTrue(m[0].indexOf('position: absolute') !== -1, 'абсолютное позиционирование');
+        assertTrue(m[0].indexOf('top: 0; right: 0; bottom: 0;') !== -1, 'прижата к правому краю, во всю высоту');
+        assertTrue(m[0].indexOf('width: 18px') !== -1, 'квадратная ширина 18px');
+        assertEqual(m[0].indexOf('margin-left'), -1, 'без отступов (margin)');
+        assertEqual(m[0].indexOf('padding'), -1, 'без внутренних отступов');
+    });
+
+    test('Панель фильтра: «Выделить всё» с промежуточным состоянием', function () {
+        assertTrue(devTableJs.indexOf('\u0412\u044b\u0434\u0435\u043b\u0438\u0442\u044c \u0432\u0441\u0451'.replace(/\\u([0-9a-f]{4})/gi, function (_, h) { return String.fromCharCode(parseInt(h, 16)); })) !== -1 || devTableJs.indexOf('Выделить всё') !== -1, 'строка «Выделить всё»');
+        assertTrue(devTableJs.indexOf('allCb.indeterminate') !== -1, 'промежуточное состояние (indeterminate)');
+        assertTrue(devTableJs.indexOf('visibleVals.forEach(function (v) { checkedSet[v] = allCb.checked; })') !== -1 || devTableJs.indexOf('checkedSet[v] = allCb.checked') !== -1, 'клик переключает все видимые значения');
+        // Синхронизация при индивидуальном изменении
+        assertTrue(devTableJs.indexOf('синхронизировать состояние «Выделить всё»') !== -1, 'синхронизация при клике по значению');
     });
 });
