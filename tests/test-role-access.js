@@ -1531,3 +1531,44 @@ describe('Поиск в строке крошек detail-панели (Task 173)
         assertTrue(html.indexOf('#detailBreadcrumbBar.search-open #flowDesktopTabs { visibility: hidden; }') !== -1, 'табы расходомеров скрыты при поиске');
     });
 });
+
+// ------------------------------------------------------------
+// Task 174: кнопки «Фильтр по колонке» выделены цветом ярче
+// ------------------------------------------------------------
+describe('Кнопки фильтра по колонке — ярче (Task 174)', function () {
+    const devTableJs = fs.readFileSync(path.resolve(__dirname, '..', 'devices-table-desktop.js'), 'utf-8');
+
+    test('Обычное состояние (тёмная тема) — яркий насыщенный цвет вместо тускло-серого', function () {
+        const m = devTableJs.match(/\.dev-table-filter-btn \{[\s\S]*?\}/);
+        assertTrue(!!m, 'правило .dev-table-filter-btn');
+        assertTrue(m[0].indexOf('#7db9f5') !== -1, 'цвет кнопки #7db9f5 (насыщенный голубой)');
+        assertEqual(m[0].indexOf('rgba(200,214,232,0.5)'), -1, 'тусклый полупрозрачный серый удалён из правила');
+    });
+
+    test('Обычное состояние (светлая тема) — акцентный синий', function () {
+        const m = devTableJs.match(/\[data-theme="light"\] \.dev-table-filter-btn \{[^}]*\}/);
+        assertTrue(!!m, 'правило светлой темы');
+        assertTrue(m[0].indexOf('#3a6ea5') !== -1, 'цвет #3a6ea5');
+        assertEqual(m[0].indexOf('rgba(51,70,94,0.55)'), -1, 'тусклый серый удалён из правила');
+    });
+
+    test('Hover — ярче обычного состояния, обе темы', function () {
+        const dark = devTableJs.match(/\.dev-table-filter-btn:hover \{[^}]*\}/);
+        assertTrue(!!dark, 'hover тёмной темы');
+        assertTrue(dark[0].indexOf('#d5e9fd') !== -1, 'hover тёмной темы #d5e9fd');
+        assertTrue(dark[0].indexOf('rgba(125,185,245,0.22)') !== -1, 'подложка hover 0.22');
+        const light = devTableJs.match(/\[data-theme="light"\] \.dev-table-filter-btn:hover \{[^}]*\}/);
+        assertTrue(!!light, 'hover светлой темы');
+        assertTrue(light[0].indexOf('#1b5aa6') !== -1, 'hover светлой темы #1b5aa6');
+    });
+
+    test('Активный фильтр — заметная янтарная плашка, обе темы', function () {
+        const dark = devTableJs.match(/\.dev-table-filter-btn\.has-filter \{[^}]*\}/);
+        assertTrue(!!dark, 'has-filter тёмной темы');
+        assertTrue(dark[0].indexOf('#ffd60a') !== -1, 'жёлтый цвет сохранён');
+        assertTrue(dark[0].indexOf('rgba(255,214,10,0.22)') !== -1, 'фон плашки 0.22 (ярче прежних 0.10)');
+        const light = devTableJs.match(/\[data-theme="light"\] \.dev-table-filter-btn\.has-filter \{[^}]*\}/);
+        assertTrue(!!light, 'has-filter светлой темы');
+        assertTrue(light[0].indexOf('rgba(199,126,0,0.16)') !== -1, 'фон плашки светлой темы 0.16');
+    });
+});
