@@ -1219,3 +1219,66 @@ describe('Багфикс: лупа наезжала на «Таблица» пр
         assertTrue(!!m, 'патч devRenderSorted должен вызывать updateHeaderGroup() для mode=prod');
     });
 });
+
+// ------------------------------------------------------------
+// Task 168: таблица приборов — фильтры/ширины/клавиатура/виртуализация
+// ------------------------------------------------------------
+describe('Таблица приборов: фильтры, ширины, клавиатура, виртуализация (Task 168)', function () {
+    const devTableJs = fs.readFileSync(path.resolve(__dirname, '..', 'devices-table-desktop.js'), 'utf-8');
+
+    test('Фильтры по колонкам: кнопка в заголовке + выпадающий список', function () {
+        assertTrue(devTableJs.indexOf('.dev-table-filter-btn') !== -1, 'кнопка фильтра в th');
+        assertTrue(devTableJs.indexOf('function buildFilterDropdown') !== -1, 'построение списка значений');
+        assertTrue(devTableJs.indexOf('function applyColumnFilters') !== -1, 'применение фильтров');
+        assertTrue(devTableJs.indexOf('colFilters[key] = chosen') !== -1, 'мультивыбор значений');
+        assertTrue(devTableJs.indexOf('(пусто)') !== -1, 'значение-пустышка отображается как (пусто)');
+    });
+
+    test('Фильтры: счётчик «N из M» и живое применение с сохранением прокрутки', function () {
+        assertTrue(devTableJs.indexOf('updateHeaderGroup(rows.length, devices.length)') !== -1, 'счётчик получает N и M');
+        assertTrue(devTableJs.indexOf("' из ' + total") !== -1, 'формат «N из M»');
+        assertTrue(devTableJs.indexOf('function rebuildTable') !== -1, 'пересборка таблицы');
+        assertTrue(devTableJs.indexOf('wrap2.scrollTop = st') !== -1, 'прокрутка сохраняется');
+    });
+
+    test('Ширина колонок: ручка на границе заголовка + сохранение', function () {
+        assertTrue(devTableJs.indexOf('.dev-table-resize-grip') !== -1, 'ручка resize-grip');
+        assertTrue(devTableJs.indexOf("localStorage.getItem('devTableColWidths')") !== -1, 'чтение сохранённых ширин');
+        assertTrue(devTableJs.indexOf("localStorage.setItem('devTableColWidths'") !== -1, 'сохранение ширин');
+        assertTrue(devTableJs.indexOf('Math.max(40,') !== -1, 'минимальная ширина 40px');
+    });
+
+    test('Ресайз sticky-колонок корректен (сдвиг второй колонки)', function () {
+        // При изменении ширины первой колонки все sticky-2 ячейки сдвигаются
+        const m = devTableJs.match(/if \(_resize\.key === COLUMNS\[0\]\.key\) \{[\s\S]{0,250}?querySelectorAll\('\.dev-table-sticky-2'\)/);
+        assertTrue(!!m, 'при ресайзе № обновляется сдвиг sticky-2');
+        assertTrue(devTableJs.indexOf('_suppressSort') !== -1, 'клик после перетаскивания не сортирует');
+    });
+
+    test('Клавиатурная навигация: стрелки/Enter/Home/End + фокус-строка', function () {
+        ['ArrowDown', 'ArrowUp', 'Home', 'End', 'Enter'].forEach(function (k) {
+            assertTrue(devTableJs.indexOf("'" + k + "'") !== -1, 'обработка клавиши ' + k);
+        });
+        assertTrue(devTableJs.indexOf('function onTableKeyDown') !== -1, 'обработчик клавиатуры');
+        assertTrue(devTableJs.indexOf('dev-table-row-focused') !== -1, 'класс фокус-строки');
+        assertTrue(devTableJs.indexOf('function ensureFocusedVisible') !== -1, 'автоскролл к фокус-строке');
+    });
+
+    test('Виртуальный скролл: спейсеры + окно строк + rAF-троттлинг', function () {
+        assertTrue(devTableJs.indexOf('dev-table-vspacer') !== -1, 'спейсеры виртуального скролла');
+        assertTrue(devTableJs.indexOf('function renderRows') !== -1, 'рендер видимого окна');
+        assertTrue(devTableJs.indexOf('requestAnimationFrame') !== -1, 'rAF-троттлинг прокрутки');
+        assertTrue(devTableJs.indexOf("wrap.addEventListener('scroll', onVirtualScroll)") !== -1, 'слушатель прокрутки');
+        assertTrue(devTableJs.indexOf('var VBUF') !== -1, 'буфер строк');
+    });
+
+    test('CSV-экспорт учитывает фильтры и сортировку', function () {
+        const m = devTableJs.match(/var rows = currentRows\.length \? currentRows : lastDevices;/);
+        assertTrue(!!m, 'экспорт из currentRows (отфильтрованные строки)');
+    });
+
+    test('Выпадающий фильтр закрывается при навигации и смене вида', function () {
+        assertTrue(/window\.navigateTo = function \(\) \{\s*\n\s*closeFilterDropdown\(\);/.test(devTableJs), 'закрытие при navigateTo');
+        assertTrue(devTableJs.indexOf("if (!tableMode) closeFilterDropdown()") !== -1, 'закрытие при выходе из таблицы');
+    });
+});
