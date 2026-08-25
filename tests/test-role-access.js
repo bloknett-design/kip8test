@@ -1089,3 +1089,85 @@ describe('Поиск на вложенных страницах КИП ИОС (T
         assertTrue(!!m, 'CSS-правило отступа для шапки избранного');
     });
 });
+
+// ------------------------------------------------------------
+// Task 165: поиск в группах приборов/блокировок + жёлтая подсветка
+// ------------------------------------------------------------
+describe('Поиск в группах приборов/блокировок + жёлтая подсветка (Task 165)', function () {
+    const devTableJs = fs.readFileSync(path.resolve(__dirname, '..', 'devices-table-desktop.js'), 'utf-8');
+
+    test('Группа приборов: поле поиска + кнопка в шапке', function () {
+        const start = html.indexOf('<div id="page-dev-group"');
+        const listIdx = html.indexOf('id="devGroupList"', start);
+        assertTrue(start !== -1 && listIdx !== -1, 'страница dev-group должна существовать');
+        const frag = html.slice(start, listIdx);
+        assertTrue(frag.indexOf('id="devGroupSearchInput"') !== -1, 'поле поиска devGroupSearchInput');
+        assertTrue(frag.indexOf('oninput="devRenderGroup()"') !== -1, 'oninput перерендеривает группу');
+        assertTrue(frag.indexOf('data-search-input="devGroupSearchInput"') !== -1, 'кнопка-лупа');
+    });
+
+    test('Группа блокировок: поле поиска + кнопка в шапке', function () {
+        const start = html.indexOf('<div id="page-lock-group"');
+        const listIdx = html.indexOf('id="lockGroupList"', start);
+        assertTrue(start !== -1 && listIdx !== -1, 'страница lock-group должна существовать');
+        const frag = html.slice(start, listIdx);
+        assertTrue(frag.indexOf('id="lockGroupSearchInput"') !== -1, 'поле поиска lockGroupSearchInput');
+        assertTrue(frag.indexOf('oninput="lockRenderGroup()"') !== -1, 'oninput перерендеривает группу');
+    });
+
+    test('devRenderGroup / lockRenderGroup: kipSearchFilter + счётчик + подсветка', function () {
+        const iDev = html.indexOf("document.getElementById('devGroupSearchInput')");
+        assertTrue(iDev !== -1, 'devRenderGroup читает запрос');
+        const fragDev = html.slice(iDev, iDev + 7000);
+        assertTrue(fragDev.indexOf('kipSearchFilter(items, rawQuery') !== -1, 'devRenderGroup: kipSearchFilter');
+        assertTrue(fragDev.indexOf('kipRenderSearchCounter(list, items.length, __searchTotal, rawQuery)') !== -1, 'devRenderGroup: счётчик');
+        assertTrue(fragDev.indexOf('devMark(name, rawQuery)') !== -1, 'devRenderGroup: подсветка devMark');
+
+        const iLock = html.indexOf("document.getElementById('lockGroupSearchInput')");
+        assertTrue(iLock !== -1, 'lockRenderGroup читает запрос');
+        const fragLock = html.slice(iLock, iLock + 7000);
+        assertTrue(fragLock.indexOf('kipSearchFilter(items, rawQuery') !== -1, 'lockRenderGroup: kipSearchFilter');
+        assertTrue(fragLock.indexOf('lockMark(name, rawQuery)') !== -1, 'lockRenderGroup: подсветка lockMark');
+        assertTrue(fragLock.indexOf('kipRenderSearchCounter(list, items.length, __searchTotal, rawQuery)') !== -1, 'lockRenderGroup: счётчик');
+    });
+
+    test('Жёлтая подсветка mark: единый стиль (списки + карточка прибора)', function () {
+        const m = html.match(/mark,\s*\n\s*\.pb-card mark \{[\s\S]*?background: #ffd60a;/);
+        assertTrue(!!m, 'глобальный mark + .pb-card mark — жёлтый #ffd60a');
+        const m2 = html.match(/\.dev-card-value mark \{[\s\S]*?background: #ffd60a;/);
+        assertTrue(!!m2, '.dev-card-value mark — жёлтый #ffd60a');
+    });
+
+    test('Таблица приборов: markCell подсвечивает совпадения слов запроса', function () {
+        assertTrue(devTableJs.indexOf('function markCell') !== -1, 'функция markCell существует');
+        assertTrue(devTableJs.indexOf('function currentSearchQuery') !== -1, 'currentSearchQuery читает #devProdSearchInput');
+        assertTrue(devTableJs.indexOf("markCell(val, query)") !== -1, 'ячейки рендерятся через markCell');
+        const m = devTableJs.match(/\.dev-table td mark \{ background: #ffd60a; color: #1a1a1a;/);
+        assertTrue(!!m, 'CSS жёлтой подсветки в таблице');
+    });
+
+    test('Подсветка не применяется к колонке № (порядковый номер)', function () {
+        const m = devTableJs.match(/var cellHtml = \(col\.key === '__num__'\) \? esc\(val\) : markCell\(val, query\);/);
+        assertTrue(!!m, 'колонка № — без подсветки, остальные — markCell');
+    });
+});
+
+// ------------------------------------------------------------
+// Task 165 (доп.): регрессия порядка экранирования в markCell
+// ------------------------------------------------------------
+describe('markCell: порядок экранирования и ё-класс (Task 165)', function () {
+    const devTableJs = fs.readFileSync(path.resolve(__dirname, '..', 'devices-table-desktop.js'), 'utf-8');
+
+    test('Экранирование спецсимволов ДО подстановки [её] — скобки класса не экранируются', function () {
+        // Якорь: комментарий про порядок стоит перед строкой экранирования,
+        // замена е -> [её] — сразу после неё
+        const iComment = devTableJs.indexOf('ВАЖНО: сначала экранируем спецсимволы');
+        const iYo = devTableJs.indexOf("n = n.replace(/е/g, '[её]');");
+        assertTrue(iComment !== -1, 'комментарий о порядке экранирования должен быть в markCell');
+        assertTrue(iYo !== -1, 'замена е -> [её] должна быть в markCell');
+        assertTrue(iComment < iYo, 'экранирование должно идти ДО подстановки [её]');
+        // Регресс: старый порядок (сначала [её], потом экранирование) удалён
+        const iOldOrder = devTableJs.indexOf("n = n.replace(/е/g, '[её]');\n            patterns.push(n.replace(/[");
+        assertTrue(iOldOrder === -1, 'старый порядок (подстановка до экранирования) не должен остаться');
+    });
+});
