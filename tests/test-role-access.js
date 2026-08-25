@@ -1171,3 +1171,25 @@ describe('markCell: порядок экранирования и ё-класс (
         assertTrue(iOldOrder === -1, 'старый порядок (подстановка до экранирования) не должен остаться');
     });
 });
+
+// ------------------------------------------------------------
+// Task 166: вертикальная полоса между кнопками «Поиск» и «Таблица»
+// ------------------------------------------------------------
+describe('Разделитель лупы и «Таблица» (Task 166)', function () {
+    const devTableJs = fs.readFileSync(path.resolve(__dirname, '..', 'devices-table-desktop.js'), 'utf-8');
+
+    test('Полоса-разделитель ::before у кнопки «Таблица» — стиль как в верхнем баре', function () {
+        const m = devTableJs.match(/\.dev-table-toggle-btn::before \{[\s\S]*?\}/);
+        assertTrue(!!m, 'псевдоэлемент .dev-table-toggle-btn::before должен существовать');
+        assertTrue(m[0].indexOf('width: 1px') !== -1, 'толщина 1px (как .desktop-top-bar-divider)');
+        assertTrue(m[0].indexOf('height: 24px') !== -1, 'высота 24px (как .desktop-top-bar-divider)');
+        assertTrue(m[0].indexOf('var(--border-color') !== -1, 'цвет var(--border-color) — единый с верхним баром');
+        assertTrue(m[0].indexOf('pointer-events: none') !== -1, 'полоса не перехватывает клики');
+    });
+
+    test('Кнопка «Таблица» — position: relative (якорь полосы)', function () {
+        const m = devTableJs.match(/\.dev-table-toggle-btn \{[\s\S]*?\}/);
+        assertTrue(!!m && m[0].indexOf('position: relative') !== -1,
+            'кнопка должна быть position: relative для позиционирования ::before');
+    });
+});
