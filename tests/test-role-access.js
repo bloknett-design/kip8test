@@ -1278,7 +1278,72 @@ describe('Таблица приборов: фильтры, ширины, кла�
     });
 
     test('Выпадающий фильтр закрывается при навигации и смене вида', function () {
-        assertTrue(/window\.navigateTo = function \(\) \{\s*\n\s*closeFilterDropdown\(\);/.test(devTableJs), 'закрытие при navigateTo');
-        assertTrue(devTableJs.indexOf("if (!tableMode) closeFilterDropdown()") !== -1, 'закрытие при выходе из таблицы');
+        // Task 169: closeFilterDropdown объединён в closePanels (все панели модуля)
+        assertTrue(/window\.navigateTo = function \(\) \{\s*\n\s*closePanels\(\);/.test(devTableJs), 'закрытие при navigateTo');
+        assertTrue(devTableJs.indexOf("if (!tableMode) closePanels()") !== -1, 'закрытие при выходе из таблицы');
+    });
+});
+
+// ------------------------------------------------------------
+// Task 169: статистика по колонке + метки строк по условиям
+// ------------------------------------------------------------
+describe('Таблица приборов: статистика по колонке + метки строк (Task 169)', function () {
+    const devTableJs = fs.readFileSync(path.resolve(__dirname, '..', 'devices-table-desktop.js'), 'utf-8');
+
+    test('Статистика: правый клик по заголовку -> панель «Количество по значениям»', function () {
+        assertTrue(devTableJs.indexOf('function onHeaderContextMenu') !== -1, 'обработчик contextmenu');
+        assertTrue(devTableJs.indexOf("wrap.addEventListener('contextmenu', onHeaderContextMenu)") !== -1, 'contextmenu подключён к таблице');
+        assertTrue(devTableJs.indexOf('function openStatsPanel') !== -1, 'функция openStatsPanel');
+        assertTrue(devTableJs.indexOf('Количество по значениям') !== -1, 'заголовок панели');
+        assertTrue(devTableJs.indexOf('e.preventDefault()') !== -1, 'браузерное меню подавляется');
+    });
+
+    test('Статистика: значения + счётчики + проценты + бары, по текущему набору', function () {
+        assertTrue(devTableJs.indexOf('dts-bar') !== -1, 'визуальные бары');
+        assertTrue(devTableJs.indexOf('currentRows.forEach') !== -1, 'подсчёт по currentRows (с учётом фильтров)');
+        assertTrue(devTableJs.indexOf("'.dts-pct'") !== -1 || devTableJs.indexOf('dts-pct') !== -1, 'проценты');
+        assertTrue(devTableJs.indexOf('Показать все ') !== -1, 'разворачивание полного списка (топ-15)');
+    });
+
+    test('Статистика: клик по значению применяет фильтр (drill-down)', function () {
+        const m = devTableJs.match(/colFilters\[key\] = \[val\];\s*\n\s*closeStatsPanel\(\);\s*\n\s*rebuildTable\(\);/);
+        assertTrue(!!m, 'клик по значению -> фильтр + пересборка');
+    });
+
+    test('Метки строк: кнопка ⚑ в шапке + панель условий', function () {
+        assertTrue(devTableJs.indexOf('dev-table-marks-btn') !== -1, 'кнопка ⚑');
+        assertTrue(devTableJs.indexOf('function toggleMarksDropdown') !== -1, 'панель настроек меток');
+        assertTrue(devTableJs.indexOf('«Дата» старше') !== -1, 'условие: дата старше N лет');
+        assertTrue(devTableJs.indexOf('«В гр. ППР» — Нет') !== -1, 'условие: вне ППР');
+        assertTrue(devTableJs.indexOf("localStorage.setItem('devTableMarks'") !== -1, 'настройки сохраняются');
+    });
+
+    test('Метки: isOldDate парсит YYYY-MM-DD и сравнивает с порогом лет', function () {
+        const m = devTableJs.match(/function isOldDate[\s\S]{0,500}?return d < limit;/);
+        assertTrue(!!m, 'функция isOldDate с корректным сравнением');
+        assertTrue(devTableJs.indexOf('match(/^(\\d{4})-(\\d{2})-(\\d{2})/)'.replace('\\\\', '\\\\')) !== -1 || devTableJs.indexOf('^(\\d{4})-(\\d{2})-(\\d{2})') !== -1, 'ISO-формат даты');
+    });
+
+    test('Метки: классы строк + цветные полосы слева (box-shadow)', function () {
+        assertTrue(devTableJs.indexOf('function rowMarkClasses') !== -1, 'функция классов меток');
+        assertTrue(devTableJs.indexOf('rowMarkClasses(dev)') !== -1, 'вызов в rowHtml');
+        assertTrue(devTableJs.indexOf('dev-mark-old') !== -1, 'класс янтарной метки');
+        assertTrue(devTableJs.indexOf('dev-mark-noppr') !== -1, 'класс красной метки');
+        const m = devTableJs.match(/tr\.dev-mark-old > td:first-child \{ box-shadow: inset 4px 0 0 #e0a030; \}/);
+        assertTrue(!!m, 'янтарная полоса слева (inset box-shadow)');
+        const m2 = devTableJs.match(/tr\.dev-mark-old\.dev-mark-noppr > td:first-child \{/);
+        assertTrue(!!m2, 'двойная метка (оба условия)');
+    });
+
+    test('Метки: изменение условий не пересобирает таблицу (только renderRows)', function () {
+        const m = devTableJs.match(/function applyAndRerender\(\) \{\s*\n\s*saveMarksCfg\(\);\s*\n\s*renderRows\(\);/);
+        assertTrue(!!m, 'лёгкое обновление классов без пересборки');
+    });
+
+    test('Панели закрываются: клик вне / Escape / навигация / смена вида', function () {
+        assertTrue(devTableJs.indexOf('function closePanels') !== -1, 'единое закрытие всех панелей');
+        assertTrue(/if \(statsEl && !statsEl\.contains\(e\.target\)\) closeStatsPanel\(\);/.test(devTableJs), 'клик вне статистики');
+        assertTrue(/if \(marksEl && !marksEl\.contains\(e\.target\)\) closeMarksDropdown\(\);/.test(devTableJs), 'клик вне меток');
+        assertTrue(/e\.key === 'Escape'[\s\S]{0,200}?closeMarksDropdown\(\);/.test(devTableJs), 'Escape закрывает все панели');
     });
 });
