@@ -1524,10 +1524,10 @@ describe('Поиск в строке крошек detail-панели (Task 173)
         assertTrue(!!m, 'Escape сворачивает поиск в строке крошек');
     });
 
-    test('Поле поиска разворачивается на месте крошек', function () {
-        const m = html.match(/#detailBarSearchInput\.search-open \{\s*\n\s*display: block;\s*\n\s*flex: 1;/);
-        assertTrue(!!m, 'flex:1 — поле занимает место крошек');
-        assertTrue(html.indexOf('#detailBreadcrumbBar.search-open #detailBreadcrumbContent { display: none; }') !== -1, 'крошки скрыты при открытом поиске');
+    test('Поле поиска разворачивается рядом с крошками (Task 176)', function () {
+        const m = html.match(/#detailBarSearchInput\.search-open \{\s*\n\s*display: block;\s*\n\s*flex: 0 1 250px;/);
+        assertTrue(!!m, 'flex: 0 1 250px — поле ограниченной ширины');
+        assertTrue(html.indexOf('#detailBreadcrumbBar.search-open #detailBreadcrumbContent { display: none; }') === -1, 'крошки НЕ скрываются при открытом поиске');
         assertTrue(html.indexOf('#detailBreadcrumbBar.search-open #flowDesktopTabs { visibility: hidden; }') !== -1, 'табы расходомеров скрыты при поиске');
     });
 });
@@ -1647,5 +1647,56 @@ describe('Шапка таблицы: два ряда + квадратные кн
             ':empty скрывает пустой бейдж');
         const svg = devTableJs.match(/clearBtn\.innerHTML = '<svg width="14" height="14"/);
         assertTrue(!!svg, 'svg уменьшен до 14x14 под квадратную кнопку');
+    });
+});
+
+// ------------------------------------------------------------
+// Task 176: лёгкая подложка на кнопки фильтра в покое + значок ▾ крупнее;
+// поле поиска в detail-баре не перекрывает хлебные крошки
+// ------------------------------------------------------------
+describe('Подложка кнопок фильтра + поиск не перекрывает крошки (Task 176)', function () {
+    const html = fs.readFileSync(path.resolve(__dirname, '..', 'index.html'), 'utf-8');
+    const devTableJs = fs.readFileSync(path.resolve(__dirname, '..', 'devices-table-desktop.js'), 'utf-8');
+
+    test('Кнопка фильтра — лёгкая подложка в покое, обе темы', function () {
+        const dark = devTableJs.match(/\.dev-table-filter-btn \{[\s\S]*?\}/);
+        assertTrue(!!dark, 'правило .dev-table-filter-btn');
+        assertTrue(dark[0].indexOf('rgba(125,185,245,0.13)') !== -1, 'подложка в покое 0.13 (тёмная тема)');
+        const light = devTableJs.match(/\[data-theme="light"\] \.dev-table-filter-btn \{[^}]*\}/);
+        assertTrue(!!light, 'правило светлой темы');
+        assertTrue(light[0].indexOf('rgba(58,110,165,0.10)') !== -1, 'подложка в покое 0.10 (светлая тема)');
+    });
+
+    test('Иерархия состояний: покой слабее hover, обе темы', function () {
+        const hoverDark = devTableJs.match(/\.dev-table-filter-btn:hover \{[^}]*\}/);
+        assertTrue(!!hoverDark && hoverDark[0].indexOf('rgba(125,185,245,0.22)') !== -1, 'hover тёмной темы 0.22 > 0.13');
+        const hoverLight = devTableJs.match(/\[data-theme="light"\] \.dev-table-filter-btn:hover \{[^}]*\}/);
+        assertTrue(!!hoverLight && hoverLight[0].indexOf('rgba(58,110,165,0.18)') !== -1, 'hover светлой темы 0.18 > 0.10');
+    });
+
+    test('Значок ▾ крупнее и подложка со скруглением слева (как вкладка)', function () {
+        const m = devTableJs.match(/\.dev-table-filter-btn \{[\s\S]*?\}/);
+        assertTrue(!!m && m[0].indexOf('font-size: 10px') !== -1, 'glyph 10px (было 9px)');
+        assertTrue(m[0].indexOf('border-radius: 4px 0 0 4px') !== -1, 'скругление слева 4px');
+        assertTrue(m[0].indexOf('border-left: 1px solid') !== -1, 'левая кромка полосы');
+    });
+
+    test('Открытый поиск: крошки остаются видимыми, путь усекается многоточием', function () {
+        const m = html.match(/#detailBreadcrumbBar\.search-open #detailBreadcrumbContent \{[^}]*\}/);
+        assertTrue(!!m, 'правило для крошек при открытом поиске');
+        assertTrue(m[0].indexOf('display: none') === -1, 'крошки не скрываются');
+        assertTrue(m[0].indexOf('text-overflow: ellipsis') !== -1, 'многоточие при усечении');
+        assertTrue(m[0].indexOf('overflow: hidden') !== -1, 'overflow: hidden');
+        assertTrue(m[0].indexOf('min-width: 120px') !== -1, 'крошки не схлопываются меньше 120px');
+        assertTrue(m[0].indexOf('white-space: nowrap') !== -1, 'одна строка');
+    });
+
+    test('Поле поиска — ограниченной ширины рядом с крошками', function () {
+        const m = html.match(/#detailBarSearchInput\.search-open \{[\s\S]*?\}/);
+        assertTrue(!!m, 'правило .search-open поля');
+        assertTrue(m[0].indexOf('flex: 0 1 250px') !== -1, 'flex-basis 250px, сжимается при нехватке места');
+        assertTrue(m[0].indexOf('flex: 1;') === -1, 'flex:1 (занять место крошек) удалён');
+        assertTrue(m[0].indexOf('margin-left: 40px') === -1, 'margin-left: 40px удалён');
+        assertTrue(m[0].indexOf('min-width: 150px') !== -1, 'минимальная ширина поля 150px');
     });
 });
