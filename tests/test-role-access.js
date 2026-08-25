@@ -1013,3 +1013,79 @@ describe('Таблица приборов: счётчик и CSV в шапке (
             'CSS-переменная --devt-group-w для сдвига лупы/поиска');
     });
 });
+
+// ------------------------------------------------------------
+// Task 164: поиск на вложенных страницах КИП ИОС
+// (группы клапанов/регуляторов/проектов + Избранное)
+// ------------------------------------------------------------
+describe('Поиск на вложенных страницах КИП ИОС (Task 164)', function () {
+
+    // Фрагмент шапки страницы: от открытия <div id="page-X"> до списка
+    function pageHeaderFragment(pageId, listId) {
+        const start = html.indexOf('<div id="page-' + pageId + '"');
+        const listIdx = html.indexOf('id="' + listId + '"', start);
+        assertTrue(start !== -1, 'страница ' + pageId + ' должна существовать');
+        assertTrue(listIdx !== -1, 'список ' + listId + ' должен существовать');
+        return html.slice(start, listIdx);
+    }
+
+    test('Группа клапанов: поле поиска + кнопка в шапке', function () {
+        const frag = pageHeaderFragment('valve-group', 'valveGroupList');
+        assertTrue(frag.indexOf('id="valveGroupSearchInput"') !== -1, 'поле поиска valveGroupSearchInput');
+        assertTrue(frag.indexOf('data-search-input="valveGroupSearchInput"') !== -1, 'кнопка-лупа с data-search-input');
+        assertTrue(frag.indexOf('oninput="valveRenderGroup()"') !== -1, 'oninput перерендеривает группу');
+    });
+
+    test('Группа регуляторов: поле поиска + кнопка в шапке', function () {
+        const frag = pageHeaderFragment('regulator-group', 'regulatorGroupList');
+        assertTrue(frag.indexOf('id="regulatorGroupSearchInput"') !== -1, 'поле поиска regulatorGroupSearchInput');
+        assertTrue(frag.indexOf('oninput="regulatorRenderGroup()"') !== -1, 'oninput перерендеривает группу');
+    });
+
+    test('Группа проектов: поле поиска + кнопка в шапке', function () {
+        const frag = pageHeaderFragment('project-group', 'projectGroupList');
+        assertTrue(frag.indexOf('id="projectGroupSearchInput"') !== -1, 'поле поиска projectGroupSearchInput');
+        assertTrue(frag.indexOf('oninput="projectsRenderGroup()"') !== -1, 'oninput перерендеривает группу');
+    });
+
+    test('Избранное: поле поиска + кнопка в шапке', function () {
+        const frag = pageHeaderFragment('device-favorites', 'deviceFavoritesContent');
+        assertTrue(frag.indexOf('id="favSearchInput"') !== -1, 'поле поиска favSearchInput');
+        assertTrue(frag.indexOf('oninput="KipFav.initFavoritesPage()"') !== -1, 'oninput перерендеривает избранное');
+    });
+
+    test('Групповые рендеры фильтруют через kipSearchFilter и показывают счётчик', function () {
+        // Фрагмент функции от чтения запроса (indexOf — надёжнее регулярок с ?.)
+        function renderFragment(inputId) {
+            const start = html.indexOf("document.getElementById('" + inputId + "')");
+            assertTrue(start !== -1, 'рендер должен читать запрос из ' + inputId);
+            return html.slice(start, start + 4000);
+        }
+        // Клапаны: запрос -> kipSearchFilter -> счётчик
+        const fv = renderFragment('valveGroupSearchInput');
+        assertTrue(fv.indexOf('kipSearchFilter(items, rawQuery') !== -1, 'valveRenderGroup: kipSearchFilter');
+        assertTrue(fv.indexOf('kipRenderSearchCounter(list, items.length, __searchTotal, rawQuery)') !== -1, 'valveRenderGroup: счётчик');
+        // Регуляторы
+        const fr = renderFragment('regulatorGroupSearchInput');
+        assertTrue(fr.indexOf('kipSearchFilter(items, rawQuery') !== -1, 'regulatorRenderGroup: kipSearchFilter');
+        // Проекты
+        const fp = renderFragment('projectGroupSearchInput');
+        assertTrue(fp.indexOf('kipSearchFilter(items, rawQuery') !== -1, 'projectsRenderGroup: kipSearchFilter');
+        assertTrue(fp.indexOf('kipRenderSearchCounter(list, items.length, __searchTotal, rawQuery)') !== -1, 'projectsRenderGroup: счётчик');
+    });
+
+    test('Избранное: фильтрация карточек поисковым запросом + счётчик', function () {
+        const iQuery = html.indexOf("document.getElementById('favSearchInput')");
+        assertTrue(iQuery !== -1, 'initFavoritesPage читает запрос favSearchInput');
+        const frag = html.slice(iQuery, iQuery + 11000);
+        assertTrue(frag.indexOf('var found = 0;') !== -1, 'счётчик найденных объявлен');
+        assertTrue(frag.indexOf('meta.name, itemName, itemSub1, itemSub2') !== -1, 'строка поиска карточки (тип+название+подзаголовки)');
+        assertTrue(frag.indexOf('kipSearchFilter([fav], rawQuery') !== -1, 'фильтрация карточек избранного через kipSearchFilter');
+        assertTrue(frag.indexOf('kipRenderSearchCounter(content, found, __searchTotal, rawQuery)') !== -1, 'счётчик «Найдено: N из M» на странице избранного');
+    });
+
+    test('Избранное: правый кластер шапки не перекрывается лупой (padding)', function () {
+        const m = html.match(/#page-device-favorites \.page-inline-header:has\(\.dev-search-toggle-btn\) \{\s*padding-right: 48px;\s*\}/);
+        assertTrue(!!m, 'CSS-правило отступа для шапки избранного');
+    });
+});
