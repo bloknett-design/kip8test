@@ -46,6 +46,8 @@ const PURE_FUNCTIONS = [
     // Диафрагмы
     'convertOpFlowToM3s',
     'convertOpDpToPa',
+    // Сапёр (Task 191)
+    'msCalcCellSize',
 ];
 
 // Мок DOM: минимально достаточный, чтобы функции не падали.
@@ -210,4 +212,13 @@ function extractFunctions() {
     return extracted;
 }
 
-module.exports = { extractFunctions, PURE_FUNCTIONS };
+module.exports = { extractFunctions, PURE_FUNCTIONS, setMockViewport };
+
+// Task 191: изменение размеров мок-вьюпорта для тестов функций,
+// зависящих от window.innerWidth (например, msCalcCellSize).
+// Все песочницы используют один и тот же объект _mockWindow по ссылке,
+// поэтому мутация действует на уже извлечённые функции.
+function setMockViewport(width, height) {
+    _mockWindow.innerWidth = width;
+    if (typeof height === 'number') _mockWindow.innerHeight = height;
+}
