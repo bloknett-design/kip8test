@@ -1702,6 +1702,45 @@ describe('Подложка кнопок фильтра + поиск не пер�
 });
 
 // ------------------------------------------------------------
+// Task 180: фикс бага «при открытии подробной карточки правые
+// кнопки и поиск смещаются влево». При открытом поиске контент
+// крошек получал flex:0 1 auto (Task 176) — не рос, поэтому
+// поле поиска + правые кнопки (✕, ⇄, лупа) уходили в середину
+// бара. Fix: контент получает flex:1 1 0% (растёт), правые
+// элементы остаются у правого края бара.
+// ------------------------------------------------------------
+describe('Fix: правые кнопки и поиск у правого края (Task 180)', function () {
+    const html = fs.readFileSync(path.resolve(__dirname, '..', 'index.html'), 'utf-8');
+
+    test('Контент при открытом поиске растёт (flex:1), а не стоит на месте', function () {
+        const m = html.match(/#detailBreadcrumbBar\.search-open #detailBreadcrumbContent \{[^}]*\}/);
+        assertTrue(!!m, 'правило для крошек при открытом поиске');
+        // Новое поведение: flex содержит grow:1
+        assertTrue(m[0].indexOf('flex: 1 1 0%') !== -1 || m[0].indexOf('flex: 1') !== -1,
+            'flex растёт (flex: 1 1 0% или flex: 1) — контент заполняет доступное место');
+        // Старое поведение удалено
+        assertTrue(m[0].indexOf('flex: 0 1 auto') === -1,
+            'старое flex: 0 1 auto (не рос) удалено');
+    });
+
+    test('Остальные свойства контента сохранены (многоточие, min-width, nowrap)', function () {
+        const m = html.match(/#detailBreadcrumbBar\.search-open #detailBreadcrumbContent \{[^}]*\}/);
+        assertTrue(!!m, 'правило существует');
+        assertTrue(m[0].indexOf('text-overflow: ellipsis') !== -1, 'многоточие');
+        assertTrue(m[0].indexOf('overflow: hidden') !== -1, 'overflow: hidden');
+        assertTrue(m[0].indexOf('min-width: 120px') !== -1, 'min-width: 120px');
+        assertTrue(m[0].indexOf('white-space: nowrap') !== -1, 'white-space: nowrap');
+    });
+
+    test('Поле поиска и кнопки остаются на месте (flex:0 1 250px)', function () {
+        // Поле поиска не должно менять flex — оно ограниченной ширины
+        const m = html.match(/#detailBarSearchInput\.search-open \{[\s\S]*?\}/);
+        assertTrue(!!m, 'правило .search-open поля');
+        assertTrue(m[0].indexOf('flex: 0 1 250px') !== -1, 'flex: 0 1 250px (ограниченная ширина)');
+    });
+});
+
+// ------------------------------------------------------------
 // Task 177/178: конвертеры — рабочая область из трёх равных частей
 // на десктопе (ввод+перевод+результаты | таблица | информация).
 // Task 177 — конвертер давления; Task 178 — распространена на все
