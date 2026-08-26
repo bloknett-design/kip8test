@@ -8844,23 +8844,23 @@
             gap: 12px;
         }
 
-        /* ===== Task 177: конвертер давления — рабочая область из трёх
+        /* ===== Task 177: конвертеры (давление/расход/масса/температура/длина/плотность/время/объём) — рабочая область из трёх
            равных частей (десктоп >= 1024px). Слева — ввод значения и
            единицы, кнопка «Перевести» и результаты; в центре — расчётная
            таблица перевода; справа — блок справочной информации.
            Колонки равной ширины, каждая прокручивается независимо;
            мобильный вид не меняется (прежний одинарный поток) ===== */
-        #contentArea > #page-conv-pressure.active {
+        #contentArea > .conv-3col-page.active {
             display: flex;
             flex-direction: column;
             overflow: hidden;
             padding-bottom: 0;
         }
-        #page-conv-pressure .page-inline-header {
+        .conv-3col-page .page-inline-header {
             flex-shrink: 0;
             position: static;
         }
-        #page-conv-pressure .conv-columns {
+        .conv-3col-page .conv-columns {
             flex: 1;
             min-height: 0;
             display: grid;
@@ -8869,7 +8869,7 @@
             padding: 12px 14px 14px;
             overflow: hidden;
         }
-        #page-conv-pressure .conv-col {
+        .conv-3col-page .conv-col {
             min-width: 0;
             min-height: 0;
             overflow-y: auto;
@@ -8877,19 +8877,19 @@
             scrollbar-width: thin;
             scrollbar-color: rgba(74,143,199,0.45) transparent;
         }
-        #page-conv-pressure .conv-col::-webkit-scrollbar { width: 8px; }
-        #page-conv-pressure .conv-col::-webkit-scrollbar-thumb { background: rgba(74,143,199,0.4); border-radius: 4px; }
-        #page-conv-pressure .conv-col::-webkit-scrollbar-track { background: transparent; }
+        .conv-3col-page .conv-col::-webkit-scrollbar { width: 8px; }
+        .conv-3col-page .conv-col::-webkit-scrollbar-thumb { background: rgba(74,143,199,0.4); border-radius: 4px; }
+        .conv-3col-page .conv-col::-webkit-scrollbar-track { background: transparent; }
         /* Колонка 1: форма -> кнопка -> результаты, общий верхний край */
-        #page-conv-pressure .conv-col-input .converter-form { margin: 0; }
-        #page-conv-pressure .conv-col-input .converter-convert-btn { margin: 10px 0 0; }
-        #page-conv-pressure .conv-col-input .converter-result-group { margin: 10px 0 0; }
-        #page-conv-pressure .conv-col-table .converter-result-group { margin: 0; }
+        .conv-3col-page .conv-col-input .converter-form { margin: 0; }
+        .conv-3col-page .conv-col-input .converter-convert-btn { margin: 10px 0 0; }
+        .conv-3col-page .conv-col-input .converter-result-group { margin: 10px 0 0; }
+        .conv-3col-page .conv-col-table .converter-result-group { margin: 0; }
         /* Колонка 3: инфоблок — без мобильного отступа сверху */
-        #page-conv-pressure .conv-col-info > .conv-info-block { margin: 0 !important; }
+        .conv-3col-page .conv-col-info > .conv-info-block { margin: 0 !important; }
         /* Заглушка средней колонки: видна, пока таблица скрыта
            (style*=none: исходное display:none и сброс при «Перевести») */
-        #page-conv-pressure:has(#conv-pressure-table[style*="none"]) .conv-table-placeholder {
+        .conv-3col-page:has(.conv-col-table > [style*="none"]) .conv-table-placeholder {
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -8901,17 +8901,17 @@
             border-radius: 14px;
             text-align: center;
         }
-        #page-conv-pressure .conv-table-placeholder svg {
+        .conv-3col-page .conv-table-placeholder svg {
             width: 30px; height: 30px;
             stroke: rgba(74,143,199,0.55);
             fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
         }
-        #page-conv-pressure .conv-table-placeholder .ctp-title { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.55); }
-        #page-conv-pressure .conv-table-placeholder .ctp-text { font-size: 12px; line-height: 1.55; max-width: 280px; color: rgba(255,255,255,0.38); }
-        [data-theme="light"] #page-conv-pressure .conv-table-placeholder { border-color: rgba(58,110,165,0.35); background: rgba(74,143,199,0.05); }
-        [data-theme="light"] #page-conv-pressure .conv-table-placeholder .ctp-title { color: rgba(20,20,19,0.7); }
-        [data-theme="light"] #page-conv-pressure .conv-table-placeholder .ctp-text { color: rgba(20,20,19,0.5); }
-        [data-theme="light"] #page-conv-pressure .conv-table-placeholder svg { stroke: rgba(58,110,165,0.55); }
+        .conv-3col-page .conv-table-placeholder .ctp-title { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.55); }
+        .conv-3col-page .conv-table-placeholder .ctp-text { font-size: 12px; line-height: 1.55; max-width: 280px; color: rgba(255,255,255,0.38); }
+        [data-theme="light"] .conv-3col-page .conv-table-placeholder { border-color: rgba(58,110,165,0.35); background: rgba(74,143,199,0.05); }
+        [data-theme="light"] .conv-3col-page .conv-table-placeholder .ctp-title { color: rgba(20,20,19,0.7); }
+        [data-theme="light"] .conv-3col-page .conv-table-placeholder .ctp-text { color: rgba(20,20,19,0.5); }
+        [data-theme="light"] .conv-3col-page .conv-table-placeholder svg { stroke: rgba(58,110,165,0.55); }
     }
 
     /* Tablet: 768-1023px — частичная адаптация */
@@ -10160,7 +10160,7 @@
         </div>
 
         <!-- Давление -->
-        <div id="page-conv-pressure" class="page-content">
+        <div id="page-conv-pressure" class="page-content conv-3col-page">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Давление</div></div>
 
             <!-- Task 177: на десктопе рабочая область делится на три равные
@@ -10191,80 +10191,178 @@
         </div>
 
         <!-- Расход -->
-        <div id="page-conv-flow" class="page-content">
+        <div id="page-conv-flow" class="page-content conv-3col-page">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Расход</div></div>
 
-            <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-flow-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-flow-unit" class="form-field" autocomplete="off"><option value="m3h" selected>м³/ч</option><option value="m3s">м³/с</option><option value="l_min">л/мин</option><option value="l_s">л/с</option><option value="t_h">т/ч</option><option value="kg_s">кг/с</option><option value="kg_h">кг/ч</option></select></div>
-            <button type="button" class="converter-convert-btn" onclick="convertUnits('flow')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
-            <div class="converter-result-group" id="conv-flow-results"></div>
-            <div class="converter-result-group" id="conv-flow-table" style="display:none;"></div>
-            <div style="margin:14px 0 10px;padding:14px 16px;background:var(--card-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--card-border);border-radius:14px;position:relative;z-index:2;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span style="font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:-0.2px;">Справочная информация</span></div><div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6;"><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Определение:</b> Расход — количество вещества, проходящее через поперечное сечение в единицу времени. Различают объёмный (Q_v, м³/с) и массовый (Q_m, кг/с). Для газов приводят к нормальным условиям (н.у.: 0 °C, 101325 Па).</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Соотношения:</b> 1 м³/ч = 0,0002778 м³/с = 16,67 л/мин = 0,2778 л/с. 1 т/ч = 0,2778 кг/с (для воды при 4 °C). 1 кг/с = 3600 кг/ч.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Связь объёма и массы:</b> Q_m = ρ · Q_v. Для воды (ρ = 998 кг/м³ при 20 °C): 1 м³/ч ≈ 0,277 кг/с. Для изменения температуры плотность корректируется.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Приведение газа к н.у.:</b> Q_н = Q_р · (P/P_н) · (T_н/T), где P, T — рабочие давление и температура; P_н = 101325 Па; T_н = 273,15 K. Без приведения сравнение расходов разных условий некорректно.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Типовые значения:</b> Квартирный счётчик воды 0,5–2,5 м³/ч; магистральный нефтепровод 2000–5000 т/ч; расход природного газа на ТЭЦ 5000–50000 м³/ч; продувка 0,1–1 м³/ч.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Нормативный документ:</b> ГОСТ 8.417-2002 «ГСИ. Единицы величин»; ГОСТ Р 8.625-2006 «Расходомеры счётчики»; ГОСТ 30319.1-2015 (приведение газа).</div></div></div>
+            <!-- Task 178: трёхколоночная схема (давление -> расход/масса/температура/длина/плотность/время/объём). См. Task 177 -->
+            <div class="conv-columns">
+                <div class="conv-col conv-col-input">
+                    <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-flow-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-flow-unit" class="form-field" autocomplete="off"><option value="m3h" selected>м³/ч</option><option value="m3s">м³/с</option><option value="l_min">л/мин</option><option value="l_s">л/с</option><option value="t_h">т/ч</option><option value="kg_s">кг/с</option><option value="kg_h">кг/ч</option></select></div>
+                    <button type="button" class="converter-convert-btn" onclick="convertUnits('flow')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
+                    <div class="converter-result-group" id="conv-flow-results"></div>
+                </div>
+                <div class="conv-col conv-col-table">
+                    <div class="conv-table-placeholder">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="10" y1="10" x2="10" y2="20"/></svg>
+                        <div class="ctp-title">Расчётная таблица перевода</div>
+                        <div class="ctp-text">Введите значение, нажмите «Перевести» и выберите единицу в результатах слева — здесь появится таблица перевода с шагом 5%.</div>
+                    </div>
+                    <div class="converter-result-group" id="conv-flow-table" style="display:none;"></div>
+                </div>
+                <div class="conv-col conv-col-info">
+                    <div class="conv-info-block" style="margin:14px 0 10px;padding:14px 16px;background:var(--card-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--card-border);border-radius:14px;position:relative;z-index:2;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span style="font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:-0.2px;">Справочная информация</span></div><div style="font-size:12px;color:var(--conv-info-text);line-height:1.6;"><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Определение:</b> Расход — количество вещества, проходящее через поперечное сечение в единицу времени. Различают объёмный (Q_v, м³/с) и массовый (Q_m, кг/с). Для газов приводят к нормальным условиям (н.у.: 0 °C, 101325 Па).</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Соотношения:</b> 1 м³/ч = 0,0002778 м³/с = 16,67 л/мин = 0,2778 л/с. 1 т/ч = 0,2778 кг/с (для воды при 4 °C). 1 кг/с = 3600 кг/ч.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Связь объёма и массы:</b> Q_m = ρ · Q_v. Для воды (ρ = 998 кг/м³ при 20 °C): 1 м³/ч ≈ 0,277 кг/с. Для изменения температуры плотность корректируется.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Приведение газа к н.у.:</b> Q_н = Q_р · (P/P_н) · (T_н/T), где P, T — рабочие давление и температура; P_н = 101325 Па; T_н = 273,15 K. Без приведения сравнение расходов разных условий некорректно.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Типовые значения:</b> Квартирный счётчик воды 0,5–2,5 м³/ч; магистральный нефтепровод 2000–5000 т/ч; расход природного газа на ТЭЦ 5000–50000 м³/ч; продувка 0,1–1 м³/ч.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Нормативный документ:</b> ГОСТ 8.417-2002 «ГСИ. Единицы величин»; ГОСТ Р 8.625-2006 «Расходомеры счётчики»; ГОСТ 30319.1-2015 (приведение газа).</div></div></div>
+                </div>
+            </div>
         </div>
 
         <!-- Вес и масса -->
-        <div id="page-conv-mass" class="page-content">
+        <div id="page-conv-mass" class="page-content conv-3col-page">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Вес и масса</div></div>
 
-            <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-mass-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-mass-unit" class="form-field" autocomplete="off"><option value="kg" selected>кг</option><option value="g">г</option><option value="mg">мг</option><option value="t">т</option><option value="lb">lb</option><option value="oz">oz</option></select></div>
-            <button type="button" class="converter-convert-btn" onclick="convertUnits('mass')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
-            <div class="converter-result-group" id="conv-mass-results"></div>
-            <div class="converter-result-group" id="conv-mass-table" style="display:none;"></div>
-            <div style="margin:14px 0 10px;padding:14px 16px;background:var(--card-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--card-border);border-radius:14px;position:relative;z-index:2;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span style="font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:-0.2px;">Справочная информация</span></div><div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6;"><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Определение:</b> Масса — мера инерции тела, единица СИ — килограмм (кг). Вес — сила тяжести, действующая на тело: F = m·g. На Земле m = 1 кг весит F ≈ 9,81 Н; g_ст = 9,80665 м/с² (нормальное ускорение).</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Соотношения:</b> 1 т = 1000 кг = 10⁶ г = 10⁹ мг. 1 фунт (lb) = 0,453592 кг. 1 унция (oz) = 28,3495 г. 1 карат = 0,2 г (для драгоценных камней).</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Тройская система:</b> Применяется для драгоценных металлов: 1 тройский фунт = 373,242 г; 1 тройская унция = 31,1035 г. На биржах золото/серебро котируются в USD/тр.унц.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Типовые значения:</b> Масса буйка КИПиА 0,5–5 кг; калибровочные гири 1 мг–20 кг (образцовые F1/F2); тензодатчик 10–100 кг; расходомер-счётчик на 1 т/ч → 1000 кг за час.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Соотношение с внесистемными:</b> 1 пуд = 16,3805 кг (русская система). 1 кг ≈ 2,20462 lb. 1 унция ≈ 28,35 г. На весах ГОСТ-класса М1 — погрешность 50 мг при 1 кг.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Нормативный документ:</b> ГОСТ 8.417-2002 «ГСИ. Единицы величин»; ГОСТ Р 8.595-2004 «ГСИ. Масса нефти и нефтепродуктов»; ГОСТ OIML R 111-1-2009 (гири).</div></div></div>
+            <!-- Task 178: трёхколоночная схема (давление -> расход/масса/температура/длина/плотность/время/объём). См. Task 177 -->
+            <div class="conv-columns">
+                <div class="conv-col conv-col-input">
+                    <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-mass-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-mass-unit" class="form-field" autocomplete="off"><option value="kg" selected>кг</option><option value="g">г</option><option value="mg">мг</option><option value="t">т</option><option value="lb">lb</option><option value="oz">oz</option></select></div>
+                    <button type="button" class="converter-convert-btn" onclick="convertUnits('mass')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
+                    <div class="converter-result-group" id="conv-mass-results"></div>
+                </div>
+                <div class="conv-col conv-col-table">
+                    <div class="conv-table-placeholder">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="10" y1="10" x2="10" y2="20"/></svg>
+                        <div class="ctp-title">Расчётная таблица перевода</div>
+                        <div class="ctp-text">Введите значение, нажмите «Перевести» и выберите единицу в результатах слева — здесь появится таблица перевода с шагом 5%.</div>
+                    </div>
+                    <div class="converter-result-group" id="conv-mass-table" style="display:none;"></div>
+                </div>
+                <div class="conv-col conv-col-info">
+                    <div class="conv-info-block" style="margin:14px 0 10px;padding:14px 16px;background:var(--card-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--card-border);border-radius:14px;position:relative;z-index:2;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span style="font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:-0.2px;">Справочная информация</span></div><div style="font-size:12px;color:var(--conv-info-text);line-height:1.6;"><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Определение:</b> Масса — мера инерции тела, единица СИ — килограмм (кг). Вес — сила тяжести, действующая на тело: F = m·g. На Земле m = 1 кг весит F ≈ 9,81 Н; g_ст = 9,80665 м/с² (нормальное ускорение).</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Соотношения:</b> 1 т = 1000 кг = 10⁶ г = 10⁹ мг. 1 фунт (lb) = 0,453592 кг. 1 унция (oz) = 28,3495 г. 1 карат = 0,2 г (для драгоценных камней).</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Тройская система:</b> Применяется для драгоценных металлов: 1 тройский фунт = 373,242 г; 1 тройская унция = 31,1035 г. На биржах золото/серебро котируются в USD/тр.унц.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Типовые значения:</b> Масса буйка КИПиА 0,5–5 кг; калибровочные гири 1 мг–20 кг (образцовые F1/F2); тензодатчик 10–100 кг; расходомер-счётчик на 1 т/ч → 1000 кг за час.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Соотношение с внесистемными:</b> 1 пуд = 16,3805 кг (русская система). 1 кг ≈ 2,20462 lb. 1 унция ≈ 28,35 г. На весах ГОСТ-класса М1 — погрешность 50 мг при 1 кг.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Нормативный документ:</b> ГОСТ 8.417-2002 «ГСИ. Единицы величин»; ГОСТ Р 8.595-2004 «ГСИ. Масса нефти и нефтепродуктов»; ГОСТ OIML R 111-1-2009 (гири).</div></div></div>
+                </div>
+            </div>
         </div>
 
         <!-- Температура -->
-        <div id="page-conv-temp" class="page-content">
+        <div id="page-conv-temp" class="page-content conv-3col-page">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Температура</div></div>
 
-            <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-temp-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-temp-unit" class="form-field" autocomplete="off"><option value="C" selected>°C</option><option value="F">°F</option><option value="K">K</option><option value="R">°R</option><option value="Ra">°Ra</option></select></div>
-            <button type="button" class="converter-convert-btn" onclick="convertTemp()"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
-            <div class="converter-result-group" id="conv-temp-results"></div>
-            <div class="converter-result-group" id="conv-temp-table" style="display:none;"></div>
-            <div style="margin:14px 0 10px;padding:14px 16px;background:var(--card-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--card-border);border-radius:14px;position:relative;z-index:2;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span style="font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:-0.2px;">Справочная информация</span></div><div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6;"><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Определение:</b> Температура — физическая величина, характеризующая среднюю кинетическую энергию частиц вещества. Единица СИ — кельвин (K); допускается градус Цельсия (°C), T(K) = t(°C) + 273,15.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Шкалы:</b> T(K) = T(°C) + 273,15. T(°F) = 1,8·t(°C) + 32. T(°Ra) = T(K)·1,8 = t(°F) + 459,67. Шкала Ранкина — абсолютная, как Кельвина, но с градусом Фаренгейта.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Реперные точки:</b> 0 °C = 273,15 K = 32 °F (точка плавления льда). 100 °C = 373,15 K = 212 °F (кипение воды при 101325 Па). Абсолютный ноль: 0 K = −273,15 °C = −459,67 °F.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Тройная точка воды:</b> 0,01 °C = 273,16 K — основная реперная точка шкалы Кельвина. Используется для поверки эталонных термометров.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Типовые значения:</b> Комнатная 20 ± 5 °C; технологические процессы от −50 до +1500 °C; криогенные до −200 °C; паропровод 150–565 °C; термокамеры до 1000 °C.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Нормативный документ:</b> ГОСТ 8.417-2002 «ГСИ. Единицы величин»; ГОСТ 6651-2009 (ТСП, ТСМ); ГОСТ Р 8.585-2001 (термопары); МИ 2884-2004 (поверочная схема).</div></div></div>
+            <!-- Task 178: трёхколоночная схема (давление -> расход/масса/температура/длина/плотность/время/объём). См. Task 177 -->
+            <div class="conv-columns">
+                <div class="conv-col conv-col-input">
+                    <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-temp-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-temp-unit" class="form-field" autocomplete="off"><option value="C" selected>°C</option><option value="F">°F</option><option value="K">K</option><option value="R">°R</option><option value="Ra">°Ra</option></select></div>
+                    <button type="button" class="converter-convert-btn" onclick="convertTemp()"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
+                    <div class="converter-result-group" id="conv-temp-results"></div>
+                </div>
+                <div class="conv-col conv-col-table">
+                    <div class="conv-table-placeholder">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="10" y1="10" x2="10" y2="20"/></svg>
+                        <div class="ctp-title">Расчётная таблица перевода</div>
+                        <div class="ctp-text">Введите значение, нажмите «Перевести» и выберите единицу в результатах слева — здесь появится таблица перевода с шагом 5%.</div>
+                    </div>
+                    <div class="converter-result-group" id="conv-temp-table" style="display:none;"></div>
+                </div>
+                <div class="conv-col conv-col-info">
+                    <div class="conv-info-block" style="margin:14px 0 10px;padding:14px 16px;background:var(--card-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--card-border);border-radius:14px;position:relative;z-index:2;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span style="font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:-0.2px;">Справочная информация</span></div><div style="font-size:12px;color:var(--conv-info-text);line-height:1.6;"><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Определение:</b> Температура — физическая величина, характеризующая среднюю кинетическую энергию частиц вещества. Единица СИ — кельвин (K); допускается градус Цельсия (°C), T(K) = t(°C) + 273,15.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Шкалы:</b> T(K) = T(°C) + 273,15. T(°F) = 1,8·t(°C) + 32. T(°Ra) = T(K)·1,8 = t(°F) + 459,67. Шкала Ранкина — абсолютная, как Кельвина, но с градусом Фаренгейта.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Реперные точки:</b> 0 °C = 273,15 K = 32 °F (точка плавления льда). 100 °C = 373,15 K = 212 °F (кипение воды при 101325 Па). Абсолютный ноль: 0 K = −273,15 °C = −459,67 °F.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Тройная точка воды:</b> 0,01 °C = 273,16 K — основная реперная точка шкалы Кельвина. Используется для поверки эталонных термометров.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Типовые значения:</b> Комнатная 20 ± 5 °C; технологические процессы от −50 до +1500 °C; криогенные до −200 °C; паропровод 150–565 °C; термокамеры до 1000 °C.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Нормативный документ:</b> ГОСТ 8.417-2002 «ГСИ. Единицы величин»; ГОСТ 6651-2009 (ТСП, ТСМ); ГОСТ Р 8.585-2001 (термопары); МИ 2884-2004 (поверочная схема).</div></div></div>
+                </div>
+            </div>
         </div>
 
         <!-- Длина и расстояние -->
-        <div id="page-conv-length" class="page-content">
+        <div id="page-conv-length" class="page-content conv-3col-page">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Длина и расстояние</div></div>
 
-            <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-length-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-length-unit" class="form-field" autocomplete="off"><option value="m" selected>м</option><option value="km">км</option><option value="cm">см</option><option value="mm">мм</option><option value="um">мкм</option><option value="mi">миля</option><option value="ft">фут</option><option value="in">дюйм</option><option value="yd">ярд</option></select></div>
-            <button type="button" class="converter-convert-btn" onclick="convertUnits('length')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
-            <div class="converter-result-group" id="conv-length-results"></div>
-            <div class="converter-result-group" id="conv-length-table" style="display:none;"></div>
-            <div style="margin:14px 0 10px;padding:14px 16px;background:var(--card-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--card-border);border-radius:14px;position:relative;z-index:2;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span style="font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:-0.2px;">Справочная информация</span></div><div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6;"><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Определение:</b> Длина — расстояние между двумя точками в пространстве. Единица СИ — метр (м), определяется как расстояние, проходимое светом в вакууме за 1/299792458 секунды.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Соотношения:</b> 1 м = 10³ мм = 10² см = 10⁻³ км = 10⁶ мкм. 1 дюйм = 25,4 мм. 1 фут = 0,3048 м. 1 ярд = 0,9144 м. 1 миля = 1609,344 м. 1 морская миля = 1852 м.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Микрометр:</b> 1 мкм = 10⁻⁶ м = 10⁻³ мм. Применяется для точности приборов (класс 0,1 / 0,25 / 0,5 — погрешности в мкм), шероховатости (Ra), допусков.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Типовые значения:</b> Диаметр трубы Ду50 = 50 мм (внутренний); глубина резервуара до 10 м; толщина стенки трубы 2–20 мм; длина импульсной линии до 60 м; высота столба ртути 760 мм.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Трубная резьба:</b> Обозначается в дюймах (1/2", 3/4", 1"), но размер в мм: 1/2" BSP → 21 мм (наружный), 3/4" → 26,4 мм, 1" → 33,2 мм. Внимание: дюйм трубный ≠ обычный дюйм (25,4 мм) — относится к внутреннему диаметру трубы.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Нормативный документ:</b> ГОСТ 8.417-2002 «ГСИ. Единицы величин»; ГОСТ 3269-81 (трубная цилиндрическая резьба); ГОСТ 6357-81 (трубная резьба); МИ 2060-90 (поверочная схема).</div></div></div>
+            <!-- Task 178: трёхколоночная схема (давление -> расход/масса/температура/длина/плотность/время/объём). См. Task 177 -->
+            <div class="conv-columns">
+                <div class="conv-col conv-col-input">
+                    <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-length-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-length-unit" class="form-field" autocomplete="off"><option value="m" selected>м</option><option value="km">км</option><option value="cm">см</option><option value="mm">мм</option><option value="um">мкм</option><option value="mi">миля</option><option value="ft">фут</option><option value="in">дюйм</option><option value="yd">ярд</option></select></div>
+                    <button type="button" class="converter-convert-btn" onclick="convertUnits('length')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
+                    <div class="converter-result-group" id="conv-length-results"></div>
+                </div>
+                <div class="conv-col conv-col-table">
+                    <div class="conv-table-placeholder">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="10" y1="10" x2="10" y2="20"/></svg>
+                        <div class="ctp-title">Расчётная таблица перевода</div>
+                        <div class="ctp-text">Введите значение, нажмите «Перевести» и выберите единицу в результатах слева — здесь появится таблица перевода с шагом 5%.</div>
+                    </div>
+                    <div class="converter-result-group" id="conv-length-table" style="display:none;"></div>
+                </div>
+                <div class="conv-col conv-col-info">
+                    <div class="conv-info-block" style="margin:14px 0 10px;padding:14px 16px;background:var(--card-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--card-border);border-radius:14px;position:relative;z-index:2;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span style="font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:-0.2px;">Справочная информация</span></div><div style="font-size:12px;color:var(--conv-info-text);line-height:1.6;"><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Определение:</b> Длина — расстояние между двумя точками в пространстве. Единица СИ — метр (м), определяется как расстояние, проходимое светом в вакууме за 1/299792458 секунды.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Соотношения:</b> 1 м = 10³ мм = 10² см = 10⁻³ км = 10⁶ мкм. 1 дюйм = 25,4 мм. 1 фут = 0,3048 м. 1 ярд = 0,9144 м. 1 миля = 1609,344 м. 1 морская миля = 1852 м.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Микрометр:</b> 1 мкм = 10⁻⁶ м = 10⁻³ мм. Применяется для точности приборов (класс 0,1 / 0,25 / 0,5 — погрешности в мкм), шероховатости (Ra), допусков.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Типовые значения:</b> Диаметр трубы Ду50 = 50 мм (внутренний); глубина резервуара до 10 м; толщина стенки трубы 2–20 мм; длина импульсной линии до 60 м; высота столба ртути 760 мм.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Трубная резьба:</b> Обозначается в дюймах (1/2", 3/4", 1"), но размер в мм: 1/2" BSP → 21 мм (наружный), 3/4" → 26,4 мм, 1" → 33,2 мм. Внимание: дюйм трубный ≠ обычный дюйм (25,4 мм) — относится к внутреннему диаметру трубы.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Нормативный документ:</b> ГОСТ 8.417-2002 «ГСИ. Единицы величин»; ГОСТ 3269-81 (трубная цилиндрическая резьба); ГОСТ 6357-81 (трубная резьба); МИ 2060-90 (поверочная схема).</div></div></div>
+                </div>
+            </div>
         </div>
 
         <!-- Плотность -->
-        <div id="page-conv-density" class="page-content">
+        <div id="page-conv-density" class="page-content conv-3col-page">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Плотность</div></div>
 
-            <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-density-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-density-unit" class="form-field" autocomplete="off"><option value="kg_m3" selected>кг/м³</option><option value="g_cm3">г/см³</option><option value="g_l">г/л</option><option value="kg_l">кг/л</option></select></div>
-            <button type="button" class="converter-convert-btn" onclick="convertUnits('density')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
-            <div class="converter-result-group" id="conv-density-results"></div>
-            <div class="converter-result-group" id="conv-density-table" style="display:none;"></div>
-            <div style="margin:14px 0 10px;padding:14px 16px;background:var(--card-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--card-border);border-radius:14px;position:relative;z-index:2;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span style="font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:-0.2px;">Справочная информация</span></div><div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6;"><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Определение:</b> Плотность — масса единицы объёма: ρ = m/V. Единица СИ — кг/м³. Для жидкостей и газов зависит от температуры и давления (для газов — сильно, для жидкостей — слабо).</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Соотношения:</b> 1 кг/м³ = 10⁻³ г/см³ = 10⁻³ кг/л = 1 г/л. 1 г/см³ = 1000 кг/м³. Плотность — обратная величина к удельному объёму: v = 1/ρ.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Вода (репер):</b> При 4 °C ρ = 1000 кг/м³ (максимум); при 20 °C ρ = 998,2 кг/м³; при 100 °C ρ = 958 кг/м³. При 0 °C (лёд) ρ = 917 кг/м³ — поэтому лёд плавает.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Плотности сред (20 °C):</b> Вода 998; спирт 789; стирол 906; дихлорэтан 1253; этиленгликоль 1112; серная кислота 96% 1834; азотная кислота 1512; олеум 1890 кг/м³.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Газы (н.у.):</b> Воздух 1,29 кг/м³; CO₂ 1,98; O₂ 1,43; N₂ 1,25; H₂ 0,09; гелий 0,18; природный газ 0,75–0,85. Плотность газа при давлении P: ρ = ρ_н · (P/P_н) · (T_н/T).</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Нормативный документ:</b> ГОСТ 8.417-2002 «ГСИ. Единицы величин»; ГОСТ 3900-85 (нефтепродукты, ареометр); ГОСТ 15123-78 (ареометры); ГОСТ Р 51069-97 (плотность нефти).</div></div></div>
+            <!-- Task 178: трёхколоночная схема (давление -> расход/масса/температура/длина/плотность/время/объём). См. Task 177 -->
+            <div class="conv-columns">
+                <div class="conv-col conv-col-input">
+                    <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-density-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-density-unit" class="form-field" autocomplete="off"><option value="kg_m3" selected>кг/м³</option><option value="g_cm3">г/см³</option><option value="g_l">г/л</option><option value="kg_l">кг/л</option></select></div>
+                    <button type="button" class="converter-convert-btn" onclick="convertUnits('density')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
+                    <div class="converter-result-group" id="conv-density-results"></div>
+                </div>
+                <div class="conv-col conv-col-table">
+                    <div class="conv-table-placeholder">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="10" y1="10" x2="10" y2="20"/></svg>
+                        <div class="ctp-title">Расчётная таблица перевода</div>
+                        <div class="ctp-text">Введите значение, нажмите «Перевести» и выберите единицу в результатах слева — здесь появится таблица перевода с шагом 5%.</div>
+                    </div>
+                    <div class="converter-result-group" id="conv-density-table" style="display:none;"></div>
+                </div>
+                <div class="conv-col conv-col-info">
+                    <div class="conv-info-block" style="margin:14px 0 10px;padding:14px 16px;background:var(--card-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--card-border);border-radius:14px;position:relative;z-index:2;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span style="font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:-0.2px;">Справочная информация</span></div><div style="font-size:12px;color:var(--conv-info-text);line-height:1.6;"><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Определение:</b> Плотность — масса единицы объёма: ρ = m/V. Единица СИ — кг/м³. Для жидкостей и газов зависит от температуры и давления (для газов — сильно, для жидкостей — слабо).</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Соотношения:</b> 1 кг/м³ = 10⁻³ г/см³ = 10⁻³ кг/л = 1 г/л. 1 г/см³ = 1000 кг/м³. Плотность — обратная величина к удельному объёму: v = 1/ρ.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Вода (репер):</b> При 4 °C ρ = 1000 кг/м³ (максимум); при 20 °C ρ = 998,2 кг/м³; при 100 °C ρ = 958 кг/м³. При 0 °C (лёд) ρ = 917 кг/м³ — поэтому лёд плавает.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Плотности сред (20 °C):</b> Вода 998; спирт 789; стирол 906; дихлорэтан 1253; этиленгликоль 1112; серная кислота 96% 1834; азотная кислота 1512; олеум 1890 кг/м³.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Газы (н.у.):</b> Воздух 1,29 кг/м³; CO₂ 1,98; O₂ 1,43; N₂ 1,25; H₂ 0,09; гелий 0,18; природный газ 0,75–0,85. Плотность газа при давлении P: ρ = ρ_н · (P/P_н) · (T_н/T).</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Нормативный документ:</b> ГОСТ 8.417-2002 «ГСИ. Единицы величин»; ГОСТ 3900-85 (нефтепродукты, ареометр); ГОСТ 15123-78 (ареометры); ГОСТ Р 51069-97 (плотность нефти).</div></div></div>
+                </div>
+            </div>
         </div>
 
         <!-- Время -->
-        <div id="page-conv-time" class="page-content">
+        <div id="page-conv-time" class="page-content conv-3col-page">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Время</div></div>
 
-            <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-time-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-time-unit" class="form-field" autocomplete="off"><option value="s" selected>секунда</option><option value="ms">миллисекунда</option><option value="min">минута</option><option value="h">час</option><option value="d">сутки</option><option value="week">неделя</option><option value="month">месяц</option><option value="year">год</option></select></div>
-            <button type="button" class="converter-convert-btn" onclick="convertUnits('time')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
-            <div class="converter-result-group" id="conv-time-results"></div>
-            <div class="converter-result-group" id="conv-time-table" style="display:none;"></div>
-            <div style="margin:14px 0 10px;padding:14px 16px;background:var(--card-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--card-border);border-radius:14px;position:relative;z-index:2;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span style="font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:-0.2px;">Справочная информация</span></div><div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6;"><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Определение:</b> Время — физическая величина, характеризующая длительность между событиями. Единица СИ — секунда (с), определяется через 9192631770 периодов излучения атома цезия-133.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Соотношения:</b> 1 с = 10³ мс = 10⁶ мкс = 10⁹ нс. 1 мин = 60 с. 1 ч = 3600 с. 1 сут = 86400 с. 1 неделя = 604800 с. 1 год (григорианский) = 365,2425 сут = 31 556 952 с.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Календарные:</b> Месяц (средний) ≈ 2 629 746 с (30,44 сут). Год (юлианский) = 365,25 сут = 31 557 600 с. Тропический год = 365,2422 сут — основа григорианского календаря.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Типовые значения:</b> Постоянная времени термодатчика 0,1–10 с; время отклика ПЛК 10–100 мс; цикл опроса SCADA 1 с; защитная задержка реле 100 мс–10 с; наработка на отказ > 100 000 ч.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Дискретность:</b> Тик ПЛК 1–100 мс; тактовая сеть Ethernet 100 Мбит/с → 10 нс/бит; таймер микроконтроллера 1 мкс–1 мс; интервал логирования 1–60 с.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Нормативный документ:</b> ГОСТ 8.417-2002 «ГСИ. Единицы величин»; ГОСТ Р 8.000-2015 «ГСИ. Основные положения»; МИ 2189-92 (поверка средств измерений времени).</div></div></div>
+            <!-- Task 178: трёхколоночная схема (давление -> расход/масса/температура/длина/плотность/время/объём). См. Task 177 -->
+            <div class="conv-columns">
+                <div class="conv-col conv-col-input">
+                    <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-time-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-time-unit" class="form-field" autocomplete="off"><option value="s" selected>секунда</option><option value="ms">миллисекунда</option><option value="min">минута</option><option value="h">час</option><option value="d">сутки</option><option value="week">неделя</option><option value="month">месяц</option><option value="year">год</option></select></div>
+                    <button type="button" class="converter-convert-btn" onclick="convertUnits('time')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
+                    <div class="converter-result-group" id="conv-time-results"></div>
+                </div>
+                <div class="conv-col conv-col-table">
+                    <div class="conv-table-placeholder">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="10" y1="10" x2="10" y2="20"/></svg>
+                        <div class="ctp-title">Расчётная таблица перевода</div>
+                        <div class="ctp-text">Введите значение, нажмите «Перевести» и выберите единицу в результатах слева — здесь появится таблица перевода с шагом 5%.</div>
+                    </div>
+                    <div class="converter-result-group" id="conv-time-table" style="display:none;"></div>
+                </div>
+                <div class="conv-col conv-col-info">
+                    <div class="conv-info-block" style="margin:14px 0 10px;padding:14px 16px;background:var(--card-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--card-border);border-radius:14px;position:relative;z-index:2;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span style="font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:-0.2px;">Справочная информация</span></div><div style="font-size:12px;color:var(--conv-info-text);line-height:1.6;"><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Определение:</b> Время — физическая величина, характеризующая длительность между событиями. Единица СИ — секунда (с), определяется через 9192631770 периодов излучения атома цезия-133.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Соотношения:</b> 1 с = 10³ мс = 10⁶ мкс = 10⁹ нс. 1 мин = 60 с. 1 ч = 3600 с. 1 сут = 86400 с. 1 неделя = 604800 с. 1 год (григорианский) = 365,2425 сут = 31 556 952 с.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Календарные:</b> Месяц (средний) ≈ 2 629 746 с (30,44 сут). Год (юлианский) = 365,25 сут = 31 557 600 с. Тропический год = 365,2422 сут — основа григорианского календаря.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Типовые значения:</b> Постоянная времени термодатчика 0,1–10 с; время отклика ПЛК 10–100 мс; цикл опроса SCADA 1 с; защитная задержка реле 100 мс–10 с; наработка на отказ > 100 000 ч.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Дискретность:</b> Тик ПЛК 1–100 мс; тактовая сеть Ethernet 100 Мбит/с → 10 нс/бит; таймер микроконтроллера 1 мкс–1 мс; интервал логирования 1–60 с.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Нормативный документ:</b> ГОСТ 8.417-2002 «ГСИ. Единицы величин»; ГОСТ Р 8.000-2015 «ГСИ. Основные положения»; МИ 2189-92 (поверка средств измерений времени).</div></div></div>
+                </div>
+            </div>
         </div>
 
         <!-- Объём -->
-        <div id="page-conv-volume" class="page-content">
+        <div id="page-conv-volume" class="page-content conv-3col-page">
             <div class="page-inline-header"><div class="page-inline-header-chevron" onclick="chevronTap()" aria-label="Назад / Главная"></div><div class="page-inline-header-title">Объём</div></div>
 
-            <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-volume-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-volume-unit" class="form-field" autocomplete="off"><option value="m3" selected>м³</option><option value="l">литр</option><option value="ml">мл</option><option value="cm3">см³</option><option value="gal">галлон</option><option value="bbl">баррель</option><option value="ft3">куб. фут</option><option value="dm3">дм³</option></select></div>
-            <button type="button" class="converter-convert-btn" onclick="convertUnits('volume')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
-            <div class="converter-result-group" id="conv-volume-results"></div>
-            <div class="converter-result-group" id="conv-volume-table" style="display:none;"></div>
-            <div style="margin:14px 0 10px;padding:14px 16px;background:var(--card-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--card-border);border-radius:14px;position:relative;z-index:2;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span style="font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:-0.2px;">Справочная информация</span></div><div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6;"><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Определение:</b> Объём — вместимость пространства, занимаемого телом. Единица СИ — кубический метр (м³); допускается литр (л = 10⁻³ м³ = 1 дм³). Литр не применяется для высокоточных измерений.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Соотношения:</b> 1 м³ = 1000 л = 10⁶ см³ = 10⁶ мл = 10⁹ мм³. 1 галлон (US) = 3,785 л. 1 галлон (UK) = 4,546 л. 1 баррель (нефть) = 158,987 л. 1 куб. фут = 28,317 л.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Стандартные условия:</b> Газ измеряют в н.м³ (0 °C, 101325 Па) или ст.м³ (20 °C, 101325 Па). Разница: 1 н.м³ = 1,073 ст.м³. Без приведения сравнение объёмов газа некорректно.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Типовые значения:</b> Мерник 0,5–10 м³; резервуар РВС-5000 = 5000 м³; калибровочная мера 1-го класса 1–100 л; мерный цилиндр 10–2000 мл; автомобильная цистерна 25 м³.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Связь с массой:</b> Через плотность: m = ρ · V. Для воды (ρ = 998 кг/м³): 1 м³ = 998 кг ≈ 1 т. Для нефти (ρ = 850 кг/м³): 1 м³ = 850 кг; 1 т = 1,176 м³.</div><div style="margin-bottom:8px;"><b style="color:rgba(255,255,255,0.7);">Нормативный документ:</b> ГОСТ 8.417-2002 «ГСИ. Единицы величин»; ГОСТ 8.570-2014 «ГСИ. Резервуары стальные вертикальные цилиндрические»; МИ 2578-2003 (мерники).</div></div></div>
+            <!-- Task 178: трёхколоночная схема (давление -> расход/масса/температура/длина/плотность/время/объём). См. Task 177 -->
+            <div class="conv-columns">
+                <div class="conv-col conv-col-input">
+                    <div class="converter-form"><div class="form-label">Значение</div><input type="text" inputmode="numeric" id="conv-volume-input" class="form-field" placeholder="Введите значение" autocomplete="off" enterkeyhint="done"><div class="form-label">Единица измерения</div><select id="conv-volume-unit" class="form-field" autocomplete="off"><option value="m3" selected>м³</option><option value="l">литр</option><option value="ml">мл</option><option value="cm3">см³</option><option value="gal">галлон</option><option value="bbl">баррель</option><option value="ft3">куб. фут</option><option value="dm3">дм³</option></select></div>
+                    <button type="button" class="converter-convert-btn" onclick="convertUnits('volume')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Перевести</button>
+                    <div class="converter-result-group" id="conv-volume-results"></div>
+                </div>
+                <div class="conv-col conv-col-table">
+                    <div class="conv-table-placeholder">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="10" y1="10" x2="10" y2="20"/></svg>
+                        <div class="ctp-title">Расчётная таблица перевода</div>
+                        <div class="ctp-text">Введите значение, нажмите «Перевести» и выберите единицу в результатах слева — здесь появится таблица перевода с шагом 5%.</div>
+                    </div>
+                    <div class="converter-result-group" id="conv-volume-table" style="display:none;"></div>
+                </div>
+                <div class="conv-col conv-col-info">
+                    <div class="conv-info-block" style="margin:14px 0 10px;padding:14px 16px;background:var(--card-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--card-border);border-radius:14px;position:relative;z-index:2;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span style="font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:-0.2px;">Справочная информация</span></div><div style="font-size:12px;color:var(--conv-info-text);line-height:1.6;"><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Определение:</b> Объём — вместимость пространства, занимаемого телом. Единица СИ — кубический метр (м³); допускается литр (л = 10⁻³ м³ = 1 дм³). Литр не применяется для высокоточных измерений.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Соотношения:</b> 1 м³ = 1000 л = 10⁶ см³ = 10⁶ мл = 10⁹ мм³. 1 галлон (US) = 3,785 л. 1 галлон (UK) = 4,546 л. 1 баррель (нефть) = 158,987 л. 1 куб. фут = 28,317 л.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Стандартные условия:</b> Газ измеряют в н.м³ (0 °C, 101325 Па) или ст.м³ (20 °C, 101325 Па). Разница: 1 н.м³ = 1,073 ст.м³. Без приведения сравнение объёмов газа некорректно.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Типовые значения:</b> Мерник 0,5–10 м³; резервуар РВС-5000 = 5000 м³; калибровочная мера 1-го класса 1–100 л; мерный цилиндр 10–2000 мл; автомобильная цистерна 25 м³.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Связь с массой:</b> Через плотность: m = ρ · V. Для воды (ρ = 998 кг/м³): 1 м³ = 998 кг ≈ 1 т. Для нефти (ρ = 850 кг/м³): 1 м³ = 850 кг; 1 т = 1,176 м³.</div><div style="margin-bottom:8px;"><b style="color:var(--conv-info-bold);">Нормативный документ:</b> ГОСТ 8.417-2002 «ГСИ. Единицы величин»; ГОСТ 8.570-2014 «ГСИ. Резервуары стальные вертикальные цилиндрические»; МИ 2578-2003 (мерники).</div></div></div>
+                </div>
+            </div>
         </div>
 
         <!-- ======================== ШКАЛА-СИГНАЛ ======================== -->
@@ -22857,7 +22955,10 @@ function showConverterTable(cat, fromUnit, toUnit, baseValue) {
     // строится в средней колонке рядом с результатами, прокручивать
     // страницу к ней не нужно; остальные конвертеры (одноколоночные)
     // скроллят к таблице, как раньше
-    var skipScroll = (cat === 'pressure') && window.matchMedia &&
+    // Task 178: трёхколоночная схема распространена на все конвертеры —
+    // на десктопе >=1024px таблица уже в средней колонке, прокрутка
+    // страницы не нужна
+    var skipScroll = window.matchMedia &&
         window.matchMedia('(min-width: 1024px)').matches;
     if (!skipScroll) setTimeout(() => tableDiv.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
 }
@@ -22896,7 +22997,11 @@ function showTempTable(fromUnit, toUnit, baseCelsius) {
 
     tableDiv.innerHTML = html;
     tableDiv.style.display = 'block';
-    setTimeout(() => tableDiv.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    // Task 178: трёхколоночная схема для температуры — таблица
+    // в средней колонке, прокрутка страницы не нужна на десктопе
+    var skipScrollT = window.matchMedia &&
+        window.matchMedia('(min-width: 1024px)').matches;
+    if (!skipScrollT) setTimeout(() => tableDiv.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
 }
 function setSignalDefaults() { let type=document.getElementById('sigType').value; let def={'4_20':[4,20],'0_20':[0,20],'0_5mA':[0,5],'0_10V':[0,10],'1_5V':[1,5],'0_5V':[0,5],'bipolar_10':[-10,10],'20_100_kPa':[20,100],'0_2_1_0_bar':['0,2','1,0'],'3_15_psi':[3,15],'0_2_1_0_kgf_cm2':['0,2','1,0'],'0_100_pct':[0,100]}; let customDiv=document.getElementById('sigCustomRange'); if(def[type]){document.getElementById('sigMin').value=def[type][0]; document.getElementById('sigMax').value=def[type][1]; customDiv.style.display='none';} else{document.getElementById('sigMin').value='0'; document.getElementById('sigMax').value='100'; document.getElementById('sigUnitCustom').value='%'; customDiv.style.display='block';} document.getElementById('sigUnitLabel').innerText=sigUnitLabels[type]; }
     function setScaleDefaults() { let type=document.getElementById('scalePreset').value; let def={'0_100':[0,100,'%'],'4_20':[4,20,'мА'],'0_20':[0,20,'мА'],'0_5mA':[0,5,'мА'],'0_10V':[0,10,'В'],'1_5V':[1,5,'В'],'0_5V':[0,5,'В'],'bipolar_10':[-10,10,'В'],'20_100_kPa':[20,100,'кПа'],'0_2_1_0_bar':['0,2','1,0','бар'],'3_15_psi':[3,15,'psi'],'0_2_1_0_kgf_cm2':['0,2','1,0','кгс/см²']}; let customDiv=document.getElementById('scaleCustomRange'); if(def[type]){document.getElementById('scaleMin').value=def[type][0]; document.getElementById('scaleMax').value=def[type][1]; document.getElementById('scaleUnitName').value=def[type][2]; customDiv.style.display='none';} else{customDiv.style.display='block';} }
