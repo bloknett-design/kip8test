@@ -1854,3 +1854,150 @@ describe('Конвертеры: три равные колонки (Task 177/178
             'светлая тема переопределяет переменные инфоблока');
     });
 });
+
+// ------------------------------------------------------------
+// Task 179: трёхколоночная схема распространена на все ИНЖЕНЕРНЫЕ
+// КАЛЬКУЛЯТОРЫ разделов «КИП и А» и «Электротехника»:
+// scale-signal, circuit-breaker, orifice-quick/dp/flow/diameter,
+// error-pressure/temp-rtd/temp-tc/flow/level/generic-*/scale/kit,
+// buoy-calc, temp-sensors. Колонки: ввод+кнопка | результаты |
+// справочная информация. Мобильный вид не меняется.
+// ------------------------------------------------------------
+describe('Инженерные калькуляторы: три равные колонки (Task 179)', function () {
+    const html = fs.readFileSync(path.resolve(__dirname, '..', 'index.html'), 'utf-8');
+
+    // (id, button class, results id, info-block count)
+    const CALCS = [
+        // — КИП и А —
+        ['scale-signal',          'scale-calc-btn',         'scaleResultsArea',  1],
+        ['orifice-quick',         'converter-convert-btn',  'oq_results',         1],
+        ['orifice-dp',             'converter-convert-btn', 'opResultsDp',         1],
+        ['orifice-flow',           'converter-convert-btn', 'opResultsFlow',        1],
+        ['orifice-diameter',       'converter-convert-btn', 'opResultsDiameter',    1],
+        ['error-pressure',        'converter-convert-btn',  'ep_results',           1],
+        ['error-temp-rtd',        'converter-convert-btn',  'rtdResults',           1],
+        ['error-temp-tc',         'converter-convert-btn',  'tcResults',            1],
+        ['error-flow',            'converter-convert-btn',  'ef_results',           1],
+        ['error-level',           'converter-convert-btn',  'el_results',            1],
+        ['error-generic-number',  'converter-convert-btn',  'egn_results',          1],
+        ['error-generic-underline', 'converter-convert-btn', 'egu_results',          1],
+        ['error-generic-circle',  'converter-convert-btn',  'egc_results',          1],
+        ['error-generic-fraction', 'converter-convert-btn', 'egf_results',          1],
+        ['error-scale',           'converter-convert-btn',  'ws_results',           3],
+        ['error-kit',             'converter-convert-btn',  'errorKitResults',     1],
+        ['buoy-calc',             'converter-convert-btn',  'buoyResults',          1],
+        ['temp-sensors',          'converter-convert-btn',  'tempSensorResults',    1],
+        // — Электротехника —
+        ['circuit-breaker',       'converter-convert-btn',  'cbResults',            1],
+    ];
+
+    function pageBlock(pageId) {
+        const open = '<div id="page-' + pageId + '" class="page-content conv-3col-page">';
+        const i = html.indexOf(open);
+        assertTrue(i !== -1, 'страница «' + pageId + '» получила класс conv-3col-page');
+        // ищем закрывающий тег на уровне страницы
+        let pos = i + open.length - 1;
+        let depth = 1;
+        const maxIter = 50000;
+        let iter = 0;
+        while (depth > 0 && iter < maxIter) {
+            const m = /<\/?div\b/.exec(html.slice(pos + 1));
+            if (!m) break;
+            pos = pos + 1 + m.index;
+            // m[0] — это '<div' или '</div'; различаем по наличию '/'
+            if (m[0].indexOf('</') === 0) depth--;
+            else depth++;
+            iter++;
+        }
+        return html.slice(i, pos + 6);
+    }
+
+    CALCS.forEach(([pageId, btnClass, resultsId, infoCount]) => {
+        test(pageId + ': структура conv-columns с тремя conv-col', function () {
+            const b = pageBlock(pageId);
+            const iHeader = b.indexOf('page-inline-header');
+            const iCols = b.indexOf('<div class="conv-columns">');
+            const iCol1 = b.indexOf('<div class="conv-col conv-col-input">');
+            const iCol2 = b.indexOf('<div class="conv-col conv-col-table">');
+            const iCol3 = b.indexOf('<div class="conv-col conv-col-info">');
+            assertTrue(iCols !== -1, 'обёртка .conv-columns на странице «' + pageId + '»');
+            assertTrue(iHeader !== -1 && iHeader < iCols, 'колонки после шапки');
+            assertTrue(iCol1 !== -1 && iCol2 !== -1 && iCol3 !== -1, 'три колонки на «' + pageId + '»');
+            assertTrue(iCol1 < iCol2 && iCol2 < iCol3, 'порядок: ввод → таблица → информация');
+        });
+
+        test(pageId + ': колонка 1 — формы и кнопка «Рассчитать»', function () {
+            const b = pageBlock(pageId);
+            const iCol1 = b.indexOf('<div class="conv-col conv-col-input">');
+            const iCol2 = b.indexOf('<div class="conv-col conv-col-table">');
+            const col1 = b.slice(iCol1, iCol2);
+            // Кнопка расчёта обязательно в col1
+            const btnRe = new RegExp('class="' + btnClass.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '"');
+            assertTrue(btnRe.test(col1), 'кнопка «' + btnClass + '» в col-input');
+            assertTrue(col1.indexOf('scale-form') !== -1 || col1.indexOf('converter-form') !== -1,
+                'в col-input есть блоки форм');
+            // Results div НЕ в col1
+            assertTrue(col1.indexOf('id="' + resultsId + '"') === -1,
+                'блок результатов не должен быть в col-input');
+        });
+
+        test(pageId + ': колонка 2 — заглушка + результаты', function () {
+            const b = pageBlock(pageId);
+            const iCol2 = b.indexOf('<div class="conv-col conv-col-table">');
+            const iCol3 = b.indexOf('<div class="conv-col conv-col-info">');
+            const col2 = b.slice(iCol2, iCol3);
+            const iPh = col2.indexOf('conv-table-placeholder');
+            const iRes = col2.indexOf('id="' + resultsId + '"');
+            assertTrue(iPh !== -1, 'заглушка средней колонки');
+            assertTrue(iRes !== -1, 'контейнер результатов #' + resultsId);
+            assertTrue(iPh < iRes, 'заглушка перед результатами');
+        });
+
+        test(pageId + ': колонка 3 — инфоблок conv-info-block с CSS-переменными', function () {
+            const b = pageBlock(pageId);
+            const iCol3 = b.indexOf('<div class="conv-col conv-col-info">');
+            const col3 = b.slice(iCol3);
+            // Количество conv-info-block: infoCount (для error-scale — 3)
+            const occurrences = (col3.match(/conv-info-block/g) || []).length;
+            assertTrue(occurrences >= infoCount,
+                'в col-info ' + infoCount + '+ инфоблок(ов) с классом conv-info-block (найдено ' + occurrences + ')');
+            assertTrue(col3.indexOf('Справочная информация') !== -1,
+                'в col-info есть заголовок «Справочная информация»');
+            assertTrue(col3.indexOf('color:var(--conv-info-text)') !== -1 || col3.indexOf('--conv-info-text') !== -1,
+                'текст инфоблока через --conv-info-text');
+            assertTrue(col3.indexOf('color:rgba(255,255,255,0.5)') === -1,
+                'жёсткий белый цвет текста удалён');
+            assertTrue(col3.indexOf('color:rgba(255,255,255,0.7)') === -1,
+                'жёсткий белый жирный удалён');
+        });
+    });
+
+    // ---------- Общие правила CSS / унификация ----------
+    test('CSS: правило .scale-form в col-input и .scale-calc-btn в col-input', function () {
+        assertTrue(html.indexOf('.conv-3col-page .conv-col-input .scale-form { margin: 0; }') !== -1,
+            'обнулён отступ .scale-form в col-input');
+        assertTrue(html.indexOf('.conv-3col-page .conv-col-input .scale-calc-btn') !== -1,
+            'правило .scale-calc-btn в col-input добавлено');
+    });
+
+    test('CSS: инфоблоки в col-info через conv-info-block — без отступов', function () {
+        assertTrue(html.indexOf('.conv-3col-page .conv-col-info > [class*="conv-info-block"]') !== -1,
+            'правило для conv-info-block в col-info');
+    });
+
+    test('Все 19 калькуляторов получили класс conv-3col-page', function () {
+        const pageIds = CALCS.map(c => c[0]);
+        pageIds.forEach(id => {
+            assertTrue(html.indexOf('<div id="page-' + id + '" class="page-content conv-3col-page">') !== -1,
+                'страница «' + id + '» помечена conv-3col-page');
+        });
+    });
+
+    test('Селекторные страницы НЕ получили класс conv-3col-page', function () {
+        // orifice-select, error-select, buoy-select — это меню выбора, не калькуляторы
+        ['orifice-select', 'error-select', 'buoy-select', 'error-generic'].forEach(id => {
+            assertTrue(html.indexOf('<div id="page-' + id + '" class="page-content conv-3col-page">') === -1,
+                'страница-меню «' + id + '» не должна быть трёхколоночной');
+        });
+    });
+});
