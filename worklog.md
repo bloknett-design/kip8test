@@ -5989,3 +5989,385 @@ Stage Summary:
   крошки автоматически восстанавливаются (раньше бар оставался пустым).
 - Активация: перезагрузить страницу 2 раза (PWA) / перезапустить десктоп
 - Следующий Task ID — 182
+
+---
+Task ID: 182
+Agent: AI Assistant (GLM)
+Task: Десктоп — зрительная подсказка на разделителе разделённых панелей: 3 вертикальные точки с небольшим выступом по центру динамичной разделительной линии
+
+Что сделано:
+- kip8test@e57951e (kipia-test-v448): CSS-правка .detail-panel-resizer
+  в index.html — прежняя тонкая 2px-полоска (::after, opacity:0,
+  видна только на :hover/.dragging) заменена на постоянную
+  ручку-подсказку в центре разделительной линии:
+    • pill 14×30 px, border-radius 7px — шире 7px-родителя, поэтому
+      визуально «выступает» влево и вправо от тонкой разделительной
+      линии (тот самый «небольшой выступ»)
+    • 3 вертикальные точки внутри pill, сделаны тремя слоями
+      radial-gradient в background-image (без доп. DOM):
+      top: center 6px, middle: center center, bottom: center calc(100%-6px)
+    • подсказка видна ВСЕГДА (повышенная обнаруживаемость границы);
+      при :hover/.dragging pill и точки подсвечиваются, добавляется
+      лёгкая внешняя обводка через box-shadow
+    • цвета вынесены в CSS-переменные --dpr-dot / --dpr-pill-bg /
+      --dpr-pill-border / --dpr-glow с отдельными значениями для
+      светлой и тёмной темы
+    • pointer-events: none на ::after — не мешает pointer-capture
+      родителя при перетаскивании
+- sw.js: CACHE_VERSION kipia-test-v447 → kipia-test-v448 (сброс кэша PWA)
+- index.html синхронизирован в kip8test-desktop автоматически
+  (GitHub Action sync-to-desktop.yml: commit 8dad65e «auto: sync
+  index.html from kip8test@e57951e»)
+- Тесты: 207 passed, 0 failed (тесты не затронуты — изменение чисто CSS)
+- Промт не менялся; electron/main.js и package.json не менялись (2.1.7)
+
+Stage Summary:
+- Пользователю: перезапустить десктопное приложение (1 раз) — после
+  сброса кэша на разделителе панелей master-detail (между списком и
+  карточкой деталей) появится постоянная зрительная подсказка в виде
+  трёх вертикальных точек с небольшим выступом по центру линии
+
+---
+Task ID: 183
+Agent: AI Assistant (GLM)
+Task: Десктоп — при замене панелей местами выступ с точками на разделителе должен всегда находиться справа от разделительной линии
+
+Что сделано:
+- kip8test@33826fa (kipia-test-v449): правка CSS у .detail-panel-resizer::after
+  в index.html:
+    • было: transform: translate(-50%, -50%) — pill отцентрирован на
+      разделительной линии и выступал влево и вправо одинаково (по 7px)
+    • стало: transform: translateY(-50%) — без X-сдвига left: 50%
+      ставит ЛЕВЫЙ край pill на центр разделителя (= разделительную
+      линию), pill целиком уходит ВПРАВО от линии (14px)
+- Геометрия работает в обеих раскладках:
+    • обычная (детали справа): разделитель на левой грани #detailPanel —
+      pill справа от линии, внутри панели деталей
+    • swap-режим (#contentArea.panels-swapped, детали слева):
+      разделитель на правой грани #detailPanel (правило right: -3px) —
+      pill по-прежнему справа от линии, теперь уже в зоне списка
+- Комментарии CSS обновлены (Task 182/183), логика JS и DOM не менялись
+- sw.js: CACHE_VERSION kipia-test-v448 → kipia-test-v449 (сброс кэша PWA)
+- index.html синхронизирован в kip8test-desktop автоматически
+  (GitHub Action sync-to-desktop.yml: commit fb4a06a «auto: sync
+  index.html from kip8test@33826fa»)
+- Тесты: 498 passed, 0 failed
+- Промт не менялся; electron/main.js и package.json не менялись (2.1.7)
+
+Stage Summary:
+- Пользователю: перезапустить десктопное приложение (1 раз) — выступ
+  с тремя точками на разделителе панелей теперь всегда будет справа
+  от разделительной линии, независимо от того, поменяли панели
+  местами или нет
+
+---
+Task ID: 184
+Agent: AI Assistant (GLM)
+Task: Десктоп — выступ с точками на разделителе панелей: наполовину, плавно вырастающий из линии
+
+Что сделано:
+- kip8test@0aa1110 (kipia-test-v450): правка CSS у .detail-panel-resizer::after
+  в index.html:
+    • Task 183 делал pill (14×30 px) целиком выступающим вправо от линии —
+      выглядел как отдельная «плавающая» ручка; Task 184 — выступ наполовину,
+      плавно вырастающий из линии
+    • добавлен mask-градиент: linear-gradient(to right, transparent 0%,
+      black 50%, black 100%) — левая половина pill полностью прозрачная,
+      на границе половин плавный переход (маска режет и фон, и рамку,
+      и box-shadow — подсветка на :hover/.dragging тоже проявляется плавно)
+    • у самой разделительной линии pill прозрачен, к середине проявляется —
+      эффект плавного выступа ИЗ линии; видимый выступ = ровно половина
+      ширины pill (7px из 14px)
+    • три точки сдвинуты в видимую правую половину: X = 8.5px
+      (центр видимой половины [7..14] px), точки не попадают в зону
+      растворения mask-градиента
+    • выступ по-прежнему всегда ВПРАВО от линии — и в обычной раскладке,
+      и в swap-режиме (Task 183 сохранён)
+    • добавлены -webkit-mask-* дубли для кросс-браузерной совместимости
+      (Electron/Chromium + PWA)
+- sw.js: CACHE_VERSION kipia-test-v449 → kipia-test-v450 (сброс кэша PWA)
+- index.html синхронизирован в kip8test-desktop автоматически
+  (GitHub Action sync-to-desktop.yml: commit 6287418 «auto: sync
+  index.html from kip8test@0aa1110»)
+- Тесты: 498 passed, 0 failed
+- Промт не менялся; electron/main.js и package.json не менялись (2.1.7)
+
+Stage Summary:
+- Пользователю: перезапустить десктопное приложение (1 раз) — ручка на
+  разделителе теперь будет выглядеть как плавный полувыступ, вырастающий
+  из линии (правая половина pill с тремя точками), а не цельная «пилюля»
+  рядом с линией
+
+---
+Task ID: 185
+Agent: AI Assistant (GLM)
+Task: Десктоп — плавнее переход выступа с точками из разделительной линии + выступ всегда справа при замене панелей местами
+
+Что сделано:
+- kip8test@b3a928e (kipia-test-v451): правка CSS у .detail-panel-resizer::after
+  в index.html:
+    • Task 184 использовал линейный mask-градиент (transparent 0% ->
+      black 50%) — у затухания были различимы границы начала/конца;
+      Task 185 заменил его на S-образную кривую (smoothstep/ease-in-out):
+        transparent 0% -> rgba(0,0,0,0.16) 17% -> rgba(0,0,0,0.5) 34% ->
+        rgba(0,0,0,0.84) 51% -> #000 68% -> #000 100%
+    • зона затухания расширена с 50% до 68% ширины pill (9.5px из 14px):
+      у самой линии ручка почти невидима (16% непрозрачности на 17%
+      ширины) и проявляется очень мягко
+    • три точки сдвинуты в полностью непрозрачную зону: X = 9.5px
+      (фон-слой 9.5..13.5px, центр точки 11.5px = 82% ширины pill) —
+      точки не попадают в зону затухания и не тускнеют
+  Проверена и подтверждена геометрия «выступ всегда СПРАВА» в swap-режиме:
+    • геометрия ::after не зависит от раскладки — left: 50% +
+      translateY(-50%) отсчитывается от самого resizer (7px), а не от
+      панели; левый край pill всегда лежит на разделительной линии
+    • swap-режим лишь переносит resizer на правую грань #detailPanel
+      (left: auto; right: -3px при border-right: 2px) — видимый
+      полувыступ уходит вправо от линии (в зону списка)
+    • JS swap не перестраивает DOM (только класс panels-swapped на
+      #contentArea), resizer остаётся внутри #detailPanel — маска и
+      точки работают одинаково в обеих раскладках
+    • комментарий у swap-правила дополнен пояснением (Task 185)
+- sw.js: CACHE_VERSION kipia-test-v450 → kipia-test-v451 (сброс кэша PWA)
+- index.html синхронизирован в kip8test-desktop автоматически
+  (GitHub Action sync-to-desktop.yml: commit 38117af «auto: sync
+  index.html from kip8test@b3a928e»)
+- Тесты: 498 passed, 0 failed
+- Промт не менялся; electron/main.js и package.json не менялись (2.1.7)
+
+Stage Summary:
+- Пользователю: перезапустить десктопное приложение (1 раз) — переход
+  выступа из линии станет заметно мягче (S-кривая вместо линейной),
+  выступ по-прежнему всегда справа от линии, в том числе после
+  замены панелей местами
+
+---
+Task ID: 186
+Agent: AI Assistant (GLM)
+Task: Десктоп — на разделителе панелей без выступа: просто три вертикальные точки на самой линии
+
+Что сделано:
+- kip8test@0d75914 (kipia-test-v452): правка CSS у .detail-panel-resizer::after
+  в index.html:
+    • выступ/pill полностью убран — удалены background-color, border,
+      border-radius, box-shadow, mask-градиент и transition
+      (наработки Task 182-185 откатаны)
+    • осталось только три вертикальные точки, центрированные НА САМОЙ
+      разделительной линии:
+        - transform: translate(-50%, -50%) — центр колонки точек совпадает
+          с центром resizer (= центр 2px линии)
+        - background-position: center 6px / center center / center
+          calc(100% - 6px) — точки сверху/центр/снизу, шаг 7px
+          (центры на 8px, 15px, 22px от верха ::after высотой 30px)
+        - каждая точка ~2.8px в диаметре, чуть шире 2px линии — читается
+          как «три точки на линии»
+    • вычищены неиспользуемые CSS-переменные --dpr-pill-bg /
+      --dpr-pill-border / --dpr-glow из всех правил (тёмная/светлая тема,
+      hover/dragging) — осталась только --dpr-dot
+    • на :hover/.dragging точки подсвечиваются (--dpr-dot -> белый),
+      полоса подсветки зоны захвата сохранена
+    • точки видны на линии в обеих раскладках — обычной и swap
+      (геометрия ::after не зависит от расположения панелей;
+      swap-правило right: -3px не меняет центрирование ::after)
+- sw.js: CACHE_VERSION kipia-test-v451 → kipia-test-v452 (сброс кэша PWA)
+- index.html синхронизирован в kip8test-desktop автоматически
+  (GitHub Action sync-to-desktop.yml: commit 5abc384 «auto: sync
+  index.html from kip8test@0d75914»)
+- Тесты: 498 passed, 0 failed
+- Промт не менялся; electron/main.js и package.json не менялись (2.1.7)
+
+Stage Summary:
+- Пользователю: перезапустить десктопное приложение (1 раз) — на
+  разделительной линии панелей master-detail будут просто три
+  вертикальные точки по центру линии, без какого-либо выступа
+
+---
+Task ID: 187
+Agent: AI Assistant (GLM)
+Task: Десктоп — точки на разделителе панелей немного крупнее и реже
+
+Что сделано:
+- kip8test@bd73b48 (kipia-test-v453): правка CSS у .detail-panel-resizer::after
+  в index.html:
+    • диаметр точек увеличен ~2.8px → ~3.8px:
+        - radial-gradient: 1.4px/1.5px → 1.9px/2px
+        - размер градиент-слоя (background-size): 4px → 6px,
+          ширина ::after: 4px → 6px — слои не обрезают увеличенные точки
+    • шаг между центрами точек увеличен 7px → 10px (реже):
+        - высота колонки ::after: 30px → 40px
+        - background-position: 6px / calc(100% - 6px) → 10px /
+          calc(100% - 10px) — центры точек на 13px, 23px, 33px
+          от верха ::after (середина между точками увеличена)
+    • точки по-прежнему центрированы НА самой 2px линии
+      (translate(-50%, -50%)), без выступа (Task 186)
+    • видны в обеих раскладках — обычной и swap
+- sw.js: CACHE_VERSION kipia-test-v452 → kipia-test-v453 (сброс кэша PWA)
+- index.html синхронизирован в kip8test-desktop автоматически
+  (GitHub Action sync-to-desktop.yml: commit ee76481 «auto: sync
+  index.html from kip8test@bd73b48»)
+- Тесты: 498 passed, 0 failed
+- Промт не менялся; electron/main.js и package.json не менялись (2.1.7)
+
+Stage Summary:
+- Пользователю: перезапустить десктопное приложение (1 раз) — точки на
+  разделительной линии станут заметно крупнее (~3.8px) и будут расположены
+  реже (шаг 10px между центрами вместо 7px)
+
+---
+Task ID: 188
+Agent: AI Assistant (GLM)
+Task: Мобильная версия — убрать кнопку поиска в разделе «Избранное» (на главной странице)
+
+Что сделано:
+- kip8test@25e4047 (kipia-test-v454): CSS-правка в index.html
+  (после правил Task 164 у #page-device-favorites):
+    • @media (max-width: 1023px) — только мобильная версия:
+        - display: none для .dev-search-toggle-btn (лупа
+          favSearchInputToggleBtn) и .dev-header-search / .search-open
+          (поле favSearchInput, в т.ч. открытое — на случай resize
+          десктоп → мобильный)
+        - отменён сдвиг правого кластера из Task 164:
+          #page-device-favorites .page-inline-header:has(...) —
+          padding-right: 48px → 20px; счётчик «N элементов» и кнопка
+          «Удалить все» прижаты к правому краю как в обычной шапке
+    • на десктопе (>= 1024px) поиск в «Избранном» сохранён без
+      изменений (Task 164)
+    • JS не менялся: делегированный клик-обработчик
+      .dev-search-toggle-btn просто не срабатывает по скрытой кнопке;
+      DOM-элементы остаются на месте — ничего не ломается
+    • страница device-favorites открывается с главной (кнопка
+      «Избранное» в закреплённых / динамическая на дашборде)
+- sw.js: CACHE_VERSION kipia-test-v453 → kipia-test-v454 (сброс кэша PWA)
+- index.html синхронизирован в kip8test-desktop автоматически
+  (GitHub Action sync-to-desktop.yml: commit bd6e876 «auto: sync
+  index.html from kip8test@25e4047»)
+- Тесты: 498 passed, 0 failed
+- Промт не менялся; electron/main.js и package.json не менялись (2.1.7)
+
+Stage Summary:
+- Пользователю: обновить PWA на телефоне (перезагрузить страницу/
+  дождаться обновления Service Worker — v454) — в разделе «Избранное»
+  кнопка поиска (лупа) в шапке пропадёт; в десктопной версии поиск
+  в «Избранном» остаётся
+
+---
+Task ID: 189
+Agent: AI Assistant (GLM)
+Task: Мобильная версия — выравнивание элементов в верхнем баре «Избранного»
+(на главной); в обеих версиях — скрытые кнопки «Сапёр» и «Телефонный
+справочник» выровнять по расположению и габаритам как остальные кнопки главной
+
+Что сделано:
+- Диагностика (Playwright, 390/360/320px + 1440px, мок API через route-fulfill,
+  localStorage с префиксом kip8test:, роль «Админ» из кэша):
+    • мобильная шапка «Избранного»: после Task 188 (скрытая лупа) заголовок
+      сжимался адаптивным скриптом до 12px — правило
+      .page-inline-header:has(.dev-header-search) .page-inline-header-title
+      продолжало давать padding-right: 130px (110px на <360px), хотя поле
+      поиска на мобильном скрыто; в заголовке оставалось ~5px контента
+    • секретные кнопки на мобильном: 2 колонки по 185px (gap 4px) при
+      полноширинных остальных кнопках 374px; правила font 13/10px были
+      мёртвым кодом (перебивались #page-dashboard .menu-btn-label 19-23px)
+    • секретные кнопки на десктопе: repeat(auto-fill, minmax(150px, 1fr)) —
+      узкие плитки 167×105px с центрированным текстом и label 23px, тогда
+      как закреплённые плитки — 453×89px, 3 колонки gap 20px, label 17px
+- kip8test@16d466b (kipia-test-v455): правки index.html:
+    • мобильная шапка «Избранного» (@media max-width: 1023px, блок Task 188):
+      #page-device-favorites .page-inline-header .page-inline-header-title
+      { padding-right: 16px } — ID-специфичность перебивает :has-правила
+      (130px/110px, в т.ч. .scrolled); заголовок снова 18px (17px на 360px,
+      12px только на 320px — там физически мало места), заголовок/счётчик/
+      «Удалить все» центрированы на одной линии (centerY 27.5), кнопка
+      прижата к правому краю (right 370 = 390 − 20px padding)
+    • мобильная/планшет — секретные кнопки: удалены правила «две в ряд»
+      (.menu-btn-row-secret-pair 1fr 1fr !important, gap 4px, @media 360px,
+      font 13/10px) и планшетное repeat(2, 1fr) — ряд наследует
+      #page-dashboard .menu-btn-row: одна колонка во всю ширину (374px),
+      gap 2px, шрифты 19/14px — как у остальных кнопок главной
+    • десктоп — секретные кнопки: #page-dashboard .menu-btn-row-secret-pair
+      { repeat(3, 1fr) !important, gap 20px, padding 16px 20px } + габариты
+      кнопок как у закреплённых плиток: flex-direction: row, выравнивание
+      влево, padding 20px 16px, min-height: auto, label 17px/600,
+      sublabel 13px, border-radius 14px, фон var(--card-bg), рамка
+      var(--card-border) !important (перебивает инлайн border-color,
+      как у закреплённых), hover-подъём + тень, светлая тема (белый фон);
+      убрано мёртвое правило «в одну строку» (repeat(2,1fr) gap 8px)
+    • HTML: «Сапёру» добавлен подзаголовок «Три уровня сложности» — та же
+      двухстрочная структура (label + sublabel), что у остальных кнопок;
+      инлайн-цвета подписей (золото/синий) сохранены как «секретная»
+      идентификация кнопок
+- sw.js: CACHE_VERSION kipia-test-v454 → kipia-test-v455 (сброс кэша PWA)
+- Верификация Playwright (после правок):
+    • мобильная: minesweeper/phonebook x=8, w=374, font 19px — идентично
+      закреплённым (x=8, w=374, font 19px), кнопки друг под другом
+    • десктоп: minesweeper x=20 y=310.6 w=453.3 h=89.3 font 17px; phonebook
+      x=493.3 (вторая ячейка сетки) — пиксель в пиксель как закреплённые
+      плитки (x=20 y=72 w=453.3 h=89.3 font 17px); светлая тема — белый
+      фон, рамка rgba(20,20,19,0.12), radius 14px
+    • десктоп «Избранное»: лупа поиска на месте (Task 164 не затронут),
+      заголовок 18px
+    • ошибок в консоли и pageerror — 0
+- Тесты: 498 passed, 0 failed (tests/run-all.js в kip8test)
+- ⚠️ Пуш в kip8test НЕ выполнен: в этой сессии нет GitHub PAT (по правилам
+  запрашивается заново в каждом чате). Коммит 16d466b подготовлен локально
+  в клоне /home/z/my-project/kip8test (index.html + sw.js). После пуша
+  GitHub Action sync-to-desktop.yml автоматически синхронизирует index.html
+  в kip8test-desktop. index.html в kip8test-desktop уже содержит те же
+  правки (идентичен по md5) и закоммичен локально вместе с worklog —
+  автосинк приедет с тем же содержимым, конфликтов при pull не будет.
+
+Stage Summary:
+- Пользователю: нужен PAT для пуша kip8test@16d466b (либо запушить
+  самостоятельно из /home/z/my-project/kip8test). После пуша: обновить PWA
+  на телефоне (v455) — в «Избранном» шапка выровнена (заголовок 18px,
+  счётчик и «Удалить все» справа); секретные кнопки (2 тапа по заголовку)
+  — полноширинные как остальные на мобильном, плитки 453px в сетке 3
+  колонки на десктопе; перезапустить десктопное приложение
+
+---
+Task ID: 190
+Agent: AI Assistant (GLM)
+Task: Пуш Task 189 (16d466b), перенос всех последних изменений в основной репозиторий kip8, обновление системных промтов 4 репозиториев (PAT передан пользователем в чате)
+
+Work Log:
+- Пуш kip8test@16d466b (v455, Task 189) — коммит был подготовлен локально
+  в прошлой сессии без PAT; пуш запустил sync-to-desktop.yml → автокоммит
+  81784d6 «auto: sync index.html from kip8test@16d466b» в kip8test-desktop;
+  деплой Pages подтверждён (живой kip8test отдаёт kipia-test-v455)
+- Диагностика kip8 ДО переноса: kipia-v392 (Task 179, коммит 49d86fe
+  «Перенос из kip8test: v373-v392 — Tasks 160-179»), после — только
+  ручная загрузка картинок 992a466 и авто-синки данных; отставание от
+  kip8test ровно на Tasks 180-189 (v446-v455)
+- scripts/prepare-kip8-transfer.py создан и закоммичен (промт ссылался
+  на него, но файла не существовало): удаляет блок isolateLocalStorage()
+  (комментарий + IIFE, 17 строк) и заменяет 'kip8test_devices_cache' →
+  'kip8_devices_cache', 'kip8test:' + DEV_CACHE_KEY → DEV_CACHE_KEY (3),
+  'kip8test_phonebook_favorites/notes/cache' → 'kip8_*' (4),
+  '/kip8test/#exam-tickets' → '/kip8/#exam-tickets'; контроль после
+  трансформации: упоминаний kip8test не остаётся
+- kip8@672fa8d (kipia-v393): index.html (294 изменённые строки — дифф
+  после трансформации содержит ТОЛЬКО правки Tasks 180-189, проверено
+  пофрагментно), tests/test-role-access.js (+10 тестов Task 180/181),
+  sw.js (kipia-v392 → kipia-v393)
+- Проверки в kip8: node tests/run-all.js → 498 passed, 0 failed;
+  node --check всех 4 script-блоков и sw.js — OK; isolateLocalStorage=0,
+  'kip8test'=0
+- Автосинк kip8-desktop: e95bc37 «auto: sync index.html from kip8@672fa8d»;
+  CI Tests и Build Desktop App — success; живой kip8 отдаёт kipia-v393
+- Системные промты всех 4 репозиториев обновлены до post-Task 189:
+  версии кэшей (kipia-test-v455 / kipia-v393), 498 тестов (было 292/488),
+  новый раздел «Десктоп: строка крошек и разделитель панелей
+  (Tasks 180-189)» с описанием всех правок Task 180-189
+- kip8test-desktop: удалён мусорный коммит df58d57 (UUID-сообщение,
+  gitlink kip8test + диагностические файлы task189_*) — вместо него
+  чистый cherry-pick docs-коммита Task 189 (58fb8d2) поверх автосинка
+- Worklog kip8test дополнен записями Tasks 182-189 (333 строки — они
+  велись только в worklog kip8test-desktop, теперь обе синхронны)
+
+Stage Summary:
+- Все 4 репозитория синхронны: kip8test@16d466b (kipia-test-v455),
+  kip8test-desktop@58fb8d2, kip8@672fa8d (kipia-v393), kip8-desktop@e95bc37
+- Пользователям боевого kip8: перезагрузить страницу 2 раза (v393) —
+  правки Tasks 180-189 в бою; APK пересборка НЕ требуется (TWA грузит
+  живую страницу); десктоп-приложения обновятся автоматически
+- Следующий Task ID — 191
