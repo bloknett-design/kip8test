@@ -5901,3 +5901,91 @@ Stage Summary:
   невидима).
 - Активация: перезагрузить страницу 2 раза / перезапустить десктоп
 - Следующий Task ID — 181
+
+---
+Task ID: 181
+Agent: AI Assistant (GLM)
+Task: Фикс бага «на странице Расходомеры хозрасчётные остаётся один шеврон и не работает переход по шевронам на главную» (десктоп)
+
+Диагноз (на основе скриншота 2026-08-25_161224.jpg + анализ index.html):
+- На странице flowmeter-data в десктопной версии:
+  1) CSS-правило (Task 127) скрывает .page-inline-header (с динамическим
+     многострелочным шевроном, рендеримым через updateChevronArrows())
+  2) CSS body:has(#page-flowmeter-data.active) #detailBreadcrumbBar
+     { display: flex !important; } — принудительно показывает detail-бар
+  3) У шеврона .detail-breadcrumb-chevron в этом баре onclick был жёстко
+     "closeDetailPanel()" — но без открытой detail-панели клик ничего не
+     делал (CSS :has() сразу же пересоздавал бар)
+  4) Итог: виден только ОДИН шеврон (вместо нескольких по глубине
+     навигации), и клик по нему не возвращал на главную
+- Доп. баг: при закрытии detail-панели через ✕ на flowmeter-data бар
+  оставался видимым, но innerHTML крошек уже был очищен — пользователь
+  видел пустую полосу без пути
+
+Фикс (только index.html — HTML + JS, без CSS-изменений):
+- HTML: у .detail-breadcrumb-chevron onclick "closeDetailPanel()" →
+  "detailBarChevronClick(event)" (новая dispatcher-функция)
+- JS: новая функция detailBarChevronClick(event) — если #detailPanel.active
+  существует → closeDetailPanel() (однострелочное поведение detail-панели);
+  иначе → chevronTap() (1 тап = goBack через history.back()/popstate,
+  2 тапа = navigateTo('dashboard') — как у page-inline-header-chevron)
+- JS: переписана updateChevronArrows() — теперь ОБНОВЛЯЕТ ОБА шеврона:
+  1) .page-inline-header-chevron активной страницы (как раньше, многострелочный
+     по pageHistory.length)
+  2) #detailBreadcrumbBar .detail-breadcrumb-chevron — на flowmeter-data без
+     detail-панели тоже многострелочный (как в заголовке), иначе однострелочный
+- JS: новая функция setFlowmeterBreadcrumbContent() — захардкоженные крошки
+  «Главная / Документация / Документация ИОС / Расходомеры хозрасчётные»
+  вынесены из navigateTo('flowmeter-data') в отдельную функцию (DRY)
+- JS: navigateTo('flowmeter-data') — заменена инлайн-HTML-строка на вызов
+  setFlowmeterBreadcrumbContent() (код короче, переиспользуется)
+- JS: closeDetailPanel() — в setTimeout(0) после очистки бара проверяет,
+  осталась ли активной page-flowmeter-data; если да — восстанавливает
+  .active класса бара, крошки (setFlowmeterBreadcrumbContent), переключатель
+  «Все / Избранные» (flowDesktopTabs) и обновляет шеврон через
+  updateChevronArrows() (многострелочный, т.к. панели больше нет).
+  setTimeout(0) нужен потому что closeDetailPanel() вызывается и из
+  navigateTo() (где все .page-content уже потеряли .active до вызова —
+  тогда проверка не сработает, и новая страница займёт своё место), и
+  напрямую кликом по ✕ (тогда активная страница сохраняется — крошки
+  восстанавливаются без мерцания)
+- JS: setDetailBreadcrumb() — в конце добавлен вызов updateChevronArrows(),
+  чтобы при открытии detail-панели шеврон становился однострелочным
+  (был многострелочным, если мы на flowmeter-data)
+
+Work Log:
+- index.html: HTML .detail-breadcrumb-chevron onclick заменён на
+  detailBarChevronClick(event); aria-label «Назад» → «Назад / Главная»
+- index.html: JS добавлена detailBarChevronClick(event) — диспетчер
+  closeDetailPanel/chevronTap по контексту
+- index.html: JS переписана updateChevronArrows() — теперь обновляет
+  оба шеврона (заголовок страницы + строка крошек detailBreadcrumbBar)
+- index.html: JS добавлена setFlowmeterBreadcrumbContent() — крошки
+  расходомеров вынесены в отдельную функцию
+- index.html: JS navigateTo('flowmeter-data') — инлайн-HTML крошек
+  заменён на вызов setFlowmeterBreadcrumbContent()
+- index.html: JS closeDetailPanel() — в setTimeout(0) восстанавливает
+  крошки и переключатель «Все / Избранные» при возврате на flowmeter-data
+- index.html: JS setDetailBreadcrumb() — добавлен вызов updateChevronArrows()
+  в конце функции
+- tests/test-role-access.js: +7 тестов в новом describe 'Шеврон в строке
+  крошек на flowmeter-data (Task 181)':
+  1) шеврон использует detailBarChevronClick (не closeDetailPanel напрямую)
+  2) detailBarChevronClick существует и делегирует по контексту
+  3) updateChevronArrows обновляет шеврон в #detailBreadcrumbBar
+  4) setFlowmeterBreadcrumbContent — крошки в одном месте
+  5) navigateTo('flowmeter-data') вызывает setFlowmeterBreadcrumbContent
+  6) closeDetailPanel восстанавливает крошки flowmeter-data после ✕
+  7) setDetailBreadcrumb вызывает updateChevronArrows (сброс шеврона)
+- sw.js: CACHE_VERSION kipia-test-v446 → kipia-test-v447
+- Тесты: 498 passed, 0 failed (was 491 → +7)
+
+Stage Summary:
+- На странице «Расходомеры хозрасчётные» в десктопе шеврон в строке крошек
+  теперь показывает несколько стрелок (по глубине навигации — 1..4) и
+  обрабатывает одиночный тап (назад через history.back) и двойной (на главную).
+  При открытой detail-панели шеврон становится одиночным, и клик закрывает
+  панель — как и раньше. После закрытия панели через ✕ на flowmeter-data
+  крошки автоматически восстанавливаются (раньше бар оставался пустым).
+- Активация: перезагрузить страницу 2 раза (PWA) / перезапустить десктоп
+- Следующий Task ID — 182

@@ -2040,3 +2040,140 @@ describe('Инженерные калькуляторы: три равные к�
         });
     });
 });
+
+// ------------------------------------------------------------
+// Task 181: фикс бага «на странице Расходомеры хозрасчётные остаётся
+// один шеврон и не работает переход по шевронам на главную».
+// На flowmeter-data page-inline-header скрыт через CSS :has(),
+// и единственный видимый шеврон — у #detailBreadcrumbBar — имел
+// onclick="closeDetailPanel()". Без открытой detail-панели клик
+// ничего не делал (CSS :has(#page-flowmeter-data.active) сразу
+// пересоздавал бар), и пользователь не мог вернуться на главную.
+// Fix: шеврон делегирует в detailBarChevronClick() — если панель
+// открыта → closeDetailPanel(), иначе → chevronTap() (1 тап = назад,
+// 2 тапа = на главную). Многострелочный шеврон рендерится через
+// updateChevronArrows() (та же функция, что и для заголовка страницы).
+// ------------------------------------------------------------
+describe('Шеврон в строке крошек на flowmeter-data (Task 181)', function () {
+    const html = fs.readFileSync(path.resolve(__dirname, '..', 'index.html'), 'utf-8');
+
+    test('Шеврон #detailBreadcrumbBar вызывает detailBarChevronClick (не closeDetailPanel напрямую)', function () {
+        // Старое: onclick="closeDetailPanel()" — клик ничего не делал без панели
+        // Новое: onclick="detailBarChevronClick(event)"
+        const m = html.match(/<div class="detail-breadcrumb-chevron"\s+onclick="detailBarChevronClick\(event\)"\s+aria-label="[^"]*">/);
+        assertTrue(!!m, 'шеврон использует detailBarChevronClick(event)');
+        // Старый onclick closeDetailPanel() удалён из шеврона
+        const oldPattern = '<div class="detail-breadcrumb-chevron" onclick="closeDetailPanel()"';
+        assertTrue(html.indexOf(oldPattern) === -1,
+            'старый onclick="closeDetailPanel()" удалён из шеврона (был бесполезен без панели)');
+    });
+
+    test('JS: функция detailBarChevronClick существует и делегирует по контексту', function () {
+        const i = html.indexOf('function detailBarChevronClick(');
+        assertTrue(i !== -1, 'функция detailBarChevronClick определена');
+        const seg = html.slice(i, i + 600);
+        // Проверяет, открыта ли detail-панель
+        assertTrue(seg.indexOf("getElementById('detailPanel')") !== -1,
+            'получает #detailPanel');
+        assertTrue(seg.indexOf("classList.contains('active')") !== -1,
+            'проверяет .active класс панели');
+        // Если открыта — closeDetailPanel
+        assertTrue(seg.indexOf('closeDetailPanel()') !== -1,
+            'если панель открыта — вызывает closeDetailPanel()');
+        // Если закрыта — chevronTap (мультитап)
+        assertTrue(seg.indexOf('chevronTap()') !== -1,
+            'если панель закрыта — вызывает chevronTap() (1 тап = назад, 2 = на главную)');
+    });
+
+    test('JS: updateChevronArrows обновляет и шеврон в #detailBreadcrumbBar', function () {
+        const i = html.indexOf('function updateChevronArrows()');
+        assertTrue(i !== -1, 'функция updateChevronArrows определена');
+        // Берём сегмент до следующего блока комментариев (function большая)
+        const endMarker = html.indexOf('// ============================================================\n    // ХЛЕБНЫЕ КРОШКИ', i);
+        const seg = html.slice(i, endMarker > i ? endMarker : i + 3000);
+        // Находит шеврон в строке крошек
+        assertTrue(seg.indexOf("#detailBreadcrumbBar .detail-breadcrumb-chevron") !== -1,
+            'выбирает шеврон в #detailBreadcrumbBar');
+        // На flowmeter-data без detail-панели — многострелочный
+        assertTrue(seg.indexOf("page-flowmeter-data") !== -1,
+            'проверяет активную страницу === page-flowmeter-data');
+        assertTrue(seg.indexOf('isDetailOpen') !== -1,
+            'проверяет, открыта ли detail-панель');
+        // Иначе — одиночная стрелка
+        assertTrue(seg.indexOf('singleArrow') !== -1,
+            'fallback на одиночную стрелку (когда detail-панель открыта)');
+    });
+
+    test('JS: setFlowmeterBreadcrumbContent — крошки расходомеров в одном месте', function () {
+        // Раньше HTML крошек «Главная / Документация / Документация ИОС /
+        // Расходомеры хозрасчётные» дублировался в navigateTo и не
+        // переиспользовался в closeDetailPanel. Теперь — в одной функции.
+        const i = html.indexOf('function setFlowmeterBreadcrumbContent()');
+        assertTrue(i !== -1, 'функция setFlowmeterBreadcrumbContent определена');
+        // Функция до следующей function (updateChevronArrows)
+        const nextFunc = html.indexOf('\n    function ', i + 50);
+        const seg = html.slice(i, nextFunc > i ? nextFunc : i + 1000);
+        // В source onclick="navigateTo(\'dashboard\')" — с escape, как в HTML-строке JS
+        assertTrue(seg.indexOf("navigateTo(\\'dashboard\\')") !== -1,
+            'кликабельная «Главная» (с escape \'dashboard\')');
+        assertTrue(seg.indexOf("navigateTo(\\'docs\\')") !== -1,
+            'кликабельная «Документация» (с escape \'docs\')');
+        assertTrue(seg.indexOf("navigateTo(\\'docs-ios\\')") !== -1,
+            'кликабельная «Документация ИОС» (с escape \'docs-ios\')');
+        assertTrue(seg.indexOf('Расходомеры хозрасчётные') !== -1,
+            'текущая страница — «Расходомеры хозрасчётные» (не кликабельна)');
+    });
+
+    test('JS: navigateTo("flowmeter-data") вызывает setFlowmeterBreadcrumbContent', function () {
+        // Раньше HTML крошек дублировался строкой прямо в navigateTo.
+        // Теперь — переиспользует функцию (без дублирования).
+        const i = html.indexOf("if (page === 'flowmeter-data') {");
+        // Находим блок после closeDetailPanel()
+        const i2 = html.indexOf('Task 130: если мы идём на flowmeter-data', i);
+        assertTrue(i2 !== -1, 'блок для flowmeter-data найден');
+        const seg = html.slice(i2, i2 + 600);
+        assertTrue(seg.indexOf('setFlowmeterBreadcrumbContent') !== -1,
+            'navigateTo вызывает setFlowmeterBreadcrumbContent() вместо инлайн-HTML');
+        // Старая дублирующая HTML-строка удалена из navigateTo
+        // (в новой версии HTML крошек появляется только внутри setFlowmeterBreadcrumbContent)
+        const oldInline = "innerHTML = '<span class=\"breadcrumb-link\" onclick=\"navigateTo(\\'dashboard\\')\">Главная</span>'";
+        assertTrue(seg.indexOf(oldInline) === -1,
+            'дублирующая HTML-строка крошек удалена из navigateTo (теперь в функции)');
+    });
+
+    test('JS: closeDetailPanel восстанавливает крошки flowmeter-data после закрытия панели', function () {
+        // Сценарий: пользователь открыл карточку расходомера (detail-панель),
+        // затем закрыл её через ✕. Активная страница — по-прежнему
+        // flowmeter-data, CSS :has(#page-flowmeter-data.active) держит бар
+        // видимым, но closeDetailPanel() очистил innerHTML. Без Task 181
+        // пользователь видел пустой бар без пути.
+        const i = html.indexOf('function closeDetailPanel()');
+        assertTrue(i !== -1, 'функция closeDetailPanel определена');
+        // Функция до следующей function
+        const nextFunc = html.indexOf('\n    function ', i + 50);
+        const seg = html.slice(i, nextFunc > i ? nextFunc : i + 4000);
+        // Проверяет активную страницу после закрытия
+        assertTrue(seg.indexOf('page-flowmeter-data') !== -1,
+            'проверяет, остались ли на flowmeter-data');
+        // Восстанавливает крошки
+        assertTrue(seg.indexOf('setFlowmeterBreadcrumbContent') !== -1,
+            'вызывает setFlowmeterBreadcrumbContent() для восстановления крошек');
+        // Восстанавливает переключатель «Все / Избранные»
+        assertTrue(seg.indexOf('flowDesktopTabs') !== -1,
+            'восстанавливает видимость переключателя «Все / Избранные»');
+        // Обновляет шеврон (многострелочный после закрытия панели)
+        assertTrue(seg.indexOf('updateChevronArrows') !== -1,
+            'обновляет шеврон (многострелочный после закрытия панели)');
+    });
+
+    test('JS: setDetailBreadcrumb вызывает updateChevronArrows (шеврон → одиночная стрелка)', function () {
+        // При открытии detail-панели шеврон в строке крошек должен
+        // стать одиночным (был многострелочным на flowmeter-data без панели).
+        const i = html.indexOf('function setDetailBreadcrumb(');
+        assertTrue(i !== -1, 'функция setDetailBreadcrumb определена');
+        const seg = html.slice(i, i + 3000);
+        // Заканчивается вызовом updateChevronArrows
+        assertTrue(seg.indexOf('updateChevronArrows') !== -1,
+            'setDetailBreadcrumb вызывает updateChevronArrows для сброса шеврона');
+    });
+});
