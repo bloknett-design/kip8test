@@ -331,3 +331,73 @@ describe('Локальное хранилище fallback (kip8_flow_comments_v1)
         assertEqual(Object.keys(loaded).length, 0, 'массив не принимается как карта');
     });
 });
+
+describe('flowBuildArchivedCommentRowHtml — Task 197: preview архивного комментария', () => {
+
+    test('Пустой/нет значения → строки нет', () => {
+        assertEqual(fns.flowBuildArchivedCommentRowHtml(''), '', 'пусто — нет строки');
+        assertEqual(fns.flowBuildArchivedCommentRowHtml(null), '', 'null — нет строки');
+        assertEqual(fns.flowBuildArchivedCommentRowHtml(undefined), '', 'undefined — нет строки');
+        assertEqual(fns.flowBuildArchivedCommentRowHtml('   '), '', 'пробелы — нет строки');
+    });
+
+    test('Корректный формат «[ISO | email]: текст» → строка с разбором', () => {
+        const archived = '[2026-08-27T05:47:39.123Z | duty@plant.local]: продувка линии утром';
+        const html = fns.flowBuildArchivedCommentRowHtml(archived);
+        assertTrue(html.indexOf('flow-archived-comment-row') !== -1, 'строка отрендерена');
+        assertTrue(html.indexOf('Последний архивный комментарий') !== -1, 'лейбл присутствует');
+        // Дата должна быть отформатирована в dd.mm.yyyy HH:MM
+        assertTrue(html.indexOf('27.08.2026') !== -1, 'дата отформатирована в dd.mm.yyyy');
+        assertTrue(html.indexOf('duty@plant.local') !== -1, 'email автора показан');
+        assertTrue(html.indexOf('продувка линии утром') !== -1, 'текст комментария показан');
+        // Метаданные и текст разделены на два span
+        assertTrue(html.indexOf('flow-archived-meta') !== -1, 'метаданные в отдельном span');
+        assertTrue(html.indexOf('flow-archived-text') !== -1, 'текст в отдельном span');
+    });
+
+    test('Формат без двоеточия после ] — весь текст как текст', () => {
+        const archived = '[2026-08-27T05:47:39.123Z | duty@plant.local] продувка';
+        const html = fns.flowBuildArchivedCommentRowHtml(archived);
+        assertTrue(html.indexOf('flow-archived-meta') !== -1, 'метаданные извлечены');
+        assertTrue(html.indexOf('продувка') !== -1, 'текст показан');
+    });
+
+    test('Произвольный текст (не формат) → показан как есть в .flow-archived-text', () => {
+        const html = fns.flowBuildArchivedCommentRowHtml('просто строка без меты');
+        assertTrue(html.indexOf('flow-archived-text') !== -1, 'есть span текста');
+        assertTrue(html.indexOf('просто строка без меты') !== -1, 'текст показан');
+        assertTrue(html.indexOf('flow-archived-meta') === -1 || html.indexOf('flow-archived-meta"></span>') !== -1,
+            'метаданные пустые (нет или пустой span)');
+    });
+
+    test('HTML-символы в тексте экранируются (XSS-защита)', () => {
+        const archived = '[2026-08-27T05:47:39.123Z | duty@plant.local]: <script>alert(1)</script>';
+        const html = fns.flowBuildArchivedCommentRowHtml(archived);
+        assertTrue(html.indexOf('<script>alert(1)</script>') === -1, 'HTML не вставлен как есть');
+        assertTrue(html.indexOf('&lt;script&gt;') !== -1, 'тег экранирован');
+    });
+
+    test('Формат с email-адресом сохраняется после форматирования даты', () => {
+        const archived = '[2026-08-27T05:47:39.123Z | admin@plant.local]: правка админом';
+        const html = fns.flowBuildArchivedCommentRowHtml(archived);
+        // После форматирования мета должна содержать « · admin@plant.local»
+        // (разделитель | заменён на ·) и дату в dd.mm.yyyy HH:MM.
+        assertTrue(html.indexOf('admin@plant.local') !== -1, 'email админа показан');
+        assertTrue(html.indexOf('27.08.2026 05:47') !== -1, 'дата+время отформатированы');
+    });
+
+    test('Строка-метаданные без даты (любой текст в скобках) — показывается как мета', () => {
+        const archived = '[вчера | кто-то]: текст комментария';
+        const html = fns.flowBuildArchivedCommentRowHtml(archived);
+        assertTrue(html.indexOf('flow-archived-meta') !== -1, 'мета есть');
+        assertTrue(html.indexOf('текст комментария') !== -1, 'текст показан');
+        // Нет ISO-даты → не падает, дата не форматируется
+    });
+
+    test('Очень длинный текст комментария не обрезается (это делает CSS)', () => {
+        const longText = 'а'.repeat(500);
+        const archived = '[2026-08-27T05:47:39.123Z | duty@plant.local]: ' + longText;
+        const html = fns.flowBuildArchivedCommentRowHtml(archived);
+        assertTrue(html.indexOf(longText) !== -1, 'длинный текст сохранён целиком');
+    });
+});

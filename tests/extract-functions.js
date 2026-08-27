@@ -67,6 +67,8 @@ const PURE_FUNCTIONS = [
     'flowBuildCommentRowHtml',
     'flowLocalCommentsLoad',
     'flowLocalCommentsSave',
+    // Task 197: архив комментариев (preview в meters.P + comment в archive.P)
+    'flowBuildArchivedCommentRowHtml',
 ];
 
 // Мок DOM: минимально достаточный, чтобы функции не падали.

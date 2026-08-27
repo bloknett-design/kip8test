@@ -6857,3 +6857,111 @@ Stage Summary:
   при попытке сохранить комментарий получит «not_your_input» от сервера
   и сработает локальный fallback (только на устройстве админа).
 - Следующий Task ID — 197
+
+---
+Task ID: 197
+Agent: Super Z (main)
+Task: Архив комментариев в карточке хозрасчётного расходомера (Вариант B).
+Пользователь вручную добавил колонку P «comment» в лист hozraschet_archive
+Google Таблицы и попросил реализовать функционал архива комментариев.
+
+Work Log:
+- Запрошен лист hozraschet_meters через gviz: 28 колонок (A..AB), заголовки
+  только у A..N (id, hoz, param, datePrev, dateCurr, prev, curr, unit, temp,
+  Gcal, period, modRole, modName, modTimestamp). O..AB пустые (O=15 — Task 195
+  comment без заголовка; P..AB — добавлены пользователем без заголовков).
+- Запрошен лист hozraschet_archive: 16 колонок с заголовками (A..P), где
+  P=«comment» — это та самая новая колонка, добавленная пользователем.
+  Выявлен давний баг в коде flowmeterInitArchive: заголовки I/J («temp»/«unit»)
+  и N/O («modName»/«timestamp») были перепутаны относительно реальной
+  структуры данных в appendToArchive. Реальный лист hozraschet_archive уже
+  имеет правильные заголовки (правились вручную).
+- Согласован Вариант B (стуктурированный): meters.P (preview) + archive.P
+  (per-entry comment). Пользователь: «Делаем вариант B».
+- Сервер scripts/Flowmeter.gs:
+  • docstring столбцов расширен A..O → A..P, добавлено описание P=16
+    «archivedComment» (preview, формат «[ISO-timestamp | email]: текст»).
+  • list: чтение расширено с 15 до 16 колонок, в объект meter добавлено
+    поле archivedComment (из P=16).
+  • updateReading: перед проверкой смены автора читается старый непустой
+    комментарий O (oldCommentForArchive). При смене автора (modName !== user.email):
+    - meters.P обновляется preview-строкой «[ISO | email_прежнего_автора]: текст»;
+    - meters.O очищается (как было раньше);
+    - в appendToArchive передаётся параметр comment = старый O (он же пишется
+      в archive.P новой архивной записи). Для того же автора (перезапись
+      показаний) — comment='', т.к. активный комментарий остаётся в O.
+  • setComment: перед записью нового текста в O — если старый непустой
+    комментарий отличается от нового (не пустой, не идентичный), он
+    архивируется в meters.P (preview). Для удаления (comment='') — НЕ
+    архивируется. Email автора архивного комментария берётся из M (modName),
+    а не из user.email — т.к. админ может перезаписать чужой комментарий, и
+    архив должен ссылаться на реального автора показаний, а не на админа.
+    Обновлён docstring с описанием архива.
+- Сервер scripts/FlowmeterArchive.gs:
+  • docstring структуры листа расширен: добавлено P=16 «comment» с
+    описанием, что копируется из meters.O при смене автора показаний.
+  • appendToArchive: добавлен 13-й параметр comment (строка или пусто);
+    в appendRow дописан 16-й элемент String(comment || '') → column P.
+  • listArchive: чтение расширено с 15 до 16 колонок, в объект record
+    добавлено поле comment (из P=16).
+  • flowmeterInitArchive: исправлен давний баг в массиве headers — I='unit'
+    (было 'temp'), J='temp' (было 'unit'), N='modName' (было 'timestamp'),
+    O='timestamp' (было пропущено), добавлено P='comment'. Теперь массив
+    headers строго соответствует структуре данных в appendToArchive.
+- Клиент index.html:
+  • Новая чистая функция flowBuildArchivedCommentRowHtml(archivedComment):
+    парсит формат «[ISO | email]: текст», форматирует ISO-дату в
+    dd.mm.yyyy HH:MM, заменяет разделитель | на ·, экранирует HTML,
+    возвращает строку «Последний архивный комментарий» (видна всем).
+  • В _buildDetailHtml: после строки «Комментарий» (meters.O) добавлен
+    вызов flowBuildArchivedCommentRowHtml(m.archivedComment) — preview
+    из meters.P. Если preview пуст — строки нет.
+  • В _buildArchiveHtml: добавлена колонка «Комментарий» в таблицу архива
+    показаний — показывается только если хоть в одной записи есть непустой
+    comment (hasAnyComment). Ячейка: текст комментария или «—».
+  • CSS: новые стили .flow-archived-comment-row, .flow-archived-meta,
+    .flow-archived-text, .flow-archive-comment (в т.ч. light-тема).
+- Тесты tests/test-flowmeter-comment.js:
+  • Новый describe-блок «flowBuildArchivedCommentRowHtml» — 8 тестов
+    (пустое значение → '', корректный формат → разбор мета+текста, без
+    двоеточия → весь текст как текст, произвольный текст, XSS-экранирование,
+    сохранение email после форматирования даты, мета без ISO-даты, длинный
+    текст не обрезается). tests/extract-functions.js: добавлена функция
+    в PURE_FUNCTIONS.
+  • Всего: 585 → 593 passed / 0 failed (+8).
+- Playwright-верификация scripts/verify_ms197_archive.js (NODE_PATH
+  /home/z/.npm-global/lib/node_modules): один комплексный сценарий —
+  duty ставит комментарий «продувка линии утром» через flowmeter.setComment →
+  admin вводит новые показания через flowmeter.updateReading (смена автора)
+  → 9 проверок: meters.O пуст, meters.P не пуст и содержит старый текст
+  + email прежнего автора, архивная запись создана с comment=старый текст,
+  клиент получил meters.P с сервера, карточка отрисовала строку «Последний
+  архивный комментарий», DOM содержит .flow-archived-comment-row. Все 9 OK.
+  Мок-роут эмулирует полный круг: list / archive / setComment /
+  updateReading / getCurrentUser — с сохранением состояния между запросами.
+- sw.js: CACHE_VERSION kipia-test-v461 → kipia-test-v462.
+
+Stage Summary:
+- Task 197 выполнен: архив комментариев в карточке расходомера реализован
+  по Варианту B. Колонка P «comment» в листе hozraschet_archive (добавлена
+  пользователем вручную) теперь заполняется при смене автора показаний —
+  в архивной записи виден комментарий, привязанный к этим показаниям.
+  Дополнительно meters.P — preview последнего архивного комментария (виден
+  в карточке под активным комментарием).
+- Архивация срабатывает в двух случаях:
+  1) setComment перезаписывает непустой O новым текстом (старый → meters.P);
+  2) updateReading со сменой автора (старый O → meters.P И archive.P
+     новой записи).
+- Серверный патч Flowmeter.gs + FlowmeterArchive.gs готов к деплою
+  (по аналогии с Task 195 — через Google Apps Script editor). Серверный
+  патч обязателен: без него клиент увидит meters.P (если поле добавлено
+  в meters лист) и archive.P (если в архивном), но само поле archivedComment
+  в ответе flowmeter.list и comment в flowmeter.archive останутся пустыми
+  — сервер не пишет/не читает колонку P.
+- Тесты: 593 passed / 0 failed (+8 новых). Playwright: 9/9 OK.
+- Пользователю: обновить PWA/десктоп (v462) + задеплоить серверный патч
+  Flowmeter.gs + FlowmeterArchive.gs (и при желании перезапустить
+  flowmeterInitArchive(true) — но осторожно, это сотрёт существующие записи
+  архива; заголовок comment в колонке P уже есть в реальном листе, можно
+  обойтись без re-init, просто проверить что заголовок на месте).
+- Следующий Task ID — 198

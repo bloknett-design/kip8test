@@ -28,6 +28,11 @@
 //   M: modRole       — роль пользователя, внёсшего показания
 //   N: modName       — имя пользователя, внёсшего показания
 //   O: timestamp     — метка времени записи (Date object)
+//   P: comment       — комментарий к этим показаниям (Task 197).
+//                      Копируется из hozraschet_meters.O в момент смены автора
+//                      показаний (см. Flowmeter.updateReading). Для того же
+//                      автора (перезапись) — пусто, т.к. активный комментарий
+//                      остаётся в O и не «архивный».
 // ============================================================
 
 var FlowmeterArchive = {
@@ -82,8 +87,12 @@ var FlowmeterArchive = {
   //   period    — периодичность
   //   role      — роль пользователя
   //   name      — имя пользователя
+  //   comment   — Task 197: комментарий к этим показаниям (строка или пусто).
+  //              Передаётся из Flowmeter.updateReading как старый комментарий
+  //              из meters.O в момент смены автора показаний. Для того же
+  //              автора (перезапись) — пусто.
   // ============================================================
-  appendToArchive: function(meterId, hoz, prev, curr, datePrev, dateCurr, temp, gcal, unit, period, role, name) {
+  appendToArchive: function(meterId, hoz, prev, curr, datePrev, dateCurr, temp, gcal, unit, period, role, name, comment) {
     var sheet = this._getSheet();
     if (!sheet) {
       // Лист архива не создан — тихо пропускаем (не блокируем основной flow)
@@ -103,10 +112,11 @@ var FlowmeterArchive = {
     }
 
     // Добавляем строку в конец листа.
-    // Структура (15 столбцов A–O, Task 100 добавил K=Gcal):
+    // Структура (16 столбцов A–P, Task 100 добавил K=Gcal, Task 197 — P=comment):
     //   A meterId, B hoz, C prev, D curr, E consumption,
     //   F datePrev, G dateCurr, H daysBetween, I unit, J temp,
-    //   K Gcal (Task 100), L period, M modRole, N modName, O timestamp
+    //   K Gcal (Task 100), L period, M modRole, N modName, O timestamp,
+    //   P comment (Task 197)
     sheet.appendRow([
       meterId,                                                                    // A: meterId
       hoz || '',                                                                  // B: hoz
@@ -122,7 +132,8 @@ var FlowmeterArchive = {
       period || '',                                                               // L: period
       role || '',                                                                 // M: modRole
       name || '',                                                                 // N: modName
-      new Date()                                                                  // O: timestamp
+      new Date(),                                                                  // O: timestamp
+      String(comment || '')                                                        // P: comment (Task 197)
     ]);
 
     Logger.log('Archive: meterId=' + meterId + ', prev=' + prev + ', curr=' + curr + ', consumption=' + consumption + ', gcal=' + (gcal || '—'));
@@ -159,8 +170,9 @@ var FlowmeterArchive = {
       return { ok: true, data: { records: [], meterId: meterId } };
     }
 
-    // Читаем все данные ( столбцы A–O, 15 столбцов; Task 100 добавил K=Gcal)
-    var range = sheet.getRange(this.DATA_START_ROW, 1, lastRow - this.DATA_START_ROW + 1, 15);
+    // Читаем все данные ( столбцы A–P, 16 столбцов; Task 100 добавил K=Gcal,
+    // Task 197 добавил P=comment)
+    var range = sheet.getRange(this.DATA_START_ROW, 1, lastRow - this.DATA_START_ROW + 1, 16);
     var values = range.getValues();
 
     var records = [];
@@ -186,7 +198,8 @@ var FlowmeterArchive = {
         modName:     String(row[13] || ''),
         timestamp:   (row[14] instanceof Date)
                        ? row[14].toISOString()
-                       : String(row[14] || '')
+                       : String(row[14] || ''),
+        comment:     String(row[15] || '').trim()    // P=16 — Task 197
       };
       records.push(record);
     }
@@ -237,22 +250,32 @@ function flowmeterInitArchive(force) {
     sheet.clear();
   }
 
-  // Заголовки (строка 1)
+  // Заголовки (строка 1). ВАЖНО: порядок соответствует appendToArchive:
+  //   A=1 meterId, B=2 hoz, C=3 prev, D=4 curr, E=5 consumption,
+  //   F=6 datePrev, G=7 dateCurr, H=8 daysBetween, I=9 unit, J=10 temp,
+  //   K=11 Gcal, L=12 period, M=13 modRole, N=14 modName, O=15 timestamp,
+  //   P=16 comment (Task 197).
+  // В предыдущей версии init-функции заголовки I/J и N/O были перепутаны
+  // (I='temp' вместо 'unit', N='timestamp' вместо 'modName') — это
+  // расходилось с реальной структурой данных в appendToArchive. Теперь
+  // заголовки строго соответствуют позициям данных.
   var headers = [
-    'meterId',       // A
-    'hoz',           // B
-    'prev',          // C
-    'curr',          // D
-    'consumption',   // E
-    'datePrev',      // F
-    'dateCurr',      // G
-    'daysBetween',   // H
-    'temp',          // I
-    'unit',          // J
-    'period',        // K
-    'modRole',       // L
-    'modName',       // M
-    'timestamp'      // N
+    'meterId',       // A=1
+    'hoz',           // B=2
+    'prev',          // C=3
+    'curr',          // D=4
+    'consumption',   // E=5
+    'datePrev',      // F=6
+    'dateCurr',      // G=7
+    'daysBetween',   // H=8
+    'unit',          // I=9  (fix: было 'temp')
+    'temp',          // J=10 (fix: было 'unit')
+    'Gcal',          // K=11
+    'period',        // L=12
+    'modRole',       // M=13
+    'modName',       // N=14 (fix: было 'timestamp')
+    'timestamp',     // O=15 (fix: было пропущено)
+    'comment'        // P=16 — Task 197
   ];
 
   // Записываем заголовки
