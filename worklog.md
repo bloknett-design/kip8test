@@ -7215,3 +7215,86 @@ Stage Summary:
 - Заголовок валидационной колонки переименован в «⚠ Замечания»
   для понятности.
 - Изменение только клиентское — сервер не трогается.
+
+---
+Task ID: 200
+Agent: main
+Task: WRONG_METER — Фаза 2 валидации (правило #5, эвристика совпадения с другим счётчиком)
+
+Work Log:
+- Пользователь подтвердил параметры по умолчанию: LOOKBACK_DAYS=7,
+  EXACT_MATCH_THRESHOLD=0.01, MIN_CONSUMPTION=1.0, SWAP_DETECTION=true.
+  Подтверждено: только уровень 1 (exact-match consumption) + уровень 3
+  (swap = совпадение пары prev/curr). Уровень 2 (близкое совпадение)
+  отключён — слишком много false positives между счётчиками одного типа.
+
+- Сервер scripts/FlowmeterArchive.gs:
+  • Новый метод getRecentAllMeters(daysBack) — чтение архива за последние
+    N дней, возвращает массив самых свежих записей по каждому meterId
+    (по dateCurr). Не требует авторизации — внутренний метод.
+  • Новый метод listRecentAllMeters(payload) — endpoint-обёртка с
+    авторизацией для клиента. Возвращает { ok, data: { records: [...] } }.
+
+- Сервер scripts/ValidationRules.gs:
+  • В CODES добавлен WRONG_METER.
+  • Добавлен блок WRONG_METER_PARAMS с 4 параметрами.
+  • compute() расширена 5-м параметром recentAllMeters (опциональный).
+  • Добавлена логика WRONG_METER в конце compute (после DUPLICATE):
+    - пропускается если recentAllMeters пустой/null
+    - пропускается если consumption < MIN_CONSUMPTION (1.0)
+    - уровень 1: для каждого другого meterId проверяет точное совпадение
+      consumption (< EXACT_MATCH_THRESHOLD = 0.01)
+    - уровень 3 (если SWAP_DETECTION): проверяет совпадение пары
+      (prev, curr) с последней записью другого счётчика
+    - первый найденный match — break (один WRONG_METER код на сохранение)
+  • Добавлен хелпер _esc(s) для экранирования HTML в detail (где
+    подставляется other.hoz — пользовательский текст).
+
+- Сервер scripts/Code.gs: добавлен маршрут
+  case 'flowmeter.getRecentAllMeters': return _json(FlowmeterArchive.listRecentAllMeters(payload));
+
+- Сервер scripts/Flowmeter.gs: в updateReading перед вызовом
+  ValidationRules.compute добавлена lazy-загрузка recentAllMeters через
+  FlowmeterArchive.getRecentAllMeters(LOOKBACK_DAYS). Оборнуто в try/catch
+  (non-critical) — если упадёт, compute получит null, WRONG_METER пропустится.
+
+- Клиент index.html:
+  • flowValidateReading расширена 5-м параметром recentAllMeters.
+  • Добавлена зеркальная логика WRONG_METER (9 строк + комментарии).
+  • В call-site (submitInput flow) добавлен lazy-fetch
+    flowmeter.getRecentAllMeters перед валидацией. Цепочка:
+    _api(getRecentAllMeters) → flowValidateReading(с recentAll) →
+    modal/send/hardBlock. .catch fallback: если fetch упал, валидируем
+    без recentAllMeters (WRONG_METER пропустится — сервер всё равно
+    валидирует независимо).
+
+- Тесты tests/test-flowmeter-validation.js:
+  • Добавлен helper recentAll(opts) — эталонный массив из 2 счётчиков.
+  • Добавлено 10 тест-кейсов в suite 'WRONG_METER (Task 200, Фаза 2)':
+    1. recentAllMeters=null → graceful skip
+    2. recentAllMeters=[] → graceful skip
+    3. Уровень 1: точное совпадение consumption → WRONG_METER + detail с id и hoz
+    4. Уровень 1: расход 250.05 vs 250.00 (разница 0.05 > 0.01) → не срабатывает
+    5. Уровень 3: пара (1000, 1250) совпадает с meterId=2 → WRONG_METER
+    6. Уровень 3 изолированно (consumption=999 ≠ 250, но пара совпадает) → WRONG_METER с 'пара'
+    7. Свой meterId исключается — detail не ссылается на себя
+    8. consumption < 1.0 → WRONG_METER пропускается (MIN_CONSUMPTION)
+    9. Несколько счётчиков, один совпадает → break, ровно 1 WRONG_METER код
+    10. WRONG_METER + JUMP_HIGH + PERIOD_MISMATCH вместе — все три в codes
+
+- Тесты: 649 → 659 passed (+10), 0 failed.
+
+Stage Summary:
+- Task 200 выполнен. WRONG_METER (правило #5, Фаза 2) реализован с
+  уровнями 1 (exact-match) и 3 (swap). Уровень 2 (близкое совпадение)
+  отключён по решению пользователя — слишком много false positives.
+- Сервер: новый endpoint flowmeter.getRecentAllMeters, расширение
+  ValidationRules.compute, обновление Flowmeter.updateReading.
+- Клиент: lazy-fetch перед валидацией, graceful fallback при ошибке fetch.
+- sw.js v465 → v466.
+- Пользователю: задеплоить 4 файла (Code.gs, FlowmeterArchive.gs,
+  ValidationRules.gs, Flowmeter.gs) в Apps Script editor, создать
+  новую версию Web App, обновить deployment. После этого открыть
+  PWA v466 и протестировать: ввести показания с расходом, совпадающим
+  с другим счётчиком за последние 7 дней → в модалке должен появиться
+  WRONG_METER.

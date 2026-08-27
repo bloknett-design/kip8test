@@ -18,7 +18,7 @@
 //   G: temp_min        — нижняя граница температуры (°C)
 //   H: temp_max        — верхняя граница температуры (°C)
 //
-// Правила (Task 199, Фаза 1 — 9 правил, без #5 WRONG_METER):
+// Правила (Task 199, Фаза 1 — 9 правил; Task 200, Фаза 2 — + WRONG_METER):
 //   HARD-BLOCK (сервер возвращает ошибку, не пишет):
 //     SIGN_NEG         — prev<0 или curr<0 (сценарий #12, «знак»)
 //     DATE_INCONSISTENT — dateCurr < datePrev (сценарий #6)
@@ -34,9 +34,12 @@
 //     DUPLICATE        — те же (prev, curr) что в последней записи архива,
 //                        поданные тем же автором в течение 5 минут
 //                        (сценарий #11)
-//
-// Фаза 2 (не реализовано): WRONG_METER — consumption совпадает с типичным
-// значением другого счётчика (требует чтения архивов всех meters).
+//     WRONG_METER      — (Task 200, Фаза 2) consumption или пара (prev, curr)
+//                        совпадает с последней записью другого счётчика
+//                        за последние 7 дней. Эвристики: уровень 1 (exact-match
+//                        consumption) + уровень 3 (swap = совпадение пары prev/curr).
+//                        Близкое совпадение (уровень 2) отключено — много false
+//                        positives. Параметры — WRONG_METER_PARAMS ниже.
 // ============================================================
 
 var ValidationRules = {
@@ -55,7 +58,28 @@ var ValidationRules = {
     PERIOD_MISMATCH:  'PERIOD_MISMATCH',
     TEMP_OUT_OF_RANGE:'TEMP_OUT_OF_RANGE',
     GCAL_RATIO:       'GCAL_RATIO',
-    DUPLICATE:        'DUPLICATE'
+    DUPLICATE:        'DUPLICATE',
+    WRONG_METER:      'WRONG_METER'   // Task 200, Фаза 2
+  },
+
+  // ============================================================
+  // Task 200 — параметры WRONG_METER (Фаза 2)
+  // ============================================================
+  //   LOOKBACK_DAYS         — сколько дней назад смотреть в архиве
+  //   EXACT_MATCH_THRESHOLD — точное совпадение = расхождение < этого значения
+  //                           (напр. 0.01 → 100.00 и 100.005 считаются совпадением)
+  //   MIN_CONSUMPTION       — игнорировать consumption < этого (нулевые/микро-расходы
+  //                           дают много ложных совпадений)
+  //   SWAP_DETECTION        — включить уровень 3 (совпадение пары prev/curr с другим
+  //                           счётчиком = оператор ввёл чужие показания целиком)
+  // Близкое совпадение (уровень 2) отключено по умолчанию — слишком много false
+  // positives между счётчиками одного типа (два воздуха, два газа и т.п.).
+  // ============================================================
+  WRONG_METER_PARAMS: {
+    LOOKBACK_DAYS: 7,
+    EXACT_MATCH_THRESHOLD: 0.01,
+    MIN_CONSUMPTION: 1.0,
+    SWAP_DETECTION: true
   },
 
   // Hard-block коды (сервер возвращает ошибку, не пишет показания)
@@ -162,23 +186,26 @@ var ValidationRules = {
   },
 
   // ============================================================
-  // compute(meter, payload, rules, lastArchive) — вычислить аномалии
+  // compute(meter, payload, rules, lastArchive, recentAllMeters) — вычислить аномалии
   // ============================================================
   // Параметры:
-  //   meter       — объект строки из hozraschet_meters (с полем
-  //                 allowNegative — 'yes'/'no'/пусто)
-  //   payload     — то, что прислал клиент: { id, prev, curr, datePrev,
-  //                 dateCurr, temp, gcal, unit }
-  //   rules       — объект из getRulesForMeter (или null = правила
-  //                 не заданы, валидация пропускается)
-  //   lastArchive — последняя запись архива для этого meterId
-  //                 (или null). { prev, curr, modName, timestamp }.
+  //   meter           — объект строки из hozraschet_meters (с полем
+  //                    allowNegative — 'yes'/'no'/пусто)
+  //   payload         — то, что прислал клиент: { id, prev, curr, datePrev,
+  //                    dateCurr, temp, gcal, unit }
+  //   rules           — объект из getRulesForMeter (или null = правила
+  //                    не заданы, валидация пропускается)
+  //   lastArchive     — последняя запись архива для этого meterId
+  //                    (или null). { prev, curr, modName, timestamp }.
+  //   recentAllMeters — (Task 200) последние записи архива для ВСЕХ счётчиков
+  //                    за последние LOOKBACK_DAYS дней (массив или null).
+  //                    Если null/пустой — правило WRONG_METER пропускается.
   // Возвращает: { codes: [..], hardBlock: null|{code, message}, detail: '...' }
   //   codes      — массив строк вида 'CODE: detail'
   //   hardBlock  — если не null, сервер должен вернуть ошибку
   //                (caller сам формирует error response)
   // ============================================================
-  compute: function(meter, payload, rules, lastArchive) {
+  compute: function(meter, payload, rules, lastArchive, recentAllMeters) {
     var codes = [];
     var hardBlock = null;
 
@@ -319,6 +346,49 @@ var ValidationRules = {
       }
     }
 
+    // ===== SOFT #5: WRONG_METER (Task 200, Фаза 2) =====
+    // Эвристика: совпадение расхода или пары (prev, curr) с другим счётчиком.
+    // Только exact-match (уровень 1) и swap (уровень 3 — совпадение пары).
+    // Близкое совпадение (уровень 2) отключено — слишком много false positives
+    // между счётчиками одного типа (два расходомера воздуха и т.п.).
+    if (recentAllMeters && recentAllMeters.length > 0 &&
+        consumption >= this.WRONG_METER_PARAMS.MIN_CONSUMPTION) {
+      var threshold = this.WRONG_METER_PARAMS.EXACT_MATCH_THRESHOLD;
+      var myMeterId = meter && meter.id ? parseInt(meter.id, 10) : null;
+      var wrongFound = false;
+
+      for (var ri = 0; ri < recentAllMeters.length; ri++) {
+        var other = recentAllMeters[ri];
+        var otherId = parseInt(other.meterId, 10);
+        if (otherId === myMeterId) continue;  // пропускаем себя
+
+        // Уровень 1: exact-match по consumption
+        var otherCons = parseFloat(other.consumption);
+        if (!isNaN(otherCons) && Math.abs(otherCons - consumption) < threshold) {
+          codes.push(this.CODES.WRONG_METER + ': расход ' + this._fmt(consumption) +
+                      ' совпадает с расходомером id=' + otherId +
+                      ' (' + this._esc(other.hoz) + '), расход ' + this._fmt(otherCons) +
+                      ' — возможно, оператор ввёл показания не в тот счётчик');
+          wrongFound = true;
+          break;
+        }
+
+        // Уровень 3: swap-detection — пара (prev, curr) совпадает с последней
+        // записью другого счётчика = оператор скопировал чужие показания целиком
+        if (this.WRONG_METER_PARAMS.SWAP_DETECTION &&
+            !isNaN(parseFloat(other.prev)) && !isNaN(parseFloat(other.curr)) &&
+            Math.abs(parseFloat(other.prev) - prev) < threshold &&
+            Math.abs(parseFloat(other.curr) - curr) < threshold) {
+          codes.push(this.CODES.WRONG_METER + ': пара (prev=' + prev +
+                      ', curr=' + curr + ') совпадает с последней записью расходомера id=' +
+                      otherId + ' (' + this._esc(other.hoz) +
+                      ') — оператор, вероятно, ввёл чужие показания целиком');
+          wrongFound = true;
+          break;
+        }
+      }
+    }
+
     var detail = codes.join('; ');
     return { codes: codes, hardBlock: hardBlock, detail: detail };
   },
@@ -329,6 +399,20 @@ var ValidationRules = {
   _fmt: function(n) {
     if (typeof n !== 'number' || isNaN(n)) return String(n);
     return n.toFixed(2);
+  },
+
+  // ============================================================
+  // _esc — экранировать HTML-спецсимволы для безопасной вставки в detail
+  // (используется в WRONG_METER detail, где подставляется other.hoz)
+  // ============================================================
+  _esc: function(s) {
+    if (s === null || s === undefined) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 };
 

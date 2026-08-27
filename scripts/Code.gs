@@ -152,6 +152,11 @@ function doPost(e) {
       case 'flowmeter.getValidationRules':
         return _json(ValidationRules.listRules(payload));
 
+      // Task 200: последние записи архива всех счётчиков за N дней
+      // (для клиента — WRONG_METER проверка перед показом модалки)
+      case 'flowmeter.getRecentAllMeters':
+        return _json(FlowmeterArchive.listRecentAllMeters(payload));
+
       default:
         return _json({ ok: false, error: 'Unknown action: ' + action });
     }

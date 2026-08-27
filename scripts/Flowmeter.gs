@@ -314,7 +314,19 @@ var Flowmeter = {
       Logger.log('Reading last archive record failed (non-critical): ' + e.message);
     }
 
-    var validationResult = ValidationRules.compute(meterForValidation, payload, rulesForMeter, lastArchiveRecord);
+    // Task 200: последние записи ВСЕХ счётчиков за 7 дней для WRONG_METER
+    var recentAllMeters = null;
+    try {
+      recentAllMeters = FlowmeterArchive.getRecentAllMeters(
+        ValidationRules.WRONG_METER_PARAMS.LOOKBACK_DAYS
+      );
+    } catch (e) {
+      Logger.log('getRecentAllMeters failed (non-critical): ' + e.message);
+    }
+
+    var validationResult = ValidationRules.compute(
+      meterForValidation, payload, rulesForMeter, lastArchiveRecord, recentAllMeters
+    );
     if (validationResult.hardBlock) {
       // Hard-block: возвращаем ошибку, ничего не пишем в таблицу
       try {

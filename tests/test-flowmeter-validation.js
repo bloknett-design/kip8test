@@ -339,6 +339,130 @@ describe('flowValidateReading — несколько правил сразу', (
     });
 });
 
+// Эталонный recentAllMeters для WRONG_METER тестов (Task 200, Фаза 2)
+function recentAll(opts) {
+    // По умолчанию — массив из 2 других счётчиков с разными расходами
+    return [
+        { meterId: 2, hoz: 'Хозрасчёт №2', prev: 1000, curr: 1250, consumption: 250, modName: 'a@p', timestamp: new Date().toISOString() },
+        { meterId: 4, hoz: 'Хозрасчёт №4', prev: 500, curr: 520, consumption: 20, modName: 'b@p', timestamp: new Date().toISOString() }
+    ].concat(opts || []);
+}
+
+describe('flowValidateReading — #5 WRONG_METER (Task 200, Фаза 2)', () => {
+    test('recentAllMeters = null → WRONG_METER не срабатывает (graceful)', () => {
+        var m = meter({ prev: 0, curr: 50.00 });
+        var p = { id: 1, prev: 0, curr: 50.00, datePrev: '8/26/2026', dateCurr: '8/27/2026' };
+        var result = fns.flowValidateReading(m, p, rules({ max_cons: 100 }), null, null);
+        assertFalse(hasCode(result.codes, 'WRONG_METER'));
+    });
+
+    test('recentAllMeters = [] (пустой массив) → WRONG_METER не срабатывает', () => {
+        var m = meter({ prev: 0, curr: 50.00 });
+        var p = { id: 1, prev: 0, curr: 50.00, datePrev: '8/26/2026', dateCurr: '8/27/2026' };
+        var result = fns.flowValidateReading(m, p, rules({ max_cons: 100 }), null, []);
+        assertFalse(hasCode(result.codes, 'WRONG_METER'));
+    });
+
+    test('Уровень 1 (exact-match): расход совпадает с другим счётчиком → WRONG_METER', () => {
+        var m = meter({ id: 1, prev: 0, curr: 250.00 });
+        var p = { id: 1, prev: 0, curr: 250.00, datePrev: '8/26/2026', dateCurr: '8/27/2026' };
+        // meterId=2 имеет consumption=250 в recentAll — точное совпадение
+        var result = fns.flowValidateReading(m, p, rules({ max_cons: 1000 }), null, recentAll());
+        assertTrue(hasCode(result.codes, 'WRONG_METER'));
+        // detail должен ссылаться на meterId=2
+        var wmCode = result.codes.find(function(c) { return c.indexOf('WRONG_METER') === 0; });
+        assertTrue(wmCode.indexOf('id=2') !== -1);
+        assertTrue(wmCode.indexOf('Хозрасчёт №2') !== -1);
+    });
+
+    test('Уровень 1: расход чуть отличается (больше 0.01) → WRONG_METER не срабатывает', () => {
+        var m = meter({ id: 1, prev: 0, curr: 250.05 });
+        var p = { id: 1, prev: 0, curr: 250.05, datePrev: '8/26/2026', dateCurr: '8/27/2026' };
+        // meterId=2 consumption=250, наш 250.05, разница 0.05 > 0.01
+        var result = fns.flowValidateReading(m, p, rules({ max_cons: 1000 }), null, recentAll());
+        assertFalse(hasCode(result.codes, 'WRONG_METER'));
+    });
+
+    test('Уровень 3 (swap): пара (prev, curr) совпадает с другим счётчиком → WRONG_METER', () => {
+        // meterId=2 в recentAll имеет prev=1000, curr=1250. Вводим их в meterId=1.
+        var m = meter({ id: 1, prev: 1000, curr: 1250, modName: 'c@p' });
+        var p = { id: 1, prev: 1000, curr: 1250, datePrev: '8/26/2026', dateCurr: '8/27/2026' };
+        // consumption = 250 — совпадает с meterId=2 consumption. Поэтому сработает
+        // уровень 1 раньше уровня 3 — оба дают WRONG_METER, это OK.
+        var result = fns.flowValidateReading(m, p, rules({ max_cons: 1000 }), null, recentAll());
+        assertTrue(hasCode(result.codes, 'WRONG_METER'));
+        var wmCode = result.codes.find(function(c) { return c.indexOf('WRONG_METER') === 0; });
+        assertTrue(wmCode.indexOf('id=2') !== -1);
+    });
+
+    test('Уровень 3: пара (prev, curr) совпадает, но расход НЕ совпадает — swap', () => {
+        // meterId=2 в recentAll: prev=1000, curr=1250, consumption=250.
+        // Конструируем так, чтобы пара совпадала, но расход не был = 250.
+        // Это возможно только если prev/curr — не числа (например, мы ввели 1000/1250
+        // как чужую пару). consumption в этом случае = 250 (1250-1000), что совпадёт
+        // с meterId=2 — уровень 1 сработает раньше. Чтобы проверить только swap,
+        // надо чтобы consumption у meterId=2 был НЕ 250.
+        var m = meter({ id: 1, prev: 1000, curr: 1250, modName: 'c@p' });
+        var p = { id: 1, prev: 1000, curr: 1250, datePrev: '8/26/2026', dateCurr: '8/27/2026' };
+        // Подменяем consumption meterId=2 на 999 (чтобы уровень 1 не сработал)
+        var customRecent = [
+            { meterId: 2, hoz: 'Хозрасчёт №2', prev: 1000, curr: 1250, consumption: 999, modName: 'a@p', timestamp: new Date().toISOString() }
+        ];
+        var result = fns.flowValidateReading(m, p, rules({ max_cons: 1000 }), null, customRecent);
+        assertTrue(hasCode(result.codes, 'WRONG_METER'));
+        var wmCode = result.codes.find(function(c) { return c.indexOf('WRONG_METER') === 0; });
+        assertTrue(wmCode.indexOf('пара') !== -1);  // detail про «пара (prev=..., curr=...)»
+    });
+
+    test('Свой собственный meterId исключается — совпадение с собой не считается', () => {
+        // meterId=1 в recentAll имеет consumption=250, наш расход=250.
+        // Но это наш же счётчик — WRONG_METER не должен сработать.
+        var m = meter({ id: 1, prev: 0, curr: 250.00 });
+        var p = { id: 1, prev: 0, curr: 250.00, datePrev: '8/26/2026', dateCurr: '8/27/2026' };
+        var recentWithSelf = recentAll([
+            { meterId: 1, hoz: 'Хозрасчёт №1', prev: 0, curr: 250, consumption: 250, modName: 'd@p', timestamp: new Date().toISOString() }
+        ]);
+        var result = fns.flowValidateReading(m, p, rules({ max_cons: 1000 }), null, recentWithSelf);
+        // meterId=2 всё ещё совпадает (consumption=250), поэтому WRONG_METER сработает на meterId=2
+        assertTrue(hasCode(result.codes, 'WRONG_METER'));
+        // detail должен ссылаться на meterId=2, НЕ на meterId=1
+        var wmCode = result.codes.find(function(c) { return c.indexOf('WRONG_METER') === 0; });
+        assertTrue(wmCode.indexOf('id=2') !== -1);
+        assertTrue(wmCode.indexOf('id=1') === -1);
+    });
+
+    test('consumption < MIN_CONSUMPTION (1.0) → WRONG_METER пропускается', () => {
+        var m = meter({ id: 1, prev: 100, curr: 100.5 });  // расход 0.5
+        var p = { id: 1, prev: 100, curr: 100.5, datePrev: '8/26/2026', dateCurr: '8/27/2026' };
+        // meterId=4 consumption=20, не совпадает. Но даже если бы совпало (0.5),
+        // расход < 1.0 — WRONG_METER пропускается.
+        var customRecent = [
+            { meterId: 4, hoz: 'Хозрасчёт №4', prev: 100, curr: 100.5, consumption: 0.5, modName: 'b@p', timestamp: new Date().toISOString() }
+        ];
+        var result = fns.flowValidateReading(m, p, rules({ max_cons: 1000, min_cons: 0 }), null, customRecent);
+        assertFalse(hasCode(result.codes, 'WRONG_METER'));
+    });
+
+    test('Несколько счётчиков в recentAll, один совпадает — break, один WRONG_METER код', () => {
+        var m = meter({ id: 1, prev: 0, curr: 250.00 });
+        var p = { id: 1, prev: 0, curr: 250.00, datePrev: '8/26/2026', dateCurr: '8/27/2026' };
+        // meterId=2 совпадает (consumption=250), meterId=4 нет (consumption=20)
+        var result = fns.flowValidateReading(m, p, rules({ max_cons: 1000 }), null, recentAll());
+        var wmCount = result.codes.filter(function(c) { return c.indexOf('WRONG_METER') === 0; }).length;
+        assertEqual(wmCount, 1);
+    });
+
+    test('WRONG_METER + другая аномалия — оба в codes', () => {
+        var m = meter({ id: 1, prev: 0, curr: 250.00 });
+        var p = { id: 1, prev: 0, curr: 250.00, datePrev: '8/20/2026', dateCurr: '8/27/2026' };
+        // JUMP_HIGH (250 > 30 = 10×3), PERIOD_MISMATCH (7 дн vs 1), WRONG_METER (consumption=250 = meterId=2)
+        var result = fns.flowValidateReading(m, p, rules({ max_cons: 10, expected_days: 1 }), null, recentAll());
+        assertTrue(hasCode(result.codes, 'JUMP_HIGH'));
+        assertTrue(hasCode(result.codes, 'PERIOD_MISMATCH'));
+        assertTrue(hasCode(result.codes, 'WRONG_METER'));
+    });
+});
+
 describe('flowValidateReading — detail-строка (формат «CODE: detail; ...»)', () => {
     test('codes.length > 0 → detail = join «; »', () => {
         var m = meter({ prev: 0, curr: 50.00 });

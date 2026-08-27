@@ -230,6 +230,83 @@ var FlowmeterArchive = {
     }
 
     return { ok: true, data: { records: records, meterId: meterId } };
+  },
+
+  // ============================================================
+  // getRecentAllMeters — последние записи архива для всех счётчиков
+  // за последние daysBack дней (Task 200, для WRONG_METER валидации)
+  // ============================================================
+  // @param {number} daysBack — сколько дней назад смотреть (по умолчанию 7)
+  // @returns {Array} — массив объектов:
+  //   { meterId, hoz, prev, curr, consumption, dateCurr, modName, timestamp }
+  // Берёт самую свежую запись для каждого meterId (по dateCurr).
+  // Не требует авторизации — вызывается сервером из updateReading
+  // и из listRules (для клиента, через маршрут flowmeter.getRecentAllMeters).
+  // ============================================================
+  getRecentAllMeters: function(daysBack) {
+    daysBack = daysBack || 7;
+    var sheet = this._getSheet();
+    if (!sheet) return [];
+
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return [];
+
+    // A..Q = 17 колонок
+    var range = sheet.getRange(this.DATA_START_ROW, 1, lastRow - this.DATA_START_ROW + 1, 17);
+    var data = range.getValues();
+
+    var byMeter = {};
+    var cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - daysBack);
+    // cutoffDate = начало дня (daysBack дней назад)
+    cutoffDate.setHours(0, 0, 0, 0);
+
+    for (var i = 0; i < data.length; i++) {
+      var row = data[i];
+      var mid = parseInt(row[0], 10); // A=meterId
+      if (!mid) continue;
+
+      var dateCurr = row[6]; // G=dateCurr
+      if (!(dateCurr instanceof Date)) continue;
+      if (dateCurr < cutoffDate) continue;
+
+      var existing = byMeter[mid];
+      if (!existing || (dateCurr > existing.dateCurr)) {
+        byMeter[mid] = {
+          meterId:     mid,
+          hoz:         row[1],            // B=hoz
+          prev:        row[2],            // C=prev
+          curr:        row[3],            // D=curr
+          consumption: row[4],            // E=consumption
+          dateCurr:    dateCurr,          // G=dateCurr
+          modName:     row[13],           // N=modName
+          timestamp:   row[14]            // O=timestamp
+        };
+      }
+    }
+
+    var result = [];
+    for (var k in byMeter) {
+      if (byMeter.hasOwnProperty(k)) result.push(byMeter[k]);
+    }
+    return result;
+  },
+
+  // ============================================================
+  // listRecentAllMeters — endpoint-обёртка (с авторизацией)
+  // для клиента: flowmeter.getRecentAllMeters (через Code.gs).
+  // ============================================================
+  // @param payload.token — токен сессии
+  // @param payload.daysBack — число дней (по умолчанию 7)
+  // @returns { ok: true, data: { records: [...] } }
+  // ============================================================
+  listRecentAllMeters: function(payload) {
+    var auth = this._requireRead(payload && payload.token);
+    if (auth.error) return auth.error;
+    var days = parseInt(payload.daysBack, 10);
+    if (isNaN(days) || days <= 0) days = 7;
+    var records = this.getRecentAllMeters(days);
+    return { ok: true, data: { records: records } };
   }
 };
 
