@@ -58,6 +58,8 @@ const PURE_FUNCTIONS = [
     'msRecordResult',
     'msMigrateResults',
     'msRenderAchievements',
+    // Навигация (Task 194: Сапёр — корневой раздел главной)
+    'buildBreadcrumbPath',
 ];
 
 // Мок DOM: минимально достаточный, чтобы функции не падали.

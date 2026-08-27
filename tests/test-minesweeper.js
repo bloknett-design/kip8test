@@ -399,6 +399,41 @@ describe('msRenderAchievements — рендер лучших результат�
     });
 });
 
+// Task 194: «Сапёр» — корневой раздел главной страницы (ранее был
+// подразделом «Инженерных калькуляторов»: крошки десктопа показывали
+// «Главная / Инженерные калькуляторы / Сапёр»). Проверяем иерархию
+// навигации через buildBreadcrumbPath: путь строится по PAGE_PARENTS.
+describe('Навигация: Сапёр — корневой раздел главной (Task 194)', () => {
+
+    test('Крошки Сапёра: Главная / Сапёр (без Инженерных калькуляторов)', () => {
+        const path = fns.buildBreadcrumbPath('minesweeper');
+        assertEqual(path.join('>'), 'minesweeper',
+            'в пути один сегмент — Сапёр на верхнем уровне, «Инженерные калькуляторы» больше не родитель');
+    });
+
+    test('Крошки как у Телефонного справочника (тоже секретный корневой раздел)', () => {
+        const ms = fns.buildBreadcrumbPath('minesweeper');
+        const pb = fns.buildBreadcrumbPath('phonebook');
+        assertEqual(ms.length, pb.length, 'Сапёр и Телефонный справочник — одна глубина иерархии');
+    });
+
+    test('Иерархия калькуляторов не тронута: КИП и А → Конвертер', () => {
+        const path = fns.buildBreadcrumbPath('converter');
+        assertEqual(path.join('>'), 'calculators>calc-kipa>converter',
+            'подразделы калькуляторов сохраняют прежнюю вложенность');
+    });
+
+    test('Иерархия калькуляторов не тронута: КИП и А', () => {
+        const path = fns.buildBreadcrumbPath('calc-kipa');
+        assertEqual(path.join('>'), 'calculators>calc-kipa',
+            'КИП и А — по-прежнему подраздел «Инженерных калькуляторов»');
+    });
+
+    test('Главная — пустой путь (корень)', () => {
+        assertEqual(fns.buildBreadcrumbPath('dashboard').length, 0, 'у главной нет крошек');
+    });
+});
+
 // Восстановление дефолтного вьюпорта мока (375) — на случай,
 // если другие тестовые файлы будут читать window.innerWidth
 describe('Восстановление мок-вьюпорта после тестов Сапёра', () => {
