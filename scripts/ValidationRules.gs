@@ -366,14 +366,14 @@ function flowmeterInitRules() {
   }
 
   var headers = [
-    'meterId',         // A=1
-    'min_cons',        // B=2
-    'max_cons',        // C=3
-    'expected_days',   // D=4
-    'gcal_ratio_min',  // E=5
-    'gcal_ratio_max',  // F=6
-    'temp_min',        // G=7
-    'temp_max'         // H=8
+    '№ счётчика',         // A=1  (meterId)
+    'Мин. расход',        // B=2  (min_cons)
+    'Макс. расход',       // C=3  (max_cons)
+    'Период (дни)',       // D=4  (expected_days)
+    'Мин. Гкал/расход',   // E=5  (gcal_ratio_min)
+    'Макс. Гкал/расход',  // F=6  (gcal_ratio_max)
+    'Мин. температура',   // G=7  (temp_min)
+    'Макс. температура'   // H=8  (temp_max)
   ];
 
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);

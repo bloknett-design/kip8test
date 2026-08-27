@@ -7150,3 +7150,35 @@ Stage Summary:
   расходомеров пара (если нужны эти правила). Файлы для скачивания
   будут в /home/z/my-project/download/Task199/.
 - Следующий Task ID — 200
+
+---
+Task ID: 199.1
+Agent: main
+Task: Переименование заголовков листа flowmeter_validation_rules с английского на русский
+
+Work Log:
+- Пользователь запросил переименование 7 заголовков (meterId, min_cons,
+  max_cons, gcal_ratio_min, gcal_ratio_max, temp_min, temp_max) на
+  русский. expected_days также переименован в «Период (дни)».
+- Создан one-off скрипт flowmeterRenameRulesHeaders.gs (в
+  /home/z/my-project/download/Task199/) — пользователь вставит в Apps
+  Script editor и запустит один раз. Скрипт перезаписывает только строку
+  1 (заголовки), данные НЕ трогает, повторно применяет bold/фон/freeze/
+  autoResizeColumn.
+- Обновлены исходники для будущих пересозданий листа:
+  • scripts/ValidationRules.gs: в функции flowmeterInitRules() массив
+    headers изменён на русский.
+  • download/Task199/flowmeterInitRules.gs: та же правка в standalone-файле.
+- Безопасность: сервер ValidationRules.getRulesForMeter читает колонки
+  по позиции (row[0]=meterId, row[1]=min_cons, …), а не по имени
+  заголовка. Поэтому переименование не затрагивает runtime-логику —
+  только отображение для человека в Google Sheets.
+
+Stage Summary:
+- Заголовки листа (A1:H1) будут переименованы после однократного запуска
+  flowmeterRenameRulesHeaders пользователем. Сервер продолжает работать
+  с теми же колонками по позиции.
+- Без deploя на сервер — изменение касается только самой таблицы.
+- Следующий шаг: задеплоить 4 файла Task 199 (Code.gs, Flowmeter.gs,
+  FlowmeterArchive.gs, ValidationRules.gs) в Apps Script editor и
+  провести end-to-end проверку валидации.
