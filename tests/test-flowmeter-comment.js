@@ -2,10 +2,12 @@
 //
 // Правила (по требованию пользователя):
 //   • кнопка ввода комментария видна ТОЛЬКО автору последних показаний
-//     (сравнение m.modName с email текущего пользователя);
+//     (сравнение m.modName с email текущего пользователя) ИЛИ АДМИНУ
+//     (role === 'Админ', без сравнения email) — Task 195 update;
 //   • комментарий — пояснение к данным, строка «Комментарий» видна всем;
 //   • возможность комментировать длится, пока показания за автором
 //     (без ограничения по времени, в отличие от правки показаний — 1 час);
+//     у админа кнопка видна всегда;
 //   • хранение: сервер (flowmeter.setComment) + fallback localStorage
 //     (kip8_flow_comments_v1) на случай, если серверный патч не задеплоен.
 //
@@ -34,7 +36,7 @@ function meter(opts) {
     }, opts || {});
 }
 
-describe('flowCanComment — право комментирования (только автор показаний)', () => {
+describe('flowCanComment — право комментирования (автор показаний ИЛИ админ)', () => {
 
     test('Автор показаний (email совпадает с modName) → true', () => {
         assertTrue(fns.flowCanComment(meter(), 'duty@plant.local'),
@@ -72,6 +74,87 @@ describe('flowCanComment — право комментирования (толь
         const old = meter({ modTimestamp: '2020-01-01T00:00:00.000Z' });
         assertTrue(fns.flowCanComment(old, 'duty@plant.local'),
             'время ввода показаний не ограничивает комментирование');
+    });
+});
+
+describe('flowCanComment — АДМИН видит кнопку всегда (Task 195 update)', () => {
+
+    test('Админ — автор показаний → true', () => {
+        assertTrue(fns.flowCanComment(meter(), 'duty@plant.local', 'Админ'),
+            'админ-автор видит кнопку');
+    });
+
+    test('Админ — НЕ автор (modName чужой) → всё равно true', () => {
+        const m = meter({ modName: 'duty@plant.local' });
+        assertTrue(fns.flowCanComment(m, 'admin@plant.local', 'Админ'),
+            'админ видит кнопку даже когда показания ввёл другой пользователь');
+    });
+
+    test('Админ — modName пустой (нет автора) → true', () => {
+        assertTrue(fns.flowCanComment(meter({ modName: '' }), 'admin@plant.local', 'Админ'),
+            'админ видит кнопку даже без автора последних показаний');
+    });
+
+    test('Админ — без email (только role) → true', () => {
+        assertTrue(fns.flowCanComment(meter(), null, 'Админ'),
+            'для админа email не нужен — роль решает');
+    });
+
+    test('Роль «Админ» — регистр/пробелы не влияют', () => {
+        assertTrue(fns.flowCanComment(meter(), 'admin@plant.local', '  АДМИН '),
+            'роль нормализуется (lowercase + trim)');
+    });
+
+    test('Не-админ и не автор (role != Админ, email != modName) → false', () => {
+        assertFalse(fns.flowCanComment(meter(), 'admin@plant.local', 'КИП ИОС дежурный'),
+            'обычная роль без авторства — кнопки нет');
+    });
+
+    test('Не-админская роль И автор → true (роль не блокирует автора)', () => {
+        assertTrue(fns.flowCanComment(meter(), 'duty@plant.local', 'КИП ИОС дежурный'),
+            'автор видит кнопку независимо от своей роли');
+    });
+
+    test('Админ + meter = null → false (защита от null)', () => {
+        assertFalse(fns.flowCanComment(null, 'admin@plant.local', 'Админ'),
+            'null meter — даже админу нельзя');
+    });
+});
+
+describe('flowBuildCommentBtnHtml — АДМИН видит кнопку (Task 195 update)', () => {
+
+    test('Админу — кнопка рендерится (без комментария)', () => {
+        const html = fns.flowBuildCommentBtnHtml(meter(), 'admin@plant.local', '', 'Админ');
+        assertTrue(html.indexOf('flow-comment-btn') !== -1, 'кнопка для админа');
+        assertTrue(html.indexOf('has-comment') === -1, 'без подсветки (комментария нет)');
+        assertTrue(html.indexOf('Добавить комментарий') !== -1, 'aria-label — добавить');
+    });
+
+    test('Админу — чужие показания + есть комментарий → подсвеченная «Изменить»', () => {
+        const m = meter({ modName: 'duty@plant.local', comment: 'серв. текст' });
+        const html = fns.flowBuildCommentBtnHtml(m, 'admin@plant.local', 'серв. текст', 'Админ');
+        assertTrue(html.indexOf('flow-comment-btn') !== -1, 'кнопка рендерится');
+        assertTrue(html.indexOf('has-comment') !== -1, 'подсветка наличия комментария');
+        assertTrue(html.indexOf('Изменить комментарий') !== -1, 'aria-label — изменить');
+    });
+
+    test('Админу — modName пустой → кнопка всё равно рендерится', () => {
+        const m = meter({ modName: '' });
+        const html = fns.flowBuildCommentBtnHtml(m, 'admin@plant.local', '', 'Админ');
+        assertTrue(html.indexOf('flow-comment-btn') !== -1,
+            'админ видит кнопку даже без автора показаний');
+    });
+
+    test('Не-админ (role != Админ) и не автор → кнопки нет', () => {
+        const html = fns.flowBuildCommentBtnHtml(meter(), 'admin@plant.local', '', 'КИП ИОС дежурный');
+        assertEqual(html, '', 'не-админ без авторства кнопку не видит');
+    });
+
+    test('Админ без 4-го аргумента (обратная совместимость) — fallback на email', () => {
+        // Старый 3-арг вызов без userRole → админ-проверка не срабатывает,
+        // срабатывает проверка email. Если email — не автор → '' .
+        const html = fns.flowBuildCommentBtnHtml(meter(), 'admin@plant.local', '');
+        assertEqual(html, '', 'без userRole админ-функция не активируется');
     });
 });
 

@@ -333,7 +333,10 @@ var Flowmeter = {
   //
   // Права: пользователь с правом ввода показаний (INPUT_ROLES), который
   // внёс ПОСЛЕДНИЕ показания (modName в M совпадает с его email).
-  // Ограничения по времени НЕТ — пока показания за этим пользователем.
+  // АДМИН (role === 'Админ') может комментировать любые показания —
+  // проверка авторства для него пропускается (Task 195 update).
+  // Ограничения по времени НЕТ — пока показания за этим пользователем
+  // (у админа — безусловно).
   // Комментарий виден всем читателям раздела (list возвращает поле comment).
   // При вводе новых показаний ДРУГИМ пользователем updateReading очищает O.
   // ============================================================
@@ -365,12 +368,16 @@ var Flowmeter = {
     }
 
     // Валидация авторства: комментарий может добавить/изменить только тот,
-    // кто вводил ПОСЛЕДНИЕ показания (столбец M — email)
-    var existingModName = String(sheet.getRange(rowNum, 13).getValue() || '').toLowerCase().trim();  // M=13
-    var currentUser = String(user.email || '').toLowerCase().trim();
-    if (!existingModName || existingModName !== currentUser) {
-      return { ok: false, error: 'not_your_input',
-               message: 'Комментарий доступен только тому, кто вводил последние показания' };
+    // кто вводил ПОСЛЕДНИЕ показания (столбец M — email).
+    // АДМИН обходит эту проверку (Task 195 update).
+    var isAdmin = (String(user.role || '').toLowerCase() === 'админ');
+    if (!isAdmin) {
+      var existingModName = String(sheet.getRange(rowNum, 13).getValue() || '').toLowerCase().trim();  // M=13
+      var currentUser = String(user.email || '').toLowerCase().trim();
+      if (!existingModName || existingModName !== currentUser) {
+        return { ok: false, error: 'not_your_input',
+                 message: 'Комментарий доступен только тому, кто вводил последние показания' };
+      }
     }
 
     // Записываем комментарий в O=15 (пустая строка = удалить)
@@ -380,8 +387,9 @@ var Flowmeter = {
     try {
       var actionLabel = comment ? 'FLOWMETER_SET_COMMENT' : 'FLOWMETER_DELETE_COMMENT';
       var shortText = comment.length > 60 ? comment.substring(0, 60) + '…' : comment;
+      var who = isAdmin ? ' (админ)' : '';
       Utils.audit(user.email, actionLabel, '', '',
-        'Расходомер id=' + id + ': ' + (comment ? '«' + shortText + '»' : 'комментарий удалён'));
+        'Расходомер id=' + id + who + ': ' + (comment ? '«' + shortText + '»' : 'комментарий удалён'));
     } catch (e) { /* audit log — не критично */ }
 
     return { ok: true, data: { id: id, comment: comment } };

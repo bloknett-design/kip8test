@@ -6772,3 +6772,88 @@ Stage Summary:
   перезагрузку и переход на другое устройство) — задеплоить серверный
   патч по scripts/DEPLOY-Task195-comment.md
 - Следующий Task ID — 196
+
+---
+Task ID: 196
+Agent: Super Z (main)
+Task: Task 195 update — кнопка 💬 в карточке расходомера теперь видна
+и АДМИНУ (не только автору последних показаний). Пользователь:
+«сделай, что бы эта кнопка 💬 была видна админу».
+
+Work Log:
+- Прочитан текущий контекст Task 195 (commit b616519, v460): flowCanComment
+  возвращал true только при совпадении m.modName === userEmail (автор
+  показаний); flowBuildCommentBtnHtml/openComment/submitComment звали
+  flowCanComment(m, email) без передачи роли.
+- Изучена серверная валидация: scripts/Flowmeter.gs setComment проверял
+  modName (столбец M) === user.email и при несовпадении возвращал
+  {error: 'not_your_input'} — для админа это блокировало бы сохранение
+  комментария.
+- Клиент index.html: flowCanComment(m, userEmail, userRole) — добавлен
+  опциональный 3-й параметр; если userRole.toLowerCase() === 'админ'
+  (после trim) — возвращает true ДО проверки email (админ видит кнопку
+  всегда, даже если показания ввёл другой пользователь, даже если
+  modName пустой). Документирующий комментарий блока Task 195 обновлён
+  (упоминание админа в правилах видимости и хранения).
+- flowBuildCommentBtnHtml(m, userEmail, commentText, userRole) — добавлен
+  опциональный 4-й параметр; пробрасывает userRole в flowCanComment.
+- Call-site в _buildDetailHtml: вводит _email и _role из
+  KipAuth._cachedEmail / KipAuth._cachedRole и передаёт оба в
+  flowCanComment и flowBuildCommentBtnHtml.
+- openComment/submitComment: те же _email + _role передаются в
+  flowCanComment (guard «только автор/админ»).
+- CSS-комментарий над .flow-comment-btn обновлён: «видна автору
+  последних показаний ИЛИ админу».
+- Сервер scripts/Flowmeter.gs setComment: добавлен `var isAdmin =
+  (String(user.role||'').toLowerCase() === 'админ');` — проверка авторства
+  (modName === email) обёрнута в `if (!isAdmin) {...}`; админ обходит
+  not_your_input и может ставить/изменять/удалять комментарий у любого
+  расходомера. В аудите добавлена пометка ` (админ)` после id при действиях
+  админа. Документирующий комментарий обновлён.
+- tests/test-flowmeter-comment.js: заголовок блока правил обновлён
+  (видна автору ИЛИ админу; у админа всегда). describe для flowCanComment
+  переименован в «автор показаний ИЛИ админ». Добавлены 2 новых describe:
+  «flowCanComment — АДМИН видит кнопку всегда» (8 тестов: админ-автор,
+  админ не-автор, modName пустой, без email, регистр/пробелы роли,
+  не-админ не-автор → false, не-админская роль но автор → true,
+  admin+null meter → false) и «flowBuildCommentBtnHtml — АДМИН видит
+  кнопку» (5 тестов: рендерится без комментария, чужие показания
+  + есть комментарий → «Изменить», modName пустой → рендерится,
+  не-админ без авторства → '', обратная совместимость 3-арг вызова).
+  Существующие 3-арг тесты остались зелёными (userRole как опциональный
+  последний параметр).
+- tests/run-all.js: 585 passed / 0 failed (было 537 → +48 = 13 старых
+  Task-195 + 13 новых admin-тестов, плюс 22 новых теста от самих Task 195
+  + Task 194 Minesweeper relocation etc.). Реально: до Task 195 было 537,
+  после Task 195 (commit b616519 v460) стало 572 (+35), после Task 196
+  (этот патч) стало 585 (+13 новых admin-тестов).
+- Playwright-верификация scripts/verify_ms195_admin.js (NODE_PATH
+  /home/z/.npm-global/lib/node_modules): 4 сценария —
+  (1) Админ + чужой modName → кнопка 💬 рендерится; (2) Автор (role=КИП
+  ИОС дежурный, email === modName) → кнопка рендерится; (3) Не-админ и
+  не автор → кнопки нет; (4) Админ + modName пустой → кнопка всё равно
+  рендерится. Все 4 — OK. ВАЖНО: выявлен тайминг — KipAuth.bootstrap()
+  запускается через setTimeout(100), и openDetail, вызванный сразу после
+  navigateTo, отрендерит карточку с _cachedRole=null → admin-проверка
+  не сработает. В тесте добавлен waitForFunction(KipAuth._cachedRole)
+  перед openDetail. В проде это не проблема: пользователь не может
+  кликнуть по расходомеру быстрее, чем bootstrap отработает (~100мс),
+  но если будут жалобы «админ не видит кнопку сразу после логина» —
+  рассмотреть повторный рендер карточки после bootstrap.
+- sw.js: CACHE_VERSION 'kipia-test-v460' → 'kipia-test-v461'.
+
+Stage Summary:
+- Task 196 выполнен: кнопка 💬 в карточке расходомера видна не только
+  автору последних показаний, но и АДМИНУ — всегда, даже если показания
+  ввёл другой пользователь, даже без автора (modName пустой). Сервер
+  flowmeter.setComment пропускает проверку авторства для админа — он
+  может ставить/изменять/удалять комментарий любого расходомера
+  (в аудите помечается « (админ)»). Клиент передаёт KipAuth._cachedRole
+  в flowCanComment/flowBuildCommentBtnHtml/openComment/submitComment.
+- Тесты 585 passed / 0 failed (+13 admin-тестов). Playwright 4/4 OK.
+- Пользователю: обновить PWA/десктоп (v461). Серверный патч Flowmeter.gs
+  (админ обходит not_your_input) задеплоить по той же инструкции
+  scripts/DEPLOY-Task195-comment.md — без него админ увидит кнопку, но
+  при попытке сохранить комментарий получит «not_your_input» от сервера
+  и сработает локальный fallback (только на устройстве админа).
+- Следующий Task ID — 197
