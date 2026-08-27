@@ -56,6 +56,7 @@ const PURE_FUNCTIONS = [
     'msLoadResults',
     'msSaveResults',
     'msRecordResult',
+    'msMigrateResults',
     'msRenderAchievements',
 ];
 

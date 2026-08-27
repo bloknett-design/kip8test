@@ -82,11 +82,16 @@ describe('msCalcCellSize — десктоп (>= 1024px, Task 191: огранич
     });
 });
 
-// Task 192: горизонтальные игровые поля на десктопе + счёт достижений
-// (три последних результата). На десктопе (>= 1024px) medium/hard
-// разворачиваются горизонтально: 9x16 → 16x9, 9x28 → 28x9; на мобильном
-// ориентация прежняя — вертикальная. Счёт достижений хранит максимум
-// 3 последних результата в localStorage (ключ msRecentResults).
+// Task 192: горизонтальные игровые поля на десктопе + счёт достижений.
+// На десктопе (>= 1024px) medium/hard разворачиваются горизонтально:
+// 9x16 → 16x9, 9x28 → 28x9; на мобильном ориентация прежняя —
+// вертикальная.
+//
+// Task 193: счёт достижений хранит топ-3 ЛУЧШИХ побед по времени
+// (ключ msBestResults): поражения не записываются, список отсортирован
+// по времени (быстрее — выше), медленная победа не вытесняет быстрые.
+// Победы из старого ключа msRecentResults (Task 192) переносятся
+// один раз при первом запуске (msMigrateResults).
 
 describe('msEffectiveDims — ориентация поля (Task 192)', () => {
 
@@ -180,46 +185,70 @@ describe('msCalcCellSize(cols) — горизонтальное поле на д
     });
 });
 
-describe('Счёт достижений — хранение трёх последних результатов (Task 192)', () => {
+describe('Счёт достижений — лучшие результаты по времени (Task 193)', () => {
 
     test('Пустой счёт: msLoadResults() возвращает []', () => {
         clearMockStorage();
-        assertEqual(fns.msLoadResults().length, 0, 'до первой игры счёт пуст');
+        assertEqual(fns.msLoadResults().length, 0, 'до первой победы счёт пуст');
     });
 
     test('Запись победы: won=true, время и сложность сохранены', () => {
         clearMockStorage();
         const res = fns.msRecordResult(true, 45, 'easy');
-        assertEqual(res.length, 1, 'после первой партии — один результат');
+        assertEqual(res.length, 1, 'после первой победы — один результат');
         assertTrue(res[0].won, 'победа зафиксирована');
         assertEqual(res[0].time, 45, 'время партии сохранено');
         assertEqual(res[0].diff, 'easy', 'сложность сохранена');
     });
 
-    test('Хранятся только три последних: 4-я партия вытесняет 1-ю', () => {
+    test('Поражение не попадает в лучшие результаты', () => {
         clearMockStorage();
-        fns.msRecordResult(true, 10, 'easy');
-        fns.msRecordResult(false, 20, 'medium');
-        fns.msRecordResult(true, 30, 'hard');
-        fns.msRecordResult(false, 40, 'easy');
-        const res = fns.msLoadResults();
-        assertEqual(res.length, 3, 'в счёте не больше трёх результатов');
-        assertEqual(res[0].time, 20, 'самый старый результат вытеснен');
-        assertEqual(res[2].time, 40, 'новейший результат — последний');
+        const res = fns.msRecordResult(false, 7, 'medium');
+        assertEqual(res.length, 0, 'взрыв не записывается в счёт достижений');
     });
 
-    test('Поражение фиксируется со временем взрыва', () => {
+    test('Поражение не вытесняет записанные победы', () => {
         clearMockStorage();
-        fns.msRecordResult(false, 7, 'medium');
+        fns.msRecordResult(true, 30, 'easy');
+        fns.msRecordResult(false, 5, 'hard');
         const res = fns.msLoadResults();
-        assertFalse(res[0].won, 'взрыв зафиксирован как поражение');
-        assertEqual(res[0].time, 7, 'время до взрыва сохранено');
+        assertEqual(res.length, 1, 'счёт не изменился после взрыва');
+        assertEqual(res[0].time, 30, 'прежняя победа на месте');
+    });
+
+    test('Результаты отсортированы по времени: быстрее — выше', () => {
+        clearMockStorage();
+        fns.msRecordResult(true, 40, 'easy');
+        fns.msRecordResult(true, 20, 'hard');
+        fns.msRecordResult(true, 30, 'medium');
+        const res = fns.msLoadResults();
+        assertEqual(res.length, 3, 'три победы в счёте');
+        assertEqual(res[0].time, 20, 'первое место — самая быстрая победа');
+        assertEqual(res[1].time, 30, 'второе место — среднее время');
+        assertEqual(res[2].time, 40, 'третье место — самая медленная из топ-3');
+        assertEqual(res[0].diff, 'hard', 'сложность победы сохранена при сортировке');
+    });
+
+    test('Хранится только топ-3: медленная победа не вытесняет быстрые', () => {
+        clearMockStorage();
+        fns.msRecordResult(true, 20, 'easy');
+        fns.msRecordResult(true, 30, 'medium');
+        fns.msRecordResult(true, 40, 'hard');
+        fns.msRecordResult(true, 50, 'easy'); // медленнее всех — не входит в топ
+        let res = fns.msLoadResults();
+        assertEqual(res.length, 3, 'в счёте не больше трёх результатов');
+        assertEqual(res[2].time, 40, 'медленная победа (50 с) не вытеснила быстрые');
+        // быстрая победа вытесняет самую медленную из топ-3
+        fns.msRecordResult(true, 10, 'medium');
+        res = fns.msLoadResults();
+        assertEqual(res[0].time, 10, 'новый рекорд — первое место');
+        assertEqual(res[2].time, 30, 'самая медленная из топ-3 (40 с) вытеснена');
     });
 
     test('Мусор в хранилище не ломает счёт (возврат к пустому)', () => {
         clearMockStorage();
         // пишем валидные данные, чтобы узнать фактический ключ
-        // (обёртка isolateLocalStorage добавляет префикс к 'msRecentResults')
+        // (обёртка isolateLocalStorage добавляет префикс к 'msBestResults')
         fns.msSaveResults([{ won: true, time: 1, diff: 'easy', ts: 1 }]);
         const keys = getMockStorageKeys();
         assertEqual(keys.length, 1, 'в хранилище один ключ счёта');
@@ -228,29 +257,145 @@ describe('Счёт достижений — хранение трёх после
         assertEqual(fns.msLoadResults().length, 0, 'повреждённое хранилище → пустой счёт без исключений');
     });
 
-    test('msRenderAchievements: 3 слота — победа, поражение, пусто + счёт 1/2', () => {
+    test('Мусор в записях отбраковывается фильтром побед', () => {
+        clearMockStorage();
+        fns.msSaveResults([
+            { won: true, time: 25, diff: 'easy', ts: 1 },
+            null,
+            { won: false, time: 10, diff: 'easy', ts: 2 },
+            { won: true, time: 'мусор', diff: 'easy', ts: 3 },
+            { won: true, time: 15, diff: 'hard', ts: 4 }
+        ]);
+        const res = fns.msLoadResults();
+        assertEqual(res.length, 2, 'учтены только валидные победы');
+        assertEqual(res[0].time, 15, 'валидные победы отсортированы по времени');
+        assertEqual(res[1].time, 25, 'вторая валидная победа в счёте');
+    });
+});
+
+describe('Миграция счёта из msRecentResults → msBestResults (Task 193)', () => {
+
+    // Вспомогалка: узнаём фактический физический префикс ключа —
+    // обёртка isolateLocalStorage добавляет 'kip8test:', кратность
+    // зависит от количества выполнений extractFunctions() в процессе.
+    function discoverPrefix() {
+        clearMockStorage();
+        fns.msSaveResults([]);
+        const keys = getMockStorageKeys();
+        return keys[0].slice(0, keys[0].length - 'msBestResults'.length);
+    }
+
+    test('Победы из старого ключа переносятся, поражения отбрасываются', () => {
+        const prefix = discoverPrefix();
+        clearMockStorage();
+        // старые данные Task 192: победы вперемешку с поражениями
+        setMockStorageItem(prefix + 'msRecentResults', JSON.stringify([
+            { won: true, time: 50, diff: 'easy', ts: 1 },
+            { won: false, time: 7, diff: 'medium', ts: 2 },
+            { won: true, time: 25, diff: 'hard', ts: 3 }
+        ]));
+        fns.msMigrateResults();
+        const res = fns.msLoadResults();
+        assertEqual(res.length, 2, 'перенесены только победы');
+        assertEqual(res[0].time, 25, 'победы отсортированы по времени (лучшая — первая)');
+        assertEqual(res[1].time, 50, 'вторая победа перенесена');
+        const after = getMockStorageKeys().map(function (k) { return k.slice(prefix.length); });
+        assertTrue(after.indexOf('msRecentResults') === -1, 'старый ключ удалён после миграции');
+        assertTrue(after.indexOf('msBestResults') !== -1, 'новый ключ создан');
+    });
+
+    test('Миграция не затирает существующий счёт лучших', () => {
+        const prefix = discoverPrefix();
+        clearMockStorage();
+        fns.msRecordResult(true, 15, 'easy'); // новый счёт уже есть
+        setMockStorageItem(prefix + 'msRecentResults', JSON.stringify([
+            { won: true, time: 99, diff: 'hard', ts: 1 }
+        ]));
+        fns.msMigrateResults();
+        const res = fns.msLoadResults();
+        assertEqual(res.length, 1, 'существующий счёт сохранён');
+        assertEqual(res[0].time, 15, 'миграция не затёрла лучший результат');
+    });
+
+    test('Миграция мусорного старого ключа не падает и удаляет его', () => {
+        const prefix = discoverPrefix();
+        clearMockStorage();
+        setMockStorageItem(prefix + 'msRecentResults', '{{{не json');
+        fns.msMigrateResults();
+        assertEqual(fns.msLoadResults().length, 0, 'мусор не перенесён, исключений нет');
+        const after = getMockStorageKeys().map(function (k) { return k.slice(prefix.length); });
+        assertTrue(after.indexOf('msRecentResults') === -1, 'мусорный старый ключ удалён');
+    });
+
+    test('Повторная миграция — no-op (старого ключа больше нет)', () => {
+        clearMockStorage();
+        fns.msRecordResult(true, 42, 'medium');
+        fns.msMigrateResults(); // старого ключа нет — ничего не должно измениться
+        const res = fns.msLoadResults();
+        assertEqual(res.length, 1, 'счёт не тронут повторной миграцией');
+        assertEqual(res[0].time, 42, 'результат сохранён');
+    });
+});
+
+describe('msRenderAchievements — рендер лучших результатов (Task 193)', () => {
+
+    test('Слоты медалей по местам + бейдж рекорда', () => {
         clearMockStorage();
         setMockViewport(1920); // десктопные подписи 16x9
         fns.msRecordResult(true, 45, 'easy');
-        fns.msRecordResult(false, 12, 'medium');
+        fns.msRecordResult(true, 12, 'medium');
         fns.msRenderAchievements();
         const row = getMockElement('msAchRow');
         assertTrue(row !== null, 'мок-элемент msAchRow создан');
-        assertTrue(row.innerHTML.indexOf('ms-ach-slot win') !== -1, 'слот победы отрендерен');
-        assertTrue(row.innerHTML.indexOf('ms-ach-slot loss') !== -1, 'слот поражения отрендерен');
+        assertEqual(row.innerHTML.split('ms-ach-slot win').length - 1, 2, 'два слота побед');
         assertTrue(row.innerHTML.indexOf('ms-ach-slot empty') !== -1, 'пустой слот отрендерен');
+        assertTrue(row.innerHTML.indexOf('ms-ach-slot loss') === -1, 'слотов поражения больше нет');
+        assertTrue(row.innerHTML.indexOf('🥇') !== -1, 'золото — лучшее время');
+        assertTrue(row.innerHTML.indexOf('🥈') !== -1, 'серебро — второе время');
+        assertTrue(row.innerHTML.indexOf('🥉') === -1, 'бронза не отрендерена без третьей победы');
         assertTrue(row.innerHTML.indexOf('16x9') !== -1, 'подпись сложности в текущей ориентации');
+        assertTrue(row.innerHTML.indexOf('12 с') !== -1, 'время лучшей партии в слоте');
         const score = getMockElement('msAchScore');
-        assertEqual(score.textContent, '1/2', 'бейдж счёта: 1 победа из 2 партий');
+        assertEqual(score.textContent, 'рекорд 12 с', 'бейдж: рекордное время');
     });
 
-    test('msRenderAchievements: пустой счёт — 3 пустых слота, бейдж скрыт', () => {
+    test('Порядок слотов — по времени, а не по хронологии', () => {
+        clearMockStorage();
+        setMockViewport(1920);
+        // первая победа медленная, вторая быстрая — быстрая должна быть первой
+        fns.msRecordResult(true, 45, 'hard');
+        fns.msRecordResult(true, 12, 'easy');
+        fns.msRenderAchievements();
+        const row = getMockElement('msAchRow');
+        const gold = row.innerHTML.indexOf('🥇');
+        const silver = row.innerHTML.indexOf('🥈');
+        assertTrue(gold !== -1 && silver !== -1, 'обе медали отрендерены');
+        assertTrue(gold < silver, 'золото левее серебра (лучшее время — первым)');
+        assertTrue(row.innerHTML.indexOf('12 с') < row.innerHTML.indexOf('45 с'), 'быстрое время в первом слоте');
+    });
+
+    test('Пустой счёт — 3 пустых слота, бейдж скрыт', () => {
         clearMockStorage();
         fns.msRenderAchievements();
         const row = getMockElement('msAchRow');
         assertEqual(row.innerHTML.split('ms-ach-slot empty').length - 1, 3, 'три пустых слота');
         const score = getMockElement('msAchScore');
-        assertEqual(score.style.display, 'none', 'бейдж счёта скрыт без партий');
+        assertEqual(score.style.display, 'none', 'бейдж скрыт без побед');
+    });
+
+    test('Полный топ-3: три медали, рекорд в бейдже', () => {
+        clearMockStorage();
+        setMockViewport(1920);
+        fns.msRecordResult(true, 60, 'easy');
+        fns.msRecordResult(true, 20, 'medium');
+        fns.msRecordResult(true, 40, 'hard');
+        fns.msRenderAchievements();
+        const row = getMockElement('msAchRow');
+        assertEqual(row.innerHTML.split('ms-ach-slot win').length - 1, 3, 'три слота побед');
+        assertTrue(row.innerHTML.indexOf('ms-ach-slot empty') === -1, 'пустых слотов нет');
+        assertTrue(row.innerHTML.indexOf('🥉') !== -1, 'бронза отрендерена');
+        const score = getMockElement('msAchScore');
+        assertEqual(score.textContent, 'рекорд 20 с', 'бейдж: лучшее из времён');
     });
 });
 
