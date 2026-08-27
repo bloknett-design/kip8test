@@ -30,6 +30,7 @@ require('./test-role-access.js');
 require('./test-minesweeper.js');
 require('./test-flowmeter-comment.js');
 require('./test-flowmeter-validation.js');
+require('./test-work-schedule.js');
 
 // Запускаем
 runAll().then(exitCode => {

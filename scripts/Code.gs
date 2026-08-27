@@ -157,6 +157,42 @@ function doPost(e) {
       case 'flowmeter.getRecentAllMeters':
         return _json(FlowmeterArchive.listRecentAllMeters(payload));
 
+      // === График работы персонала (WorkSchedule) ===
+      // WorkSchedule.gs возвращает {ok, data/error} напрямую,
+      // поэтому оборачиваем через _json без дополнительной упаковки.
+      case 'workSchedule.getStatusCodes':
+        return _json(WorkSchedule.getStatusCodes(payload));
+
+      case 'workSchedule.getPatterns':
+        return _json(WorkSchedule.getPatterns(payload));
+
+      case 'workSchedule.listEmployees':
+        return _json(WorkSchedule.listEmployees(payload));
+
+      case 'workSchedule.listEntries':
+        return _json(WorkSchedule.listEntries(payload));
+
+      case 'workSchedule.listTrainings':
+        return _json(WorkSchedule.listTrainings(payload));
+
+      case 'workSchedule.generateMonth':
+        return _json(WorkSchedule.generateMonth(payload));
+
+      case 'workSchedule.setManualEntry':
+        return _json(WorkSchedule.setManualEntry(payload));
+
+      case 'workSchedule.deleteEntry':
+        return _json(WorkSchedule.deleteEntry(payload));
+
+      case 'workSchedule.addEmployee':
+        return _json(WorkSchedule.addEmployee(payload));
+
+      case 'workSchedule.addTraining':
+        return _json(WorkSchedule.addTraining(payload));
+
+      case 'workSchedule.deleteTraining':
+        return _json(WorkSchedule.deleteTraining(payload));
+
       default:
         return _json({ ok: false, error: 'Unknown action: ' + action });
     }
