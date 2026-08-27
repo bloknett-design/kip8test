@@ -7011,3 +7011,142 @@ Stage Summary:
   админский комментарий сохраняется только локально (toast «Сохранено
   только на этом устройстве»).
 - Следующий Task ID — 199
+
+---
+Task ID: 199
+Agent: Super Z (main)
+Task: Защита от ошибочного ввода показаний расходомеров (Фаза 1).
+Пользователь предложил: сценарии # 3, 4, 6, 7, 8, 9, 10, 11, 12 (без #1/#2,
+без #5 WRONG_METER — отложен на Фазу 2), стратегия S1 (soft-confirm) +
+запись в новый столбец archive.Q. Параметры валидации в отдельной таблице
+flowmeter_validation_rules (колонки A-H). Белый список allowNegative в
+новой колонке meters.Q для счётчиков с легитимным curr<prev (возврат
+конденсата). 7 решений пользователя зафиксированы в чате (temp_min/max в
+rules; заголовок allowNegative; формат anomaly с детализацией;
+#6/#12 hard-block, остальные soft-confirm; #4 слит с #10 как JUMP_NEGATIVE;
+#5 в Фазе 2; сервер валидирует независимо от клиента).
+
+Work Log:
+- Создан scripts/ValidationRules.gs: объект ValidationRules с методами
+  getRulesForMeter(meterId), listRules(payload) — эндпоинт
+  flowmeter.getValidationRules, compute(meter, payload, rules, lastArchive)
+  → {codes, hardBlock, detail}. 9 правил Фазы 1: SIGN_NEG (hard),
+  DATE_INCONSISTENT (hard), JUMP_NEGATIVE (soft, для не-конденсатных),
+  JUMP_HIGH (consumption > max×3), JUMP_LOW (0 ≤ cons < min/10),
+  PERIOD_MISMATCH (daysBetween ±tolerance, для expected_days=1 допуск ±1,
+  для остальных ±10%), TEMP_OUT_OF_RANGE (temp вне [temp_min, temp_max]),
+  GCAL_RATIO (для расходомеров пара: gcal/consumption вне диапазона,
+  skip при consumption=0), DUPLICATE (те же prev/curr что в последней
+  записи архива, тот же автор, < 5 минут). Константы CODES и
+  HARD_BLOCK_CODES в объекте. Эндпоинт listRules поддерживает payload.id
+  для фильтрации.
+- Создана функция flowmeterInitRules() — одноразовая инициализация листа
+  rules: создаёт лист flowmeter_validation_rules с заголовками A-H
+  (meterId, min_cons, max_cons, expected_days, gcal_ratio_min,
+  gcal_ratio_max, temp_min, temp_max) и форматированием.
+- Создана flowmeterInitRulesFromArchive(force) — автозаполнение min/max/
+  expected_days из истории архива (по 12 meterId). min_cons = 0.5 ×
+  historical_min, max_cons = 1.5 × historical_max, expected_days = мода.
+  gcal_ratio_min/max и temp_min/max НЕ заполняются (требуют ручной
+  настройки для расходомеров пара).
+- Flowmeter.gs: docstring расширена A..O → A..Q с описанием Q=17
+  allowNegative. list() теперь читает 17 столбцов (A..Q), в объект meter
+  добавлено поле allowNegative (lowercase-строка из Q). updateReading():
+  перед записью показаний вычисляется meterForValidation (с allowNegative
+  из Q=17), rulesForMeter (через ValidationRules.getRulesForMeter),
+  lastArchiveRecord (чтение последней строки архива для DUPLICATE-проверки).
+  ValidationRules.compute вызывается; при hardBlock — audit
+  FLOWMETER_VALIDATION_BLOCK и возврат ошибки с кодом (lowercase) +
+  сообщением. anomalyDetail (строка «CODE: detail; ...») передаётся в
+  appendToArchive как новый 14-й параметр.
+- FlowmeterArchive.gs: docstring расширена с описанием Q=17 anomaly.
+  appendToArchive(meterId, hoz, prev, curr, datePrev, dateCurr, temp,
+  gcal, unit, period, role, name, comment, anomaly) — добавлен 14-й
+  параметр anomaly, в appendRow дописан 17-й элемент String(anomaly || '')
+  → column Q. listArchive: чтение расширено с 15 до 17 столбцов, в
+  объект record добавлено поле anomaly (Q=17, trim). flowmeterInitArchive:
+  headers расширены с P='comment' до Q='anomaly'.
+- Code.gs: добавлен маршрут case 'flowmeter.getValidationRules':
+  return _json(ValidationRules.listRules(payload)). Рядом с
+  flowmeter.archive и default. Безопасен — старый код его не трогает.
+- Клиент index.html:
+  • Новая чистая функция flowValidateReading(meter, payload, rules,
+    lastArchive) — зеркалит серверную ValidationRules.compute. Возвращает
+    {codes, hardBlock, detail}. Те же 9 правил. _flowParseDate(s) —
+    парсинг M/D/YYYY, YYYY-MM-DD, DD.MM.YYYY → Date. _flowFmt(n) —
+    toFixed(2). flowBuildAnomalyModalHtml(meter, codes) — построение HTML
+    модалки подтверждения.
+  • CSS: .flow-archive-anomaly (ячейка в архивной таблице),
+    .flow-anomaly-badge / .flow-anomaly-badge-detail (значки с кодами и
+    детализацией), .flow-anomaly-modal-overlay + .flow-anomaly-modal +
+    .flow-anomaly-list + .flow-anomaly-item + .flow-anomaly-code +
+    .flow-anomaly-detail + .flow-anomaly-modal-actions + .flow-anomaly-btn
+    (.flow-anomaly-cancel, .flow-anomaly-confirm) — для тёмной и светлой
+    темы. Анимация flowAnomalyFadeIn 0.18s.
+  • submitInput: перед отправкой на сервер вызывает flowValidateReading.
+    При hardBlock — toast с сообщением, self.load() для отката
+    оптимистичного UI, return. При soft-confirm codes — отрисовывает
+    модалку через _showAnomalyModal, сохраняет _pendingApiPayload,
+    ожидает подтверждения. _sendUpdateReading(payload, isEdit) — общая
+    функция фактической отправки (используется и при отсутствии аномалий,
+    и после confirm). cancelAnomalyModal() — удаляет модалку и сбрасывает
+    payload, self.load() для отката. confirmAnomalyModal() — удаляет
+    модалку, передаёт payload в _sendUpdateReading.
+  • _rulesCache (объект в памяти FlowmeterData) — кэш правил по meterId.
+    _getRulesForMeter(meterId) — синхронно возвращает из кэша или null.
+    loadValidationRules() — async, _api('flowmeter.getValidationRules', {})
+    → итерация data.rules, заполнение _rulesCache по r.meterId. Catch
+    возвращает null (сервер не поддерживает — тихо пропускаем).
+    _getLastArchiveForValidation(meterId, meter) — из кэша архива
+    (localStorage) берёт последнюю запись, возвращает {prev, curr,
+    modName, timestamp}.
+  • openDetail: loadValidationRules() вызывается ДО ветвления desktop/
+    mobile — чтобы и десктопная flowmeterRenderDetailInPanel имела
+    правила наготове.
+  • _buildArchiveHtml: добавлена колонка «⚠» (заголовок) если хоть в
+    одной записи есть непустой anomaly. Для каждой записи — парсинг
+    формата «CODE: detail; ...», генерация значков .flow-anomaly-badge
+    и .flow-anomaly-badge-detail.
+- Тесты tests/test-flowmeter-validation.js: 56 кейсов в 11 describe-блоках
+  (нет аномалий, SIGN_NEG hard-block ×3, DATE_INCONSISTENT hard-block ×2,
+  JUMP_NEGATIVE ×3, JUMP_HIGH ×4, JUMP_LOW ×3, PERIOD_MISMATCH ×4,
+  TEMP_OUT_OF_RANGE ×4, GCAL_RATIO ×5, DUPLICATE ×5, несколько правил
+  сразу ×2, detail-строка ×2, _flowParseDate ×5, _flowFmt ×4,
+  flowBuildAnomalyModalHtml ×8). tests/extract-functions.js: добавлены
+  flowValidateReading, _flowParseDate, _flowFmt, flowBuildAnomalyModalHtml
+  в PURE_FUNCTIONS. tests/run-all.js: подключён test-flowmeter-validation.js.
+- Playwright scripts/verify_ms199_validation.js: сценарий JUMP_HIGH
+  (consumption=48.89, max=10 → ×4.89 от max, ×1.63 от порога max×3=30) →
+  модалка «Проверьте показания» → «Сохранить с пометкой» → сервер получил
+  updateReading → archive.Q содержит JUMP_HIGH. + проверка hard-block
+  SIGN_NEG (curr=-91.11) → модалка не появилась, запрос на сервер не
+  отправлен (клиент заблокировал). 7 проверок — все OK. Мок-роут
+  эмулирует flowmeter.list/archive/getValidationRules/updateReading/
+  getCurrentUser, серверная валидация (зеркало клиента), запись в архив
+  с полем anomaly.
+- sw.js: CACHE_VERSION kipia-test-v463 → kipia-test-v464.
+
+Stage Summary:
+- Task 199 Фаза 1 выполнена: защита от ошибочного ввода показаний
+  расходомеров реализована по сценарию S1 (soft-confirm на клиенте,
+  модалка) + запись аномалий в archive.Q (сервер независимо валидирует).
+  9 правил Фазы 1 (без #5 WRONG_METER — отложен на Фазу 2). Правило
+  #4 REVERSED слито с #10 как JUMP_NEGATIVE для не-конденсатных счётчиков
+  (по allowNegative флагу в meters.Q). 2 правила — hard-block (SIGN_NEG,
+  DATE_INCONSISTENT), 7 — soft-confirm. Архитектура: клиентская
+  валидация (UX-модалка) + серверная (независимый расчёт и запись в
+  archive.Q). Структура: новый лист flowmeter_validation_rules (8 колонок
+  A-H), новые колонки meters.Q (allowNegative) и archive.Q (anomaly).
+- Тесты: 649 passed / 0 failed (+56 от 593). Playwright: 7/7 OK.
+- Пользователю: обновить PWA/десктоп (v464) + задеплоить серверные
+  файлы ValidationRules.gs + Flowmeter.gs (обновлённый) +
+  FlowmeterArchive.gs (обновлённый) + Code.gs (с новым маршрутом).
+  После деплоя вручную: (1) запустить flowmeterInitRules() в Apps Script
+  для создания листа flowmeter_validation_rules; (2) при желании
+  запустить flowmeterInitRulesFromArchive(false) для автозаполнения
+  min/max/expected_days из истории архива; (3) вручную проставить
+  allowNegative='yes' в meters.Q для счётчиков возврата конденсата;
+  (4) вручную проставить gcal_ratio_min/max и temp_min/max для
+  расходомеров пара (если нужны эти правила). Файлы для скачивания
+  будут в /home/z/my-project/download/Task199/.
+- Следующий Task ID — 200

@@ -44,6 +44,11 @@
 //                     непустой O уходит в P, а в архивную запись (hozraschet_archive.P)
 //                     копируется тот же текст как comment этой записи.
 //                     Полная история комментариев — в hozraschet_archive.P по записям.
+//     Q: allowNegative — флаг «допустим отрицательный расход» (Task 199). Значения:
+//                     'yes' (для счётчиков возврата конденсата, где curr<prev легитимно)
+//                     или пусто/'no' (для остальных). Читается в list() → поле meter
+//                     .allowNegative. Используется в ValidationRules.compute для
+//                     пропуска правила JUMP_NEGATIVE.
 //
 //   Данные начинаются со строки 2 (строка 1 — заголовки).
 //   Строка 2 → id=1, строка 13 → id=12.
@@ -145,9 +150,10 @@ var Flowmeter = {
       return { ok: true, data: { meters: [] } };
     }
 
-    // Читаем данные (строка DATA_START_ROW до lastRow, столбцы A–P = 16 столбцов;
-    // O=15 — comment, Task 195; P=16 — archivedComment, Task 197)
-    var range = sheet.getRange(this.DATA_START_ROW, 1, lastRow - this.DATA_START_ROW + 1, 16);
+    // Читаем данные (строка DATA_START_ROW до lastRow, столбцы A–Q = 17 столбцов;
+    // O=15 — comment, Task 195; P=16 — archivedComment, Task 197;
+    // Q=17 — allowNegative, Task 199)
+    var range = sheet.getRange(this.DATA_START_ROW, 1, lastRow - this.DATA_START_ROW + 1, 17);
     var values = range.getValues();
 
     // Task 109: Строим кэш email → name из таблицы users (KIP8_Access)
@@ -184,7 +190,8 @@ var Flowmeter = {
         modDisplayName: modDisplayName,             // Task 109 — имя для отображения
         modTimestamp:   this._parseTimestamp(row[13]),  // N=14 (Task 108)
         comment:        String(row[14] || '').trim(),   // O=15 — Task 195
-        archivedComment: String(row[15] || '').trim()   // P=16 — Task 197 (preview)
+        archivedComment: String(row[15] || '').trim(),   // P=16 — Task 197 (preview)
+        allowNegative:  String(row[16] || '').trim().toLowerCase()  // Q=17 — Task 199
       };
       meters.push(meter);
     }
@@ -255,6 +262,70 @@ var Flowmeter = {
                  message: 'Нет данных о времени ввода — редактирование недоступно' };
       }
     }
+
+    // Task 199: Валидация показаний перед записью. Считываем meter из строки
+    // (нужен для allowNegative из Q=17), берём правила из flowmeter_validation_rules
+    // и последнюю запись архива для проверки DUPLICATE.
+    // Hard-block (SIGN_NEG, DATE_INCONSISTENT) — возвращаем ошибку, не пишем.
+    // Soft-confirm правила — записываем показания, но в archive.Q пишем строку
+    // с кодами и детализацией (пример: «JUMP_HIGH: расход 50.50 > max×3=15.00; ...»).
+    var meterForValidation = {
+      id: id,
+      hoz: String(sheet.getRange(rowNum, 2).getValue() || ''),
+      param: String(sheet.getRange(rowNum, 3).getValue() || ''),
+      unit: String(sheet.getRange(rowNum, 8).getValue() || ''),
+      period: String(sheet.getRange(rowNum, 11).getValue() || ''),
+      modRole: String(sheet.getRange(rowNum, 12).getValue() || ''),
+      modName: String(sheet.getRange(rowNum, 13).getValue() || ''),
+      allowNegative: String(sheet.getRange(rowNum, 17).getValue() || '').toLowerCase().trim()  // Q=17
+    };
+    var rulesForMeter = null;
+    var lastArchiveRecord = null;
+    try {
+      rulesForMeter = ValidationRules.getRulesForMeter(id);
+    } catch (e) {
+      Logger.log('ValidationRules.getRulesForMeter failed: ' + e.message);
+    }
+    try {
+      var archSheet = SpreadsheetApp.openById(this.SPREADSHEET_ID)
+                       .getSheetByName('hozraschet_archive');
+      if (archSheet) {
+        var archLast = archSheet.getLastRow();
+        if (archLast >= 2) {
+          // Читаем все строки, ищем последнюю для этого meterId (колонка A=1)
+          var archRange = archSheet.getRange(2, 1, archLast - 1, 16);
+          var archVals = archRange.getValues();
+          for (var av = archVals.length - 1; av >= 0; av--) {
+            if (parseInt(archVals[av][0], 10) === id) {
+              lastArchiveRecord = {
+                meterId: parseInt(archVals[av][0], 10),
+                prev: parseFloat(archVals[av][2]) || 0,
+                curr: parseFloat(archVals[av][3]) || 0,
+                modName: String(archVals[av][13] || ''),
+                timestamp: (archVals[av][14] instanceof Date)
+                            ? archVals[av][14].toISOString() : String(archVals[av][14] || '')
+              };
+              break;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      Logger.log('Reading last archive record failed (non-critical): ' + e.message);
+    }
+
+    var validationResult = ValidationRules.compute(meterForValidation, payload, rulesForMeter, lastArchiveRecord);
+    if (validationResult.hardBlock) {
+      // Hard-block: возвращаем ошибку, ничего не пишем в таблицу
+      try {
+        Utils.audit(user.email, 'FLOWMETER_VALIDATION_BLOCK', '', '',
+          'Расходомер id=' + id + ': ' + validationResult.hardBlock.code +
+          ' — ' + validationResult.hardBlock.message);
+      } catch (e) { /* audit — не критично */ }
+      return { ok: false, error: validationResult.hardBlock.code.toLowerCase(),
+               message: validationResult.hardBlock.message };
+    }
+    var anomalyDetail = validationResult.detail || '';
 
     // Обновляем ячейки:
     // D=4 (datePrev), E=5 (dateCurr), F=6 (prev), G=7 (curr), I=9 (temp)
@@ -343,7 +414,8 @@ var Flowmeter = {
         payload.datePrev, payload.dateCurr,
         payload.temp, payload.gcal, unitVal, periodVal,
         user.role || '', user.name || user.email || '',  // Task 109: имя (если есть) или email
-        authorChanged ? oldCommentForArchive : ''  // Task 197: comment архивной записи
+        authorChanged ? oldCommentForArchive : '',  // Task 197: comment архивной записи
+        anomalyDetail  // Task 199: строка с кодами аномалий для archive.Q
       );
     } catch (archiveErr) {
       Logger.log('Archive write failed (non-critical): ' + archiveErr.message);

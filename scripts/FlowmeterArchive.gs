@@ -33,6 +33,15 @@
 //                      показаний (см. Flowmeter.updateReading). Для того же
 //                      автора (перезапись) — пусто, т.к. активный комментарий
 //                      остаётся в O и не «архивный».
+//   Q: anomaly        — строка с кодами аномалий валидации (Task 199, Фаза 1).
+//                      Формат: «CODE1: detail; CODE2: detail; ...» (пусто = аномалий
+//                      нет). Заполняется в appendToArchive из результата
+//                      ValidationRules.compute, вызванного в updateReading.
+//                      Коды: SIGN_NEG / DATE_INCONSISTENT (hard-block, в archive не
+//                      попадают, т.к. показания не сохраняются) + JUMP_NEGATIVE /
+//                      JUMP_HIGH / JUMP_LOW / PERIOD_MISMATCH / TEMP_OUT_OF_RANGE /
+//                      GCAL_RATIO / DUPLICATE (soft-confirm, попадают в archive
+//                      с пометкой).
 // ============================================================
 
 var FlowmeterArchive = {
@@ -91,8 +100,13 @@ var FlowmeterArchive = {
   //              Передаётся из Flowmeter.updateReading как старый комментарий
   //              из meters.O в момент смены автора показаний. Для того же
   //              автора (перезапись) — пусто.
+  //   anomaly   — Task 199: строка с кодами аномалий валидации (soft-confirm),
+  //              формат «CODE1: detail; CODE2: detail; ...». Пусто = аномалий
+  //              нет. Hard-block-коды (SIGN_NEG, DATE_INCONSISTENT) сюда не
+  //              попадают, т.к. показания не сохраняются (caller возвращает
+  //              ошибку до вызова appendToArchive).
   // ============================================================
-  appendToArchive: function(meterId, hoz, prev, curr, datePrev, dateCurr, temp, gcal, unit, period, role, name, comment) {
+  appendToArchive: function(meterId, hoz, prev, curr, datePrev, dateCurr, temp, gcal, unit, period, role, name, comment, anomaly) {
     var sheet = this._getSheet();
     if (!sheet) {
       // Лист архива не создан — тихо пропускаем (не блокируем основной flow)
@@ -112,11 +126,12 @@ var FlowmeterArchive = {
     }
 
     // Добавляем строку в конец листа.
-    // Структура (16 столбцов A–P, Task 100 добавил K=Gcal, Task 197 — P=comment):
+    // Структура (17 столбцов A–Q, Task 100 добавил K=Gcal, Task 197 — P=comment,
+    // Task 199 — Q=anomaly):
     //   A meterId, B hoz, C prev, D curr, E consumption,
     //   F datePrev, G dateCurr, H daysBetween, I unit, J temp,
     //   K Gcal (Task 100), L period, M modRole, N modName, O timestamp,
-    //   P comment (Task 197)
+    //   P comment (Task 197), Q anomaly (Task 199)
     sheet.appendRow([
       meterId,                                                                    // A: meterId
       hoz || '',                                                                  // B: hoz
@@ -133,7 +148,8 @@ var FlowmeterArchive = {
       role || '',                                                                 // M: modRole
       name || '',                                                                 // N: modName
       new Date(),                                                                  // O: timestamp
-      String(comment || '')                                                        // P: comment (Task 197)
+      String(comment || ''),                                                       // P: comment (Task 197)
+      String(anomaly || '')                                                        // Q: anomaly (Task 199)
     ]);
 
     Logger.log('Archive: meterId=' + meterId + ', prev=' + prev + ', curr=' + curr + ', consumption=' + consumption + ', gcal=' + (gcal || '—'));
@@ -170,9 +186,9 @@ var FlowmeterArchive = {
       return { ok: true, data: { records: [], meterId: meterId } };
     }
 
-    // Читаем все данные ( столбцы A–P, 16 столбцов; Task 100 добавил K=Gcal,
-    // Task 197 добавил P=comment)
-    var range = sheet.getRange(this.DATA_START_ROW, 1, lastRow - this.DATA_START_ROW + 1, 16);
+    // Читаем все данные (столбцы A–Q, 17 столбцов; Task 100 добавил K=Gcal,
+    // Task 197 добавил P=comment, Task 199 добавил Q=anomaly)
+    var range = sheet.getRange(this.DATA_START_ROW, 1, lastRow - this.DATA_START_ROW + 1, 17);
     var values = range.getValues();
 
     var records = [];
@@ -199,7 +215,8 @@ var FlowmeterArchive = {
         timestamp:   (row[14] instanceof Date)
                        ? row[14].toISOString()
                        : String(row[14] || ''),
-        comment:     String(row[15] || '').trim()    // P=16 — Task 197
+        comment:     String(row[15] || '').trim(),    // P=16 — Task 197
+        anomaly:     String(row[16] || '').trim()    // Q=17 — Task 199
       };
       records.push(record);
     }
@@ -254,7 +271,7 @@ function flowmeterInitArchive(force) {
   //   A=1 meterId, B=2 hoz, C=3 prev, D=4 curr, E=5 consumption,
   //   F=6 datePrev, G=7 dateCurr, H=8 daysBetween, I=9 unit, J=10 temp,
   //   K=11 Gcal, L=12 period, M=13 modRole, N=14 modName, O=15 timestamp,
-  //   P=16 comment (Task 197).
+  //   P=16 comment (Task 197), Q=17 anomaly (Task 199).
   // В предыдущей версии init-функции заголовки I/J и N/O были перепутаны
   // (I='temp' вместо 'unit', N='timestamp' вместо 'modName') — это
   // расходилось с реальной структурой данных в appendToArchive. Теперь
@@ -275,7 +292,8 @@ function flowmeterInitArchive(force) {
     'modRole',       // M=13
     'modName',       // N=14 (fix: было 'timestamp')
     'timestamp',     // O=15 (fix: было пропущено)
-    'comment'        // P=16 — Task 197
+    'comment',       // P=16 — Task 197
+    'anomaly'        // Q=17 — Task 199
   ];
 
   // Записываем заголовки

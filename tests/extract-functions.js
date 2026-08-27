@@ -69,6 +69,12 @@ const PURE_FUNCTIONS = [
     'flowLocalCommentsSave',
     // Task 197: архив комментариев (preview в meters.P + comment в archive.P)
     'flowBuildArchivedCommentRowHtml',
+    // Task 199: валидация показаний расходомера (UX-зеркало серверной
+    // ValidationRules.compute) + построение модалки аномалий
+    'flowValidateReading',
+    '_flowParseDate',
+    '_flowFmt',
+    'flowBuildAnomalyModalHtml',
 ];
 
 // Мок DOM: минимально достаточный, чтобы функции не падали.

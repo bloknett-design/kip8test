@@ -147,6 +147,11 @@ function doPost(e) {
       case 'flowmeter.archive':
         return _json(FlowmeterArchive.listArchive(payload));
 
+      // Task 199: правила валидации показаний (для админ-панели и
+      // для клиента — preload перед открытием карточки ввода)
+      case 'flowmeter.getValidationRules':
+        return _json(ValidationRules.listRules(payload));
+
       default:
         return _json({ ok: false, error: 'Unknown action: ' + action });
     }
