@@ -28,6 +28,7 @@ require('./test-orifice.js');
 require('./test-utils.js');
 require('./test-role-access.js');
 require('./test-minesweeper.js');
+require('./test-flowmeter-comment.js');
 
 // Запускаем
 runAll().then(exitCode => {

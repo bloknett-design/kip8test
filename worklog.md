@@ -6667,3 +6667,108 @@ Stage Summary:
   работают как раньше. После пуша sync-to-desktop.yml автоматически
   синхронизирует index.html в kip8test-desktop
 - Следующий Task ID — 195
+
+---
+Task ID: 195
+Agent: AI Assistant (GLM) — main agent
+Task: Комментарий к «Последним показаниям» расходомера в детальной
+карточке — кнопка видна только автору показаний, комментарий виден
+всем до тех пор, пока другой пользователь не внесёт новые данные
+
+Work Log:
+- Запрос: «в разделе хозрасчётных расходомеров, в подробной карточке
+  расходомера, в строке "Последние показания" в правой части
+  добавить кнопку ввода комментария, чтобы она отображалась только
+  у пользователя, который ввёл данные в "Последние показания", и
+  мог добавить при необходимости текстовый комментарий к данным до
+  тех пор, пока другой пользователь не внесёт новые данные»
+- Анализ: бэкенд — Apps Script (Flowmeter.gs/Code.gs), справочные
+  копии в scripts/. Двухуровневое хранение:
+  • сервер (основной) — новый столбец O «comment» листа
+    hozraschet_meters + эндпоинт flowmeter.setComment (валидация
+    авторства на сервере, only INPUT_ROLES + modName === email);
+    list возвращает поле comment; updateReading при смене автора
+    (existingModName M !== user.email) очищает столбец O
+  • localStorage (fallback) — kip8_flow_comments_v1; используется
+    пока серверный патч Task 195 не задеплоен (ответ «Unknown action»),
+    комментарий виден только на устройстве автора с пометкой «только
+    на этом устройстве»; при смене автора показаний (modName ≠ email)
+    устаревает и удаляется из _pruneStaleLocalComment (вызов в openDetail)
+- kip8test (kipia-test-v460), index.html:
+  • Standalone-функции (топ-левел, тестируемые): flowCanComment —
+    авторство показаний без учёта регистра/пробелов; flowCommentText —
+    приоритет серверного m.comment над локальной картой; flowBuildCommentBtnHtml —
+    кнопка 💬 (только автору; has-comment при наличии); flowBuildCommentRowHtml —
+    подстрока «Комментарий» (видна всем, escHtml от XSS, isLocal → пометка);
+    flowLocalCommentsLoad/Save — fallback localStorage, защита от мусора/массивов
+  • _buildDetailHtml: шапка строки «Последние показания» — flex
+    (label слева, кнопка справа) + подстрока «Комментарий» под ней;
+    вычисление canComment через KipAuth._cachedEmail; локальные
+    комментарии показываются только автору (карта передаётся при canComment)
+  • Методы FlowmeterData: _getLocalComments (ленивый кэш),
+    _pruneStaleLocalComment (вызов в openDetail), openComment/closeComment,
+    _updateCommentCounter (maxlength 500 + счётчик), submitComment
+    (серверный путь → ok; «Unknown action» → fallback localStorage;
+    «not_your_input» → toast + load; сеть → sheet не закрывается),
+    deleteComment (кнопка «Удалить» — submitComment с пустым текстом)
+  • HTML: новый #flowCommentSheet (по паттерну flow-input-sheet) —
+    textarea + счётчик + Сохранить/Удалить/Отмена
+  • CSS: .flow-comment-btn (30x30, has-comment оранжевый #c87048),
+    .flow-detail-row-head (flex space-between), .flow-detail-comment-row,
+    .flow-comment-field (textarea), .flow-comment-counter, .flow-comment-delete,
+    тёмная+светлая темы
+  • Защита sheet: navigateTo (как flowInputSheet Task 105) + popstate
+    (как Task 104) — закрывают #flowCommentSheet без сохранения
+- Серверный патч (справочные копии в scripts/):
+  • scripts/Flowmeter.gs: list читает 15 столбцов (O=15 → meter.comment);
+    новый метод setComment (валидация _requireEdit + modName M === email,
+    иначе not_your_input; запись O; аудит FLOWMETER_SET_COMMENT /
+    FLOWMETER_DELETE_COMMENT); updateReading — при смене автора
+    очищает столбец O (тот же автор перезаписывает → комментарий сохраняется)
+  • scripts/Code.gs: case 'flowmeter.setComment' → Flowmeter.setComment(payload)
+  • scripts/DEPLOY-Task195-comment.md: пошаговая инструкция деплоя
+    (столбец O1 в Google Таблице → правки Flowmeter.gs/Code.gs →
+    Deploy → проверка; откат без слома фронтенда — fallback localStorage)
+- sw.js: v459 → v460
+- Тесты tests/test-flowmeter-comment.js (новый, 30 шт.): flowCanComment
+  (7), flowCommentText (8), flowBuildCommentBtnHtml (5), flowBuildCommentRowHtml
+  (5), localStorage roundtrip/мусор/массив (5); extract-functions.js
+  PURE_FUNCTIONS +6 (flowCanComment, flowCommentText, flowBuildCommentBtnHtml,
+  flowBuildCommentRowHtml, flowLocalCommentsLoad, flowLocalCommentsSave);
+  run-all.js +test-flowmeter-comment.js; итог 572 passed / 0 failed
+  (было 542 + 30; один баг пойман и исправлен: typeof 'object' пропускал
+  массив — добавлен !Array.isArray)
+- node --check 4 script-блоков index.html — OK; sw.js OK
+- Playwright verify_flow195.js: 5 сценариев (A — мобайл 390 автор,
+  сервер с поддержкой: кнопка в правой части строки flex, sheet, ввод,
+  toast «Комментарий сохранён», строка «Комментарий» без пометки,
+  fallback-ключ localStorage не создан, мок-сервер получил setComment;
+  B — другой пользователь: кнопки нет, комментарий виден, в карточке
+  его показаний кнопка есть; C — fallback «Unknown action» →
+  localStorage с пометкой, переживает reload, при смене автора
+  (modName → other@plant.local) кнопка исчезает, устаревший локальный
+  комментарий удаляется; D — десктоп 1920: панель detail, кнопка в
+  панели, sheet работает, регрессия «Ввести показания» цела;
+  E — автор повторно вводит показания: кнопка и комментарий сохраняются,
+  авторство за тем же пользователем); 38/38 проверок, pageerror=0
+  во всех сценариях; VLM-контроль скриншотов A и D: «ОК, кнопка
+  подсвечена, текст виден полностью, наложений нет»
+
+Stage Summary:
+- Task 195 выполнен и подготовлен к пушу: кнопка 💬 в правой части
+  строки «Последние показания» (только автору показаний) + sheet ввода
+  (textarea ≤500 символов + счётчик + кнопка «Удалить») + подстрока
+  «Комментарий» (видна всем). Серверный патч (flowmeter.setComment +
+  столбец O + сброс при смене автора) подготовлен в scripts/Flowmeter.gs /
+  scripts/Code.gs с инструкцией деплоя scripts/DEPLOY-Task195-comment.md.
+  Fallback на localStorage (kip8_flow_comments_v1) делает кнопку рабочей
+  сразу после пуша — даже до деплоя серверного патча (комментарий виден
+  только на устройстве автора с пометкой; устаревает и удаляется при
+  смене автора показаний). Ограничения по времени НЕТ (в отличие от
+  правки показаний — 1 час): комментировать можно, пока показания за
+  автором. Тесты 572 passed / 0 failed, Playwright 38/38 pageerror=0
+- Пользователю: обновить PWA/десктоп (v460) — кнопка 💬 работает сразу
+  (fallback). Для общего хранения комментариев (видны всем, переживают
+  перезагрузку и переход на другое устройство) — задеплоить серверный
+  патч по scripts/DEPLOY-Task195-comment.md
+- Следующий Task ID — 196

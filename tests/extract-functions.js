@@ -60,6 +60,13 @@ const PURE_FUNCTIONS = [
     'msRenderAchievements',
     // Навигация (Task 194: Сапёр — корневой раздел главной)
     'buildBreadcrumbPath',
+    // Расходомеры: комментарий к последним показаниям (Task 195)
+    'flowCanComment',
+    'flowCommentText',
+    'flowBuildCommentBtnHtml',
+    'flowBuildCommentRowHtml',
+    'flowLocalCommentsLoad',
+    'flowLocalCommentsSave',
 ];
 
 // Мок DOM: минимально достаточный, чтобы функции не падали.

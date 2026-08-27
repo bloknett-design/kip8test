@@ -8,6 +8,8 @@
 // Эндпоинты (вызываются через doPost):
 //   flowmeter.list         — прочитать все позиции расходомеров
 //   flowmeter.updateReading — обновить показания одной позиции
+//   flowmeter.setComment   — Task 195: комментарий к последним показаниям
+//                            (только для автора показаний)
 //
 // Авторизация — по тому же паттерну, что CableJournal.gs:
 //   Utils.findSessionByToken(token) → session
@@ -17,7 +19,7 @@
 //   Строка 1 — заголовки столбцов
 //   Строки 2+ — данные (12 позиций, строки 2–13)
 //
-//   Столбцы (A–N):
+//   Столбцы (A–O):
 //     A: id         — номер позиции (1–12)
 //     B: hoz        — название (Хозрасчёт №1)
 //     C: param      — параметр (Расход пара в корпус 114)
@@ -32,6 +34,9 @@
 //     L: modRole    — роль пользователя, внёсшего последние изменения
 //     M: modName    — имя пользователя, внёсшего последние изменения
 //     N: modTimestamp — timestamp последнего ввода (Task 108 — для редактирования в течение 1 часа)
+//     O: comment    — комментарий к последним показаниям (Task 195; виден всем,
+//                     редактировать может только автор показаний — до тех пор,
+//                     пока другой пользователь не внесёт новые данные)
 //
 //   Данные начинаются со строки 2 (строка 1 — заголовки).
 //   Строка 2 → id=1, строка 13 → id=12.
@@ -133,8 +138,9 @@ var Flowmeter = {
       return { ok: true, data: { meters: [] } };
     }
 
-    // Читаем данные (строка DATA_START_ROW до lastRow, столбцы A–N = 14 столбцов)
-    var range = sheet.getRange(this.DATA_START_ROW, 1, lastRow - this.DATA_START_ROW + 1, 14);
+    // Читаем данные (строка DATA_START_ROW до lastRow, столбцы A–O = 15 столбцов;
+    // O=15 — comment, Task 195)
+    var range = sheet.getRange(this.DATA_START_ROW, 1, lastRow - this.DATA_START_ROW + 1, 15);
     var values = range.getValues();
 
     // Task 109: Строим кэш email → name из таблицы users (KIP8_Access)
@@ -169,7 +175,8 @@ var Flowmeter = {
         modRole:        String(row[11] || ''),
         modName:        modEmail,                   // M — email (для _canEdit, Task 108)
         modDisplayName: modDisplayName,             // Task 109 — имя для отображения
-        modTimestamp:   this._parseTimestamp(row[13])  // N=14 (Task 108)
+        modTimestamp:   this._parseTimestamp(row[13]),  // N=14 (Task 108)
+        comment:        String(row[14] || '').trim()   // O=15 — Task 195
       };
       meters.push(meter);
     }
@@ -276,8 +283,17 @@ var Flowmeter = {
 
     // Кто внёс изменения: L=12 (modRole), M=13 (modName)
     // Task 108: пишем email (не user.name) — чтобы клиент мог сравнить с KipAuth._cachedEmail
+    // Task 195: если показания теперь за ДРУГИМ пользователем — комментарий
+    // к прежним показаниям устарел, очищаем столбец O. Тот же автор
+    // перезаписывает свои показания — комментарий сохраняем.
+    var existingModEmail = String(sheet.getRange(rowNum, 13).getValue() || '');  // M=13
     sheet.getRange(rowNum, 12).setValue(user.role || '');
     sheet.getRange(rowNum, 13).setValue(user.email || '');
+    if (existingModEmail.toLowerCase() !== String(user.email || '').toLowerCase()) {
+      try {
+        sheet.getRange(rowNum, 15).setValue('');  // O=15 — сброс комментария (Task 195)
+      } catch (e) { /* столбца может не быть — не критично */ }
+    }
 
     // Task 108: Записываем timestamp текущего ввода в N=14 (modTimestamp)
     sheet.getRange(rowNum, 14).setValue(new Date());
@@ -306,6 +322,69 @@ var Flowmeter = {
     }
 
     return { ok: true, data: { id: id } };
+  },
+
+  // ============================================================
+  // flowmeter.setComment — Task 195: комментарий к последним показаниям
+  // ============================================================
+  // payload: { token, id, comment }
+  //   comment — строка до 500 символов; пустая строка = удалить комментарий.
+  // Возвращает: { ok: true, data: { id: N, comment: '...' } }
+  //
+  // Права: пользователь с правом ввода показаний (INPUT_ROLES), который
+  // внёс ПОСЛЕДНИЕ показания (modName в M совпадает с его email).
+  // Ограничения по времени НЕТ — пока показания за этим пользователем.
+  // Комментарий виден всем читателям раздела (list возвращает поле comment).
+  // При вводе новых показаний ДРУГИМ пользователем updateReading очищает O.
+  // ============================================================
+  setComment: function(payload) {
+    var auth = this._requireEdit(payload.token);
+    if (auth.error) return auth.error;
+    var user = auth.user;
+
+    var id = parseInt(payload.id, 10);
+    if (!id || id < 1) {
+      return { ok: false, error: 'Некорректный id позиции' };
+    }
+
+    var comment = String(payload.comment === undefined || payload.comment === null
+      ? '' : payload.comment).trim();
+    if (comment.length > 500) {
+      return { ok: false, error: 'Комментарий длиннее 500 символов' };
+    }
+
+    var sheet = this._getSheet();
+    if (!sheet) {
+      return { ok: false, error: 'Лист не найден' };
+    }
+
+    var rowNum = id + 1;
+    var lastRow = sheet.getLastRow();
+    if (rowNum > lastRow) {
+      return { ok: false, error: 'Позиция id=' + id + ' не найдена' };
+    }
+
+    // Валидация авторства: комментарий может добавить/изменить только тот,
+    // кто вводил ПОСЛЕДНИЕ показания (столбец M — email)
+    var existingModName = String(sheet.getRange(rowNum, 13).getValue() || '').toLowerCase().trim();  // M=13
+    var currentUser = String(user.email || '').toLowerCase().trim();
+    if (!existingModName || existingModName !== currentUser) {
+      return { ok: false, error: 'not_your_input',
+               message: 'Комментарий доступен только тому, кто вводил последние показания' };
+    }
+
+    // Записываем комментарий в O=15 (пустая строка = удалить)
+    sheet.getRange(rowNum, 15).setValue(comment);
+
+    // Аудит
+    try {
+      var actionLabel = comment ? 'FLOWMETER_SET_COMMENT' : 'FLOWMETER_DELETE_COMMENT';
+      var shortText = comment.length > 60 ? comment.substring(0, 60) + '…' : comment;
+      Utils.audit(user.email, actionLabel, '', '',
+        'Расходомер id=' + id + ': ' + (comment ? '«' + shortText + '»' : 'комментарий удалён'));
+    } catch (e) { /* audit log — не критично */ }
+
+    return { ok: true, data: { id: id, comment: comment } };
   },
 
   // ============================================================
