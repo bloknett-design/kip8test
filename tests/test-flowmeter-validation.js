@@ -762,19 +762,19 @@ describe('Task 223+224+228: график архива — условный ис�
     });
 });
 
-// Task 228: SW обновлён до v492 (условный источник данных графика)
-describe('Task 228: SW версия v492', () => {
+// Task 228+229: SW обновлён до v493 (условный источник графика + дата как одна строка)
+describe('Task 229: SW версия v493', () => {
     const fs = require('fs');
     const path = require('path');
     const swPath = path.resolve(__dirname, '..', 'sw.js');
     const sw = fs.readFileSync(swPath, 'utf-8');
 
-    test('CACHE_VERSION = kipia-test-v492', () => {
-        assertTrue(sw.indexOf("kipia-test-v492") !== -1);
+    test('CACHE_VERSION = kipia-test-v493', () => {
+        assertTrue(sw.indexOf("kipia-test-v493") !== -1);
     });
-    test('Старая версия v491 убрана', () => {
-        assertTrue(sw.indexOf("kipia-test-v491") === -1,
-                   'Старая v491 не должна остаться в sw.js');
+    test('Старая версия v492 убрана', () => {
+        assertTrue(sw.indexOf("kipia-test-v492") === -1,
+                   'Старая v492 не должна остаться в sw.js');
     });
 });
 
@@ -831,14 +831,23 @@ describe('Task 225: реорганизация строки «Последние
                    'Подзначения должны иметь класс flow-detail-sub');
     });
 
-    test('Дата «за дата г.» — в row-head, справа от названия (Task 227)', () => {
+    test('Дата «за дата г.» — под-элемент label, одна строка (Task 227+229)', () => {
         var body = detailBody();
-        // Должна быть строка вида <span class="flow-detail-date flow-detail-date-inline">за ... г.</span>
-        // внутри .flow-detail-row-head (а не отдельной строкой под названием)
+        // Task 227: дата в row-head (не отдельной строкой под названием)
+        // Task 229: дата — под-элемент .flow-detail-label (одна общая строка)
         assertTrue(body.indexOf('flow-detail-date-inline') !== -1,
                    'Дата должна иметь класс-маркер flow-detail-date-inline');
-        assertTrue(body.indexOf('flow-detail-date-inline">за ') !== -1,
-                   'Дата «за ...» должна быть внутри span с классом flow-detail-date-inline');
+        // Проверяем, что lastReadingLabel идёт ВНУТРИ span.flow-detail-label
+        // (это единственный span с этим классом в карточке), а date-inline
+        // идёт сразу после lastReadingLabel (с тем же родителем — span.label).
+        // Находим подстроку «flow-detail-label» — после неё в радиусе 200
+        // символов должно быть «flow-detail-date-inline» (т.е. date-элемент
+        // является под-элементом label, а не отдельным span в row-head).
+        var labelIdx = body.indexOf('flow-detail-label');
+        assertTrue(labelIdx !== -1, 'flow-detail-label должен быть в коде');
+        var snippet = body.substring(labelIdx, Math.min(body.length, labelIdx + 300));
+        assertTrue(snippet.indexOf('flow-detail-date-inline') !== -1,
+                   'Дата должна идти внутри span.flow-detail-label (одна общая строка с названием)');
         // Старый формат (<div class="flow-detail-date">за ...</div> как отдельная
         // строка под row-head) должен быть убран
         assertTrue(body.indexOf('<div class="flow-detail-date">за ') === -1,
