@@ -1253,18 +1253,140 @@ describe('Task 234: код правила не показывается в мо�
     });
 });
 
-// Task 234: SW обновлён до v498
-describe('Task 234: SW версия v498', () => {
+// Task 234 (историческая заметка): в этой ревизии SW был поднят до v498
+// (код правила убран из модалки подтверждения аномалий). Актуальная версия —
+// v499 (Task 235, см. ниже). Отдельный блок Task 234 убран, чтобы не падал
+// при следующих bump-ах.
+
+// Task 235: правила валидации кэшируются в localStorage между сессиями.
+// Раньше loadValidationRules() при каждом открытии карточки делал серверный
+// запрос flowmeter.getValidationRules — теперь если кэш свежий (< 24ч),
+// запрос пропускается, и модалка аномалий появляется моментально из памяти.
+// Сервер всё равно валидирует независимо при фактическом сохранении.
+describe('Task 235: кэш правил валидации в localStorage (мгновенная модалка)', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const idxPath = path.resolve(__dirname, '..', 'index.html');
+    const src = fs.readFileSync(idxPath, 'utf-8');
+
+    // Извлекаем тело объекта FlowmeterData для source-text проверок
+    function flowmeterDataBody() {
+        var idx = src.indexOf('var FlowmeterData = {');
+        if (idx === -1) return '';
+        // Ищем закрывающую скобку объекта на отдельной строке
+        var end = src.indexOf('\n    };\n', idx);
+        return src.substring(idx, end === -1 ? src.length : end);
+    }
+
+    test('Поле _rulesCacheKey определено', () => {
+        var body = flowmeterDataBody();
+        assertTrue(body.indexOf("_rulesCacheKey: 'kip8_flow_rules_v1'") !== -1,
+                   'Должен быть ключ _rulesCacheKey для localStorage');
+    });
+
+    test('Поле _rulesCacheTtlMs определено (24 часа)', () => {
+        var body = flowmeterDataBody();
+        // TTL = 24 * 60 * 60 * 1000 (1 сутки в мс)
+        assertTrue(body.indexOf('_rulesCacheTtlMs:') !== -1 &&
+                   body.indexOf('24 * 60 * 60 * 1000') !== -1,
+                   'TTL должен быть 24 часа (24*60*60*1000 мс)');
+    });
+
+    test('Поле _rulesCacheTs определено (timestamp последней синхронизации)', () => {
+        var body = flowmeterDataBody();
+        assertTrue(body.indexOf('_rulesCacheTs:') !== -1,
+                   'Должно быть поле _rulesCacheTs — timestamp кэша');
+    });
+
+    test('Метод _loadRulesCacheFromStorage определён (синхронная подгрузка из localStorage)', () => {
+        var body = flowmeterDataBody();
+        assertTrue(body.indexOf('_loadRulesCacheFromStorage: function') !== -1,
+                   'Должен быть метод _loadRulesCacheFromStorage');
+        // Должен читать localStorage по _rulesCacheKey
+        assertTrue(body.indexOf("localStorage.getItem(this._rulesCacheKey)") !== -1,
+                   'Метод должен читать localStorage по _rulesCacheKey');
+        // Должен заполнять _rulesCacheTs
+        assertTrue(body.indexOf('this._rulesCacheTs = ts') !== -1,
+                   'Должен устанавливать _rulesCacheTs из localStorage');
+    });
+
+    test('Метод _persistRulesCache определён (запись в localStorage)', () => {
+        var body = flowmeterDataBody();
+        assertTrue(body.indexOf('_persistRulesCache: function') !== -1,
+                   'Должен быть метод _persistRulesCache');
+        // Должен писать в localStorage
+        assertTrue(body.indexOf("localStorage.setItem(this._rulesCacheKey") !== -1,
+                   'Метод должен писать в localStorage по _rulesCacheKey');
+        // Должен ставить текущий timestamp
+        assertTrue(body.indexOf('ts: Date.now()') !== -1,
+                   'Payload должен содержать текущий timestamp');
+    });
+
+    test('loadValidationRules: skip-fetch если кэш свежий', () => {
+        var body = flowmeterDataBody();
+        var idx = body.indexOf('loadValidationRules: function');
+        assertTrue(idx !== -1, 'loadValidationRules должен быть определён');
+        var snippet = body.substring(idx, idx + 2500);
+        // Проверка freshness: if (_rulesCacheTs > 0 && (now - _rulesCacheTs) < _rulesCacheTtlMs)
+        assertTrue(snippet.indexOf('_rulesCacheTs > 0') !== -1 &&
+                   snippet.indexOf('_rulesCacheTtlMs') !== -1,
+                   'Должна быть проверка freshness по _rulesCacheTs + TTL');
+        // Если свежий — return Promise.resolve без _api вызова
+        assertTrue(snippet.indexOf('Promise.resolve(this._rulesCache)') !== -1,
+                   'При свежем кэше — return Promise.resolve без серверного round-trip');
+    });
+
+    test('loadValidationRules: persist после успешного fetch', () => {
+        var body = flowmeterDataBody();
+        var idx = body.indexOf('loadValidationRules: function');
+        var snippet = body.substring(idx, idx + 2500);
+        // После успешного fetch должно вызываться _persistRulesCache
+        assertTrue(snippet.indexOf('self._persistRulesCache()') !== -1,
+                   'После успешного fetch должно вызываться _persistRulesCache');
+        // Старый кэш должен сбрасываться перед заполнением (если сервер вернул
+        // урезанный список — не оставляем «зомби»-правил)
+        assertTrue(snippet.indexOf('self._rulesCache = {}') !== -1,
+                   'Старый _rulesCache должен сбрасываться перед заполнением');
+    });
+
+    test('loadValidationRules: fallback на stale localStorage при ошибке fetch', () => {
+        var body = flowmeterDataBody();
+        var idx = body.indexOf('loadValidationRules: function');
+        var snippet = body.substring(idx, idx + 2500);
+        // В catch-ветке должно вызываться _loadRulesCacheFromStorage
+        // (если в памяти пусто — пробуем достать из localStorage)
+        assertTrue(snippet.indexOf('_loadRulesCacheFromStorage()') !== -1,
+                   'В catch-ветке должно вызываться _loadRulesCacheFromStorage (fallback)');
+    });
+
+    test('init() вызывает _loadRulesCacheFromStorage (синхронно до load)', () => {
+        var body = flowmeterDataBody();
+        var idx = body.indexOf('init: function');
+        assertTrue(idx !== -1, 'init должен быть определён');
+        var initEnd = body.indexOf('load: function', idx);
+        var initSnippet = body.substring(idx, initEnd === -1 ? body.length : initEnd);
+        assertTrue(initSnippet.indexOf('_loadRulesCacheFromStorage()') !== -1,
+                   'init() должен вызывать _loadRulesCacheFromStorage');
+        // Должен идти ДО load()
+        var callPos = initSnippet.indexOf('_loadRulesCacheFromStorage()');
+        var loadPos = initSnippet.indexOf('this.load()');
+        assertTrue(callPos !== -1 && loadPos !== -1 && callPos < loadPos,
+                   '_loadRulesCacheFromStorage должен идти ДО this.load() в init()');
+    });
+});
+
+// Task 235: SW обновлён до v499
+describe('Task 235: SW версия v499', () => {
     const fs = require('fs');
     const path = require('path');
     const swPath = path.resolve(__dirname, '..', 'sw.js');
     const sw = fs.readFileSync(swPath, 'utf-8');
 
-    test('CACHE_VERSION = kipia-test-v498', () => {
-        assertTrue(sw.indexOf("kipia-test-v498") !== -1);
+    test('CACHE_VERSION = kipia-test-v499', () => {
+        assertTrue(sw.indexOf("kipia-test-v499") !== -1);
     });
-    test('Старая версия v497 убрана', () => {
-        assertTrue(sw.indexOf("kipia-test-v497") === -1,
-                   'Старая v497 не должна остаться в sw.js');
+    test('Старая версия v498 убрана', () => {
+        assertTrue(sw.indexOf("kipia-test-v498") === -1,
+                   'Старая v498 не должна остаться в sw.js');
     });
 });
