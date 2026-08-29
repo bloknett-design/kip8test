@@ -762,19 +762,55 @@ describe('Task 223+224+228: график архива — условный ис�
     });
 });
 
-// Task 228+229: SW обновлён до v493 (условный источник графика + дата как одна строка)
-describe('Task 229: SW версия v493', () => {
+// Task 229+230: SW обновлён до v494 (дата как одна строка + horizontal scroll таблицы)
+describe('Task 230: SW версия v494', () => {
     const fs = require('fs');
     const path = require('path');
     const swPath = path.resolve(__dirname, '..', 'sw.js');
     const sw = fs.readFileSync(swPath, 'utf-8');
 
-    test('CACHE_VERSION = kipia-test-v493', () => {
-        assertTrue(sw.indexOf("kipia-test-v493") !== -1);
+    test('CACHE_VERSION = kipia-test-v494', () => {
+        assertTrue(sw.indexOf("kipia-test-v494") !== -1);
     });
-    test('Старая версия v492 убрана', () => {
-        assertTrue(sw.indexOf("kipia-test-v492") === -1,
-                   'Старая v492 не должна остаться в sw.js');
+    test('Старая версия v493 убрана', () => {
+        assertTrue(sw.indexOf("kipia-test-v493") === -1,
+                   'Старая v493 не должна остаться в sw.js');
+    });
+});
+
+// Task 230: горизонтальный скролл таблицы хронологии работает сразу (без pinch-zoom).
+// Причина бага: .pinch-zoom-target имеет touch-action: pan-y (только вертикаль),
+// и лишь после добавления класса .zoomed (через pinch-zoom) становится pan-x pan-y.
+// Решение: для таблицы хронологии добавлено специфичное правило
+// .flow-archive-table-wrap.pinch-zoom-target { touch-action: pan-x pan-y }.
+describe('Task 230: горизонтальный скролл таблицы хронологии без pinch-zoom', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const idxPath = path.resolve(__dirname, '..', 'index.html');
+    const src = fs.readFileSync(idxPath, 'utf-8');
+
+    test('Добавлено правило .flow-archive-table-wrap.pinch-zoom-target', () => {
+        assertTrue(src.indexOf('.flow-archive-table-wrap.pinch-zoom-target') !== -1,
+                   'Должно быть CSS-правило .flow-archive-table-wrap.pinch-zoom-target');
+    });
+
+    test('touch-action: pan-x pan-y для таблицы хронологии', () => {
+        // Находим блок правила
+        var ruleIdx = src.indexOf('.flow-archive-table-wrap.pinch-zoom-target');
+        assertTrue(ruleIdx !== -1);
+        var ruleEnd = src.indexOf('}', ruleIdx);
+        var ruleText = src.substring(ruleIdx, ruleEnd === -1 ? src.length : ruleEnd);
+        assertTrue(ruleText.indexOf('touch-action: pan-x pan-y') !== -1,
+                   'touch-action должен быть pan-x pan-y');
+    });
+
+    test('Старое touch-action: pan-y у .pinch-zoom-target сохранено (для других элементов)', () => {
+        // Базовое правило .pinch-zoom-target не трогаем — оно нужно для билетов и др.
+        // Ищем именно базовое правило (с переносом строки перед, чтобы не поймать
+        // .flow-archive-table-wrap.pinch-zoom-target).
+        var needle = '\n    .pinch-zoom-target {\n        touch-action: pan-y;';
+        assertTrue(src.indexOf(needle) !== -1,
+                   'Базовое .pinch-zoom-target должно остаться с touch-action: pan-y');
     });
 });
 

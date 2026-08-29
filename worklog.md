@@ -7557,3 +7557,43 @@ Stage Summary:
 - Пользователю: после обновления PWA открыть любой расходомер — в строке
   «Последние показания» дата должна идти сразу после названия как
   продолжение текста, без видимого разделения на 2 блока.
+
+---
+Task ID: 230
+Agent: main
+Task: В мобильном приложении таблица «Хронология показаний» не перемещается по горизонтали, пока пользователь не сделает pinch-zoom — после этого горизонтальная прокрутка начинает работать.
+
+Work Log:
+- Анализ CSS-правил для pinch-zoom:
+  • .pinch-zoom-target { touch-action: pan-y; } — базовое правило, только вертикальный скролл.
+  • .pinch-zoom-target.zoomed { overflow-x: auto; touch-action: pan-x pan-y; } — после pinch-zoom добавляется класс .zoomed (через applyScale в JS), и touch-action становится pan-x pan-y → горизонтальный скролл начинает работать.
+  • .flow-archive-table-wrap { overflow-x: auto; /* touch-action задаётся классом .pinch-zoom-target */ }
+- Причина бага: таблица хронологии имеет классы flow-archive-table-wrap + pinch-zoom-target. В НЕ-zoomed состоянии применяется touch-action: pan-y от .pinch-zoom-target — это блокирует горизонтальный pan, браузер не запускает horizontal scrolling, хотя overflow-x: auto есть. Только после pinch-zoom (класс .zoomed) — touch-action: pan-x pan-y, скролл работает.
+- Решение: добавлено специфичное CSS-правило для таблицы хронологии:
+    .flow-archive-table-wrap.pinch-zoom-target { touch-action: pan-x pan-y; }
+  Это переопределяет базовое .pinch-zoom-target (более специфичный селектор) — таблица хронологии получает pan-x pan-y с самого начала, горизонтальный скролл работает без необходимости зумить.
+- Базовое правило .pinch-zoom-target { touch-action: pan-y; } НЕ ТРОГАЕМ — оно нужно для других элементов (билеты, и т.д.), где горизонтальный скролл не нужен до зума.
+- Pinch-zoom продолжит работать: JS-обработчики touchstart/touchmove (с passive:false) и gesturestart/gesturechange/gestureend (iOS Safari) вызывают preventDefault() и applyScale() — они работают независимо от touch-action.
+- SW обновлён v493 → v494.
+- Тесты tests/test-flowmeter-validation.js:
+  • Добавлен describe «Task 230: горизонтальный скролл таблицы хронологии без pinch-zoom» с 3 тестами:
+    1. Добавлено правило .flow-archive-table-wrap.pinch-zoom-target
+    2. touch-action: pan-x pan-y для таблицы хронологии
+    3. Базовое .pinch-zoom-target осталось с touch-action: pan-y (для других элементов)
+  • Изменён SW-тест: v493 → v494, проверка убранной v493.
+- Тесты: 734 → 737 passed (+3), 0 failed.
+
+Stage Summary:
+- Task 230 выполнен. Таблица «Хронология показаний» теперь скроллится
+  по горизонтали с самого начала, без необходимости сначала делать
+  pinch-zoom. Pinch-zoom по-прежнему работает (через JS-обработчики).
+- Корневая причина: .pinch-zoom-target { touch-action: pan-y } блокировал
+  horizontal pan для таблицы, и лишь класс .zoomed (после pinch-zoom)
+  включал pan-x pan-y.
+- Решение: специфичное правило для таблицы хронологии:
+  .flow-archive-table-wrap.pinch-zoom-target { touch-action: pan-x pan-y }
+- Файлы изменены: index.html (CSS .flow-archive-table-wrap.pinch-zoom-target),
+  sw.js (v494), tests/test-flowmeter-validation.js (+3 теста).
+- Пользователю: после обновления PWA на мобильном открыть любой расходомер
+  с таблицей хронологии — провести пальцем по таблице влево/вправо — она
+  должна сразу прокручиваться по горизонтали без необходимости зумить.
