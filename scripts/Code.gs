@@ -157,6 +157,11 @@ function doPost(e) {
       case 'flowmeter.getRecentAllMeters':
         return _json(FlowmeterArchive.listRecentAllMeters(payload));
 
+      // Task 222: карта кодов правил аномалий → текстовые описания
+      // (для отображения в столбце «⚠ Замечания» хронологии показаний)
+      case 'flowmeter.getValidationHelp':
+        return _json(ValidationRules.listHelp(payload));
+
       // === График работы персонала (WorkSchedule) ===
       // WorkSchedule.gs возвращает {ok, data/error} напрямую,
       // поэтому оборачиваем через _json без дополнительной упаковки.

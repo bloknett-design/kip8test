@@ -573,3 +573,94 @@ describe('flowBuildAnomalyModalHtml — построение модалки', ()
         assertTrue(html.indexOf('flow-anomaly-confirm') !== -1);
     });
 });
+
+// Task 222: проверка, что flowBuildAnomalyModalHtml использует
+// дружелюбное описание из FlowmeterData._anomalyHelp, если оно есть.
+// Поскольку FlowmeterData объявлен внутри sandbox extract-functions
+// и не экспортируется, проверяем source-text инварианты в index.html.
+describe('Task 222: flowBuildAnomalyModalHtml — дружелюбные описания (source-text)', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const idxSrc = fs.readFileSync(path.resolve(__dirname, '..', 'index.html'), 'utf-8');
+
+    test('FlowmeterData имеет поле _anomalyHelp (инициализировано как {})', () => {
+        assertTrue(idxSrc.indexOf('_anomalyHelp: {}') !== -1);
+    });
+    test('flowBuildAnomalyModalHtml читает FlowmeterData._anomalyHelp', () => {
+        // Ищем паттерн обращения к карте описаний внутри функции
+        var idx = idxSrc.indexOf('function flowBuildAnomalyModalHtml');
+        assertTrue(idx !== -1);
+        var snippet = idxSrc.substring(idx, idx + 1500);
+        assertTrue(snippet.indexOf('FlowmeterData._anomalyHelp') !== -1);
+        assertTrue(snippet.indexOf('helpMap[code]') !== -1);
+        assertTrue(snippet.indexOf('|| detail') !== -1);
+    });
+    test('_buildArchiveHtml использует _anomalyHelp для столбца «⚠ Замечания»', () => {
+        // Ищем паттерн внутри _buildArchiveHtml
+        var idx = idxSrc.indexOf('_buildArchiveHtml: function');
+        assertTrue(idx !== -1);
+        var snippet = idxSrc.substring(idx, idx + 12000);
+        assertTrue(snippet.indexOf('this._anomalyHelp') !== -1);
+        assertTrue(snippet.indexOf('friendly') !== -1);
+        assertTrue(snippet.indexOf('displayText') !== -1);
+    });
+    test('loadArchive сохраняет anomalyHelp из ответа сервера', () => {
+        var idx = idxSrc.indexOf("'flowmeter.archive',");
+        assertTrue(idx !== -1);
+        var snippet = idxSrc.substring(idx, idx + 800);
+        assertTrue(snippet.indexOf('data.anomalyHelp') !== -1);
+        assertTrue(snippet.indexOf('self._anomalyHelp') !== -1);
+    });
+});
+
+// Task 222: проверка, что серверный файл ValidationRules.gs содержит
+// нужные структуры (HELP_SHEET_NAME, DEFAULT_HELP, getHelpMap, listHelp,
+// flowmeterInitValidationHelp) и что DEFAULT_HELP содержит все 10 кодов.
+describe('Task 222: ValidationRules.gs — структуры для help-таблицы', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const vrPath = path.resolve(__dirname, '..', 'scripts', 'ValidationRules.gs');
+    const src = fs.readFileSync(vrPath, 'utf-8');
+
+    test('HELP_SHEET_NAME = flowmeter_validation_help', () => {
+        assertTrue(src.indexOf("HELP_SHEET_NAME: 'flowmeter_validation_help'") !== -1);
+    });
+    test('DEFAULT_HELP содержит все 10 кодов', () => {
+        var codes = ['SIGN_NEG', 'DATE_INCONSISTENT', 'JUMP_NEGATIVE', 'JUMP_HIGH',
+                     'JUMP_LOW', 'PERIOD_MISMATCH', 'TEMP_OUT_OF_RANGE', 'GCAL_RATIO',
+                     'DUPLICATE', 'WRONG_METER'];
+        for (var i = 0; i < codes.length; i++) {
+            assertTrue(src.indexOf(codes[i] + ':') !== -1,
+                       'DEFAULT_HELP должен содержать код ' + codes[i]);
+        }
+    });
+    test('Метод getHelpMap определён', () => {
+        assertTrue(src.indexOf('getHelpMap: function') !== -1);
+    });
+    test('Метод listHelp определён (для эндпоинта flowmeter.getValidationHelp)', () => {
+        assertTrue(src.indexOf('listHelp: function') !== -1);
+    });
+    test('Функция flowmeterInitValidationHelp определена', () => {
+        assertTrue(src.indexOf('function flowmeterInitValidationHelp') !== -1);
+    });
+});
+
+// Task 222: проверка, что Code.gs регистрирует новый эндпоинт
+// flowmeter.getValidationHelp, а FlowmeterArchive.gs возвращает anomalyHelp.
+describe('Task 222: регистрация эндпоинта и anomalyHelp в архиве', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const codeSrc = fs.readFileSync(path.resolve(__dirname, '..', 'scripts', 'Code.gs'), 'utf-8');
+    const archSrc = fs.readFileSync(path.resolve(__dirname, '..', 'scripts', 'FlowmeterArchive.gs'), 'utf-8');
+
+    test('Code.gs: case flowmeter.getValidationHelp → ValidationRules.listHelp', () => {
+        assertTrue(codeSrc.indexOf("'flowmeter.getValidationHelp'") !== -1);
+        assertTrue(codeSrc.indexOf('ValidationRules.listHelp') !== -1);
+    });
+    test('FlowmeterArchive.gs: listArchive возвращает anomalyHelp', () => {
+        assertTrue(archSrc.indexOf('anomalyHelp') !== -1);
+        assertTrue(archSrc.indexOf('ValidationRules.getHelpMap') !== -1);
+    });
+});
+
+

@@ -46,7 +46,29 @@ var ValidationRules = {
 
   SPREADSHEET_ID: '1enZSq7K8pwJVzaAI_tbXZtvATqARTxH0lSU4c-wc1eY',
   RULES_SHEET_NAME: 'flowmeter_validation_rules',
+  HELP_SHEET_NAME: 'flowmeter_validation_help',   // Task 222
   DATA_START_ROW: 2,
+
+  // Task 222 — дефолтные описания кодов правил в простой форме для
+  // пользователей. Используются:
+  //   • при инициализации листа flowmeter_validation_help
+  //     (функция flowmeterInitValidationHelp ниже);
+  //   • как fallback, если лист отсутствует или код не найден в нём
+  //     (getHelpMap возвращает DEFAULT_HELP вместо пустого объекта).
+  // При изменении этих строк желательно повторно запустить
+  // flowmeterInitValidationHelp(true) — функция перезапишет лист.
+  DEFAULT_HELP: {
+    SIGN_NEG:          'Введено отрицательное показание — проверьте, нет ли знака «минус» по ошибке.',
+    DATE_INCONSISTENT: 'Текущая дата раньше предыдущей — проверьте даты снятия показаний.',
+    JUMP_NEGATIVE:     'Расход получился отрицательным — возможно, перепутаны предыдущие и текущие показания.',
+    JUMP_HIGH:         'Расход намного больше обычного — возможна лишняя цифра или ошибка ввода.',
+    JUMP_LOW:          'Расход намного меньше обычного — возможна ошибка ввода.',
+    PERIOD_MISMATCH:   'Период между показаниями не соответствует ожидаемому.',
+    TEMP_OUT_OF_RANGE: 'Температура вне допустимого диапазона.',
+    GCAL_RATIO:        'Соотношение Гкал/расход вне допустимого диапазона.',
+    DUPLICATE:         'Такие же показания уже были введены недавно этим же автором — возможен дубликат.',
+    WRONG_METER:       'Показания похожи на запись другого счётчика — проверьте, что выбран верный счётчик.'
+  },
 
   // Коды правил (используются в archive.Q как строка «CODE: detail; ...»)
   CODES: {
@@ -394,6 +416,54 @@ var ValidationRules = {
   },
 
   // ============================================================
+  // Task 222 — getHelpMap(): прочитать лист flowmeter_validation_help и
+  // вернуть {CODE: описание}. Не требует авторизации — вызывается
+  // сервером из FlowmeterArchive.listArchive для добавления anomalyHelp
+  // в ответ архивного эндпоинта. Если лист отсутствует или пуст —
+  // возвращает DEFAULT_HELP (10 кодов с предзаполненными описаниями).
+  // Кэшируется на 10 минут через CacheService (опционально).
+  // ============================================================
+  getHelpMap: function() {
+    var result = {};
+    try {
+      var ss = SpreadsheetApp.openById(this.SPREADSHEET_ID);
+      var sheet = ss.getSheetByName(this.HELP_SHEET_NAME);
+      if (sheet) {
+        var lastRow = sheet.getLastRow();
+        if (lastRow >= this.DATA_START_ROW) {
+          var range = sheet.getRange(this.DATA_START_ROW, 1, lastRow - this.DATA_START_ROW + 1, 2);
+          var values = range.getValues();
+          for (var i = 0; i < values.length; i++) {
+            var code = String(values[i][0] || '').trim();
+            var desc = String(values[i][1] || '').trim();
+            if (code && desc) result[code] = desc;
+          }
+        }
+      }
+    } catch (e) {
+      // Тихо игнорируем — fallback ниже даст DEFAULT_HELP
+    }
+    // Если лист пуст/отсутствует — сливаем с DEFAULT_HELP (любые
+    // пользовательские записи из листа перебивают дефолт).
+    var keys = Object.keys(this.DEFAULT_HELP);
+    for (var k = 0; k < keys.length; k++) {
+      if (!result[keys[k]]) result[keys[k]] = this.DEFAULT_HELP[keys[k]];
+    }
+    return result;
+  },
+
+  // ============================================================
+  // Task 222 — listHelp(payload): эндпоинт flowmeter.getValidationHelp.
+  // Авторизация любая роль с правом чтения расходомеров.
+  // Возвращает { ok: true, data: { help: {CODE: описание, ...} } }.
+  // ============================================================
+  listHelp: function(payload) {
+    var auth = this._requireRead(payload.token);
+    if (auth.error) return auth.error;
+    return { ok: true, data: { help: this.getHelpMap() } };
+  },
+
+  // ============================================================
   // _fmt — форматировать число для detail-строки (2 знака после запятой)
   // ============================================================
   _fmt: function(n) {
@@ -577,4 +647,72 @@ function flowmeterInitRulesFromArchive(force) {
   Logger.log('Rules: записано ' + rowsToWrite.length + ' строк (meterId 1..12).');
   Logger.log('Внимание: gcal_ratio_min/max и temp_min/max НЕ заполнены — ' +
              'для расходомеров пара настройте вручную (см. System Prompt).');
+}
+
+// ============================================================
+// Task 222 — flowmeterInitValidationHelp
+// Одноразовая инициализация листа «flowmeter_validation_help» с
+// описаниями кодов правил в простой форме для пользователей.
+// Запускается вручную из редактора Apps Script:
+//   1. Выбрать функцию flowmeterInitValidationHelp
+//   2. Нажать ▶ Run
+//   3. Проверить лог — «Help: лист создан / заполнен»
+// При изменении DEFAULT_HELP в ValidationRules выше — повторно
+// запустить flowmeterInitValidationHelp(true) для перезаписи листа.
+// ============================================================
+// Структура листа (строка 1 — заголовки):
+//   A: code        — код правила (SIGN_NEG, JUMP_HIGH, ...)
+//   B: description — текстовое описание в простой форме
+// ============================================================
+function flowmeterInitValidationHelp(force) {
+  var SPREADSHEET_ID = '1enZSq7K8pwJVzaAI_tbXZtvATqARTxH0lSU4c-wc1eY';
+  var SHEET_NAME = 'flowmeter_validation_help';
+
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(SHEET_NAME);
+
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME);
+    Logger.log('Help: лист «' + SHEET_NAME + '» создан.');
+  } else {
+    Logger.log('Help: лист «' + SHEET_NAME + '» уже существует.');
+  }
+
+  // Заголовки (перезаписываем всегда — они не подлежат редактированию)
+  var headers = ['Код правила', 'Описание для пользователя'];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  var headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange.setFontWeight('bold');
+  headerRange.setBackground('#4a86e8');
+  headerRange.setFontColor('#ffffff');
+  sheet.setFrozenRows(1);
+
+  // Если force=true — очищаем старые данные (кроме заголовков)
+  var existingLastRow = sheet.getLastRow();
+  if (force && existingLastRow >= 2) {
+    sheet.getRange(2, 1, existingLastRow - 1, 2).clearContent();
+    Logger.log('Help: очищено ' + (existingLastRow - 1) + ' старых строк (force=true).');
+  } else if (!force && existingLastRow >= 2) {
+    Logger.log('Help: в листе уже есть ' + (existingLastRow - 1) + ' строк. ' +
+               'Для перезаписи вызовите flowmeterInitValidationHelp(true).');
+    // Всё равно подгоняем ширину колонок
+    sheet.autoResizeColumn(1);
+    sheet.autoResizeColumn(2);
+    return;
+  }
+
+  // Заполняем строками из DEFAULT_HELP
+  var helpMap = ValidationRules.DEFAULT_HELP;
+  var codes = Object.keys(helpMap);
+  var rowsToWrite = [];
+  for (var i = 0; i < codes.length; i++) {
+    rowsToWrite.push([codes[i], helpMap[codes[i]]]);
+  }
+  sheet.getRange(2, 1, rowsToWrite.length, 2).setValues(rowsToWrite);
+  sheet.autoResizeColumn(1);
+  sheet.autoResizeColumn(2);
+
+  Logger.log('Help: записано ' + rowsToWrite.length + ' строк описаний кодов.');
+  Logger.log('Содержимое можно редактировать прямо в листе — изменения подхватываются');
+  Logger.log('архивным эндпоинтом flowmeter.archive (поле anomalyHelp в ответе).');
 }

@@ -229,7 +229,19 @@ var FlowmeterArchive = {
       records = records.slice(0, limit);
     }
 
-    return { ok: true, data: { records: records, meterId: meterId } };
+    // Task 222: добавляем карту описаний кодов аномалий (для рендера в
+    // столбце «⚠ Замечания» хронологии показаний). Фронтенд берёт из
+    // этой карты дружелюбное описание вместо технического detail.
+    var anomalyHelp = {};
+    try {
+      if (typeof ValidationRules !== 'undefined' && ValidationRules.getHelpMap) {
+        anomalyHelp = ValidationRules.getHelpMap();
+      }
+    } catch (e) {
+      // Тихо игнорируем — фронтенд использует технический detail
+    }
+
+    return { ok: true, data: { records: records, meterId: meterId, anomalyHelp: anomalyHelp } };
   },
 
   // ============================================================
