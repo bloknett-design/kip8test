@@ -218,6 +218,25 @@ var Flowmeter = {
       return { ok: false, error: 'Некорректный id позиции' };
     }
 
+    // Task 205: Хозрасчёт №1 (id=1) — особый режим «расход за предыдущие сутки».
+    // Данные приходят уже сформированными из Тэкон-19 (расход за сутки в т и Гкал).
+    // Поэтому:
+    //   • prev всегда 0 (нет накопительных показаний);
+    //   • datePrev = dateCurr (нет «предыдущей даты»);
+    //   • temp игнорируется (Тэкон-19 не отдаёт температуру);
+    //   • gcal — обязательное поле (расходомер пара).
+    // consumption в архиве = curr - 0 = curr — то есть равно введённому значению,
+    // что и требуется для графика по введённым данным, а не по вычисленному расходу.
+    if (id === 1) {
+      payload.prev = 0;
+      payload.datePrev = payload.dateCurr || '';
+      payload.temp = null;
+      if (payload.gcal === null || payload.gcal === undefined || payload.gcal === '') {
+        return { ok: false, error: 'gcal_required',
+                 message: 'Для Хозрасчёта №1 обязательно укажите расход в Гкал' };
+      }
+    }
+
     var sheet = this._getSheet();
     if (!sheet) {
       return { ok: false, error: 'Лист не найден' };
