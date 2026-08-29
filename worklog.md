@@ -7789,3 +7789,113 @@ Stage Summary:
     (kip8_flow_data_v1) → «Нет связи с сервером, попробуйте зайти позже».
   • Если интернет есть, но кэш уже пустой и сервер недоступен →
     то же сообщение об ошибке связи.
+
+---
+Task ID: 240
+Agent: main
+Task: Пользователь сообщил «отсутствие в боковом меню раздела График работы» (предыдущий Task 239 был ошибочным — пользователь перепутал разделы). Откатить Task 239 и добавить «График работы» в сайдбар.
+
+Work Log:
+- Шаг 1: откат Task 239 (вынос «Расходомеры хозрасчётные» из группы
+  «Документация ИОС» в top-level sidebar-item).
+  • git revert --no-edit 9a82596 8bfd341 — два revert-коммита.
+  • Push: 9a82596..41d3393 main -> main.
+  • Тесты: 806 → 802 passed (вернулись к состоянию Task 238).
+
+- Шаг 2: анализ ситуации с «График работы».
+  • Страница page-work-schedule существует (строки 10452+).
+  • В ROLE_ACCESS _WORK_SCHEDULE_PAGES отсутствует в LVL_* массивах:
+    - LVL_OBSHCHIJ, LVL_ITR_TOKEM, LVL_KIP8, LVL_KIP8_PRO,
+      LVL_KIP_IOS, LVL_KIP_IOS_WITH_FLOW — ни один не включает
+      WORK_SCHEDULE.
+    - Только 'Админ' имеет ['*'] → доступ к work-schedule через isAll.
+  • На странице «Документация ИОС» (page-docs-ios) есть кнопка
+    workScheduleMenuBtn (строка 10417) с navigateTo('work-schedule').
+    Эта кнопка видна только Админу (общая логика _applyRoleToUI по
+    циклу .menu-btn с navigateTo).
+  • НО в сайдбаре отдельного пункта для «График работы» НЕ было —
+    пользователь не мог быстро перейти к разделу из бокового меню.
+
+- Шаг 3: дизайн решения.
+  1. Добавить top-level sidebar-item «График работы» (без
+     sidebar-item-extra класса → display:flex по умолчанию, видим
+     ролям с доступом без необходимости разворачивать группу).
+  2. id="sidebarWorkScheduleBtn" — для возможной отдельной проверки
+     в _applyRoleToUI (как sidebarAdminBtn), хотя общая логика по
+     циклу .sidebar-item уже корректно работает (WORK_SCHEDULE_PAGES
+     не в LVL_*, только Админ через ['*']).
+  3. style="display:none" — чтобы не мелькал до первого запуска
+     _applyRoleToUI (как sidebarAdminBtn).
+  4. Расположение: ПОСЛЕ разделителя и sidebarUserInfo, ПЕРЕД
+     sidebarAdminBtn. Оба пункта (График работы + Админ-панель)
+     видимы только Админу — логично держать их рядом.
+  5. Иконка: календарь (rect 18×18 + 2 вертикальные линии сверху
+     для «корешков» + горизонтальная линия под заголовком) —
+     паттерн как у lucide-react calendar. Цвет #7ec699 (зелёный,
+     как у кнопки «Обновить» — обе иконки «общего сервиса»).
+  6. Текст: «График работы» (без sublabel — sidebar-item не
+     поддерживает sublabel, только menu-btn на дашборде).
+
+- Шаг 4: реализация.
+  • index.html (строки ~34929-34945): добавлен sidebar-item перед
+    sidebarAdminBtn:
+    ```html
+    <div class="sidebar-item" id="sidebarWorkScheduleBtn"
+         onclick="navigateTo('work-schedule'); toggleSidebar();"
+         style="display:none;">
+      <svg viewBox="0 0 24 24" width="18" height="18" ...>
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <span>График работы</span>
+    </div>
+    ```
+  • sw.js: CACHE_VERSION v502 → v503.
+  • tests/test-flowmeter-validation.js:
+    - Task 238 SW-блок (v502 present, v501 gone) заменён исторической
+      заметкой (v502 → v503 в Task 240).
+    - Добавлен describe «Task 240: sidebar-item «График работы»»:
+      3 теста:
+        (a) Сайдбар: есть sidebar-item с navigateTo('work-schedule')
+            и текстом «График работы».
+        (b) Сайдбар: sidebar-item имеет id="sidebarWorkScheduleBtn"
+            и style="display:none".
+        (c) Сайдбар: sidebar-item расположен ПЕРЕД «Админ-панелью»
+            (по позиции id="..." атрибута в HTML — важно: искать
+            по подстроке sidebarAdminBtn нельзя, т.к. JavaScript-код
+            в _applyRoleToUI ссылается на sidebarAdminBtn раньше
+            по файлу).
+    - Добавлен describe «Task 240: SW версия v503»: 2 теста
+      (v503 present, v502 gone).
+  • Тесты: 802 → 805 passed (+3), 0 failed. Учитывая: −2 (убран
+    Task 238 SW-блок) + 3 (Task 240 sidebar тесты) + 2 (Task 240
+    SW-блок) = +3.
+
+- Шаг 5: commit aeaf348, push origin/main (41d3393..aeaf348).
+
+Stage Summary:
+- Task 240 выполнен. Раздел «График работы» теперь виден в сайдбаре
+  как top-level пункт (между пользовательской информацией и
+  «Админ-панелью») — для роли «Админ». Не-Админ роли его не видят
+  (как и кнопку workScheduleMenuBtn на странице «Документация ИОС»).
+- Корневая причина: раздел существовал как страница и был доступен
+  через dashboard-кнопку на странице «Документация ИОС», но в сайдбаре
+  отсутствовал. Пользователю приходилось идти Главная → Документация
+  ИОС → График работы, чтобы открыть шахматку.
+- Решение: добавлен top-level sidebar-item «График работы» с
+  иконкой календаря, расположен перед «Админ-панелью» (оба пункта
+  видимы только Админу — логично держать их рядом).
+- Видимость управляется общей логикой _applyRoleToUI (цикл по
+  .sidebar-item с navigateTo): WORK_SCHEDULE_PAGES отсутствует в
+  LVL_* массивах, только Админ имеет доступ через ['*'].
+- Файлы изменены: index.html (+sidebar-item), sw.js (v503),
+  tests/test-flowmeter-validation.js (+5 тестов Task 240,
+  Task 238 SW-блок → историческая заметка).
+- Пользователю: после обновления PWA (v503) открыть сайдбар под
+  ролью «Админ» — между разделителем и «Админ-панелью» должен
+  появиться пункт «График работы» с иконкой календаря. Клик открывает
+  страницу page-work-schedule (шахматка) напрямую.
+- Task 239 откатан по просьбе пользователя (commit 41d3393 — revert
+  8bfd341, commit 7abf16b — revert 9a82596).
