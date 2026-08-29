@@ -747,12 +747,15 @@ describe('Task 223+224: график архива — показания + но�
                    'Должна быть защита от деления на ноль (range === 0 / flat)');
     });
 
-    test('Минимальная высота бара 1% (Math.max(1, ...))', () => {
+    test('Минимальная высота бара 5% (Math.max(5, ...)) — Task 226', () => {
         var fnIdx = src.indexOf('_buildArchiveChart: function');
         var fnEnd = src.indexOf('return html;', fnIdx);
         var fnBody = src.substring(fnIdx, fnEnd);
-        assertTrue(fnBody.indexOf('Math.max(1') !== -1,
-                   'Должен быть Math.max(1, ...) для минимальной высоты 1%');
+        assertTrue(fnBody.indexOf('Math.max(5') !== -1,
+                   'Должен быть Math.max(5, ...) для минимальной высоты 5% (Task 226)');
+        // Старая формула Math.max(1, ...) убрана
+        assertTrue(fnBody.indexOf('Math.max(1') === -1,
+                   'Старый Math.max(1, ...) должен быть убран');
     });
 
     test('Старый код (curr / maxReading × 100 без min) убран', () => {
@@ -767,19 +770,19 @@ describe('Task 223+224: график архива — показания + но�
     });
 });
 
-// Task 224: SW обновлён до v489 (нормализация графиков + реорганизация карточки)
-describe('Task 224: SW версия v489', () => {
+// Task 226: SW обновлён до v490 (минимальная высота бара 5%)
+describe('Task 226: SW версия v490', () => {
     const fs = require('fs');
     const path = require('path');
     const swPath = path.resolve(__dirname, '..', 'sw.js');
     const sw = fs.readFileSync(swPath, 'utf-8');
 
-    test('CACHE_VERSION = kipia-test-v489', () => {
-        assertTrue(sw.indexOf("kipia-test-v489") !== -1);
+    test('CACHE_VERSION = kipia-test-v490', () => {
+        assertTrue(sw.indexOf("kipia-test-v490") !== -1);
     });
-    test('Старая версия v488 убрана', () => {
-        assertTrue(sw.indexOf("kipia-test-v488") === -1,
-                   'Старая v488 не должна остаться в sw.js');
+    test('Старая версия v489 убрана', () => {
+        assertTrue(sw.indexOf("kipia-test-v489") === -1,
+                   'Старая v489 не должна остаться в sw.js');
     });
 });
 
