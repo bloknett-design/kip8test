@@ -19,7 +19,7 @@
 //   Строка 1 — заголовки столбцов
 //   Строки 2+ — данные (12 позиций, строки 2–13)
 //
-//   Столбцы (A–P):
+//   Столбцы (A–Q; P не используется с Task 211):
 //     A: id         — номер позиции (1–12)
 //     B: hoz        — название (Хозрасчёт №1)
 //     C: param      — параметр (Расход пара в корпус 114)
@@ -37,13 +37,8 @@
 //     O: comment    — активный комментарий к последним показаниям (Task 195; виден всем,
 //                     редактировать может автор показаний ИЛИ админ — до тех пор,
 //                     пока другой пользователь не внесёт новые данные)
-//     P: archivedComment — последний архивный комментарий (Task 197; preview для карточки).
-//                     Формат: «[ISO-timestamp | email]: текст». Обновляется в двух случаях:
-//                     (1) setComment перезаписывает непустой O новым текстом — старый
-//                     текст уходит в P; (2) updateReading со сменой автора — старый
-//                     непустой O уходит в P, а в архивную запись (hozraschet_archive.P)
-//                     копируется тот же текст как comment этой записи.
-//                     Полная история комментариев — в hozraschet_archive.P по записям.
+//     P: (не используется с Task 211; ранее archivedComment — preview для карточки.
+//                       Полная история комментариев — в hozraschet_archive.P по записям.)
 //     Q: allowNegative — флаг «допустим отрицательный расход» (Task 199). Значения:
 //                     'yes' (для счётчиков возврата конденсата, где curr<prev легитимно)
 //                     или пусто/'no' (для остальных). Читается в list() → поле meter
@@ -151,7 +146,7 @@ var Flowmeter = {
     }
 
     // Читаем данные (строка DATA_START_ROW до lastRow, столбцы A–Q = 17 столбцов;
-    // O=15 — comment, Task 195; P=16 — archivedComment, Task 197;
+    // O=15 — comment, Task 195; P=16 — не используется с Task 211;
     // Q=17 — allowNegative, Task 199)
     var range = sheet.getRange(this.DATA_START_ROW, 1, lastRow - this.DATA_START_ROW + 1, 17);
     var values = range.getValues();
@@ -190,7 +185,8 @@ var Flowmeter = {
         modDisplayName: modDisplayName,             // Task 109 — имя для отображения
         modTimestamp:   this._parseTimestamp(row[13]),  // N=14 (Task 108)
         comment:        String(row[14] || '').trim(),   // O=15 — Task 195
-        archivedComment: String(row[15] || '').trim(),   // P=16 — Task 197 (preview)
+        // Task 211: P=16 (archivedComment) больше не читается из meters —
+        // полная история комментариев живёт в hozraschet_archive.P
         allowNegative:  String(row[16] || '').trim().toLowerCase()  // Q=17 — Task 199
       };
       meters.push(meter);
@@ -391,10 +387,10 @@ var Flowmeter = {
 
     // Кто внёс изменения: L=12 (modRole), M=13 (modName)
     // Task 108: пишем email (не user.name) — чтобы клиент мог сравнить с KipAuth._cachedEmail
-    // Task 197: при смене автора показаний (modName меняется) — старый непустой
-    // комментарий O архивируется: (1) в meters.P как preview последнего архивного
-    // комментария; (2) в archive.P как comment архивной записи показаний (см.
-    // appendToArchive, куда он передаётся параметром). O очищается.
+    // Task 211: при смене автора показаний (modName меняется) — старый непустой
+    // комментарий O архивируется в archive.P (передаётся параметром comment в
+    // appendToArchive; см. ниже). meters.P больше не используется. O очищается,
+    // т.к. активный комментарий был привязан к предыдущему автору.
     // Тот же автор перезаписывает свои показания — комментарий O сохраняем,
     // в архиве делается запись с comment='' (старый комментарий не трогаем —
     // он не «архивный», а активный, ещё привязан к тем же показаниям).
@@ -406,14 +402,9 @@ var Flowmeter = {
     sheet.getRange(rowNum, 13).setValue(user.email || '');
 
     if (authorChanged && oldCommentForArchive !== '') {
-      // Обновить meters.P (preview последнего архивного комментария).
-      // Формат: [ISO-timestamp | email автора старых показаний]: текст
-      try {
-        var archivePreview = '[' + new Date().toISOString() + ' | ' +
-                             existingModEmail + ']: ' + oldCommentForArchive;
-        sheet.getRange(rowNum, 16).setValue(archivePreview);  // P=16 — Task 197
-      } catch (e) { /* столбца может не быть — не критично */ }
-      // Очистить активный комментарий O (старый текст уже заархивирован)
+      // Task 211: meters.P больше не пишем — preview не нужен.
+      // Старый комментарий сохранится в archive.P через appendToArchive (вызов ниже).
+      // Очистить активный комментарий O (старый текст уже заархивирован в archive.P)
       try {
         sheet.getRange(rowNum, 15).setValue('');  // O=15 — сброс (Task 195)
       } catch (e) { /* не критично */ }
@@ -468,14 +459,14 @@ var Flowmeter = {
   // (у админа — безусловно).
   // Комментарий виден всем читателям раздела (list возвращает поле comment).
   // При вводе новых показаний ДРУГИМ пользователем updateReading очищает O
-  // и архивирует старый непустой комментарий в meters.P и в archive.P.
+  // и архивирует старый непустой комментарий в archive.P (hozraschet_archive).
   //
-  // Task 197: при перезаписи непустого O новым текстом — старый
-  // комментарий переносится в meters.P (preview последнего архивного
-  // комментария, формат «[ISO-timestamp | email автора показаний M]: текст»).
-  // Полная история — в hozraschet_archive.P (по записям при updateReading).
-  // Удаление (пустой comment) — НЕ архивируется.
-  // Совпадение старый === новый — не плодит дубли, не трогает P.
+  // Task 211: meters.P (archivedComment preview) больше не используется.
+  // При перезаписи непустого O новым текстом через setComment — старый
+  // комментарий просто теряется (история сохраняется только при смене автора
+  // показаний в updateReading — там старый O уходит в archive.P).
+  // Удаление (пустой comment) — просто очищает O.
+  // Совпадение старый === новый — не плодит дубли.
   // ============================================================
   setComment: function(payload) {
     var auth = this._requireEdit(payload.token);
@@ -517,22 +508,13 @@ var Flowmeter = {
       }
     }
 
-    // Task 197: перед перезаписью O новым текстом — архивируем старый
-    // непустой комментарий в meters.P (preview). Активный автор показаний
-    // (M=13) берём как «email автора архивного комментария», а не email
-    // текущего пользователя (т.к. админ может перезаписать чужой комментарий,
-    // но архив должен ссылаться на реального автора показаний).
-    // Удаление (comment === '') — НЕ архивируем, просто очищаем O.
+    // Task 211: meters.P больше не пишем — preview не нужен.
+    // Старый непустой комментарий при замене на новый просто теряется.
+    // (История комментариев сохраняется только при смене автора показаний
+    //  в updateReading — там старый O уходит в archive.P.)
+    // Удаление (comment === '') — просто очищаем O.
     // Совпадение (старый === новый) — ничего не делаем, не плодим дубли.
     var oldComment = String(sheet.getRange(rowNum, 15).getValue() || '').trim();  // O=15
-    var archiveAuthorEmail = String(sheet.getRange(rowNum, 13).getValue() || '').trim();  // M=13
-    if (comment !== '' && oldComment !== '' && oldComment !== comment) {
-      try {
-        var archivePreview = '[' + new Date().toISOString() + ' | ' +
-                             archiveAuthorEmail + ']: ' + oldComment;
-        sheet.getRange(rowNum, 16).setValue(archivePreview);  // P=16 — Task 197
-      } catch (e) { /* столбца может не быть — не критично */ }
-    }
 
     // Записываем новый комментарий в O=15 (пустая строка = удалить)
     sheet.getRange(rowNum, 15).setValue(comment);
