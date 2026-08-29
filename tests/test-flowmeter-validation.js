@@ -767,21 +767,116 @@ describe('Task 223+224: график архива — показания + но�
     });
 });
 
-// Task 224: SW обновлён до v488 (нормализация графиков)
-describe('Task 224: SW версия v488', () => {
+// Task 224: SW обновлён до v489 (нормализация графиков + реорганизация карточки)
+describe('Task 224: SW версия v489', () => {
     const fs = require('fs');
     const path = require('path');
     const swPath = path.resolve(__dirname, '..', 'sw.js');
     const sw = fs.readFileSync(swPath, 'utf-8');
 
-    test('CACHE_VERSION = kipia-test-v488', () => {
-        assertTrue(sw.indexOf("kipia-test-v488") !== -1);
+    test('CACHE_VERSION = kipia-test-v489', () => {
+        assertTrue(sw.indexOf("kipia-test-v489") !== -1);
     });
-    test('Старая версия v487 убрана', () => {
-        assertTrue(sw.indexOf("kipia-test-v487") === -1,
-                   'Старая v487 не должна остаться в sw.js');
+    test('Старая версия v488 убрана', () => {
+        assertTrue(sw.indexOf("kipia-test-v488") === -1,
+                   'Старая v488 не должна остаться в sw.js');
     });
 });
+
+// Task 225: реорганизация строки «Последние показания» в детальной карточке.
+// Убраны отдельные строки «Температура среды» и «Гигакалории пара» — их
+// значения перенесены под основные показания. Дата «за дата г.» —
+// отдельной строкой под названием «Последние показания».
+describe('Task 225: реорганизация строки «Последние показания»', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const idxPath = path.resolve(__dirname, '..', 'index.html');
+    const src = fs.readFileSync(idxPath, 'utf-8');
+
+    // Находим _buildDetailHtml
+    function detailBody() {
+        var fnIdx = src.indexOf('_buildDetailHtml: function');
+        if (fnIdx === -1) return '';
+        // Конец функции — следующая закрывающая } на уровне метода
+        var fnEnd = src.indexOf('\n        },', fnIdx);
+        return src.substring(fnIdx, fnEnd === -1 ? src.length : fnEnd);
+    }
+
+    test('Отдельная строка «Температура среды» убрана', () => {
+        var body = detailBody();
+        // Не должно быть HTML-строки с label «Температура среды»
+        assertTrue(body.indexOf('>Температура среды<') === -1,
+                   'Строка «Температура среды» должна быть убрана');
+    });
+
+    test('Отдельная строка «Гигакалории пара» убрана', () => {
+        var body = detailBody();
+        assertTrue(body.indexOf('>Гигакалории пара<') === -1,
+                   'Строка «Гигакалории пара» должна быть убрана');
+    });
+
+    test('Значение температуры перенесено в flow-detail-sub (под осн. значением)', () => {
+        var body = detailBody();
+        // tempStr всё ещё формируется в buildDetailHtml
+        assertTrue(body.indexOf('m.temp.toFixed(1)') !== -1,
+                   'Должно быть вычисление tempStr');
+        // И оборачивается в flow-detail-sub
+        assertTrue(body.indexOf('flow-detail-value flow-detail-sub') !== -1 ||
+                   body.indexOf('flow-detail-sub') !== -1,
+                   'Подзначения должны иметь класс flow-detail-sub');
+    });
+
+    test('Значение гигакалорий перенесено в flow-detail-sub', () => {
+        var body = detailBody();
+        // gcalStr формируется ранее (строка ~31793)
+        assertTrue(body.indexOf('gcalStr') !== -1,
+                   'Должно использоваться gcalStr');
+        // И оборачивается в flow-detail-sub
+        assertTrue(body.indexOf('flow-detail-sub') !== -1,
+                   'Подзначения должны иметь класс flow-detail-sub');
+    });
+
+    test('Дата «за дата г.» — отдельной строкой под названием', () => {
+        var body = detailBody();
+        // Должна быть строка вида <div class="flow-detail-date">за ... г.</div>
+        // после .flow-detail-row-head (а НЕ внутри value)
+        assertTrue(body.indexOf('<div class="flow-detail-date">за ') !== -1,
+                   'Дата должна быть отдельной строкой под названием');
+    });
+
+    test('Значение показаний не содержит встроенную дату «за ...»', () => {
+        var body = detailBody();
+        // Старый формат — значение показаний имело встроенную дату через запятую:
+        //   ... ' + this._esc(m.unit) + ',<span class="flow-detail-date"> за ' + this._fmtDate(m.dateCurr) + ' г.</span> ...
+        // После Task 225 дата перенесена выше (отдельной строкой), а в значении
+        // показаний её быть не должно.
+        // Проверяем: в подстроке, где формируется flow-detail-curr, нет
+        // ",<span class=\"flow-detail-date\"> за ".
+        var currIdx = body.indexOf('flow-detail-curr');
+        assertTrue(currIdx !== -1, 'flow-detail-curr должен быть в коде');
+        // Ищем следующий фрагмент ',<span class="flow-detail-date"> за '
+        // в радиусе 200 символов от flow-detail-curr (тело строки значения).
+        var snippet = body.substring(currIdx, Math.min(body.length, currIdx + 400));
+        assertTrue(snippet.indexOf(',<span class="flow-detail-date"> за ') === -1,
+                   'Значение показаний не должно содержать встроенную дату «за ...»');
+        // И должно закрываться </div> без продолжения даты
+        // (найдём первую закрывающую > после curr)
+        assertTrue(snippet.indexOf(' ' + '</div>') !== -1 || snippet.indexOf('</div>') !== -1,
+                   'Значение показаний должно закрываться </div>');
+    });
+
+    test('Добавлен класс flow-detail-row-last для строки «Последние показания»', () => {
+        var body = detailBody();
+        assertTrue(body.indexOf('flow-detail-row-last') !== -1,
+                   'Должен быть класс-маркер flow-detail-row-last');
+    });
+
+    test('CSS-класс .flow-detail-sub определён', () => {
+        assertTrue(src.indexOf('.flow-detail-sub') !== -1,
+                   'CSS .flow-detail-sub должен быть определён');
+    });
+});
+
 
 
 
