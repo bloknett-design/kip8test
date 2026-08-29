@@ -528,21 +528,36 @@ describe('_flowFmt — форматирование чисел', () => {
 });
 
 describe('flowBuildAnomalyModalHtml — построение модалки', () => {
-    test('Пустой массив codes → нет <li>, но модалка рендерится', () => {
+    test('Пустой массив codes → fallback <li> с сообщением по умолчанию (Task 234)', () => {
+        // Task 234: если все displayText пусты, рендерится fallback-пункт
         var html = fns.flowBuildAnomalyModalHtml(meter(), []);
         assertTrue(html.indexOf('flow-anomaly-modal') !== -1);
-        assertTrue(html.indexOf('flow-anomaly-item') === -1);
+        assertTrue(html.indexOf('flow-anomaly-item') !== -1,
+                   'При пустом codes рендерится fallback <li>');
+        assertTrue(html.indexOf('Проверьте корректность') !== -1,
+                   'Fallback должен содержать «Проверьте корректность...»');
     });
-    test('Один код с деталью → <li> с кодом и деталью', () => {
+    test('Один код с деталью → <li> только с деталью (Task 234: без кода)', () => {
+        // Task 234: код правила не рендерится — только описание (detail)
         var html = fns.flowBuildAnomalyModalHtml(meter(), ['JUMP_HIGH: расход 50.00 > max×3=30.00']);
         assertTrue(html.indexOf('flow-anomaly-item') !== -1);
-        assertTrue(html.indexOf('JUMP_HIGH') !== -1);
-        assertTrue(html.indexOf('расход 50.00') !== -1);
+        assertTrue(html.indexOf('расход 50.00') !== -1,
+                   'Деталь аномалии должна быть в html');
+        assertTrue(html.indexOf('JUMP_HIGH') === -1,
+                   'Код правила JUMP_HIGH не должен отображаться в модалке (Task 234)');
+        assertTrue(html.indexOf('flow-anomaly-code') === -1,
+                   'Span.flow-anomaly-code не должен присутствовать');
     });
-    test('Код без двоеточия — весь текст как код, detail пустой', () => {
+    test('Код без двоеточия — detail пустой → fallback (Task 234)', () => {
+        // Task 234: при пустом displayText элемент пропускается,
+        // если все пропущены — fallback-пункт «Проверьте корректность...»
         var html = fns.flowBuildAnomalyModalHtml(meter(), ['SIGN_NEG']);
-        assertTrue(html.indexOf('flow-anomaly-item') !== -1);
-        assertTrue(html.indexOf('SIGN_NEG') !== -1);
+        assertTrue(html.indexOf('flow-anomaly-item') !== -1,
+                   'Fallback <li> должен присутствовать');
+        assertTrue(html.indexOf('SIGN_NEG') === -1,
+                   'Код SIGN_NEG не должен отображаться (Task 234)');
+        assertTrue(html.indexOf('Проверьте корректность') !== -1,
+                   'Fallback-сообщение должно быть');
     });
     test('Несколько кодов — несколько <li>', () => {
         var codes = ['JUMP_HIGH: расход 50', 'PERIOD_MISMATCH: 5 дн'];
@@ -1172,22 +1187,84 @@ describe('Task 233: код правила не показывается в ст�
     });
 });
 
-// Task 233: SW обновлён до v497
-describe('Task 233: SW версия v497', () => {
+// Task 233 (историческая заметка): в этой ревизии SW был поднят до v497
+// (код правила убран из столбца «⚠ Замечания» хронологии). Актуальная
+// версия — v498 (Task 234, см. ниже). Отдельный блок Task 233 убран, чтобы
+// не падал при следующих bump-ах.
+
+// Task 234: код правила убран ИЗ МОДАЛКИ подтверждения аномалий.
+// В Task 233 был убран из столбца хронологии, но в flowBuildAnomalyModalHtml
+// (Task 199) оставался span.flow-anomaly-code с техническим кодом (JUMP_NEGATIVE,
+// TEMP_OUT_OF_RANGE, ...). Теперь модалка показывает только описание аномалии.
+describe('Task 234: код правила не показывается в модалке подтверждения аномалий', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const idxPath = path.resolve(__dirname, '..', 'index.html');
+    const src = fs.readFileSync(idxPath, 'utf-8');
+
+    // Извлекаем тело функции flowBuildAnomalyModalHtml
+    function modalBody() {
+        var fnIdx = src.indexOf('function flowBuildAnomalyModalHtml(');
+        if (fnIdx === -1) return '';
+        // Функция объявлена как `function name(...) { ... }` — ищем закрывающую
+        // скобку на отдельной строке с отступом 4 пробела.
+        var fnEnd = src.indexOf('\n    }\n', fnIdx);
+        return src.substring(fnIdx, fnEnd === -1 ? src.length : fnEnd);
+    }
+
+    test('HTML-вывод span.flow-anomaly-code убран из flowBuildAnomalyModalHtml', () => {
+        var body = modalBody();
+        // Раньше: '<span class="flow-anomaly-code">' + escHtml(code) + '</span>'
+        // Этой строки быть не должно в теле модалки.
+        assertTrue(body.indexOf('<span class="flow-anomaly-code">') === -1,
+                   'Не должно быть рендера .flow-anomaly-code (кода правила) в модалке');
+    });
+
+    test('Описание аномалии (.flow-anomaly-detail) всё ещё рендерится в модалке', () => {
+        var body = modalBody();
+        assertTrue(body.indexOf('flow-anomaly-detail') !== -1,
+                   'Должен остаться рендер .flow-anomaly-detail с описанием');
+    });
+
+    test('Если displayText пуст — элемент не рендерится (continue в цикле)', () => {
+        var body = modalBody();
+        assertTrue(body.indexOf('if (!displayText) continue') !== -1,
+                   'Должна быть проверка if (!displayText) continue — пустые описания пропускаются');
+    });
+
+    test('Fallback, если после фильтра items пуст', () => {
+        var body = modalBody();
+        // После цикла: if (!items) { ... } — fallback на пункт по умолчанию
+        var idxIfItems = body.indexOf('if (!items)');
+        assertTrue(idxIfItems !== -1,
+                   'Должна быть проверка if (!items) — fallback если все описания пусты');
+        var afterIf = body.substring(idxIfItems);
+        assertTrue(afterIf.indexOf('flow-anomaly-detail') !== -1 &&
+                   afterIf.indexOf('Проверьте корректность') !== -1,
+                   'Fallback должен содержать пункт с текстом «Проверьте корректность...»');
+    });
+
+    test('Цикл по codes сохранён (обрабатывается каждый код)', () => {
+        var body = modalBody();
+        assertTrue(body.indexOf('for (var i = 0; i < codes.length; i++)') !== -1,
+                   'Цикл по codes должен остаться');
+        assertTrue(body.indexOf('helpMap[code]') !== -1,
+                   'Логика выбора описания из helpMap (Task 222) должна сохраниться');
+    });
+});
+
+// Task 234: SW обновлён до v498
+describe('Task 234: SW версия v498', () => {
     const fs = require('fs');
     const path = require('path');
     const swPath = path.resolve(__dirname, '..', 'sw.js');
     const sw = fs.readFileSync(swPath, 'utf-8');
 
-    test('CACHE_VERSION = kipia-test-v497', () => {
-        assertTrue(sw.indexOf("kipia-test-v497") !== -1);
+    test('CACHE_VERSION = kipia-test-v498', () => {
+        assertTrue(sw.indexOf("kipia-test-v498") !== -1);
     });
-    test('Старая версия v496 убрана', () => {
-        assertTrue(sw.indexOf("kipia-test-v496") === -1,
-                   'Старая v496 не должна остаться в sw.js');
+    test('Старая версия v497 убрана', () => {
+        assertTrue(sw.indexOf("kipia-test-v497") === -1,
+                   'Старая v497 не должна остаться в sw.js');
     });
 });
-
-
-
-
