@@ -1732,58 +1732,131 @@ describe('Task 238: состояние «Загрузка данных…» и �
 // Текущая версия — v503 (Task 240, см. ниже). Отдельный блок Task 238 убран,
 // чтобы не плодить исторические SW-блоки в файле.
 
-// Task 240: раздел «График работы» добавлен в сайдбар как top-level
-// sidebar-item (раньше был только на странице «Документация ИОС»
-// через workScheduleMenuBtn). Виден только роли «Админ» —
+// Task 240 (историческая заметка): в этой ревизии раздел «График работы»
+// был добавлен в сайдбар как top-level sidebar-item с иконкой календаря,
+// расположенный перед «Админ-панелью». Виден только роли «Админ» —
 // WORK_SCHEDULE_PAGES отсутствует в LVL_* массивах, доступ через ['*'].
-// SW поднят до v503.
-describe('Task 240: sidebar-item «График работы»', () => {
+// SW был поднят до v503.
+//
+// Task 241 (текущая ревизия): «График работы» перемещён из top-level
+// сервисной секции в сворачиваемую группу «Документация ИОС»
+// (data-group="docs-ios") — рядом с «Расходомерами хозрасчётными».
+// Виден только Админу (как и раньше). Иконка календаря убрана — внутри
+// группы sidebar-item-extra пункты идут без иконок, только цветной текст.
+// Светлая тема: зебра списка карточек расходомеров сделана немного
+// контрастней (odd-ряд темнее, even-ряд без изменений). SW поднят до v504.
+
+describe('Task 241: «График работы» перемещён в группу «Документация ИОС»', () => {
     const fs = require('fs');
     const path = require('path');
     const htmlPath = path.resolve(__dirname, '..', 'index.html');
     const html = fs.readFileSync(htmlPath, 'utf-8');
 
-    test('Сайдбар: есть sidebar-item с navigateTo(\'work-schedule\')', () => {
-        // Должен быть top-level sidebar-item (без sidebar-item-extra класса),
-        // виден только Админу. Иконка — календарь.
-        const reItem = /<div class="sidebar-item"[^>]*onclick="navigateTo\('work-schedule'\);[^"]*"[^>]*>[\s\S]{0,500}?График работы[\s\S]{0,200}?<\/div>/;
+    test('Сайдбар: есть sidebar-item с navigateTo(\'work-schedule\') и текстом «График работы»', () => {
+        // После Task 241 пункт находится внутри группы docs-ios как
+        // sidebar-item-extra (без иконки, с оранжевым цветом группы).
+        const reItem = /<div class="sidebar-item[^"]*"[^>]*onclick="navigateTo\('work-schedule'\);[^"]*"[^>]*>[\s\S]{0,500}?График работы[\s\S]{0,200}?<\/div>/;
         assertTrue(reItem.test(html),
-            'Ожидался <div class="sidebar-item" onclick="navigateTo(\'work-schedule\')">График работы</div>');
+            'Ожидался sidebar-item с navigateTo(\'work-schedule\') и текстом «График работы»');
     });
 
     test('Сайдбар: sidebar-item «График работы» имеет id="sidebarWorkScheduleBtn" и style="display:none"', () => {
         // id — для возможной отдельной проверки в _applyRoleToUI (как sidebarAdminBtn).
         // style="display:none" — чтобы не мелькал до первого запуска _applyRoleToUI.
-        const reAttrs = /<div class="sidebar-item"[^>]*id="sidebarWorkScheduleBtn"[^>]*style="display:none;"/;
+        const reAttrs = /<div class="sidebar-item[^"]*"[^>]*id="sidebarWorkScheduleBtn"[^>]*style="display:none;"/;
         assertTrue(reAttrs.test(html),
             'sidebar-item должен иметь id="sidebarWorkScheduleBtn" и style="display:none"');
     });
 
-    test('Сайдбар: sidebar-item «График работы» расположен ПЕРЕД «Админ-панель» в HTML-разметке', () => {
-        // Логично: оба пункта видимы только Админу; «График работы» — перед
-        // «Админ-панель», чтобы они шли подряд. Используем поиск по
-        // id="..." (атрибут HTML), а не по строковому вхождению — иначе
-        // JavaScript-код в _applyRoleToUI со ссылкой на sidebarAdminBtn
-        // (раньше по файлу) даёт ложное срабатывание.
+    test('Сайдбар: «График работы» расположен ВНУТРИ группы docs-ios', () => {
+        // Найти начало группы docs-ios и убедиться, что sidebar-item с
+        // navigateTo('work-schedule') находится после начала группы и до
+        // ближайшего sidebar-divider (группа — последняя перед разделителем).
+        const groupStart = html.indexOf('data-group="docs-ios"');
+        assertTrue(groupStart !== -1, 'Группа docs-ios должна существовать');
+        const dividerStart = html.indexOf('class="sidebar-divider"', groupStart + 1);
+        assertTrue(dividerStart !== -1, 'После группы docs-ios должен идти sidebar-divider');
+        const groupSlice = html.slice(groupStart, dividerStart);
+        const reItem = /<div class="sidebar-item[^"]*"[^>]*onclick="navigateTo\('work-schedule'\)/;
+        assertTrue(reItem.test(groupSlice),
+            'Внутри группы docs-ios должен быть sidebar-item с navigateTo(\'work-schedule\')');
+    });
+
+    test('Сайдбар: «График работы» расположен ПЕРЕД «Админ-панель» в HTML-разметке', () => {
+        // Логично: оба пункта видимы только Админу; «График работы» (теперь
+        // внутри группы docs-ios) всё ещё идёт раньше sidebarAdminBtn в HTML.
         const idxWork = html.indexOf('id="sidebarWorkScheduleBtn"');
         const idxAdmin = html.indexOf('id="sidebarAdminBtn"');
         assertTrue(idxWork !== -1 && idxAdmin !== -1 && idxWork < idxAdmin,
             'sidebarWorkScheduleBtn должен идти раньше sidebarAdminBtn в HTML-разметке');
     });
+
+    test('Сайдбар: группа docs-ios имеет статичный счётчик «2»', () => {
+        // Для Админа видны 2 пункта (Расходомеры + График работы).
+        // Статичный HTML-счётчик должен быть «2» — чтобы не было мелькания
+        // до первого запуска _applyRoleToUI. _applyRoleToUI пересчитает
+        // счётчик для не-Админ ролей (1 — если виден только Расходомеры).
+        const groupStart = html.indexOf('data-group="docs-ios"');
+        const dividerStart = html.indexOf('class="sidebar-divider"', groupStart + 1);
+        const groupSlice = html.slice(groupStart, dividerStart);
+        const reCount = /<span class="sidebar-group-title-count">2<\/span>/;
+        assertTrue(reCount.test(groupSlice),
+            'Группа docs-ios должна иметь статичный счётчик «2»');
+    });
+
+    test('Сайдбар: «График работы» НЕ имеет иконки (как sidebar-item-extra внутри группы)', () => {
+        // Внутри групп sidebar-item-extra пункты идут без svg-иконок —
+        // только цветной текст. Это соответствует паттерну остальных пунктов
+        // групп (Расходомеры, Приборы, Блокировки и т.д.).
+        const reItem = /<div class="sidebar-item[^"]*"[^>]*id="sidebarWorkScheduleBtn"[^>]*>[\s\S]{0,300}?<\/div>/;
+        const m = reItem.exec(html);
+        assertTrue(m !== null, 'sidebar-item «График работы» должен существовать');
+        assertTrue(m[0].indexOf('<svg') === -1,
+            'sidebar-item «График работы» внутри группы docs-ios не должен содержать <svg> иконку');
+    });
 });
 
-// Task 240: SW обновлён до v503
-describe('Task 240: SW версия v503', () => {
+describe('Task 241: зебра списка расходомеров в светлой теме контрастней', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const htmlPath = path.resolve(__dirname, '..', 'index.html');
+    const html = fs.readFileSync(htmlPath, 'utf-8');
+
+    // Извлекаем RGB-компоненты из rgba(...) фона нечётных/чётных карточек.
+    function extractLightBg(nth) {
+        // Пример: [data-theme="light"] .flow-card:nth-child(odd)  { background: rgba(243, 233, 223, 0.96); }
+        const re = new RegExp('\\[data-theme="light"\\] \\.flow-card:nth-child\\(' + nth + '\\)\\s*\\{[^}]*background:\\s*rgba\\((\\d+),\\s*(\\d+),\\s*(\\d+)');
+        const m = re.exec(html);
+        if (!m) return null;
+        return { r: +m[1], g: +m[2], b: +m[3] };
+    }
+
+    test('Светлая тема: odd-ряд карточек темнее even-ряда (R-канал)', () => {
+        const odd = extractLightBg('odd');
+        const even = extractLightBg('even');
+        assertTrue(odd !== null && even !== null,
+            'Должны быть CSS-правила для odd/even в светлой теме');
+        // odd должен быть темнее even (меньшее значение RGB = темнее).
+        assertTrue(odd.r < even.r,
+            'odd-ряд должен быть темнее even-ряда по R-каналу (было 248 vs 252 — разница 4, незаметно)');
+        // Разница должна быть заметной (≥ 7 пунктов — было 4, стало ~9–15).
+        assertTrue((even.r - odd.r) >= 7,
+            'Разница по R-каналу должна быть не менее 7 (контрастней, чем было)');
+    });
+});
+
+// Task 241: SW обновлён до v504
+describe('Task 241: SW версия v504', () => {
     const fs = require('fs');
     const path = require('path');
     const swPath = path.resolve(__dirname, '..', 'sw.js');
     const sw = fs.readFileSync(swPath, 'utf-8');
 
-    test('CACHE_VERSION = kipia-test-v503', () => {
-        assertTrue(sw.indexOf("kipia-test-v503") !== -1);
+    test('CACHE_VERSION = kipia-test-v504', () => {
+        assertTrue(sw.indexOf("kipia-test-v504") !== -1);
     });
-    test('Старая версия v502 убрана', () => {
-        assertTrue(sw.indexOf("kipia-test-v502") === -1,
-                   'Старая v502 не должна остаться в sw.js');
+    test('Старая версия v503 убрана', () => {
+        assertTrue(sw.indexOf("kipia-test-v503") === -1,
+                   'Старая v503 не должна остаться в sw.js');
     });
 });
