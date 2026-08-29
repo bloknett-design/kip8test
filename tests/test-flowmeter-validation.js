@@ -1102,19 +1102,89 @@ describe('Task 232: комментарий сразу отображается �
     });
 });
 
-// Task 232: SW обновлён до v496
-describe('Task 232: SW версия v496', () => {
+// Task 232 (историческая заметка): в этой ревизии SW был поднят до v496
+// (комментарий сразу отображается в архиве). Актуальная версия — v497
+// (Task 233, см. ниже). Отдельный блок Task 232 убран, чтобы не падал
+// при следующих bump-ах.
+
+// Task 233: код правила (JUMP_NEGATIVE, TEMP_OUT_OF_RANGE, ...) не должен
+// отображаться в тексте сообщения в столбце «⚠ Замечания» таблицы хронологии.
+// Раньше рядом с описанием рендерился .flow-anomaly-badge с самим кодом —
+// убрали. Теперь каждая аномалия = одна строка с описанием (friendly или detail).
+describe('Task 233: код правила не показывается в столбце «⚠ Замечания»', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const idxPath = path.resolve(__dirname, '..', 'index.html');
+    const src = fs.readFileSync(idxPath, 'utf-8');
+
+    // Извлекаем тело метода _buildArchiveHtml
+    function archiveBody() {
+        var fnIdx = src.indexOf('_buildArchiveHtml: function');
+        if (fnIdx === -1) return '';
+        var fnEnd = src.indexOf('\n        },', fnIdx);
+        return src.substring(fnIdx, fnEnd === -1 ? src.length : fnEnd);
+    }
+
+    test('HTML-вывод span.flow-anomaly-badge убран из _buildArchiveHtml', () => {
+        var body = archiveBody();
+        // Раньше: badges += '<span class="flow-anomaly-badge">' + this._esc(code) + '</span>';
+        // Этой строки быть не должно в коде рендера аномалий.
+        assertTrue(body.indexOf('<span class="flow-anomaly-badge">') === -1,
+                   'Не должно быть рендера .flow-anomaly-badge (кода правила) в _buildArchiveHtml');
+    });
+
+    test('Описание аномалии (.flow-anomaly-badge-detail) всё ещё рендерится', () => {
+        var body = archiveBody();
+        assertTrue(body.indexOf('flow-anomaly-badge-detail') !== -1,
+                   'Должен остаться рендер .flow-anomaly-badge-detail с описанием');
+    });
+
+    test('Каждая аномалия обёрнута в div.flow-anomaly-line', () => {
+        var body = archiveBody();
+        assertTrue(body.indexOf('flow-anomaly-line') !== -1,
+                   'Должна быть обёртка .flow-anomaly-line для каждой аномалии (отдельная строка)');
+    });
+
+    test('Если displayText пуст — элемент не рендерится (проверка if (displayText))', () => {
+        var body = archiveBody();
+        // Должна быть проверка if (displayText) перед добавлением в badges
+        assertTrue(body.indexOf('if (displayText)') !== -1,
+                   'Должна быть проверка if (displayText) — пустые описания не рендерятся');
+    });
+
+    test('Fallback «—» если ни одного описания не найдено', () => {
+        var body = archiveBody();
+        // После цикла должна быть проверка: if (badges) ... else td с «—»
+        var idxIfBadges = body.indexOf('if (badges)');
+        assertTrue(idxIfBadges !== -1,
+                   'Должна быть проверка if (badges) — fallback на «—» если все описания пусты');
+        // После if (badges) должно быть else с «—»
+        var afterIf = body.substring(idxIfBadges);
+        assertTrue(afterIf.indexOf('else') !== -1 &&
+                   afterIf.indexOf('—') !== -1,
+                   'После if (badges) должен быть else-ветвление с «—»');
+    });
+
+    test('CSS-класс .flow-anomaly-line определён', () => {
+        assertTrue(src.indexOf('.flow-archive-anomaly .flow-anomaly-line') !== -1 ||
+                   src.indexOf('.flow-anomaly-line') !== -1,
+                   'CSS .flow-anomaly-line должен быть определён');
+    });
+});
+
+// Task 233: SW обновлён до v497
+describe('Task 233: SW версия v497', () => {
     const fs = require('fs');
     const path = require('path');
     const swPath = path.resolve(__dirname, '..', 'sw.js');
     const sw = fs.readFileSync(swPath, 'utf-8');
 
-    test('CACHE_VERSION = kipia-test-v496', () => {
-        assertTrue(sw.indexOf("kipia-test-v496") !== -1);
+    test('CACHE_VERSION = kipia-test-v497', () => {
+        assertTrue(sw.indexOf("kipia-test-v497") !== -1);
     });
-    test('Старая версия v495 убрана', () => {
-        assertTrue(sw.indexOf("kipia-test-v495") === -1,
-                   'Старая v495 не должна остаться в sw.js');
+    test('Старая версия v496 убрана', () => {
+        assertTrue(sw.indexOf("kipia-test-v496") === -1,
+                   'Старая v496 не должна остаться в sw.js');
     });
 });
 
