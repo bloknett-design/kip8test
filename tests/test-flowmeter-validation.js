@@ -667,122 +667,114 @@ describe('Task 222: регистрация эндпоинта и anomalyHelp в 
 // а не из вычисленного расхода (r.consumption); высота баров нормализуется
 // по диапазону [min..max]: bar = (curr − min) / (max − min) × 100.
 // Тесты — source-text на index.html (без мутации sandbox-объектов).
-describe('Task 223+224: график архива — показания + нормализация по диапазону', () => {
+describe('Task 223+224+228: график архива — условный источник + нормализация', () => {
     const fs = require('fs');
     const path = require('path');
     const idxPath = path.resolve(__dirname, '..', 'index.html');
     const src = fs.readFileSync(idxPath, 'utf-8');
 
-    // Task 223: источник данных — r.curr (показания), не r.consumption
-    test('_buildArchiveChart использует r.curr (показания), а не consumption', () => {
-        // Находим функцию _buildArchiveChart
+    function chartBody() {
         var fnIdx = src.indexOf('_buildArchiveChart: function');
-        assertTrue(fnIdx !== -1, '_buildArchiveChart должна быть определена');
-        // Берём тело функции (до закрывающей }, уникальной для функции)
+        if (fnIdx === -1) return '';
         var fnEnd = src.indexOf('return html;', fnIdx);
-        assertTrue(fnEnd !== -1);
-        var fnBody = src.substring(fnIdx, fnEnd);
-        // Использует r.curr
-        assertTrue(fnBody.indexOf('r.curr') !== -1 || fnBody.indexOf('records[i].curr') !== -1,
-                   'Должен использовать readings (r.curr / records[i].curr)');
-        // НЕ использует consumption для bar height
-        assertTrue(fnBody.indexOf('r.consumption') === -1,
-                   'НЕ должен использовать r.consumption для построения графика');
+        return src.substring(fnIdx, fnEnd === -1 ? src.length : fnEnd);
+    }
+
+    // Task 228: условный выбор источника данных
+    test('Определяется dailyMode через _isDailyMode(meter)', () => {
+        var body = chartBody();
+        assertTrue(body.indexOf('_isDailyMode') !== -1,
+                   'Должен вызываться _isDailyMode(meter) для определения источника');
     });
 
-    test('Заголовок графика: «Показания», а не «Расход»', () => {
-        var fnIdx = src.indexOf('_buildArchiveChart: function');
-        var fnEnd = src.indexOf('return html;', fnIdx);
-        var fnBody = src.substring(fnIdx, fnEnd);
-        assertTrue(fnBody.indexOf('Показания') !== -1,
-                   'Заголовок графика должен быть «Показания»');
-        // Заголовок «Расход» убран из чарта (но «Расход» может встречаться
-        // в комментариях — проверяем только контекст chart-title)
-        var titleIdx = fnBody.indexOf('flow-archive-chart-title');
-        assertTrue(titleIdx !== -1);
-        var titleEnd = fnBody.indexOf('</div>', titleIdx);
-        var titleStr = fnBody.substring(titleIdx, titleEnd);
-        assertTrue(titleStr.indexOf('Расход') === -1,
-                   'В заголовке графика не должно быть слова «Расход»');
+    test('Функция pickValue использует r.curr для dailyMode', () => {
+        var body = chartBody();
+        assertTrue(body.indexOf('pickValue') !== -1,
+                   'Должна быть функция pickValue для выбора источника');
+        // Для dailyMode → r.curr
+        assertTrue(body.indexOf('r.curr') !== -1,
+                   'pickValue должен использовать r.curr для dailyMode');
+    });
+
+    test('Функция pickValue использует r.consumption для НЕ-dailyMode (Task 228)', () => {
+        var body = chartBody();
+        // Для не-dailyMode → r.consumption
+        assertTrue(body.indexOf('r.consumption') !== -1,
+                   'pickValue должен использовать r.consumption для не-dailyMode (Task 228)');
+    });
+
+    test('Заголовок: «Показания» для dailyMode, «Расход» для остальных', () => {
+        var body = chartBody();
+        // chartTitle = dailyMode ? 'Показания' : 'Расход'
+        assertTrue(body.indexOf("'Показания'") !== -1,
+                   'Должна быть строка «Показания» для dailyMode');
+        assertTrue(body.indexOf("'Расход'") !== -1,
+                   'Должна быть строка «Расход» для не-dailyMode');
+        // Тернарный оператор
+        assertTrue(body.indexOf("chartTitle = dailyMode") !== -1 ||
+                   body.indexOf("dailyMode ? 'Показания' : 'Расход'") !== -1,
+                   'Должен быть тернарный выбор заголовка по dailyMode');
     });
 
     // Task 224: нормализация по диапазону
-    test('Вычисляется minReading (минимум показаний)', () => {
-        var fnIdx = src.indexOf('_buildArchiveChart: function');
-        var fnEnd = src.indexOf('return html;', fnIdx);
-        var fnBody = src.substring(fnIdx, fnEnd);
-        assertTrue(fnBody.indexOf('minReading') !== -1,
-                   'Должна быть переменная minReading');
-        assertTrue(fnBody.indexOf('Infinity') !== -1,
-                   'minReading должен инициализироваться Infinity');
+    test('Вычисляется minVal (минимум значений)', () => {
+        var body = chartBody();
+        assertTrue(body.indexOf('minVal') !== -1,
+                   'Должна быть переменная minVal');
+        assertTrue(body.indexOf('Infinity') !== -1,
+                   'minVal должен инициализироваться Infinity');
     });
 
-    test('Вычисляется maxReading (максимум показаний)', () => {
-        var fnIdx = src.indexOf('_buildArchiveChart: function');
-        var fnEnd = src.indexOf('return html;', fnIdx);
-        var fnBody = src.substring(fnIdx, fnEnd);
-        assertTrue(fnBody.indexOf('maxReading') !== -1,
-                   'Должна быть переменная maxReading');
+    test('Вычисляется maxVal (максимум значений)', () => {
+        var body = chartBody();
+        assertTrue(body.indexOf('maxVal') !== -1,
+                   'Должна быть переменная maxVal');
     });
 
-    test('Формула нормализации: (curr − minReading) / range × 100', () => {
-        var fnIdx = src.indexOf('_buildArchiveChart: function');
-        var fnEnd = src.indexOf('return html;', fnIdx);
-        var fnBody = src.substring(fnIdx, fnEnd);
-        // Должна быть формула нормализации
-        assertTrue(fnBody.indexOf('(curr - minReading)') !== -1,
-                   'Должна быть формула (curr − minReading)');
-        assertTrue(fnBody.indexOf('/ range') !== -1,
+    test('Формула нормализации: (val − minVal) / range × 100', () => {
+        var body = chartBody();
+        assertTrue(body.indexOf('(val - minVal)') !== -1,
+                   'Должна быть формула (val − minVal)');
+        assertTrue(body.indexOf('/ range') !== -1,
                    'Должно быть деление на range (max − min)');
-        assertTrue(fnBody.indexOf('* 100') !== -1,
+        assertTrue(body.indexOf('* 100') !== -1,
                    'Должно быть умножение на 100');
     });
 
     test('Защита от деления на ноль (плоский случай max === min)', () => {
-        var fnIdx = src.indexOf('_buildArchiveChart: function');
-        var fnEnd = src.indexOf('return html;', fnIdx);
-        var fnBody = src.substring(fnIdx, fnEnd);
-        // Должна быть проверка range === 0 (или flat)
-        assertTrue(fnBody.indexOf('range === 0') !== -1 || fnBody.indexOf('flat') !== -1,
+        var body = chartBody();
+        assertTrue(body.indexOf('range === 0') !== -1 || body.indexOf('flat') !== -1,
                    'Должна быть защита от деления на ноль (range === 0 / flat)');
     });
 
     test('Минимальная высота бара 5% (Math.max(5, ...)) — Task 226', () => {
-        var fnIdx = src.indexOf('_buildArchiveChart: function');
-        var fnEnd = src.indexOf('return html;', fnIdx);
-        var fnBody = src.substring(fnIdx, fnEnd);
-        assertTrue(fnBody.indexOf('Math.max(5') !== -1,
+        var body = chartBody();
+        assertTrue(body.indexOf('Math.max(5') !== -1,
                    'Должен быть Math.max(5, ...) для минимальной высоты 5% (Task 226)');
-        // Старая формула Math.max(1, ...) убрана
-        assertTrue(fnBody.indexOf('Math.max(1') === -1,
+        assertTrue(body.indexOf('Math.max(1') === -1,
                    'Старый Math.max(1, ...) должен быть убран');
     });
 
     test('Старый код (curr / maxReading × 100 без min) убран', () => {
-        var fnIdx = src.indexOf('_buildArchiveChart: function');
-        var fnEnd = src.indexOf('return html;', fnIdx);
-        var fnBody = src.substring(fnIdx, fnEnd);
-        // Старая формула (curr / maxReading) без minReading не должна встречаться
-        // в строке вычисления barPct. Однако maxReading может встречаться отдельно.
-        // Проверяем, что нет выражения "(curr / maxReading) * 100"
-        assertTrue(fnBody.indexOf('(curr / maxReading) * 100') === -1,
+        var body = chartBody();
+        assertTrue(body.indexOf('(curr / maxReading) * 100') === -1,
                    'Старая формула (curr / maxReading) × 100 должна быть убрана');
     });
 });
 
-// Task 226+227: SW обновлён до v491 (мин. высота 5% + дата справа от названия)
-describe('Task 227: SW версия v491', () => {
+// Task 228: SW обновлён до v492 (условный источник данных графика)
+describe('Task 228: SW версия v492', () => {
     const fs = require('fs');
     const path = require('path');
     const swPath = path.resolve(__dirname, '..', 'sw.js');
     const sw = fs.readFileSync(swPath, 'utf-8');
 
-    test('CACHE_VERSION = kipia-test-v491', () => {
-        assertTrue(sw.indexOf("kipia-test-v491") !== -1);
+    test('CACHE_VERSION = kipia-test-v492', () => {
+        assertTrue(sw.indexOf("kipia-test-v492") !== -1);
     });
-    test('Старая версия v490 убрана', () => {
-        assertTrue(sw.indexOf("kipia-test-v490") === -1,
-                   'Старая v490 не должна остаться в sw.js');
+    test('Старая версия v491 убрана', () => {
+        assertTrue(sw.indexOf("kipia-test-v491") === -1,
+                   'Старая v491 не должна остаться в sw.js');
     });
 });
 
