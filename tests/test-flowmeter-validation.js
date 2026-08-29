@@ -1727,18 +1727,63 @@ describe('Task 238: состояние «Загрузка данных…» и �
     });
 });
 
-// Task 238: SW обновлён до v502
-describe('Task 238: SW версия v502', () => {
+// Task 238 (историческая заметка): в этой ревизии SW был поднят до v502
+// для состояния «Загрузка данных…» с анимированными точками и ошибки связи.
+// Текущая версия — v503 (Task 240, см. ниже). Отдельный блок Task 238 убран,
+// чтобы не плодить исторические SW-блоки в файле.
+
+// Task 240: раздел «График работы» добавлен в сайдбар как top-level
+// sidebar-item (раньше был только на странице «Документация ИОС»
+// через workScheduleMenuBtn). Виден только роли «Админ» —
+// WORK_SCHEDULE_PAGES отсутствует в LVL_* массивах, доступ через ['*'].
+// SW поднят до v503.
+describe('Task 240: sidebar-item «График работы»', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const htmlPath = path.resolve(__dirname, '..', 'index.html');
+    const html = fs.readFileSync(htmlPath, 'utf-8');
+
+    test('Сайдбар: есть sidebar-item с navigateTo(\'work-schedule\')', () => {
+        // Должен быть top-level sidebar-item (без sidebar-item-extra класса),
+        // виден только Админу. Иконка — календарь.
+        const reItem = /<div class="sidebar-item"[^>]*onclick="navigateTo\('work-schedule'\);[^"]*"[^>]*>[\s\S]{0,500}?График работы[\s\S]{0,200}?<\/div>/;
+        assertTrue(reItem.test(html),
+            'Ожидался <div class="sidebar-item" onclick="navigateTo(\'work-schedule\')">График работы</div>');
+    });
+
+    test('Сайдбар: sidebar-item «График работы» имеет id="sidebarWorkScheduleBtn" и style="display:none"', () => {
+        // id — для возможной отдельной проверки в _applyRoleToUI (как sidebarAdminBtn).
+        // style="display:none" — чтобы не мелькал до первого запуска _applyRoleToUI.
+        const reAttrs = /<div class="sidebar-item"[^>]*id="sidebarWorkScheduleBtn"[^>]*style="display:none;"/;
+        assertTrue(reAttrs.test(html),
+            'sidebar-item должен иметь id="sidebarWorkScheduleBtn" и style="display:none"');
+    });
+
+    test('Сайдбар: sidebar-item «График работы» расположен ПЕРЕД «Админ-панель» в HTML-разметке', () => {
+        // Логично: оба пункта видимы только Админу; «График работы» — перед
+        // «Админ-панель», чтобы они шли подряд. Используем поиск по
+        // id="..." (атрибут HTML), а не по строковому вхождению — иначе
+        // JavaScript-код в _applyRoleToUI со ссылкой на sidebarAdminBtn
+        // (раньше по файлу) даёт ложное срабатывание.
+        const idxWork = html.indexOf('id="sidebarWorkScheduleBtn"');
+        const idxAdmin = html.indexOf('id="sidebarAdminBtn"');
+        assertTrue(idxWork !== -1 && idxAdmin !== -1 && idxWork < idxAdmin,
+            'sidebarWorkScheduleBtn должен идти раньше sidebarAdminBtn в HTML-разметке');
+    });
+});
+
+// Task 240: SW обновлён до v503
+describe('Task 240: SW версия v503', () => {
     const fs = require('fs');
     const path = require('path');
     const swPath = path.resolve(__dirname, '..', 'sw.js');
     const sw = fs.readFileSync(swPath, 'utf-8');
 
-    test('CACHE_VERSION = kipia-test-v502', () => {
-        assertTrue(sw.indexOf("kipia-test-v502") !== -1);
+    test('CACHE_VERSION = kipia-test-v503', () => {
+        assertTrue(sw.indexOf("kipia-test-v503") !== -1);
     });
-    test('Старая версия v501 убрана', () => {
-        assertTrue(sw.indexOf("kipia-test-v501") === -1,
-                   'Старая v501 не должна остаться в sw.js');
+    test('Старая версия v502 убрана', () => {
+        assertTrue(sw.indexOf("kipia-test-v502") === -1,
+                   'Старая v502 не должна остаться в sw.js');
     });
 });
