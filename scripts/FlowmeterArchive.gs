@@ -156,6 +156,56 @@ var FlowmeterArchive = {
   },
 
   // ============================================================
+  // updateLatestComment — Task 237: обновить P (comment) в самой свежей
+  // архивной записи для meterId.
+  // ============================================================
+  // Вызывается:
+  //   1) из Flowmeter.setComment — синхронизация: при записи нового
+  //      комментария в meters.O он же пишется в archive.P самой свежей
+  //      записи этого счётчика. Так комментарий остаётся в архиве даже
+  //      после того, как при следующем вводе показаний meters.O будет
+  //      очищен.
+  //   2) из Flowmeter.updateReading — миграция старых комментариев:
+  //      если в meters.O был комментарий (а archive.P пуст из-за того,
+  //      что setComment был вызван ДО развертывания этого патча),
+  //      дублируем его в archive.P перед сбросом meters.O. Idempotent:
+  //      если setComment уже записал, значение совпадает и перезапись
+  //      не меняет данных.
+  //
+  // @param {number} meterId — id позиции (1–12)
+  // @param {string} comment — текст комментария (пустая строка = удалить)
+  // @returns {boolean} true если строка найдена и обновлена, false если
+  //                     архив пуст или нет записей для этого meterId.
+  // Не требует авторизации — вызывается только сервером из
+  // Flowmeter.setComment / Flowmeter.updateReading.
+  // ============================================================
+  updateLatestComment: function(meterId, comment) {
+    var sheet = this._getSheet();
+    if (!sheet) return false;
+
+    var lastRow = sheet.getLastRow();
+    if (lastRow < this.DATA_START_ROW) return false;
+
+    // Читаем только колонку A (meterId) для поиска последней записи.
+    // Для эффективности: 1 колонка вместо 17.
+    var range = sheet.getRange(this.DATA_START_ROW, 1,
+                               lastRow - this.DATA_START_ROW + 1, 1);
+    var values = range.getValues();
+
+    // Идём с конца, ищем самую свежую запись для meterId.
+    // (appendRow всегда добавляет в конец листа → последняя по позиции
+    //  с совпадающим meterId и есть самая свежая.)
+    for (var i = values.length - 1; i >= 0; i--) {
+      if (parseInt(values[i][0], 10) === meterId) {
+        var rowToUpdate = this.DATA_START_ROW + i;
+        sheet.getRange(rowToUpdate, 16).setValue(String(comment || ''));  // P=16
+        return true;
+      }
+    }
+    return false;  // записей для этого meterId нет
+  },
+
+  // ============================================================
   // listArchive — прочитать архив для заданного meterId
   // ============================================================
   // payload: { token, id }

@@ -387,26 +387,33 @@ var Flowmeter = {
 
     // Кто внёс изменения: L=12 (modRole), M=13 (modName)
     // Task 108: пишем email (не user.name) — чтобы клиент мог сравнить с KipAuth._cachedEmail
-    // Task 211: при смене автора показаний (modName меняется) — старый непустой
-    // комментарий O архивируется в archive.P (передаётся параметром comment в
-    // appendToArchive; см. ниже). meters.P больше не используется. O очищается,
-    // т.к. активный комментарий был привязан к предыдущему автору.
-    // Тот же автор перезаписывает свои показания — комментарий O сохраняем,
-    // в архиве делается запись с comment='' (старый комментарий не трогаем —
-    // он не «архивный», а активный, ещё привязан к тем же показаниям).
-    var existingModEmail = String(sheet.getRange(rowNum, 13).getValue() || '');  // M=13
+    // Task 237: при новом вводе показаний meters.O ВСЕГДА очищается
+    // (независимо от смены автора) — комментарий к только что введённым
+    // показаниям пока не введён, ждём вызова setComment от автора. Прежний
+    // комментарий остаётся в archive.P своей строки (он был записан туда
+    // одновременно с meters.O в setComment — см. Task 237). Для случая
+    // миграции старых комментариев (setComment был вызван ДО развёртывания
+    // этого патча и не записал в archive.P) — дублируем старый meters.O
+    // в archive.P самой свежей записи ПЕРЕД сбросом O. Idempotent: если
+    // setComment уже записал то же значение, перезапись не меняет данных.
     var oldCommentForArchive = String(sheet.getRange(rowNum, 15).getValue() || '').trim();  // O=15
-    var authorChanged = existingModEmail.toLowerCase() !== String(user.email || '').toLowerCase();
 
     sheet.getRange(rowNum, 12).setValue(user.role || '');
     sheet.getRange(rowNum, 13).setValue(user.email || '');
 
-    if (authorChanged && oldCommentForArchive !== '') {
-      // Task 211: meters.P больше не пишем — preview не нужен.
-      // Старый комментарий сохранится в archive.P через appendToArchive (вызов ниже).
-      // Очистить активный комментарий O (старый текст уже заархивирован в archive.P)
+    if (oldCommentForArchive !== '') {
+      // Task 237: миграция — продублировать старый meters.O в archive.P
+      // самой свежей записи этого счётчика (если ещё не там). Для новых
+      // комментариев (setComment уже записал) — no-op (то же значение).
       try {
-        sheet.getRange(rowNum, 15).setValue('');  // O=15 — сброс (Task 195)
+        FlowmeterArchive.updateLatestComment(id, oldCommentForArchive);
+      } catch (e) {
+        Logger.log('updateLatestComment (migration) failed (non-critical): ' + e.message);
+      }
+      // Очистить активный комментарий O — ждёт нового комментария для
+      // только что введённых показаний (его внесёт setComment автора).
+      try {
+        sheet.getRange(rowNum, 15).setValue('');  // O=15 — сброс
       } catch (e) { /* не критично */ }
     }
 
@@ -421,9 +428,11 @@ var Flowmeter = {
 
     // Архив: добавить запись в лист hozraschet_archive
     // (не блокирует основной ответ — ошибка архива тихо логируется)
-    // Task 197: в архивную запись копируется старый комментарий O — только
-    // если сменился автор показаний. Тот же автор перезаписывает — comment='' ,
-    // т.к. активный комментарий остаётся в O и не «архивный».
+    // Task 237: новая архивная запись ВСЕГДА создаётся с пустым comment
+    // (P=''), т.к. комментарий к только что введённым показаниям ещё не
+    // внесён — его добавит setComment (который одновременно пишет в
+    // meters.O И в archive.P этой новой записи). Прежний комментарий
+    // остаётся в archive.P своей (предыдущей) строки — не трогаем.
     try {
       var hozName = String(sheet.getRange(rowNum, 2).getValue() || '');
       var unitVal = String(sheet.getRange(rowNum, 8).getValue() || '');
@@ -434,7 +443,7 @@ var Flowmeter = {
         payload.datePrev, payload.dateCurr,
         payload.temp, payload.gcal, unitVal, periodVal,
         user.role || '', user.name || user.email || '',  // Task 109: имя (если есть) или email
-        authorChanged ? oldCommentForArchive : '',  // Task 197: comment архивной записи
+        '',  // Task 237: новая запись — без комментария (ожидание setComment)
         anomalyDetail  // Task 199: строка с кодами аномалий для archive.Q
       );
     } catch (archiveErr) {
@@ -458,15 +467,13 @@ var Flowmeter = {
   // Ограничения по времени НЕТ — пока показания за этим пользователем
   // (у админа — безусловно).
   // Комментарий виден всем читателям раздела (list возвращает поле comment).
-  // При вводе новых показаний ДРУГИМ пользователем updateReading очищает O
-  // и архивирует старый непустой комментарий в archive.P (hozraschet_archive).
   //
-  // Task 211: meters.P (archivedComment preview) больше не используется.
-  // При перезаписи непустого O новым текстом через setComment — старый
-  // комментарий просто теряется (история сохраняется только при смене автора
-  // показаний в updateReading — там старый O уходит в archive.P).
-  // Удаление (пустой comment) — просто очищает O.
-  // Совпадение старый === новый — не плодит дубли.
+  // Task 237: комментарий пишется ОДНОВРЕМЕННО в две таблицы:
+  //   • hozraschet_meters.O (активный комментарий к текущим показаниям)
+  //   • hozraschet_archive.P (в строку с самой свежей архивной записью
+  //     этого счётчика — через FlowmeterArchive.updateLatestComment)
+  // После ввода новых показаний meters.O очищается (см. updateReading),
+  // а предыдущий комментарий остаётся в archive.P своей строки (архив).
   // ============================================================
   setComment: function(payload) {
     var auth = this._requireEdit(payload.token);
@@ -508,16 +515,20 @@ var Flowmeter = {
       }
     }
 
-    // Task 211: meters.P больше не пишем — preview не нужен.
-    // Старый непустой комментарий при замене на новый просто теряется.
-    // (История комментариев сохраняется только при смене автора показаний
-    //  в updateReading — там старый O уходит в archive.P.)
-    // Удаление (comment === '') — просто очищаем O.
-    // Совпадение (старый === новый) — ничего не делаем, не плодим дубли.
-    var oldComment = String(sheet.getRange(rowNum, 15).getValue() || '').trim();  // O=15
+    // Task 237: пишем комментарий одновременно в две таблицы:
+    //   1) hozraschet_meters.O — активный комментарий (текущие показания)
+    //   2) hozraschet_archive.P — в строку с самой свежей архивной записью
+    //      этого счётчика. Так после следующего ввода показаний (когда
+    //      meters.O будет очищен) комментарий останется в архиве.
+    sheet.getRange(rowNum, 15).setValue(comment);  // O=15 — meters.O
 
-    // Записываем новый комментарий в O=15 (пустая строка = удалить)
-    sheet.getRange(rowNum, 15).setValue(comment);
+    // archive.P — самая свежая запись для этого meterId.
+    // Ошибки updateLatestComment НЕ блокируют ответ (арxiv — best-effort).
+    try {
+      FlowmeterArchive.updateLatestComment(id, comment);
+    } catch (e) {
+      Logger.log('FlowmeterArchive.updateLatestComment failed (non-critical): ' + e.message);
+    }
 
     // Аудит
     try {

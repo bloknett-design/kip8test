@@ -7597,3 +7597,104 @@ Stage Summary:
 - Пользователю: после обновления PWA на мобильном открыть любой расходомер
   с таблицей хронологии — провести пальцем по таблице влево/вправо — она
   должна сразу прокручиваться по горизонтали без необходимости зумить.
+
+---
+Task ID: 231-236 (историческая заметка)
+Agent: main
+Task: Несколько итераций между Task 230 и Task 237 — без отдельных worklog-записей, но зафиксированы в git-истории.
+
+Work Log:
+- Task 231 (commit d8857e3): карточка расходомера — label+дата в одну строку, лейблы Гкал/T среды убраны.
+- Task 232 (commit 6bab9e1): комментарий сразу отображается в архивных записях (fallback к m.comment для новейшей записи, если archive.P пуст — кэш-рендер).
+- Task 233 (commit b6c6b5a): код правила убран из столбца «⚠ Замечания» хронологии показаний (только описание).
+- Task 234 (commit 47fef56): код правила убран ИЗ МОДАЛКИ подтверждения аномалий (flowBuildAnomalyModalHtml); fallback «Проверьте корректность…» если все displayText пусты.
+- Task 234 doc (commit 96a7b17): расширенный комментарий в ValidationRules.gs над GCAL_RATIO — зафиксировано допущение «gcal за сутки, consumption за период; формула корректна только при expected_days=1».
+- Task 235 (commit cf1b542): кэш правил валидации в localStorage (24ч TTL) — мгновенная модалка аномалий без серверного round-trip.
+- Task 236 (commit d5a2cc9): кнопка «Обновить правила» в админ-панели (page-admin → .admin-footer) — обнуляет _rulesCacheTs и вызывает loadValidationRules() для принудительного обхода 24ч TTL.
+
+Stage Summary:
+- Зафиксировано для истории. Все коммиты на месте в git log. SW версия
+  до Task 237 — v500. Тесты до Task 237 — 778 passed / 0 failed.
+
+---
+Task ID: 237
+Agent: main
+Task: Комментарий к показаниям должен одновременно сохраняться в meters.O и archive.P; meters.O всегда сбрасывается при новом вводе показаний (не только при смене автора); новая архивная запись создаётся с пустым comment, ожидая ввода через setComment.
+
+Work Log:
+- Анализ текущей логики (Task 195 + Task 211):
+  • meters.O — активный комментарий к текущим показаниям (виден всем, редактирует автор/админ).
+  • archive.P — комментарии в архивных записях. До Task 237 заполнялся ТОЛЬКО при смене автора показаний в updateReading (старый meters.O копировался в P НОВОЙ архивной записи — что неправильно по новой логике).
+  • setComment писал только в meters.O — не синхронизировал archive.P.
+  • meters.O сбрасывался ТОЛЬКО при authorChanged (смена автора), что означало: тот же автор при перезаписи своих показаний сохранял старый комментарий в meters.O — что противоречит требованию «комментарий относится к конкретным показаниям».
+
+- Требования пользователя (Task 237):
+  1. После ввода новых показаний — возможность добавить комментарий пока другой/тот же пользователь не введёт новые показания.
+  2. После ввода комментария — одновременная запись в meters.O И archive.P (столбец comment).
+  3. После очередного ввода показаний: meters.O сбрасывается (пусто, ждёт нового комментария); archive.P предыдущей записи сохраняет свой комментарий; archive.P новой записи — пустой.
+
+- Дизайн решения:
+  1. Новый метод FlowmeterArchive.updateLatestComment(meterId, comment) — ищет самую свежую архивную запись для meterId (scan с конца, эффективность: только колонка A читается) и обновляет её P (16) столбец.
+  2. setComment — после записи в meters.O вызывает FlowmeterArchive.updateLatestComment(id, comment) для синхронной записи в archive.P. Try/catch (best-effort: ошибка архива не блокирует ответ).
+  3. updateReading — meters.O ВСЕГДА сбрасывается (не зависимо от authorChanged). Перед сбросом — миграция: если в meters.O был непустой комментарий, вызываем FlowmeterArchive.updateLatestComment(id, oldComment) для записи в archive.P самой свежей записи (для старых комментариев, которые не были синхронизированы с archive.P до этого патча — idempotent, если setComment уже записал то же значение).
+  4. appendToArchive — вызывается с пустой строкой как comment (новая запись — без комментария, ждёт setComment автора).
+  5. Фронтенд НЕ ТРОГАЕМ — Task 232 fallback (берёт m.comment для i===0 архивной записи, если archive.P пуст) корректно работает с новой логикой:
+     • После setComment: archive.P новейшей записи уже заполнен (новая логика) → fallback не нужен (но и не вредит).
+     • До setComment (только что ввели показания): archive.P новейшей записи пуст, m.comment тоже пуст → fallback возвращает '' → отображается '—'. Корректно.
+     • Локальный fallback (сервер недоступен): m.comment заполнен из localStorage → fallback отображает его в новейшей записи архива.
+
+- Файлы изменены:
+  • scripts/FlowmeterArchive.gs: добавлен метод updateLatestComment (47 строк кода + 22 строки комментария).
+  • scripts/Flowmeter.gs: патч setComment (добавлен вызов FlowmeterArchive.updateLatestComment); патч updateReading (убран authorChanged, всегда сбрасывается meters.O, миграция старого комментария в archive.P перед сбросом, appendToArchive вызывается с пустой строкой как comment).
+  • sw.js: CACHE_VERSION v500 → v501.
+  • tests/test-flowmeter-validation.js: добавлен describe «Task 237: комментарий в meters.O + archive.P (одновременная запись)» с 10 тестами; Task 236 SW-блок заменён исторической заметкой; добавлен Task 237 SW-блок (v501 present, v500 gone).
+
+- Тесты:
+  • 10 новых тестов покрывают:
+    1. FlowmeterArchive.updateLatestComment определён
+    2. updateLatestComment — scan с конца (values.length - 1; i >= 0; i--)
+    3. updateLatestComment — пишет в P=16, setValue(String(comment || ''))
+    4. updateLatestComment — читает только 1 колонку (эффективность)
+    5. setComment — пишет в meters.O (столбец 15)
+    6. setComment — вызывает FlowmeterArchive.updateLatestComment(id, comment)
+    7. setComment — try/catch вокруг updateLatestComment (best-effort)
+    8. updateReading — meters.O сбрасывается ВСЕГДА (if (oldCommentForArchive !== '') без authorChanged)
+    9. updateReading — миграция старого meters.O в archive.P перед сбросом
+    10. updateReading — appendToArchive вызывается с пустой строкой как comment (нет authorChanged ? oldCommentForArchive : '')
+  • SW-блок Task 237: v501 present, v500 gone.
+  • Базовое поведение: 778 → 788 passed (+10), 0 failed.
+
+- Аудит-логика сохранена:
+  • FLOWMETER_SET_COMMENT / FLOWMETER_DELETE_COMMENT — в setComment.
+  • FLOWMETER_UPDATE_READING — в updateReading.
+  • FLOWMETER_VALIDATION_BLOCK — в validation hard-block пути.
+
+Stage Summary:
+- Task 237 выполнен. Логика комментариев теперь работает по требованию
+  пользователя:
+  1. Пользователь вводит новые показания → meters.O пуст, archive.P новой
+     записи пуст. Ждёт комментария.
+  2. Пользователь вводит комментарий → setComment пишет одновременно в
+     meters.O И в archive.P самой свежей записи.
+  3. Любой пользователь (включая того же) вводит новые показания →
+     meters.O очищается (миграция старого значения в archive.P предыдущей
+     записи, если оно не было синхронизировано), создаётся новая архивная
+     запись с пустым comment. Старая архивная запись сохраняет свой
+     комментарий (он был записан в archive.P через setComment).
+- Файлы изменены: scripts/FlowmeterArchive.gs (+updateLatestComment),
+  scripts/Flowmeter.gs (патч setComment + патч updateReading),
+  sw.js (v501), tests/test-flowmeter-validation.js (+10 тестов).
+- Развёртывание: как и для Task 195 (см. scripts/DEPLOY-Task195-comment.md),
+  нужно вручную скопировать содержимое scripts/Flowmeter.gs и
+  scripts/FlowmeterArchive.gs в проект Apps Script (тот же, где Code.gs /
+  Utils.gs), создать новую версию деплоя. URL веб-приложения не меняется.
+- Пользователю: после деплоя серверного патча — проверить полный цикл:
+  1. Ввести показания в любом расходомере.
+  2. Открыть карточку → в строке «Последние показания» нажать ✎ → ввести
+     комментарий → «Сохранить».
+  3. В таблице хронологии показатьаний → в новейшей записи в колонке
+     «Комментарий» должен появиться введённый текст.
+  4. Внести новые показания (можно с того же аккаунта).
+  5. В строке «Последние показания» кнопка ✎ снова активна (meters.O
+     сброшен); в хронологии новейшая запись имеет пустой комментарий,
+     предыдущая — сохраняет старый комментарий.

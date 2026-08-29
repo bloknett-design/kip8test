@@ -1467,18 +1467,134 @@ describe('Task 236: кнопка «Обновить правила» в адми
     });
 });
 
-// Task 236: SW обновлён до v500
-describe('Task 236: SW версия v500', () => {
+// Task 236 (историческая заметка): в этой ревизии SW был поднят до v500
+// (кнопка «Обновить правила» в админ-панели — обнуляет _rulesCacheTs и
+// вызывает loadValidationRules() для принудительного обхода 24ч TTL).
+// Актуальная версия — v501 (Task 237, см. ниже). Отдельный блок Task 236
+// убран, чтобы не падал при следующих bump-ах.
+
+// Task 237: комментарий одновременно пишется в meters.O и archive.P,
+// meters.O всегда сбрасывается при новом вводе показаний (не только
+// при смене автора), новая архивная запись создаётся с пустым comment.
+describe('Task 237: комментарий в meters.O + archive.P (одновременная запись)', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const flowmeterPath = path.resolve(__dirname, '..', 'scripts', 'Flowmeter.gs');
+    const archivePath = path.resolve(__dirname, '..', 'scripts', 'FlowmeterArchive.gs');
+    const flowmeterSrc = fs.readFileSync(flowmeterPath, 'utf-8');
+    const archiveSrc = fs.readFileSync(archivePath, 'utf-8');
+
+    test('FlowmeterArchive.updateLatestComment определён', () => {
+        assertTrue(archiveSrc.indexOf('updateLatestComment: function') !== -1,
+            'Метод updateLatestComment: function должен быть в FlowmeterArchive.gs');
+    });
+
+    test('updateLatestComment: ищет самую свежую запись (scan с конца)', () => {
+        var idx = archiveSrc.indexOf('updateLatestComment: function');
+        var snippet = archiveSrc.substring(idx, idx + 2500);
+        // Цикл с конца массива (i >= 0; i--) — для поиска последней записи
+        assertTrue(snippet.indexOf('values.length - 1;') !== -1,
+            'Должен сканировать с конца для поиска самой свежей записи');
+        assertTrue(snippet.indexOf('i >= 0; i--') !== -1,
+            'Цикл должен идти в обратном порядке');
+    });
+
+    test('updateLatestComment: пишет в столбец P (16) — comment', () => {
+        var idx = archiveSrc.indexOf('updateLatestComment: function');
+        var snippet = archiveSrc.substring(idx, idx + 2500);
+        assertTrue(snippet.indexOf('getRange(rowToUpdate, 16)') !== -1,
+            'Должен обновлять P=16 (comment) в самой свежей записи');
+        assertTrue(snippet.indexOf("setValue(String(comment || ''))") !== -1,
+            'Должен записывать строку комментария (пустая строка для удаления)');
+    });
+
+    test('updateLatestComment: только колонка A читается для поиска (эффективность)', () => {
+        var idx = archiveSrc.indexOf('updateLatestComment: function');
+        var snippet = archiveSrc.substring(idx, idx + 2500);
+        // Чтение 1 колонки вместо 17 — для эффективности (только A=meterId)
+        assertTrue(snippet.indexOf(', 1)') !== -1,
+            'Должен читать 1 колонку (только A=meterId) для эффективности');
+    });
+
+    test('setComment: пишет в meters.O (столбец 15)', () => {
+        var idx = flowmeterSrc.indexOf('setComment: function');
+        assertTrue(idx !== -1);
+        var snippet = flowmeterSrc.substring(idx, idx + 3000);
+        assertTrue(snippet.indexOf('getRange(rowNum, 15)') !== -1,
+            'setComment должен писать в meters.O (столбец 15)');
+    });
+
+    test('setComment: вызывает FlowmeterArchive.updateLatestComment (синхронная запись в archive.P)', () => {
+        var idx = flowmeterSrc.indexOf('setComment: function');
+        var snippet = flowmeterSrc.substring(idx, idx + 3000);
+        assertTrue(snippet.indexOf('FlowmeterArchive.updateLatestComment(id, comment)') !== -1,
+            'setComment должен вызывать FlowmeterArchive.updateLatestComment для записи в archive.P');
+    });
+
+    test('setComment: try/catch вокруг updateLatestComment (best-effort)', () => {
+        var idx = flowmeterSrc.indexOf('setComment: function');
+        var snippet = flowmeterSrc.substring(idx, idx + 3000);
+        var callIdx = snippet.indexOf('FlowmeterArchive.updateLatestComment');
+        var callSnippet = snippet.substring(callIdx - 100, callIdx + 300);
+        assertTrue(callSnippet.indexOf('try') !== -1,
+            'Вызов updateLatestComment должен быть в try/catch (не блокировать ответ)');
+        assertTrue(callSnippet.indexOf('catch (e)') !== -1,
+            'Должен быть catch блок для не критичных ошибок архива');
+    });
+
+    test('updateReading: meters.O сбрасывается ВСЕГДА (не только при смене автора)', () => {
+        var idx = flowmeterSrc.indexOf('updateReading: function');
+        // updateReading ~11к символов — берём полный body до закрывающей },
+        var endIdx = flowmeterSrc.indexOf('  },', idx + 100);
+        var snippet = flowmeterSrc.substring(idx, endIdx);
+        // По старой логике был authorChanged && oldCommentForArchive — теперь
+        // должно быть только oldCommentForArchive (без authorChanged)
+        assertTrue(snippet.indexOf("if (oldCommentForArchive !== '') {") !== -1,
+            'Сброс meters.O должен зависеть только от наличия старого комментария');
+        assertTrue(snippet.indexOf('authorChanged && oldCommentForArchive') === -1,
+            'Не должно быть условия authorChanged для сброса meters.O (Task 237)');
+    });
+
+    test('updateReading: миграция старого meters.O в archive.P перед сбросом', () => {
+        var idx = flowmeterSrc.indexOf('updateReading: function');
+        var endIdx = flowmeterSrc.indexOf('  },', idx + 100);
+        var snippet = flowmeterSrc.substring(idx, endIdx);
+        // Перед сбросом meters.O — продублировать в archive.P (миграция)
+        var resetIdx = snippet.indexOf("sheet.getRange(rowNum, 15).setValue('')");
+        assertTrue(resetIdx !== -1, 'Должен сбрасывать meters.O (столбец 15)');
+        var beforeReset = snippet.substring(0, resetIdx);
+        assertTrue(beforeReset.indexOf('FlowmeterArchive.updateLatestComment(id, oldCommentForArchive)') !== -1,
+            'Перед сбросом meters.O должен вызывать updateLatestComment для миграции');
+    });
+
+    test('updateReading: appendToArchive вызывается с пустой строкой как comment', () => {
+        var idx = flowmeterSrc.indexOf('updateReading: function');
+        var endIdx = flowmeterSrc.indexOf('  },', idx + 100);
+        var snippet = flowmeterSrc.substring(idx, endIdx);
+        var archiveCallIdx = snippet.indexOf('FlowmeterArchive.appendToArchive(');
+        assertTrue(archiveCallIdx !== -1, 'Должен вызывать appendToArchive');
+        // После вызова — параметры. Ищем в радиусе 800 символов пустую строку
+        // для параметра comment (Task 237: новая запись без комментария).
+        var callSnippet = snippet.substring(archiveCallIdx, archiveCallIdx + 1000);
+        assertTrue(callSnippet.indexOf("''") !== -1,
+            'Новый параметр comment в appendToArchive должен быть пустой строкой (Task 237)');
+        assertTrue(callSnippet.indexOf('authorChanged ? oldCommentForArchive') === -1,
+            'Старая логика (authorChanged ? oldCommentForArchive) убрана');
+    });
+});
+
+// Task 237: SW обновлён до v501
+describe('Task 237: SW версия v501', () => {
     const fs = require('fs');
     const path = require('path');
     const swPath = path.resolve(__dirname, '..', 'sw.js');
     const sw = fs.readFileSync(swPath, 'utf-8');
 
-    test('CACHE_VERSION = kipia-test-v500', () => {
-        assertTrue(sw.indexOf("kipia-test-v500") !== -1);
+    test('CACHE_VERSION = kipia-test-v501', () => {
+        assertTrue(sw.indexOf("kipia-test-v501") !== -1);
     });
-    test('Старая версия v499 убрана', () => {
-        assertTrue(sw.indexOf("kipia-test-v499") === -1,
-                   'Старая v499 не должна остаться в sw.js');
+    test('Старая версия v500 убрана', () => {
+        assertTrue(sw.indexOf("kipia-test-v500") === -1,
+                   'Старая v500 не должна остаться в sw.js');
     });
 });
