@@ -29,7 +29,7 @@
 //   Дни_цикла, Инструктажи, Записи_графика, Сводка_по_месяцам
 //
 // Структура листа «Сотрудники» (заголовки в строке 1, данные со строки 2):
-//   A: таб_№              — табельный номер (строка, PK)
+//   A: таб_номер              — табельный номер (строка, PK)
 //   B: ФИО
 //   C: тип                — 'сменный' или 'дневной'
 //   D: смена              — 1..5 для сменного, пусто для дневного
@@ -59,7 +59,7 @@
 //
 // Структура листа «Инструктажи»:
 //   A: id (auto-increment)
-//   B: таб_№ (FK на Сотрудники)
+//   B: таб_номер (FK на Сотрудники)
 //   C: тип (инструктаж/обучение/проверка_знаний)
 //   D: тема
 //   E: дата_начала (Date)
@@ -69,7 +69,7 @@
 //
 // Структура листа «Записи_графика» (ГЛАВНАЯ БД):
 //   A: дата (Date)
-//   B: таб_№ (FK на Сотрудники — кто работал)
+//   B: таб_номер (FK на Сотрудники — кто работал)
 //   C: статус (код)
 //   D: переработка (0/1)
 //   E: праздник (0/1)
@@ -283,7 +283,7 @@ var WorkSchedule = {
       var archived = parseInt(r[8], 10) === 1;
       if (archived && !includeArchived) continue;
       employees.push({
-        таб_№:            String(r[0]).trim(),
+        таб_номер:            String(r[0]).trim(),
         ФИО:             String(r[1] || '').trim(),
         тип:             String(r[2] || '').trim(),
         смена:           r[3] === '' || r[3] === null ? null : parseInt(r[3], 10),
@@ -318,7 +318,7 @@ var WorkSchedule = {
     var lastRow = sheet.getLastRow();
     if (lastRow < 2) return { ok: true, data: { entries: [] } };
 
-    // Читаем даты (A), таб_№ (B), статус (C), переработка (D), праздник (E),
+    // Читаем даты (A), таб_номер (B), статус (C), переработка (D), праздник (E),
     // источник (F), дата_обновления (G), замещает (H), инструкция (I), комментарий (J)
     var values = sheet.getRange(2, 1, lastRow - 1, 10).getValues();
     var monthStart = new Date(year, month - 1, 1);
@@ -332,7 +332,7 @@ var WorkSchedule = {
       if (dateCell < monthStart || dateCell >= monthEnd) continue;
       entries.push({
         дата:            this._toIsoDate(dateCell),
-        таб_№:           String(r[1] || '').trim(),
+        таб_номер:           String(r[1] || '').trim(),
         статус:          String(r[2] || '').trim(),
         переработка:     parseInt(r[3], 10) === 1 ? 1 : 0,
         праздник:        parseInt(r[4], 10) === 1 ? 1 : 0,
@@ -379,7 +379,7 @@ var WorkSchedule = {
       }
       trainings.push({
         id:                parseInt(r[0], 10),
-        таб_№:             String(r[1] || '').trim(),
+        таб_номер:             String(r[1] || '').trim(),
         тип:               String(r[2] || '').trim(),
         тема:              String(r[3] || '').trim(),
         дата_начала:       startDate instanceof Date ? this._toIsoDate(startDate) : null,
@@ -397,7 +397,7 @@ var WorkSchedule = {
   // payload: { token, year, month }
   // Algorithm:
   //   1. Загрузить сотрудников, шаблоны+дни, инструктажи месяца, записи месяца
-  //   2. Построить индекс существующих записей: { "ISO|таб_№": {entry, rowIndex} }
+  //   2. Построить индекс существующих записей: { "ISO|таб_номер": {entry, rowIndex} }
   //   3. Для каждого сотрудника с шаблоном:
   //        для каждого дня месяца → статус = pattern_day[day_of_cycle]
   //        если статус есть и в индексе НЕТ записи → вставить source=авто
@@ -443,10 +443,10 @@ var WorkSchedule = {
     var existing = this.listEntries({ token: payload.token, year: year, month: month });
     if (!existing.ok) return existing;
     var existingEntries = existing.data.entries;
-    var entryIndex = {};  // "ISO|таб_№": { entry, rowIndex }
+    var entryIndex = {};  // "ISO|таб_номер": { entry, rowIndex }
     for (var ei = 0; ei < existingEntries.length; ei++) {
       var e = existingEntries[ei];
-      var key = e.дата + '|' + e.таб_№;
+      var key = e.дата + '|' + e.таб_номер;
       entryIndex[key] = e;
     }
 
@@ -454,11 +454,11 @@ var WorkSchedule = {
     var daysInMonth = this._daysInMonth(year, month);
 
     // 2. Подготовить массивы для batch-вставки и batch-обновления
-    var toInsert = [];  // [[дата, таб_№, статус, 0/1, 0/1, 'авто', дата_обновления, '', null, ''], ...]
+    var toInsert = [];  // [[дата, таб_номер, статус, 0/1, 0/1, 'авто', дата_обновления, '', null, ''], ...]
     var toUpdate = [];  // [{ rowIndex, status, instruction_id }, ...]
 
     var perEmployee = {};
-    for (var ei2 = 0; ei2 < emps.length; ei2++) perEmployee[emps[ei2]['таб_№']] = { generated: 0, updated: 0, skipped: 0 };
+    for (var ei2 = 0; ei2 < emps.length; ei2++) perEmployee[emps[ei2]['таб_номер']] = { generated: 0, updated: 0, skipped: 0 };
 
     // 3. Прогон по сотрудникам + дням месяца
     for (var i = 0; i < emps.length; i++) {
@@ -487,14 +487,14 @@ var WorkSchedule = {
         if (!status) continue;  // регулярный выходной → пропустить
 
         var iso = this._toIsoDate(dt);
-        var key2 = iso + '|' + emp['таб_№'];
+        var key2 = iso + '|' + emp['таб_номер'];
         if (entryIndex[key2]) {
-          perEmployee[emp['таб_№']].skipped++;
+          perEmployee[emp['таб_номер']].skipped++;
           continue;  // запись уже есть (manual или auto) — не трогаем
         }
-        toInsert.push([dt, emp['таб_№'], status, 0, 0, 'авто', new Date(), '', null, '']);
+        toInsert.push([dt, emp['таб_номер'], status, 0, 0, 'авто', new Date(), '', null, '']);
         entryIndex[key2] = { _rowIndex: -1, источник: 'авто', статус: status, инструкция: null };
-        perEmployee[emp['таб_№']].generated++;
+        perEmployee[emp['таб_номер']].generated++;
       }
     }
 
@@ -513,12 +513,12 @@ var WorkSchedule = {
         // Проверить, что cur в пределах месяца
         if (cur.getMonth() + 1 === month && cur.getFullYear() === year) {
           var iso2 = this._toIsoDate(cur);
-          var key3 = iso2 + '|' + t['таб_№'];
+          var key3 = iso2 + '|' + t['таб_номер'];
           var existingEntry = entryIndex[key3];
           if (existingEntry) {
             if (existingEntry.источник === 'руч') {
               // ручные правки приоритетнее — не трогаем
-              if (perEmployee[t['таб_№']]) perEmployee[t['таб_№']].skipped++;
+              if (perEmployee[t['таб_номер']]) perEmployee[t['таб_номер']].skipped++;
             } else {
               // авто-запись → обновить на код инструктажа + инструкция=id
               if (existingEntry._rowIndex && existingEntry._rowIndex > 0) {
@@ -527,7 +527,7 @@ var WorkSchedule = {
                   status: codeFor,
                   instruction_id: t.id
                 });
-                if (perEmployee[t['таб_№']]) perEmployee[t['таб_№']].updated++;
+                if (perEmployee[t['таб_номер']]) perEmployee[t['таб_номер']].updated++;
                 // Обновить индекс — чтобы не обновить повторно
                 existingEntry.статус = codeFor;
                 existingEntry.инструкция = t.id;
@@ -536,20 +536,20 @@ var WorkSchedule = {
                 // Находим её в toInsert и заменяем.
                 for (var ii = 0; ii < toInsert.length; ii++) {
                   var r = toInsert[ii];
-                  if (this._toIsoDate(r[0]) === iso2 && r[1] === t['таб_№']) {
+                  if (this._toIsoDate(r[0]) === iso2 && r[1] === t['таб_номер']) {
                     r[2] = codeFor;     // статус
                     r[8] = t.id;        // инструкция
                     break;
                   }
                 }
-                if (perEmployee[t['таб_№']]) perEmployee[t['таб_№']].updated++;
+                if (perEmployee[t['таб_номер']]) perEmployee[t['таб_номер']].updated++;
               }
             }
           } else {
             // Нет записи → вставить новую с инструктажем
-            toInsert.push([new Date(cur), t['таб_№'], codeFor, 0, 0, 'авто', new Date(), '', t.id, '']);
+            toInsert.push([new Date(cur), t['таб_номер'], codeFor, 0, 0, 'авто', new Date(), '', t.id, '']);
             entryIndex[key3] = { _rowIndex: -1, источник: 'авто', статус: codeFor, инструкция: t.id };
-            if (perEmployee[t['таб_№']]) perEmployee[t['таб_№']].generated++;
+            if (perEmployee[t['таб_номер']]) perEmployee[t['таб_номер']].generated++;
           }
         }
         cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate() + 1);
@@ -598,7 +598,7 @@ var WorkSchedule = {
   // ============================================================
 
   // workSchedule.setManualEntry
-  // payload: { token, date(ISO), таб_№, статус, переработка, праздник,
+  // payload: { token, date(ISO), таб_номер, статус, переработка, праздник,
   //            замещает, инструкция, комментарий }
   // Если запись есть:
   //   - source='руч' → обновить
@@ -611,8 +611,8 @@ var WorkSchedule = {
 
     var dateObj = this._parseIsoDate(payload.date);
     if (!dateObj) return { ok: false, error: 'invalid_date' };
-    var tabNo = String(payload.таб_№ || '').trim();
-    if (!tabNo) return { ok: false, error: 'invalid_таб_№' };
+    var tabNo = String(payload.таб_номер || '').trim();
+    if (!tabNo) return { ok: false, error: 'invalid_таб_номер' };
     var status = String(payload.статус || '').trim();
     if (!status) return { ok: false, error: 'invalid_статус' };
 
@@ -622,7 +622,7 @@ var WorkSchedule = {
     var lastRow = sheet.getLastRow();
     var foundRow = -1;
     if (lastRow >= 2) {
-      // Читаем A (дата) и B (таб_№) для поиска существующей записи
+      // Читаем A (дата) и B (таб_номер) для поиска существующей записи
       var lookup = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
       for (var i = 0; i < lookup.length; i++) {
         var dCell = lookup[i][0];
@@ -660,16 +660,16 @@ var WorkSchedule = {
 
     try {
       Utils.audit(user.email, 'WORKSCHEDULE_SET_MANUAL', '', '',
-        'Запись ' + payload.date + ' таб_№=' + tabNo + ' → ' + status);
+        'Запись ' + payload.date + ' таб_номер=' + tabNo + ' → ' + status);
     } catch (e) { /* ignore */ }
 
-    return { ok: true, data: { date: payload.date, таб_№: tabNo, статус: status } };
+    return { ok: true, data: { date: payload.date, таб_номер: tabNo, статус: status } };
   },
 
   // workSchedule.deleteEntry
   // Удалить запись (только source='руч'; для source='авто' — отказ, т.к. авто-записи
   // пересоздаются при следующей регенерации).
-  // payload: { token, date(ISO), таб_№ }
+  // payload: { token, date(ISO), таб_номер }
   deleteEntry: function(payload) {
     var auth = this._requireWrite(payload.token);
     if (auth.error) return auth.error;
@@ -677,8 +677,8 @@ var WorkSchedule = {
 
     var dateObj = this._parseIsoDate(payload.date);
     if (!dateObj) return { ok: false, error: 'invalid_date' };
-    var tabNo = String(payload.таб_№ || '').trim();
-    if (!tabNo) return { ok: false, error: 'invalid_таб_№' };
+    var tabNo = String(payload.таб_номер || '').trim();
+    if (!tabNo) return { ok: false, error: 'invalid_таб_номер' };
 
     var sheet = this._getSheet(this.ENTRIES_SHEET);
     if (!sheet) return { ok: false, error: 'sheet_not_found: ' + this.ENTRIES_SHEET };
@@ -699,9 +699,9 @@ var WorkSchedule = {
         sheet.deleteRow(i + 2);
         try {
           Utils.audit(user.email, 'WORKSCHEDULE_DELETE_ENTRY', '', '',
-            'Удалена запись ' + payload.date + ' таб_№=' + tabNo);
+            'Удалена запись ' + payload.date + ' таб_номер=' + tabNo);
         } catch (e) { /* ignore */ }
-        return { ok: true, data: { date: payload.date, таб_№: tabNo } };
+        return { ok: true, data: { date: payload.date, таб_номер: tabNo } };
       }
     }
     return { ok: false, error: 'not_found' };
@@ -712,15 +712,15 @@ var WorkSchedule = {
   // ============================================================
 
   // workSchedule.addEmployee
-  // payload: { token, таб_№, ФИО, тип, смена, шаблон_ротации,
+  // payload: { token, таб_номер, ФИО, тип, смена, шаблон_ротации,
   //            старт_цикла(ISO), дата_приёма(ISO), должность, комментарий }
   addEmployee: function(payload) {
     var auth = this._requireWrite(payload.token);
     if (auth.error) return auth.error;
     var user = auth.user;
 
-    var tabNo = String(payload.таб_№ || '').trim();
-    if (!tabNo) return { ok: false, error: 'invalid_таб_№' };
+    var tabNo = String(payload.таб_номер || '').trim();
+    if (!tabNo) return { ok: false, error: 'invalid_таб_номер' };
     var fio = String(payload.ФИО || '').trim();
     if (!fio) return { ok: false, error: 'invalid_ФИО' };
     var tip = String(payload.тип || '').trim();
@@ -731,13 +731,13 @@ var WorkSchedule = {
     var sheet = this._getSheet(this.EMPLOYEES_SHEET);
     if (!sheet) return { ok: false, error: 'sheet_not_found: ' + this.EMPLOYEES_SHEET };
 
-    // Проверка уникальности таб_№
+    // Проверка уникальности таб_номер
     var lastRow = sheet.getLastRow();
     if (lastRow >= 2) {
       var existing = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
       for (var i = 0; i < existing.length; i++) {
         if (String(existing[i][0]).trim() === tabNo) {
-          return { ok: false, error: 'duplicate_таб_№',
+          return { ok: false, error: 'duplicate_таб_номер',
                    message: 'Сотрудник с таб. № ' + tabNo + ' уже есть в справочнике' };
         }
       }
@@ -759,10 +759,10 @@ var WorkSchedule = {
 
     try {
       Utils.audit(user.email, 'WORKSCHEDULE_ADD_EMPLOYEE', '', '',
-        'Добавлен сотрудник таб_№=' + tabNo + ' ФИО=' + fio);
+        'Добавлен сотрудник таб_номер=' + tabNo + ' ФИО=' + fio);
     } catch (e) { /* ignore */ }
 
-    return { ok: true, data: { таб_№: tabNo } };
+    return { ok: true, data: { таб_номер: tabNo } };
   },
 
   // ============================================================
@@ -770,15 +770,15 @@ var WorkSchedule = {
   // ============================================================
 
   // workSchedule.addTraining
-  // payload: { token, таб_№, тип, тема, дата_начала(ISO), дата_окончания(ISO),
+  // payload: { token, таб_номер, тип, тема, дата_начала(ISO), дата_окончания(ISO),
   //            длительность_дней, комментарий }
   addTraining: function(payload) {
     var auth = this._requireWrite(payload.token);
     if (auth.error) return auth.error;
     var user = auth.user;
 
-    var tabNo = String(payload.таб_№ || '').trim();
-    if (!tabNo) return { ok: false, error: 'invalid_таб_№' };
+    var tabNo = String(payload.таб_номер || '').trim();
+    if (!tabNo) return { ok: false, error: 'invalid_таб_номер' };
     var tip = String(payload.тип || '').trim();
     if (!this.TRAINING_TYPE_TO_STATUS[tip]) {
       return { ok: false, error: 'invalid_тип' };
@@ -813,7 +813,7 @@ var WorkSchedule = {
 
     try {
       Utils.audit(user.email, 'WORKSCHEDULE_ADD_TRAINING', '', '',
-        'Добавлено мероприятие id=' + newId + ' тип=' + tip + ' таб_№=' + tabNo);
+        'Добавлено мероприятие id=' + newId + ' тип=' + tip + ' таб_номер=' + tabNo);
     } catch (e) { /* ignore */ }
 
     return { ok: true, data: { id: newId } };

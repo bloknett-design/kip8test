@@ -42,7 +42,7 @@
  */
 
 /** URL деплоя (заполните после первого деплоя). */
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbztmOJb_QVnjRk1GnvKe4X1TWcDgPSFVvGJiumm3y5RaGwgEiJX15PBiJVUX9mKJiWHzA/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzgPtyya6eMCql4pxZiOyYkfJaBsMRLvKK5bzrsbZpLa5zoNtxSoKeNYJauQVIOtlz2rg/exec';
 
 /**
  * Обработка POST-запросов от PWA.
@@ -229,10 +229,56 @@ function _json(obj) {
 
 /**
  * Cron-функция: запускать каждый час через Time-driven trigger.
- * См. настройку триггеров в функции setupTriggers() ниже.
+ * Триггер создаётся функцией setupTriggers() ниже — запустите её один раз
+ * вручную в Apps Script Editor после первого деплоя (Editor → выберите
+ * setupTriggers в выпадающем списке функций → Run → авторизуйтесь).
+ * После этого функция идемпотентна: повторные запуски сначала удалят старые
+ * триггеры hourlyCleanup, потом создадут новый — без дубликатов.
  */
 function hourlyCleanup() {
   Utils.cleanupExpiredSessions();
   Utils.cleanupExpiredOtpCodes();
   Utils.cleanupOldAuditLogs();
+}
+
+/**
+ * setupTriggers() — разовое создание time-driven триггера.
+ *
+ * Порядок действий:
+ *   1. Открыть Apps Script Editor (там, где размешён этот Code.gs)
+ *   2. В выпадающем списке функций вверху выбрать «setupTriggers»
+ *   3. Нажать Run (▶)
+ *   4. При первом запуске Google попросит авторизацию:
+ *      Review permissions → выбрать аккаунт → Advanced →
+ *      Go to project (unsafe) → Allow
+ *   5. В Executions (Ctrl+Enter / левое меню ▶) должно появиться:
+ *      «Создан триггер hourlyCleanup (раз в час), удалено старых: N»
+ *   6. Проверить: левое меню Triggers (иконка часов) →
+ *      должен быть виден триггер hourlyCleanup, повтор «Every 1 hour»
+ *
+ * Идемпотентность: перед созданием удаляются все существующие триггеры
+ * с тем же именем handler-функции — повторные запуски безопасны.
+ */
+function setupTriggers() {
+  // 1. Удаляем старые триггеры hourlyCleanup, чтобы не дублировались
+  var triggers = ScriptApp.getProjectTriggers();
+  var removed = 0;
+  for (var i = 0; i < triggers.length; i++) {
+    var t = triggers[i];
+    if (t.getHandlerFunction() === 'hourlyCleanup') {
+      ScriptApp.deleteTrigger(t);
+      removed++;
+    }
+  }
+  if (removed > 0) {
+    console.log('Удалено старых триггеров hourlyCleanup: ' + removed);
+  }
+
+  // 2. Создаём новый — раз в час
+  ScriptApp.newTrigger('hourlyCleanup')
+    .timeBased()
+    .everyHours(1)
+    .create();
+
+  console.log('Создан триггер hourlyCleanup (раз в час)');
 }
