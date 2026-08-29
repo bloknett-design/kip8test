@@ -762,25 +762,11 @@ describe('Task 223+224+228: график архива — условный ис�
     });
 });
 
-// Task 229+230+231: SW обновлён до v495
-// (Task 229: дата как одна строка в детальной карточке;
-//  Task 230: horizontal scroll таблицы хронологии;
-//  Task 231: дата + label «Последние показания» в одной строке в карточке списка,
-//            лейблы «Гкал» и «T среды» убраны)
-describe('Task 231: SW версия v495', () => {
-    const fs = require('fs');
-    const path = require('path');
-    const swPath = path.resolve(__dirname, '..', 'sw.js');
-    const sw = fs.readFileSync(swPath, 'utf-8');
-
-    test('CACHE_VERSION = kipia-test-v495', () => {
-        assertTrue(sw.indexOf("kipia-test-v495") !== -1);
-    });
-    test('Старая версия v494 убрана', () => {
-        assertTrue(sw.indexOf("kipia-test-v494") === -1,
-                   'Старая v494 не должна остаться в sw.js');
-    });
-});
+// Task 231 (историческая заметка): в этой ревизии SW был поднят до v495.
+// Актуальная версия — v496 (Task 232, см. ниже). Текущий SW-тест живёт в
+// блоке «Task 232: SW версия v496» — он проверяет и наличие v496, и
+// отсутствие v495. Отдельный блок Task 231 убран, чтобы не падал при
+// следующих bump-ах.
 
 // Task 230: горизонтальный скролл таблицы хронологии работает сразу (без pinch-zoom).
 // Причина бага: .pinch-zoom-target имеет touch-action: pan-y (только вертикаль),
@@ -1016,6 +1002,119 @@ describe('Task 231: карточка расходомера — label+дата �
     test('CSS-класс .flow-summary-sub определён', () => {
         assertTrue(src.indexOf('.flow-summary-sub') !== -1,
                    'CSS .flow-summary-sub должен быть определён');
+    });
+});
+
+// Task 232: внесённый комментарий сразу отображается в архивных записях.
+// Архитектура:
+//   • setComment пишет в meters.O (активный комментарий счётчика)
+//   • archive.P заполняется только при смене автора показаний в updateReading
+//   • для той же автора archive.P пустой → самая свежая запись в архиве
+//     показывает r.comment = '' хотя комментарий есть в meters.O
+// Решение: в _buildArchiveHtml для i===0 (новейшая запись) если r.comment пуст,
+// берём m.comment (через flowCommentText — с поддержкой локального fallback).
+// Доп.: в submitComment success добавлен немедленный рендер архива из кэша,
+// чтобы комментарий отобразился без ожидания network round-trip в loadArchive.
+describe('Task 232: комментарий сразу отображается в архивных записях', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const idxPath = path.resolve(__dirname, '..', 'index.html');
+    const src = fs.readFileSync(idxPath, 'utf-8');
+
+    // Извлекаем тело метода _buildArchiveHtml
+    function archiveBody() {
+        var fnIdx = src.indexOf('_buildArchiveHtml: function');
+        if (fnIdx === -1) return '';
+        var fnEnd = src.indexOf('\n        },', fnIdx);
+        return src.substring(fnIdx, fnEnd === -1 ? src.length : fnEnd);
+    }
+
+    // Извлекаем тело submitComment
+    function submitBody() {
+        var fnIdx = src.indexOf('submitComment: function');
+        if (fnIdx === -1) return '';
+        var fnEnd = src.indexOf('\n        },', fnIdx);
+        return src.substring(fnIdx, fnEnd === -1 ? src.length : fnEnd);
+    }
+
+    test('В _buildArchiveHtml есть проверка i === 0 + flowCommentText fallback', () => {
+        var body = archiveBody();
+        // Проверка i === 0 в контексте comment cell
+        assertTrue(body.indexOf('i === 0') !== -1,
+                   'Должна быть проверка i === 0 для новейшей записи');
+        // Вызов flowCommentText(meter, ...) для получения активного комментария
+        assertTrue(body.indexOf('flowCommentText(meter') !== -1,
+                   'Должен быть вызов flowCommentText(meter, ...) для fallback');
+    });
+
+    test('Старая логика «r.comment → cmtStr или —» сохранена для старых записей', () => {
+        var body = archiveBody();
+        // Должна остаться проверка r.comment из archive.P (для старых записей)
+        assertTrue(body.indexOf('r.comment') !== -1,
+                   'r.comment должен использоваться (для старых записей)');
+        // И должна быть явная защита: если !cmtStr, брать liveCmt
+        assertTrue(body.indexOf('if (!cmtStr && i === 0') !== -1 ||
+                   body.indexOf('!cmtStr && i === 0') !== -1,
+                   'Должна быть защита: для i===0 при пустом r.comment брать активный');
+    });
+
+    test('Если у записи есть archive.P (r.comment) — он приоритетнее активного', () => {
+        var body = archiveBody();
+        // Порядок: сначала r.comment, потом fallback. Проверяем что r.comment первый
+        var idxRcomment = body.indexOf('var cmtStr = (r.comment');
+        assertTrue(idxRcomment !== -1,
+                   'Должна быть инициализация cmtStr из r.comment');
+        var idxFallback = body.indexOf('if (!cmtStr && i === 0');
+        assertTrue(idxFallback !== -1, 'Должен быть fallback для i===0');
+        assertTrue(idxFallback > idxRcomment,
+                   'Fallback должен идти ПОСЛЕ инициализации из r.comment');
+    });
+
+    test('submitComment вызывает немедленный рендер архива из кэша', () => {
+        var body = submitBody();
+        // В success-handler должен быть вызов _restoreArchiveCache + _buildArchiveHtml
+        assertTrue(body.indexOf('_restoreArchiveCache') !== -1,
+                   'submitComment должен вызывать _restoreArchiveCache для кэш-рендера');
+        assertTrue(body.indexOf('flowArchiveContainer') !== -1,
+                   'submitComment должен обращаться к #flowArchiveContainer');
+        assertTrue(body.indexOf('_buildArchiveHtml') !== -1,
+                   'submitComment должен вызвать _buildArchiveHtml с кэшем');
+    });
+
+    test('Кэш-рендер обёрнут в try/catch (не ломает основной flow)', () => {
+        var body = submitBody();
+        // Поиск try { ... } catch ... вокруг _restoreArchiveCache
+        var idx = body.indexOf('_restoreArchiveCache');
+        assertTrue(idx !== -1);
+        // Должен быть try перед этим вызовом (в радиусе 200 символов)
+        var before = body.substring(Math.max(0, idx - 200), idx);
+        assertTrue(before.indexOf('try') !== -1,
+                   'Кэш-рендер должен быть в try-блоке (не ломает основной flow)');
+    });
+
+    test('Локальный fallback-путь в submitComment тоже имеет кэш-рендер', () => {
+        var body = submitBody();
+        // Должен быть второй блок _restoreArchiveCache в fallback-ветке (Unknown action)
+        var firstIdx = body.indexOf('_restoreArchiveCache');
+        var secondIdx = body.indexOf('_restoreArchiveCache', firstIdx + 1);
+        assertTrue(secondIdx !== -1,
+                   'Должно быть два вызова _restoreArchiveCache: основной + fallback');
+    });
+});
+
+// Task 232: SW обновлён до v496
+describe('Task 232: SW версия v496', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const swPath = path.resolve(__dirname, '..', 'sw.js');
+    const sw = fs.readFileSync(swPath, 'utf-8');
+
+    test('CACHE_VERSION = kipia-test-v496', () => {
+        assertTrue(sw.indexOf("kipia-test-v496") !== -1);
+    });
+    test('Старая версия v495 убрана', () => {
+        assertTrue(sw.indexOf("kipia-test-v495") === -1,
+                   'Старая v495 не должна остаться в sw.js');
     });
 });
 
