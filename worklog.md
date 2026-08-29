@@ -7993,3 +7993,48 @@ Stage Summary:
   чтобы увидеть оба пункта («Расходомеры хозрасчётные» и «График работы»).
   В светлой теме на странице расходомеров хозрасчётных зебра карточек
   станет немного контрастней (odd-ряд темнее).
+
+---
+Task ID: 241 финал (документация — kip8test как источник переноса в kip8)
+Agent: main (Super Z)
+Task: Зафиксировать в worklog.md kip8test факт финального переноса модуля
+      WorkSchedule (Tasks 201-239) + Task 241 sidebar-move в боевой репозиторий
+      kip8 (commit 5edaeac). В kip8test: БЕЗ изменений кода — kip8test остаётся
+      источником, из которого выполнен перенос.
+
+Work Log:
+- В kip8test код НЕ ТРОГАЛСЯ — перенос выполнен в направлении kip8test → kip8,
+  kip8test является источником.
+- В kip8 (commit 5edaeac, push в origin/main) выполнен перенос:
+  - Фронтенд (index.html, +1238 строк): CSS .ws-* (279), 3 HTML-страницы
+    (#page-work-schedule/-employees/-trainings), 3 bottom-sheet-а
+    (wsCellOverlay/wsEmpOverlay/wsTrOverlay, 145 строк), кнопка меню
+    workScheduleMenuBtn в .kip-ios-block страницы Документация ИОС,
+    JS-модуль var WorkSchedule = {...} (770 строк), 3 init-блока в
+    navigateTo(), _WORK_SCHEDULE_PAGES в role config, Task 241 sidebar-move
+    (sidebarWorkScheduleBtn внутри группы docs-ios сайдбара, счётчик «2»).
+  - Бэкенд: scripts/WorkSchedule.gs (854 строки, Apps Script Web App) +
+    11 workSchedule.* case-роутов в scripts/Code.gs.
+  - Тесты: tests/test-work-schedule.js (344 строки, +33 теста), добавлен
+    require в tests/run-all.js, ALL_PAGES += Kip._WORK_SCHEDULE_PAGES в
+    tests/test-role-access.js.
+  - SW: kipia-v394 → kipia-v395.
+  - Тесты: 542 passed / 0 failed (было 509).
+- В kip8 обновлены документы:
+  - worklog.md: добавлена запись Task 241 (финальный перенос в kip8 —
+    модуль WorkSchedule Tasks 201-239 + sidebar-move).
+  - Системный_промт_для_приложения_КИПиА.md: версия документа → post-Task 241
+    ФИНАЛЬНЫЙ перенос; кэш v394 → v395; добавлен раздел «График работы /
+    WorkSchedule (Tasks 201-239, перенесён в kip8 в Task 241)»; page count
+    89+ → 92+.
+
+Stage Summary:
+- kip8test@96039d0 → kip8@5edaeac: модуль WorkSchedule и Task 241 sidebar-move
+  успешно перенесены в боевой репозиторий. Боевой сайт (https://bloknett-design.
+  github.io/kip8/) после обновления кэша PWA (v395) получит «График работы» в
+  сайдбаре внутри группы «Документация ИОС» (виден только Админу).
+- В kip8test: БЕЗ изменений кода. Промт обновлён пометкой «ФИНАЛ: модуль
+  WorkSchedule перенесён в боевой kip8@5edaeac».
+- Дальнейшая разработка модуля WorkSchedule (Tasks 242+) — продолжается в
+  kip8test (источник), с последующим переносом в kip8.
+- Локальная дата: 2026-08-29 18:06:57 UTC+07:00 (Asia/Novosibirsk).
