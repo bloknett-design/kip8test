@@ -357,15 +357,18 @@ describe('Аудит ролей: базовые инварианты', function 
 // перестроение сетки при фильтрации (дыры)
 // ------------------------------------------------------------
 
-// Пункты сайдбара по группам (из HTML) — для вычисления ожидаемых счётчиков
+// Пункты сайдбара по группам (из HTML) — для вычисления ожидаемых счётчиков.
+// Task 239: группа 'docs-ios' удалена — её единственный пункт
+// «Расходомеры хозрасчётные» вынесен как top-level sidebar-item
+// (виден ролям с доступом к flowmeter-data без необходимости
+// разворачивать группу).
 const SIDEBAR_GROUPS = {
     kipa: ['converter', 'scale-signal', 'error-select', 'buoy-select', 'temp-sensors', 'orifice-select'],
     electro: ['circuit-breaker'],
     geometry: ['geo-circle', 'geo-ring', 'geo-cylinder', 'geo-horiz', 'geo-sphere', 'geo-cone'],
     'exam-tickets': ['tickets-1000v', 'tickets-4', 'tickets-5', 'tickets-6'],
     library: [],  // внешние ссылки + library-electro (без navigateTo у внешних)
-    'kip-ios': ['devices-prod', 'lockouts-prod', 'valves-prod', 'regulators-prod', 'projects-prod', 'cable-journal-edit', 'plan-114'],
-    'docs-ios': ['flowmeter-data']
+    'kip-ios': ['devices-prod', 'lockouts-prod', 'valves-prod', 'regulators-prod', 'projects-prod', 'cable-journal-edit', 'plan-114']
 };
 
 // Ожидаемый динамический счётчик группы сайдбара для роли:
@@ -399,9 +402,11 @@ describe('Аудит ролей: счётчики групп сайдбара (T
     });
 
     test('Каждая группа сайдбара в HTML имеет счётчик', function () {
-        // Извлечь группы и проверить наличие счётчика в разметке
+        // Извлечь группы и проверить наличие счётчика в разметке.
+        // Task 239: групп 6 (раньше было 7 — docs-ios удалена, её пункт
+        // вынесен как top-level sidebar-item).
         const groups = html.match(/<div class="sidebar-group[^"]*" data-group="[^"]+"/g) || [];
-        assertTrue(groups.length >= 7, 'в сайдбаре должно быть минимум 7 групп, найдено: ' + groups.length);
+        assertTrue(groups.length >= 6, 'в сайдбаре должно быть минимум 6 групп, найдено: ' + groups.length);
         const counts = html.match(/class="sidebar-group-title-count"/g) || [];
         assertEqual(counts.length, groups.length,
             'число счётчиков должно совпадать с числом групп');
@@ -417,16 +422,29 @@ describe('Аудит ролей: счётчики групп сайдбара (T
             'у КИП ИОС в группе КИП ИОС должно быть 7 видимых пунктов');
     });
 
-    test('Группа «Документация ИОС» (расходомеры): видима только ролям с фильтром 10', function () {
-        ROLES.forEach(function (role) {
-            const expected = hasPage(role, 'flowmeter-data') ? 1 : 0;
-            assertEqual(expectedSidebarCount(role, 'docs-ios'), expected,
-                'роль «' + role + '»: пунктов в группе docs-ios должно быть ' + expected);
-        });
+    test('Группа «Документация ИОС» удалена (Task 239): пункт Расходомеры вынесен как top-level', function () {
+        // Раньше была отдельная сворачиваемая группа 'docs-ios' с одним
+        // пунктом flowmeter-data. Task 239: группа удалена, пункт вынесен
+        // как top-level sidebar-item (виден без разворачивания).
+        const docsGroup = html.match(/<div class="sidebar-group[^"]*" data-group="docs-ios"/g) || [];
+        assertEqual(docsGroup.length, 0,
+            'группа docs-ios должна быть удалена из сайдбара (Task 239)');
+        // Пункт «Расходомеры хозрасчётные» должен быть top-level sidebar-item
+        // (БЕЗ sidebar-item-extra класса — иначе CSS скроет его до разворачивания).
+        // Между navigateTo('flowmeter-data') и текстом «Расходомеры хозрасчётные»
+        // не должно быть sidebar-item-extra.
+        const reItem = /<div class="sidebar-item"[^>]*navigateTo\('flowmeter-data'\)[^>]*>[\s\S]*?Расходомеры хозрасчётные[\s\S]*?<\/div>/;
+        assertTrue(reItem.test(html),
+            'нет top-level sidebar-item (без sidebar-item-extra) для «Расходомеры хозрасчётные»');
+        // Старая разметка с sidebar-item-extra для flowmeter-data — не должна присутствовать.
+        const reOld = /<div class="sidebar-item sidebar-item-extra"[^>]*navigateTo\('flowmeter-data'\)/;
+        assertTrue(!reOld.test(html),
+            'старая разметка sidebar-item-extra для flowmeter-data не должна остаться');
     });
 
-    test('Гость: во всех группах 0 доступных пунктов документации', function () {
-        ['exam-tickets', 'kip-ios', 'docs-ios'].forEach(function (group) {
+    test('Гость: в группах 0 доступных пунктов документации', function () {
+        // Task 239: docs-ios группа удалена; проверяем оставшиеся.
+        ['exam-tickets', 'kip-ios'].forEach(function (group) {
             assertEqual(expectedSidebarCount('Общий доступ', group), 0,
                 'у гостя в группе «' + group + '» не должно быть доступных пунктов');
         });

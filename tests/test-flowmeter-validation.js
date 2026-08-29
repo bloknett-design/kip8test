@@ -1727,18 +1727,66 @@ describe('Task 238: состояние «Загрузка данных…» и �
     });
 });
 
-// Task 238: SW обновлён до v502
-describe('Task 238: SW версия v502', () => {
+// Task 238 (историческая заметка): в этой ревизии SW был поднят до v502
+// для состояния «Загрузка данных…» с анимированными точками и ошибки связи.
+// Текущая версия — v503 (Task 239, см. ниже). Отдельный блок Task 238 убран,
+// чтобы не плодить исторические SW-блоки в файле.
+
+// Task 239: раздел «Расходомеры хозрасчётные» вынесен как top-level
+// sidebar-item (раньше был единственным пунктом сворачиваемой группы
+// «Документация ИОС», и пользователь не видел его в сайдбаре, пока не
+// кликнет на заголовок группы). SW поднят до v503.
+describe('Task 239: top-level sidebar-item «Расходомеры хозрасчётные»', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const htmlPath = path.resolve(__dirname, '..', 'index.html');
+    const html = fs.readFileSync(htmlPath, 'utf-8');
+
+    test('Сайдбар: есть top-level sidebar-item для flowmeter-data', () => {
+        // Без sidebar-item-extra класса — иначе CSS скроет пункт до разворачивания.
+        // Ищем <div class="sidebar-item" ... onclick="navigateTo('flowmeter-data')">
+        // с текстом «Расходомеры хозрасчётные» внутри.
+        const reItem = /<div class="sidebar-item"[^>]*onclick="navigateTo\('flowmeter-data'\);[^"]*"[^>]*>[\s\S]{0,400}?Расходомеры хозрасчётные[\s\S]{0,100}?<\/div>/;
+        assertTrue(reItem.test(html),
+            'Ожидался top-level <div class="sidebar-item" onclick="navigateTo(\'flowmeter-data\')...>Расходомеры хозрасчётные</div>');
+    });
+
+    test('Сайдбар: старая разметка sidebar-item-extra для flowmeter-data убрана', () => {
+        // Старая разметка скрывала пункт CSS-классом sidebar-item-extra.
+        const reOld = /<div class="sidebar-item sidebar-item-extra"[^>]*navigateTo\('flowmeter-data'\)/;
+        assertTrue(!reOld.test(html),
+            'Старая разметка sidebar-item-extra для flowmeter-data не должна остаться');
+    });
+
+    test('Сайдбар: группа «Документация ИОС» (data-group="docs-ios") удалена', () => {
+        // Группа содержала только один пункт (flowmeter-data) — после выноса
+        // пункта как top-level группа стала пустой и удалена целиком.
+        const docsGroup = html.match(/<div class="sidebar-group[^"]*" data-group="docs-ios"/g) || [];
+        assertEqual(docsGroup.length, 0,
+            'Группа docs-ios должна быть удалена (Task 239)');
+    });
+
+    test('Сайдбар: текст «Расходомеры хозрасчётные» присутствует ровно 1 раз как sidebar-item', () => {
+        // Должен быть один top-level sidebar-item с этим текстом (без учёта
+        // кнопки на странице Документация ИОС, у которой другой класс — menu-btn).
+        const matches = html.match(/<div class="sidebar-item"[^>]*>[\s\S]{0,500}?Расходомеры хозрасчётные[\s\S]{0,300}?<\/div>/g) || [];
+        assertEqual(matches.length, 1,
+            'Должен быть ровно 1 top-level sidebar-item с текстом «Расходомеры хозрасчётные», найдено: ' + matches.length);
+    });
+});
+
+// Task 239: SW обновлён до v503
+describe('Task 239: SW версия v503', () => {
     const fs = require('fs');
     const path = require('path');
     const swPath = path.resolve(__dirname, '..', 'sw.js');
     const sw = fs.readFileSync(swPath, 'utf-8');
 
-    test('CACHE_VERSION = kipia-test-v502', () => {
-        assertTrue(sw.indexOf("kipia-test-v502") !== -1);
+    test('CACHE_VERSION = kipia-test-v503', () => {
+        assertTrue(sw.indexOf("kipia-test-v503") !== -1);
     });
-    test('Старая версия v501 убрана', () => {
-        assertTrue(sw.indexOf("kipia-test-v501") === -1,
-                   'Старая v501 не должна остаться в sw.js');
+    test('Старая версия v502 убрана', () => {
+        assertTrue(sw.indexOf("kipia-test-v502") === -1,
+                   'Старая v502 не должна остаться в sw.js');
     });
 });
