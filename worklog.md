@@ -7698,3 +7698,94 @@ Stage Summary:
   5. В строке «Последние показания» кнопка ✎ снова активна (meters.O
      сброшен); в хронологии новейшая запись имеет пустой комментарий,
      предыдущая — сохраняет старый комментарий.
+
+---
+Task ID: 238
+Agent: main
+Task: При открытии страницы «Расходомеры хозрасчётные» до загрузки данных появляется «Нет данных» — заменить на «Загрузка данных...» с анимированными тремя точками; при невозможности загрузки — «Нет связи с сервером, попробуйте зайти позже».
+
+Work Log:
+- Анализ текущего flow:
+  • FlowmeterData.init() рендерит список сразу с пустым _METERS=[] → renderList показывает заглушку.
+  • До Task 238 заглушка в не-fav ветке была всегда 'admin-empty: Нет данных' — независимо от того, идёт ли ещё загрузка, упала ли она, или сервер вернул пустой список.
+  • load() вызывается из init() и из других мест (refresh после setComment, updateReading и т.д.).
+  • _restoreCache(silent) и _loadFallback(silent) — при silent=true (авторизован) НЕ рендерят промежуточные данные; UI держит «Загрузка…» до ответа сервера (по дизайну: не показывать устаревший кэш).
+
+- Дизайн:
+  1. Новое поле _loadState: 'idle' (default) | 'loading' | 'loaded' | 'error'.
+     • 'idle'    — не авторизован (нет токена) или исходное состояние.
+     • 'loading' — fetch в полёте.
+     • 'loaded'  — сервер ответил (даже пустым списком — genuine empty).
+     • 'error'   — fetch упал; при наличии кэша данные рендерятся из кэша (meters.length > 0), при отсутствии — показывается ошибка связи.
+  2. init(): _loadState = token ? 'loading' : 'idle' перед первым renderList.
+  3. load():
+     • Без токена → _loadState = 'idle'.
+     • С токеном И _METERS пустой → _loadState = 'loading' + renderList (показывает «Загрузка данных…»).
+     • С токеном И _METERS уже есть (кэш) — НЕ трогаем состояние/UI; пользователь видит кэш, фоновый refresh тихо обновит.
+     • Success → _loadState = 'loaded'.
+     • Catch → _loadState = 'error'.
+  4. renderList() в empty-кейсе (не fav tab):
+     • _loadState === 'loading' → «Загрузка данных…» с анимированными точками (.flow-loading + .flow-loading-dots).
+     • _loadState === 'error'   → «Нет связи с сервером» + «Попробуйте зайти позже» (.flow-error).
+     • else (loaded/idle)        → 'admin-empty: Нет данных' (как раньше, для genuine-empty случаев).
+
+- CSS (после .flow-empty-hint):
+  • .flow-loading — контейнер (text-align center, padding 40px 20px).
+  • .flow-loading-text — шрифт 16px, bold.
+  • .flow-loading-dots — inline-block контейнер для трёх точек.
+  • .flow-loading-dots span — opacity:0 + animation: flowLoadingDot 1.4s infinite.
+  • :nth-child(1..3) с задержками 0s / 0.2s / 0.4s — каскад появления точек.
+  • @keyframes flowLoadingDot { 0%,60%,100% opacity:0; 30% opacity:1 } — классический «пульс».
+  • .flow-error / .flow-error-icon (⚠ 32px) / .flow-error-text / .flow-error-hint — паттерн как у .flow-empty.
+
+- HTML рендер:
+  • loading: <div class="flow-loading"><div class="flow-loading-text">Загрузка данных<span class="flow-loading-dots"><span>.</span><span>.</span><span>.</span></span></div></div>
+  • error:   <div class="flow-error"><div class="flow-error-icon">⚠</div><div class="flow-error-text">Нет связи с сервером</div><div class="flow-error-hint">Попробуйте зайти позже</div></div>
+
+- Файлы изменены:
+  • index.html: +CSS (.flow-loading, .flow-error, @keyframes flowLoadingDot — 48 строк); +поле _loadState; патч init() (1 строка); патч load() (4 изменения); патч renderList() (3-веточный empty-кейс).
+  • sw.js: CACHE_VERSION v501 → v502.
+  • tests/test-flowmeter-validation.js: добавлен describe «Task 238: состояние «Загрузка данных…» и ошибка связи» с 13 тестами; Task 237 SW-блок заменён исторической заметкой; добавлен Task 238 SW-блок (v502 present, v501 gone).
+
+- Тесты: 13 новых:
+  1. .flow-loading CSS-класс существует
+  2. .flow-loading-dots span — animation: flowLoadingDot
+  3. @keyframes flowLoadingDot определён
+  4. :nth-child(1..3) с animation-delay
+  5. .flow-error CSS-класс существует
+  6. _loadState поле определено со значением по умолчанию 'idle'
+  7. init() устанавливает _loadState = token ? 'loading' : 'idle'
+  8. load() при отсутствии токена → _loadState = 'idle'
+  9. load() при пустом _METERS → _loadState = 'loading' + renderList
+  10. load() success → _loadState = 'loaded'
+  11. load() catch → _loadState = 'error'
+  12. renderList() loading-ветка показывает «Загрузка данных» + .flow-loading-dots
+  13. renderList() error-ветка показывает «Нет связи с сервером» + «Попробуйте зайти позже»
+  14. renderList() fallback «Нет данных» сохранён (для loaded/idle)
+  • SW-блок: v502 present, v501 gone.
+  • 788 → 802 passed (+14), 0 failed.
+
+Stage Summary:
+- Task 238 выполнен. UX расходомеров при загрузке:
+  • Авторизованный пользователь открывает раздел → видит «Загрузка данных…»
+    с анимированными точками (вместо сбивающего с толку «Нет данных»).
+  • Если сервер недоступен / ошибка сети / сессии и НЕТ кэша →
+    «Нет связи с сервером, попробуйте зайти позже».
+  • Если кэш есть — данные показываются из кэша (могут быть устаревшими,
+    но пользователь видит рабочее приложение, а не заглушку).
+  • Если сервер вернул пустой список (genuine empty — расстр. редкий случай)
+    → остаётся «Нет данных».
+- Корневая причина бага: renderList() показывал «Нет данных» для ВСЕХ
+  пустых кейсов (loading/error/loaded/idle) — безразлично к состоянию.
+- Решение: явное поле состояния _loadState + 3-веточный empty-кейс в
+  renderList() с разными сообщениями и анимацией.
+- Файлы изменены: index.html (CSS + JS), sw.js (v502),
+  tests/test-flowmeter-validation.js (+14 тестов).
+- Пользователю: после обновления PWA (v502) открыть раздел «Расходомеры
+  хозрасчётные»:
+  • При нормальной сети — кратко видно «Загрузка данных…» с бегущими
+    точками, затем список карточек.
+  • Если выключить интернет и очистить кэш localStorage
+    (kip8_flow_data_v1) → «Нет связи с сервером, попробуйте зайти позже».
+  • Если интернет есть, но кэш уже пустой и сервер недоступен →
+    то же сообщение об ошибке связи.

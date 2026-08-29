@@ -1583,18 +1583,162 @@ describe('Task 237: комментарий в meters.O + archive.P (одновр
     });
 });
 
-// Task 237: SW обновлён до v501
-describe('Task 237: SW версия v501', () => {
+// Task 237 (историческая заметка): в этой ревизии SW был поднят до v501
+// (комментарий к показаниям теперь пишется одновременно в hozraschet_meters.O
+// и hozraschet_archive.P; meters.O всегда сбрасывается при новом вводе
+// показаний, новая архивная запись создаётся с пустым comment). Актуальная
+// версия — v502 (Task 238, см. ниже). Отдельный блок Task 237 убран, чтобы
+// не падать при следующих bump-ах.
+
+// Task 238: «Загрузка данных…» с анимированными точками до загрузки данных
+// (вместо «Нет данных»); «Нет связи с сервером, попробуйте зайти позже»
+// при ошибке сети/сервера и отсутствии кэша.
+describe('Task 238: состояние «Загрузка данных…» и ошибка связи', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const idxPath = path.resolve(__dirname, '..', 'index.html');
+    const src = fs.readFileSync(idxPath, 'utf-8');
+
+    // === CSS ===
+
+    test('.flow-loading класс определён', () => {
+        var idx = src.indexOf('.flow-loading {');
+        assertTrue(idx !== -1, 'CSS-класс .flow-loading должен существовать');
+    });
+
+    test('.flow-loading-dots span — анимация (animation: flowLoadingDot)', () => {
+        var idx = src.indexOf('.flow-loading-dots span {');
+        assertTrue(idx !== -1);
+        var snippet = src.substring(idx, idx + 300);
+        assertTrue(snippet.indexOf('animation') !== -1 &&
+                   snippet.indexOf('flowLoadingDot') !== -1,
+            '.flow-loading-dots span должен использовать animation: flowLoadingDot');
+    });
+
+    test('@keyframes flowLoadingDot определён', () => {
+        assertTrue(src.indexOf('@keyframes flowLoadingDot') !== -1,
+            '@keyframes flowLoadingDot должен быть определён');
+    });
+
+    test('.flow-loading-dots span:nth-child(1..3) — задержки анимации', () => {
+        // Три точки с разными animation-delay (каскад)
+        assertTrue(src.indexOf('.flow-loading-dots span:nth-child(1)') !== -1,
+            'nth-child(1) для задержки анимации');
+        assertTrue(src.indexOf('.flow-loading-dots span:nth-child(2)') !== -1,
+            'nth-child(2) для задержки анимации');
+        assertTrue(src.indexOf('.flow-loading-dots span:nth-child(3)') !== -1,
+            'nth-child(3) для задержки анимации');
+    });
+
+    test('.flow-error класс определён', () => {
+        var idx = src.indexOf('.flow-error {');
+        assertTrue(idx !== -1, 'CSS-класс .flow-error должен существовать');
+    });
+
+    // === _loadState поле ===
+
+    test('_loadState поле определено со значением по умолчанию \'idle\'', () => {
+        var idx = src.indexOf('_loadState:');
+        assertTrue(idx !== -1, '_loadState поле должно быть в FlowmeterData');
+        var snippet = src.substring(idx, idx + 200);
+        assertTrue(snippet.indexOf("'idle'") !== -1,
+            "Значение по умолчанию должно быть 'idle'");
+    });
+
+    // === init() ===
+
+    test('init() устанавливает _loadState в \'loading\' при наличии токена', () => {
+        // Ищем через уникальный маркер, который есть только в init() FlowmeterData
+        var marker = "_loadState = token ? 'loading' : 'idle'";
+        assertTrue(src.indexOf(marker) !== -1,
+            "init() должен устанавливать _loadState = token ? 'loading' : 'idle'");
+    });
+
+    // === load() ===
+
+    test('load(): при отсутствии токена _loadState = \'idle\'', () => {
+        // Уникальный маркер внутри load() FlowmeterData
+        var marker = "this._loadState = 'idle';  // Task 238: нет токена";
+        assertTrue(src.indexOf(marker) !== -1,
+            "В ветке без токена: _loadState = 'idle'");
+    });
+
+    test('load(): при пустом _METERS — _loadState = \'loading\' + renderList', () => {
+        // Ищем уникальный фрагмент
+        var meterCheck = src.indexOf('this._METERS.length === 0');
+        assertTrue(meterCheck !== -1,
+            'Должна быть проверка _METERS.length === 0');
+        var block = src.substring(meterCheck, meterCheck + 300);
+        assertTrue(block.indexOf("_loadState = 'loading'") !== -1,
+            'При пустом _METERS: _loadState = \'loading\'');
+        assertTrue(block.indexOf('this.renderList()') !== -1,
+            'При пустом _METERS: renderList() для показа «Загрузка данных…»');
+    });
+
+    test('load() success: _loadState = \'loaded\'', () => {
+        // Уникальный маркер в success-ветке load()
+        var marker = "self._loadState = 'loaded';  // Task 238";
+        assertTrue(src.indexOf(marker) !== -1,
+            "В success-ветке then: _loadState = 'loaded'");
+    });
+
+    test('load() catch: _loadState = \'error\'', () => {
+        // Уникальный маркер в catch-ветке load()
+        var marker = "self._loadState = 'error';  // Task 238";
+        assertTrue(src.indexOf(marker) !== -1,
+            "В catch-ветке: _loadState = 'error'");
+    });
+
+    // === renderList() — 3 ветки ===
+
+    test('renderList(): ветка loading показывает «Загрузка данных»', () => {
+        var marker = "this._loadState === 'loading'";
+        var loadingIdx = src.indexOf(marker);
+        assertTrue(loadingIdx !== -1,
+            "renderList должен проверять _loadState === 'loading'");
+        var block = src.substring(loadingIdx, loadingIdx + 500);
+        assertTrue(block.indexOf('Загрузка данных') !== -1,
+            'В loading-ветке должен быть текст «Загрузка данных»');
+        assertTrue(block.indexOf('flow-loading-dots') !== -1,
+            'Должны быть анимированные точки .flow-loading-dots');
+    });
+
+    test('renderList(): ветка error показывает «Нет связи с сервером»', () => {
+        var marker = "this._loadState === 'error'";
+        var errorIdx = src.indexOf(marker);
+        assertTrue(errorIdx !== -1,
+            "renderList должен проверять _loadState === 'error'");
+        var block = src.substring(errorIdx, errorIdx + 600);
+        assertTrue(block.indexOf('Нет связи с сервером') !== -1,
+            'В error-ветке должен быть текст «Нет связи с сервером»');
+        assertTrue(block.indexOf('Попробуйте зайти позже') !== -1,
+            'В error-ветке должен быть hint «Попробуйте зайти позже»');
+    });
+
+    test('renderList(): fallback «Нет данных» сохранён для loaded/idle', () => {
+        // Заглушка должна остаться — в else-ветке renderList
+        // Ищем в радиусе после loading-маркера и error-маркера
+        var loadingIdx = src.indexOf("this._loadState === 'loading'");
+        var errorIdx = src.indexOf("this._loadState === 'error'");
+        // «Нет данных» должен быть после error-блока
+        var noDataIdx = src.indexOf('Нет данных', errorIdx);
+        assertTrue(noDataIdx !== -1 && noDataIdx < errorIdx + 2000,
+            'Должна остаться заглушка «Нет данных» для loaded/idle состояний');
+    });
+});
+
+// Task 238: SW обновлён до v502
+describe('Task 238: SW версия v502', () => {
     const fs = require('fs');
     const path = require('path');
     const swPath = path.resolve(__dirname, '..', 'sw.js');
     const sw = fs.readFileSync(swPath, 'utf-8');
 
-    test('CACHE_VERSION = kipia-test-v501', () => {
-        assertTrue(sw.indexOf("kipia-test-v501") !== -1);
+    test('CACHE_VERSION = kipia-test-v502', () => {
+        assertTrue(sw.indexOf("kipia-test-v502") !== -1);
     });
-    test('Старая версия v500 убрана', () => {
-        assertTrue(sw.indexOf("kipia-test-v500") === -1,
-                   'Старая v500 не должна остаться в sw.js');
+    test('Старая версия v501 убрана', () => {
+        assertTrue(sw.indexOf("kipia-test-v501") === -1,
+                   'Старая v501 не должна остаться в sw.js');
     });
 });
