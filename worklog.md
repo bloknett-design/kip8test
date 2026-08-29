@@ -8038,3 +8038,35 @@ Stage Summary:
 - Дальнейшая разработка модуля WorkSchedule (Tasks 242+) — продолжается в
   kip8test (источник), с последующим переносом в kip8.
 - Локальная дата: 2026-08-29 18:06:57 UTC+07:00 (Asia/Novosibirsk).
+
+---
+Task ID: 246 (бекпорт kip8-фиксов Tasks 242-243 в kip8test)
+Agent: main (Super Z)
+Task: После успешного переноса Tasks 192-238 из kip8test в kip8 (Task 245,
+      commit 1e0c4a9) выяснилось, что два kip8-специфичных фикса живут только
+      в kip8/index.html и при следующем переносе kip8test → kip8 будут
+      потеряны. Бекпорт этих фиксов в kip8test для паритета.
+
+Work Log:
+- Task 242 (бекпорт): в navigator.serviceWorker.register('./sw.js') добавлено
+  { updateViaCache: 'none' } + комментарий + reg.update().catch(function() {})
+  сразу при загрузке (после setInterval). В kip8test ранее этого не было.
+- Task 243 (бекпорт): в @media (max-width: 1023px) для #sidebar.desktop-open,
+  #sidebar.active и #sidebarOverlay.active добавлено !important. В kip8test
+  ранее без !important. В kip8test wsTrSheet уже правильно закрыт (Task 244
+  фикс не нужен — он был нужен только из-за бага при переносе Task 241 final
+  в kip8), но !important добавлен для паритета — чтобы при следующем переносе
+  kip8test → kip8 автоматически попадал в kip8.
+- sw.js: CACHE_VERSION kipia-test-v504 → kipia-test-v505.
+- tests/test-flowmeter-validation.js: SW-блок обновлён — Task 241 v504 заменён
+  на Task 246 v505 (проверка kipia-test-v505 present, kipia-test-v504 gone).
+- Валидация: node tests/run-all.js → 809 passed / 0 failed.
+- Коммит и push.
+
+Stage Summary:
+- kip8test теперь содержит ВСЕ фиксы из kip8 (Tasks 242-243). При следующем
+  переносе kip8test → kip8 через prepare-kip8-transfer.py эти фиксы попадут
+  в kip8 автоматически — ручное патчение больше не потребуется.
+- WS: kipia-test-v504 → kipia-test-v505.
+- Тесты: 809 passed / 0 failed.
+- Локальная дата: 2026-08-29 (Asia/Novosibirsk, UTC+07:00).

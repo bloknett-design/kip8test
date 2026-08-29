@@ -1845,18 +1845,18 @@ describe('Task 241: зебра списка расходомеров в свет
     });
 });
 
-// Task 241: SW обновлён до v504
-describe('Task 241: SW версия v504', () => {
+// Task 246 (бекпорт Tasks 242-243 из kip8): SW обновлён до v505
+describe('Task 246: SW версия v505 (бекпорт из kip8)', () => {
     const fs = require('fs');
     const path = require('path');
     const swPath = path.resolve(__dirname, '..', 'sw.js');
     const sw = fs.readFileSync(swPath, 'utf-8');
 
-    test('CACHE_VERSION = kipia-test-v504', () => {
-        assertTrue(sw.indexOf("kipia-test-v504") !== -1);
+    test('CACHE_VERSION = kipia-test-v505', () => {
+        assertTrue(sw.indexOf("kipia-test-v505") !== -1);
     });
-    test('Старая версия v503 убрана', () => {
-        assertTrue(sw.indexOf("kipia-test-v503") === -1,
-                   'Старая v503 не должна остаться в sw.js');
+    test('Старая версия v504 убрана', () => {
+        assertTrue(sw.indexOf("kipia-test-v504") === -1,
+                   'Старая v504 не должна остаться в sw.js');
     });
 });
