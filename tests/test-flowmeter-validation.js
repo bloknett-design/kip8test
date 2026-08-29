@@ -770,19 +770,19 @@ describe('Task 223+224: график архива — показания + но�
     });
 });
 
-// Task 226: SW обновлён до v490 (минимальная высота бара 5%)
-describe('Task 226: SW версия v490', () => {
+// Task 226+227: SW обновлён до v491 (мин. высота 5% + дата справа от названия)
+describe('Task 227: SW версия v491', () => {
     const fs = require('fs');
     const path = require('path');
     const swPath = path.resolve(__dirname, '..', 'sw.js');
     const sw = fs.readFileSync(swPath, 'utf-8');
 
-    test('CACHE_VERSION = kipia-test-v490', () => {
-        assertTrue(sw.indexOf("kipia-test-v490") !== -1);
+    test('CACHE_VERSION = kipia-test-v491', () => {
+        assertTrue(sw.indexOf("kipia-test-v491") !== -1);
     });
-    test('Старая версия v489 убрана', () => {
-        assertTrue(sw.indexOf("kipia-test-v489") === -1,
-                   'Старая v489 не должна остаться в sw.js');
+    test('Старая версия v490 убрана', () => {
+        assertTrue(sw.indexOf("kipia-test-v490") === -1,
+                   'Старая v490 не должна остаться в sw.js');
     });
 });
 
@@ -839,12 +839,18 @@ describe('Task 225: реорганизация строки «Последние
                    'Подзначения должны иметь класс flow-detail-sub');
     });
 
-    test('Дата «за дата г.» — отдельной строкой под названием', () => {
+    test('Дата «за дата г.» — в row-head, справа от названия (Task 227)', () => {
         var body = detailBody();
-        // Должна быть строка вида <div class="flow-detail-date">за ... г.</div>
-        // после .flow-detail-row-head (а НЕ внутри value)
-        assertTrue(body.indexOf('<div class="flow-detail-date">за ') !== -1,
-                   'Дата должна быть отдельной строкой под названием');
+        // Должна быть строка вида <span class="flow-detail-date flow-detail-date-inline">за ... г.</span>
+        // внутри .flow-detail-row-head (а не отдельной строкой под названием)
+        assertTrue(body.indexOf('flow-detail-date-inline') !== -1,
+                   'Дата должна иметь класс-маркер flow-detail-date-inline');
+        assertTrue(body.indexOf('flow-detail-date-inline">за ') !== -1,
+                   'Дата «за ...» должна быть внутри span с классом flow-detail-date-inline');
+        // Старый формат (<div class="flow-detail-date">за ...</div> как отдельная
+        // строка под row-head) должен быть убран
+        assertTrue(body.indexOf('<div class="flow-detail-date">за ') === -1,
+                   'Старая дата-как-блок должна быть убрана (Task 227)');
     });
 
     test('Значение показаний не содержит встроенную дату «за ...»', () => {
