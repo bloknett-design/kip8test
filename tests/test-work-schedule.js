@@ -262,9 +262,11 @@ describe('График работы — WorkSchedule', () => {
             assertTrue(gsContent.indexOf("'Записи_графика'") !== -1);
         });
 
-        test('WRITE_ROLES содержит КИП ИОС и Админ', () => {
-            assertTrue(gsContent.indexOf("'КИП ИОС'") !== -1);
-            assertTrue(gsContent.indexOf("'Админ'") !== -1);
+        test('READ_ROLES и WRITE_ROLES ограничены только Админом (Task 204)', () => {
+            // Task 204: доступ к графику работы ограничен — только Админ.
+            // Ранее в READ_ROLES также были КИП ИОС/ИТР8/ИТР ИОС; в WRITE_ROLES — КИП ИОС+Админ.
+            assertTrue(gsContent.indexOf("READ_ROLES: ['Админ']") !== -1);
+            assertTrue(gsContent.indexOf("WRITE_ROLES: ['Админ']") !== -1);
         });
 
         test('TRAINING_TYPE_TO_STATUS: 3 типа → И/ОБ/ПЗ', () => {
