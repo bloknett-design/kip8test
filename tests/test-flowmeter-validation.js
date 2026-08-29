@@ -762,19 +762,23 @@ describe('Task 223+224+228: график архива — условный ис�
     });
 });
 
-// Task 229+230: SW обновлён до v494 (дата как одна строка + horizontal scroll таблицы)
-describe('Task 230: SW версия v494', () => {
+// Task 229+230+231: SW обновлён до v495
+// (Task 229: дата как одна строка в детальной карточке;
+//  Task 230: horizontal scroll таблицы хронологии;
+//  Task 231: дата + label «Последние показания» в одной строке в карточке списка,
+//            лейблы «Гкал» и «T среды» убраны)
+describe('Task 231: SW версия v495', () => {
     const fs = require('fs');
     const path = require('path');
     const swPath = path.resolve(__dirname, '..', 'sw.js');
     const sw = fs.readFileSync(swPath, 'utf-8');
 
-    test('CACHE_VERSION = kipia-test-v494', () => {
-        assertTrue(sw.indexOf("kipia-test-v494") !== -1);
+    test('CACHE_VERSION = kipia-test-v495', () => {
+        assertTrue(sw.indexOf("kipia-test-v495") !== -1);
     });
-    test('Старая версия v493 убрана', () => {
-        assertTrue(sw.indexOf("kipia-test-v493") === -1,
-                   'Старая v493 не должна остаться в sw.js');
+    test('Старая версия v494 убрана', () => {
+        assertTrue(sw.indexOf("kipia-test-v494") === -1,
+                   'Старая v494 не должна остаться в sw.js');
     });
 });
 
@@ -920,6 +924,98 @@ describe('Task 225: реорганизация строки «Последние
     test('CSS-класс .flow-detail-sub определён', () => {
         assertTrue(src.indexOf('.flow-detail-sub') !== -1,
                    'CSS .flow-detail-sub должен быть определён');
+    });
+});
+
+// Task 231: реорганизация сводной карточки расходомера в списке.
+// В каждой карточке хозрасчётного расходомера:
+//   1) «Последние показания» и дата «за дата г.» — в одной строке (дата — под-элемент label,
+//      как в детальной карточке Task 229);
+//   2) лейблы «Гкал» и «T среды» убраны — значения (с собственными единицами °C и Гкал)
+//      показаны под основным значением как sub-текст.
+describe('Task 231: карточка расходомера — label+дата в одну строку, лейблы Гкал/T среды убраны', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const idxPath = path.resolve(__dirname, '..', 'index.html');
+    const src = fs.readFileSync(idxPath, 'utf-8');
+
+    // Извлекаем тело метода renderList (где формируется HTML карточек)
+    function renderListBody() {
+        var fnIdx = src.indexOf('renderList: function');
+        if (fnIdx === -1) return '';
+        var fnEnd = src.indexOf('\n        },', fnIdx);
+        return src.substring(fnIdx, fnEnd === -1 ? src.length : fnEnd);
+    }
+
+    test('Лейбл «T среды» убран из карточки списка', () => {
+        var body = renderListBody();
+        // Не должно быть HTML-строки с label «T среды» внутри renderList
+        assertTrue(body.indexOf('>T среды<') === -1,
+                   'Лейбл «T среды» должен быть убран из карточки списка');
+    });
+
+    test('Лейбл «Гкал» убран из карточки списка', () => {
+        var body = renderListBody();
+        assertTrue(body.indexOf('>Гкал<') === -1,
+                   'Лейбл «Гкал» должен быть убран из карточки списка');
+    });
+
+    test('Дата — под-элемент label «Последние показания» (одна строка)', () => {
+        var body = renderListBody();
+        // Дата должна иметь класс-маркер flow-summary-date-inline
+        assertTrue(body.indexOf('flow-summary-date-inline') !== -1,
+                   'Дата должна иметь класс flow-summary-date-inline');
+        // Проверяем: в радиусе 300 символов после flow-summary-label должен быть
+        // flow-summary-date-inline (т.е. дата — под-элемент label)
+        var labelIdx = body.indexOf('flow-summary-label');
+        assertTrue(labelIdx !== -1, 'flow-summary-label должен быть в коде');
+        var snippet = body.substring(labelIdx, Math.min(body.length, labelIdx + 300));
+        assertTrue(snippet.indexOf('flow-summary-date-inline') !== -1,
+                   'Дата должна идти внутри span.flow-summary-label (одна строка с названием)');
+    });
+
+    test('Старый формат даты через запятую в значении убран', () => {
+        var body = renderListBody();
+        // Старый формат: ',<span class="flow-detail-date"> за ' + ... + ' г.'
+        // не должен встречаться в карточке списка
+        assertTrue(body.indexOf(',<span class="flow-detail-date"> за ') === -1,
+                   'Старый формат даты через запятую в значении должен быть убран');
+    });
+
+    test('Sub-значения temp/gcal показаны под основным значением без лейблов', () => {
+        var body = renderListBody();
+        // Должен быть класс flow-summary-sub для sub-значений
+        assertTrue(body.indexOf('flow-summary-sub') !== -1,
+                   'Должен быть класс flow-summary-sub для sub-значений temp/gcal');
+        // Значения tempStr/gcalStr всё ещё формируются и используются
+        assertTrue(body.indexOf('tempStr') !== -1, 'tempStr должен использоваться');
+        assertTrue(body.indexOf('gcalStr') !== -1, 'gcalStr должен использоваться');
+        // Проверяем что subParts содержит tempStr/gcalStr (через join)
+        assertTrue(body.indexOf('subParts.push(tempStr)') !== -1 ||
+                   body.indexOf('subParts.push(') !== -1,
+                   'temp/gcal должны добавляться в subParts');
+        assertTrue(body.indexOf('.join(') !== -1,
+                   'Sub-значения должны объединяться через join');
+    });
+
+    test('Старые отдельные summary-items для T среды и Гкал убраны', () => {
+        var body = renderListBody();
+        // Раньше было: html += '<span class="flow-summary-item"><span class="flow-summary-label">T среды</span>...
+        // Теперь этого быть не должно
+        assertTrue(body.indexOf('flow-summary-label">T среды') === -1,
+                   'Отдельный summary-item с T среды должен быть убран');
+        assertTrue(body.indexOf('flow-summary-label">Гкал') === -1,
+                   'Отдельный summary-item с Гкал должен быть убран');
+    });
+
+    test('CSS-класс .flow-summary-date-inline определён', () => {
+        assertTrue(src.indexOf('.flow-summary-label .flow-summary-date-inline') !== -1,
+                   'CSS .flow-summary-label .flow-summary-date-inline должен быть определён');
+    });
+
+    test('CSS-класс .flow-summary-sub определён', () => {
+        assertTrue(src.indexOf('.flow-summary-sub') !== -1,
+                   'CSS .flow-summary-sub должен быть определён');
     });
 });
 
