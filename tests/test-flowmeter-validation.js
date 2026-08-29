@@ -663,4 +663,125 @@ describe('Task 222: регистрация эндпоинта и anomalyHelp в 
     });
 });
 
+// Task 223 + 224: график в архиве расходомера строится из показаний (r.curr),
+// а не из вычисленного расхода (r.consumption); высота баров нормализуется
+// по диапазону [min..max]: bar = (curr − min) / (max − min) × 100.
+// Тесты — source-text на index.html (без мутации sandbox-объектов).
+describe('Task 223+224: график архива — показания + нормализация по диапазону', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const idxPath = path.resolve(__dirname, '..', 'index.html');
+    const src = fs.readFileSync(idxPath, 'utf-8');
+
+    // Task 223: источник данных — r.curr (показания), не r.consumption
+    test('_buildArchiveChart использует r.curr (показания), а не consumption', () => {
+        // Находим функцию _buildArchiveChart
+        var fnIdx = src.indexOf('_buildArchiveChart: function');
+        assertTrue(fnIdx !== -1, '_buildArchiveChart должна быть определена');
+        // Берём тело функции (до закрывающей }, уникальной для функции)
+        var fnEnd = src.indexOf('return html;', fnIdx);
+        assertTrue(fnEnd !== -1);
+        var fnBody = src.substring(fnIdx, fnEnd);
+        // Использует r.curr
+        assertTrue(fnBody.indexOf('r.curr') !== -1 || fnBody.indexOf('records[i].curr') !== -1,
+                   'Должен использовать readings (r.curr / records[i].curr)');
+        // НЕ использует consumption для bar height
+        assertTrue(fnBody.indexOf('r.consumption') === -1,
+                   'НЕ должен использовать r.consumption для построения графика');
+    });
+
+    test('Заголовок графика: «Показания», а не «Расход»', () => {
+        var fnIdx = src.indexOf('_buildArchiveChart: function');
+        var fnEnd = src.indexOf('return html;', fnIdx);
+        var fnBody = src.substring(fnIdx, fnEnd);
+        assertTrue(fnBody.indexOf('Показания') !== -1,
+                   'Заголовок графика должен быть «Показания»');
+        // Заголовок «Расход» убран из чарта (но «Расход» может встречаться
+        // в комментариях — проверяем только контекст chart-title)
+        var titleIdx = fnBody.indexOf('flow-archive-chart-title');
+        assertTrue(titleIdx !== -1);
+        var titleEnd = fnBody.indexOf('</div>', titleIdx);
+        var titleStr = fnBody.substring(titleIdx, titleEnd);
+        assertTrue(titleStr.indexOf('Расход') === -1,
+                   'В заголовке графика не должно быть слова «Расход»');
+    });
+
+    // Task 224: нормализация по диапазону
+    test('Вычисляется minReading (минимум показаний)', () => {
+        var fnIdx = src.indexOf('_buildArchiveChart: function');
+        var fnEnd = src.indexOf('return html;', fnIdx);
+        var fnBody = src.substring(fnIdx, fnEnd);
+        assertTrue(fnBody.indexOf('minReading') !== -1,
+                   'Должна быть переменная minReading');
+        assertTrue(fnBody.indexOf('Infinity') !== -1,
+                   'minReading должен инициализироваться Infinity');
+    });
+
+    test('Вычисляется maxReading (максимум показаний)', () => {
+        var fnIdx = src.indexOf('_buildArchiveChart: function');
+        var fnEnd = src.indexOf('return html;', fnIdx);
+        var fnBody = src.substring(fnIdx, fnEnd);
+        assertTrue(fnBody.indexOf('maxReading') !== -1,
+                   'Должна быть переменная maxReading');
+    });
+
+    test('Формула нормализации: (curr − minReading) / range × 100', () => {
+        var fnIdx = src.indexOf('_buildArchiveChart: function');
+        var fnEnd = src.indexOf('return html;', fnIdx);
+        var fnBody = src.substring(fnIdx, fnEnd);
+        // Должна быть формула нормализации
+        assertTrue(fnBody.indexOf('(curr - minReading)') !== -1,
+                   'Должна быть формула (curr − minReading)');
+        assertTrue(fnBody.indexOf('/ range') !== -1,
+                   'Должно быть деление на range (max − min)');
+        assertTrue(fnBody.indexOf('* 100') !== -1,
+                   'Должно быть умножение на 100');
+    });
+
+    test('Защита от деления на ноль (плоский случай max === min)', () => {
+        var fnIdx = src.indexOf('_buildArchiveChart: function');
+        var fnEnd = src.indexOf('return html;', fnIdx);
+        var fnBody = src.substring(fnIdx, fnEnd);
+        // Должна быть проверка range === 0 (или flat)
+        assertTrue(fnBody.indexOf('range === 0') !== -1 || fnBody.indexOf('flat') !== -1,
+                   'Должна быть защита от деления на ноль (range === 0 / flat)');
+    });
+
+    test('Минимальная высота бара 1% (Math.max(1, ...))', () => {
+        var fnIdx = src.indexOf('_buildArchiveChart: function');
+        var fnEnd = src.indexOf('return html;', fnIdx);
+        var fnBody = src.substring(fnIdx, fnEnd);
+        assertTrue(fnBody.indexOf('Math.max(1') !== -1,
+                   'Должен быть Math.max(1, ...) для минимальной высоты 1%');
+    });
+
+    test('Старый код (curr / maxReading × 100 без min) убран', () => {
+        var fnIdx = src.indexOf('_buildArchiveChart: function');
+        var fnEnd = src.indexOf('return html;', fnIdx);
+        var fnBody = src.substring(fnIdx, fnEnd);
+        // Старая формула (curr / maxReading) без minReading не должна встречаться
+        // в строке вычисления barPct. Однако maxReading может встречаться отдельно.
+        // Проверяем, что нет выражения "(curr / maxReading) * 100"
+        assertTrue(fnBody.indexOf('(curr / maxReading) * 100') === -1,
+                   'Старая формула (curr / maxReading) × 100 должна быть убрана');
+    });
+});
+
+// Task 224: SW обновлён до v488 (нормализация графиков)
+describe('Task 224: SW версия v488', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const swPath = path.resolve(__dirname, '..', 'sw.js');
+    const sw = fs.readFileSync(swPath, 'utf-8');
+
+    test('CACHE_VERSION = kipia-test-v488', () => {
+        assertTrue(sw.indexOf("kipia-test-v488") !== -1);
+    });
+    test('Старая версия v487 убрана', () => {
+        assertTrue(sw.indexOf("kipia-test-v487") === -1,
+                   'Старая v487 не должна остаться в sw.js');
+    });
+});
+
+
 
