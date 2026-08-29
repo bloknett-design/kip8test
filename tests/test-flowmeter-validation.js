@@ -1375,18 +1375,110 @@ describe('Task 235: кэш правил валидации в localStorage (мг
     });
 });
 
-// Task 235: SW обновлён до v499
-describe('Task 235: SW версия v499', () => {
+// Task 235 (историческая заметка): в этой ревизии SW был поднят до v499
+// (правила валидации кэшируются в localStorage на 24ч для моментальной
+// модалки аномалий). Актуальная версия — v500 (Task 236, см. ниже).
+// Отдельный блок Task 235 убран, чтобы не падал при следующих bump-ах.
+
+// Task 236: кнопка «Обновить правила» в админ-панели (page-admin → .admin-footer).
+// Принудительно обнуляет _rulesCacheTs (обходит TTL-проверку 24ч) и вызывает
+// loadValidationRules() — фоновый fetch свежих правил с сервера + обновление
+// localStorage. Видна только админу (страница page-admin защищена ролью).
+describe('Task 236: кнопка «Обновить правила» в админ-панели', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const idxPath = path.resolve(__dirname, '..', 'index.html');
+    const src = fs.readFileSync(idxPath, 'utf-8');
+
+    test('Кнопка «Обновить правила» присутствует в .admin-footer', () => {
+        // Ищем .admin-footer блок внутри page-admin
+        var adminPageIdx = src.indexOf('id="page-admin"');
+        assertTrue(adminPageIdx !== -1, 'page-admin должен существовать');
+        var footerIdx = src.indexOf('class="admin-footer"', adminPageIdx);
+        assertTrue(footerIdx !== -1, '.admin-footer должен быть в page-admin');
+        // Ищем кнопку «Обновить правила» после .admin-footer
+        var footerEnd = src.indexOf('</div>', footerIdx);
+        var footerBlock = src.substring(footerIdx, footerEnd === -1 ? src.length : footerEnd);
+        assertTrue(footerBlock.indexOf('Обновить правила') !== -1,
+                   'В .admin-footer должна быть кнопка «Обновить правила»');
+        assertTrue(footerBlock.indexOf('KipAdmin.refreshValidationRules()') !== -1,
+                   'Кнопка должна вызывать KipAdmin.refreshValidationRules()');
+    });
+
+    test('Метод refreshValidationRules определён в KipAdmin', () => {
+        var idx = src.indexOf('refreshValidationRules: function');
+        assertTrue(idx !== -1,
+                   'Метод refreshValidationRules: function должен быть в KipAdmin');
+    });
+
+    test('refreshValidationRules обнуляет _rulesCacheTs перед вызовом', () => {
+        var idx = src.indexOf('refreshValidationRules: function');
+        assertTrue(idx !== -1);
+        var snippet = src.substring(idx, idx + 1500);
+        // Должно быть: FlowmeterData._rulesCacheTs = 0
+        assertTrue(snippet.indexOf('FlowmeterData._rulesCacheTs = 0') !== -1,
+                   'Должно обнулять _rulesCacheTs перед вызовом loadValidationRules');
+    });
+
+    test('refreshValidationRules вызывает FlowmeterData.loadValidationRules()', () => {
+        var idx = src.indexOf('refreshValidationRules: function');
+        var snippet = src.substring(idx, idx + 1500);
+        assertTrue(snippet.indexOf('FlowmeterData.loadValidationRules()') !== -1,
+                   'Должно вызывать FlowmeterData.loadValidationRules()');
+    });
+
+    test('refreshValidationRules: toast обратной связи (success/error)', () => {
+        var idx = src.indexOf('refreshValidationRules: function');
+        var snippet = src.substring(idx, idx + 2500);
+        // Должен показывать toast с количеством правил или с ошибкой
+        assertTrue(snippet.indexOf('KipToast.show') !== -1,
+                   'Должен использовать KipToast.show для обратной связи');
+        assertTrue(snippet.indexOf('Правила обновлены') !== -1,
+                   'Должен показывать «Правила обновлены» при успехе');
+        assertTrue(snippet.indexOf('Ошибка обновления правил') !== -1,
+                   'Должен показывать «Ошибка обновления правил» при сбое');
+    });
+
+    test('refreshValidationRules: try/catch вокруг всего тела', () => {
+        var idx = src.indexOf('refreshValidationRules: function');
+        var snippet = src.substring(idx, idx + 2500);
+        // Должно быть в try/catch — чтобы клик по кнопке не уронил страницу
+        assertTrue(snippet.indexOf('try {') !== -1 &&
+                   snippet.indexOf('catch (e)') !== -1,
+                   'Тело метода должно быть в try/catch');
+        // В catch должно логироваться + показываться toast
+        var catchIdx = snippet.indexOf('catch (e)');
+        var catchSnippet = snippet.substring(catchIdx);
+        assertTrue(catchSnippet.indexOf('console.error') !== -1,
+                   'В catch должно логироваться в console');
+        assertTrue(catchSnippet.indexOf('KipToast.show') !== -1,
+                   'В catch должен показываться toast с ошибкой');
+    });
+
+    test('Кнопка не нарушает существующую кнопку «Обновить данные»', () => {
+        var adminPageIdx = src.indexOf('id="page-admin"');
+        var footerIdx = src.indexOf('class="admin-footer"', adminPageIdx);
+        var footerEnd = src.indexOf('</div>', footerIdx);
+        var footerBlock = src.substring(footerIdx, footerEnd === -1 ? src.length : footerEnd);
+        assertTrue(footerBlock.indexOf('Обновить данные') !== -1,
+                   'Кнопка «Обновить данные» должна остаться');
+        assertTrue(footerBlock.indexOf('KipAdmin.refreshAll()') !== -1,
+                   '«Обновить данные» должна вызывать KipAdmin.refreshAll()');
+    });
+});
+
+// Task 236: SW обновлён до v500
+describe('Task 236: SW версия v500', () => {
     const fs = require('fs');
     const path = require('path');
     const swPath = path.resolve(__dirname, '..', 'sw.js');
     const sw = fs.readFileSync(swPath, 'utf-8');
 
-    test('CACHE_VERSION = kipia-test-v499', () => {
-        assertTrue(sw.indexOf("kipia-test-v499") !== -1);
+    test('CACHE_VERSION = kipia-test-v500', () => {
+        assertTrue(sw.indexOf("kipia-test-v500") !== -1);
     });
-    test('Старая версия v498 убрана', () => {
-        assertTrue(sw.indexOf("kipia-test-v498") === -1,
-                   'Старая v498 не должна остаться в sw.js');
+    test('Старая версия v499 убрана', () => {
+        assertTrue(sw.indexOf("kipia-test-v499") === -1,
+                   'Старая v499 не должна остаться в sw.js');
     });
 });
