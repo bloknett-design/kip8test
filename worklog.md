@@ -8219,3 +8219,58 @@ Stage Summary:
   в 4 строках, столбец станет шире (появится горизонтальный скролл).
 - Перенос в боевой kip8 — после подтверждения пользователя.
 - Локальная дата: 2026-08-30 (Asia/Novosibirsk, UTC+07:00).
+
+---
+Task ID: 249
+Дата: 2026-08-30 (Asia/Novosibirsk, UTC+07:00)
+
+Задача:
+На странице раздела «График работы» хлебные крошки показывали
+«Главная / work-schedule» (raw id вместо названия). Требование:
+«Главная / График работы».
+
+Work Log:
+- Причина: у страниц модуля WorkSchedule (work-schedule,
+  work-schedule-employees, work-schedule-trainings) не было записей
+  ни в PAGE_PARENTS, ни в PAGE_LABELS → buildBreadcrumbPath давал
+  путь [work-schedule], а рендер крошек (PAGE_LABELS[pageId] || pageId)
+  откатывался на raw id. Дефект проявлялся на десктопе (≥1024px,
+  updateDesktopBreadcrumb).
+- Фикс (2 карты, работает вместе):
+  1) PAGE_PARENTS: work-schedule → dashboard (корневой раздел, как
+     Сапёр/Справочник — Task 194 precedent); подразделы
+     work-schedule-employees/trainings → work-schedule.
+  2) PAGE_LABELS: «График работы» / «Сотрудники» / «Инструктажи и
+     обучения» — метки совпадают с заголовками страниц
+     (page-inline-header-title).
+- Итоговые крошки: «Главная / График работы» (главная страница модуля),
+  «Главная / График работы / Сотрудники», «Главная / График работы /
+  Инструктажи и обучения».
+- sw.js: kipia-test-v507 → v508.
+- tests/test-work-schedule.js: +1 describe Task 249 (9 тестов): метки
+  PAGE_LABELS (в т.ч. отсутствие дублей — scoped regex по блоку,
+  т.к. глобальный цепляет PAGE_PARENTS), иерархия PAGE_PARENTS,
+  симуляция buildBreadcrumbPath для work-schedule (1 сегмент) и
+  work-schedule-employees (2 сегмента), соответствие заголовкам
+  страниц, SW v508.
+- tests/test-flowmeter-validation.js: Task 248 SW-блок (v507) →
+  историческая заметка (SW-тест v508 теперь в test-work-schedule.js).
+- Верификация:
+  • node tests/run-all.js → 832 passed / 0 failed (825 − 2 + 9)
+  • JS-синтаксис 4 inline-скриптов — OK (scripts/check-js-syntax.js)
+  • Функциональная проверка (scripts/task249-verify.js): крошки всех
+    трёх страниц + регресс соседних (Сапёр, Справочник, расходомеры,
+    конвертер) — 8/8 PASS
+  • Браузерная проверка (agent-browser, 1280×800, реплика реального
+    кода): work-schedule «Главная / График работы», сотрудники
+    «Главная / График работы / Сотрудники», инструктажи «Главная /
+    График работы / Инструктажи и обучения», raw id в крошках
+    отсутствует. Скриншот: scripts/task249-proof.png
+- Мобильная версия не затронута (крошки только на десктопе; на
+  мобильном заголовок страницы остаётся текстом).
+
+Stage Summary:
+- Task 249 выполнен: крошки страниц Графика работы показывают
+  человекочитаемые названия вместо raw id.
+- Тесты: 825 → 832 passed / 0 failed. SW: v507 → v508.
+- Перенос в боевой kip8 — после подтверждения пользователя.

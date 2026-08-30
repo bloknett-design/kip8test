@@ -341,4 +341,131 @@ describe('График работы — WorkSchedule', () => {
             assertTrue(html.indexOf('.ws-day-col') !== -1);
         });
     });
+
+    // ============================================================
+    // Task 249: хлебные крошки страниц Графика работы.
+    // До фикса: у work-schedule*-страниц не было записей ни в PAGE_PARENTS,
+    // ни в PAGE_LABELS → крошки показывали raw id: «Главная / work-schedule».
+    // После фикса: «Главная / График работы» (и полные пути у подразделов).
+    // ============================================================
+    describe('Task 249: крошки «Главная / График работы» вместо raw id', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+        // Извлекаем блок PAGE_LABELS (regex по всему html цепляет и PAGE_PARENTS,
+        // где 'work-schedule': 'dashboard' стоит выше по файлу)
+        const labelsMatch = html.match(/const PAGE_LABELS = \{([\s\S]*?)\n    \};/);
+        const labels = labelsMatch ? labelsMatch[1] : '';
+
+        test('PAGE_LABELS: метка «График работы» для work-schedule', () => {
+            const m = labels.match(/'work-schedule':\s+'([^']+)'/);
+            assertTrue(!!m, 'PAGE_LABELS должен содержать запись для work-schedule');
+            assertEqual(m[1], 'График работы',
+                'Метка work-schedule должна быть «График работы» (не raw id)');
+        });
+
+        test('PAGE_LABELS: метки для подразделов (сотрудники/инструктажи)', () => {
+            const mEmp = labels.match(/'work-schedule-employees':\s+'([^']+)'/);
+            const mTr = labels.match(/'work-schedule-trainings':\s+'([^']+)'/);
+            assertTrue(!!mEmp, 'PAGE_LABELS должен содержать запись для work-schedule-employees');
+            assertTrue(!!mTr, 'PAGE_LABELS должен содержать запись для work-schedule-trainings');
+            assertEqual(mEmp[1], 'Сотрудники',
+                'Метка work-schedule-employees должна совпадать с заголовком страницы');
+            assertEqual(mTr[1], 'Инструктажи и обучения',
+                'Метка work-schedule-trainings должна совпадать с заголовком страницы');
+        });
+
+        test('PAGE_LABELS: метки не дублируются (единственная запись на страницу)', () => {
+            const countMain = (labels.match(/'work-schedule':\s+'/g) || []).length;
+            const countEmp = (labels.match(/'work-schedule-employees':\s+'/g) || []).length;
+            const countTr = (labels.match(/'work-schedule-trainings':\s+'/g) || []).length;
+            assertEqual(countMain, 1, 'Ровно одна запись work-schedule в PAGE_LABELS');
+            assertEqual(countEmp, 1, 'Ровно одна запись work-schedule-employees в PAGE_LABELS');
+            assertEqual(countTr, 1, 'Ровно одна запись work-schedule-trainings в PAGE_LABELS');
+        });
+
+        test('PAGE_PARENTS: work-schedule — корневой раздел (родитель dashboard)', () => {
+            // В PAGE_PARENTS: 'work-schedule': 'dashboard' (после admin-блока)
+            const re = /'work-schedule':\s+'dashboard'/;
+            assertTrue(re.test(html),
+                'PAGE_PARENTS должен содержать work-schedule → dashboard (корневой раздел, как Сапёр/Справочник)');
+        });
+
+        test('PAGE_PARENTS: подразделы с родителем work-schedule', () => {
+            const reEmp = /'work-schedule-employees':\s+'work-schedule'/;
+            const reTr = /'work-schedule-trainings':\s+'work-schedule'/;
+            assertTrue(reEmp.test(html),
+                'PAGE_PARENTS: work-schedule-employees → work-schedule (путь «Главная / График работы / Сотрудники»)');
+            assertTrue(reTr.test(html),
+                'PAGE_PARENTS: work-schedule-trainings → work-schedule (путь «Главная / График работы / Инструктажи и обучения»)');
+        });
+
+        test('buildBreadcrumbPath: путь work-schedule = [work-schedule] (один сегмент)', () => {
+            // Симуляция buildBreadcrumbPath с PAGE_PARENTS из index.html:
+            // извлекаем карту и поднимаемся от work-schedule до dashboard.
+            const mapMatch = html.match(/const PAGE_PARENTS = \{([\s\S]*?)\n    \};/);
+            assertTrue(!!mapMatch, 'PAGE_PARENTS должен существовать в index.html');
+            const entries = {};
+            const re = /'([a-z0-9-]+)':\s+'([a-z0-9-]+)'/g;
+            let mm;
+            while ((mm = re.exec(mapMatch[1])) !== null) {
+                if (!(mm[1] in entries)) entries[mm[1]] = mm[2]; // первая запись приоритетна
+            }
+            // Путь от work-schedule вверх
+            const path = [];
+            let cur = 'work-schedule';
+            const visited = new Set();
+            while (cur && cur !== 'dashboard' && !visited.has(cur)) {
+                visited.add(cur);
+                path.unshift(cur);
+                cur = entries[cur] || null;
+            }
+            assertEqual(path.length, 1,
+                'Путь work-schedule должен быть одним сегментом (родитель — dashboard)');
+            assertEqual(path[0], 'work-schedule');
+        });
+
+        test('buildBreadcrumbPath: путь work-schedule-employees = [work-schedule, work-schedule-employees]', () => {
+            const mapMatch = html.match(/const PAGE_PARENTS = \{([\s\S]*?)\n    \};/);
+            assertTrue(!!mapMatch, 'PAGE_PARENTS должен существовать в index.html');
+            const entries = {};
+            const re = /'([a-z0-9-]+)':\s+'([a-z0-9-]+)'/g;
+            let mm;
+            while ((mm = re.exec(mapMatch[1])) !== null) {
+                if (!(mm[1] in entries)) entries[mm[1]] = mm[2];
+            }
+            const path = [];
+            let cur = 'work-schedule-employees';
+            const visited = new Set();
+            while (cur && cur !== 'dashboard' && !visited.has(cur)) {
+                visited.add(cur);
+                path.unshift(cur);
+                cur = entries[cur] || null;
+            }
+            assertEqual(path.length, 2,
+                'Путь work-schedule-employees — два сегмента через work-schedule');
+            assertEqual(path[0], 'work-schedule');
+            assertEqual(path[1], 'work-schedule-employees');
+        });
+
+        test('Метки совпадают с заголовками страниц (page-inline-header-title)', () => {
+            // Заголовок страницы — источник истины для метки крошек
+            assertTrue(html.indexOf('<div class="page-inline-header-title">График работы</div>') !== -1,
+                'Заголовок страницы work-schedule — «График работы»');
+            assertTrue(html.indexOf('<div class="page-inline-header-title">Сотрудники</div>') !== -1,
+                'Заголовок страницы work-schedule-employees — «Сотрудники»');
+            assertTrue(html.indexOf('<div class="page-inline-header-title">Инструктажи и обучения</div>') !== -1,
+                'Заголовок страницы work-schedule-trainings — «Инструктажи и обучения»');
+        });
+
+        test('SW: CACHE_VERSION = kipia-test-v508', () => {
+            const swPath = path.resolve(__dirname, '..', 'sw.js');
+            const sw = fs.readFileSync(swPath, 'utf8');
+            assertTrue(sw.indexOf("kipia-test-v508") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v508 (Task 249)');
+            assertTrue(sw.indexOf("kipia-test-v507") === -1,
+                'Старая версия v507 не должна остаться в sw.js');
+        });
+    });
 });

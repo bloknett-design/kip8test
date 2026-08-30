@@ -2010,18 +2010,5 @@ describe('Task 248: CSS-отсечка «4 строки» сохранена (sa
     });
 });
 
-// Task 248: SW обновлён до v507
-describe('Task 248: SW версия v507', () => {
-    const fs = require('fs');
-    const path = require('path');
-    const swPath = path.resolve(__dirname, '..', 'sw.js');
-    const sw = fs.readFileSync(swPath, 'utf-8');
-
-    test('CACHE_VERSION = kipia-test-v507', () => {
-        assertTrue(sw.indexOf("kipia-test-v507") !== -1);
-    });
-    test('Старая версия v506 убрана', () => {
-        assertTrue(sw.indexOf("kipia-test-v506") === -1,
-                   'Старая v506 не должна остаться в sw.js');
-    });
-});
+// Task 248: SW-блок версии v507 удалён — версия v508 введена в Task 249
+// (SW-тест v508 находится в tests/test-work-schedule.js). Историческая заметка.
