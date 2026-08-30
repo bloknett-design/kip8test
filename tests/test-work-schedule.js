@@ -911,72 +911,112 @@ describe('График работы — WorkSchedule', () => {
         });
     });
 
-    describe('Task 254: красные линии-границы выходных и рабочих дней', () => {
+    describe('Task 254 + Task 255: линии-границы выходных и рабочих дней', () => {
         const fs = require('fs');
         const path = require('path');
         const indexPath = path.resolve(__dirname, '..', 'index.html');
         const html = fs.readFileSync(indexPath, 'utf8');
 
-        test('CSS: границы 2px красные — и в шапке, и в теле таблицы', () => {
-            const reL = /\.ws-grid thead th\.ws-day-col\.ws-boundary-left,\s*\n\s*\.ws-grid tbody td\.ws-cell\.ws-boundary-left \{ border-left: 2px solid #e53935; \}/;
-            const reR = /\.ws-grid thead th\.ws-day-col\.ws-boundary-right,\s*\n\s*\.ws-grid tbody td\.ws-cell\.ws-boundary-right \{ border-right: 2px solid #e53935; \}/;
+        test('CSS: границы 1px приглушённые (#cc6e73) — только в tbody', () => {
+            // Task 255: тоньше (1px вместо 2px), приглушённее (#cc6e73
+            // вместо яркого #e53935), из шапки (thead) убраны.
+            const reL = /\.ws-grid tbody td\.ws-cell\.ws-boundary-left,\s*\n\s*\.ws-grid tbody td\.ws-cell\.ws-boundary-before \{ border-left: 1px solid #cc6e73; \}/;
+            const reR = /\.ws-grid tbody td\.ws-cell\.ws-boundary-right,\s*\n\s*\.ws-grid tbody td\.ws-cell\.ws-boundary-after \{ border-right: 1px solid #cc6e73; \}/;
             assertTrue(reL.test(html) && reR.test(html),
-                'Линии слева от субботы и справа от воскресенья — 2px #e53935 (thead + tbody)');
+                'Линии — 1px #cc6e73, парные классы left/before + right/after (tbody)');
+            const oldBright = /\.ws-grid[^{]*\{[^}]*#e53935/;
+            assertTrue(!oldBright.test(html),
+                'Яркий #e53935 больше не используется для линий-границ');
         });
 
         test('CSS: специфичность границ выше светлой темы (не перекрасится)', () => {
             // Светлая тема задаёт [data-theme="light"] .ws-grid tbody td
             // { border-color } со специфичностью (0,2,2) НИЖЕ по файлу.
             // Граничные селекторы обязаны быть сильнее: + .ws-cell → (0,3,2).
-            const re = /\.ws-grid tbody td\.ws-cell\.ws-boundary-left \{ border-left: 2px solid #e53935; \}/;
+            const re = /\.ws-grid tbody td\.ws-cell\.ws-boundary-after \{ border-right: 1px solid #cc6e73; \}/;
             assertTrue(re.test(html),
-                'Селектор td.ws-cell.ws-boundary-left — красная граница переживает светлую тему');
-            const weak = /\.ws-grid tbody td\.ws-boundary-left \{/;
+                'Селектор td.ws-cell.ws-boundary-after — красная граница переживает светлую тему');
+            const weak = /\.ws-grid tbody td\.ws-boundary-\w+ \{/;
             assertTrue(!weak.test(html),
                 'Слабый селектор (без .ws-cell) удалён — иначе светлая тема перекрасит границу');
         });
 
-        test('JS: суббота (не 1-е число) — граница слева, воскресенье (не последний день) — справа', () => {
+        test('CSS: в шапке (thead) граничных селекторов больше нет', () => {
+            // Task 255: линии убраны из шапки графика — только тело таблицы.
+            const thBoundary = /\.ws-grid thead th[^{]*ws-boundary/;
+            assertTrue(!thBoundary.test(html),
+                'Граничные селекторы не должны затрагивать thead (шапка без линий)');
+        });
+
+        test('JS: обе стороны стыка — пятница+суббота, воскресенье+понедельник', () => {
+            // При 1px в border-collapse цвет общей грани равных границ
+            // браузер может взять у соседа — красной делается ОБЕ стороны.
             assertTrue(html.indexOf("if (cellDow === 6 && day > 1) classes.push('ws-boundary-left');") !== -1,
-                'Суббота со 2-й позиции месяца — красная линия слева (стык с пятницей)');
-            assertTrue(html.indexOf("classes.push('ws-boundary-right');") !== -1,
-                'Воскресенье не последним днём — красная линия справа (стык с понедельником)');
-            const reGuard = /cellDow === 0 && day < new Date\(this\._year, this\._month, 0\)\.getDate\(\)/;
-            assertTrue(reGuard.test(html),
-                'Граница справа НЕ ставится, если воскресенье — последний день месяца');
+                'Суббота со 2-й позиции месяца — ws-boundary-left');
+            assertTrue(html.indexOf("if (cellDow === 5 && day < lastDay) classes.push('ws-boundary-after');") !== -1,
+                'Пятница (не последний день) — ws-boundary-after (border-right)');
+            assertTrue(html.indexOf("if (cellDow === 0 && day < lastDay) classes.push('ws-boundary-right');") !== -1,
+                'Воскресенье (не последний день) — ws-boundary-right');
+            assertTrue(html.indexOf("if (cellDow === 1 && day > 1) classes.push('ws-boundary-before');") !== -1,
+                'Понедельник со 2-й позиции месяца — ws-boundary-before (border-left)');
+            const reLast = /var lastDay = new Date\(this\._year, this\._month, 0\)\.getDate\(\);/;
+            assertTrue(reLast.test(html),
+                'lastDay вычисляется один раз для обеих проверок');
         });
 
-        test('JS: шапка таблицы — те же граничные классы (линия непрерывна)', () => {
-            assertTrue(html.indexOf("if (dt.getDay() === 6 && d > 1) thCls += ' ws-boundary-left';") !== -1,
-                'Шапка: суббота (не 1-е) — ws-boundary-left');
-            assertTrue(html.indexOf("if (dt.getDay() === 0 && d < daysInMonth) thCls += ' ws-boundary-right';") !== -1,
-                'Шапка: воскресенье (не последнее) — ws-boundary-right');
-        });
-
-        test('CSS: 2px перекрывает обычную 1px-границу (border-collapse)', () => {
-            const re = /\.ws-grid tbody td \{[^}]*border: 1px solid/;
-            assertTrue(re.test(html),
-                'Обычные границы ячеек 1px — 2px красная граница всегда победит в border-collapse');
+        test('JS: шапка таблицы — граничные классы НЕ ставятся', () => {
+            // Task 255: из шапки линии убраны — thCls больше не получает
+            // ws-boundary-*, остаются только ws-day-col + ws-holiday.
+            assertTrue(html.indexOf("thCls += ' ws-boundary-left'") === -1 &&
+                       html.indexOf("thCls += ' ws-boundary-right'") === -1,
+                'Шапка: граничные классы удалены из рендера th');
+            const reTh = /var thCls = 'ws-day-col' \+ \(isHoliday \? ' ws-holiday' : ''\);/;
+            assertTrue(reTh.test(html),
+                'Шапка: thCls формируется только из ws-day-col + ws-holiday');
         });
     });
 
-    describe('Task 254: должность сотрудника под ФИО', () => {
+    describe('Task 254 + Task 255: должность и режим занятости под ФИО', () => {
         const fs = require('fs');
         const path = require('path');
         const indexPath = path.resolve(__dirname, '..', 'index.html');
         const html = fs.readFileSync(indexPath, 'utf8');
 
-        test('JS: колонка сотрудника — ws-emp-name + ws-emp-pos с должностью', () => {
-            assertTrue(html.indexOf("'<div class=\"ws-emp-pos\">' + this._esc(emp['должность']) + '</div>'") !== -1,
-                'Должность выводится в .ws-emp-pos (поле «должность» справочника)');
+        test('JS: _posLabel — должность + тип (столбец C) + смена №N (столбец D)', () => {
+            // Данные таблицы «Сотрудники» файла табель_КИП_ИОС: столбец C —
+            // тип (сменный/дневной), столбец D — номер смены. Формирование:
+            // «Слесарь КИПиА смена №1» / «Слесарь КИПиА дневной».
+            const re = /_posLabel: function\(emp\) \{[\s\S]*?if \(tip === 'сменный'\) \{[\s\S]*?' смена №' \+ smena[\s\S]*?\} else if \(tip === 'дневной'\) \{[\s\S]*?' дневной';[\s\S]*?\}/;
+            assertTrue(re.test(html),
+                'Хелпер _posLabel формирует «… смена №N» / «… дневной»');
+            const reRange = /smena >= 1 && smena <= 5/;
+            assertTrue(reRange.test(html),
+                'Смена выводится только при корректном номере 1..5');
+        });
+
+        test('JS: колонка сотрудника — ws-emp-pos с подписью _posLabel', () => {
+            assertTrue(html.indexOf("var empPosLabel = this._posLabel(emp);") !== -1 &&
+                       html.indexOf("'<div class=\"ws-emp-pos\">' + this._esc(empPosLabel) + '</div>'") !== -1,
+                'Подпись в .ws-emp-pos формируется через _posLabel (должность + режим)');
             assertTrue(html.indexOf('<div class="ws-emp-name">') !== -1,
                 'ФИО переносится в блок .ws-emp-name (две строки в колонке)');
         });
 
-        test('JS: пустая должность — строка не рендерится', () => {
-            const re = /var empPos = emp\['должность'\]\s*\n\s*\? '<div class="ws-emp-pos">'/;
+        test('JS: пустая подпись — строка не рендерится', () => {
+            const re = /var empPosLabel = this\._posLabel\(emp\);\s*\n\s*var empPos = empPosLabel\s*\n\s*\? '<div class="ws-emp-pos">'/;
             assertTrue(re.test(html),
-                'Тернарник: без должности нет пустого блока .ws-emp-pos');
+                'Тернарник: без должности И типа нет пустого блока .ws-emp-pos');
+        });
+
+        test('JS: справочник «Сотрудники» — смена в подписи должности (единый формат)', () => {
+            // Task 255: в карточках справочника фрагмент «· смена N» убран,
+            // смена (столбец D) входит в подпись должности справа от неё.
+            assertTrue(html.indexOf("var posLabel = this._posLabel(e);") !== -1 &&
+                       html.indexOf("(posLabel ? ' · ' + this._esc(posLabel) : '')") !== -1,
+                'Карточка: подпись _posLabel справа от тега типа');
+            assertTrue(html.indexOf("· смена ' + e.смена") === -1 &&
+                       html.indexOf('· смена не задана') === -1,
+                'Дублирующий отдельный фрагмент смены удалён');
         });
 
         test('CSS: .ws-emp-pos — мелкий приглушённый текст с эллипсисом', () => {
@@ -989,6 +1029,19 @@ describe('График работы — WorkSchedule', () => {
             const re = /\[data-theme="light"\] \.ws-grid tbody td\.ws-emp-col \.ws-emp-pos \{[^}]*color:\s*#666;/;
             assertTrue(re.test(html),
                 'Светлая тема: читаемая должность под ФИО');
+        });
+    });
+
+    describe('Task 255: селекты месяца/года без скруглений', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('CSS: .ws-month-sel/.ws-year-sel — border-radius: 0', () => {
+            const re = /\.ws-month-sel, \.ws-year-sel \{[^}]*border-radius:\s*0;/;
+            assertTrue(re.test(html),
+                'Селекты месяца и года — прямые углы (как кнопки тулбара)');
         });
     });
 
@@ -1023,19 +1076,19 @@ describe('График работы — WorkSchedule', () => {
         });
     });
 
-    describe('Task 254: SW версия v512', () => {
+    describe('Task 255: SW версия v513', () => {
         const fs = require('fs');
         const path = require('path');
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v512', () => {
-            assertTrue(sw.indexOf("kipia-test-v512") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v512 (Task 254)');
+        test('CACHE_VERSION = kipia-test-v513', () => {
+            assertTrue(sw.indexOf("kipia-test-v513") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v513 (Task 255)');
         });
-        test('Старая версия v511 убрана', () => {
-            assertTrue(sw.indexOf("kipia-test-v511") === -1,
-                'Старая v511 не должна остаться в sw.js');
+        test('Старая версия v512 убрана', () => {
+            assertTrue(sw.indexOf("kipia-test-v512") === -1,
+                'Старая v512 не должна остаться в sw.js');
         });
     });
 });
