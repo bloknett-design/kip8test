@@ -347,6 +347,9 @@ describe('График работы — WorkSchedule', () => {
     // До фикса: у work-schedule*-страниц не было записей ни в PAGE_PARENTS,
     // ни в PAGE_LABELS → крошки показывали raw id: «Главная / work-schedule».
     // После фикса: «Главная / График работы» (и полные пути у подразделов).
+    // Task 267: work-schedule стал подразделом «Документации ИОС» —
+    // цепочка стала ПОЛНОЙ: «Главная / Документация / Документация ИОС /
+    // График работы» (см. тесты ниже и describe Task 267).
     // ============================================================
     describe('Task 249: крошки «Главная / График работы» вместо raw id', () => {
         const fs = require('fs');
@@ -385,11 +388,14 @@ describe('График работы — WorkSchedule', () => {
             assertEqual(countTr, 1, 'Ровно одна запись work-schedule-trainings в PAGE_LABELS');
         });
 
-        test('PAGE_PARENTS: work-schedule — корневой раздел (родитель dashboard)', () => {
-            // В PAGE_PARENTS: 'work-schedule': 'dashboard' (после admin-блока)
-            const re = /'work-schedule':\s+'dashboard'/;
+        test('PAGE_PARENTS: work-schedule — подраздел «Документации ИОС» (Task 267)', () => {
+            // Task 249: был корневым ('dashboard'). Task 267: полная цепочка
+            // крошек — «Главная / Документация / Документация ИОС / График
+            // работы» (кнопка раздела живёт на page-docs-ios, рядом с
+            // «Расходомерами хозрасчётными» — их цепочка построена так же)
+            const re = /'work-schedule':\s+'docs-ios'/;
             assertTrue(re.test(html),
-                'PAGE_PARENTS должен содержать work-schedule → dashboard (корневой раздел, как Сапёр/Справочник)');
+                'PAGE_PARENTS должен содержать work-schedule → docs-ios (полная цепочка крошек, Task 267)');
         });
 
         test('PAGE_PARENTS: подразделы с родителем work-schedule', () => {
@@ -401,7 +407,7 @@ describe('График работы — WorkSchedule', () => {
                 'PAGE_PARENTS: work-schedule-trainings → work-schedule (путь «Главная / График работы / Инструктажи и обучения»)');
         });
 
-        test('buildBreadcrumbPath: путь work-schedule = [work-schedule] (один сегмент)', () => {
+        test('buildBreadcrumbPath: путь work-schedule = [docs, docs-ios, work-schedule] (Task 267)', () => {
             // Симуляция buildBreadcrumbPath с PAGE_PARENTS из index.html:
             // извлекаем карту и поднимаемся от work-schedule до dashboard.
             const mapMatch = html.match(/const PAGE_PARENTS = \{([\s\S]*?)\n    \};/);
@@ -421,12 +427,15 @@ describe('График работы — WorkSchedule', () => {
                 path.unshift(cur);
                 cur = entries[cur] || null;
             }
-            assertEqual(path.length, 1,
-                'Путь work-schedule должен быть одним сегментом (родитель — dashboard)');
-            assertEqual(path[0], 'work-schedule');
+            // Task 267: полная цепочка — Документация → Документация ИОС → График работы
+            assertEqual(path.length, 3,
+                'Путь work-schedule — три сегмента (полная цепочка, Task 267)');
+            assertEqual(path[0], 'docs');
+            assertEqual(path[1], 'docs-ios');
+            assertEqual(path[2], 'work-schedule');
         });
 
-        test('buildBreadcrumbPath: путь work-schedule-employees = [work-schedule, work-schedule-employees]', () => {
+        test('buildBreadcrumbPath: путь work-schedule-employees = [docs, docs-ios, work-schedule, work-schedule-employees] (Task 267)', () => {
             const mapMatch = html.match(/const PAGE_PARENTS = \{([\s\S]*?)\n    \};/);
             assertTrue(!!mapMatch, 'PAGE_PARENTS должен существовать в index.html');
             const entries = {};
@@ -443,10 +452,14 @@ describe('График работы — WorkSchedule', () => {
                 path.unshift(cur);
                 cur = entries[cur] || null;
             }
-            assertEqual(path.length, 2,
-                'Путь work-schedule-employees — два сегмента через work-schedule');
-            assertEqual(path[0], 'work-schedule');
-            assertEqual(path[1], 'work-schedule-employees');
+            // Task 267: четыре сегмента — Главная / Документация /
+            // Документация ИОС / График работы / Сотрудники
+            assertEqual(path.length, 4,
+                'Путь work-schedule-employees — четыре сегмента через docs → docs-ios → work-schedule');
+            assertEqual(path[0], 'docs');
+            assertEqual(path[1], 'docs-ios');
+            assertEqual(path[2], 'work-schedule');
+            assertEqual(path[3], 'work-schedule-employees');
         });
 
         test('Метки совпадают с заголовками страниц (page-inline-header-title)', () => {
@@ -1184,8 +1197,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v514 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v522") !== -1,
-                'Актуальная версия — kipia-test-v522 (Task 266)');
+            assertTrue(sw.indexOf("kipia-test-v523") !== -1,
+                'Актуальная версия — kipia-test-v523 (Task 267)');
         });
         test('Старая версия v514 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v514") === -1,
@@ -1248,8 +1261,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v516 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v522") !== -1,
-                'Актуальная версия — kipia-test-v522 (Task 266)');
+            assertTrue(sw.indexOf("kipia-test-v523") !== -1,
+                'Актуальная версия — kipia-test-v523 (Task 267)');
         });
     });
 
@@ -1260,8 +1273,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v515 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v522") !== -1,
-                'Актуальная версия — kipia-test-v522 (Task 266)');
+            assertTrue(sw.indexOf("kipia-test-v523") !== -1,
+                'Актуальная версия — kipia-test-v523 (Task 267)');
         });
     });
 
@@ -1271,8 +1284,8 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
         test('v513 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v522") !== -1,
-                'Актуальная версия — kipia-test-v522');
+            assertTrue(sw.indexOf("kipia-test-v523") !== -1,
+                'Актуальная версия — kipia-test-v523');
         });
     });
 
@@ -1465,8 +1478,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v517 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v522") !== -1,
-                'Актуальная версия — kipia-test-v522 (Task 266)');
+            assertTrue(sw.indexOf("kipia-test-v523") !== -1,
+                'Актуальная версия — kipia-test-v523 (Task 267)');
         });
         test('Старая версия v517 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v517") === -1,
@@ -1480,9 +1493,9 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v522', () => {
-            assertTrue(sw.indexOf("kipia-test-v522") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v522 (Task 266)');
+        test('CACHE_VERSION = kipia-test-v523', () => {
+            assertTrue(sw.indexOf("kipia-test-v523") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v523 (Task 267)');
         });
         test('Старая версия v517 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v517") === -1,
@@ -1667,6 +1680,186 @@ describe('График работы — WorkSchedule', () => {
                 'заголовок экранируется');
             assertTrue(sb.overlay.innerHTML.indexOf('OK&lt;x&gt;') !== -1,
                 'надпись кнопки экранируется');
+        });
+    });
+
+    // ============================================================
+    // Task 267 (по заявке пользователя), 4 пункта:
+    //   1) анимация точек «Загрузка…» при загрузке графика —
+    //      по примеру «Расходомеров хозрасчётных» (.flow-loading-dots);
+    //   2) Документация ИОС — автоматическое размещение кнопок
+    //      (обе в одном .menu-btn-row, как на странице «Библиотека»);
+    //   3) «График работы» можно закрепить на главной (SUBSECTIONS);
+    //   4) хлебные крошки «Графика работы» — полная цепочка
+    //      «Главная / Документация / Документация ИОС / График работы».
+    // ============================================================
+    describe('Task 267: анимация точек «Загрузка…» в Графике работы', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('CSS: переиспользуются классы расходомеров .flow-loading-dots + keyframes', () => {
+            assertTrue(html.indexOf('.flow-loading-dots {') !== -1,
+                'CSS .flow-loading-dots определён (общий для расходомеров и графика)');
+            assertTrue(html.indexOf('@keyframes flowLoadingDot') !== -1,
+                'keyframes flowLoadingDot определён');
+            assertTrue(html.indexOf('.flow-loading-dots span {') !== -1,
+                'анимация на точках-спанах');
+            // Задержки чередуются — «бегущие» точки
+            const re1 = /\.flow-loading-dots span:nth-child\(1\) \{ animation-delay: 0s; \}/;
+            const re3 = /\.flow-loading-dots span:nth-child\(3\) \{ animation-delay: 0\.4s; \}/;
+            assertTrue(re1.test(html) && re3.test(html),
+                'задержки 0s/0.2s/0.4s — точки бегут по очереди');
+        });
+
+        test('HTML: статический #wsEmpty — «Загрузка» + три анимированные точки', () => {
+            const re = /<div class="admin-empty" id="wsEmpty">Загрузка<span class="flow-loading-dots"><span>\.<\/span><span>\.<\/span><span>\.<\/span><\/span><\/div>/;
+            assertTrue(re.test(html),
+                'плейсхолдер сетки содержит span.flow-loading-dots с тремя точками');
+        });
+
+        test('JS: loadGrid() ставит ту же разметку с точками', () => {
+            const re = /wrapEl\.innerHTML = '<div class="admin-empty" id="wsEmpty">Загрузка<span class="flow-loading-dots"><span>\.<\/span><span>\.<\/span><span>\.<\/span><\/span><\/div>';/;
+            assertTrue(re.test(html),
+                'loadGrid показывает «Загрузка…» с анимированными точками при каждой смене месяца');
+        });
+
+        test('CSS-комментарий фиксирует переиспользование классов (Task 267)', () => {
+            assertTrue(html.indexOf('Task 267: классы .flow-loading-dots / @keyframes flowLoadingDot') !== -1,
+                'комментарий в CSS о совместном использовании классов');
+        });
+    });
+
+    describe('Task 267: Документация ИОС — автоматическое размещение кнопок', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        // Блок страницы Документация ИОС (от заголовка до следующей страницы)
+        const pageStart = html.indexOf('id="page-docs-ios"');
+        const pageEnd = html.indexOf('id="page-flowmeter-data"');
+        assertTrue(pageStart !== -1 && pageEnd !== -1 && pageStart < pageEnd,
+            'страница page-docs-ios найдена');
+        const pageBlock = html.slice(pageStart, pageEnd);
+
+        test('HTML: обе кнопки в ОДНОМ .menu-btn-row (как в Библиотеке)', () => {
+            const rows = pageBlock.match(/<div class="menu-btn-row">/g) || [];
+            assertEqual(rows.length, 1,
+                'на странице Документация ИОС ровно один .menu-btn-row (было два)');
+            assertTrue(pageBlock.indexOf('id="flowmeterMenuBtn"') !== -1,
+                'кнопка «Расходомеры хозрасчётные» на месте');
+            assertTrue(pageBlock.indexOf('id="workScheduleMenuBtn"') !== -1,
+                'кнопка «График работы» на месте');
+            // Порядок: расходомеры раньше графика в разметке
+            const iFlow = pageBlock.indexOf('id="flowmeterMenuBtn"');
+            const iWs = pageBlock.indexOf('id="workScheduleMenuBtn"');
+            assertTrue(iFlow !== -1 && iWs !== -1 && iFlow < iWs,
+                'порядок кнопок: Расходомеры → График работы');
+        });
+
+        test('CSS: grid-auto-rows 1fr — равная высота кнопок, как у Библиотеки', () => {
+            const re = /#page-library-internal \.menu-btn-row,\s*\n\s*#page-library-electro \.menu-btn-row,\s*\n\s*#page-docs-ios \.kip-ios-block \.menu-btn-row \{ grid-auto-rows: 1fr; \}/;
+            assertTrue(re.test(html),
+                'правило grid-auto-rows: 1fr включает #page-docs-ios .kip-ios-block .menu-btn-row');
+        });
+
+        test('CSS: десктоп — 3 колонки для page-docs-ios (авто-размещение сеткой)', () => {
+            const re = /#page-docs-ios \.kip-ios-block \.menu-btn-row,[\s\S]{0,200}?grid-template-columns: repeat\(3, 1fr\);/;
+            assertTrue(re.test(html),
+                'десктопное правило 3 колонок покрывает .kip-ios-block страницы Документация ИОС');
+        });
+
+        test('Роль-фильтр: скрытие .kip-ios-block при всех скрытых кнопках не сломано', () => {
+            assertTrue(html.indexOf("flowmeterBtn.closest('.kip-ios-block')") !== -1,
+                'проверка kip-ios-block осталась (кнопки в одном ряду — closest работает)');
+        });
+    });
+
+    describe('Task 267: кнопка «График работы» — закрепление на главной', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        // Извлечение реестра SUBSECTIONS (как в test-role-access.js)
+        const m = html.match(/const\s+SUBSECTIONS\s*=\s*\{/);
+        assertTrue(!!m, 'SUBSECTIONS найден');
+        // Запись work-schedule в реестре (регекс по строке реестра)
+        test('SUBSECTIONS: запись work-schedule — label/sublabel/target/category', () => {
+            const re = /'work-schedule':\s*\{ label: 'График работы',\s*sublabel: 'Шахматка сменного и дневного персонала',\s*target: 'work-schedule',\s*category: 'docs' \}/;
+            assertTrue(re.test(html),
+                'реестр содержит work-schedule (метка как у кнопки на странице, категория docs — золотистый стиль)');
+        });
+
+        test('SUBSECTIONS: work-schedule доступен для закрепления (валидный target)', () => {
+            // target = 'work-schedule' — страница существует и входит в _WORK_SCHEDULE_PAGES
+            assertTrue(html.indexOf('id="page-work-schedule"') !== -1,
+                'страница page-work-schedule существует');
+            assertTrue(html.indexOf("_WORK_SCHEDULE_PAGES: ['work-schedule',") !== -1,
+                'work-schedule в _WORK_SCHEDULE_PAGES (доступ Админу через *)');
+        });
+
+        test('wrapSubsectionItems: ключ кнопки «График работы» теперь в реестре → свайп работает', () => {
+            // Кнопка на page-docs-ios имеет onclick navigateTo('work-schedule');
+            // wrapSubsectionItems оборачивает только кнопки с ключом в SUBSECTIONS
+            const reBtn = /id="workScheduleMenuBtn"[^>]*onclick="navigateTo\('work-schedule'\)"/;
+            assertTrue(reBtn.test(html),
+                'кнопка workScheduleMenuBtn ведёт на work-schedule');
+            assertTrue(html.indexOf("if (!SUBSECTIONS[key]) return;") !== -1,
+                'фильтр по реестру в wrapSubsectionItems');
+        });
+
+        test('Закреплённый ярлык: рендер как у «Расходомеров» (docs-категория)', () => {
+            // renderPinnedItems красит docs-категорию золотистым — как flowmeter-data
+            assertTrue(html.indexOf("const isDocs = s.category === 'docs';") !== -1,
+                'стилизация docs-категории в renderPinnedItems');
+        });
+    });
+
+    describe('Task 267: полная цепочка хлебных крошек Графика работы', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('PAGE_PARENTS: work-schedule больше НЕ корневой (dashboard убран)', () => {
+            const re = /'work-schedule':\s+'dashboard'/;
+            assertTrue(!re.test(html),
+                'записи work-schedule → dashboard быть не должно (Task 267 заменил на docs-ios)');
+        });
+
+        test('PAGE_PARENTS: цепочка как у «Расходомеров хозрасчётных»', () => {
+            const reWs = /'work-schedule':\s+'docs-ios'/;
+            const reFlow = /'flowmeter-data':\s+'docs-ios'/;
+            assertTrue(reWs.test(html) && reFlow.test(html),
+                'work-schedule и flowmeter-data — оба подразделы docs-ios (единая цепочка)');
+        });
+
+        test('PAGE_LABELS: метки цепочки существуют (Документация / Документация ИОС / График работы)', () => {
+            const labelsMatch = html.match(/const PAGE_LABELS = \{([\s\S]*?)\n    \};/);
+            assertTrue(!!labelsMatch, 'PAGE_LABELS найден');
+            const labels = labelsMatch[1];
+            assertTrue(/'docs':\s+'Документация'/.test(labels), 'метка Документация');
+            assertTrue(/'docs-ios':\s+'Документация ИОС'/.test(labels), 'метка Документация ИОС');
+            assertTrue(/'work-schedule':\s+'График работы'/.test(labels), 'метка График работы');
+        });
+    });
+
+    describe('Task 267: SW версия v523', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const swPath = path.resolve(__dirname, '..', 'sw.js');
+        const sw = fs.readFileSync(swPath, 'utf8');
+
+        test('CACHE_VERSION = kipia-test-v523', () => {
+            assertTrue(sw.indexOf("kipia-test-v523") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v523 (Task 267)');
+        });
+        test('Старая версия v522 убрана', () => {
+            assertTrue(sw.indexOf("kipia-test-v522") === -1,
+                'Старая v522 не должна остаться в sw.js');
         });
     });
 });
