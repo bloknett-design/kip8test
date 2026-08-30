@@ -1184,8 +1184,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v514 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v520") !== -1,
-                'Актуальная версия — kipia-test-v520 (Task 264)');
+            assertTrue(sw.indexOf("kipia-test-v521") !== -1,
+                'Актуальная версия — kipia-test-v521 (Task 265)');
         });
         test('Старая версия v514 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v514") === -1,
@@ -1248,8 +1248,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v516 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v520") !== -1,
-                'Актуальная версия — kipia-test-v520 (Task 264)');
+            assertTrue(sw.indexOf("kipia-test-v521") !== -1,
+                'Актуальная версия — kipia-test-v521 (Task 265)');
         });
     });
 
@@ -1260,8 +1260,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v515 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v520") !== -1,
-                'Актуальная версия — kipia-test-v520 (Task 264)');
+            assertTrue(sw.indexOf("kipia-test-v521") !== -1,
+                'Актуальная версия — kipia-test-v521 (Task 265)');
         });
     });
 
@@ -1271,8 +1271,8 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
         test('v513 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v520") !== -1,
-                'Актуальная версия — kipia-test-v520');
+            assertTrue(sw.indexOf("kipia-test-v521") !== -1,
+                'Актуальная версия — kipia-test-v521');
         });
     });
 
@@ -1465,8 +1465,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v517 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v520") !== -1,
-                'Актуальная версия — kipia-test-v520 (Task 264)');
+            assertTrue(sw.indexOf("kipia-test-v521") !== -1,
+                'Актуальная версия — kipia-test-v521 (Task 265)');
         });
         test('Старая версия v517 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v517") === -1,
@@ -1480,13 +1480,193 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v520', () => {
-            assertTrue(sw.indexOf("kipia-test-v520") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v520 (Task 264)');
+        test('CACHE_VERSION = kipia-test-v521', () => {
+            assertTrue(sw.indexOf("kipia-test-v521") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v521 (Task 265)');
         });
         test('Старая версия v517 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v517") === -1,
                 'Старая v517 не должна остаться в sw.js');
+        });
+    });
+
+    // ============================================================
+    // Task 265: «Сформировать» — только через диалог подтверждения.
+    // kipConfirm усилен: заголовок/надписи кнопок (title/okText/
+    // cancelText), клавиатура (Escape — отмена, Enter — OK, если
+    // фокус не на кнопке), защита от двойного срабатывания.
+    // ============================================================
+    describe('Task 265: подтверждение «Сформировать»', () => {
+        const vm = require('vm');
+        const html = require('fs').readFileSync(
+            require('path').resolve(__dirname, '..', 'index.html'), 'utf8');
+
+        // Извлечение function NAME(...) {...} из index.html
+        function extractFn(src, name) {
+            const start = src.indexOf('function ' + name + '(');
+            if (start === -1) return null;
+            const braceStart = src.indexOf('{', start);
+            let depth = 0;
+            for (let i = braceStart; i < src.length; i++) {
+                if (src[i] === '{') depth++;
+                else if (src[i] === '}') { depth--; if (depth === 0) return src.slice(start, i + 1); }
+            }
+            return null;
+        }
+        const dialogSrc = ['_kipDialogOverlay', '_kipDialogClose', '_kipDialogEsc', 'kipConfirm']
+            .map(n => extractFn(html, n)).join('\n');
+        if (!dialogSrc || dialogSrc.length < 100) {
+            throw new Error('Task 265: функции диалога не извлеклись');
+        }
+
+        // Мок DOM + песочница с 4 функциями диалога
+        function makeDialogSandbox() {
+            const buttons = {
+                cancel: { className: 'kip-dialog-btn kip-dialog-cancel', textContent: '', onclick: null,
+                          closest: function () { return this; } },
+                ok:     { className: 'kip-dialog-btn kip-dialog-ok', textContent: '', onclick: null,
+                          closest: function () { return this; } }
+            };
+            const overlay = {
+                id: '', className: '',
+                _html: '',
+                set innerHTML(v) { this._html = String(v || ''); },
+                get innerHTML() { return this._html; },
+                classList: (() => {
+                    const set = new Set();
+                    return { add: c => set.add(c), remove: c => set.delete(c), contains: c => set.has(c) };
+                })(),
+                querySelector: sel =>
+                    sel === '.kip-dialog-cancel' ? buttons.cancel :
+                    sel === '.kip-dialog-ok' ? buttons.ok : null
+            };
+            const listeners = {};
+            const documentMock = {
+                getElementById: id => (id === 'kipDialogOverlay' ? overlay : null),
+                createElement: () => overlay,
+                body: { appendChild: () => {} },
+                addEventListener: (type, fn) => { (listeners[type] = listeners[type] || []).push(fn); },
+                removeEventListener: (type, fn) => {
+                    const arr = listeners[type] || [];
+                    const i = arr.indexOf(fn);
+                    if (i !== -1) arr.splice(i, 1);
+                }
+            };
+            const sandbox = {
+                document: documentMock,
+                requestAnimationFrame: fn => { fn(); return 0; },
+                setTimeout: () => 0,
+                clearTimeout: () => {},
+                Promise
+            };
+            vm.createContext(sandbox);
+            vm.runInContext(dialogSrc, sandbox);
+            return { sandbox, overlay, buttons, listeners };
+        }
+        const fireKey = (sb, key, target) => {
+            (sb.listeners.keydown || []).forEach(fn => fn({ key, target: target || null }));
+        };
+
+        test('HTML: generateMonth — kipConfirm с заголовком «Формирование шахматки» и кнопкой «Сформировать»', () => {
+            assertTrue(html.indexOf("{ title: 'Формирование шахматки', okText: 'Сформировать' }") !== -1,
+                'опции диалога: title + okText');
+            assertTrue(/kipConfirm\('Сформировать шахматку на ' \+ monthName/.test(html),
+                'текст вопроса с месяцем и годом');
+            assertTrue(html.indexOf('Существующие ручные правки будут сохранены') !== -1,
+                'пояснение о сохранении ручных правок');
+            assertTrue(html.indexOf('if (!ok) return;') !== -1,
+                'генерация только после подтверждения (ok === true)');
+        });
+
+        test('HTML: кнопка «Сформировать» с подсказкой о диалоге', () => {
+            const m = html.match(/id="wsGenerateBtn"[^>]*title="([^"]*)"/);
+            assertTrue(m && m[1].indexOf('диалог подтверждения') !== -1,
+                'title кнопки упоминает диалог подтверждения');
+        });
+
+        test('kipConfirm: дефолтные заголовок и кнопки', async () => {
+            const sb = makeDialogSandbox();
+            const p = sb.sandbox.kipConfirm('Удалить?', {});
+            await Promise.resolve();
+            assertTrue(sb.overlay.innerHTML.indexOf('Подтвердите действие') !== -1,
+                'заголовок по умолчанию');
+            assertTrue(sb.overlay.innerHTML.indexOf('>OK<') !== -1, 'кнопка OK');
+            assertTrue(sb.overlay.innerHTML.indexOf('>Отмена<') !== -1, 'кнопка Отмена');
+            assertTrue(sb.overlay.classList.contains('active'), 'оверлей активируется');
+            sb.buttons.ok.onclick();
+            assertEqual(await p, true, 'OK → true');
+        });
+
+        test('kipConfirm: кастомные title/okText/cancelText', async () => {
+            const sb = makeDialogSandbox();
+            const p = sb.sandbox.kipConfirm('Текст', { title: 'Формирование шахматки', okText: 'Сформировать', cancelText: 'Не сейчас' });
+            await Promise.resolve();
+            assertTrue(sb.overlay.innerHTML.indexOf('Формирование шахматки') !== -1,
+                'свой заголовок');
+            assertTrue(sb.overlay.innerHTML.indexOf('>Сформировать<') !== -1,
+                'своя кнопка подтверждения');
+            assertTrue(sb.overlay.innerHTML.indexOf('>Не сейчас<') !== -1,
+                'своя кнопка отмены');
+            sb.buttons.cancel.onclick();
+            assertEqual(await p, false, 'отмена → false');
+        });
+
+        test('kipConfirm: danger — красная кнопка OK', () => {
+            const sb = makeDialogSandbox();
+            sb.sandbox.kipConfirm('Удалить всё?', { danger: true });
+            assertTrue(sb.overlay.innerHTML.indexOf('kip-dialog-ok danger') !== -1,
+                'класс danger у кнопки подтверждения');
+        });
+
+        test('kipConfirm: Escape — отмена, слушатель снимается', async () => {
+            const sb = makeDialogSandbox();
+            const p = sb.sandbox.kipConfirm('Вопрос?');
+            await Promise.resolve();
+            assertTrue((sb.listeners.keydown || []).length === 1, 'keydown-слушатель добавлен');
+            fireKey(sb, 'Escape');
+            assertEqual(await p, false, 'Escape → false');
+            assertEqual((sb.listeners.keydown || []).length, 0, 'слушатель снят после закрытия');
+        });
+
+        test('kipConfirm: Enter — подтверждение (фокус не на кнопке)', async () => {
+            const sb = makeDialogSandbox();
+            const p = sb.sandbox.kipConfirm('Вопрос?');
+            await Promise.resolve();
+            fireKey(sb, 'Enter');
+            assertEqual(await p, true, 'Enter → true');
+        });
+
+        test('kipConfirm: Enter при фокусе на кнопке диалога — обрабатывает кнопка', async () => {
+            const sb = makeDialogSandbox();
+            let settled = null;
+            const p = sb.sandbox.kipConfirm('Вопрос?');
+            p.then(v => { settled = v; });
+            await Promise.resolve();
+            fireKey(sb, 'Enter', sb.buttons.cancel);   // фокус на «Отмена»
+            await new Promise(r => setTimeout(r, 5));
+            assertEqual(settled, null, 'глобальный Enter не сработал');
+            sb.buttons.cancel.onclick();
+            assertEqual(await p, false, 'кнопка отменила');
+        });
+
+        test('kipConfirm: двойной клик не ломает результат', async () => {
+            const sb = makeDialogSandbox();
+            const p = sb.sandbox.kipConfirm('Вопрос?');
+            await Promise.resolve();
+            sb.buttons.ok.onclick();
+            sb.buttons.ok.onclick();
+            sb.buttons.cancel.onclick();
+            assertEqual(await p, true, 'первое срабатывание побеждает');
+            assertEqual((sb.listeners.keydown || []).length, 0, 'слушатель снят один раз');
+        });
+
+        test('kipConfirm: экранирование заголовка и надписей', () => {
+            const sb = makeDialogSandbox();
+            sb.sandbox.kipConfirm('?', { title: '<b>Опасно</b>', okText: 'OK<x>' });
+            assertTrue(sb.overlay.innerHTML.indexOf('&lt;b&gt;Опасно&lt;/b&gt;') !== -1,
+                'заголовок экранируется');
+            assertTrue(sb.overlay.innerHTML.indexOf('OK&lt;x&gt;') !== -1,
+                'надпись кнопки экранируется');
         });
     });
 });
