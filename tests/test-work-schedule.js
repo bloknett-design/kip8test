@@ -864,13 +864,178 @@ describe('График работы — WorkSchedule', () => {
                 'thead th: height 32px — шапка не растягивается пропорционально строкам');
         });
 
-        test('SW: CACHE_VERSION = kipia-test-v511', () => {
-            const swPath = path.resolve(__dirname, '..', 'sw.js');
-            const sw = fs.readFileSync(swPath, 'utf8');
-            assertTrue(sw.indexOf("kipia-test-v511") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v511 (Task 252)');
-            assertTrue(sw.indexOf("kipia-test-v510") === -1,
-                'Старая версия v510 не должна остаться в sw.js');
+        // Task 252: SW-тест версии v511 удалён — версия v512 введена в
+        // Task 254 (см. describe ниже). Историческая заметка.
+    });
+
+    // ============================================================
+    // Task 254: визуальная разметка шахматки:
+    //   1) пустые ячейки выходных (Сб/Вс) — слабый пастельно-розовый фон;
+    //   2) красные линии-границы между колонками выходных и рабочих
+    //      дней (слева от субботы, справа от воскресенья) — непрерывные,
+    //      от шапки до последней строки;
+    //   3) под ФИО сотрудника — строка с должностью
+    //      («Слесарь КИПиА дневной» / «Слесарь КИПиА смена №1»);
+    //   4) тулбар с кнопками — непрозрачный фон, кнопки без скруглений.
+    // ============================================================
+    describe('Task 254: розовый фон пустых ячеек выходных дней', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('CSS: .ws-weekend.ws-status-empty — розовый фон (тёмная тема)', () => {
+            const re = /\.ws-grid tbody td\.ws-cell\.ws-weekend\.ws-status-empty \{[^}]*background:\s*#6e4250;[^}]*\}/;
+            assertTrue(re.test(html),
+                'Пустые ячейки выходных — сплошной пыльно-розовый фон (#6e4250)');
+        });
+
+        test('CSS: светлая тема — слабый пастельный розовый (#f7d9e3)', () => {
+            const re = /\[data-theme="light"\] \.ws-grid tbody td\.ws-cell\.ws-weekend\.ws-status-empty \{[^}]*background:\s*#f7d9e3;/;
+            assertTrue(re.test(html),
+                'Светлая тема: пастельно-розовый фон пустых ячеек выходных');
+        });
+
+        test('JS: _renderCell помечает выходные классом ws-weekend', () => {
+            assertTrue(html.indexOf("if (cellDow === 0 || cellDow === 6) classes.push('ws-weekend');") !== -1,
+                'Суббота и воскресенье должны получать класс ws-weekend');
+        });
+
+        test('CSS: розовый ТОЛЬКО у пустых ячеек (комбинация с ws-status-empty)', () => {
+            // Селектор требует ОБА класса: у статусных ячеек выходного
+            // (Д/Н/Б…) цвета справочника остаются
+            assertTrue(html.indexOf('.ws-grid tbody td.ws-cell.ws-weekend.ws-status-empty {') !== -1,
+                'Селектор розового фона — строго .ws-weekend.ws-status-empty');
+            assertTrue(html.indexOf("if (status) style += 'background:' + color + ';';") !== -1,
+                'Inline-фон статусных ячеек сохранён (Task 250/252)');
+        });
+    });
+
+    describe('Task 254: красные линии-границы выходных и рабочих дней', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('CSS: границы 2px красные — и в шапке, и в теле таблицы', () => {
+            const reL = /\.ws-grid thead th\.ws-day-col\.ws-boundary-left,\s*\n\s*\.ws-grid tbody td\.ws-cell\.ws-boundary-left \{ border-left: 2px solid #e53935; \}/;
+            const reR = /\.ws-grid thead th\.ws-day-col\.ws-boundary-right,\s*\n\s*\.ws-grid tbody td\.ws-cell\.ws-boundary-right \{ border-right: 2px solid #e53935; \}/;
+            assertTrue(reL.test(html) && reR.test(html),
+                'Линии слева от субботы и справа от воскресенья — 2px #e53935 (thead + tbody)');
+        });
+
+        test('CSS: специфичность границ выше светлой темы (не перекрасится)', () => {
+            // Светлая тема задаёт [data-theme="light"] .ws-grid tbody td
+            // { border-color } со специфичностью (0,2,2) НИЖЕ по файлу.
+            // Граничные селекторы обязаны быть сильнее: + .ws-cell → (0,3,2).
+            const re = /\.ws-grid tbody td\.ws-cell\.ws-boundary-left \{ border-left: 2px solid #e53935; \}/;
+            assertTrue(re.test(html),
+                'Селектор td.ws-cell.ws-boundary-left — красная граница переживает светлую тему');
+            const weak = /\.ws-grid tbody td\.ws-boundary-left \{/;
+            assertTrue(!weak.test(html),
+                'Слабый селектор (без .ws-cell) удалён — иначе светлая тема перекрасит границу');
+        });
+
+        test('JS: суббота (не 1-е число) — граница слева, воскресенье (не последний день) — справа', () => {
+            assertTrue(html.indexOf("if (cellDow === 6 && day > 1) classes.push('ws-boundary-left');") !== -1,
+                'Суббота со 2-й позиции месяца — красная линия слева (стык с пятницей)');
+            assertTrue(html.indexOf("classes.push('ws-boundary-right');") !== -1,
+                'Воскресенье не последним днём — красная линия справа (стык с понедельником)');
+            const reGuard = /cellDow === 0 && day < new Date\(this\._year, this\._month, 0\)\.getDate\(\)/;
+            assertTrue(reGuard.test(html),
+                'Граница справа НЕ ставится, если воскресенье — последний день месяца');
+        });
+
+        test('JS: шапка таблицы — те же граничные классы (линия непрерывна)', () => {
+            assertTrue(html.indexOf("if (dt.getDay() === 6 && d > 1) thCls += ' ws-boundary-left';") !== -1,
+                'Шапка: суббота (не 1-е) — ws-boundary-left');
+            assertTrue(html.indexOf("if (dt.getDay() === 0 && d < daysInMonth) thCls += ' ws-boundary-right';") !== -1,
+                'Шапка: воскресенье (не последнее) — ws-boundary-right');
+        });
+
+        test('CSS: 2px перекрывает обычную 1px-границу (border-collapse)', () => {
+            const re = /\.ws-grid tbody td \{[^}]*border: 1px solid/;
+            assertTrue(re.test(html),
+                'Обычные границы ячеек 1px — 2px красная граница всегда победит в border-collapse');
+        });
+    });
+
+    describe('Task 254: должность сотрудника под ФИО', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('JS: колонка сотрудника — ws-emp-name + ws-emp-pos с должностью', () => {
+            assertTrue(html.indexOf("'<div class=\"ws-emp-pos\">' + this._esc(emp['должность']) + '</div>'") !== -1,
+                'Должность выводится в .ws-emp-pos (поле «должность» справочника)');
+            assertTrue(html.indexOf('<div class="ws-emp-name">') !== -1,
+                'ФИО переносится в блок .ws-emp-name (две строки в колонке)');
+        });
+
+        test('JS: пустая должность — строка не рендерится', () => {
+            const re = /var empPos = emp\['должность'\]\s*\n\s*\? '<div class="ws-emp-pos">'/;
+            assertTrue(re.test(html),
+                'Тернарник: без должности нет пустого блока .ws-emp-pos');
+        });
+
+        test('CSS: .ws-emp-pos — мелкий приглушённый текст с эллипсисом', () => {
+            const re = /\.ws-grid tbody td\.ws-emp-col \.ws-emp-pos \{[^}]*text-overflow:\s*ellipsis;[^}]*font-size:\s*10px;[^}]*font-weight:\s*400;/;
+            assertTrue(re.test(html),
+                'Должность: эллипсис при переполнении, 10px/400, цвет secondary');
+        });
+
+        test('CSS: светлая тема — должность темнее (#666)', () => {
+            const re = /\[data-theme="light"\] \.ws-grid tbody td\.ws-emp-col \.ws-emp-pos \{[^}]*color:\s*#666;/;
+            assertTrue(re.test(html),
+                'Светлая тема: читаемая должность под ФИО');
+        });
+    });
+
+    describe('Task 254: непрозрачный тулбар, кнопки без скруглений', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('CSS: .ws-toolbar — сплошной фон (#17212b, без var(--card-bg))', () => {
+            const re = /\.ws-toolbar \{[^}]*background:\s*#17212b;/;
+            assertTrue(re.test(html),
+                'Тулбар непрозрачный: сплошной аналог --header-bg тёмной темы');
+            // именно ОБЪЯВЛЕНИЕ фона, не упоминание в комментарии
+            // (комментарий внутри .ws-toolbar описывает, что было раньше)
+            const reVar = /\.ws-toolbar \{[^}]*background:\s*var\(--card-bg\)/;
+            assertTrue(!reVar.test(html),
+                'Полупрозрачный var(--card-bg) больше не задаёт фон тулбара');
+        });
+
+        test('CSS: светлая тема — тулбар сплошной #f0eee6', () => {
+            const re = /\[data-theme="light"\] \.ws-toolbar \{ background: #f0eee6; \}/;
+            assertTrue(re.test(html),
+                'Светлая тема: непрозрачный тулбар (аналог --header-bg светлой)');
+        });
+
+        test('CSS: кнопки «Сформировать» и «Сохранить» — без скруглений', () => {
+            const reGen = /\.ws-generate-btn \{[^}]*border-radius:\s*0;/;
+            const reSave = /\.ws-save-btn \{[^}]*border-radius:\s*0;/;
+            assertTrue(reGen.test(html) && reSave.test(html),
+                'Обе кнопки тулбара — border-radius: 0 (прямые углы)');
+        });
+    });
+
+    describe('Task 254: SW версия v512', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const swPath = path.resolve(__dirname, '..', 'sw.js');
+        const sw = fs.readFileSync(swPath, 'utf8');
+
+        test('CACHE_VERSION = kipia-test-v512', () => {
+            assertTrue(sw.indexOf("kipia-test-v512") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v512 (Task 254)');
+        });
+        test('Старая версия v511 убрана', () => {
+            assertTrue(sw.indexOf("kipia-test-v511") === -1,
+                'Старая v511 не должна остаться в sw.js');
         });
     });
 });
