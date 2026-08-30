@@ -1908,18 +1908,120 @@ describe('Task 247: то же для карточек списка расход�
     });
 });
 
-// Task 247: SW обновлён до v506
-describe('Task 247: SW версия v506', () => {
+// Task 247: SW-блок версии v506 удалён — версия v507 введена в Task 248
+// (см. describe ниже). Историческая заметка.
+
+// Task 248: столбец «Комментарий» таблицы «Хронология показаний» — текст
+// размещается максимум в 4 строки; если при этой ширине столбца весь текст
+// не помещается, ширина столбца подгоняется (не меняя 4 строк) так, чтобы
+// помещался ВЕСЬ текст. Причина бага: эвристика Task 221
+// ceil(naturalWidth / 4) + 10 делила текст на 4 равные части, а реальный
+// перенос — по границам слов (комментарий «В показаниях значения за период
+// двух суток 28-29.08.2026» → 5 строк, 5-я срезалась max-height:5.2em).
+// Фикс: бинарный поиск минимальной ширины по РЕАЛЬНОЙ высоте ячейки.
+describe('Task 248: ширина столбца «Комментарий» — весь текст в 4 строки (бинарный поиск)', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const htmlPath = path.resolve(__dirname, '..', 'index.html');
+    const html = fs.readFileSync(htmlPath, 'utf-8');
+
+    test('JS: MAX_LINES = 4 в _applyOptimalWidth', () => {
+        const re = /_applyOptimalWidth:\s*function[^]*?var MAX_LINES = 4;/;
+        assertTrue(re.test(html),
+            'В _applyOptimalWidth должна быть константа MAX_LINES = 4 (максимум 4 строки по ТЗ)');
+    });
+
+    test('JS: бинарный поиск минимальной ширины (while hi-lo и Math.floor)', () => {
+        assertTrue(html.indexOf('while (hi - lo > 1)') !== -1,
+            'Должен быть бинарный поиск: while (hi - lo > 1)');
+        const re = /var mid = Math\.floor\(\(lo \+ hi\) \/ 2\);/;
+        assertTrue(re.test(html),
+            'Должен быть бинарный поиск: mid = Math.floor((lo + hi) / 2)');
+    });
+
+    test('JS: порог высоты = 4 строки (maxAllowedHeight из lineHeight)', () => {
+        const re = /var maxAllowedHeight = MAX_LINES \* lineHeightPx \+ 1;/;
+        assertTrue(re.test(html),
+            'Порог высоты должен считаться как MAX_LINES * lineHeightPx + 1 (реальная высота 4 строк + допуск округления)');
+        assertTrue(html.indexOf('getComputedStyle(measured[0].cell, null)') !== -1,
+            'lineHeight должен браться из computed style ячейки');
+    });
+
+    test('JS: старая эвристика Task 221 ceil(maxNatural / 4) удалена', () => {
+        const re = /Math\.ceil\(maxNatural\s*\/\s*4\)/;
+        assertTrue(!re.test(html),
+            'Эвристика ceil(maxNatural / 4) не должна остаться — она не учитывает границы слов');
+        assertTrue(html.indexOf('fourLineWidth') === -1,
+            'Переменная fourLineWidth (эвристика Task 221) должна быть удалена');
+    });
+
+    test('JS: _measureArchiveCellHeight — реальная высота при white-space: normal', () => {
+        const re = /_measureArchiveCellHeight:\s*function\s*\(cell,\s*widthPx\)/;
+        assertTrue(re.test(html),
+            'Должен быть helper _measureArchiveCellHeight(cell, widthPx)');
+        const reW = /' width:' \+ widthPx \+ 'px !important;'/;
+        assertTrue(reW.test(html),
+            'Измерение должно идти при фиксированной ширине width:widthPx');
+        assertTrue(html.indexOf('white-space:normal !important') !== -1,
+            'Измерение должно идти при white-space:normal (реальный перенос по словам, а не nowrap)');
+        const reH = /var h = cell\.scrollHeight;/;
+        assertTrue(reH.test(html),
+            'Высота должна измеряться через cell.scrollHeight');
+    });
+
+    test('JS: результат применяется как min-width И max-width (механика Task 221)', () => {
+        const reMin = /cells\[j\]\.style\.minWidth = candidate \+ 'px';/;
+        const reMax = /cells\[j\]\.style\.maxWidth = candidate \+ 'px';/;
+        assertTrue(reMin.test(html) && reMax.test(html),
+            'candidate должен применяться как min-width + max-width на все inner-div столбца');
+    });
+
+    test('JS: guard при скрытом контейнере (измерения 0) — ширина не применяется', () => {
+        assertTrue(html.indexOf('if (headerNatural <= 0) return;') !== -1,
+            'Guard: headerNatural <= 0 → return (скрытый контейнер, CSS-fallback)');
+        assertTrue(html.indexOf('if (measured.length === 0) return;') !== -1,
+            'Guard: measured.length === 0 → return (все измерения 0, CSS-fallback)');
+    });
+
+    test('JS: алгоритм применяется к обоим столбцам (Комментарий + Замечания)', () => {
+        assertTrue(html.indexOf('this._applyOptimalWidth(commentCells, commentTh);') !== -1,
+            'Должен вызываться для столбца «Комментарий»');
+        assertTrue(html.indexOf('this._applyOptimalWidth(anomalyCells, anomalyTh);') !== -1,
+            'Должен вызываться для столбца «⚠ Замечания»');
+    });
+});
+
+describe('Task 248: CSS-отсечка «4 строки» сохранена (safety cap)', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const htmlPath = path.resolve(__dirname, '..', 'index.html');
+    const html = fs.readFileSync(htmlPath, 'utf-8');
+
+    test('CSS: .flow-archive-comment-inner — max-height: 5.2em + overflow: hidden', () => {
+        const re = /\.flow-archive-table \.flow-archive-comment-inner\s*\{[^}]*max-height:\s*5\.2em;[^}]*overflow:\s*hidden;/;
+        assertTrue(re.test(html),
+            'Отсечка 4 строки (4 × 1.3em = 5.2em) должна остаться как safety cap');
+    });
+
+    test('CSS: .flow-archive-comment — перенос слов разрешён (white-space: normal)', () => {
+        const re = /\.flow-archive-table \.flow-archive-comment\s*\{[^}]*white-space:\s*normal;[^}]*word-break:\s*break-word;/;
+        assertTrue(re.test(html),
+            'Ячейка комментария должна переносить текст по словам (white-space: normal + word-break: break-word)');
+    });
+});
+
+// Task 248: SW обновлён до v507
+describe('Task 248: SW версия v507', () => {
     const fs = require('fs');
     const path = require('path');
     const swPath = path.resolve(__dirname, '..', 'sw.js');
     const sw = fs.readFileSync(swPath, 'utf-8');
 
-    test('CACHE_VERSION = kipia-test-v506', () => {
-        assertTrue(sw.indexOf("kipia-test-v506") !== -1);
+    test('CACHE_VERSION = kipia-test-v507', () => {
+        assertTrue(sw.indexOf("kipia-test-v507") !== -1);
     });
-    test('Старая версия v505 убрана', () => {
-        assertTrue(sw.indexOf("kipia-test-v505") === -1,
-                   'Старая v505 не должна остаться в sw.js');
+    test('Старая версия v506 убрана', () => {
+        assertTrue(sw.indexOf("kipia-test-v506") === -1,
+                   'Старая v506 не должна остаться в sw.js');
     });
 });
