@@ -1169,19 +1169,78 @@ describe('График работы — WorkSchedule', () => {
         });
     });
 
-    describe('Task 256: SW версия v514', () => {
+    describe('Task 256: SW версия v514 (история)', () => {
         const fs = require('fs');
         const path = require('path');
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v514', () => {
-            assertTrue(sw.indexOf("kipia-test-v514") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v514 (Task 256)');
+        test('v514 заменена актуальной версией', () => {
+            assertTrue(sw.indexOf("kipia-test-v515") !== -1,
+                'Актуальная версия — kipia-test-v515 (Task 257)');
         });
-        test('Старая версия v513 убрана', () => {
-            assertTrue(sw.indexOf("kipia-test-v513") === -1,
-                'Старая v513 не должна остаться в sw.js');
+        test('Старая версия v514 убрана', () => {
+            assertTrue(sw.indexOf("kipia-test-v514") === -1,
+                'Старая v514 не должна остаться в sw.js');
+        });
+    });
+
+    describe('Task 257: завершающая полоса внизу таблицы + скрытие скроллбара', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('CSS: .ws-grid-foot — полоса-бордюрчик 3px внизу таблицы', () => {
+            const re = /\.ws-grid-foot \{[^}]*height:\s*3px;[^}]*background:\s*rgba\(74,\s*143,\s*199,\s*0\.35\);[^}]*\}/s;
+            assertTrue(re.test(html),
+                'Небольшой бордюрчик (3px) — зрительное окончание таблицы снизу');
+        });
+
+        test('CSS: .ws-grid-foot — светлая тема', () => {
+            const re = /\[data-theme="light"\] \.ws-grid-foot \{[^}]*background:\s*rgba\(20,\s*20,\s*19,\s*0\.15\);[^}]*\}/s;
+            assertTrue(re.test(html), 'В светлой теме полоса темнее фона, но мягкая');
+        });
+
+        test('CSS: полосы прокрутки шахматки скрыты (все движки)', () => {
+            const reWrap = /\.ws-grid-wrap \{[^}]*scrollbar-width:\s*none;[^}]*-ms-overflow-style:\s*none;[^}]*\}/s;
+            const reWebkit = /\.ws-grid-wrap::-webkit-scrollbar \{[^}]*display:\s*none;[^}]*\}/s;
+            assertTrue(reWrap.test(html) && reWebkit.test(html),
+                'scrollbar-width:none (Firefox) + ::-webkit-scrollbar display:none ' +
+                '(Chrome/Edge PWA) — полосы прокрутки справа от таблицы больше нет, ' +
+                'прокрутка колесом/свайпом остаётся');
+        });
+
+        test('JS: _renderGrid добавляет .ws-grid-foot сразу после таблицы', () => {
+            const re = /html \+= '<\/tbody><\/table>';[\s\S]*?html \+= '<div class="ws-grid-foot" aria-hidden="true"><\/div>';[\s\S]*?wrap\.innerHTML = html;/;
+            assertTrue(re.test(html),
+                'Полоса-бордюрчик рендерится под последней строкой каждой шахматки');
+        });
+
+        test('JS: _fitGrid резервирует высоту полосы в бюджете строк', () => {
+            const reFoot = /var foot = wrap\.querySelector\('\.ws-grid-foot'\);[\s\S]*?var footH = foot \? Math\.round\(foot\.getBoundingClientRect\(\)\.height\) : 0;[\s\S]*?var budget = avail - headH - footH;/;
+            assertTrue(reFoot.test(html),
+                'budget = область - шапка - полоса: таблица с полосой всегда до низа');
+        });
+
+        test('JS: _fitGrid — реальная высота области вместо clientHeight', () => {
+            const re = /var avail = Math\.floor\(wrap\.getBoundingClientRect\(\)\.height \+ 0\.25\);/;
+            assertTrue(re.test(html),
+                'floor(факт+0.25): при дробном масштабе окна (Windows 125%/150%) ' +
+                'clientHeight округлялся ВВЕРХ и таблица переливалась на долю px — ' +
+                'появлялась полоса прокрутки справа');
+        });
+    });
+
+    describe('Task 257: SW версия v515', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const swPath = path.resolve(__dirname, '..', 'sw.js');
+        const sw = fs.readFileSync(swPath, 'utf8');
+
+        test('CACHE_VERSION = kipia-test-v515', () => {
+            assertTrue(sw.indexOf("kipia-test-v515") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v515 (Task 257)');
         });
     });
 
@@ -1191,8 +1250,8 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
         test('v513 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v514") !== -1,
-                'Актуальная версия — kipia-test-v514');
+            assertTrue(sw.indexOf("kipia-test-v515") !== -1,
+                'Актуальная версия — kipia-test-v515');
         });
     });
 });
