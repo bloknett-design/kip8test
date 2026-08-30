@@ -582,10 +582,10 @@ describe('Task 260: интеграция в index.html', () => {
         assertTrue(html.indexOf('.ws-cal-panel {') !== -1,
             'стили окошка календаря в тулбаре');
     });
-    test('SW: версия кэша kipia-test-v521 (Task 265)', () => {
+    test('SW: версия кэша kipia-test-v522 (Task 266)', () => {
         const sw = fs.readFileSync(path.resolve(__dirname, '..', 'sw.js'), 'utf8');
-        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v521'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v521');
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v522'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v522');
     });
     test('Тултип ячейки содержит название праздника', () => {
         assertTrue(html.indexOf('titleParts.splice(1, 0, cellInfo.title);') !== -1,
@@ -1033,9 +1033,11 @@ describe('Task 262: интеграция в index.html', () => {
         assertTrue(html.indexOf(': выходной перенесён на ' + String.fromCharCode(39) + ' + tTo') !== -1,
             'рабочая суббота объясняет перенос');
     });
-    test('CSS: бейджи «предварительные данные» и «официальные нормы»', () => {
+    test('CSS: бейдж «предварительные данные» (официальные нормы убраны — Task 266)', () => {
         assertTrue(html.indexOf('.ws-cal-prelim') !== -1, 'стили бейджа preliminary');
-        assertTrue(html.indexOf('.ws-cal-official') !== -1, 'стили бейджа официальных норм');
+        // Task 266: бейдж «официальные нормы» убран из окошка вместе со стилями
+        assertTrue(html.indexOf('.ws-cal-official') === -1,
+            'стили бейджа официальных норм удалены (Task 266)');
         assertTrue(html.indexOf("На ' + y + ' год (40-час): <b>'") !== -1,
             'строка годовой нормы — в окошке тулбара');
     });
@@ -1044,7 +1046,7 @@ describe('Task 262: интеграция в index.html', () => {
             'подсказка региона 42 в шторке');
         assertTrue(html.indexOf('Версия календаря:') !== -1, 'строка версии в шторке');
     });
-    test('JS: окошко помечает официальность и предварительность', () => {
+    test('JS: окошко помечает официальность (тултип) и предварительность', () => {
         assertTrue(html.indexOf("st.normsOfficial ? ' — официальные данные' : ''") !== -1,
             'тултип норм окошка: официальные данные');
         assertTrue(html.indexOf('>предварительно</span>') !== -1,
@@ -1102,12 +1104,14 @@ describe('Task 264: День города Кемерово (12 июня, рег�
 });
 
 describe('Task 264: окошко календаря в баре кнопок графика', () => {
-    test('HTML: тулбар — колонка: ряд кнопок + окошко wsCalPanel', () => {
+    test('HTML: тулбар — ряд кнопок (.ws-toolbar-main) + окошко wsCalPanel', () => {
         assertTrue(html.indexOf('id="wsCalPanel"') !== -1, 'контейнер окошка');
         assertTrue(html.indexOf('class="ws-toolbar-main"') !== -1,
             'ряд кнопок .ws-toolbar-main');
+        // Task 266: мобильная база — колонка (кнопки сверху, окошко ниже);
+        // на десктопе (≥1024px) тулбар — строка: окошко слева, кнопки справа
         assertTrue(/\.ws-toolbar \{[^}]*flex-direction:\s*column/.test(html),
-            'тулбар стал колонкой — окошко растёт вниз, к таблице');
+            'мобильная база тулбара — колонка');
         assertTrue(html.indexOf('.ws-cal-panel[hidden] { display: none; }') !== -1,
             'скрытие окошка до первых данных');
     });
@@ -1141,11 +1145,79 @@ describe('Task 264: окошко календаря в баре кнопок г�
         assertTrue(html.indexOf('(сокращённый день, −1 час)') !== -1,
             'пояснение в тултипе шапки');
     });
-    test('_sourceShort: короткие подписи для окошка', () => {
-        const { PC } = makePC();
-        assertEqual(PC._sourceShort('legalic'), 'calendar.legalic.ru');
-        assertEqual(PC._sourceShort('isdayoff'), 'isDayOff');
-        assertEqual(PC._sourceShort('prodcalendar'), 'production-calendar.ru');
-        assertTrue(PC._sourceShort('fallback').indexOf('Сб/Вс') !== -1);
+});
+
+// ============================================================
+// Task 266: ревизия окошка календаря в баре кнопок графика —
+// столбики (нормы слева, праздники справа), окошко в левой части
+// бара / кнопки в правой, статическая высота бара + скролл в
+// окошке; убраны строка «источник: …» и бейдж «официальные нормы»
+// ============================================================
+
+describe('Task 266: окошко столбиками, слева в баре — кнопки справа', () => {
+    test('CSS: столбики — вертикальные списки (.ws-cp-col)', () => {
+        assertTrue(/\.ws-cp-col \{[^}]*flex-direction:\s*column/.test(html),
+            'столбик — колонка (нормы/праздники столбиком)');
+        assertTrue(/\.ws-cp-col \{[^}]*flex-shrink:\s*0/.test(html),
+            'столбик не сжимается — переносится при нехватке ширины');
+        assertTrue(html.indexOf('ws-cp-col ws-cp-norms') !== -1,
+            'столбик норм в renderPanel');
+        assertTrue(html.indexOf('ws-cp-col ws-cp-days') !== -1,
+            'столбик праздников в renderPanel');
+    });
+    test('CSS: статическая высота окошка + скролл внутри', () => {
+        assertTrue(/\.ws-cal-panel \{[^}]*height:\s*132px/.test(html),
+            'фиксированная высота окошка (мобильная база)');
+        assertTrue(/\.ws-cal-panel \{[^}]*overflow-y:\s*auto/.test(html),
+            'полоса прокрутки, если столбики не входят');
+        assertTrue(/\.ws-cal-panel \{[^}]*overscroll-behavior:\s*contain/.test(html),
+            'скролл окошка не тянет страницу');
+    });
+    test('CSS: десктоп — окошко слева, кнопки справа (≥1024px)', () => {
+        const mq = html.match(/@media \(min-width: 1024px\) \{[\s\S]*?\.ws-toolbar \{[\s\S]*?\}/);
+        assertTrue(!!mq, 'media-блок десктопного тулбара');
+        assertTrue(/\.ws-cal-panel \{[^}]*order:\s*0/.test(html),
+            'окошко — левая часть бара (order: 0)');
+        assertTrue(/\.ws-cal-panel \{[^}]*flex:\s*1 1 auto/.test(html),
+            'окошко растягивается на свободную ширину слева');
+        assertTrue(/\.ws-toolbar-main \{[^}]*margin-left:\s*auto/.test(html),
+            'кнопки прижаты в правую часть бара');
+        assertTrue(/\.ws-toolbar-main \{[^}]*flex-wrap:\s*nowrap/.test(html),
+            'ряд кнопок на десктопе — в одну строку');
+    });
+    test('CSS: высота бара на десктопе — 160px (статическая)', () => {
+        const re = /@media \(min-width: 1024px\) \{[\s\S]*?\.ws-cal-panel \{[^}]*height:\s*160px/s;
+        assertTrue(re.test(html), 'десктопная высота окошка — 160px');
+    });
+    test('JS: убраны источник и время обновления из окошка', () => {
+        // строки источника больше нет ни в JS, ни в CSS окошка
+        assertTrue(html.indexOf('ws-cp-src') === -1,
+            'класс строки источника удалён');
+        assertTrue(html.indexOf('_sourceShort') === -1,
+            'метод _sourceShort удалён (был нужен только для окошка)');
+        assertTrue(html.indexOf("', обновлено ' + this._fmtDateTime") === -1,
+            'время обновления не выводится в окошке');
+        // источник остался в шторке настроек
+        assertTrue(html.indexOf('_sourceLabel') !== -1,
+            'полная подпись источника — в шторке');
+    });
+    test('JS: бейдж «официальные нормы» не рендерится', () => {
+        assertTrue(html.indexOf('>официальные нормы</span>') === -1,
+            'бейдж удалён из renderPanel');
+        // официальность осталась тултипом столбика норм
+        assertTrue(html.indexOf("st.normsOfficial ? ' — официальные данные' : ''") !== -1,
+            'тултип столбика норм помечает официальность');
+    });
+    test('JS: легенда звёздочки — в конце столбика праздников', () => {
+        assertTrue(html.indexOf('ws-cp-legend') !== -1,
+            'класс легенды в окошке');
+        assertTrue(html.indexOf('ws-cp-legend">* — сокращённый предпраздничный день') !== -1,
+            'легенда — последний элемент столбика праздников');
+    });
+    test('JS: renderPanel — заголовки обоих столбиков', () => {
+        assertTrue(html.indexOf('ws-cp-cap">Норма, ') !== -1,
+            'заголовок столбика норм');
+        assertTrue(html.indexOf('ws-cp-cap">Праздники и переносы</span>') !== -1,
+            'заголовок столбика праздников');
     });
 });

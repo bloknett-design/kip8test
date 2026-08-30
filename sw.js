@@ -18,7 +18,7 @@
 // День города Кемерово (12 июня), звёздочка сокращённых дней.
 // Task 265: «Сформировать» — только через диалог подтверждения
 // (заголовок/кнопка действия, Escape/Enter).
-const CACHE_VERSION = 'kipia-test-v521';
+const CACHE_VERSION = 'kipia-test-v522';
 const CACHE_NAME = CACHE_VERSION;
 
 // Отдельный кэш для картинок Google Drive (превью + полные).
