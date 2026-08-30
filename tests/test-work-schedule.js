@@ -902,9 +902,11 @@ describe('График работы — WorkSchedule', () => {
                 'Светлая тема: пастельно-розовый фон пустых ячеек выходных');
         });
 
-        test('JS: _renderCell помечает выходные классом ws-weekend', () => {
-            assertTrue(html.indexOf("if (cellDow === 0 || cellDow === 6) classes.push('ws-weekend');") !== -1,
-                'Суббота и воскресенье должны получать класс ws-weekend');
+        test('JS: _renderCell помечает нерабочие дни классом ws-weekend', () => {
+            // Task 260: выходные определяются по производственному
+            // календарю (Сб/Вс + праздники + переносы, без рабочих суббот)
+            assertTrue(html.indexOf("if (dayOff) classes.push('ws-weekend');") !== -1,
+                'Нерабочие дни (Сб/Вс + праздники + переносы) — класс ws-weekend');
         });
 
         test('CSS: розовый ТОЛЬКО у пустых ячеек (комбинация с ws-status-empty)', () => {
@@ -954,17 +956,22 @@ describe('График работы — WorkSchedule', () => {
                 'Граничные селекторы не должны затрагивать thead (шапка без линий)');
         });
 
-        test('JS: обе стороны стыка — пятница+суббота, воскресенье+понедельник', () => {
+        test('JS: обе стороны стыка — по производственному календарю', () => {
+            // Task 260 (развитие Tasks 254/255): стык определяется между
+            // соседними рабочим и нерабочим днём ПО КАЛЕНДАРЮ, а не по
+            // дню недели (праздники в будни тоже дают красную границу).
             // При 1px в border-collapse цвет общей грани равных границ
             // браузер может взять у соседа — красной делается ОБЕ стороны.
-            assertTrue(html.indexOf("if (cellDow === 6 && day > 1) classes.push('ws-boundary-left');") !== -1,
-                'Суббота со 2-й позиции месяца — ws-boundary-left');
-            assertTrue(html.indexOf("if (cellDow === 5 && day < lastDay) classes.push('ws-boundary-after');") !== -1,
-                'Пятница (не последний день) — ws-boundary-after (border-right)');
-            assertTrue(html.indexOf("if (cellDow === 0 && day < lastDay) classes.push('ws-boundary-right');") !== -1,
-                'Воскресенье (не последний день) — ws-boundary-right');
-            assertTrue(html.indexOf("if (cellDow === 1 && day > 1) classes.push('ws-boundary-before');") !== -1,
-                'Понедельник со 2-й позиции месяца — ws-boundary-before (border-left)');
+            assertTrue(html.indexOf("var dayOff = this._calDayOff(day);") !== -1,
+                '_renderCell определяет нерабочий день через _calDayOff');
+            assertTrue(html.indexOf("if (dayOff && day > 1 && !this._calDayOff(day - 1)) classes.push('ws-boundary-left');") !== -1,
+                'Первый нерабочий день блока — ws-boundary-left');
+            assertTrue(html.indexOf("if (dayOff && day < lastDay && !this._calDayOff(day + 1)) classes.push('ws-boundary-right');") !== -1,
+                'Последний нерабочий день блока — ws-boundary-right');
+            assertTrue(html.indexOf("if (!dayOff && day < lastDay && this._calDayOff(day + 1)) classes.push('ws-boundary-after');") !== -1,
+                'Последний рабочий день перед блоком — ws-boundary-after');
+            assertTrue(html.indexOf("if (!dayOff && day > 1 && this._calDayOff(day - 1)) classes.push('ws-boundary-before');") !== -1,
+                'Первый рабочий день после блока — ws-boundary-before');
             const reLast = /var lastDay = new Date\(this\._year, this\._month, 0\)\.getDate\(\);/;
             assertTrue(reLast.test(html),
                 'lastDay вычисляется один раз для обеих проверок');
@@ -972,13 +979,14 @@ describe('График работы — WorkSchedule', () => {
 
         test('JS: шапка таблицы — граничные классы НЕ ставятся', () => {
             // Task 255: из шапки линии убраны — thCls больше не получает
-            // ws-boundary-*, остаются только ws-day-col + ws-holiday.
+            // ws-boundary-*, остаются ws-day-col + ws-holiday (+ ws-feast
+            // Task 260 — праздник по производственному календарю).
             assertTrue(html.indexOf("thCls += ' ws-boundary-left'") === -1 &&
                        html.indexOf("thCls += ' ws-boundary-right'") === -1,
                 'Шапка: граничные классы удалены из рендера th');
-            const reTh = /var thCls = 'ws-day-col' \+ \(isHoliday \? ' ws-holiday' : ''\);/;
+            const reTh = /var thCls = 'ws-day-col' \+ \(isOff \? ' ws-holiday' : ''\) \+/;
             assertTrue(reTh.test(html),
-                'Шапка: thCls формируется только из ws-day-col + ws-holiday');
+                'Шапка: thCls формируется из ws-day-col + ws-holiday (+ ws-feast)');
         });
     });
 
@@ -1176,8 +1184,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v514 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v517") !== -1,
-                'Актуальная версия — kipia-test-v517 (Task 259)');
+            assertTrue(sw.indexOf("kipia-test-v518") !== -1,
+                'Актуальная версия — kipia-test-v518 (Task 260)');
         });
         test('Старая версия v514 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v514") === -1,
@@ -1240,8 +1248,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v516 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v517") !== -1,
-                'Актуальная версия — kipia-test-v517 (Task 259)');
+            assertTrue(sw.indexOf("kipia-test-v518") !== -1,
+                'Актуальная версия — kipia-test-v518 (Task 260)');
         });
     });
 
@@ -1252,8 +1260,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v515 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v517") !== -1,
-                'Актуальная версия — kipia-test-v517 (Task 259)');
+            assertTrue(sw.indexOf("kipia-test-v518") !== -1,
+                'Актуальная версия — kipia-test-v518 (Task 260)');
         });
     });
 
@@ -1263,8 +1271,8 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
         test('v513 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v517") !== -1,
-                'Актуальная версия — kipia-test-v517');
+            assertTrue(sw.indexOf("kipia-test-v518") !== -1,
+                'Актуальная версия — kipia-test-v518');
         });
     });
 
@@ -1450,19 +1458,35 @@ describe('График работы — WorkSchedule', () => {
         });
     });
 
-    describe('Task 259: SW версия v517', () => {
+    describe('Task 259: SW версия v517 (история)', () => {
         const fs = require('fs');
         const path = require('path');
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v517', () => {
-            assertTrue(sw.indexOf("kipia-test-v517") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v517 (Task 259)');
+        test('v517 заменена актуальной версией', () => {
+            assertTrue(sw.indexOf("kipia-test-v518") !== -1,
+                'Актуальная версия — kipia-test-v518 (Task 260)');
         });
-        test('Старая версия v516 убрана', () => {
-            assertTrue(sw.indexOf("kipia-test-v516") === -1,
-                'Старая v516 не должна остаться в sw.js');
+        test('Старая версия v517 убрана', () => {
+            assertTrue(sw.indexOf("kipia-test-v517") === -1,
+                'Старая v517 не должна остаться в sw.js');
+        });
+    });
+
+    describe('Task 260: SW версия v518', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const swPath = path.resolve(__dirname, '..', 'sw.js');
+        const sw = fs.readFileSync(swPath, 'utf8');
+
+        test('CACHE_VERSION = kipia-test-v518', () => {
+            assertTrue(sw.indexOf("kipia-test-v518") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v518 (Task 260)');
+        });
+        test('Старая версия v517 убрана', () => {
+            assertTrue(sw.indexOf("kipia-test-v517") === -1,
+                'Старая v517 не должна остаться в sw.js');
         });
     });
 });
