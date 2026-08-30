@@ -1176,8 +1176,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v514 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v515") !== -1,
-                'Актуальная версия — kipia-test-v515 (Task 257)');
+            assertTrue(sw.indexOf("kipia-test-v516") !== -1,
+                'Актуальная версия — kipia-test-v516 (Task 258)');
         });
         test('Старая версия v514 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v514") === -1,
@@ -1191,10 +1191,10 @@ describe('График работы — WorkSchedule', () => {
         const indexPath = path.resolve(__dirname, '..', 'index.html');
         const html = fs.readFileSync(indexPath, 'utf8');
 
-        test('CSS: .ws-grid-foot — полоса-бордюрчик 3px внизу таблицы', () => {
-            const re = /\.ws-grid-foot \{[^}]*height:\s*3px;[^}]*background:\s*rgba\(74,\s*143,\s*199,\s*0\.35\);[^}]*\}/s;
+        test('CSS: .ws-grid-foot — полоса-бордюрчик 5px внизу таблицы (Task 258)', () => {
+            const re = /\.ws-grid-foot \{[^}]*height:\s*5px;[^}]*background:\s*rgba\(74,\s*143,\s*199,\s*0\.35\);[^}]*\}/s;
             assertTrue(re.test(html),
-                'Небольшой бордюрчик (3px) — зрительное окончание таблицы снизу');
+                'Небольшой бордюрчик (Task 258: 5px) — зрительное окончание таблицы снизу');
         });
 
         test('CSS: .ws-grid-foot — светлая тема', () => {
@@ -1232,15 +1232,31 @@ describe('График работы — WorkSchedule', () => {
         });
     });
 
-    describe('Task 257: SW версия v515', () => {
+    describe('Task 258: SW версия v516', () => {
         const fs = require('fs');
         const path = require('path');
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v515', () => {
-            assertTrue(sw.indexOf("kipia-test-v515") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v515 (Task 257)');
+        test('CACHE_VERSION = kipia-test-v516', () => {
+            assertTrue(sw.indexOf("kipia-test-v516") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v516 (Task 258: бордюрчик 5px)');
+        });
+        test('Старая версия v515 убрана', () => {
+            assertTrue(sw.indexOf("kipia-test-v515") === -1,
+                'Старая v515 не должна остаться в sw.js');
+        });
+    });
+
+    describe('Task 257: SW версия v515 (история)', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const swPath = path.resolve(__dirname, '..', 'sw.js');
+        const sw = fs.readFileSync(swPath, 'utf8');
+
+        test('v515 заменена актуальной версией', () => {
+            assertTrue(sw.indexOf("kipia-test-v516") !== -1,
+                'Актуальная версия — kipia-test-v516 (Task 258)');
         });
     });
 
@@ -1250,8 +1266,8 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
         test('v513 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v515") !== -1,
-                'Актуальная версия — kipia-test-v515');
+            assertTrue(sw.indexOf("kipia-test-v516") !== -1,
+                'Актуальная версия — kipia-test-v516');
         });
     });
 });
