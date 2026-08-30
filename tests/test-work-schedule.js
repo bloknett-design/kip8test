@@ -1184,8 +1184,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v514 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v519") !== -1,
-                'Актуальная версия — kipia-test-v519 (Task 262)');
+            assertTrue(sw.indexOf("kipia-test-v520") !== -1,
+                'Актуальная версия — kipia-test-v520 (Task 264)');
         });
         test('Старая версия v514 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v514") === -1,
@@ -1248,8 +1248,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v516 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v519") !== -1,
-                'Актуальная версия — kipia-test-v519 (Task 262)');
+            assertTrue(sw.indexOf("kipia-test-v520") !== -1,
+                'Актуальная версия — kipia-test-v520 (Task 264)');
         });
     });
 
@@ -1260,8 +1260,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v515 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v519") !== -1,
-                'Актуальная версия — kipia-test-v519 (Task 262)');
+            assertTrue(sw.indexOf("kipia-test-v520") !== -1,
+                'Актуальная версия — kipia-test-v520 (Task 264)');
         });
     });
 
@@ -1271,8 +1271,8 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
         test('v513 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v519") !== -1,
-                'Актуальная версия — kipia-test-v519');
+            assertTrue(sw.indexOf("kipia-test-v520") !== -1,
+                'Актуальная версия — kipia-test-v520');
         });
     });
 
@@ -1465,8 +1465,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v517 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v519") !== -1,
-                'Актуальная версия — kipia-test-v519 (Task 262)');
+            assertTrue(sw.indexOf("kipia-test-v520") !== -1,
+                'Актуальная версия — kipia-test-v520 (Task 264)');
         });
         test('Старая версия v517 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v517") === -1,
@@ -1480,9 +1480,9 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v519', () => {
-            assertTrue(sw.indexOf("kipia-test-v519") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v519 (Task 262)');
+        test('CACHE_VERSION = kipia-test-v520', () => {
+            assertTrue(sw.indexOf("kipia-test-v520") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v520 (Task 264)');
         });
         test('Старая версия v517 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v517") === -1,
