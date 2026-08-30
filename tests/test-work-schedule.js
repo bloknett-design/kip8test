@@ -575,13 +575,203 @@ describe('График работы — WorkSchedule', () => {
                 'Длинные ФИО обрезаются эллипсисом, не растягивая таблицу');
         });
 
-        test('SW: CACHE_VERSION = kipia-test-v509', () => {
+        // Task 250: SW-тест версии v509 удалён — версия v510 введена в
+        // Task 251 (см. describe ниже). Историческая заметка.
+    });
+
+    // ============================================================
+    // Task 251: переделанный ввод статусов в шахматке:
+    //   1) клик по ячейке → попап-табличка «код — название» рядом с ячейкой;
+    //   2) выбор статуса отображается в ячейке ЛОКАЛЬНО (накопление в
+    //      _PENDING), мгновенной передачи на сервер НЕТ;
+    //   3) кнопка «Сохранить» — пакетная отправка всех изменений на сервер
+    //      (setManualEntry/deleteEntry) с последующей синхронизацией
+    //      (loadGrid перечитывает данные из БД).
+    // ============================================================
+    describe('Task 251: попап выбора статуса рядом с ячейкой', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('HTML: элементы попапа (#wsCellPopup + #wsPopupCloser) существуют', () => {
+            assertTrue(html.indexOf('id="wsCellPopup"') !== -1,
+                'Должен быть контейнер попапа #wsCellPopup');
+            assertTrue(html.indexOf('id="wsPopupCloser"') !== -1,
+                'Должен быть прозрачный клик-ловец #wsPopupCloser (закрытие по клику мимо)');
+        });
+
+        test('JS: клик по ячейке вызывает onCellClick (не openCellForm)', () => {
+            // В HTML onclick собирается в JS-строке: onCellClick(event, \'...\')
+            assertTrue(html.indexOf("WorkSchedule.onCellClick(event, \\\''") !== -1,
+                'onclick ячейки должен открывать попап: onCellClick(event, ...)');
+            // Старый мгновенно-сохраняющий обработчик в ячейках удалён
+            assertTrue(html.indexOf("WorkSchedule.openCellForm(\\'") === -1,
+                'openCellForm не должен вызываться напрямую из onclick ячейки');
+        });
+
+        test('JS: попап рендерит строки «код + название» столбиком', () => {
+            assertTrue(html.indexOf("WorkSchedule.onPopupStatus(\\'") !== -1,
+                'Строки попапа: клик → onPopupStatus(код)');
+            assertTrue(html.indexOf('<span class="ws-popup-code">') !== -1,
+                'Код статуса в попапе (.ws-popup-code)');
+            assertTrue(html.indexOf('<span class="ws-popup-name">') !== -1,
+                'Название статуса в попапе (.ws-popup-name)');
+            assertTrue(html.indexOf('>выходной</span>') !== -1,
+                'Строка «— выходной —» для очистки ячейки');
+        });
+
+        test('JS: строка «Дополнительно…» открывает sheet расширенной правки', () => {
+            assertTrue(html.indexOf('onclick="WorkSchedule.onPopupMore()">Дополнительно…') !== -1,
+                'Попап должен содержать «Дополнительно…» → onPopupMore → openCellForm');
+        });
+
+        test('CSS: попап — фиксированное позиционирование + строки столбиком', () => {
+            const reFixed = /\.ws-cell-popup \{[^}]*position:\s*fixed;/;
+            assertTrue(reFixed.test(html),
+                '.ws-cell-popup — position: fixed (позиция у ячейки через JS)');
+            const reRow = /\.ws-popup-row \{[^}]*display:\s*flex;/;
+            assertTrue(reRow.test(html),
+                '.ws-popup-row — flex-строки (табличка код—название столбиком)');
+        });
+    });
+
+    describe('Task 251: накопление правок без мгновенной отправки', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('JS: буфер _PENDING в состоянии модуля', () => {
+            assertTrue(html.indexOf('_PENDING: {},') !== -1,
+                'Модуль должен содержать _PENDING — буфер локальных правок');
+        });
+
+        test('JS: onPopupStatus применяет статус ЛОКАЛЬНО (без _api)', () => {
+            // Извлекаем метод onPopupStatus и проверяем: _applyCellStatus +
+            // _renderGrid, и НЕТ вызова _api (мгновенной отправки нет)
+            const m = html.match(/onPopupStatus: function\(code\) \{[\s\S]*?\n        \},/);
+            assertTrue(!!m, 'Метод onPopupStatus должен существовать');
+            const body = m[0];
+            assertTrue(body.indexOf('this._applyCellStatus(') !== -1,
+                'onPopupStatus должен применять статус через _applyCellStatus');
+            assertTrue(body.indexOf('this._renderGrid();') !== -1,
+                'onPopupStatus должен перерисовывать сетку (статус сразу в ячейке)');
+            assertTrue(body.indexOf('_api(') === -1,
+                'onPopupStatus НЕ должен вызывать _api — мгновенной отправки быть не должно');
+        });
+
+        test('JS: _applyCellStatus не обращается к серверу', () => {
+            const m = html.match(/_applyCellStatus: function\(isoDate, tabNo, code\) \{[\s\S]*?\n        \},/);
+            assertTrue(!!m, 'Метод _applyCellStatus должен существовать');
+            assertTrue(m[0].indexOf('_api(') === -1,
+                '_applyCellStatus — только локальный _PENDING, без сервера');
+            assertTrue(m[0].indexOf('__delete: true') !== -1,
+                '_applyCellStatus должен уметь планировать удаление (__delete)');
+        });
+
+        test('JS: «выходной» на ручной записи → __delete; на авто — тост', () => {
+            const m = html.match(/_applyCellStatus: function\(isoDate, tabNo, code\) \{[\s\S]*?\n        \},/);
+            const body = m[0];
+            assertTrue(body.indexOf("server.источник === 'руч') {") !== -1 &&
+                       body.indexOf('__delete: true') !== -1,
+                'Очистка ручной записи → __delete (удаление при сохранении)');
+            assertTrue(body.indexOf('Нельзя очистить авто-запись') !== -1,
+                'Очистка авто-записи → тост-отказ (сервер запрещает deleteEntry для авто)');
+        });
+
+        test('JS: submitCellForm накапливает локально (без setManualEntry)', () => {
+            const m = html.match(/submitCellForm: function\(\) \{[\s\S]*?\n        \},/);
+            assertTrue(!!m, 'Метод submitCellForm должен существовать');
+            assertTrue(m[0].indexOf('_setPendingCell(') !== -1,
+                'submitCellForm должен писать в _PENDING (локально)');
+            assertTrue(m[0].indexOf('setManualEntry') === -1,
+                'submitCellForm НЕ должен вызывать setManualEntry напрямую');
+        });
+
+        test('JS: рендер ячейки учитывает pending (класс ws-pending)', () => {
+            assertTrue(html.indexOf("if (isPending) classes.push('ws-pending');") !== -1,
+                'Ячейка с несохранённой правкой — класс ws-pending');
+            const re = /\.ws-grid tbody td\.ws-cell\.ws-pending \{[^}]*outline:\s*2px dashed/;
+            assertTrue(re.test(html),
+                'CSS: ws-pending — пунктирная рамка (маркер несохранённой ячейки)');
+            assertTrue(html.indexOf("if (isPending) titleParts.push('не сохранено');") !== -1,
+                'Tooltip несохранённой ячейки — «не сохранено»');
+        });
+
+        test('JS: _renderGrid накладывает _PENDING на серверные данные', () => {
+            const re = /var pending = this\._PENDING\[key\] \|\| null;/;
+            assertTrue(re.test(html),
+                '_renderGrid должен читать _PENDING для каждой ячейки');
+            assertTrue(html.indexOf('Object.assign({}, entry || {}, pending,') !== -1,
+                'Слияние: pending перекрывает серверную запись (эффективное состояние)');
+        });
+    });
+
+    describe('Task 251: кнопка «Сохранить» — пакетная отправка и синхронизация', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('HTML: кнопка #wsSaveBtn в тулбаре', () => {
+            const re = /<button type="button" id="wsSaveBtn" class="ws-save-btn" onclick="WorkSchedule\.saveAll\(\)" hidden>Сохранить<\/button>/;
+            assertTrue(re.test(html),
+                'Кнопка «Сохранить» (saveAll) должна быть в тулбаре, скрыта по умолчанию');
+        });
+
+        test('JS: _updateSaveBtn — счётчик правок и скрытие при нуле', () => {
+            const m = html.match(/_updateSaveBtn: function\(\) \{[\s\S]*?\n        \},/);
+            assertTrue(!!m, 'Метод _updateSaveBtn должен существовать');
+            assertTrue(m[0].indexOf('btn.hidden = !this._canEdit || n === 0;') !== -1,
+                'Кнопка скрыта без прав или без правок');
+            assertTrue(m[0].indexOf("'Сохранить (' + n + ')'") !== -1,
+                'Текст кнопки — со счётчиком правок');
+        });
+
+        test('JS: saveAll отправляет setManualEntry и deleteEntry', () => {
+            const m = html.match(/saveAll: function\(\) \{[\s\S]*?\n        \},/);
+            assertTrue(!!m, 'Метод saveAll должен существовать');
+            assertTrue(m[0].indexOf("self._api('workSchedule.deleteEntry', payload)") !== -1,
+                'saveAll: pending __delete → deleteEntry');
+            assertTrue(m[0].indexOf("self._api('workSchedule.setManualEntry', payload)") !== -1,
+                'saveAll: правка статуса → setManualEntry');
+        });
+
+        test('JS: saveAll синхронизируется — loadGrid после отправки', () => {
+            const m = html.match(/saveAll: function\(\) \{[\s\S]*?\n        \},/);
+            assertTrue(m[0].indexOf('self.loadGrid();') !== -1,
+                'После пакетной отправки — loadGrid (перечитать данные из БД)');
+        });
+
+        test('JS: успешные правки удаляются из _PENDING, ошибки остаются', () => {
+            const m = html.match(/saveAll: function\(\) \{[\s\S]*?\n        \},/);
+            assertTrue(m[0].indexOf('delete self._PENDING[key];') !== -1,
+                'Успешная отправка — правка удаляется из _PENDING');
+            assertTrue(m[0].indexOf('failCount++;') !== -1,
+                'Ошибка отправки — правка остаётся в _PENDING (можно повторить)');
+        });
+
+        test('JS: защита от повторного запуска (_saving)', () => {
+            const m = html.match(/saveAll: function\(\) \{[\s\S]*?\n        \},/);
+            assertTrue(m[0].indexOf('if (this._saving) return;') !== -1,
+                'saveAll должен игнорировать повторный клик во время сохранения');
+        });
+
+        test('JS: Esc закрывает попап, beforeunload предупреждает о правках', () => {
+            assertTrue(html.indexOf("if (ev.key === 'Escape') selfOnce.closeCellPopup();") !== -1,
+                'Esc должен закрывать попап');
+            assertTrue(html.indexOf("Object.keys(selfOnce._PENDING).length > 0") !== -1,
+                'beforeunload должен предупреждать при несохранённых правках');
+        });
+
+        test('SW: CACHE_VERSION = kipia-test-v510', () => {
             const swPath = path.resolve(__dirname, '..', 'sw.js');
             const sw = fs.readFileSync(swPath, 'utf8');
-            assertTrue(sw.indexOf("kipia-test-v509") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v509 (Task 250)');
-            assertTrue(sw.indexOf("kipia-test-v508") === -1,
-                'Старая версия v508 не должна остаться в sw.js');
+            assertTrue(sw.indexOf("kipia-test-v510") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v510 (Task 251)');
+            assertTrue(sw.indexOf("kipia-test-v509") === -1,
+                'Старая версия v509 не должна остаться в sw.js');
         });
     });
 });
