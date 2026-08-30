@@ -459,13 +459,129 @@ describe('График работы — WorkSchedule', () => {
                 'Заголовок страницы work-schedule-trainings — «Инструктажи и обучения»');
         });
 
-        test('SW: CACHE_VERSION = kipia-test-v508', () => {
+        // Task 249: SW-тест версии v508 удалён — версия v509 введена в
+        // Task 250 (см. describe ниже). Историческая заметка.
+    });
+
+    // ============================================================
+    // Task 250: десктопная версия «Графика работы»:
+    //   1) коды статусов убраны (из ячеек и легенды);
+    //   2) фон ячеек шахматки непрозрачный (было transparent у пустых);
+    //   3) дашборд автоматически подгоняется по ширине экрана
+    //      приложения, без горизонтальной прокрутки.
+    // ============================================================
+    describe('Task 250: коды статусов убраны из ячеек и легенды', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('JS: текст кода статуса не выводится в ячейке (только цвет)', () => {
+            // Старый вывод: (status || '·') — код буквой в ячейке
+            assertTrue(html.indexOf("(status || '·')") === -1,
+                'Код статуса не должен выводиться в ячейке (старый паттерн (status || \'·\'))');
+            // Новый: пустая ячейка — маркер «·», статусная — без текста
+            assertTrue(html.indexOf("(status ? '' : '·')") !== -1,
+                'Статусная ячейка — без текста, пустая — маркер «·»');
+        });
+
+        test('JS: легенда без кодов — только цветовой образец и название', () => {
+            assertTrue(html.indexOf("'<b>' + this._esc(c.code) + '</b> — '") === -1,
+                'Код статуса не должен выводиться в легенде');
+            // Новый рендер: свотч сразу followed by название, без кода
+            const re = /';"><\/span>' \+\s*\n\s*this\._esc\(c\.name\) \+/;
+            assertTrue(re.test(html),
+                'Легенда: свотч + название (this._esc(c.name)) без кода');
+        });
+
+        test('JS: tooltip показывает название статуса, а не код', () => {
+            assertTrue(html.indexOf("var statusName = status;") !== -1,
+                'Должна быть переменная statusName (поиск названия по коду)');
+            assertTrue(html.indexOf("titleParts.push('статус: ' + (statusName || '—'));") !== -1,
+                'Tooltip: «статус: <название>» вместо кода');
+        });
+
+        test('JS: переработка — класс ws-overtime (маркер-точка вместо underline)', () => {
+            assertTrue(html.indexOf("if (isOvertime) classes.push('ws-overtime');") !== -1,
+                'Переработка должна добавлять класс ws-overtime');
+            assertTrue(html.indexOf("text-decoration:underline;") === -1,
+                'Прежний underline текста кода должен быть удалён (текста в ячейке нет)');
+        });
+    });
+
+    describe('Task 250: фон ячеек шахматки непрозрачный', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('JS: inline-фон «transparent» убран из _renderCell', () => {
+            assertTrue(html.indexOf(": 'transparent'") === -1,
+                'Пустые ячейки не должны получать inline transparent-фон');
+            // Статусные ячейки — inline цвет; пустые — CSS-фон
+            assertTrue(html.indexOf("if (status) style += 'background:' + color + ';';") !== -1,
+                'Inline-фон задаётся только статусным ячейкам (цвет справочника)');
+        });
+
+        test('CSS: сплошной фон ячеек (.ws-grid tbody td.ws-cell)', () => {
+            const re = /\.ws-grid tbody td\.ws-cell \{[^}]*background:\s*var\(--bg-primary, #1a2233\);[^}]*\}/;
+            assertTrue(re.test(html),
+                'Ячейки должны иметь сплошной (непрозрачный) CSS-фон в тёмной теме');
+        });
+
+        test('CSS: сплошной фон ячеек в светлой теме', () => {
+            const re = /\[data-theme="light"\] \.ws-grid tbody td\.ws-cell \{[^}]*background:\s*#eef0f2;[^}]*\}/;
+            assertTrue(re.test(html),
+                'Светлая тема: сплошной фон пустых ячеек (#eef0f2)');
+        });
+
+        test('CSS: маркер переработки — точка ::after в углу ячейки', () => {
+            const re = /\.ws-grid tbody td\.ws-cell\.ws-overtime::after \{[^}]*border-radius:\s*50%;[^}]*\}/;
+            assertTrue(re.test(html),
+                'ws-overtime::after — круглая точка (маркер переработки)');
+        });
+    });
+
+    describe('Task 250: десктоп — вся ширина экрана, без прокрутки', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('CSS: table-layout: fixed + width: 100% для шахматки (≥1024px)', () => {
+            assertTrue(html.indexOf('#page-work-schedule .ws-grid {\n            width: 100%;') !== -1,
+                'Таблица должна занимать 100% ширины контейнера');
+            assertTrue(html.indexOf('table-layout: fixed;') !== -1,
+                'table-layout: fixed — колонки дней делят ширину поровну');
+        });
+
+        test('CSS: горизонтальная прокрутка отключена на десктопе', () => {
+            const re = /@media \(min-width: 1024px\) \{[^@]*?#page-work-schedule \.ws-grid-wrap \{\s*\n\s*overflow-x: hidden;/;
+            assertTrue(re.test(html),
+                '.ws-grid-wrap на десктопе — overflow-x: hidden (без прокрутки)');
+        });
+
+        test('CSS: колонка сотрудников фиксирована, дни делят остаток', () => {
+            assertTrue(html.indexOf('#page-work-schedule .ws-grid thead th.ws-emp-col {\n            width: 200px;') !== -1,
+                'Колонка сотрудников — фиксированная ширина (200px)');
+            const reDay = /#page-work-schedule \.ws-grid thead th\.ws-day-col \{[^}]*width:\s*auto;[^}]*min-width:\s*0;/;
+            assertTrue(reDay.test(html),
+                'Колонки дней: width auto + min-width 0 (делят остаток ширины)');
+        });
+
+        test('CSS: ФИО — эллипсис в фиксированной колонке', () => {
+            const re = /#page-work-schedule \.ws-grid tbody td\.ws-emp-col \{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;/;
+            assertTrue(re.test(html),
+                'Длинные ФИО обрезаются эллипсисом, не растягивая таблицу');
+        });
+
+        test('SW: CACHE_VERSION = kipia-test-v509', () => {
             const swPath = path.resolve(__dirname, '..', 'sw.js');
             const sw = fs.readFileSync(swPath, 'utf8');
-            assertTrue(sw.indexOf("kipia-test-v508") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v508 (Task 249)');
-            assertTrue(sw.indexOf("kipia-test-v507") === -1,
-                'Старая версия v507 не должна остаться в sw.js');
+            assertTrue(sw.indexOf("kipia-test-v509") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v509 (Task 250)');
+            assertTrue(sw.indexOf("kipia-test-v508") === -1,
+                'Старая версия v508 не должна остаться в sw.js');
         });
     });
 });
