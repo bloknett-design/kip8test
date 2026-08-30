@@ -1176,8 +1176,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v514 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v516") !== -1,
-                'Актуальная версия — kipia-test-v516 (Task 258)');
+            assertTrue(sw.indexOf("kipia-test-v517") !== -1,
+                'Актуальная версия — kipia-test-v517 (Task 259)');
         });
         test('Старая версия v514 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v514") === -1,
@@ -1191,15 +1191,16 @@ describe('График работы — WorkSchedule', () => {
         const indexPath = path.resolve(__dirname, '..', 'index.html');
         const html = fs.readFileSync(indexPath, 'utf8');
 
-        test('CSS: .ws-grid-foot — полоса-бордюрчик 5px внизу таблицы (Task 258)', () => {
-            const re = /\.ws-grid-foot \{[^}]*height:\s*5px;[^}]*background:\s*rgba\(74,\s*143,\s*199,\s*0\.35\);[^}]*\}/s;
+        test('CSS: .ws-grid-foot — полоса-бордюрчик 5px внизу таблицы (Task 259: непрозрачная, с эффектом выступа)', () => {
+            const re = /\.ws-grid-foot \{[^}]*height:\s*5px;[^}]*box-sizing:\s*border-box;[^}]*background:\s*#35648f;[^}]*border-top:\s*1px solid #85b7dc;[^}]*border-bottom:\s*1px solid #0f1b26;[^}]*\}/s;
             assertTrue(re.test(html),
-                'Небольшой бордюрчик (Task 258: 5px) — зрительное окончание таблицы снизу');
+                'Бордюрчик 5px: сплошной стальной фон #35648f + верхняя грань ' +
+                '#85b7dc (блик) и нижняя #0f1b26 (тень) — эффект выступа');
         });
 
-        test('CSS: .ws-grid-foot — светлая тема', () => {
-            const re = /\[data-theme="light"\] \.ws-grid-foot \{[^}]*background:\s*rgba\(20,\s*20,\s*19,\s*0\.15\);[^}]*\}/s;
-            assertTrue(re.test(html), 'В светлой теме полоса темнее фона, но мягкая');
+        test('CSS: .ws-grid-foot — светлая тема (Task 259)', () => {
+            const re = /\[data-theme="light"\] \.ws-grid-foot \{[^}]*background:\s*#b3c2ce;[^}]*border-top:\s*1px solid #ffffff;[^}]*border-bottom:\s*1px solid #84929e;[^}]*\}/s;
+            assertTrue(re.test(html), 'Светлая тема: сплошной фон + белый блик сверху, тень снизу');
         });
 
         test('CSS: полосы прокрутки шахматки скрыты (все движки)', () => {
@@ -1232,19 +1233,15 @@ describe('График работы — WorkSchedule', () => {
         });
     });
 
-    describe('Task 258: SW версия v516', () => {
+    describe('Task 258: SW версия v516 (история)', () => {
         const fs = require('fs');
         const path = require('path');
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v516', () => {
-            assertTrue(sw.indexOf("kipia-test-v516") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v516 (Task 258: бордюрчик 5px)');
-        });
-        test('Старая версия v515 убрана', () => {
-            assertTrue(sw.indexOf("kipia-test-v515") === -1,
-                'Старая v515 не должна остаться в sw.js');
+        test('v516 заменена актуальной версией', () => {
+            assertTrue(sw.indexOf("kipia-test-v517") !== -1,
+                'Актуальная версия — kipia-test-v517 (Task 259)');
         });
     });
 
@@ -1255,8 +1252,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v515 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v516") !== -1,
-                'Актуальная версия — kipia-test-v516 (Task 258)');
+            assertTrue(sw.indexOf("kipia-test-v517") !== -1,
+                'Актуальная версия — kipia-test-v517 (Task 259)');
         });
     });
 
@@ -1266,8 +1263,206 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
         test('v513 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v516") !== -1,
-                'Актуальная версия — kipia-test-v516');
+            assertTrue(sw.indexOf("kipia-test-v517") !== -1,
+                'Актуальная версия — kipia-test-v517');
+        });
+    });
+
+    // ============================================================
+    // Task 259: бордюрчик непрозрачный с эффектом выступа;
+    // группировка/сортировка сотрудников (сменные 1-5 → дневные
+    // по алфавиту); разделитель групп сменного/дневного персонала
+    // ============================================================
+
+    describe('Task 259: бордюрчик под графиком — непрозрачный, с эффектом выступа', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('CSS: полоса непрозрачная — сплошной фон без rgba-альфы', () => {
+            const reSolid = /\.ws-grid-foot \{[^}]*background:\s*#35648f;[^}]*\}/s;
+            const reLightSolid = /\[data-theme="light"\] \.ws-grid-foot \{[^}]*background:\s*#b3c2ce;[^}]*\}/s;
+            assertTrue(reSolid.test(html) && reLightSolid.test(html),
+                'Фон полосы — сплошные цвета в обеих темах (было rgba с альфой)');
+            const reOldAlpha = /\.ws-grid-foot \{[^}]*rgba\(/s;
+            assertFalse(reOldAlpha.test(html),
+                'В тёмной теме больше нет полупрозрачного rgba-фона полосы');
+        });
+
+        test('CSS: эффект выступа — верхняя грань светлее фона, нижняя темнее', () => {
+            const reDark = /\.ws-grid-foot \{[^}]*border-top:\s*1px solid #85b7dc;[^}]*border-bottom:\s*1px solid #0f1b26;[^}]*\}/s;
+            assertTrue(reDark.test(html),
+                'Блик #85b7dc сверху + тень #0f1b26 снизу на стальном фоне — bevel');
+            const reLight = /\[data-theme="light"\] \.ws-grid-foot \{[^}]*border-top:\s*1px solid #ffffff;[^}]*border-bottom:\s*1px solid #84929e;[^}]*\}/s;
+            assertTrue(reLight.test(html), 'Светлая тема: белый блик + серо-синяя тень');
+        });
+
+        test('CSS: высота полосы остаётся 5px (box-sizing: border-box)', () => {
+            const re = /\.ws-grid-foot \{[^}]*height:\s*5px;[^}]*box-sizing:\s*border-box;[^}]*\}/s;
+            assertTrue(re.test(html),
+                '1px блик + 3px фон + 1px тень = 5px, _fitGrid читает реальную ' +
+                'геометрию — подгонка строк не меняется');
+        });
+    });
+
+    describe('Task 259: группировка и сортировка сотрудников', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const vm = require('vm');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        // Извлечение метода _sortEmployees из объекта WorkSchedule
+        // (поиск по имени + балансировка фигурных скобок)
+        function extractMethod(src, name) {
+            const start = src.indexOf(name + ': function(');
+            if (start === -1) return null;
+            const braceStart = src.indexOf('{', start);
+            let depth = 0;
+            for (let i = braceStart; i < src.length; i++) {
+                if (src[i] === '{') depth++;
+                else if (src[i] === '}') {
+                    depth--;
+                    if (depth === 0) return src.slice(start, i + 1);
+                }
+            }
+            return null;
+        }
+
+        let _sortEmployees = null;
+        try {
+            const src = extractMethod(html, '_sortEmployees');
+            if (src) {
+                const ctx = {};
+                vm.createContext(ctx);
+                vm.runInContext('var WSMixin = { ' + src + ' };', ctx);
+                _sortEmployees = ctx.WSMixin._sortEmployees;
+            }
+        } catch (e) { /* метод не извлёкся — тесты ниже упадут с понятной причиной */ }
+
+        test('JS: _sortEmployees определён и подключён в _loadEmployees', () => {
+            assertTrue(html.indexOf('_sortEmployees: function(list)') !== -1,
+                'Метод _sortEmployees определён в модуле WorkSchedule');
+            const re = /self\._EMPLOYEES = self\._sortEmployees\(data\.employees \|\| \[\]\);/;
+            assertTrue(re.test(html),
+                '_loadEmployees применяет сортировку — единый порядок для ' +
+                'шахматки, справочника и селектов');
+        });
+
+        test('Функционально: сменные по сменам 1..5, затем дневные по алфавиту', () => {
+            assertTrue(typeof _sortEmployees === 'function',
+                '_sortEmployees извлечён из index.html');
+            const src = [
+                { 'ФИО': 'Ягодкин Н.Н.', 'тип': 'дневной' },
+                { 'ФИО': 'Иванов А.А.',  'тип': 'сменный', 'смена': 3 },
+                { 'ФИО': 'Сидоров К.К.', 'тип': 'сменный', 'смена': 1 },
+                { 'ФИО': 'Абрамов В.В.', 'тип': 'сменный', 'смена': 1 },
+                { 'ФИО': 'Петров Б.Б.',  'тип': 'сменный', 'смена': 2 },
+                { 'ФИО': 'Козлов Д.Д.',  'тип': 'дневной' }
+            ];
+            const out = _sortEmployees(src).map(e => e['ФИО']);
+            assertEqual(JSON.stringify(out),
+                JSON.stringify(['Абрамов В.В.', 'Сидоров К.К.', 'Петров Б.Б.',
+                                'Иванов А.А.', 'Козлов Д.Д.', 'Ягодкин Н.Н.']),
+                'Смена №1 (алфавит), смена №2, смена №3, затем дневные (алфавит)');
+        });
+
+        test('Функционально: внутри одной смены — алфавит фамилий', () => {
+            const src = [
+                { 'ФИО': 'Юдин С.С.', 'тип': 'сменный', 'смена': 2 },
+                { 'ФИО': 'Белов Р.Р.', 'тип': 'сменный', 'смена': 2 },
+                { 'ФИО': 'Мишин Л.Л.', 'тип': 'сменный', 'смена': 2 }
+            ];
+            const out = _sortEmployees(src).map(e => e['ФИО']);
+            assertEqual(JSON.stringify(out),
+                JSON.stringify(['Белов Р.Р.', 'Мишин Л.Л.', 'Юдин С.С.']),
+                'Внутри смены №2 сортировка по фамилиям');
+        });
+
+        test('Функционально: все 5 смен по порядку, сменный без номера — после них', () => {
+            const src = [
+                { 'ФИО': 'Фёдоров Ф.Ф.', 'тип': 'сменный' },          // без номера
+                { 'ФИО': 'Бобров Б.Б.', 'тип': 'сменный', 'смена': 5 },
+                { 'ФИО': 'Агафов А.А.', 'тип': 'сменный', 'смена': 4 },
+                { 'ФИО': 'Васин В.В.',  'тип': 'сменный', 'смена': 1 },
+                { 'ФИО': 'Гусев Г.Г.',  'тип': 'сменный', 'смена': 2 },
+                { 'ФИО': 'Дёмин Д.Д.',  'тип': 'сменный', 'смена': 3 },
+                { 'ФИО': 'Яшин Я.Я.',   'тип': 'дневной' }
+            ];
+            const out = _sortEmployees(src).map(e => e['смена'] || '—');
+            assertEqual(JSON.stringify(out),
+                JSON.stringify([1, 2, 3, 4, 5, '—', '—']),
+                'Смены 1-5 по порядку, сменный без номера перед дневными, дневной в конце');
+        });
+
+        test('Функционально: без типа — в конце; исходный массив не мутируется', () => {
+            const src = [
+                { 'ФИО': 'Иванов И.И.' },                        // без типа
+                { 'ФИО': 'Смирнов С.С.', 'тип': 'дневной' },
+                { 'ФИО': 'Кузнецов К.К.', 'тип': 'сменный', 'смена': 1 }
+            ];
+            const snapshot = JSON.stringify(src);
+            const out = _sortEmployees(src);
+            assertEqual(JSON.stringify(out.map(e => e['ФИО'])),
+                JSON.stringify(['Кузнецов К.К.', 'Смирнов С.С.', 'Иванов И.И.']),
+                'Сменный → дневной → без типа');
+            assertEqual(JSON.stringify(src), snapshot,
+                '_sortEmployees возвращает новый массив, не мутируя вход');
+        });
+    });
+
+    describe('Task 259: разделитель групп сменного и дневного персонала', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('CSS: усиленная верхняя граница у строки ws-group-first', () => {
+            const reDark = /\.ws-grid tbody tr\.ws-group-first td \{[^}]*border-top:\s*2px solid #4a8fc7;[^}]*\}/s;
+            assertTrue(reDark.test(html),
+                'Разделитель 2px стальной синий на первой строке дневной группы');
+            const reLight = /\[data-theme="light"\] \.ws-grid tbody tr\.ws-group-first td \{[^}]*border-top:\s*2px solid #6e8ba4;[^}]*\}/s;
+            assertTrue(reLight.test(html), 'Светлая тема — свой цвет разделителя');
+        });
+
+        test('JS: _renderGrid ставит ws-group-first на стыке сменных и дневных', () => {
+            const re = /var trCls = \(empTier === 1 && prevTier === 0\)[\s\S]*?' class="ws-group-first"' : '';[\s\S]*?html \+= '<tr' \+ trCls \+ '>';/;
+            assertTrue(re.test(html),
+                'Класс ставится только когда дневной идёт сразу после сменного');
+            const reTier = /var empTier = \(empTip === 'сменный'\) \? 0\s*: \(empTip === 'дневной'\) \? 1 : 2;/;
+            assertTrue(reTier.test(html), 'Тир сотрудника: сменный 0, дневной 1, без типа 2');
+        });
+
+        test('JS: prevTier обновляется по каждой строке (стык отслеживается)', () => {
+            const re = /var prevTier = -1;[\s\S]*?prevTier = empTier;/;
+            assertTrue(re.test(html),
+                'Группа предыдущей строки отслеживается до конца списка');
+        });
+
+        test('Инвариант: без сменных ИЛИ без дневных разделитель не ставится', () => {
+            // условие empTier === 1 && prevTier === 0 не срабатывает:
+            //  - все дневные: первая строка имеет prevTier = -1
+            //  - только сменные: empTier === 1 не встречается
+            const re = /var trCls = \(empTier === 1 && prevTier === 0\)/;
+            assertTrue(re.test(html),
+                'Строгая проверка стыка — лишних разделителей нет');
+        });
+    });
+
+    describe('Task 259: SW версия v517', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const swPath = path.resolve(__dirname, '..', 'sw.js');
+        const sw = fs.readFileSync(swPath, 'utf8');
+
+        test('CACHE_VERSION = kipia-test-v517', () => {
+            assertTrue(sw.indexOf("kipia-test-v517") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v517 (Task 259)');
+        });
+        test('Старая версия v516 убрана', () => {
+            assertTrue(sw.indexOf("kipia-test-v516") === -1,
+                'Старая v516 не должна остаться в sw.js');
         });
     });
 });
