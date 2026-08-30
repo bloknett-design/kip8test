@@ -1845,18 +1845,81 @@ describe('Task 241: зебра списка расходомеров в свет
     });
 });
 
-// Task 246 (бекпорт Tasks 242-243 из kip8): SW обновлён до v505
-describe('Task 246: SW версия v505 (бекпорт из kip8)', () => {
+// Task 246 (бекпорт Tasks 242-243 из kip8): SW-блок версии v505 удалён —
+// версия v506 введена в Task 247 (см. describe ниже). Историческая заметка.
+
+// Task 247: дата «за ДД.ММ.ГГГГ г.» в строке «Последние показания» — единый
+// неразрывный блок. При нехватке ширины (мобильные экраны) весь текст
+// «за 29.08.2026 г.» переносится на новую строку ЦЕЛИКОМ, а не по словам:
+//   • white-space: nowrap на .flow-detail-date-inline / .flow-summary-date-inline
+//   • пробел-разделитель вынесен ЗА пределы span даты (единственная точка
+//     переноса — между названием «Последние показания» и блоком даты)
+describe('Task 247: дата «за ДД.ММ.ГГГГ г.» — неразрывный блок (детальная карточка)', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const htmlPath = path.resolve(__dirname, '..', 'index.html');
+    const html = fs.readFileSync(htmlPath, 'utf-8');
+
+    test('CSS: .flow-detail-date-inline имеет white-space: nowrap', () => {
+        const re = /\.flow-detail-label \.flow-detail-date-inline\s*\{[^}]*white-space:\s*nowrap/;
+        assertTrue(re.test(html),
+            'Правило .flow-detail-label .flow-detail-date-inline должно содержать white-space: nowrap — иначе дата рвётся по словам');
+    });
+
+    test('HTML: блок даты начинается с «за» БЕЗ ведущего пробела внутри span', () => {
+        assertTrue(html.indexOf('<span class="flow-detail-date-inline">за ') !== -1,
+            'span даты должен начинаться сразу с «за» (без пробела внутри)');
+        assertTrue(html.indexOf('<span class="flow-detail-date-inline"> за ') === -1,
+            'Старый паттерн с пробелом внутри span не должен остаться (пробел внутри nowrap-блока запретил бы перенос между названием и датой)');
+    });
+
+    test('HTML: пробел-разделитель ВНЕ span (перенос между названием и датой)', () => {
+        // В _buildDetailHtml: lastReadingLabel + ' <span class="flow-detail-date-inline">за '
+        // (пробел — внутри строкового литерала, но ЗА пределами HTML-тега span)
+        const re = /lastReadingLabel \+\s*' <span class="flow-detail-date-inline">за '/;
+        assertTrue(re.test(html),
+            'Пробел между «Последние показания» и span даты должен быть снаружи — единственная точка переноса строки');
+    });
+});
+
+describe('Task 247: то же для карточек списка расходомеров', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const htmlPath = path.resolve(__dirname, '..', 'index.html');
+    const html = fs.readFileSync(htmlPath, 'utf-8');
+
+    test('CSS: .flow-summary-date-inline имеет white-space: nowrap', () => {
+        const re = /\.flow-summary-label \.flow-summary-date-inline\s*\{[^}]*white-space:\s*nowrap/;
+        assertTrue(re.test(html),
+            'Правило .flow-summary-label .flow-summary-date-inline должно содержать white-space: nowrap');
+    });
+
+    test('HTML: блок даты начинается с «за» БЕЗ ведущего пробела внутри span', () => {
+        assertTrue(html.indexOf('<span class="flow-summary-date-inline">за ') !== -1,
+            'span даты в карточке списка должен начинаться сразу с «за»');
+        assertTrue(html.indexOf('<span class="flow-summary-date-inline"> за ') === -1,
+            'Старый паттерн с пробелом внутри span не должен остаться в карточках списка');
+    });
+
+    test('HTML: пробел-разделитель ВНЕ span в renderList', () => {
+        // В renderList: «Последние показания <span class="flow-summary-date-inline">за »
+        assertTrue(html.indexOf('Последние показания <span class="flow-summary-date-inline">за ') !== -1,
+            'Между «Последние показания» и span даты должен стоять пробел снаружи span');
+    });
+});
+
+// Task 247: SW обновлён до v506
+describe('Task 247: SW версия v506', () => {
     const fs = require('fs');
     const path = require('path');
     const swPath = path.resolve(__dirname, '..', 'sw.js');
     const sw = fs.readFileSync(swPath, 'utf-8');
 
-    test('CACHE_VERSION = kipia-test-v505', () => {
-        assertTrue(sw.indexOf("kipia-test-v505") !== -1);
+    test('CACHE_VERSION = kipia-test-v506', () => {
+        assertTrue(sw.indexOf("kipia-test-v506") !== -1);
     });
-    test('Старая версия v504 убрана', () => {
-        assertTrue(sw.indexOf("kipia-test-v504") === -1,
-                   'Старая v504 не должна остаться в sw.js');
+    test('Старая версия v505 убрана', () => {
+        assertTrue(sw.indexOf("kipia-test-v505") === -1,
+                   'Старая v505 не должна остаться в sw.js');
     });
 });
