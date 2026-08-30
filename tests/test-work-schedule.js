@@ -852,10 +852,16 @@ describe('График работы — WorkSchedule', () => {
                 '.ws-grid-wrap: flex:1 + min-height:0 + overflow-y:auto — график занимает всё место до низа');
         });
 
-        test('CSS: таблица height:100% — строки делят высоту, график до низа окна', () => {
-            const re = /#page-work-schedule \.ws-grid \{[^}]*height:\s*100%;[^}]*\}/;
-            assertTrue(re.test(html),
-                '.ws-grid: height:100% — последняя строка у нижнего края экрана');
+        test('CSS: график до низа окна — Task 256: целые высоты строк вместо height:100%', () => {
+            // Task 252 растягивал таблицу height:100% — браузер раздавал
+            // строкам ДРОБНЫЕ высоты (60.2px), из-за чего 1px границы
+            // «растворялись» антиалиасингом (Task 256). Теперь высоты
+            // строк задаёт _fitGrid целыми пикселями, таблица по-прежнему
+            // до нижнего края (сумма строк = высота области).
+            const re = /#page-work-schedule \.ws-grid \{[^}]*height:\s*auto;[^}]*\}/;
+            const reVar = /#page-work-schedule \.ws-grid tbody td \{[^}]*height:\s*var\(--ws-row-h,\s*32px\);[^}]*\}/;
+            assertTrue(re.test(html) && reVar.test(html),
+                '.ws-grid: height:auto + --ws-row-h (целые высоты строк, до низа окна)');
         });
 
         test('CSS: шапка таблицы компактная (не тянется вместе со строками)', () => {
@@ -1076,19 +1082,117 @@ describe('График работы — WorkSchedule', () => {
         });
     });
 
-    describe('Task 255: SW версия v513', () => {
+    describe('Task 256: авто-подгонка шахматки под окно (целые высоты строк)', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('CSS: шапка — целочисленные межстрочные интервалы (было 36.5px)', () => {
+            const reTh = /\.ws-grid thead th \{[^}]*line-height:\s*14px;/s;
+            const reDow = /\.ws-grid thead th\.ws-day-col \.ws-dow \{[^}]*line-height:\s*11px;/s;
+            assertTrue(reTh.test(html) && reDow.test(html),
+                'Числа дней lh=14px + дни недели lh=11px: шапка ровно 37.5px, ' +
+                'границы строк — на целых пикселях (антиалиасинг не стирает линии)');
+        });
+
+        test('CSS: колонка ФИО — целые интервалы (.ws-emp-name/.ws-emp-pos)', () => {
+            const reName = /\.ws-grid tbody td\.ws-emp-col \.ws-emp-name \{[^}]*line-height:\s*14px;/s;
+            const rePos = /\.ws-grid tbody td\.ws-emp-col \.ws-emp-pos \{[^}]*line-height:\s*12px;/s;
+            assertTrue(reName.test(html) && rePos.test(html),
+                'ФИО lh=14px + должность lh=12px: природная высота строки целая');
+        });
+
+        test('CSS: высота ячеек тела — var(--ws-row-h) (задаёт _fitGrid)', () => {
+            const re = /#page-work-schedule \.ws-grid tbody td \{\s*\n\s*height:\s*var\(--ws-row-h,\s*32px\);/s;
+            assertTrue(re.test(html),
+                'Высота строк через CSS-переменную, без JS — прежние 32px');
+        });
+
+        test('CSS: растяжение height:100% убрано (дробные высоты стирали границы)', () => {
+            const reBad = /#page-work-schedule \.ws-grid \{\s*\n\s*height:\s*100%;/;
+            const reOk = /#page-work-schedule \.ws-grid \{\s*\n\s*height:\s*auto;/;
+            assertTrue(!reBad.test(html) && reOk.test(html),
+                'height:100% заменён на auto: высоты строк задаёт _fitGrid целыми px');
+        });
+
+        test('CSS: компактные режимы ws-compact / ws-tight', () => {
+            const reCompact = /\.ws-grid-wrap\.ws-compact \.ws-grid tbody td\.ws-emp-col \{[^}]*padding:\s*3px 10px;/s;
+            const reTight = /\.ws-grid-wrap\.ws-tight \.ws-grid tbody td\.ws-emp-col \{[^}]*padding:\s*1px 8px;/s;
+            const reTightPos = /\.ws-grid-wrap\.ws-tight \.ws-grid tbody td\.ws-emp-col \.ws-emp-pos \{[^}]*font-size:\s*9px;[^}]*margin-top:\s*0;/s;
+            assertTrue(reCompact.test(html) && reTight.test(html) && reTightPos.test(html),
+                'Два яруса уплотнения колонки ФИО при нехватке высоты окна');
+        });
+
+        test('JS: _fitGrid — целочисленные высоты + остаток по +1px первым строкам', () => {
+            const hasFloor = html.indexOf('Math.floor(budget / n)') !== -1;
+            const hasRem = html.indexOf('h + (i < rem ? 1 : 0)') !== -1;
+            assertTrue(hasFloor && hasRem,
+                'floor((область-шапка)/строки) и раздача остатка пикселей');
+        });
+
+        test('JS: _fitGrid — подбор яруса по ЗАМЕРУ природной высоты строки', () => {
+            const reMeasure = /var measureNatural = function\(\) \{[\s\S]*?getBoundingClientRect\(\)\.height;/;
+            const hasTiers = html.indexOf("wrap.classList.add('ws-compact');") !== -1 &&
+                             html.indexOf("wrap.classList.add('ws-tight');") !== -1;
+            assertTrue(reMeasure.test(html) && hasTiers,
+                'Пороги компактности не по формуле, а по фактическому рендеру ' +
+                '(box-sizing + collapsed-границы дают +1px к расчётной высоте)');
+        });
+
+        test('JS: _fitGrid — мобильная вёрстка (<1024px) не подгоняется', () => {
+            const re = /window\.matchMedia\s*\n?\s*&&\s*window\.matchMedia\('\(min-width: 1024px\)'\)\.matches;/;
+            const hasClear = html.indexOf("wrap.classList.remove('ws-compact', 'ws-tight');") !== -1;
+            assertTrue(re.test(html) && hasClear,
+                'На мобильной — природные высоты (очистка классов и переменной)');
+        });
+
+        test('JS: _renderGrid вызывает _fitGrid после сборки таблицы', () => {
+            const re = /wrap\.innerHTML = html;\s*\n\s*\/\/ Task 256[\s\S]*?\n\s*this\._fitGrid\(\);/;
+            assertTrue(re.test(html),
+                'После каждого рендера шахматки — пересчёт высот строк');
+        });
+
+        test('JS: _attachFitResize — ResizeObserver + брейкпоинт 1024px', () => {
+            const hasRO = html.indexOf('new ResizeObserver(function() {') !== -1 ||
+                          html.indexOf('new ResizeObserver(') !== -1;
+            const hasMq = html.indexOf("window.matchMedia('(min-width: 1024px)')") !== -1;
+            assertTrue(hasRO && hasMq,
+                'Пересчёт при изменении окна/показе страницы и переходе мобильная/десктоп');
+        });
+
+        test('JS: init навешивает _attachFitResize один раз', () => {
+            const re = /this\._attachFitResize\(\);/;
+            const hasGuard = html.indexOf('if (this._fitAttached) return;') !== -1;
+            assertTrue(re.test(html) && hasGuard,
+                'Наблюдатель размера вешается однократно при инициализации модуля');
+        });
+    });
+
+    describe('Task 256: SW версия v514', () => {
         const fs = require('fs');
         const path = require('path');
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v513', () => {
-            assertTrue(sw.indexOf("kipia-test-v513") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v513 (Task 255)');
+        test('CACHE_VERSION = kipia-test-v514', () => {
+            assertTrue(sw.indexOf("kipia-test-v514") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v514 (Task 256)');
         });
-        test('Старая версия v512 убрана', () => {
-            assertTrue(sw.indexOf("kipia-test-v512") === -1,
-                'Старая v512 не должна остаться в sw.js');
+        test('Старая версия v513 убрана', () => {
+            assertTrue(sw.indexOf("kipia-test-v513") === -1,
+                'Старая v513 не должна остаться в sw.js');
+        });
+    });
+
+    describe('Task 255: SW версия v513 (история)', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const swPath = path.resolve(__dirname, '..', 'sw.js');
+        const sw = fs.readFileSync(swPath, 'utf8');
+        test('v513 заменена актуальной версией', () => {
+            assertTrue(sw.indexOf("kipia-test-v514") !== -1,
+                'Актуальная версия — kipia-test-v514');
         });
     });
 });
