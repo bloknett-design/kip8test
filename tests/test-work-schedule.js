@@ -476,23 +476,9 @@ describe('График работы — WorkSchedule', () => {
         const indexPath = path.resolve(__dirname, '..', 'index.html');
         const html = fs.readFileSync(indexPath, 'utf8');
 
-        test('JS: текст кода статуса не выводится в ячейке (только цвет)', () => {
-            // Старый вывод: (status || '·') — код буквой в ячейке
-            assertTrue(html.indexOf("(status || '·')") === -1,
-                'Код статуса не должен выводиться в ячейке (старый паттерн (status || \'·\'))');
-            // Новый: пустая ячейка — маркер «·», статусная — без текста
-            assertTrue(html.indexOf("(status ? '' : '·')") !== -1,
-                'Статусная ячейка — без текста, пустая — маркер «·»');
-        });
-
-        test('JS: легенда без кодов — только цветовой образец и название', () => {
-            assertTrue(html.indexOf("'<b>' + this._esc(c.code) + '</b> — '") === -1,
-                'Код статуса не должен выводиться в легенде');
-            // Новый рендер: свотч сразу followed by название, без кода
-            const re = /';"><\/span>' \+\s*\n\s*this\._esc\(c\.name\) \+/;
-            assertTrue(re.test(html),
-                'Легенда: свотч + название (this._esc(c.name)) без кода');
-        });
+        // Task 252: тесты «код не выводится в ячейке» и «легенда без
+        // кодов» удалены — Task 252 вернул коды в ячейки и убрал легенду
+        // целиком (см. describe Task 252 ниже). Историческая заметка.
 
         test('JS: tooltip показывает название статуса, а не код', () => {
             assertTrue(html.indexOf("var statusName = status;") !== -1,
@@ -765,13 +751,126 @@ describe('График работы — WorkSchedule', () => {
                 'beforeunload должен предупреждать при несохранённых правках');
         });
 
-        test('SW: CACHE_VERSION = kipia-test-v510', () => {
+        // Task 252: SW-тест версии v510 удалён — версия v511 введена в
+        // Task 252 (см. describe ниже). Историческая заметка.
+    });
+
+    // ============================================================
+    // Task 252: «График работы» — чистка десктопного дашборда:
+    //   1) легенды под шахматкой убраны совсем (HTML/CSS/JS);
+    //   2) шахматка растянута до самого низа окна (десктоп ≥1024px):
+    //      страница — flex-колонка, ws-grid-wrap flex:1 + скролл,
+    //      таблица height:100% — строки делят свободную высоту;
+    //   3) тулбар с кнопками — на всю ширину, ровно между баром
+    //      хлебных крошек (page-inline-header) и графиком;
+    //   4) коды статусов ВЕРНУТЫ в ячейки шахматки (цвет + код,
+    //      как до Task 250; непрозрачный фон Task 250 сохранён).
+    // ============================================================
+    describe('Task 252: легенда под шахматкой полностью убрана', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('HTML: элемент #wsLegend удалён со страницы', () => {
+            assertTrue(html.indexOf('id="wsLegend"') === -1,
+                'Контейнер легенды #wsLegend не должен существовать');
+            assertTrue(html.indexOf('class="ws-legend"') === -1,
+                'Элемент .ws-legend не должен существовать');
+        });
+
+        test('JS: метод _renderLegend удалён из модуля WorkSchedule', () => {
+            assertTrue(html.indexOf('_renderLegend') === -1,
+                'Ни метод, ни вызов _renderLegend не должны остаться в коде');
+        });
+
+        test('CSS: правила .ws-legend / .ws-legend-item / .ws-legend-swatch удалены', () => {
+            const reItem = /\.ws-legend-item\s*\{/;
+            const reSwatch = /\.ws-legend-swatch\s*\{/;
+            const reBlock = /\.ws-legend\s*\{/;
+            assertTrue(!reBlock.test(html) && !reItem.test(html) && !reSwatch.test(html),
+                'CSS-правила легенды должны быть удалены (вместо них — комментарий Task 252)');
+        });
+    });
+
+    describe('Task 252: коды статусов возвращены в ячейки', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('JS: в ячейке выводится код статуса (status || «·»)', () => {
+            // Реверс Task 250: снова (status || '·') — код буквой в ячейке
+            assertTrue(html.indexOf("(status || '·')") !== -1,
+                'Код статуса должен выводиться в ячейке (паттерн (status || \'·\'))');
+            assertTrue(html.indexOf("(status ? '' : '·')") === -1,
+                'Паттерн Task 250 «статусная ячейка без текста» должен быть удалён');
+        });
+
+        test('JS: непрозрачный фон Task 250 сохранён (CSS-фон + inline для статусных)', () => {
+            const re = /\.ws-grid tbody td\.ws-cell \{[^}]*background:\s*var\(--bg-primary, #1a2233\);/;
+            assertTrue(re.test(html),
+                'Сплошной CSS-фон пустых ячеек должен остаться');
+            assertTrue(html.indexOf("if (status) style += 'background:' + color + ';';") !== -1,
+                'Inline-фон задаётся только статусным ячейкам');
+        });
+
+        test('JS: tooltip и маркеры Task 250/251 не тронуты', () => {
+            assertTrue(html.indexOf("titleParts.push('статус: ' + (statusName || '—'));") !== -1,
+                'Tooltip: «статус: <название>» (Task 250) — на месте');
+            assertTrue(html.indexOf("if (isOvertime) classes.push('ws-overtime');") !== -1,
+                'Маркер переработки ws-overtime (Task 250) — на месте');
+            assertTrue(html.indexOf("if (isPending) classes.push('ws-pending');") !== -1,
+                'Маркер несохранённой правки ws-pending (Task 251) — на месте');
+        });
+    });
+
+    describe('Task 252: десктоп — график до самого низа, тулбар между крошками и графиком', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('CSS: страница — flex-колонка на всю высоту (≥1024px)', () => {
+            const re = /#contentArea > #page-work-schedule\.active \{[^}]*display:\s*flex;[^}]*flex-direction:\s*column;[^}]*\}/;
+            assertTrue(re.test(html),
+                '#page-work-schedule.active — flex-колонка (крошки → тулбар → шахматка)');
+            const rePad = /#contentArea > #page-work-schedule\.active \{[^}]*padding-bottom:\s*0;/;
+            assertTrue(rePad.test(html),
+                'Мобильный нижний отступ ~70px убран на десктопе');
+        });
+
+        test('CSS: бары (крошки + тулбар) не сжимаются — тулбар во всю ширину между ними', () => {
+            const re = /#page-work-schedule \.page-inline-header,\s*\n\s*#page-work-schedule \.ws-toolbar \{[^}]*flex-shrink:\s*0;/;
+            assertTrue(re.test(html),
+                'page-inline-header и ws-toolbar — flex-shrink: 0 (бары фиксированной высоты, тулбар между крошками и графиком)');
+        });
+
+        test('CSS: шахматка занимает остаток высоты и скроллится сама', () => {
+            const re = /#page-work-schedule \.ws-grid-wrap \{[^}]*flex:\s*1;[^}]*min-height:\s*0;[^}]*overflow-y:\s*auto;[^}]*\}/;
+            assertTrue(re.test(html),
+                '.ws-grid-wrap: flex:1 + min-height:0 + overflow-y:auto — график занимает всё место до низа');
+        });
+
+        test('CSS: таблица height:100% — строки делят высоту, график до низа окна', () => {
+            const re = /#page-work-schedule \.ws-grid \{[^}]*height:\s*100%;[^}]*\}/;
+            assertTrue(re.test(html),
+                '.ws-grid: height:100% — последняя строка у нижнего края экрана');
+        });
+
+        test('CSS: шапка таблицы компактная (не тянется вместе со строками)', () => {
+            const re = /#page-work-schedule \.ws-grid thead th \{[^}]*height:\s*32px;/;
+            assertTrue(re.test(html),
+                'thead th: height 32px — шапка не растягивается пропорционально строкам');
+        });
+
+        test('SW: CACHE_VERSION = kipia-test-v511', () => {
             const swPath = path.resolve(__dirname, '..', 'sw.js');
             const sw = fs.readFileSync(swPath, 'utf8');
-            assertTrue(sw.indexOf("kipia-test-v510") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v510 (Task 251)');
-            assertTrue(sw.indexOf("kipia-test-v509") === -1,
-                'Старая версия v509 не должна остаться в sw.js');
+            assertTrue(sw.indexOf("kipia-test-v511") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v511 (Task 252)');
+            assertTrue(sw.indexOf("kipia-test-v510") === -1,
+                'Старая версия v510 не должна остаться в sw.js');
         });
     });
 });
