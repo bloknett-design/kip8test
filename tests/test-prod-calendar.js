@@ -446,7 +446,7 @@ describe('ProdCalendar: кэш и ensureYear', () => {
     test('ключ кэша включает год и регион', () => {
         const { PC } = makePC();
         PC.setSettings({ region: 54, token: '' });
-        assertEqual(PC._cacheKey(2026), 'ws_pcal_year_2026_54');
+        assertEqual(PC._cacheKey(2026), 'ws_pcal_year2_2026_54');
     });
     test('свежий кэш → сеть НЕ дёргается, resolve(false)', () => {
         const fresh = {
@@ -455,7 +455,7 @@ describe('ProdCalendar: кэш и ensureYear', () => {
             days: { '0509': { holiday: 1 } }
         };
         const { PC } = makePC({
-            'ws_pcal_year_2026_42': JSON.stringify(fresh)
+            'ws_pcal_year2_2026_42': JSON.stringify(fresh)
         });
         PC._fetchYear = function() { throw new Error('сеть не должна вызываться'); };
         let resolved = null;
@@ -473,7 +473,7 @@ describe('ProdCalendar: кэш и ensureYear', () => {
         const changed = await PC.ensureYear(2026, true);
         assertEqual(changed, true, 'пришли новые данные');
         assertTrue(PC._MEM[2026] && PC._MEM[2026].days['0109'].off === 1, 'в памяти');
-        const cached = JSON.parse(storage._d['ws_pcal_year_2026_42']);
+        const cached = JSON.parse(storage._d['ws_pcal_year2_2026_42']);
         assertEqual(cached.source, 'isdayoff', 'в localStorage');
         assertTrue(cached.days['0501'].off === 1);
     });
@@ -484,7 +484,7 @@ describe('ProdCalendar: кэш и ensureYear', () => {
             days: { '0509': { holiday: 1 } }
         };
         const { PC } = makePC({
-            'ws_pcal_year_2026_42': JSON.stringify(stale)
+            'ws_pcal_year2_2026_42': JSON.stringify(stale)
         });
         PC._fetchYear = function() { return Promise.reject(new Error('нет сети')); };
         const changed = await PC.ensureYear(2026, true);
@@ -577,15 +577,470 @@ describe('Task 260: интеграция в index.html', () => {
         assertTrue(html.indexOf('.ws-cal-day-kind') !== -1, 'стили списка праздников');
         assertTrue(html.indexOf('.ws-cal-norms-grid') !== -1, 'стили блока норм');
     });
-    test('SW: версия кэша kipia-test-v518', () => {
+    test('SW: версия кэша kipia-test-v519 (Task 262)', () => {
         const sw = fs.readFileSync(path.resolve(__dirname, '..', 'sw.js'), 'utf8');
-        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v518'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v518');
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v519'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v519');
     });
     test('Тултип ячейки содержит название праздника', () => {
         assertTrue(html.indexOf('titleParts.splice(1, 0, cellInfo.title);') !== -1,
             'название вставляется в тултип ячейки');
         assertTrue(html.indexOf('popupDate += \' · \' + pdInfo.title;') !== -1,
             'название — в заголовке попапа выбора статуса');
+    });
+});
+
+// ============================================================
+// Task 262: legalic — основной источник, официальные нормы,
+// цепочки переносов, 2027 preliminary, День шахтёра (регион 42)
+// ============================================================
+
+// Фикстуры legalic. Особые дни 2026 — РЕАЛЬНЫЕ (export
+// calendar.legalic.ru/api/v1/calendars/RU-FEDERAL/export?year=2026):
+// 14 праздников, 4 перенесённых выходных, 4 сокращённых, 0 рабочих
+// суббот. Полный год генерируется: WORKING = 480/432/288 мин,
+// SHORTENED_WORKING = 420/372/228 мин (суммы минут = официальные
+// нормы: 247 дн. → 1972 / 1774,4 / 1181,6 ч).
+const LG2026_SPECIAL = {
+    '0101': { t: 'PUBLIC_HOLIDAY', n: 'Новогодние каникулы' },
+    '0102': { t: 'PUBLIC_HOLIDAY', n: 'Новогодние каникулы' },
+    '0103': { t: 'PUBLIC_HOLIDAY', n: 'Новогодние каникулы' },
+    '0104': { t: 'PUBLIC_HOLIDAY', n: 'Новогодние каникулы' },
+    '0105': { t: 'PUBLIC_HOLIDAY', n: 'Новогодние каникулы' },
+    '0106': { t: 'PUBLIC_HOLIDAY', n: 'Новогодние каникулы' },
+    '0107': { t: 'PUBLIC_HOLIDAY', n: 'Рождество Христово' },
+    '0108': { t: 'PUBLIC_HOLIDAY', n: 'Новогодние каникулы' },
+    '0109': { t: 'TRANSFERRED_DAY_OFF', from: '2026-01-03' },
+    '0223': { t: 'PUBLIC_HOLIDAY', n: 'День защитника Отечества' },
+    '0308': { t: 'PUBLIC_HOLIDAY', n: 'Международный женский день', to: '2026-03-09' },
+    '0309': { t: 'TRANSFERRED_DAY_OFF', from: '2026-03-08' },
+    '0430': { t: 'SHORTENED_WORKING' },
+    '0501': { t: 'PUBLIC_HOLIDAY', n: 'Праздник Весны и Труда' },
+    '0508': { t: 'SHORTENED_WORKING' },
+    '0509': { t: 'PUBLIC_HOLIDAY', n: 'День Победы' },
+    '0511': { t: 'TRANSFERRED_DAY_OFF', from: '2026-05-09' },
+    '0611': { t: 'SHORTENED_WORKING' },
+    '0612': { t: 'PUBLIC_HOLIDAY', n: 'День России' },
+    '1103': { t: 'SHORTENED_WORKING' },
+    '1104': { t: 'PUBLIC_HOLIDAY', n: 'День народного единства' },
+    '1231': { t: 'TRANSFERRED_DAY_OFF', from: '2026-01-04' }
+};
+
+// Генератор полного года legalic (WORKING/WEEKEND достраиваются,
+// минуты соответствуют реальным суммам источника)
+function buildLegalicYear(year, special, status) {
+    const days = [];
+    for (let m = 1; m <= 12; m++) {
+        const last = new Date(year, m, 0).getDate();
+        for (let d = 1; d <= last; d++) {
+            const mmdd = (m < 10 ? '0' : '') + m + (d < 10 ? '0' : '') + d;
+            const dow = new Date(year, m - 1, d).getDay();
+            const sp = special[mmdd] || {};
+            const weekend = dow === 0 || dow === 6;
+            const type = sp.t || (weekend ? 'WEEKEND' : 'WORKING');
+            const minutes = type === 'WORKING' ? { '40h': 480, '36h': 432, '24h': 288 }
+                          : type === 'SHORTENED_WORKING' ? { '40h': 420, '36h': 372, '24h': 228 }
+                          : { '40h': 0, '36h': 0, '24h': 0 };
+            const day = {
+                date: year + '-' + mmdd.slice(0, 2) + '-' + mmdd.slice(2),
+                weekday: (dow + 6) % 7,
+                type: type,
+                isWorking: type === 'WORKING' || type === 'SHORTENED_WORKING' ||
+                           type === 'TRANSFERRED_WORKING',
+                shortened: type === 'SHORTENED_WORKING',
+                minutes: minutes
+            };
+            if (sp.n) day.holidayName = sp.n;
+            if (sp.from) day.transferredFrom = sp.from;
+            if (sp.to) day.transferredTo = sp.to;
+            days.push(day);
+        }
+    }
+    return {
+        version: { versionId: 'RU-FEDERAL-' + year + '-v1', year: year,
+                   status: status || 'OFFICIAL' },
+        contentHash: 'sha256:test',
+        days: days
+    };
+}
+
+// Загрузить в модуль данные legalic года (минуя сеть), регион 42
+function loadLegalic(PC, json, year) {
+    const parsed = PC._parseLegalic(json);
+    parsed.region = 42;
+    parsed.regionName = 'Кемеровская область - Кузбасс';
+    parsed.fetchedAtMs = Date.now();
+    PC._applyRegionalOverlay(year, parsed);
+    PC._MEM[year] = parsed;
+    return parsed;
+}
+
+describe('Task 262: legalic — парсинг и официальные нормы', () => {
+    test('JS: источник legalic прописан в index.html (основной)', () => {
+        assertTrue(html.indexOf('calendar.legalic.ru/api/v1/calendars/RU-FEDERAL/export') !== -1,
+            'URL legalic export прописан');
+        assertTrue(html.indexOf('_fetchLegalic: function') !== -1,
+            'метод _fetchLegalic определён');
+    });
+    test('парсинг: типы дней → off/holiday/short/work + переносы', () => {
+        const { PC } = makePC();
+        const parsed = PC._parseLegalic(buildLegalicYear(2026, LG2026_SPECIAL));
+        assertEqual(parsed.source, 'legalic', 'источник legalic');
+        assertEqual(parsed.days['0501'].off, 1, '1 мая — нерабочий');
+        assertEqual(parsed.days['0501'].holiday, 1, '1 мая — праздник');
+        assertEqual(parsed.days['0501'].title, 'Праздник Весны и Труда', 'название из holidayName');
+        assertEqual(parsed.days['0109'].off, 1, '9 января — перенесённый выходной');
+        assertEqual(parsed.days['0109'].tFrom, '0103', 'перенос С 03.01');
+        assertEqual(parsed.days['0308'].tTo, '0309', 'перенос НА 09.03');
+        assertEqual(parsed.days['0430'].short, 1, '30 апреля — сокращённый');
+        assertTrue(!parsed.days['0105'] || parsed.days['0105'].holiday === 1,
+            'обычные дни без признаков не записываются');
+        assertEqual(parsed.version.id, 'RU-FEDERAL-2026-v1', 'версия календаря');
+        assertEqual(parsed.preliminary, false, '2026 — OFFICIAL');
+    });
+    test('парсинг: TRANSFERRED_WORKING (рабочая суббота 01.11.2025)', () => {
+        const { PC } = makePC();
+        const parsed = PC._parseLegalic({
+            version: { versionId: 'RU-FEDERAL-2025-v1', year: 2025, status: 'OFFICIAL' },
+            days: [
+                { date: '2025-11-01', weekday: 5, type: 'TRANSFERRED_WORKING',
+                  isWorking: true, shortened: true,
+                  minutes: { '40h': 420, '36h': 372, '24h': 228 },
+                  transferredTo: '2025-11-03' },
+                { date: '2025-11-03', weekday: 1, type: 'TRANSFERRED_DAY_OFF',
+                  isWorking: false, shortened: false,
+                  minutes: { '40h': 0, '36h': 0, '24h': 0 },
+                  transferredFrom: '2025-11-01' }
+            ]
+        });
+        assertEqual(parsed.days['1101'].work, 1, 'рабочая суббота');
+        assertEqual(parsed.days['1101'].short, 1, 'и сокращённая');
+        assertEqual(parsed.days['1101'].tTo, '1103', 'выходной перенесён на 03.11');
+        assertEqual(parsed.days['1103'].off, 1, '03.11 — нерабочий');
+        assertEqual(parsed.days['1103'].tFrom, '1101', 'перенос с 01.11');
+    });
+    test('парсинг: некорректный формат → null', () => {
+        const { PC } = makePC();
+        assertEqual(PC._parseLegalic(null), null);
+        assertEqual(PC._parseLegalic({ days: 'x' }), null);
+        assertEqual(PC._parseLegalic({ days: [] }), null); // нет version.versionId
+    });
+    test('официальные нормы 2026 из минут: год и месяцы', () => {
+        const { PC } = makePC();
+        const parsed = PC._parseLegalic(buildLegalicYear(2026, LG2026_SPECIAL));
+        assertEqual(parsed.norms.official, true);
+        assertEqual(parsed.norms.year.h40, 1972, '40-час: 1972 ч');
+        assertEqual(parsed.norms.year.h36, 1774.4, '36-час: 1774,4 ч');
+        assertEqual(parsed.norms.year.h24, 1181.6, '24-час: 1181,6 ч');
+        assertEqual(parsed.norms.months['01'].h40, 120, 'январь: 120 ч');
+        assertEqual(parsed.norms.months['05'].h40, 151, 'май: 151 ч');
+        assertEqual(parsed.norms.months['04'].h40, 175, 'апрель: 175 ч');
+    });
+    test('PRELIMINARY (2027, проект Минтруда) → флаг preliminary', () => {
+        const { PC } = makePC();
+        const parsed = PC._parseLegalic(buildLegalicYear(2027, {}, 'PRELIMINARY'));
+        assertEqual(parsed.preliminary, true, 'год предварительный');
+        assertEqual(parsed.version.status, 'PRELIMINARY');
+    });
+});
+
+describe('Task 262: День шахтёра (Кузбасс, регион 42)', () => {
+    test('_minersDayMmdd: последнее воскресенье августа 2024-2027', () => {
+        const { PC } = makePC();
+        assertEqual(PC._minersDayMmdd(2024), '0825', '2024: 25 августа');
+        assertEqual(PC._minersDayMmdd(2025), '0831', '2025: 31 августа');
+        assertEqual(PC._minersDayMmdd(2026), '0830', '2026: 30 августа');
+        assertEqual(PC._minersDayMmdd(2027), '0829', '2027: 29 августа');
+    });
+    test('оверлей: для региона 42 добавляется, для 54 — нет', () => {
+        const a = makePC();
+        const parsedA = a.PC._parseLegalic(buildLegalicYear(2026, LG2026_SPECIAL));
+        parsedA.region = 42;
+        a.PC._applyRegionalOverlay(2026, parsedA);
+        assertTrue(parsedA.days['0830'] && parsedA.days['0830'].regional === 1,
+            '30.08.2026 — региональный праздник');
+        assertEqual(parsedA.days['0830'].title, 'День шахтёра');
+        assertEqual(parsedA.days['0830'].holiday, 1);
+        assertEqual(parsedA.days['0830'].off, 1);
+
+        const b = makePC();
+        const parsedB = b.PC._parseLegalic(buildLegalicYear(2026, LG2026_SPECIAL));
+        parsedB.region = 54;
+        b.PC._applyRegionalOverlay(2026, parsedB);
+        assertTrue(!parsedB.days['0830'], 'для региона 54 оверлей не применяется');
+    });
+    test('оверлей не перетирает уже размеченный день', () => {
+        const { PC } = makePC();
+        const parsed = PC._parseLegalic(buildLegalicYear(2026, {
+            '0830': { t: 'TRANSFERRED_WORKING', to: '2026-09-01' }
+        }));
+        parsed.region = 42;
+        PC._applyRegionalOverlay(2026, parsed);
+        assertEqual(parsed.days['0830'].work, 1, 'рабочий перенос сохранён');
+        assertTrue(!parsed.days['0830'].regional, 'региональная метка не ставится');
+    });
+    test('dayInfo: 30.08.2026 — День шахтёра (региональный праздник)', () => {
+        const { PC } = makePC();
+        loadLegalic(PC, buildLegalicYear(2026, LG2026_SPECIAL), 2026);
+        const info = PC.dayInfo(2026, 8, 30);
+        assertTrue(info.off, 'нерабочий');
+        assertTrue(info.holiday, 'праздник');
+        assertTrue(info.regional, 'региональный');
+        assertEqual(info.title, 'День шахтёра');
+    });
+    test('фолбэк без данных: День шахтёра вычисляется для 42', () => {
+        const { PC } = makePC(); // регион по умолчанию 42
+        const info = PC.dayInfo(2026, 8, 30);
+        assertEqual(info.source, 'fallback');
+        assertTrue(info.holiday && info.regional, 'праздник региональный');
+        assertEqual(info.title, 'День шахтёра');
+        assertTrue(info.off, 'воскресенье — нерабочий');
+    });
+    test('фолбэк без данных: для региона 54 Дня шахтёра нет', () => {
+        const { PC } = makePC();
+        PC.setSettings({ region: 54, token: '' });
+        const info = PC.dayInfo(2026, 8, 30);
+        assertFalse(info.holiday, 'не праздник');
+        assertFalse(info.regional, 'не региональный');
+        assertEqual(info.title, null);
+    });
+    test('monthStats: август 2026 содержит День шахтёра в особых днях', () => {
+        const { PC } = makePC();
+        loadLegalic(PC, buildLegalicYear(2026, LG2026_SPECIAL), 2026);
+        const st = PC.monthStats(2026, 8);
+        const miners = st.specialDays.filter(function(x) { return x.title === 'День шахтёра'; });
+        assertEqual(miners.length, 1, 'ровно один день');
+        assertEqual(miners[0].d, 30);
+        assertEqual(miners[0].kind, 'региональный праздник');
+    });
+    test('HTML: закон № 186-ОЗ упоминается в index.html', () => {
+        assertTrue(html.indexOf('186-ОЗ') !== -1, 'ссылка на Закон Кемеровской области');
+    });
+});
+
+describe('Task 262: цепочки переносов в dayInfo', () => {
+    test('9 января 2026: «Выходной, перенесённый с 03.01.2026»', () => {
+        const { PC } = makePC();
+        loadLegalic(PC, buildLegalicYear(2026, LG2026_SPECIAL), 2026);
+        const info = PC.dayInfo(2026, 1, 9);
+        assertTrue(info.off && !info.holiday, 'нерабочий, не праздник');
+        assertEqual(info.title, 'Выходной, перенесённый с 03.01.2026');
+        assertEqual(info.transferFrom, '03.01.2026');
+    });
+    test('8 марта 2026: праздник + «выходной перенесён на 09.03.2026»', () => {
+        const { PC } = makePC();
+        loadLegalic(PC, buildLegalicYear(2026, LG2026_SPECIAL), 2026);
+        const info = PC.dayInfo(2026, 3, 8);
+        assertTrue(info.holiday, 'праздник (воскресенье)');
+        assertEqual(info.title, 'Международный женский день (выходной перенесён на 09.03.2026)');
+        assertEqual(info.transferTo, '09.03.2026');
+    });
+    test('31 декабря 2026: перенесённый с 04.01.2026', () => {
+        const { PC } = makePC();
+        loadLegalic(PC, buildLegalicYear(2026, LG2026_SPECIAL), 2026);
+        const info = PC.dayInfo(2026, 12, 31);
+        assertTrue(info.off, 'нерабочий');
+        assertEqual(info.title, 'Выходной, перенесённый с 04.01.2026');
+    });
+    test('рабочая суббота 01.11.2025: «выходной перенесён на 03.11.2025»', () => {
+        const { PC } = makePC();
+        PC._MEM[2025] = {
+            source: 'legalic', fetchedAtMs: Date.now(), region: 42,
+            regionName: 'Кемеровская область - Кузбасс',
+            version: { id: 'RU-FEDERAL-2025-v1', status: 'OFFICIAL' },
+            norms: { official: true, months: {}, year: null },
+            days: {
+                '1101': { work: 1, short: 1, tTo: '1103' },
+                '1103': { off: 1, tFrom: '1101' }
+            }
+        };
+        const sat = PC.dayInfo(2025, 11, 1);
+        assertFalse(sat.off, 'суббота рабочая');
+        assertTrue(sat.work, 'флаг work');
+        assertEqual(sat.title, 'Рабочий день (перенос): выходной перенесён на 03.11.2025');
+        const mon = PC.dayInfo(2025, 11, 3);
+        assertTrue(mon.off, 'понедельник нерабочий');
+        assertEqual(mon.title, 'Выходной, перенесённый с 01.11.2025');
+    });
+    test('30 апреля 2026: сокращённый рабочий день', () => {
+        const { PC } = makePC();
+        loadLegalic(PC, buildLegalicYear(2026, LG2026_SPECIAL), 2026);
+        const info = PC.dayInfo(2026, 4, 30);
+        assertFalse(info.off, 'рабочий');
+        assertTrue(info.short, 'сокращённый');
+        assertEqual(info.title, 'Сокращённый рабочий день');
+    });
+});
+
+describe('Task 262: официальные нормы в monthStats', () => {
+    test('январь 2026: 15 раб. дн., 120/108/72 ч — официальные', () => {
+        const { PC } = makePC();
+        loadLegalic(PC, buildLegalicYear(2026, LG2026_SPECIAL), 2026);
+        const st = PC.monthStats(2026, 1);
+        assertEqual(st.source, 'legalic');
+        assertEqual(st.workDays, 15);
+        assertEqual(st.hours40, 120);
+        assertEqual(st.hours36, 108);
+        assertEqual(st.hours24, 72);
+        assertEqual(st.normsOfficial, true, 'нормы официальные');
+        assertEqual(st.yearHours40, 1972, 'годовая норма 40-час.');
+        assertEqual(st.version.id, 'RU-FEDERAL-2026-v1');
+        assertEqual(st.preliminary, false);
+    });
+    test('май 2026: 19 раб. дн., 151 ч; апрель: 175 ч', () => {
+        const { PC } = makePC();
+        loadLegalic(PC, buildLegalicYear(2026, LG2026_SPECIAL), 2026);
+        const may = PC.monthStats(2026, 5);
+        assertEqual(may.workDays, 19);
+        assertEqual(may.hours40, 151);
+        assertEqual(may.shortened, 1, '8 мая сокращённый');
+        const apr = PC.monthStats(2026, 4);
+        assertEqual(apr.workDays, 22);
+        assertEqual(apr.hours40, 175);
+    });
+    test('год 2026 суммарно: 247 раб. дн. (сверка всех месяцев)', () => {
+        const { PC } = makePC();
+        loadLegalic(PC, buildLegalicYear(2026, LG2026_SPECIAL), 2026);
+        let wd = 0;
+        for (let m = 1; m <= 12; m++) wd += PC.monthStats(2026, m).workDays;
+        assertEqual(wd, 247, '247 рабочих дней в году');
+    });
+    test('isDayOff-данные: нормы остаются локальным расчётом', () => {
+        const { PC } = makePC();
+        loadIsDayOff(PC, IDO_2026, 2026);
+        const st = PC.monthStats(2026, 5);
+        assertEqual(st.source, 'isdayoff');
+        assertEqual(st.normsOfficial, false, 'локальный расчёт');
+        assertEqual(st.hours40, 151, 'совпадает с официальным');
+    });
+    test('PRELIMINARY-год: monthStats.preliminary = true', () => {
+        const { PC } = makePC();
+        loadLegalic(PC, buildLegalicYear(2027, {}, 'PRELIMINARY'), 2027);
+        const st = PC.monthStats(2027, 1);
+        assertEqual(st.preliminary, true, '2027 — предварительные данные');
+        assertEqual(st.version.status, 'PRELIMINARY');
+    });
+});
+
+describe('Task 262: приоритет источников _fetchYear', () => {
+    test('регион 42 (даже с токеном): legalic первый, оверлей применён', async () => {
+        const { PC } = makePC();
+        PC.setSettings({ region: 42, token: 'tok' });
+        const calls = [];
+        PC._fetchLegalic = function() {
+            calls.push('legalic');
+            return Promise.resolve({
+                source: 'legalic', fetchedAtMs: Date.now(),
+                region: 42, regionName: 'Кемеровская область - Кузбасс',
+                days: { '0501': { off: 1, holiday: 1 } }
+            });
+        };
+        PC._fetchIsDayOff = function() { calls.push('isdayoff'); return Promise.resolve(null); };
+        PC._fetchProdCal = function() { calls.push('prodcal'); return Promise.resolve(null); };
+        const data = await PC._fetchYear(2026);
+        assertEqual(data.source, 'legalic', 'победил legalic');
+        assertEqual(calls.join(','), 'legalic', 'другие источники не дёргались');
+        assertTrue(data.days['0830'] && data.days['0830'].regional === 1,
+            'День шахтёра наложен');
+    });
+    test('токен + регион с региональными праздниками → production-calendar.ru первый', async () => {
+        const { PC } = makePC();
+        PC.setSettings({ region: 26, token: 'tok' }); // Ставропольский край, type 2
+        const calls = [];
+        PC._fetchProdCal = function() {
+            calls.push('prodcal');
+            return Promise.resolve({
+                source: 'prodcalendar', fetchedAtMs: Date.now(),
+                region: 26, regionName: 'Ставропольский край',
+                days: { '0421': { off: 1, holiday: 1, regional: 1 } }
+            });
+        };
+        PC._fetchLegalic = function() { calls.push('legalic'); return Promise.resolve(null); };
+        PC._fetchIsDayOff = function() { calls.push('isdayoff'); return Promise.resolve(null); };
+        const data = await PC._fetchYear(2026);
+        assertEqual(data.source, 'prodcalendar', 'победил prodcal (региональный)');
+        assertEqual(calls.join(','), 'prodcal');
+        assertTrue(!data.days['0830'], 'День шахтёра не для этого региона');
+    });
+    test('legalic недоступен → isDayOff (резерв)', async () => {
+        const { PC } = makePC();
+        PC.setSettings({ region: 42, token: '' });
+        PC._fetchLegalic = function() { return Promise.reject(new Error('down')); };
+        PC._fetchIsDayOff = function() {
+            const parsed = PC._parseIsDayOff(IDO_2026);
+            parsed.fetchedAtMs = Date.now();
+            parsed.region = 42;
+            parsed.regionName = 'Кемеровская область - Кузбасс';
+            return Promise.resolve(parsed);
+        };
+        const data = await PC._fetchYear(2026);
+        assertEqual(data.source, 'isdayoff', 'резерв сработал');
+        assertTrue(data.days['0830'] && data.days['0830'].regional === 1,
+            'День шахтёра наложен и на резерв');
+    });
+    test('все источники недоступны → null (фолбэк Сб/Вс)', async () => {
+        const { PC } = makePC();
+        PC.setSettings({ region: 42, token: 'tok' });
+        PC._fetchLegalic = function() { return Promise.reject(new Error('down')); };
+        PC._fetchIsDayOff = function() { return Promise.reject(new Error('down')); };
+        PC._fetchProdCal = function() { return Promise.reject(new Error('down')); };
+        const data = await PC._fetchYear(2026);
+        assertEqual(data, null, 'все отказали — null');
+    });
+});
+
+describe('Task 262: кэш v2 и подписи источников', () => {
+    test('кэш v2 хранит version/norms и вычищает старый ключ Task 260', () => {
+        const { PC, storage } = makePC({
+            'ws_pcal_year_2026_42': '{"source":"isdayoff","fetchedAtMs":1,"days":{}}'
+        });
+        PC.setSettings({ region: 42, token: '' });
+        PC._saveCache(2026, {
+            source: 'legalic', fetchedAtMs: 12345,
+            region: 42, regionName: 'Кемеровская область - Кузбасс',
+            version: { id: 'RU-FEDERAL-2026-v1', status: 'OFFICIAL' },
+            norms: { official: true, months: { '01': { h40: 120 } }, year: { h40: 1972 } },
+            days: { '0101': { off: 1 } }
+        });
+        const cached = JSON.parse(storage._d['ws_pcal_year2_2026_42']);
+        assertEqual(cached.source, 'legalic', 'legalic принимается кэшем');
+        assertEqual(cached.version.id, 'RU-FEDERAL-2026-v1', 'версия в кэше');
+        assertEqual(cached.norms.year.h40, 1972, 'нормы в кэше');
+        assertTrue(!('ws_pcal_year_2026_42' in storage._d), 'старый ключ вычищен');
+        // чтение обратно
+        const loaded = PC._loadCache(2026);
+        assertEqual(loaded.version.id, 'RU-FEDERAL-2026-v1');
+    });
+    test('_sourceLabel: legalic — основной источник', () => {
+        const { PC } = makePC();
+        assertTrue(PC._sourceLabel('legalic').indexOf('calendar.legalic.ru') !== -1);
+        assertTrue(PC._sourceLabel('isdayoff').indexOf('isDayOff') !== -1);
+        assertTrue(PC._sourceLabel('prodcalendar').indexOf('production-calendar.ru') !== -1);
+    });
+});
+
+describe('Task 262: интеграция в index.html', () => {
+    test('JS: цепочки переносов в тултипах (перенесён с/на)', () => {
+        assertTrue(html.indexOf("title = 'Выходной, перенесённый с ' + tFrom;") !== -1,
+            '«Выходной, перенесённый с …» в названии дня');
+        assertTrue(html.indexOf("' (выходной перенесён на ' + tTo + ')'" ) !== -1,
+            '«(выходной перенесён на …)» у праздников на Сб/Вс');
+        assertTrue(html.indexOf(': выходной перенесён на ' + String.fromCharCode(39) + ' + tTo') !== -1,
+            'рабочая суббота объясняет перенос');
+    });
+    test('CSS: бейджи «предварительные данные» и «официальные нормы»', () => {
+        assertTrue(html.indexOf('.ws-cal-prelim') !== -1, 'стили бейджа preliminary');
+        assertTrue(html.indexOf('.ws-cal-official') !== -1, 'стили бейджа официальных норм');
+        assertTrue(html.indexOf('.ws-cal-year-norm') !== -1, 'строка годовой нормы');
+    });
+    test('JS: шторка упоминает День шахтёра и версию календаря', () => {
+        assertTrue(html.indexOf('День шахтёра (последнее воскресенье августа)') !== -1,
+            'подсказка региона 42 в шторке');
+        assertTrue(html.indexOf('Версия календаря:') !== -1, 'строка версии в шторке');
+    });
+    test('JS: чип норм помечает официальность и предварительность', () => {
+        assertTrue(html.indexOf("st.normsOfficial ? ' — официальные данные' : ''") !== -1,
+            'чип: официальные данные');
+        assertTrue(html.indexOf("' *'") !== -1, 'чип: звёздочка у предварительного года');
     });
 });
