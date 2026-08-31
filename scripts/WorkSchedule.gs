@@ -182,6 +182,39 @@ var WorkSchedule = {
     return new Date(y, m - 1, d);
   },
 
+  // Значение ячейки листа → Date (Task 279).
+  // Ячейка может хранить дату как настоящий Date (формат даты Google
+  // Таблиц) или как ТЕКСТ — «10.08.2026», «1.8.26», «2026-08-10»
+  // (ручной ввод в локали, не распознавшей дату). Раньше текст
+  // отбрасывался по instanceof Date — периоды молча терялись и
+  // «Сформировать» не проставлял «О». Теперь текст парсится.
+  // null — значение не похоже на дату.
+  _parseSheetDate: function(v) {
+    if (v instanceof Date) return v;
+    if (v === null || v === undefined) return null;
+    var s = String(v).trim();
+    if (!s) return null;
+    var m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);        // ISO
+    if (m) return this._safeDate(+m[1], +m[2], +m[3]);
+    m = s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})$/);  // dd.mm.yyyy
+    if (m) return this._safeDate(+m[3], +m[2], +m[1]);
+    m = s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{2})$/);   // dd.mm.yy
+    if (m) return this._safeDate(2000 + +m[3], +m[2], +m[1]);
+    return null;
+  },
+
+  // new Date с проверкой реальности даты: JS «катит» несуществующие
+  // даты (32.01 → 1.02) — сверяем компоненты назад
+  _safeDate: function(y, mo, d) {
+    if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+    if (y < 1900 || y > 2100) return null;
+    var dt = new Date(y, mo - 1, d);
+    if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) {
+      return null;
+    }
+    return dt;
+  },
+
   // Date → ISO YYYY-MM-DD (для ключей индекса)
   _toIsoDate: function(dt) {
     if (!dt) return null;
@@ -415,6 +448,9 @@ var WorkSchedule = {
   // payload: { token, year }  (год не указан — все периоды листа)
   // Возвращает периоды, ПЕРЕСЕКАЮЩИЕСЯ с годом (границы года не
   // включаются в фильтр строго: период 29.12–11.01 попадает в оба года).
+  // Task 279: id не обязателен (id: null у строк ручного заполнения),
+  // даты читаются и из текстовых ячеек («10.08.2026») — см.
+  // _parseSheetDate. Непарсируемые даты — строка пропускается.
   // returns: { ok:true, data: { vacations: [...] } }
   listVacations: function(payload) {
     var auth = this._requireRead(payload.token);
@@ -436,17 +472,26 @@ var WorkSchedule = {
     var vacations = [];
     for (var i = 0; i < values.length; i++) {
       var r = values[i];
-      if (r[0] === '' || r[0] === null) continue;  // нет id — пустая строка
-      var startDate = r[3];
-      var endDate   = r[4];
-      if (!(startDate instanceof Date)) continue;
-      if (!(endDate instanceof Date)) endDate = startDate;
+      // Task 279: «пустая строка» = нет ни id, ни таб_номера, ни даты
+      // начала. Раньше требовался id — строки РУЧНОГО заполнения без
+      // id (деплой-док Task 274 разрешал «id можно не заполнять»)
+      // молча выбрасывались: план не показывался, «Сформировать» не
+      // проставлял «О». Теперь id не обязателен (id: null — кнопка
+      // «Удалить» на фронте скрыта; id присвоит vacationsInitSheet
+      // или addVacation).
+      if ((r[0] === '' || r[0] === null) && !String(r[1] || '').trim() &&
+          !this._parseSheetDate(r[3])) continue;
+      // Task 279: даты могут лежать текстом — парсим (см. _parseSheetDate)
+      var startDate = this._parseSheetDate(r[3]);
+      if (!startDate) continue;
+      var endDate = this._parseSheetDate(r[4]) || startDate;
       // Период пересекается с годом?
       if (yearStart && (endDate.getTime() < yearStart.getTime() ||
                         startDate.getTime() >= yearEnd.getTime())) continue;
       var part = parseInt(r[2], 10);
+      var vId = parseInt(r[0], 10);
       vacations.push({
-        id:               parseInt(r[0], 10),
+        id:               isNaN(vId) ? null : vId,
         'таб_номер':      String(r[1] || '').trim(),
         часть:            isNaN(part) ? null : part,
         дата_начала:      this._toIsoDate(startDate),
@@ -745,9 +790,16 @@ var WorkSchedule = {
     }
 
     // 6. Аудит
+    // Task 279: в аудит и в ответ добавлены отпускные счётчики и
+    // диагностика — «отпуска не формируются» больше не тихие:
+    // vacationsFound (периодов в листе на год), vacationError
+    // (например, листа нет), дней «О» = generated + updated.
+    var vacationDays = vacationGenerated + vacationUpdated;
     var summary = 'Сформирован график на ' + String(month).padStart(2, '0') + '.' + year +
                   ': вставлено ' + insertCount + ', обновлено ' + updateCount +
-                  ', удалено устаревших отпусков ' + removeCount;
+                  ', удалено устаревших отпусков ' + removeCount +
+                  ', периодов отпусков ' + vacations.length +
+                  ', дней «О» ' + vacationDays;
     try {
       Utils.audit(user.email, 'WORKSCHEDULE_GENERATE_MONTH', '', '', summary);
     } catch (e) { /* ignore */ }
@@ -760,6 +812,10 @@ var WorkSchedule = {
         removed: removeCount,
         vacationGenerated: vacationGenerated,
         vacationUpdated: vacationUpdated,
+        vacationsFound:    vacations.length,
+        vacationError:     (vacs && vacs.ok) ? null :
+                          String((vacs && vacs.error) || 'list_vacations_failed'),
+        vacationDays:      vacationDays,
         perEmployee: perEmployee,
         monthStart: this._toIsoDate(monthStart),
         daysInMonth: daysInMonth
@@ -1070,8 +1126,10 @@ var WorkSchedule = {
         var r = values[i];
         if (r[0] === '' || r[0] === null) continue;
         if (String(r[1] || '').trim() !== tabNo) continue;
-        var exStart = r[3] instanceof Date ? r[3] : null;
-        var exEnd   = r[4] instanceof Date ? r[4] : exStart;
+        // Task 279: пересечения/дубли считаются и по текстовым датам
+        // (раньше такие строки игнорировались — контроль дырявился)
+        var exStart = this._parseSheetDate(r[3]);
+        var exEnd   = this._parseSheetDate(r[4]) || exStart;
         if (!exStart) continue;
         // Пересечение периодов одного сотрудника
         if (endDate.getTime() >= exStart.getTime() &&

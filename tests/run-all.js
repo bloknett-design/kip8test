@@ -33,6 +33,7 @@ require('./test-flowmeter-validation.js');
 require('./test-work-schedule.js');
 require('./test-prod-calendar.js');
 require('./test-vacations-init.js');
+require('./test-vacations-generate.js');
 
 // Запускаем
 runAll().then(exitCode => {

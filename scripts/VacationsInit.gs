@@ -16,9 +16,11 @@
 //   vacationsInitSheet([force]) — создать/починить лист «Отпуска»:
 //     • листа нет            → создать: шапка A1–F1, форматирование,
 //                              валидации, подсветка пересечений;
-//     • лист есть, БЕЗ force → БЕЗОПАСНЫЙ режим: данные НЕ трогаются;
-//                              чинится только шапка (если строки 1
-//                              не было — данные сдвигаются вниз);
+//     • лист есть, БЕЗ force → БЕЗОПАСНЫЙ режим: данные не теряются;
+//                              чинится шапка (если строки 1 не было —
+//                              данные сдвигаются вниз) + Task 279
+//                              самолечение: дозаполняются пустые id,
+//                              текстовые даты конвертируются в Date;
 //     • force = true         → полная перестройка (ДАННЫЕ УДАЛЯЮТСЯ!).
 //   vacationsSeedDemo([force]) — демо-периоды из DEPLOY-инструкции
 //     (017 — 3 части 28 дн., 023 — 1 часть). Добавляются только на
@@ -34,10 +36,11 @@
 //   E: дата_окончания — дата
 //   F: комментарий    — текст (до 500 символов)
 //
-// ВАЖНО: даты обязаны быть реальными датами Google Таблиц —
-// WorkSchedule.gs проверяет `instanceof Date` и ИГНОРИРУЕТ строки.
-// vacationsSeedDemo пишет даты как new Date(y, m, d); при ручном
-// заполнении вводите даты в ячейки с форматом даты (не текстом).
+// ВАЖНО: даты могут лежать и текстом («10.08.2026» — ручной ввод в
+// локали, не распознавшей дату). Task 279: WorkSchedule.gs теперь
+// парсит текстовые даты (_parseSheetDate), а vacationsInitSheet()
+// ДОЗАПОЛНЯЕТ пустые id и конвертирует текстовые даты в настоящие
+// Date (самолечение листа). vacationsSeedDemo пишет new Date(y, m, d).
 //
 // Идемпотентность: повторный запуск vacationsInitSheet() безопасен —
 // данные сохраняются, переустанавливаются только шапка/форматирование/
@@ -193,6 +196,58 @@ function vacationsInitSheet(force) {
                'пересечения). Лист полностью рабочий.');
   }
 
+  // --- Task 279: нормализация данных (id и текстовые даты) ---
+  // Причины бага «при формировании не формируются отпуска в шахматке»:
+  //   (1) пустой id в столбце A — деплой-док Task 274 разрешал
+  //       «id можно не заполнять», но сервер ДО Task 279 молча
+  //       выбрасывал такие строки;
+  //   (2) даты текстом («10.08.2026») — тоже молча выбрасывались
+  //       (instanceof Date === false).
+  // Оба дефекта чинятся и на чтении (WorkSchedule._parseSheetDate,
+  // id: null допустим), и здесь — на данных: id дозаполняются
+  // (max id + 1), текстовые даты конвертируются в Date. Данные не
+  // теряются, повторный запуск ничего не меняет (идемпотентно).
+  // force-режим сюда не доходит — лист очищен выше.
+  if (sheet.getLastRow() >= 2) {
+    var normLastRow = sheet.getLastRow();
+    var normVals = sheet.getRange(2, 1, normLastRow - 1, 6).getValues();
+    var normMaxId = 0;
+    for (var mi = 0; mi < normVals.length; mi++) {
+      var normId = parseInt(normVals[mi][0], 10);
+      if (!isNaN(normId) && normId > normMaxId) normMaxId = normId;
+    }
+    var idsFixed = 0, datesFixed = 0;
+    for (var ni = 0; ni < normVals.length; ni++) {
+      var normRow = ni + 2;
+      // 1) пустой id (A) → дозаполнить max id + 1
+      if (normVals[ni][0] === '' || normVals[ni][0] === null) {
+        // дозаполняем только содержательные строки (есть таб или дата)
+        if (String(normVals[ni][1] || '').trim() || vacParseDate(normVals[ni][3])) {
+          normMaxId++;
+          sheet.getRange(normRow, 1).setValue(normMaxId);
+          idsFixed++;
+        }
+      }
+      // 2) текстовые даты (D, E) → настоящие Date + формат dd.mm.yyyy
+      for (var dc = 4; dc <= 5; dc++) {
+        var cellVal = normVals[ni][dc - 1];
+        if (cellVal instanceof Date) continue;
+        var parsedDate = vacParseDate(cellVal);
+        if (parsedDate) {
+          sheet.getRange(normRow, dc).setValue(parsedDate).setNumberFormat('dd.mm.yyyy');
+          datesFixed++;
+        }
+      }
+    }
+    if (idsFixed > 0 || datesFixed > 0) {
+      Logger.log('Task 279 — самолечение данных: дозаполнено id: ' + idsFixed +
+                 ', дат сконвертировано из текста: ' + datesFixed + '.' +
+                 ' (раньше такие строки не попадали в план и «Сформировать»)');
+    } else {
+      Logger.log('Данные листа в порядке: пустых id и текстовых дат нет.');
+    }
+  }
+
   // --- Итог ---
   var dataRows = Math.max(0, sheet.getLastRow() - 1);
   Logger.log('==========================================');
@@ -298,4 +353,36 @@ function vacationsSeedDemo(force) {
   Logger.log('017: 3 части (14 + 10 + 4 = 28 дн.), 023: 1 часть (14 дн.).');
   Logger.log('Даты записаны как Date objects. «Сформировать» (2026) ' +
              'проставит «О»: июнь/август/октябрь — 017, июнь — 023.');
+}
+
+// ============================================================
+// vacParseDate / vacSafeDate — локальный парсер дат (Task 279)
+// ============================================================
+// Не зависит от WorkSchedule.gs (файл можно запускать отдельно).
+// Date → как есть; «dd.mm.yyyy» / «dd.mm.yy» / «yyyy-mm-dd» → Date;
+// остальное (пусто, число, мусор) → null. Совпадает по поведению
+// с WorkSchedule._parseSheetDate.
+// ============================================================
+function vacParseDate(v) {
+  if (v instanceof Date) return v;
+  if (v === null || v === undefined) return null;
+  var s = String(v).trim();
+  if (!s) return null;
+  var m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);        // ISO
+  if (m) return vacSafeDate(+m[1], +m[2], +m[3]);
+  m = s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})$/);  // dd.mm.yyyy
+  if (m) return vacSafeDate(+m[3], +m[2], +m[1]);
+  m = s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{2})$/);   // dd.mm.yy
+  if (m) return vacSafeDate(2000 + +m[3], +m[2], +m[1]);
+  return null;
+}
+
+function vacSafeDate(y, mo, d) {
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  if (y < 1900 || y > 2100) return null;
+  var dt = new Date(y, mo - 1, d);
+  if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) {
+    return null;
+  }
+  return dt;
 }
