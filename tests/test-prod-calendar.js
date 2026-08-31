@@ -5,19 +5,24 @@
 //   1. Парсинг isDayOff (GitHub-зеркало) — реальные данные 2024/2026:
 //      праздники, перенесённые выходные, сокращённые дни, РАБОЧИЕ
 //      субботы (2024: 27.04, 28.12, 02.11).
-//   2. Парсинг production-calendar.ru/v2 — типы дней 1..6, названия,
-//      региональные праздники, гостевое ограничение (days строкой).
-//   3. dayInfo — единая логика «нерабочий/праздник/сокращённый/рабочая
+//      (Task 272: парсер production-calendar.ru и его тесты удалены
+//      вместе с источником — токен и выбор региона убраны из
+//      приложения, регион один: 42 — Кемеровская область - Кузбасс.)
+//   2. dayInfo — единая логика «нерабочий/праздник/сокращённый/рабочая
 //      суббота + название»; фолбэк без данных (Сб/Вс + ст. 112 ТК РФ).
-//   4. monthStats — нормы времени 40/36/24-час. недель по месяцам и
+//   3. monthStats — нормы времени 40/36/24-час. недель по месяцам и
 //      году (сверено с официальным календарём 2026: 247 дн., 1972 ч).
-//   5. Кэш localStorage (ключ = год + регион), TTL, офлайн-устаревание.
-//   6. Настройки: регион по умолчанию 42 (Кемеровская область — Кузбасс).
-//   7. Интеграция в index.html: чип в тулбаре, шторка, вызовы в
-//      WorkSchedule, CSS, SW-версия.
-//   8. Task 264: День города Кемерово (12 июня, регион 42, вместе с
+//   4. Кэш localStorage (ключ = год + регион), TTL, офлайн-устаревание.
+//   5. Настройки: регион фиксирован 42 (Кемеровская область — Кузбасс),
+//      хранившиеся настройки (регион/токен) вычищаются (Task 272).
+//   6. Интеграция в index.html: кнопка «Обновить» в тулбаре, диалог
+//      подтверждения, вызовы в WorkSchedule, CSS, SW-версия.
+//   7. Task 264: День города Кемерово (12 июня, регион 42, вместе с
 //      Днём России), окошко календаря в тулбаре (нормы и праздники
 //      месяца), звёздочка сокращённых предпраздничных дней.
+//   8. Task 272: кнопка «Календарь» → «Обновить» (диалог с источником
+//      calendar.legalic.ru и подтверждением), шторка настроек,
+//      выбор региона и поле токена production-calendar.ru удалены.
 //
 // Запуск: через tests/run-all.js (require './test-prod-calendar.js').
 
@@ -108,39 +113,9 @@ const IDO_2024 = {
     covidday: []
 };
 
-// production-calendar.ru/v2 (compact): все 6 типов дней + региональный
-// праздник (Радоница в Ставропольском крае — тип 4) и перенос (тип 6)
-const PCAL_DAYS = [
-    { date: '2026-01-01', type: { id: 3, name: 'Государственный праздник', is_working: 0 },
-      title: 'Новогодние каникулы', working_hours: 0, is_project: false, is_wsch: false },
-    { date: '2026-01-07', type: { id: 3, name: 'Государственный праздник', is_working: 0 },
-      title: 'Рождество Христово', working_hours: 0, is_project: false, is_wsch: false },
-    { date: '2026-01-09', type: { id: 6, name: 'Дополнительный / перенесенный выходной день', is_working: 0 },
-      title: 'Перенос с субботы 3 января', working_hours: 0, is_project: false, is_wsch: false },
-    { date: '2026-04-21', type: { id: 4, name: 'Региональный праздник', is_working: 0 },
-      title: 'День поминовения усопших (Радоница)', working_hours: 0, is_project: false, is_wsch: false },
-    { date: '2026-04-30', type: { id: 5, name: 'Предпраздничный сокращенный рабочий день', is_working: 1 },
-      title: null, working_hours: 7, is_project: false, is_wsch: false },
-    { date: '2026-10-31', type: { id: 1, name: 'Рабочий день', is_working: 1 },
-      title: 'Перенос рабочего дня', working_hours: 8, is_project: true, is_wsch: false }
-];
-
-const PCAL_OK = {
-    status: 'ok', period: 'месяц',
-    dt_start: '2026-01-01', dt_end: '2026-01-31',
-    country: { code: 'ru', name: 'Российская Федерация',
-               region: { id: 42, name: 'Кемеровская область - Кузбасс' } },
-    work_week: { id: 5, name: '5-дневная рабочая неделя' },
-    statistics: { calendar_days: 31, work_days: 15, working_hours: 120 },
-    days: PCAL_DAYS
-};
-
-// Гостевое ограничение production-calendar.ru: days = СТРОКА
-const PCAL_GUEST_RESTRICTED = {
-    status: 'ok', period: 'месяц',
-    country: { code: 'ru', name: 'Российская Федерация', region: null },
-    days: 'Данные за выбранный период недоступны для гостевого токена.'
-};
+// Task 272: фикстуры production-calendar.ru (PCAL_DAYS, PCAL_OK,
+// PCAL_GUEST_RESTRICTED) УДАЛЕНЫ вместе с парсером и тестами —
+// источник с личным токеном исключён из приложения.
 
 // Загрузить в модуль данные isDayOff конкретного года (минуя сеть)
 function loadIsDayOff(PC, json, year) {
@@ -161,14 +136,16 @@ function loadIsDayOff(PC, json, year) {
 
 describe('ProdCalendar: модуль определён', () => {
     test('JS: var ProdCalendar определён в index.html', () => {
-        assertTrue(PC_SRC !== null && PC_SRC.indexOf('_REGIONS_RAW') !== -1,
+        assertTrue(PC_SRC !== null && PC_SRC.indexOf('_DEFAULT_REGION') !== -1,
             'Модуль ProdCalendar извлекается из index.html');
     });
-    test('JS: источники данных — isDayOff GitHub и production-calendar.ru', () => {
+    test('JS: источники данных — legalic (основной) и isDayOff (резерв)', () => {
+        assertTrue(html.indexOf('calendar.legalic.ru/api/v1/calendars/RU-FEDERAL/export') !== -1,
+            'URL legalic прописан (основной источник)');
         assertTrue(html.indexOf('raw.githubusercontent.com/isdayoff/calendars') !== -1,
             'URL isDayOff GitHub-зеркала прописан');
-        assertTrue(html.indexOf('production-calendar.ru/v2/ru/') !== -1,
-            'URL production-calendar.ru прописан');
+        assertTrue(html.indexOf('https://production-calendar.ru/v2/ru/') === -1,
+            'URL production-calendar.ru удалён (Task 272 — токен больше не используется)');
     });
 });
 
@@ -211,36 +188,9 @@ describe('ProdCalendar: парсинг isDayOff', () => {
     });
 });
 
-describe('ProdCalendar: парсинг production-calendar.ru', () => {
-    test('типы дней 1-6 → off/holiday/regional/short/work', () => {
-        const { PC } = makePC();
-        const parsed = PC._parseProdCal(PCAL_OK);
-        assertEqual(parsed.source, 'prodcalendar');
-        assertEqual(parsed.days['0101'].off, 1, 'тип 3 — нерабочий');
-        assertEqual(parsed.days['0101'].holiday, 1, 'тип 3 — праздник');
-        assertEqual(parsed.days['0101'].title, 'Новогодние каникулы',
-            'официальное название из API');
-        assertEqual(parsed.days['0109'].off, 1, 'тип 6 — нерабочий');
-        assertFalse(parsed.days['0109'].holiday, 'тип 6 — не праздник');
-        assertEqual(parsed.days['0109'].title, 'Перенос с субботы 3 января');
-        assertEqual(parsed.days['0421'].regional, 1, 'тип 4 — региональный');
-        assertEqual(parsed.days['0421'].holiday, 1, 'тип 4 — праздник');
-        assertEqual(parsed.days['0430'].short, 1, 'тип 5 — сокращённый');
-        assertTrue(!parsed.days['0430'].off, 'тип 5 — рабочий день');
-        assertEqual(parsed.days['1031'].work, 1, 'тип 1 — рабочий перенос');
-        assertEqual(parsed.days['1031'].project, 1, 'is_project сохранён');
-    });
-    test('гостевое ограничение (days строкой) → null', () => {
-        const { PC } = makePC();
-        assertEqual(PC._parseProdCal(PCAL_GUEST_RESTRICTED), null,
-            'days-строка с сообщением об ограничении → источник пропускается');
-    });
-    test('status не ok → null', () => {
-        const { PC } = makePC();
-        assertEqual(PC._parseProdCal({ status: 'error', days: [] }), null);
-        assertEqual(PC._parseProdCal(null), null);
-    });
-});
+// Task 272: describe «Парсинг production-calendar.ru» УДАЛЁН —
+// источник с личным токеном исключён из приложения (регион один — 42,
+// поле ввода токена и шторка настроек убраны).
 
 describe('ProdCalendar: dayInfo — производственный календарь 2026', () => {
     test('9 января (пт) — перенесённый выходной', () => {
@@ -414,42 +364,49 @@ describe('ProdCalendar: monthStats — нормы времени', () => {
     });
 });
 
-describe('ProdCalendar: регионы и настройки', () => {
-    test('регион по умолчанию — 42 (Кемеровская область - Кузбасс)', () => {
+describe('ProdCalendar: настройки — регион фиксирован (Task 272)', () => {
+    test('регион всегда 42 (Кемеровская область - Кузбасс), токена нет', () => {
         const { PC } = makePC();
         const s = PC.getSettings();
         assertEqual(s.region, 42);
-        assertEqual(s.token, '');
+        assertTrue(s.token === undefined,
+            'токен production-calendar.ru из настроек удалён');
     });
-    test('справочник: 89 регионов, у 42 НЕТ региональных праздников', () => {
+    test('Task 272: справочник регионов и токен удалены из модуля', () => {
         const { PC } = makePC();
-        const regs = PC.regions();
-        assertEqual(regs.length, 89);
-        assertEqual(PC.regionName(42), 'Кемеровская область - Кузбасс');
-        assertFalse(PC.regionHasRegional(42), 'Кузбасс — федеральный календарь');
-        assertTrue(PC.regionHasRegional(16), 'Татарстан — есть региональные');
+        assertTrue(PC.regions === undefined, 'regions() удалён');
+        assertTrue(PC.regionName === undefined, 'regionName() удалён');
+        assertTrue(PC.regionHasRegional === undefined, 'regionHasRegional() удалён');
+        assertTrue(PC.setSettings === undefined, 'setSettings() удалён');
+        assertTrue(PC._REGIONS_RAW === undefined, 'таблица 89 регионов удалена');
+        assertTrue(PC._PRODCAL_URL === undefined, 'URL production-calendar.ru удалён');
+        assertTrue(PC._fetchProdCal === undefined, '_fetchProdCal удалён');
+        assertTrue(PC._parseProdCal === undefined, '_parseProdCal удалён');
+        assertTrue(PC.openSheet === undefined, 'openSheet (шторка) удалён');
+        assertTrue(PC.closeSheet === undefined, 'closeSheet (шторка) удалён');
+        assertTrue(PC._renderSheet === undefined, '_renderSheet (шторка) удалён');
+        assertTrue(PC.saveToken === undefined, 'saveToken (токен) удалён');
+        assertTrue(PC.onRegionChange === undefined, 'onRegionChange (регион) удалён');
     });
-    test('настройки сохраняются в localStorage', () => {
-        const { PC, storage } = makePC();
-        PC.setSettings({ region: 54, token: 'abc123' });
-        const s = PC.getSettings();
-        assertEqual(s.region, 54);
-        assertEqual(s.token, 'abc123');
-        assertTrue(storage._d['ws_pcal_settings_v1'] !== undefined);
+    test('старая запись настроек (регион/токен) вычищается из localStorage', () => {
+        const { PC, storage } = makePC({
+            'ws_pcal_settings_v1': '{"region":26,"token":"tok"}'
+        });
+        PC.getSettings();
+        assertTrue(storage._d['ws_pcal_settings_v1'] === undefined,
+            'запись настроек удалена (больше не используется)');
     });
-    test('битые настройки → значения по умолчанию', () => {
+    test('битые/чужие настройки не влияют — регион остаётся 42', () => {
         const { PC } = makePC({ 'ws_pcal_settings_v1': '{битый json' });
         const s = PC.getSettings();
         assertEqual(s.region, 42);
-        assertEqual(s.token, '');
     });
 });
 
 describe('ProdCalendar: кэш и ensureYear', () => {
-    test('ключ кэша включает год и регион', () => {
+    test('ключ кэша включает год и регион (фиксированный 42, Task 272)', () => {
         const { PC } = makePC();
-        PC.setSettings({ region: 54, token: '' });
-        assertEqual(PC._cacheKey(2026), 'ws_pcal_year2_2026_54');
+        assertEqual(PC._cacheKey(2026), 'ws_pcal_year2_2026_42');
     });
     test('свежий кэш → сеть НЕ дёргается, resolve(false)', () => {
         const fresh = {
@@ -530,23 +487,33 @@ describe('ProdCalendar: утилиты', () => {
 });
 
 describe('Task 260: интеграция в index.html', () => {
-    test('HTML: чип календаря в тулбаре шахматки', () => {
+    test('HTML: кнопка «Обновить» в тулбаре шахматки (Task 272)', () => {
         assertTrue(html.indexOf('id="wsCalChip"') !== -1 &&
                    html.indexOf('wsCalChipText') !== -1,
-            'кнопка-чип wsCalChip с текстовым элементом');
-        assertTrue(html.indexOf('onclick="ProdCalendar.openSheet()"') !== -1,
-            'клик по чипу открывает шторку ProdCalendar.openSheet()');
+            'кнопка wsCalChip с текстовым элементом');
+        assertTrue(html.indexOf('onclick="ProdCalendar.confirmRefresh()"') !== -1,
+            'клик по кнопке открывает диалог подтверждения ProdCalendar.confirmRefresh()');
+        assertTrue(html.indexOf('>Обновить</span>') !== -1,
+            'надпись кнопки — «Обновить» (была «Календарь»)');
         assertTrue(/id="wsCalChip"[\s\S]{0,600}?class="ws-cal-chip"/.test(html) ||
                    /class="ws-cal-chip"[\s\S]{0,600}?id="wsCalChip"/.test(html),
-            'чип в тулбаре (рядом с селектами месяца/года)');
+            'кнопка в тулбаре (рядом с селектами месяца/года)');
     });
-    test('HTML: шторка производственного календаря', () => {
-        assertTrue(html.indexOf('id="wsCalOverlay"') !== -1 &&
-                   html.indexOf('id="wsCalSheet"') !== -1 &&
-                   html.indexOf('id="wsCalSheetBody"') !== -1,
-            'оверлей + шторка + тело шторки');
-        assertTrue(html.indexOf('ProdCalendar.closeSheet()') !== -1,
-            'закрытие по клику на оверлей');
+    test('HTML: шторка настроек календаря УДАЛЕНА (Task 272)', () => {
+        assertTrue(html.indexOf('id="wsCalOverlay"') === -1 &&
+                   html.indexOf('id="wsCalSheet"') === -1 &&
+                   html.indexOf('id="wsCalSheetBody"') === -1,
+            'оверлей + шторка + тело шторки удалены из разметки');
+        assertTrue(html.indexOf('ProdCalendar.closeSheet()') === -1,
+            'закрытие шторки больше не используется');
+        assertTrue(html.indexOf('wsCalRegionSel') === -1,
+            'селект региона удалён');
+        assertTrue(html.indexOf('wsCalToken') === -1,
+            'поле ввода токена production-calendar.ru удалено');
+        assertTrue(html.indexOf('API-токен production-calendar.ru') === -1,
+            'плейсхолдер токена удалён');
+        assertTrue(html.indexOf('.ws-cal-sheet {') === -1,
+            'стили шторки удалены');
     });
     test('JS: WorkSchedule запускает загрузку календаря', () => {
         assertTrue(html.indexOf('_ensureCal: function') !== -1,
@@ -555,7 +522,7 @@ describe('Task 260: интеграция в index.html', () => {
         assertTrue(initCalls >= 2,
             '_ensureCal вызывается в init() и onMonthChange()');
         assertTrue(html.indexOf('self._updateCalChip();') !== -1,
-            'чип норм обновляется после загрузки сетки (loadGrid)');
+            'кнопка «Обновить» синхронизируется после загрузки сетки (loadGrid)');
     });
     test('JS: ячейки шахматки используют календарь (_calDayOff)', () => {
         assertTrue(html.indexOf('_calDayOff: function') !== -1,
@@ -573,8 +540,10 @@ describe('Task 260: интеграция в index.html', () => {
         assertTrue(html.indexOf('thTitle = d + \' \' + dow + \' — \' + dInfo.title') !== -1,
             'тултип заголовка с названием праздника');
     });
-    test('CSS: стили чипа, праздника, окошка и шторки', () => {
-        assertTrue(html.indexOf('.ws-cal-chip {') !== -1, 'стили чипа');
+    test('CSS: стили кнопки, праздника и окошка', () => {
+        assertTrue(html.indexOf('.ws-cal-chip {') !== -1, 'стили кнопки «Обновить»');
+        assertTrue(html.indexOf('.ws-cal-chip:disabled') !== -1,
+            'стиль выключенной кнопки на время обновления (Task 272)');
         assertTrue(html.indexOf('.ws-grid thead th.ws-day-col.ws-feast {') !== -1,
             'стили праздника в шапке');
         assertTrue(html.indexOf('.ws-cp-day.k-hol') !== -1,
@@ -582,10 +551,10 @@ describe('Task 260: интеграция в index.html', () => {
         assertTrue(html.indexOf('.ws-cal-panel {') !== -1,
             'стили окошка календаря в тулбаре');
     });
-    test('SW: версия кэша kipia-test-v525 (Task 270)', () => {
+    test('SW: версия кэша kipia-test-v526 (Task 272)', () => {
         const sw = fs.readFileSync(path.resolve(__dirname, '..', 'sw.js'), 'utf8');
-        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v525'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v525');
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v526'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v526');
     });
     test('Тултип ячейки содержит название праздника', () => {
         assertTrue(html.indexOf('titleParts.splice(1, 0, cellInfo.title);') !== -1,
@@ -801,13 +770,16 @@ describe('Task 262: День шахтёра (Кузбасс, регион 42)', 
         assertEqual(info.title, 'День шахтёра');
         assertTrue(info.off, 'воскресенье — нерабочий');
     });
-    test('фолбэк без данных: для региона 54 Дня шахтёра нет', () => {
-        const { PC } = makePC();
-        PC.setSettings({ region: 54, token: '' });
+    test('Task 272: сохранённый регион 54 в настройках игнорируется (фикс. 42)', () => {
+        const { PC } = makePC({
+            'ws_pcal_settings_v1': '{"region":54,"token":"tok"}'
+        });
+        assertEqual(PC.getSettings().region, 42,
+            'регион фиксирован — 42, выбор региона удалён из приложения');
         const info = PC.dayInfo(2026, 8, 30);
-        assertFalse(info.holiday, 'не праздник');
-        assertFalse(info.regional, 'не региональный');
-        assertEqual(info.title, null);
+        assertTrue(info.holiday && info.regional,
+            'День шахтёра считается — как для региона 42');
+        assertEqual(info.title, 'День шахтёра');
     });
     test('monthStats: август 2026 содержит День шахтёра в особых днях', () => {
         const { PC } = makePC();
@@ -927,10 +899,9 @@ describe('Task 262: официальные нормы в monthStats', () => {
     });
 });
 
-describe('Task 262: приоритет источников _fetchYear', () => {
-    test('регион 42 (даже с токеном): legalic первый, оверлей применён', async () => {
+describe('Task 262/272: приоритет источников _fetchYear', () => {
+    test('регион 42: legalic первый, оверлей применён', async () => {
         const { PC } = makePC();
-        PC.setSettings({ region: 42, token: 'tok' });
         const calls = [];
         PC._fetchLegalic = function() {
             calls.push('legalic');
@@ -941,35 +912,25 @@ describe('Task 262: приоритет источников _fetchYear', () => {
             });
         };
         PC._fetchIsDayOff = function() { calls.push('isdayoff'); return Promise.resolve(null); };
-        PC._fetchProdCal = function() { calls.push('prodcal'); return Promise.resolve(null); };
         const data = await PC._fetchYear(2026);
         assertEqual(data.source, 'legalic', 'победил legalic');
-        assertEqual(calls.join(','), 'legalic', 'другие источники не дёргались');
+        assertEqual(calls.join(','), 'legalic', 'резерв не дёргался');
         assertTrue(data.days['0830'] && data.days['0830'].regional === 1,
             'День шахтёра наложен');
     });
-    test('токен + регион с региональными праздниками → production-calendar.ru первый', async () => {
+    test('Task 272: prodcal больше НЕ участвует в цепочке', async () => {
         const { PC } = makePC();
-        PC.setSettings({ region: 26, token: 'tok' }); // Ставропольский край, type 2
-        const calls = [];
-        PC._fetchProdCal = function() {
-            calls.push('prodcal');
-            return Promise.resolve({
-                source: 'prodcalendar', fetchedAtMs: Date.now(),
-                region: 26, regionName: 'Ставропольский край',
-                days: { '0421': { off: 1, holiday: 1, regional: 1 } }
-            });
-        };
-        PC._fetchLegalic = function() { calls.push('legalic'); return Promise.resolve(null); };
-        PC._fetchIsDayOff = function() { calls.push('isdayoff'); return Promise.resolve(null); };
+        // оба источника отказывают — цепочка завершается, prodcal-веток нет
+        let isdayoffCalled = false;
+        PC._fetchLegalic = function() { return Promise.reject(new Error('down')); };
+        PC._fetchIsDayOff = function() { isdayoffCalled = true; return Promise.reject(new Error('down')); };
         const data = await PC._fetchYear(2026);
-        assertEqual(data.source, 'prodcalendar', 'победил prodcal (региональный)');
-        assertEqual(calls.join(','), 'prodcal');
-        assertTrue(!data.days['0830'], 'День шахтёра не для этого региона');
+        assertEqual(data, null, 'оба отказали — null, третьего источника нет');
+        assertTrue(isdayoffCalled, 'резерв isdayoff вызывался');
+        assertTrue(PC._fetchProdCal === undefined, '_fetchProdCal удалён из модуля');
     });
     test('legalic недоступен → isDayOff (резерв)', async () => {
         const { PC } = makePC();
-        PC.setSettings({ region: 42, token: '' });
         PC._fetchLegalic = function() { return Promise.reject(new Error('down')); };
         PC._fetchIsDayOff = function() {
             const parsed = PC._parseIsDayOff(IDO_2026);
@@ -985,10 +946,8 @@ describe('Task 262: приоритет источников _fetchYear', () => {
     });
     test('все источники недоступны → null (фолбэк Сб/Вс)', async () => {
         const { PC } = makePC();
-        PC.setSettings({ region: 42, token: 'tok' });
         PC._fetchLegalic = function() { return Promise.reject(new Error('down')); };
         PC._fetchIsDayOff = function() { return Promise.reject(new Error('down')); };
-        PC._fetchProdCal = function() { return Promise.reject(new Error('down')); };
         const data = await PC._fetchYear(2026);
         assertEqual(data, null, 'все отказали — null');
     });
@@ -999,7 +958,6 @@ describe('Task 262: кэш v2 и подписи источников', () => {
         const { PC, storage } = makePC({
             'ws_pcal_year_2026_42': '{"source":"isdayoff","fetchedAtMs":1,"days":{}}'
         });
-        PC.setSettings({ region: 42, token: '' });
         PC._saveCache(2026, {
             source: 'legalic', fetchedAtMs: 12345,
             region: 42, regionName: 'Кемеровская область - Кузбасс',
@@ -1041,10 +999,13 @@ describe('Task 262: интеграция в index.html', () => {
         assertTrue(html.indexOf("На ' + y + ' год (40-час): <b>'") !== -1,
             'строка годовой нормы — в окошке тулбара');
     });
-    test('JS: шторка упоминает День шахтёра и версию календаря', () => {
-        assertTrue(html.indexOf('День шахтёра (последнее воскресенье августа, Закон') !== -1,
-            'подсказка региона 42 в шторке');
-        assertTrue(html.indexOf('Версия календаря:') !== -1, 'строка версии в шторке');
+    test('JS: День шахтёра и версия календаря остаются в данных (Task 272)', () => {
+        // шторка удалена, но День шахтёра остаётся в оверлее/фолбэке,
+        // версия календаря — в кэше и тултипах
+        assertTrue(html.indexOf('последнее воскресенье августа') !== -1,
+            'правило Дня шахтёра (регион 42) упоминается в комментариях');
+        assertTrue(html.indexOf("_MINERS_DAY_TITLE: 'День шахтёра'") !== -1,
+            'константа Дня шахтёра в модуле');
     });
     test('JS: окошко помечает официальность (тултип) и предварительность', () => {
         assertTrue(html.indexOf("st.normsOfficial ? ' — официальные данные' : ''") !== -1,
@@ -1068,11 +1029,12 @@ describe('Task 264: День города Кемерово (12 июня, рег�
         assertTrue(info.holiday, 'праздник');
         assertEqual(info.title, 'День России · День города Кемерово');
     });
-    test('для региона 54 День города не добавляется', () => {
+    test('Task 272: День города Кемерово — всегда (регион фиксирован 42)', () => {
         const { PC } = makePC();
         loadLegalic(PC, buildLegalicYear(2026, LG2026_SPECIAL), 2026);
-        PC.setSettings({ region: 54, token: '' });
-        assertEqual(PC.dayInfo(2026, 6, 12).title, 'День России');
+        assertEqual(PC.dayInfo(2026, 6, 12).title,
+            'День России · День города Кемерово',
+            'регион 42 фиксирован — выбор другого региона невозможен');
     });
     test('фолбэк без данных: комбинированное название и без источника', () => {
         const { PC } = makePC(); // регион по умолчанию 42
@@ -1080,10 +1042,10 @@ describe('Task 264: День города Кемерово (12 июня, рег�
         assertEqual(info.source, 'fallback');
         assertEqual(info.title, 'День России · День города Кемерово');
     });
-    test('фолбэк для региона 54: только День России', () => {
+    test('Task 272: фолбэк всегда с Днём города (регион фиксирован 42)', () => {
         const { PC } = makePC();
-        PC.setSettings({ region: 54, token: '' });
-        assertEqual(PC.dayInfo(2026, 6, 12).title, 'День России');
+        assertEqual(PC.dayInfo(2026, 6, 12).title,
+            'День России · День города Кемерово');
     });
     test('monthStats: 12 июня — праздник с двойным названием', () => {
         const { PC } = makePC();
@@ -1094,12 +1056,13 @@ describe('Task 264: День города Кемерово (12 июня, рег�
         assertEqual(d12[0].kind, 'праздник');
         assertEqual(d12[0].title, 'День России · День города Кемерово');
     });
-    test('_isCityDay: только 0612 и только регион 42', () => {
+    test('_isCityDay: только 0612 (регион фиксирован 42)', () => {
         const { PC } = makePC();
         assertTrue(PC._isCityDay('0612'), 'регион 42, 12 июня');
         assertFalse(PC._isCityDay('0613'), 'другая дата');
-        PC.setSettings({ region: 54, token: '' });
-        assertFalse(PC._isCityDay('0612'), 'не Кузбасс');
+        // Task 272: регион фиксирован — выбор региона в настройках
+        // невозможен, День города применяется всегда
+        assertTrue(PC._isCityDay('0612'), 'регион всегда 42');
     });
 });
 
@@ -1132,8 +1095,9 @@ describe('Task 264: окошко календаря в баре кнопок г�
     test('JS: нормы и праздники ПЕРЕМЕЩЕНЫ из шторки в окошко', () => {
         assertTrue(html.indexOf('.ws-cal-norms-grid') === -1,
             'блок норм шторки (и его CSS) удалён');
-        assertTrue(html.indexOf('Нормы времени и праздники месяца — ') !== -1,
-            'подсказка о переезде в шторке');
+        // Task 272: подсказка о переезде удалена вместе со шторкой
+        assertTrue(html.indexOf('Нормы времени и праздники месяца — ') === -1,
+            'подсказка о переезде удалена (шторки больше нет)');
         assertTrue(html.indexOf('нет праздников и переносов') !== -1,
             'пустое состояние списка в окошке');
     });
@@ -1175,13 +1139,15 @@ describe('Task 266: окошко столбиками, слева в баре �
         assertTrue(/\.ws-cal-panel \{[^}]*overscroll-behavior:\s*contain/.test(html),
             'скролл окошка не тянет страницу');
     });
-    test('CSS: десктоп — кнопки слева внизу, окно справа (≥1024px, Task 269)', () => {
+    test('CSS: десктоп — кнопки слева вверху, окно справа (≥1024px, Task 269→272)', () => {
         const mq = html.match(/@media \(min-width: 1024px\) \{[\s\S]*?\.ws-toolbar \{[\s\S]*?\}/);
         assertTrue(!!mq, 'media-блок десктопного тулбара');
         assertTrue(/\.ws-toolbar-main \{[^}]*order:\s*0/.test(html),
             'кнопки — левая часть бара (order: 0)');
-        assertTrue(/\.ws-toolbar-main \{[^}]*align-self:\s*flex-end/.test(html),
-            'кнопки прижаты к нижней кромке бара (Task 269)');
+        assertTrue(/\.ws-toolbar-main \{[^}]*align-self:\s*flex-start/.test(html),
+            'кнопки прижаты к ВЕРХНЕЙ кромке бара (Task 272 — левый верхний угол)');
+        assertFalse(/\.ws-toolbar-main \{[^}]*align-self:\s*flex-end/.test(html),
+            'прижатие к нижней кромке (Task 269) удалено');
         assertTrue(/\.ws-toolbar-main \{[^}]*flex-wrap:\s*nowrap/.test(html),
             'ряд кнопок на десктопе — в одну строку');
     });
@@ -1197,9 +1163,9 @@ describe('Task 266: окошко столбиками, слева в баре �
             'метод _sourceShort удалён (был нужен только для окошка)');
         assertTrue(html.indexOf("', обновлено ' + this._fmtDateTime") === -1,
             'время обновления не выводится в окошке');
-        // источник остался в шторке настроек
+        // Task 272: полная подпись источника — в диалоге кнопки «Обновить»
         assertTrue(html.indexOf('_sourceLabel') !== -1,
-            'полная подпись источника — в шторке');
+            'полная подпись источника — в диалоге подтверждения обновления');
     });
     test('JS: бейдж «официальные нормы» не рендерится', () => {
         assertTrue(html.indexOf('>официальные нормы</span>') === -1,
@@ -1219,5 +1185,53 @@ describe('Task 266: окошко столбиками, слева в баре �
             'заголовок столбика норм');
         assertTrue(html.indexOf('ws-cp-cap">Праздники и переносы</span>') !== -1,
             'заголовок столбика праздников');
+    });
+});
+
+// ============================================================
+// Task 272: кнопка «Обновить» вместо «Календарь» — диалог с
+// источником legalic и подтверждением; регион фиксирован (42);
+// выбор региона, поле токена и шторка настроек удалены;
+// «Сформировать» — шахматка на весь год; кнопки в левом
+// верхнем углу бара
+// ============================================================
+
+describe('Task 272: кнопка «Обновить» и диалог подтверждения', () => {
+    test('JS: confirmRefresh — диалог с источником и кнопкой «Обновить»', () => {
+        assertTrue(html.indexOf('confirmRefresh: function') !== -1,
+            'метод confirmRefresh определён');
+        assertTrue(html.indexOf("{ title: 'Обновление календаря', okText: 'Обновить' }") !== -1,
+            'диалог: заголовок «Обновление календаря», кнопка «Обновить»');
+        assertTrue(html.indexOf("'Источник: ' + srcLabel") !== -1,
+            'в сообщении — подпись источника данных');
+        assertTrue(html.indexOf("'\\nОбновить производственный календарь на ' + ym.y + ' год?'") !== -1,
+            'вопрос подтверждения обновления года');
+    });
+    test('JS: подпись источника legalic — как в заявке', () => {
+        const { PC } = makePC();
+        assertEqual(PC._sourceLabel('legalic'),
+            'calendar.legalic.ru (федеральный, официальные нормы)');
+    });
+    test('JS: refreshNow — кнопка «Обновление…» на время запроса', () => {
+        assertTrue(html.indexOf("'Обновление…'") !== -1,
+            'надпись «Обновление…» на кнопке во время обновления');
+        assertTrue(html.indexOf('ensureYear(ym.y, true)') !== -1,
+            'обновление — принудительное (force=true, TTL игнорируется)');
+        assertTrue(html.indexOf("'Календарь обновлён'") !== -1,
+            'тост об успешном обновлении');
+    });
+    test('JS: _currentYM берёт год из WorkSchedule или текущей даты', () => {
+        assertTrue(html.indexOf('_currentYM: function') !== -1,
+            'метод _currentYM определён (замена _sy/_sm шторки)');
+        assertTrue(html.indexOf('this._sy') === -1 && html.indexOf('this._sm') === -1,
+            'поля шторки _sy/_sm удалены');
+    });
+    test('HTML: иконка кнопки — круговые стрелки (не календарь)', () => {
+        const icon = html.match(/id="wsCalChip"[\s\S]{0,400}?<svg[^>]*>([\s\S]*?)<\/svg>/);
+        assertTrue(!!icon, 'svg-иконка внутри кнопки');
+        assertTrue(icon[1].indexOf('polyline') !== -1,
+            'иконка обновления — круговые стрелки (polyline)');
+        assertTrue(icon[1].indexOf('<rect') === -1,
+            'старая иконка календаря (rect) удалена');
     });
 });
