@@ -1197,8 +1197,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v514 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v523") !== -1,
-                'Актуальная версия — kipia-test-v523 (Task 267)');
+            assertTrue(sw.indexOf("kipia-test-v524") !== -1,
+                'Актуальная версия — kipia-test-v524 (Task 269)');
         });
         test('Старая версия v514 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v514") === -1,
@@ -1261,8 +1261,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v516 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v523") !== -1,
-                'Актуальная версия — kipia-test-v523 (Task 267)');
+            assertTrue(sw.indexOf("kipia-test-v524") !== -1,
+                'Актуальная версия — kipia-test-v524 (Task 269)');
         });
     });
 
@@ -1273,8 +1273,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v515 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v523") !== -1,
-                'Актуальная версия — kipia-test-v523 (Task 267)');
+            assertTrue(sw.indexOf("kipia-test-v524") !== -1,
+                'Актуальная версия — kipia-test-v524 (Task 269)');
         });
     });
 
@@ -1284,8 +1284,8 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
         test('v513 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v523") !== -1,
-                'Актуальная версия — kipia-test-v523');
+            assertTrue(sw.indexOf("kipia-test-v524") !== -1,
+                'Актуальная версия — kipia-test-v524');
         });
     });
 
@@ -1478,8 +1478,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v517 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v523") !== -1,
-                'Актуальная версия — kipia-test-v523 (Task 267)');
+            assertTrue(sw.indexOf("kipia-test-v524") !== -1,
+                'Актуальная версия — kipia-test-v524 (Task 269)');
         });
         test('Старая версия v517 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v517") === -1,
@@ -1493,9 +1493,9 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v523', () => {
-            assertTrue(sw.indexOf("kipia-test-v523") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v523 (Task 267)');
+        test('CACHE_VERSION = kipia-test-v524', () => {
+            assertTrue(sw.indexOf("kipia-test-v524") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v524 (Task 267)');
         });
         test('Старая версия v517 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v517") === -1,
@@ -1714,13 +1714,15 @@ describe('График работы — WorkSchedule', () => {
         });
 
         test('HTML: статический #wsEmpty — «Загрузка» + три анимированные точки', () => {
-            const re = /<div class="admin-empty" id="wsEmpty">Загрузка<span class="flow-loading-dots"><span>\.<\/span><span>\.<\/span><span>\.<\/span><\/span><\/div>/;
+            // Task 269: та же разметка, но на классах расходомеров
+            // .flow-loading + .flow-loading-text (шрифт как у расходомеров)
+            const re = /<div class="flow-loading" id="wsEmpty"><div class="flow-loading-text">Загрузка<span class="flow-loading-dots"><span>\.<\/span><span>\.<\/span><span>\.<\/span><\/span><\/div><\/div>/;
             assertTrue(re.test(html),
                 'плейсхолдер сетки содержит span.flow-loading-dots с тремя точками');
         });
 
         test('JS: loadGrid() ставит ту же разметку с точками', () => {
-            const re = /wrapEl\.innerHTML = '<div class="admin-empty" id="wsEmpty">Загрузка<span class="flow-loading-dots"><span>\.<\/span><span>\.<\/span><span>\.<\/span><\/span><\/div>';/;
+            const re = /wrapEl\.innerHTML = '<div class="flow-loading" id="wsEmpty"><div class="flow-loading-text">Загрузка<span class="flow-loading-dots"><span>\.<\/span><span>\.<\/span><span>\.<\/span><\/span><\/div><\/div>';/;
             assertTrue(re.test(html),
                 'loadGrid показывает «Загрузка…» с анимированными точками при каждой смене месяца');
         });
@@ -1847,19 +1849,168 @@ describe('График работы — WorkSchedule', () => {
         });
     });
 
-    describe('Task 267: SW версия v523', () => {
+    describe('Task 269: SW версия v524', () => {
         const fs = require('fs');
         const path = require('path');
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v523', () => {
-            assertTrue(sw.indexOf("kipia-test-v523") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v523 (Task 267)');
+        test('CACHE_VERSION = kipia-test-v524', () => {
+            assertTrue(sw.indexOf("kipia-test-v524") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v524 (Task 269)');
         });
-        test('Старая версия v522 убрана', () => {
-            assertTrue(sw.indexOf("kipia-test-v522") === -1,
-                'Старая v522 не должна остаться в sw.js');
+        test('Старая версия v523 убрана', () => {
+            assertTrue(sw.indexOf("kipia-test-v523") === -1,
+                'Старая v523 не должна остаться в sw.js');
+        });
+    });
+
+    // ============================================================
+    // Task 269 (по заявке пользователя), 5 пунктов — бар кнопок
+    // «Графика работы» и «Загрузка…»:
+    //   1) столбик норм окна календаря разделён на ДВА столбика
+    //      (счётчики дней слева, нормы часов справа от них);
+    //   2) само окно стало УЖЕ — ширина по тексту (fit-content);
+    //   3) высота кнопок бара ВЫРАВНЕНА (34px у всех элементов);
+    //   4) кнопки — в ЛЕВОЙ НИЖНЕЙ части бара, окно с данными —
+    //      в ПРАВОЙ (десктоп ≥1024px);
+    //   5) шрифт «Загрузка…» — как у «Расходомеров хозрасчётных»
+    //      (.flow-loading + .flow-loading-text: 16px / 600).
+    // ============================================================
+    describe('Task 269: нормы двумя столбиками (.ws-cp-group/.ws-cp-cols)', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('CSS: группа норм — колонка с заголовком (.ws-cp-group)', () => {
+            assertTrue(/\.ws-cp-group \{[^}]*flex-direction:\s*column/.test(html),
+                'группа норм — вертикальная: заголовок сверху, столбики под ним');
+            assertTrue(/\.ws-cp-group \{[^}]*flex-shrink:\s*0/.test(html),
+                'группа не сжимается — переносится при нехватке ширины');
+        });
+
+        test('CSS: ДВА подстолбика норм в ряд (.ws-cp-cols)', () => {
+            assertTrue(/\.ws-cp-cols \{[^}]*display:\s*flex/.test(html),
+                '.ws-cp-cols — строка из двух подстолбиков');
+            assertTrue(/\.ws-cp-cols \{[^}]*column-gap:\s*16px/.test(html),
+                'зазор между подстолбиками (второй — справа от первого)');
+            assertTrue(/\.ws-cp-cols \{[^}]*flex-wrap:\s*wrap/.test(html),
+                'на узких экранах подстолбик часов переносится под дни');
+        });
+
+        test('JS: renderPanel — дни и часы в РАЗНЫХ подстолбиках', () => {
+            // заголовок «Норма, …» живёт в группе, под ней .ws-cp-cols
+            const groupRe = /'<div class="ws-cp-group ws-cp-norms"[^>]*>'\s*\+[^;]*?'<span class="ws-cp-cap">Норма, '/;
+            assertTrue(groupRe.test(html),
+                'группа норм с заголовком «Норма, {месяц}» (тултип официальности — на группе)');
+            assertTrue(html.indexOf("'<div class=\"ws-cp-cols\">'") !== -1,
+                'контейнер двух подстолбиков .ws-cp-cols');
+            // первый подстолбик — счётчики дней, второй — нормы часов:
+            // «Рабочих» и «40-час» в разных .ws-cp-col внутри .ws-cp-cols
+            const colsStart = html.indexOf("'<div class=\"ws-cp-cols\">'");
+            const colsEnd = html.indexOf("'</div>' +\n                    '</div>';");
+            assertTrue(colsStart !== -1 && colsEnd > colsStart, 'блок .ws-cp-cols найден');
+            const colsBlock = html.slice(colsStart, colsEnd);
+            const iDays = colsBlock.indexOf('Рабочих: <b>');
+            const iFirstColEnd = colsBlock.indexOf("'</div>' +", iDays);
+            const iHours = colsBlock.indexOf('40-час: <b>');
+            assertTrue(iDays !== -1 && iHours !== -1 && iFirstColEnd !== -1,
+                'и дни, и часы есть в блоке .ws-cp-cols');
+            assertTrue(iDays < iFirstColEnd && iHours > iFirstColEnd,
+                '«Рабочих» — в первом подстолбике, «40-час» — во втором (справа)');
+        });
+    });
+
+    describe('Task 269: окно уже — ширина по тексту, высота 120px', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('CSS: базовое правило — width: fit-content', () => {
+            assertTrue(/\.ws-cal-panel \{[^}]*width:\s*fit-content/.test(html),
+                'окно не растягивается — ширина по тексту столбиков');
+            assertTrue(/\.ws-cal-panel \{[^}]*max-width:\s*100%/.test(html),
+                'окно не шире бара');
+        });
+
+        test('CSS: статическая высота 120px (мобильная база + десктоп)', () => {
+            assertTrue(/\.ws-cal-panel \{[^}]*height:\s*120px/.test(html),
+                'высота окна — 120px в базовом правиле');
+            const re = /@media \(min-width: 1024px\) \{[\s\S]*?\.ws-cal-panel \{[^}]*height:\s*120px/s;
+            assertTrue(re.test(html), 'высота окна на десктопе — те же 120px');
+        });
+    });
+
+    describe('Task 269: кнопки слева внизу / окно справа + высота кнопок', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('CSS: единая высота всех элементов ряда кнопок (34px)', () => {
+            const re = /\.ws-month-sel, \.ws-year-sel, \.ws-cal-chip, \.ws-generate-btn, \.ws-save-btn \{[^}]*height:\s*34px[^}]*box-sizing:\s*border-box/;
+            assertTrue(re.test(html),
+                'селекты, чип «Календарь», «Сформировать» и «Сохранить» — одного роста');
+        });
+
+        test('CSS: десктоп — кнопки в ЛЕВОЙ НИЖНЕЙ части бара', () => {
+            assertTrue(/\.ws-toolbar-main \{[^}]*order:\s*0/.test(html),
+                'ряд кнопок — левая часть бара (order: 0)');
+            assertTrue(/\.ws-toolbar-main \{[^}]*align-self:\s*flex-end/.test(html),
+                'кнопки прижаты к нижней кромке бара');
+            assertTrue(/\.ws-toolbar-main \{[^}]*margin-right:\s*auto/.test(html),
+                'окно уходит в правую часть бара');
+        });
+
+        test('CSS: десктоп — окно с данными в ПРАВОЙ части бара', () => {
+            assertTrue(/\.ws-cal-panel \{[^}]*order:\s*1/.test(html),
+                'окно календаря — правая часть бара (order: 1)');
+            assertTrue(/\.ws-cal-panel \{[^}]*flex:\s*0 1 auto/.test(html),
+                'окно не растягивается на свободную ширину');
+            assertFalse(/\.ws-cal-panel \{[^}]*flex:\s*1 1 auto/.test(html),
+                'старое растягивание (flex: 1 1 auto) удалено');
+        });
+
+        test('CSS: старое размещение Task 266 удалено', () => {
+            assertFalse(/\.ws-toolbar-main \{[^}]*margin-left:\s*auto/.test(html),
+                'кнопки больше не прижаты вправо');
+            assertFalse(/\.ws-cal-panel \{[^}]*min-width:\s*0/.test(html),
+                'min-width: 0 из старого правила удалён');
+        });
+    });
+
+    describe('Task 269: шрифт «Загрузка…» — как у расходомеров', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('CSS: .flow-loading-text — 16px / 600 / text-primary', () => {
+            assertTrue(/\.flow-loading-text \{[^}]*font-size:\s*16px/.test(html),
+                'размер шрифта «Загрузка…» — 16px (как у расходомеров)');
+            assertTrue(/\.flow-loading-text \{[^}]*font-weight:\s*600/.test(html),
+                'жирность — 600');
+            assertTrue(/\.flow-loading-text \{[^}]*color:\s*var\(--text-primary\)/.test(html),
+                'цвет — основной текст, а не приглушённый admin-empty');
+        });
+
+        test('HTML: статический #wsEmpty — .flow-loading + .flow-loading-text', () => {
+            const re = /<div class="flow-loading" id="wsEmpty"><div class="flow-loading-text">Загрузка<span class="flow-loading-dots"><span>\.<\/span><span>\.<\/span><span>\.<\/span><\/span><\/div><\/div>/;
+            assertTrue(re.test(html),
+                'плейсхолдер сетки использует классы расходомеров (шрифт 16px/600) с тремя точками');
+        });
+
+        test('JS: loadGrid() ставит ту же разметку с классами расходомеров', () => {
+            const re = /wrapEl\.innerHTML = '<div class="flow-loading" id="wsEmpty"><div class="flow-loading-text">Загрузка<span class="flow-loading-dots"><span>\.<\/span><span>\.<\/span><span>\.<\/span><\/span><\/div><\/div>';/;
+            assertTrue(re.test(html),
+                'loadGrid показывает «Загрузка…» шрифтом расходомеров при каждой смене месяца');
+        });
+
+        test('HTML: #wsEmpty больше не использует admin-empty', () => {
+            assertFalse(/<div class="admin-empty" id="wsEmpty"/.test(html),
+                'старая разметка admin-empty (14px, приглушённый цвет) удалена');
         });
     });
 });

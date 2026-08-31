@@ -582,10 +582,10 @@ describe('Task 260: интеграция в index.html', () => {
         assertTrue(html.indexOf('.ws-cal-panel {') !== -1,
             'стили окошка календаря в тулбаре');
     });
-    test('SW: версия кэша kipia-test-v523 (Task 267)', () => {
+    test('SW: версия кэша kipia-test-v524 (Task 269)', () => {
         const sw = fs.readFileSync(path.resolve(__dirname, '..', 'sw.js'), 'utf8');
-        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v523'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v523');
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v524'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v524');
     });
     test('Тултип ячейки содержит название праздника', () => {
         assertTrue(html.indexOf('titleParts.splice(1, 0, cellInfo.title);') !== -1,
@@ -1149,45 +1149,45 @@ describe('Task 264: окошко календаря в баре кнопок г�
 
 // ============================================================
 // Task 266: ревизия окошка календаря в баре кнопок графика —
-// столбики (нормы слева, праздники справа), окошко в левой части
-// бара / кнопки в правой, статическая высота бара + скролл в
-// окошке; убраны строка «источник: …» и бейдж «официальные нормы»
+// столбики (нормы + праздники), статическая высота бара + скролл
+// в окошке; убраны строка «источник: …» и бейдж «официальные нормы».
+// Task 269: нормы — ГРУППА из двух подстолбиков (дни/часы), окно —
+// шириной по тексту в ПРАВОЙ части бара, кнопки — слева внизу.
 // ============================================================
 
 describe('Task 266: окошко столбиками, слева в баре — кнопки справа', () => {
     test('CSS: столбики — вертикальные списки (.ws-cp-col)', () => {
         assertTrue(/\.ws-cp-col \{[^}]*flex-direction:\s*column/.test(html),
-            'столбик — колонка (нормы/праздники столбиком)');
+            'столбик — колонка (подстолбики норм/праздники)');
         assertTrue(/\.ws-cp-col \{[^}]*flex-shrink:\s*0/.test(html),
             'столбик не сжимается — переносится при нехватке ширины');
-        assertTrue(html.indexOf('ws-cp-col ws-cp-norms') !== -1,
-            'столбик норм в renderPanel');
+        // Task 269: нормы — группа ws-cp-group ws-cp-norms (два подстолбика)
+        assertTrue(html.indexOf('ws-cp-group ws-cp-norms') !== -1,
+            'группа норм в renderPanel');
         assertTrue(html.indexOf('ws-cp-col ws-cp-days') !== -1,
             'столбик праздников в renderPanel');
     });
     test('CSS: статическая высота окошка + скролл внутри', () => {
-        assertTrue(/\.ws-cal-panel \{[^}]*height:\s*132px/.test(html),
-            'фиксированная высота окошка (мобильная база)');
+        assertTrue(/\.ws-cal-panel \{[^}]*height:\s*120px/.test(html),
+            'фиксированная высота окошка (мобильная база, Task 269 — 120px)');
         assertTrue(/\.ws-cal-panel \{[^}]*overflow-y:\s*auto/.test(html),
             'полоса прокрутки, если столбики не входят');
         assertTrue(/\.ws-cal-panel \{[^}]*overscroll-behavior:\s*contain/.test(html),
             'скролл окошка не тянет страницу');
     });
-    test('CSS: десктоп — окошко слева, кнопки справа (≥1024px)', () => {
+    test('CSS: десктоп — кнопки слева внизу, окно справа (≥1024px, Task 269)', () => {
         const mq = html.match(/@media \(min-width: 1024px\) \{[\s\S]*?\.ws-toolbar \{[\s\S]*?\}/);
         assertTrue(!!mq, 'media-блок десктопного тулбара');
-        assertTrue(/\.ws-cal-panel \{[^}]*order:\s*0/.test(html),
-            'окошко — левая часть бара (order: 0)');
-        assertTrue(/\.ws-cal-panel \{[^}]*flex:\s*1 1 auto/.test(html),
-            'окошко растягивается на свободную ширину слева');
-        assertTrue(/\.ws-toolbar-main \{[^}]*margin-left:\s*auto/.test(html),
-            'кнопки прижаты в правую часть бара');
+        assertTrue(/\.ws-toolbar-main \{[^}]*order:\s*0/.test(html),
+            'кнопки — левая часть бара (order: 0)');
+        assertTrue(/\.ws-toolbar-main \{[^}]*align-self:\s*flex-end/.test(html),
+            'кнопки прижаты к нижней кромке бара (Task 269)');
         assertTrue(/\.ws-toolbar-main \{[^}]*flex-wrap:\s*nowrap/.test(html),
             'ряд кнопок на десктопе — в одну строку');
     });
-    test('CSS: высота бара на десктопе — 160px (статическая)', () => {
-        const re = /@media \(min-width: 1024px\) \{[\s\S]*?\.ws-cal-panel \{[^}]*height:\s*160px/s;
-        assertTrue(re.test(html), 'десктопная высота окошка — 160px');
+    test('CSS: высота бара на десктопе — 120px (статическая, Task 269)', () => {
+        const re = /@media \(min-width: 1024px\) \{[\s\S]*?\.ws-cal-panel \{[^}]*height:\s*120px/s;
+        assertTrue(re.test(html), 'десктопная высота окошка — 120px');
     });
     test('JS: убраны источник и время обновления из окошка', () => {
         // строки источника больше нет ни в JS, ни в CSS окошка
