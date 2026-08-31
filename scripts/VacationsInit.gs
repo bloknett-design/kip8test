@@ -165,19 +165,33 @@ function vacationsInitSheet(force) {
   // [s1..e1] и [s2..e2] пересекаются, если s1 <= e2 и e1 >= s2.
   // «<>» (непустые) в COUNTIFS и guards $D2/$E2 — черновики без
   // дат (заполнен только таб_номер) не дают ложных пересечений.
-  var overlapRange = sheet.getRange(2, 4, VALIDATION_ROWS - 1, 2);  // D2:E1000
-  var overlapFormula = 'AND($B2<>"", $D2<>"", $E2<>"", ' +
-    'COUNTIFS($B$2:$B,$B2, $D$2:$D,"<>", $E$2:$E,"<>", ' +
-    '$D$2:$D,"<="&$E2, $E$2:$E,">="&$D2) > 1)';
-  var overlapRule = SpreadsheetApp.newConditionalFormatRule()
-    .whenFormulaSatisfied(overlapFormula)
-    .setBackground('#f4c7c3')
-    .build();
-  // Правила листа заменяются целиком (идемпотентность повторных
-  // запусков; свои правила на листе «Отпуска» завести заново).
-  sheet.setConditionalFormatRules([overlapRule]);
-  Logger.log('Подсветка пересечений периодов: D2:E' + (VALIDATION_ROWS - 0) +
-             ' (красный фон).');
+  // Task 277: 1) у правила ОБЯЗАТЕЛЬНО setRanges — без него build()
+  // бросает «Ranges must have at least one range»; 2) формула — с
+  // префиксом «=» (синтаксис формул UI); 3) 1000 в диапазонах
+  // COUNTIFS = VALIDATION_ROWS (ограничено для скорости).
+  // Подсветка — косметика: сбой не должен валить инициализацию,
+  // блок под try/catch (сервер пересечения всё равно отклоняет).
+  try {
+    var overlapRange = sheet.getRange(2, 4, VALIDATION_ROWS - 1, 2);  // D2:E1000
+    var overlapFormula = '=AND($B2<>"", $D2<>"", $E2<>"", ' +
+      'COUNTIFS($B$2:$B$1000,$B2, $D$2:$D$1000,"<>", $E$2:$E$1000,"<>", ' +
+      '$D$2:$D$1000,"<="&$E2, $E$2:$E$1000,">="&$D2) > 1)';
+    var overlapRule = SpreadsheetApp.newConditionalFormatRule()
+      .whenFormulaSatisfied(overlapFormula)
+      .setBackground('#f4c7c3')
+      .setRanges([overlapRange])
+      .build();
+    // Правила листа заменяются целиком (идемпотентность повторных
+    // запусков; свои правила на листе «Отпуска» завести заново).
+    sheet.setConditionalFormatRules([overlapRule]);
+    var appliedRules = sheet.getConditionalFormatRules();
+    Logger.log('Подсветка пересечений периодов: D2:E' + VALIDATION_ROWS +
+               ' (красный фон); правил на листе: ' + appliedRules.length + '.');
+  } catch (cfErr) {
+    Logger.log('⚠ Не удалось настроить подсветку пересечений: ' + cfErr +
+               ' (не критично — сервер addVacation всё равно отклоняет ' +
+               'пересечения). Лист полностью рабочий.');
+  }
 
   // --- Итог ---
   var dataRows = Math.max(0, sheet.getLastRow() - 1);

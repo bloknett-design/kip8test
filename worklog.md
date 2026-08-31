@@ -1775,3 +1775,52 @@ Stage Summary:
   4) New version.
 - Следующий номер: 277.
 - Локальная дата: 2026-08-31 (Asia/Novosibirsk, UTC+07:00).
+
+---
+Task ID: 277
+Agent: main (Super Z)
+Task: Hotfix №2 VacationsInit.gs — Exception «Ranges must have at
+      least one range» при повторном запуске (журнал пользователя:
+      валидации применились — «12 сотрудников из листа «Сотрудники»»,
+      затем падение на VacationsInit.gs:175).
+
+Work Log:
+- Причина: правило условного форматирования строилось БЕЗ
+  .setRanges() — ConditionalFormatRuleBuilder.build() требует хотя
+  бы один диапазон и бросает «Ranges must have at least one range»
+  (строка 175 = .build(); переменная overlapRange объявлялась, но
+  в билдер не передавалась). До падения успели примениться: обе
+  валидации (лог «12 сотрудников»), форматы, шапка.
+- Fix: 1) .setRanges([overlapRange]) добавлен в цепочку; 2) формула
+  подсветки теперь с префиксом «=» (синтаксис формул UI Sheets) и
+  диапазонами COUNTIFS, ограниченными до строки 1000
+  (= VALIDATION_ROWS, скорость); 3) блок подсветки обёрнут в
+  try/catch — сбой косметики не валит инициализацию, лист остаётся
+  рабочим (сервер пересечения всё равно отклоняет); 4) лог
+  подтверждает применённые правила (getConditionalFormatRules().
+  length).
+- Пользовательская вставка (upload/Pasted Content…txt, 1147 строк)
+  — это WorkSchedule.gs, побайтово идентичный репозиторию
+  (task277-check-paste.py): VACATIONS_SHEET / listVacations /
+  addVacation / deleteVacation на местах. Разворачиваемый набор
+  сервера корректен; в чате продублирован Code.gs с тремя case.
+- Тесты: +3 регрессии — setRanges обязателен, формула с «=»,
+  белый список методов ConditionalFormatRuleBuilder
+  (whenFormulaSatisfied/setBackground/setRanges, count=1);
+  обновлены 2 теста под ограниченные диапазоны $1000.
+  Прогон: 1160 passed / 0 failed (было 1157, +3).
+- Кэш НЕ поднимался (фронтенд не менялся). Пользователю: заменить
+  VacationsInit.gs в Apps Script на обновлённый (download/kip8test/)
+  и перезапустить vacationsInitSheet() БЕЗ force — идемпотентно
+  применит подсветку поверх уже сконфигурированного листа.
+- Коммит + push (PAT-протокол). Копия → download/kip8test/.
+
+Stage Summary:
+- Task 277 (hotfix №2) готов: vacationsInitSheet выполняется до
+  конца — setRanges у правила подсветки, «=»-формула, try/catch
+  защита. Подтверждено: разворачиваемый WorkSchedule.gs
+  пользователя идентичен репо. 1160 тестов; кэш v527 без изменений.
+- Осталось у пользователя: перезапуск init → New version деплой →
+  проверка приложения (Отпуска/Сформировать/шахматка).
+- Следующий номер: 278.
+- Локальная дата: 2026-08-31 (Asia/Novosibirsk, UTC+07:00).

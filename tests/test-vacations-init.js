@@ -20,6 +20,9 @@
 //  10. Запись демо — appendRow из 6 полей, id от max id + 1
 //      (та же логика, что addVacation)
 //  11. Подсветка пересечений периодов одного сотрудника
+// + регрессии Task 276 (setHelpTitle не существует) и Task 277
+//   (setRanges обязателен, формула с «=», методы билдеров из белых
+//   списков — по реальным инцидентам в Apps Script).
 
 const fs = require('fs');
 const path = require('path');
@@ -177,13 +180,46 @@ describe('Task 275: VacationsInit.gs — инициализация листа �
 
     test('подсветка пересечений периодов одного сотрудника (COUNTIFS)', () => {
         const gs = fs.readFileSync(gsPath, 'utf8');
-        assertTrue(gs.indexOf('COUNTIFS($B$2:$B,$B2') !== -1,
+        assertTrue(gs.indexOf('COUNTIFS($B$2:$B$1000,$B2') !== -1,
             'COUNTIFS-формула пересечения не найдена');
         assertTrue(gs.indexOf('whenFormulaSatisfied') !== -1,
             'условное форматирование не настроено');
         // Формула пересечения: s1 <= e2 И e1 >= s2
-        assertTrue(gs.indexOf('$D$2:$D,"<="&$E2') !== -1 && gs.indexOf('$E$2:$E,">="&$D2') !== -1,
+        assertTrue(gs.indexOf('$D$2:$D$1000,"<="&$E2') !== -1 && gs.indexOf('$E$2:$E$1000,">="&$D2') !== -1,
             'условие пересечения интервалов неполное');
+    });
+
+    test('регрессия Task 277: setRanges у правила подсветки (иначе «Ranges must have at least one range»)', () => {
+        // Реальный инцидент при втором запуске 2026-08-31:
+        // Exception: Ranges must have at least one range (build без setRanges)
+        const gs = fs.readFileSync(gsPath, 'utf8');
+        assertTrue(gs.indexOf('setRanges([overlapRange])') !== -1,
+            'ConditionalFormatRuleBuilder.build() требует setRanges — без него Exception');
+    });
+
+    test('формула подсветки — с префиксом «=» (синтаксис формул UI)', () => {
+        const gs = fs.readFileSync(gsPath, 'utf8');
+        assertTrue(gs.indexOf("var overlapFormula = '=AND(") !== -1,
+            "whenFormulaSatisfied ожидает формулу с ведущим '='");
+    });
+
+    test('цепочка условного форматирования — только существующие методы', () => {
+        // Белый список документированных методов ConditionalFormatRuleBuilder
+        const gs = fs.readFileSync(gsPath, 'utf8');
+        const allowed = ['whenFormulaSatisfied', 'setBackground', 'setRanges'];
+        const re = /newConditionalFormatRule\(\)([\s\S]*?)\.build\(\)/g;
+        let found = 0;
+        let m;
+        while ((m = re.exec(gs)) !== null) {
+            found++;
+            const calls = m[1].match(/\.\s*(\w+)\(/g) || [];
+            for (const c of calls) {
+                const name = c.replace(/[^a-zA-Z]/g, '');
+                assertTrue(allowed.indexOf(name) !== -1,
+                    'ConditionalFormatRuleBuilder.' + name + ' — недокументированный метод');
+            }
+        }
+        assertEqual(found, 1, 'ожидалось 1 правило условного форматирования');
     });
 
     test('регрессия Task 276: setHelpTitle не используется (метода нет — TypeError)', () => {
@@ -223,7 +259,7 @@ describe('Task 275: VacationsInit.gs — инициализация листа �
         // подсвечивать валидные периоды того же сотрудника
         assertTrue(gs.indexOf('$D2<>"", $E2<>""') !== -1,
             'guards непустых дат текущей строки не найдены');
-        assertTrue(gs.indexOf('$D$2:$D,"<>"') !== -1 && gs.indexOf('$E$2:$E,"<>"') !== -1,
+        assertTrue(gs.indexOf('$D$2:$D$1000,"<>"') !== -1 && gs.indexOf('$E$2:$E$1000,"<>"') !== -1,
             'COUNTIFS должен считать только заполненные периоды');
     });
 
