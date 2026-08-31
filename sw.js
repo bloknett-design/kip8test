@@ -36,7 +36,7 @@
 // серверные listVacations/addVacation/deleteVacation + заполнение
 // «О» в generateMonth с приоритетом «руч > отпуск > инструктаж >
 // смена» и очисткой устаревших авто-«О».
-const CACHE_VERSION = 'kipia-test-v529';
+const CACHE_VERSION = 'kipia-test-v530';
 const CACHE_NAME = CACHE_VERSION;
 
 // Отдельный кэш для картинок Google Drive (превью + полные).
