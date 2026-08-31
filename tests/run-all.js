@@ -34,6 +34,7 @@ require('./test-work-schedule.js');
 require('./test-prod-calendar.js');
 require('./test-vacations-init.js');
 require('./test-vacations-generate.js');
+require('./test-vacations-diagnose.js');
 
 // Запускаем
 runAll().then(exitCode => {
