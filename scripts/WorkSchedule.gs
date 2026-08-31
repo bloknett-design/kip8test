@@ -16,6 +16,9 @@
 //   workSchedule.addEmployee      — добавить нового сотрудника
 //   workSchedule.addTraining      — добавить плановое мероприятие
 //   workSchedule.deleteTraining   — удалить мероприятие
+//   workSchedule.listVacations    — план отпусков (Task 274, лист «Отпуска»)
+//   workSchedule.addVacation      — добавить период отпуска (часть 1..3)
+//   workSchedule.deleteVacation   — удалить период отпуска
 //
 // Авторизация — по тому же паттерну, что Flowmeter.gs:
 //   Utils.findSessionByToken(token) → session
@@ -24,9 +27,10 @@
 // Google Таблица — ОТДЕЛЬНАЯ от hozraschet:
 //   SPREADSHEET_ID = '1MQtW-CWCmjlu-SAeVBllKDP6NRkiOkmW-7xgOjHskWY'
 //
-// Листы (8):
+// Листы (9):
 //   README, Сотрудники, Коды_статусов, Шаблоны_ротации,
-//   Дни_цикла, Инструктажи, Записи_графика, Сводка_по_месяцам
+//   Дни_цикла, Инструктажи, Записи_графика, Сводка_по_месяцам,
+//   Отпуска (Task 274)
 //
 // Структура листа «Сотрудники» (заголовки в строке 1, данные со строки 2):
 //   A: таб_номер              — табельный номер (строка, PK)
@@ -78,6 +82,17 @@
 //   H: замещает (FK на Сотрудники — кого замещали; может быть пусто)
 //   I: инструкция (FK на Инструктажи.id; может быть пусто)
 //   J: комментарий
+//
+// Структура листа «Отпуска» (Task 274 — план периодов отпусков):
+//   A: id (auto-increment)
+//   B: таб_номер (FK на Сотрудники)
+//   C: часть (1..3 — отпуска делятся на 2–3 части в год)
+//   D: дата_начала (Date)
+//   E: дата_окончания (Date)
+//   F: комментарий
+//   Период задаёт автоматическую расстановку «О» (Отпуск) в
+//   Записи_графика при «Сформировать» (generateMonth, шаг 4.5):
+//   приоритет — ручная правка > отпуск > инструктаж > плановая смена.
 // ============================================================
 
 var WorkSchedule = {
@@ -93,6 +108,9 @@ var WorkSchedule = {
   TRAININGS_SHEET:    'Инструктажи',
   ENTRIES_SHEET:      'Записи_графика',
   SUMMARY_SHEET:      'Сводка_по_месяцам',
+  // Task 274: лист «Отпуска» — план периодов (2–3 части на год).
+  // Данные листа определяют автоматическое заполнение «О» в шахматке.
+  VACATIONS_SHEET:    'Отпуска',
 
   // Строка, с которой начинаются данные
   DATA_START_ROW: 2,
@@ -393,6 +411,54 @@ var WorkSchedule = {
     return { ok: true, data: { trainings: trainings } };
   },
 
+  // workSchedule.listVacations (Task 274)
+  // payload: { token, year }  (год не указан — все периоды листа)
+  // Возвращает периоды, ПЕРЕСЕКАЮЩИЕСЯ с годом (границы года не
+  // включаются в фильтр строго: период 29.12–11.01 попадает в оба года).
+  // returns: { ok:true, data: { vacations: [...] } }
+  listVacations: function(payload) {
+    var auth = this._requireRead(payload.token);
+    if (auth.error) return auth.error;
+
+    var sheet = this._getSheet(this.VACATIONS_SHEET);
+    if (!sheet) return { ok: false, error: 'sheet_not_found: ' + this.VACATIONS_SHEET };
+
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return { ok: true, data: { vacations: [] } };
+
+    // Читаем id (A), таб_номер (B), часть (C), дата_начала (D),
+    // дата_окончания (E), комментарий (F)
+    var values = sheet.getRange(2, 1, lastRow - 1, 6).getValues();
+    var year = payload.year ? parseInt(payload.year, 10) : null;
+    var yearStart = year ? new Date(year, 0, 1) : null;
+    var yearEnd   = year ? new Date(year + 1, 0, 1) : null;  // не включительно
+
+    var vacations = [];
+    for (var i = 0; i < values.length; i++) {
+      var r = values[i];
+      if (r[0] === '' || r[0] === null) continue;  // нет id — пустая строка
+      var startDate = r[3];
+      var endDate   = r[4];
+      if (!(startDate instanceof Date)) continue;
+      if (!(endDate instanceof Date)) endDate = startDate;
+      // Период пересекается с годом?
+      if (yearStart && (endDate.getTime() < yearStart.getTime() ||
+                        startDate.getTime() >= yearEnd.getTime())) continue;
+      var part = parseInt(r[2], 10);
+      vacations.push({
+        id:               parseInt(r[0], 10),
+        'таб_номер':      String(r[1] || '').trim(),
+        часть:            isNaN(part) ? null : part,
+        дата_начала:      this._toIsoDate(startDate),
+        дата_окончания:   this._toIsoDate(endDate),
+        дней:             Math.round((endDate.getTime() - startDate.getTime()) /
+                                     (24 * 60 * 60 * 1000)) + 1,
+        комментарий:      String(r[5] || '').trim()
+      });
+    }
+    return { ok: true, data: { vacations: vacations } };
+  },
+
   // ============================================================
   // ГЛАВНОЕ: generateMonth
   // ============================================================
@@ -408,7 +474,17 @@ var WorkSchedule = {
   //          если есть ручная запись → пропустить (manual priority)
   //          если есть авто-запись → ОБНОВИТЬ: статус=И/ОБ/ПЗ, инструкция=id
   //          иначе → вставить source=авто, статус=И/ОБ/ПЗ, инструкция=id
-  //   5. Аудит, возврат {generated, updated, skipped, perEmployee}
+  //   4.5 (Task 274) Отпуска — лист «Отпуска», ВЫСШИЙ приоритет среди
+  //        авто-источников: для каждого дня периода в этом месяце:
+  //          ручная запись → не трогать; авто-запись (смена/инструктаж/
+  //          устаревший код) → статус='О', инструкция=∅; нет записи →
+  //          вставить source=авто, статус='О'. Все календарные дни
+  //          периода (включая Сб/Вс) отмечаются «О» — отпуск в
+  //          календарных днях.
+  //          Устаревшие авто-'О' записи месяца (период изменён/удалён
+  //          в листе «Отпуска») — удаляются: повторное «Сформировать»
+  //          даёт актуальную расстановку (идемпотентность).
+  //   5. Аудит, возврат {generated, updated, removed, perEmployee}
   // ============================================================
   generateMonth: function(payload) {
     var auth = this._requireWrite(payload.token);
@@ -558,6 +634,86 @@ var WorkSchedule = {
       }
     }
 
+    // 4.5 (Task 274) Прогон по отпускам — лист «Отпуска», высший
+    // приоритет среди авто-источников (после ручных правок).
+    // Отсутствие листа «Отпуска» — НЕ ошибка: генерация работает и
+    // без плана отпусков (vocations=[]; до создания листа/деплоя).
+    var vacs = this.listVacations({ token: payload.token, year: year });
+    var vacations = (vacs.ok && vacs.data && vacs.data.vacations) ? vacs.data.vacations : [];
+    var coveredVac = {};   // "ISO|таб_номер" → период (день покрыт отпуском)
+    var vacationGenerated = 0;
+    var vacationUpdated = 0;
+
+    for (var vi = 0; vi < vacations.length; vi++) {
+      var v = vacations[vi];
+      var vStart = this._parseIsoDate(v.дата_начала);
+      var vEnd   = this._parseIsoDate(v.дата_окончания) || vStart;
+      if (!vStart) continue;
+
+      // Для каждого календарного дня периода в текущем месяце
+      // (включая Сб/Вс — отпуск в календарных днях)
+      var vc = new Date(Math.max(vStart.getTime(), monthStart.getTime()));
+      while (vc.getTime() <= vEnd.getTime()) {
+        if (vc.getMonth() + 1 === month && vc.getFullYear() === year) {
+          var isoV = this._toIsoDate(vc);
+          var keyV = isoV + '|' + v['таб_номер'];
+          coveredVac[keyV] = v;
+          var exV = entryIndex[keyV];
+          if (exV) {
+            if (exV.источник === 'руч') {
+              // ручные правки приоритетнее отпуска — не трогаем
+              if (perEmployee[v['таб_номер']]) perEmployee[v['таб_номер']].skipped++;
+            } else if (exV.статус === 'О' && !exV.инструкция) {
+              // уже отпуск (прошлая генерация) — не трогаем
+              if (perEmployee[v['таб_номер']]) perEmployee[v['таб_номер']].skipped++;
+            } else if (exV._rowIndex && exV._rowIndex > 0) {
+              // авто-запись (смена/инструктаж) → перекрыть отпуском,
+              // инструкция (I) очищается: сотрудник в отпуске
+              toUpdate.push({ rowIndex: exV._rowIndex, status: 'О', instruction_id: null });
+              exV.статус = 'О';
+              exV.инструкция = null;
+              vacationUpdated++;
+              if (perEmployee[v['таб_номер']]) perEmployee[v['таб_номер']].updated++;
+            } else {
+              // строка из toInsert (шаг 3/4) — заменить статус на «О»
+              for (var vii = 0; vii < toInsert.length; vii++) {
+                var rv = toInsert[vii];
+                if (this._toIsoDate(rv[0]) === isoV && rv[1] === v['таб_номер']) {
+                  rv[2] = 'О';   // статус
+                  rv[8] = null;  // инструкция
+                  break;
+                }
+              }
+              vacationUpdated++;
+              if (perEmployee[v['таб_номер']]) perEmployee[v['таб_номер']].updated++;
+            }
+          } else {
+            // нет записи (в т.ч. выходной по циклу) → вставить «О»
+            toInsert.push([new Date(vc), v['таб_номер'], 'О', 0, 0, 'авто', new Date(), '', null, '']);
+            entryIndex[keyV] = { _rowIndex: -1, источник: 'авто', статус: 'О', инструкция: null };
+            vacationGenerated++;
+            if (perEmployee[v['таб_номер']]) perEmployee[v['таб_номер']].generated++;
+          }
+        }
+        vc = new Date(vc.getFullYear(), vc.getMonth(), vc.getDate() + 1);
+      }
+    }
+
+    // Устаревшие авто-«О» записи месяца: сотрудник в отпуске по
+    // старому плану, текущий лист «Отпуска» день не покрывает →
+    // строка под удаление (идемпотентность повторной генерации).
+    // «ручные» записи никогда не удаляются; авто-«О», превращённые
+    // шагом 4 в код инструктажа, уже не «О» в индексе — не трогаются.
+    var toDeleteRows = [];
+    for (var sv = 0; sv < existingEntries.length; sv++) {
+      var se = existingEntries[sv];
+      if (se.статус === 'О' && se.источник === 'авто' &&
+          se._rowIndex && se._rowIndex > 0 &&
+          !coveredVac[se.дата + '|' + se['таб_номер']]) {
+        toDeleteRows.push(se._rowIndex);
+      }
+    }
+
     // 5. Запись в лист
     var insertCount = toInsert.length;
     if (insertCount > 0) {
@@ -576,9 +732,22 @@ var WorkSchedule = {
       }
     }
 
+    // 5.5 (Task 274) Удаление устаревших авто-«О» строк — ПОСЛЕ
+    // вставок/обновлений: вставленные строки добавляются НИЖЕ
+    // существующих (индексы существующих не меняются), удаление
+    // СВЕРХУ ВНИЗ сохраняет корректность индексов оставшихся.
+    var removeCount = toDeleteRows.length;
+    if (removeCount > 0) {
+      toDeleteRows.sort(function(a, b) { return b - a; });
+      for (var dr = 0; dr < toDeleteRows.length; dr++) {
+        entriesSheet.deleteRow(toDeleteRows[dr]);
+      }
+    }
+
     // 6. Аудит
     var summary = 'Сформирован график на ' + String(month).padStart(2, '0') + '.' + year +
-                  ': вставлено ' + insertCount + ', обновлено ' + updateCount;
+                  ': вставлено ' + insertCount + ', обновлено ' + updateCount +
+                  ', удалено устаревших отпусков ' + removeCount;
     try {
       Utils.audit(user.email, 'WORKSCHEDULE_GENERATE_MONTH', '', '', summary);
     } catch (e) { /* ignore */ }
@@ -588,6 +757,9 @@ var WorkSchedule = {
       data: {
         generated: insertCount,
         updated: updateCount,
+        removed: removeCount,
+        vacationGenerated: vacationGenerated,
+        vacationUpdated: vacationUpdated,
         perEmployee: perEmployee,
         monthStart: this._toIsoDate(monthStart),
         daysInMonth: daysInMonth
@@ -844,6 +1016,127 @@ var WorkSchedule = {
         try {
           Utils.audit(user.email, 'WORKSCHEDULE_DELETE_TRAINING', '', '',
             'Удалено мероприятие id=' + id);
+        } catch (e) { /* ignore */ }
+        return { ok: true, data: { id: id } };
+      }
+    }
+    return { ok: false, error: 'not_found' };
+  },
+
+  // ============================================================
+  // CRUD отпусков (Task 274 — лист «Отпуска»)
+  // ============================================================
+
+  // workSchedule.addVacation
+  // payload: { token, таб_номер, часть(1..3), дата_начала(ISO),
+  //            дата_окончания(ISO), комментарий }
+  // Валидация:
+  //   - часть 1..3 (отпуска делятся на 2–3 части в год);
+  //   - дата_окончания >= дата_начала;
+  //   - период не пересекается с уже заданными периодами сотрудника;
+  //   - номер части не дублируется в году начала периода.
+  addVacation: function(payload) {
+    var auth = this._requireWrite(payload.token);
+    if (auth.error) return auth.error;
+    var user = auth.user;
+
+    var tabNo = String(payload.таб_номер || '').trim();
+    if (!tabNo) return { ok: false, error: 'invalid_таб_номер' };
+    var part = parseInt(payload.часть, 10);
+    if (isNaN(part) || part < 1 || part > 3) {
+      return { ok: false, error: 'invalid_часть',
+               message: 'Часть отпуска — 1, 2 или 3' };
+    }
+    var startDate = this._parseIsoDate(payload.дата_начала);
+    if (!startDate) return { ok: false, error: 'invalid_дата_начала' };
+    var endDate = payload.дата_окончания ? this._parseIsoDate(payload.дата_окончания) : startDate;
+    if (!endDate) endDate = startDate;
+    if (endDate.getTime() < startDate.getTime()) {
+      return { ok: false, error: 'end_before_start',
+               message: 'Дата окончания раньше даты начала' };
+    }
+    var days = Math.round((endDate.getTime() - startDate.getTime()) /
+                          (24 * 60 * 60 * 1000)) + 1;
+    var comment = String(payload.комментарий || '').slice(0, 500);
+
+    var sheet = this._getSheet(this.VACATIONS_SHEET);
+    if (!sheet) return { ok: false, error: 'sheet_not_found: ' + this.VACATIONS_SHEET };
+
+    // Проверки по существующим периодам сотрудника
+    var lastRow = sheet.getLastRow();
+    if (lastRow >= 2) {
+      var values = sheet.getRange(2, 1, lastRow - 1, 6).getValues();
+      for (var i = 0; i < values.length; i++) {
+        var r = values[i];
+        if (r[0] === '' || r[0] === null) continue;
+        if (String(r[1] || '').trim() !== tabNo) continue;
+        var exStart = r[3] instanceof Date ? r[3] : null;
+        var exEnd   = r[4] instanceof Date ? r[4] : exStart;
+        if (!exStart) continue;
+        // Пересечение периодов одного сотрудника
+        if (endDate.getTime() >= exStart.getTime() &&
+            startDate.getTime() <= exEnd.getTime()) {
+          return { ok: false, error: 'overlap',
+                   message: 'Период пересекается с уже заданным отпуском ' +
+                            'этого сотрудника (' + this._toIsoDate(exStart) + ' — ' +
+                            this._toIsoDate(exEnd) + ')' };
+        }
+        // Дубль номера части в том же году (год даты начала периода)
+        var exPart = parseInt(r[2], 10);
+        if (exPart === part && exStart.getFullYear() === startDate.getFullYear()) {
+          return { ok: false, error: 'duplicate_часть',
+                   message: 'Часть ' + part + ' у этого сотрудника уже задана на ' +
+                            startDate.getFullYear() + ' год' };
+        }
+      }
+    }
+
+    // max id в столбце A
+    var maxId = 0;
+    if (lastRow >= 2) {
+      var ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+      for (var j = 0; j < ids.length; j++) {
+        var v = parseInt(ids[j][0], 10);
+        if (!isNaN(v) && v > maxId) maxId = v;
+      }
+    }
+    var newId = maxId + 1;
+
+    sheet.appendRow([newId, tabNo, part, startDate, endDate, comment]);
+
+    try {
+      Utils.audit(user.email, 'WORKSCHEDULE_ADD_VACATION', '', '',
+        'Добавлен отпуск id=' + newId + ' часть=' + part +
+        ' таб_номер=' + tabNo + ' ' + this._toIsoDate(startDate) + '…' +
+        this._toIsoDate(endDate) + ' (' + days + ' дн.)');
+    } catch (e) { /* ignore */ }
+
+    return { ok: true, data: { id: newId, дней: days } };
+  },
+
+  // workSchedule.deleteVacation
+  // payload: { token, id }
+  deleteVacation: function(payload) {
+    var auth = this._requireWrite(payload.token);
+    if (auth.error) return auth.error;
+    var user = auth.user;
+
+    var id = parseInt(payload.id, 10);
+    if (isNaN(id)) return { ok: false, error: 'invalid_id' };
+
+    var sheet = this._getSheet(this.VACATIONS_SHEET);
+    if (!sheet) return { ok: false, error: 'sheet_not_found: ' + this.VACATIONS_SHEET };
+
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return { ok: false, error: 'not_found' };
+
+    var ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    for (var i = 0; i < ids.length; i++) {
+      if (parseInt(ids[i][0], 10) === id) {
+        sheet.deleteRow(i + 2);
+        try {
+          Utils.audit(user.email, 'WORKSCHEDULE_DELETE_VACATION', '', '',
+            'Удалён отпуск id=' + id);
         } catch (e) { /* ignore */ }
         return { ok: true, data: { id: id } };
       }

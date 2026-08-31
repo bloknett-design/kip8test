@@ -198,6 +198,17 @@ function doPost(e) {
       case 'workSchedule.deleteTraining':
         return _json(WorkSchedule.deleteTraining(payload));
 
+      // Task 274: отпуска — план периодов (лист «Отпуска» таблицы
+      // табель_КИП_ИОС), автоматическая расстановка «О» в шахматке
+      case 'workSchedule.listVacations':
+        return _json(WorkSchedule.listVacations(payload));
+
+      case 'workSchedule.addVacation':
+        return _json(WorkSchedule.addVacation(payload));
+
+      case 'workSchedule.deleteVacation':
+        return _json(WorkSchedule.deleteVacation(payload));
+
       default:
         return _json({ ok: false, error: 'Unknown action: ' + action });
     }
