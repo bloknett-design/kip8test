@@ -582,10 +582,10 @@ describe('Task 260: интеграция в index.html', () => {
         assertTrue(html.indexOf('.ws-cal-panel {') !== -1,
             'стили окошка календаря в тулбаре');
     });
-    test('SW: версия кэша kipia-test-v524 (Task 269)', () => {
+    test('SW: версия кэша kipia-test-v525 (Task 270)', () => {
         const sw = fs.readFileSync(path.resolve(__dirname, '..', 'sw.js'), 'utf8');
-        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v524'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v524');
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v525'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v525');
     });
     test('Тултип ячейки содержит название праздника', () => {
         assertTrue(html.indexOf('titleParts.splice(1, 0, cellInfo.title);') !== -1,
@@ -1168,8 +1168,8 @@ describe('Task 266: окошко столбиками, слева в баре �
             'столбик праздников в renderPanel');
     });
     test('CSS: статическая высота окошка + скролл внутри', () => {
-        assertTrue(/\.ws-cal-panel \{[^}]*height:\s*120px/.test(html),
-            'фиксированная высота окошка (мобильная база, Task 269 — 120px)');
+        assertTrue(/\.ws-cal-panel \{[^}]*height:\s*95px/.test(html),
+            'фиксированная высота окошка (Task 270 — 95px, под 5 строк)');
         assertTrue(/\.ws-cal-panel \{[^}]*overflow-y:\s*auto/.test(html),
             'полоса прокрутки, если столбики не входят');
         assertTrue(/\.ws-cal-panel \{[^}]*overscroll-behavior:\s*contain/.test(html),
@@ -1185,9 +1185,9 @@ describe('Task 266: окошко столбиками, слева в баре �
         assertTrue(/\.ws-toolbar-main \{[^}]*flex-wrap:\s*nowrap/.test(html),
             'ряд кнопок на десктопе — в одну строку');
     });
-    test('CSS: высота бара на десктопе — 120px (статическая, Task 269)', () => {
-        const re = /@media \(min-width: 1024px\) \{[\s\S]*?\.ws-cal-panel \{[^}]*height:\s*120px/s;
-        assertTrue(re.test(html), 'десктопная высота окошка — 120px');
+    test('CSS: высота бара на десктопе — 95px (статическая, Task 270)', () => {
+        const re = /@media \(min-width: 1024px\) \{[\s\S]*?\.ws-cal-panel \{[^}]*height:\s*95px/s;
+        assertTrue(re.test(html), 'десктопная высота окошка — 95px (под 5 строк)');
     });
     test('JS: убраны источник и время обновления из окошка', () => {
         // строки источника больше нет ни в JS, ни в CSS окошка

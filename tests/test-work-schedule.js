@@ -1197,8 +1197,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v514 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v524") !== -1,
-                'Актуальная версия — kipia-test-v524 (Task 269)');
+            assertTrue(sw.indexOf("kipia-test-v525") !== -1,
+                'Актуальная версия — kipia-test-v525 (Task 270)');
         });
         test('Старая версия v514 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v514") === -1,
@@ -1261,8 +1261,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v516 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v524") !== -1,
-                'Актуальная версия — kipia-test-v524 (Task 269)');
+            assertTrue(sw.indexOf("kipia-test-v525") !== -1,
+                'Актуальная версия — kipia-test-v525 (Task 270)');
         });
     });
 
@@ -1273,8 +1273,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v515 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v524") !== -1,
-                'Актуальная версия — kipia-test-v524 (Task 269)');
+            assertTrue(sw.indexOf("kipia-test-v525") !== -1,
+                'Актуальная версия — kipia-test-v525 (Task 270)');
         });
     });
 
@@ -1284,8 +1284,8 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
         test('v513 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v524") !== -1,
-                'Актуальная версия — kipia-test-v524');
+            assertTrue(sw.indexOf("kipia-test-v525") !== -1,
+                'Актуальная версия — kipia-test-v525');
         });
     });
 
@@ -1478,8 +1478,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v517 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v524") !== -1,
-                'Актуальная версия — kipia-test-v524 (Task 269)');
+            assertTrue(sw.indexOf("kipia-test-v525") !== -1,
+                'Актуальная версия — kipia-test-v525 (Task 270)');
         });
         test('Старая версия v517 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v517") === -1,
@@ -1493,9 +1493,9 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v524', () => {
-            assertTrue(sw.indexOf("kipia-test-v524") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v524 (Task 267)');
+        test('CACHE_VERSION = kipia-test-v525', () => {
+            assertTrue(sw.indexOf("kipia-test-v525") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v525 (Task 270)');
         });
         test('Старая версия v517 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v517") === -1,
@@ -1855,9 +1855,9 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v524', () => {
-            assertTrue(sw.indexOf("kipia-test-v524") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v524 (Task 269)');
+        test('CACHE_VERSION = kipia-test-v525', () => {
+            assertTrue(sw.indexOf("kipia-test-v525") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v525 (Task 270)');
         });
         test('Старая версия v523 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v523") === -1,
@@ -1922,7 +1922,7 @@ describe('График работы — WorkSchedule', () => {
         });
     });
 
-    describe('Task 269: окно уже — ширина по тексту, высота 120px', () => {
+    describe('Task 269: окно уже — ширина по тексту; Task 270: высота под 5 строк', () => {
         const fs = require('fs');
         const path = require('path');
         const indexPath = path.resolve(__dirname, '..', 'index.html');
@@ -1935,11 +1935,13 @@ describe('График работы — WorkSchedule', () => {
                 'окно не шире бара');
         });
 
-        test('CSS: статическая высота 120px (мобильная база + десктоп)', () => {
-            assertTrue(/\.ws-cal-panel \{[^}]*height:\s*120px/.test(html),
-                'высота окна — 120px в базовом правиле');
-            const re = /@media \(min-width: 1024px\) \{[\s\S]*?\.ws-cal-panel \{[^}]*height:\s*120px/s;
-            assertTrue(re.test(html), 'высота окна на десктопе — те же 120px');
+        test('CSS: статическая высота 95px — ПОД ПЯТЬ СТРОК (Task 270)', () => {
+            assertTrue(/\.ws-cal-panel \{[^}]*height:\s*95px/.test(html),
+                'высота окна — 95px в базовом правиле (плашка + 4 строки часов)');
+            const re = /@media \(min-width: 1024px\) \{[\s\S]*?\.ws-cal-panel \{[^}]*height:\s*95px/s;
+            assertTrue(re.test(html), 'высота окна на десктопе — те же 95px');
+            assertFalse(/\.ws-cal-panel \{[^}]*height:\s*120px/.test(html),
+                'старая высота 120px (Task 269) заменена');
         });
     });
 
@@ -2011,6 +2013,99 @@ describe('График работы — WorkSchedule', () => {
         test('HTML: #wsEmpty больше не использует admin-empty', () => {
             assertFalse(/<div class="admin-empty" id="wsEmpty"/.test(html),
                 'старая разметка admin-empty (14px, приглушённый цвет) удалена');
+        });
+    });
+
+    // ============================================================
+    // Task 270: окошко календаря — высота под 5 строк, светлый фон
+    // темнее, плашки-заголовки столбцов с цветным фоном и ярким
+    // текстом, узкий бар с отступами 5px
+    // ============================================================
+
+    describe('Task 270: заголовки столбцов — плашки с цветным фоном, текст ярче', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('CSS: .ws-cp-cap — плашка (inline-block + padding, обнимает текст)', () => {
+            assertTrue(/\.ws-cp-cap \{[^}]*display:\s*inline-block/.test(html),
+                'заголовок — inline-block плашка, а не растянутая строка');
+            assertTrue(/\.ws-cp-cap \{[^}]*padding:\s*1px 7px/.test(html),
+                'плашка с внутренними отступами 1px 7px');
+            assertTrue(/\.ws-cp-cap \{[^}]*align-self:\s*flex-start/.test(html),
+                'плашка не тянется на ширину столбика (align-self: flex-start)');
+            assertTrue(/\.ws-cp-cap \{[^}]*border-radius:\s*2px/.test(html),
+                'скругление 2px — как у чипов дней');
+        });
+
+        test('CSS: плашка «Норма» — синий фон, яркий текст', () => {
+            const re = /\.ws-cp-norms > \.ws-cp-cap \{[^}]*background:\s*rgba\(74, 143, 199, 0\.22\);[^}]*color:\s*#93c1ea;/s;
+            assertTrue(re.test(html),
+                'цветовое разграничение: заголовок норм — синяя плашка, текст яркий #93c1ea');
+        });
+
+        test('CSS: плашка «Праздники» — красный фон, яркий текст', () => {
+            const re = /\.ws-cp-days > \.ws-cp-cap \{[^}]*background:\s*rgba\(255, 107, 107, 0\.20\);[^}]*color:\s*#ff9c9c;/s;
+            assertTrue(re.test(html),
+                'заголовок праздников — красная плашка, текст яркий #ff9c9c');
+        });
+
+        test('CSS: плашки РАЗНЫЕ — синий ≠ красный (цветовое разграничение)', () => {
+            const norms = html.match(/\.ws-cp-norms > \.ws-cp-cap \{[^}]*\}/s);
+            const days = html.match(/\.ws-cp-days > \.ws-cp-cap \{[^}]*\}/s);
+            assertTrue(norms && days && norms[0] !== days[0],
+                'у заголовков норм и праздников — разные цвета фона');
+        });
+
+        test('CSS: светлая тема — плашки сохраняют смысловые цвета, текст ярче', () => {
+            const reN = /\[data-theme="light"\] \.ws-cp-norms > \.ws-cp-cap \{[^}]*background:\s*rgba\(74, 143, 199, 0\.16\);[^}]*color:\s*#1d5f96;/s;
+            assertTrue(reN.test(html),
+                'светлая тема: норм — синяя плашка, насыщенный текст #1d5f96 (ярче серого #999)');
+            const reD = /\[data-theme="light"\] \.ws-cp-days > \.ws-cp-cap \{[^}]*background:\s*rgba\(255, 107, 107, 0\.15\);[^}]*color:\s*#b02c2c;/s;
+            assertTrue(reD.test(html),
+                'светлая тема: праздники — красная плашка, насыщенный текст #b02c2c');
+        });
+
+        test('CSS: светлая тема — .ws-cp-cap больше НЕ перекрашивается в серый', () => {
+            assertFalse(/\[data-theme="light"\] \.ws-cp-cap,/.test(html),
+                'старое правило серого заголовка в светлой теме удалено');
+        });
+    });
+
+    describe('Task 270: светлая тема — окно темнее, бар узкий с отступами 5px', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.resolve(__dirname, '..', 'index.html');
+        const html = fs.readFileSync(indexPath, 'utf8');
+
+        test('CSS: светлая тема — фон окна #e9e7de (темнее белого и тулбара)', () => {
+            const re = /\[data-theme="light"\] \.ws-cal-panel \{[^}]*background:\s*#e9e7de;/s;
+            assertTrue(re.test(html),
+                'окно в светлой теме — на тон темнее (#e9e7de вместо #fff): ' +
+                'углублённый блок данных, не выбеливается на баре #f0eee6');
+            assertFalse(/\[data-theme="light"\] \.ws-cal-panel \{[^}]*background:\s*#fff;/s.test(html),
+                'белый фон окна в светлой теме убран');
+        });
+
+        test('CSS: отступы бара — 5px со всех сторон (базовое правило)', () => {
+            assertTrue(/\.ws-toolbar \{[^}]*padding:\s*5px;/.test(html),
+                'внутренние отступы тулбара — 5px (было 8px 12px)');
+        });
+
+        test('CSS: десктоп — зазор между рядом кнопок и окном 5px', () => {
+            const re = /@media \(min-width: 1024px\) \{[\s\S]*?\.ws-toolbar \{[^}]*gap:\s*5px;/s;
+            assertTrue(re.test(html), 'десктопный зазор в баре — 5px (было 12px)');
+        });
+
+        test('CSS: бар узкий — высота задаётся окном 95px, без лишних мин-высот', () => {
+            // окно 95px + 2×5px отступа + рамка 1px = 106px: бар обнимает окно
+            assertTrue(/\.ws-cal-panel \{[^}]*height:\s*95px/.test(html),
+                'высота окна — 95px: бар сужается по высоте окошка');
+            assertFalse(/\.ws-toolbar \{[^}]*min-height/.test(html),
+                'у тулбара нет независимой мин-высоты — бар по содержимому');
+            assertFalse(/\.ws-toolbar \{[^}]*padding:\s*8px 12px/.test(html),
+                'старые отступы 8px 12px убраны');
         });
     });
 });
