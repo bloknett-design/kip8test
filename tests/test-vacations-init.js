@@ -186,6 +186,47 @@ describe('Task 275: VacationsInit.gs — инициализация листа �
             'условие пересечения интервалов неполное');
     });
 
+    test('регрессия Task 276: setHelpTitle не используется (метода нет — TypeError)', () => {
+        // Реальный инцидент при первом запуске 2026-08-31:
+        // TypeError: ...setAllowInvalid(...).setHelpTitle is not a function
+        // У DataValidationBuilder существует ТОЛЬКО setHelpText.
+        // Ищем ВЫЗОВ «.setHelpTitle(», а не упоминание в комментариях.
+        const gs = fs.readFileSync(gsPath, 'utf8');
+        assertFalse(/\.\s*setHelpTitle\s*\(/.test(gs),
+            'setHelpTitle не существует у DataValidationBuilder (Apps Script) — удалить');
+    });
+
+    test('цепочки валидаций — только существующие методы DataValidationBuilder', () => {
+        // Белый список документированных методов Apps Script, которые
+        // разрешены в цепочках newDataValidation()...build().
+        const gs = fs.readFileSync(gsPath, 'utf8');
+        const allowed = ['requireNumberBetween', 'requireValueInRange',
+                         'setAllowInvalid', 'setHelpText'];
+        const re = /newDataValidation\(\)([\s\S]*?)\.build\(\)/g;
+        let found = 0;
+        let m;
+        while ((m = re.exec(gs)) !== null) {
+            found++;
+            const calls = m[1].match(/\.\s*(\w+)\(/g) || [];
+            for (const c of calls) {
+                const name = c.replace(/[^a-zA-Z]/g, '');
+                assertTrue(allowed.indexOf(name) !== -1,
+                    'DataValidationBuilder.' + name + ' — недокументированный метод (TypeError)');
+            }
+        }
+        assertEqual(found, 2, 'ожидались 2 правила валидации (часть + таб_номер)');
+    });
+
+    test('подсветка не срабатывает на черновики без дат (guards «<>»)', () => {
+        const gs = fs.readFileSync(gsPath, 'utf8');
+        // Строка с заполненным только таб_номер (без D/E) не должна
+        // подсвечивать валидные периоды того же сотрудника
+        assertTrue(gs.indexOf('$D2<>"", $E2<>""') !== -1,
+            'guards непустых дат текущей строки не найдены');
+        assertTrue(gs.indexOf('$D$2:$D,"<>"') !== -1 && gs.indexOf('$E$2:$E,"<>"') !== -1,
+            'COUNTIFS должен считать только заполненные периоды');
+    });
+
     test('инициализатор не пишет данные при повторном запуске (без force)', () => {
         const gs = fs.readFileSync(gsPath, 'utf8');
         // appendRow в VacationsInit.gs — только в vacationsSeedDemo

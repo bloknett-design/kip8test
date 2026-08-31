@@ -1732,3 +1732,46 @@ Stage Summary:
 - Перенос в kip8 — после деплоя и проверки пользователем.
   Следующий номер: 276.
 - Локальная дата: 2026-08-31 (Asia/Novosibirsk, UTC+07:00).
+
+---
+Task ID: 276
+Agent: main (Super Z)
+Task: Hotfix VacationsInit.gs — TypeError при первом запуске
+      vacationsInitSheet (журнал пользователя: «Лист «Отпуска» создан»
+      → TypeError ...setAllowInvalid(...).setHelpTitle is not a function,
+      VacationsInit.gs:139).
+
+Work Log:
+- Причина: у Apps Script DataValidationBuilder НЕТ метода setHelpTitle
+  (существует только setHelpText) — оба правила валидации (часть 1..3,
+  таб_номер из «Сотрудники») рушились на цепочке. Лист успел создаться,
+  шапка/формат/ширины/freeze применены; НЕ применились: обе валидации,
+  подсветка пересечений.
+- Fix: убраны оба вызова .setHelpTitle, текст заголовка влит в
+  setHelpText; комментарий-предостережение в коде (Task 276).
+- Усиление: формула подсветки пересечений получила guards
+  «$D2<>"", $E2<>""» + критерии «<>» (непустые) в COUNTIFS —
+  черновик-строка с одним таб_номер (без дат) не подсвечивает
+  валидные периоды того же сотрудника.
+- Мелочь: опечатка «демо-периусы» → «демо-периоды» в совете лога.
+- Тесты: +3 регрессии в tests/test-vacations-init.js —
+  1) отсутствие ВЫЗОВА .setHelpTitle( (упоминание в комментарии
+  допустимо); 2) белый список методов цепочек newDataValidation…build
+  (requireNumberBetween / requireValueInRange / setAllowInvalid /
+  setHelpText; count правил = 2); 3) guards «<>» в формуле подсветки.
+  Прогон: 1157 passed / 0 failed (было 1154, +3).
+- Кэш НЕ поднимался (фронтенд не менялся). Пользователю: повторно
+  запустить vacationsInitSheet() БЕЗ force — идемпотентно доконфигу-
+  рирует валидации и подсветку поверх созданного листа.
+- Коммит + push (PAT-протокол). Копии → download/kip8test/.
+
+Stage Summary:
+- Task 276 (hotfix) готов: vacationsInitSheet выполняется до конца —
+  setHelpTitle убран (метода нет в Apps Script), подсветка устойчива
+  к черновикам. Регресс-тесты закрепляют API-ограничение.
+  1157 тестов; кэш v527 без изменений.
+- Порядок деплоя Task 274 не изменился: 1) VacationsInit.gs ▶ Run
+  (повторный запуск — ок); 2) WorkSchedule.gs; 3) 3 case Code.gs;
+  4) New version.
+- Следующий номер: 277.
+- Локальная дата: 2026-08-31 (Asia/Novosibirsk, UTC+07:00).

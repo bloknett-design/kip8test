@@ -133,11 +133,12 @@ function vacationsInitSheet(force) {
   // --- Валидация: часть = целое 1..3 (ст. 125 ТК РФ) ---
   // addVacation отклонит неверную часть на сервере; валидация
   // помогает при ручном редактировании листа.
+  // ВАЖНО: у DataValidationBuilder НЕТ метода setHelpTitle — только
+  // setHelpText (иначе TypeError, Task 276). Не добавлять.
   var partRule = SpreadsheetApp.newDataValidation()
     .requireNumberBetween(1, 3)
     .setAllowInvalid(false)
-    .setHelpTitle('Часть отпуска')
-    .setHelpText('Отпуск делится на 1–3 части в год (ст. 125 ТК РФ). Введите 1, 2 или 3.')
+    .setHelpText('Часть отпуска: введите 1, 2 или 3 (ст. 125 ТК РФ — отпуск делится на 1–3 части в год).')
     .build();
   sheet.getRange(2, 3, VALIDATION_ROWS - 1, 1).setDataValidation(partRule);
 
@@ -148,8 +149,7 @@ function vacationsInitSheet(force) {
     var empRule = SpreadsheetApp.newDataValidation()
       .requireValueInRange(empRange, true)  // true — показывать список
       .setAllowInvalid(false)
-      .setHelpTitle('Табельный номер')
-      .setHelpText('Выберите табельный номер сотрудника из листа «Сотрудники».')
+      .setHelpText('Табельный номер: выберите сотрудника из листа «Сотрудники».')
       .build();
     sheet.getRange(2, 2, VALIDATION_ROWS - 1, 1).setDataValidation(empRule);
     Logger.log('Выпадающий список таб_номер: ' + (empSheet.getLastRow() - 1) +
@@ -163,8 +163,11 @@ function vacationsInitSheet(force) {
   // Сервер addVacation отклоняет пересечения; при РУЧНОМ заполнении
   // пересекающиеся периоды подсвечиваются красным. Периоды
   // [s1..e1] и [s2..e2] пересекаются, если s1 <= e2 и e1 >= s2.
+  // «<>» (непустые) в COUNTIFS и guards $D2/$E2 — черновики без
+  // дат (заполнен только таб_номер) не дают ложных пересечений.
   var overlapRange = sheet.getRange(2, 4, VALIDATION_ROWS - 1, 2);  // D2:E1000
-  var overlapFormula = 'AND($B2<>"", COUNTIFS($B$2:$B,$B2,' +
+  var overlapFormula = 'AND($B2<>"", $D2<>"", $E2<>"", ' +
+    'COUNTIFS($B$2:$B,$B2, $D$2:$D,"<>", $E$2:$E,"<>", ' +
     '$D$2:$D,"<="&$E2, $E$2:$E,">="&$D2) > 1)';
   var overlapRule = SpreadsheetApp.newConditionalFormatRule()
     .whenFormulaSatisfied(overlapFormula)
@@ -188,7 +191,7 @@ function vacationsInitSheet(force) {
              'scripts/DEPLOY-Task274-vacations.md.');
   if (dataRows === 0) {
     Logger.log('Совет: для быстрой проверки запустите vacationsSeedDemo() — ' +
-               'демо-периусы 017 (3 части) и 023 (1 часть).');
+               'демо-периоды 017 (3 части) и 023 (1 часть).');
   }
   return { sheet: SHEET_NAME, rows: dataRows, created: created, force: !!force };
 }
