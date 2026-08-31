@@ -1669,3 +1669,66 @@ Stage Summary:
 - Перенос в боевой kip8 — после проверки пользователем (и деплоя
   серверной части); следующая партия — Task 275+.
 - Локальная дата: 2026-08-31 (Asia/Novosibirsk, UTC+07:00).
+
+---
+Task ID: 275
+Agent: main (Super Z)
+Task: Скрипт автоматического создания листа «Отпуска» в табель_КИП_ИОС
+      (автоматизация шага 1 деплоя Task 274 — вместо ручного
+      создания листа и заголовков).
+
+Work Log:
+- Изучил паттерн scripts/FlowmeterInit.gs (одноразовая инициализация
+  листа из Apps Script) и серверное чтение/запись «Отпуска» в
+  WorkSchedule.gs (listVacations: A id / B таб_номер / C часть /
+  D-E даты / F комментарий, чтение со строки 2, даты — только
+  instanceof Date; addVacation: appendRow 6 полей, id = max + 1).
+- Новый scripts/VacationsInit.gs:
+  • vacationsInitSheet([force]) — создаёт/чинит лист «Отпуска»:
+    шапка A1–F1 (канонизация/починка; данные в строке 1 сдвигаются
+    вниз insertRowBefore — раньше приложение их не видело),
+    форматирование (синяя шапка #4a86e8, freeze строки 1, ширины
+    столбцов, форматы A/C «0», D/E «dd.mm.yyyy» по открытым
+    диапазонам A2:A — новые строки наследуют), валидации
+    (C2:C1000 — целое 1..3 requireNumberBetween; B2:B1000 —
+    выпадающий список таб_номер из листа «Сотрудники»
+    requireValueInRange), условное форматирование D2:E1000 —
+    красный фон пересекающихся периодов одного сотрудника
+    (COUNTIFS, s1<=e2 && e1>=s2; правила листа заменяются целиком —
+    идемпотентность). Идемпотентен: повторный запуск данные НЕ
+    трогает; force=true — полная перестройка (данные удаляются).
+  • vacationsSeedDemo([force]) — демо-периоды из DEPLOY-дока
+    (017: 3 части 14+10+4=28 дн.; 023: 1 часть 14 дн.), даты —
+    Date objects (new Date(2026, …)), appendRow в формате addVacation,
+    id от max id + 1, только на пустой лист (или force); проверка
+    существования таб_номер в «Сотрудники» с предупреждением в лог
+    (страница «Отпуска» строится join'ом по сотрудникам).
+- DEPLOY-Task274-vacations.md: шаг 1 переписан на автоматический
+  (скопировать VacationsInit.gs в проект Apps Script → ▶ Run
+  vacationsInitSheet); исправлена опечатка SPREADSHEET_ID в доке
+  (SAeVll → SAeVBll — как в WorkSchedule.gs).
+- Тесты: tests/test-vacations-init.js (17 проверок: совпадение
+  SHEET_NAME/SPREADSHEET_ID с WorkSchedule.gs, заголовки A–F,
+  порядок столбцов listVacations, даты демо = Date objects (8 шт.),
+  математика периодов 14+10+4=28, таб/части демо, идемпотентность
+  force/clear, insertRowBefore строки 1, requireNumberBetween(1,3),
+  requireValueInRange, appendRow 6 полей, maxId++, COUNTIFS-подсветка,
+  appendRow только в seedDemo) + подключение в run-all.js.
+  Прогон: 1154 passed / 0 failed (было 1137, +17).
+- Псевдо-опечатка FlowmeterInit.gs (строка 77) — артефакт отображения
+  Bash-вывода (съедается «[h»); по od -c файл корректен, не правил.
+- Кэш НЕ поднимается: index.html/sw.js не изменялись (прецедент
+  dd6ecbe — docs-only коммит без версии); фронтенд не затронут.
+- Коммит + push в main (PAT-протокол). Копии → download/kip8test/.
+
+Stage Summary:
+- Task 275 готов: scripts/VacationsInit.gs — автоматическое создание
+  листа «Отпуска» (шаг 1 деплоя Task 274 теперь одна кнопка ▶ Run):
+  шапка/формат/валидации/подсветка пересечений + демо-данные для
+  проверки. DEPLOY-док обновлён, опечатка ID исправлена.
+  1154 теста, kip8test (без поднятия кэша — фронтенд не менялся).
+- Порядок деплоя Task 274: 1) VacationsInit.gs ▶ Run; 2) замена
+  WorkSchedule.gs; 3) три case в Code.gs; 4) New version.
+- Перенос в kip8 — после деплоя и проверки пользователем.
+  Следующий номер: 276.
+- Локальная дата: 2026-08-31 (Asia/Novosibirsk, UTC+07:00).
