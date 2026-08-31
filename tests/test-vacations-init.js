@@ -23,6 +23,10 @@
 // + регрессии Task 276 (setHelpTitle не существует) и Task 277
 //   (setRanges обязателен, формула с «=», методы билдеров из белых
 //   списков — по реальным инцидентам в Apps Script).
+// + регрессии Task 281 (ручной ввод таб. номера отвергался
+//   валидацией): B2:B — формат «@» (текст), список валидации на
+//   весь лист «Сотрудники», числовые таб. канонизируются в текст
+//   (и в «Сотрудники»!A, и в «Отпуска»!B — однозначное сопоставление).
 
 const fs = require('fs');
 const path = require('path');
@@ -270,5 +274,92 @@ describe('Task 275: VacationsInit.gs — инициализация листа �
         const appendPos = gs.indexOf('sheet.appendRow(');
         assertTrue(seedStart !== -1 && appendPos !== -1 && appendPos > seedStart,
             'appendRow должен использоваться только в vacationsSeedDemo');
+    });
+});
+
+// ============================================================
+// Task 281: ручной ввод таб. номера в «Отпуска»!B отвергался
+// валидацией («Произошла ошибка. Табельный номер: выберите
+// сотрудника из листа «Сотрудники»»). Причина: столбец B был
+// формата «Авто» — ручной ввод «017»/«17» превращался в ЧИСЛО,
+// а список requireValueInRange в «Сотрудники»!A — текст; сравнение
+// СТРОГОЕ по типу → любой ручной ввод отвергался. Фикс: B2:B —
+// формат «@» (текст), список валидации — на весь лист
+// «Сотрудники», числовые таб. канонизируются в текст.
+// ============================================================
+describe('Task 281: таб_номер — текстовый формат и самолечение', () => {
+
+    test('столбец B — формат «@»: ручной ввод «017» не превращается в число', () => {
+        const gs = fs.readFileSync(gsPath, 'utf8');
+        assertTrue(gs.indexOf("getRange('B2:B').setNumberFormat('@')") !== -1,
+            "B2:B должен получить формат '@' — иначе «017» → число 17 и валидация отвергает");
+    });
+
+    test('формат B «@» ставится до блока нормализации (работает и при пустом листе)', () => {
+        const gs = fs.readFileSync(gsPath, 'utf8');
+        const fmtPos = gs.indexOf("getRange('B2:B').setNumberFormat('@')");
+        const normPos = gs.indexOf('--- Task 279: нормализация данных');
+        assertTrue(fmtPos !== -1 && normPos !== -1 && fmtPos < normPos,
+            'формат B должен применяться всегда, а не только при наличии данных');
+    });
+
+    test('A и C остаются числовыми форматами («0»), B — единственный текстовый', () => {
+        const gs = fs.readFileSync(gsPath, 'utf8');
+        assertTrue(gs.indexOf("getRange('A2:A').setNumberFormat('0')") !== -1,
+            'id — числовой формат «0»');
+        assertTrue(gs.indexOf("getRange('C2:C').setNumberFormat('0')") !== -1,
+            'часть — числовой формат «0»');
+    });
+
+    test('список валидации — на весь лист «Сотрудники» (getMaxRows, не getLastRow)', () => {
+        const gs = fs.readFileSync(gsPath, 'utf8');
+        assertTrue(/var empRows = Math\.max\(empSheet\.getMaxRows\(\) - 1,\s*\n?\s*empSheet\.getLastRow\(\) - 1, 1\);/.test(gs),
+            'empRows = max(getMaxRows, getLastRow, 1) не найден');
+        assertTrue(gs.indexOf('empSheet.getRange(2, 1, empRows, 1)') !== -1,
+            'валидация должна охватывать весь лист — новые сотрудники попадают в список');
+    });
+
+    test('валидация не ослаблена: requireValueInRange + setAllowInvalid(false)', () => {
+        const gs = fs.readFileSync(gsPath, 'utf8');
+        assertTrue(gs.indexOf('requireValueInRange(empRange, true)') !== -1,
+            'requireValueInRange(empRange, true) должен остаться');
+        assertTrue(gs.indexOf('.setAllowInvalid(false)') !== -1,
+            'режим отклонения ввода должен сохраниться');
+    });
+
+    test('числовые таб. номера в «Сотрудники»!A канонизируются в текст (typeof number)', () => {
+        const gs = fs.readFileSync(gsPath, 'utf8');
+        assertTrue(/typeof empTabVal === 'number'/.test(gs),
+            'проверка typeof number для таб. номера «Сотрудники» не найдена');
+        assertTrue(gs.indexOf('empSheet.getRange(te + 2, 1).setValue(String(empTabVal))') !== -1,
+            'канонизация должна конвертировать число в строку');
+    });
+
+    test('канонизация «Сотрудники» пишет ТОЛЬКО в столбец A (таб. номер)', () => {
+        const gs = fs.readFileSync(gsPath, 'utf8');
+        const writes = [...gs.matchAll(/empSheet\.getRange\(([^)]+)\)\.setValue/g)];
+        assertTrue(writes.length > 0, 'записи в «Сотрудники» не найдены');
+        for (const w of writes) {
+            assertEqual(w[1].replace(/\s+/g, ''), 'te+2,1',
+                'запись в «Сотрудники» вне столбца A: ' + w[1]);
+        }
+    });
+
+    test('таб_номер-число в «Отпуска»!B заменяется текстовым табом (однозначно)', () => {
+        const gs = fs.readFileSync(gsPath, 'utf8');
+        assertTrue(/typeof normVals\[ni\]\[1\] === 'number'/.test(gs),
+            'проверка числа в столбце B «Отпуска» не найдена');
+        assertTrue(gs.indexOf('sheet.getRange(normRow, 2).setValue(tabByNum[numTab])') !== -1,
+            'числовой таб должен заменяться текстовым из «Сотрудники»');
+        assertTrue(gs.indexOf('!tabAmbiguous[numTab]') !== -1,
+            'неоднозначные соответствия («017» и «17») должны пропускаться');
+    });
+
+    test('итоговый лог самолечения включает счётчик таб_номер-чисел', () => {
+        const gs = fs.readFileSync(gsPath, 'utf8');
+        assertTrue(gs.indexOf('idsFixed > 0 || datesFixed > 0 || tabsFixed > 0') !== -1,
+            'условие итогового лога не учитывает tabsFixed');
+        assertTrue(gs.indexOf('таб_номер-чисел исправлено: ') !== -1,
+            'счётчик исправленных таб. номеров в логе не найден');
     });
 });
