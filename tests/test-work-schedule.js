@@ -1200,8 +1200,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v514 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v527") !== -1,
-                'Актуальная версия — kipia-test-v527 (Task 272)');
+            assertTrue(sw.indexOf("kipia-test-v528") !== -1,
+                'Актуальная версия — kipia-test-v528 (Task 272)');
         });
         test('Старая версия v514 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v514") === -1,
@@ -1264,8 +1264,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v516 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v527") !== -1,
-                'Актуальная версия — kipia-test-v527 (Task 272)');
+            assertTrue(sw.indexOf("kipia-test-v528") !== -1,
+                'Актуальная версия — kipia-test-v528 (Task 272)');
         });
     });
 
@@ -1276,8 +1276,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v515 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v527") !== -1,
-                'Актуальная версия — kipia-test-v527 (Task 272)');
+            assertTrue(sw.indexOf("kipia-test-v528") !== -1,
+                'Актуальная версия — kipia-test-v528 (Task 272)');
         });
     });
 
@@ -1287,8 +1287,8 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
         test('v513 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v527") !== -1,
-                'Актуальная версия — kipia-test-v527');
+            assertTrue(sw.indexOf("kipia-test-v528") !== -1,
+                'Актуальная версия — kipia-test-v528');
         });
     });
 
@@ -1481,8 +1481,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v517 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v527") !== -1,
-                'Актуальная версия — kipia-test-v527 (Task 272)');
+            assertTrue(sw.indexOf("kipia-test-v528") !== -1,
+                'Актуальная версия — kipia-test-v528 (Task 272)');
         });
         test('Старая версия v517 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v517") === -1,
@@ -1496,9 +1496,9 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v527', () => {
-            assertTrue(sw.indexOf("kipia-test-v527") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v527 (Task 272)');
+        test('CACHE_VERSION = kipia-test-v528', () => {
+            assertTrue(sw.indexOf("kipia-test-v528") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v528 (Task 272)');
         });
         test('Старая версия v517 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v517") === -1,
@@ -1583,24 +1583,29 @@ describe('График работы — WorkSchedule', () => {
             (sb.listeners.keydown || []).forEach(fn => fn({ key, target: target || null }));
         };
 
-        test('HTML: generateYear — kipConfirm с заголовком «Формирование шахматки» и кнопкой «Сформировать»', () => {
-            assertTrue(html.indexOf("{ title: 'Формирование шахматки', okText: 'Сформировать' }") !== -1,
-                'опции диалога: title + okText');
-            assertTrue(/kipConfirm\('Сформировать шахматку на ' \+ this\._year \+ ' год \\(все 12 месяцев\\\?\\)'/.test(html) ||
-                       html.indexOf("'Сформировать шахматку на ' + this._year + ' год (все 12 месяцев)?\\n'") !== -1,
-                'текст вопроса с ГОДОМ (все 12 месяцев)');
+        test('HTML: generateYear — kipConfirm с заголовком «Формирование шахматки» и выбором периода (Task 278)', () => {
+            assertTrue(html.indexOf("title: 'Формирование шахматки'") !== -1,
+                'заголовок диалога — «Формирование шахматки»');
+            assertTrue(html.indexOf("okText: 'Весь год'") !== -1,
+                'основная кнопка — «Весь год» (было «Сформировать» до Task 278)');
+            assertTrue(html.indexOf('altText: isCurrent') !== -1,
+                'альтернативная кнопка — выбор месяца (altText)');
+            assertTrue(html.indexOf("'Сформировать шахматку на весь ' + this._year + ' год (все 12 месяцев) '") !== -1,
+                'текст вопроса — с ГОДОМ (все 12 месяцев)');
             assertTrue(html.indexOf('Существующие ручные правки будут сохранены') !== -1,
                 'пояснение о сохранении ручных правок');
-            assertTrue(html.indexOf('if (!ok) return;') !== -1,
-                'генерация только после подтверждения (ok === true)');
+            assertTrue(html.indexOf("if (sel === 'alt') { self._doGenerateMonth(); return; }") !== -1,
+                'ветка выбора месяца — _doGenerateMonth');
+            assertTrue(html.indexOf('if (!sel) return;') !== -1,
+                'генерация только после подтверждения (sel === true)');
         });
 
-        test('HTML: кнопка «Сформировать» с подсказкой о диалоге (год)', () => {
+        test('HTML: кнопка «Сформировать» с подсказкой о диалоге (месяц или год)', () => {
             const m = html.match(/id="wsGenerateBtn"[^>]*title="([^"]*)"/);
             assertTrue(m && m[1].indexOf('диалог подтверждения') !== -1,
                 'title кнопки упоминает диалог подтверждения');
-            assertTrue(m && m[1].indexOf('весь выбранный год') !== -1,
-                'title кнопки упоминает весь год (Task 272)');
+            assertTrue(m && m[1].indexOf('выбранный месяц или весь год') !== -1,
+                'title кнопки упоминает выбор: месяц или весь год (Task 278)');
         });
 
         test('kipConfirm: дефолтные заголовок и кнопки', async () => {
@@ -1861,9 +1866,9 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v527', () => {
-            assertTrue(sw.indexOf("kipia-test-v527") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v527 (Task 272)');
+        test('CACHE_VERSION = kipia-test-v528', () => {
+            assertTrue(sw.indexOf("kipia-test-v528") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v528 (Task 272)');
         });
         test('Старая версия v523 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v523") === -1,
@@ -2208,11 +2213,13 @@ describe('График работы — WorkSchedule', () => {
                 'счётчики суммируются по всем месяцам');
         });
 
-        test('JS: диалог подтверждения — год, а не месяц', () => {
-            assertTrue(html.indexOf("'Сформировать шахматку на ' + this._year + ' год (все 12 месяцев)?\\n'") !== -1,
-                'вопрос диалога — на весь год (все 12 месяцев)');
-            assertTrue(/monthName\[this\._month\] \+ ' ' \+ this\._year/.test(html) === false,
-                'старый текст с названием месяца удалён');
+        test('JS: диалог подтверждения — выбор: месяц или весь год (Task 278)', () => {
+            assertTrue(html.indexOf("'или только на ' + (isCurrent ? 'текущий' : 'выбранный')") !== -1,
+                'вопрос диалога — на весь год ИЛИ только месяц');
+            assertTrue(html.indexOf("altText: isCurrent ? 'Текущий месяц' : 'Выбранный месяц'") !== -1,
+                'надпись альт-кнопки адаптируется: текущий/выбранный месяц');
+            assertTrue(html.indexOf("monthNames[this._month - 1]") !== -1,
+                'название выбранного месяца — в тексте диалога');
         });
     });
 
@@ -2222,9 +2229,9 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v527', () => {
-            assertTrue(sw.indexOf("kipia-test-v527") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v527 (Task 272)');
+        test('CACHE_VERSION = kipia-test-v528', () => {
+            assertTrue(sw.indexOf("kipia-test-v528") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v528 (Task 272)');
         });
         test('Старая версия v525 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v525") === -1,
@@ -2594,19 +2601,194 @@ describe('График работы — WorkSchedule', () => {
         });
     });
 
-    describe('Task 274: SW версия v527', () => {
+    describe('Task 274: SW версия v527 (история)', () => {
         const fs = require('fs');
         const path = require('path');
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v527', () => {
-            assertTrue(sw.indexOf("kipia-test-v527") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v527 (Task 274)');
+        test('v527 заменена актуальной версией', () => {
+            assertTrue(sw.indexOf("kipia-test-v528") !== -1,
+                'Актуальная версия — kipia-test-v528');
         });
-        test('Старая версия v526 убрана', () => {
-            assertTrue(sw.indexOf("kipia-test-v526") === -1,
-                'Старая v526 не должна остаться в sw.js');
+        test('Старая версия v527 убрана', () => {
+            assertTrue(sw.indexOf("kipia-test-v527") === -1,
+                'Старая v527 не должна остаться в sw.js (Task 278)');
+        });
+    });
+
+    // ============================================================
+    // Task 278: выбор периода в диалоге «Сформировать» —
+    // «Текущий месяц» или «Весь год». kipConfirm расширен опцией
+    // altText (третья кнопка → резолв 'alt'); _doGenerateMonth —
+    // один вызов generateMonth для выбранного месяца.
+    // ============================================================
+    describe('Task 278: выбор «месяц или год» в диалоге «Сформировать»', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const vm = require('vm');
+        const html = fs.readFileSync(
+            path.resolve(__dirname, '..', 'index.html'), 'utf8');
+
+        // ---- Песочница с функциями диалога (как Task 265, +alt) ----
+        function extractFn(src, name) {
+            const start = src.indexOf('function ' + name + '(');
+            if (start === -1) return null;
+            const braceStart = src.indexOf('{', start);
+            let depth = 0;
+            for (let i = braceStart; i < src.length; i++) {
+                if (src[i] === '{') depth++;
+                else if (src[i] === '}') { depth--; if (depth === 0) return src.slice(start, i + 1); }
+            }
+            return null;
+        }
+        const dialogSrc = ['_kipDialogOverlay', '_kipDialogClose', '_kipDialogEsc', 'kipConfirm']
+            .map(n => extractFn(html, n)).join('\n');
+        if (!dialogSrc || dialogSrc.length < 100) {
+            throw new Error('Task 278: функции диалога не извлеклись');
+        }
+
+        function makeAltSandbox() {
+            const buttons = {
+                cancel: { className: 'kip-dialog-btn kip-dialog-cancel', textContent: '', onclick: null,
+                          closest: function () { return this; } },
+                alt:     { className: 'kip-dialog-btn kip-dialog-alt', textContent: '', onclick: null,
+                          closest: function () { return this; } },
+                ok:      { className: 'kip-dialog-btn kip-dialog-ok', textContent: '', onclick: null,
+                           closest: function () { return this; } }
+            };
+            const overlay = {
+                id: '', className: '',
+                _html: '',
+                set innerHTML(v) { this._html = String(v || ''); },
+                get innerHTML() { return this._html; },
+                classList: (() => {
+                    const set = new Set();
+                    return { add: c => set.add(c), remove: c => set.delete(c), contains: c => set.has(c) };
+                })(),
+                querySelector: sel =>
+                    sel === '.kip-dialog-cancel' ? buttons.cancel :
+                    sel === '.kip-dialog-alt' ? buttons.alt :
+                    sel === '.kip-dialog-ok' ? buttons.ok : null
+            };
+            const listeners = {};
+            const documentMock = {
+                getElementById: id => (id === 'kipDialogOverlay' ? overlay : null),
+                createElement: () => overlay,
+                body: { appendChild: () => {} },
+                addEventListener: (type, fn) => { (listeners[type] = listeners[type] || []).push(fn); },
+                removeEventListener: (type, fn) => {
+                    const arr = listeners[type] || [];
+                    const i = arr.indexOf(fn);
+                    if (i !== -1) arr.splice(i, 1);
+                }
+            };
+            const sandbox = {
+                document: documentMock,
+                requestAnimationFrame: fn => { fn(); return 0; },
+                setTimeout: () => 0,
+                clearTimeout: () => {},
+                Promise
+            };
+            vm.createContext(sandbox);
+            vm.runInContext(dialogSrc, sandbox);
+            return { sandbox, overlay, buttons, listeners };
+        }
+        const fireKey = (sb, key, target) => {
+            (sb.listeners.keydown || []).forEach(fn => fn({ key, target: target || null }));
+        };
+
+        test('kipConfirm: altText — третья кнопка, клик → ' + "'alt'", async () => {
+            const sb = makeAltSandbox();
+            const p = sb.sandbox.kipConfirm('Вопрос?', { okText: 'Весь год', altText: 'Текущий месяц' });
+            await Promise.resolve();
+            assertTrue(sb.overlay.innerHTML.indexOf('>Текущий месяц<') !== -1,
+                'альт-кнопка с текстом altText');
+            assertTrue(sb.overlay.innerHTML.indexOf('kip-dialog-alt') !== -1,
+                'класс kip-dialog-alt');
+            assertTrue(sb.overlay.innerHTML.indexOf('with-alt') !== -1,
+                'ряд кнопок помечен with-alt (компактные отступы)');
+            sb.buttons.alt.onclick();
+            assertEqual(await p, 'alt', 'клик по альт-кнопке → ' + "'alt'");
+        });
+
+        test('kipConfirm: без altText — две кнопки, с altText — три', () => {
+            const sb = makeAltSandbox();
+            sb.sandbox.kipConfirm('Обычный вопрос?');
+            const plain = (sb.overlay.innerHTML.match(/kip-dialog-btn kip-/g) || []).length;
+            assertEqual(plain, 2, 'без altText — 2 кнопки (обратная совместимость)');
+            assertFalse(sb.overlay.innerHTML.indexOf('with-alt') !== -1,
+                'без altText ряд НЕ помечен with-alt');
+            sb.sandbox.kipConfirm('С выбором?', { okText: 'A', altText: 'B' });
+            const three = (sb.overlay.innerHTML.match(/kip-dialog-btn kip-/g) || []).length;
+            assertEqual(three, 3, 'с altText — 3 кнопки');
+        });
+
+        test('kipConfirm: Escape → false, Enter → true (primary OK)', async () => {
+            const sb = makeAltSandbox();
+            const p = sb.sandbox.kipConfirm('Вопрос?', { okText: 'Весь год', altText: 'Текущий месяц' });
+            await Promise.resolve();
+            fireKey(sb, 'Escape');
+            assertEqual(await p, false, 'Escape — отмена (не ' + "'alt')");
+        });
+
+        test('kipConfirm: Enter при фокусе НЕ на кнопке — primary OK (год)', async () => {
+            const sb = makeAltSandbox();
+            const p = sb.sandbox.kipConfirm('Вопрос?', { okText: 'Весь год', altText: 'Текущий месяц' });
+            await Promise.resolve();
+            fireKey(sb, 'Enter');
+            assertEqual(await p, true, 'Enter — основная кнопка (Весь год)');
+        });
+
+        test('JS: generateYear — ветка sel === ' + "'alt'" + ' ведёт в _doGenerateMonth', () => {
+            const gen = html.slice(html.indexOf('generateYear: function'),
+                                   html.indexOf('_doGenerateMonth: function'));
+            assertTrue(gen.indexOf("if (sel === 'alt')") !== -1,
+                'ветка выбора месяца');
+            assertTrue(gen.indexOf('self._doGenerateMonth()') !== -1,
+                'вызов генерации одного месяца');
+            assertTrue(gen.indexOf('self._doGenerateYear()') !== -1,
+                'вызов генерации года (sel === true)');
+        });
+
+        test('JS: _doGenerateMonth — один вызов generateMonth для выбранного месяца', () => {
+            const gm = html.slice(html.indexOf('_doGenerateMonth: function'),
+                                  html.indexOf('_doGenerateYear: function'));
+            assertTrue(gm.indexOf("{ year: this._year, month: this._month }") !== -1,
+                'вызов с ВЫБРАННЫМ месяцем (не цикл 1..12)');
+            assertFalse(gm.indexOf('nextMonth') !== -1,
+                'нет цикла по 12 месяцам');
+            assertTrue(gm.indexOf("'Формируется…'") !== -1,
+                'кнопка занята на время генерации');
+            assertTrue(gm.indexOf('сформировано') !== -1 &&
+                       gm.indexOf('обновлено') !== -1,
+                'тост с итогами месяца');
+            assertTrue(gm.indexOf('устаревших отпусков') !== -1,
+                'тост учитывает removed (Task 274)');
+            assertTrue(gm.indexOf('self.loadGrid()') !== -1,
+                'перезагрузка сетки после генерации');
+        });
+
+        test('JS: тост ошибки месяца — с названием месяца', () => {
+            const gm = html.slice(html.indexOf('_doGenerateMonth: function'),
+                                  html.indexOf('_doGenerateYear: function'));
+            assertTrue(gm.indexOf("'Ошибка (' + monthName + ' ' + self._year + ')") !== -1,
+                'тост ошибки с месяцем и годом');
+        });
+
+        test('CSS: alt-кнопка и перенос ряда (тёмная + светлая)', () => {
+            assertTrue(html.indexOf('.kip-dialog-alt {') !== -1,
+                'стили .kip-dialog-alt');
+            assertTrue(html.indexOf('[data-theme="light"] .kip-dialog-alt') !== -1,
+                'светлая тема alt-кнопки');
+            const btns = html.slice(html.indexOf('.kip-dialog-btns {'),
+                                    html.indexOf('.kip-dialog-btn {'));
+            assertTrue(btns.indexOf('flex-wrap: wrap') !== -1,
+                'ряд кнопок переносится (3 кнопки на мобильном)');
+            assertTrue(html.indexOf('.kip-dialog-btns.with-alt .kip-dialog-btn') !== -1,
+                'компактные отступы при трёх кнопках');
+            assertTrue(html.indexOf('.kip-dialog.with-alt { max-width: 360px; }') !== -1,
+                'диалог с тремя кнопками шире (одна строка на десктопе)');
         });
     });
 });
