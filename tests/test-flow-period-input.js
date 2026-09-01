@@ -8,24 +8,32 @@
 //   _buildStatsHtml, CSS .flow-stats-*).
 // Task 289: форма ввода «за неделю» УБРАНА (chips: сутки/месяц;
 //   недельные ветки ввода и flowPrevWeekRange удалены); счётчик
-//   «За неделю» — сумма суточных показаний ТЕКУЩЕЙ календарной
-//   недели (пн–вс), справа от заголовка «Хронология показаний»;
-//   на сервере дни периода в архиве считаются ВКЛЮЧИТЕЛЬНО
-//   (01.08–31.08 = 31 день, неделя пн–вс = 7 дней).
+//   «За неделю» — из суточных показаний, справа от заголовка
+//   «Хронология показаний»; на сервере дни периода в архиве
+//   считаются ВКЛЮЧИТЕЛЬНО (01.08–31.08 = 31 день).
+// Task 290: счётчик «За неделю» считает ПОСЛЕДНЮЮ ПОЛНУЮ
+//   календарную неделю (пн–вс, закрывшуюся в прошлое воскресенье)
+//   — складываются показания, переданные за КАЖДЫЕ сутки недели
+//   (т + Гкал), период подписан («24.08–30.08.2026»); в начале
+//   каждой недели счётчик сам переходит на новую закрывшуюся
+//   неделю, БЕЗ записи в архив.
 //
 // ЧТО ПРОВЕРЯЕТСЯ:
 //   A. Standalone-хелперы (песочница extract-functions):
-//      flowWeekCounterStats — текущая неделя пн–вс (переходы
-//      месяца/года), сумма суточных, пропуск агрегатов, дедуп
-//      правок за один день; flowPrevMonthRange — прошедший месяц;
+//      flowWeekCounterStats — последняя ПОЛНАЯ неделя пн–вс
+//      (переходы месяца/года, переход ровно в пн), сумма суточных
+//      т И Гкал за каждые сутки, пропуск агрегатов, дедуп правок
+//      за один день; flowWeekRangeLabel — подпись периода;
+//      flowPrevMonthRange — прошедший месяц;
 //      flowDateToInputVal / flowDateToMdy — конвертация дат;
 //      flowEntryTypeAcc — винительный падеж.
 //   B. Клиент (index.html, статика): chips (сутки/месяц), поля дат,
 //      ветка submitInput (только месяц), маршрут updatePeriodReading,
-//      счётчик «За неделю» в заголовке хронологии (метод, CSS,
-//      обе ветки рендера), Task 289 — форма недели убрана,
+//      счётчик «За неделю» в заголовке хронологии (период + т +
+//      Гкал + перенос CSS, чистый рендер без записи в архив),
+//      Task 289 — форма недели убрана,
 //      Task 288 — счётчик контроля удалён, бейджи «нед»/«мес»,
-//      график — только суточные записи, SW v535.
+//      график — только суточные записи, SW v536.
 //   C. Серверные справочные копии (.gs): ветка entryType в
 //      updateReading, _writePeriodEntry (только архив, prev=0,
 //      hard-проверки), колонка R (entryType) в архиве,
@@ -300,6 +308,8 @@ describe('Task 288 — счётчик «Передано показаний (к�
             'Task 289: flowPrevWeekRange не извлекается (неделя не вводится)');
         assertTrue(EXTRACT_SRC.indexOf("'flowWeekCounterStats'") !== -1,
             'Task 289: flowWeekCounterStats извлекается (счётчик недели)');
+        assertTrue(EXTRACT_SRC.indexOf("'flowWeekRangeLabel'") !== -1,
+            'Task 290: flowWeekRangeLabel извлекается (подпись периода недели)');
         assertTrue(EXTRACT_SRC.indexOf("'flowEntryTypeAcc'") !== -1,
             'flowEntryTypeAcc остаётся (форма ввода)');
     });
@@ -360,9 +370,9 @@ describe('Task 286 — клиент: CSS и SW', () => {
             'светлая тема');
     });
 
-    test('SW-кэш поднят до v535 (Task 289 — фронтенд менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v535'") !== -1,
-            'CACHE_VERSION = kipia-test-v535');
+    test('SW-кэш поднят до v536 (Task 289 — фронтенд менялся)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v536'") !== -1,
+            'CACHE_VERSION = kipia-test-v536');
         assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v534'") !== -1,
             'старой версии v534 нет');
     });
@@ -374,59 +384,104 @@ describe('Task 286 — клиент: CSS и SW', () => {
 });
 
 // ============================================================
-// D. Task 289 — счётчик «За неделю» из суточных данных
+// D. Task 289/290 — счётчик «За неделю» из суточных данных
 // ============================================================
 
-describe('Task 289 — flowWeekCounterStats: текущая календарная неделя (пн–вс)', () => {
+describe('Task 290 — flowWeekCounterStats: последняя ПОЛНАЯ календарная неделя (пн–вс)', () => {
 
-    test('Вторник 01.09.2026 → неделя пн 31.08.2026 – вс 06.09.2026', () => {
+    test('Вторник 01.09.2026 → полная неделя пн 24.08.2026 – вс 30.08.2026', () => {
         const w = fns.flowWeekCounterStats([], new Date(2026, 8, 1));  // вт
-        assertEqual(fns.flowDateToMdy(w.start), '8/31/2026', 'start = понедельник ТЕКУЩЕЙ недели');
-        assertEqual(fns.flowDateToMdy(w.end), '9/6/2026', 'end = воскресенье текущей недели');
+        assertEqual(fns.flowDateToMdy(w.start), '8/24/2026', 'start = пн прошлой (полной) недели');
+        assertEqual(fns.flowDateToMdy(w.end), '8/30/2026', 'end = вс прошлой (полной) недели');
     });
 
-    test('Понедельник 31.08.2026 → неделя начинается сегодня', () => {
+    test('Понедельник 31.08.2026 → уже перешёл на закрывшуюся неделю 24.08–30.08', () => {
+        // В начале каждой недели (ровно в пн) счётчик переходит на
+        // данные только что закрывшейся полной недели
         const w = fns.flowWeekCounterStats([], new Date(2026, 7, 31));  // пн
-        assertEqual(fns.flowDateToMdy(w.start), '8/31/2026', 'start = сегодня (понедельник)');
-        assertEqual(fns.flowDateToMdy(w.end), '9/6/2026', 'end = вс этой недели');
+        assertEqual(fns.flowDateToMdy(w.start), '8/24/2026', 'start = пн закрывшейся недели');
+        assertEqual(fns.flowDateToMdy(w.end), '8/30/2026', 'end = вс (вчера)');
     });
 
-    test('Воскресенье 06.09.2026 → та же неделя пн 31.08 – вс 06.09', () => {
+    test('Воскресенье 06.09.2026 → всё ещё 24.08–30.08 (текущая неделя не полная)', () => {
         const w = fns.flowWeekCounterStats([], new Date(2026, 8, 6));  // вс
-        assertEqual(fns.flowDateToMdy(w.start), '8/31/2026', 'start = пн этой недели');
-        assertEqual(fns.flowDateToMdy(w.end), '9/6/2026', 'end = сегодня (вс)');
+        assertEqual(fns.flowDateToMdy(w.start), '8/24/2026', 'start = пн полной недели');
+        assertEqual(fns.flowDateToMdy(w.end), '8/30/2026', 'end = вс полной недели');
     });
 
-    test('Неделя через границу года: вс 03.01.2027 → пн 28.12.2026 – вс 03.01.2027', () => {
-        const w = fns.flowWeekCounterStats([], new Date(2027, 0, 3));  // вс
+    test('Неделя через границу года: пн 04.01.2027 → полная 28.12.2026 – 03.01.2027', () => {
+        const w = fns.flowWeekCounterStats([], new Date(2027, 0, 4));  // пн
         assertEqual(fns.flowDateToMdy(w.start), '12/28/2026', 'start в прошлом году');
         assertEqual(fns.flowDateToMdy(w.end), '1/3/2027', 'end в новом году');
     });
 
-    test('Неделя через границу месяца: ср 30.09.2026 → пн 28.09 – вс 04.10', () => {
-        const w = fns.flowWeekCounterStats([], new Date(2026, 8, 30));  // ср
+    test('Воскресенье 03.01.2027 → полная неделя 21.12.2026 – 27.12.2026', () => {
+        // Текущая неделя 28.12.2026–03.01.2027 ещё не полная (включает сегодня)
+        const w = fns.flowWeekCounterStats([], new Date(2027, 0, 3));  // вс
+        assertEqual(fns.flowDateToMdy(w.start), '12/21/2026', 'start = пн позапрошлой недели');
+        assertEqual(fns.flowDateToMdy(w.end), '12/27/2026', 'end = вс прошлой недели');
+    });
+
+    test('Неделя через границу месяца: пн 05.10.2026 → полная 28.09 – 04.10', () => {
+        const w = fns.flowWeekCounterStats([], new Date(2026, 9, 5));  // пн
         assertEqual(fns.flowDateToMdy(w.start), '9/28/2026', 'start = пн сентября');
         assertEqual(fns.flowDateToMdy(w.end), '10/4/2026', 'end = вс октября');
     });
 
-    test('Сумма только суточных записей внутри недели (пн–вс)', () => {
+    test('Претензия Task 290: счётчик = сумма показаний КАЖДЫХ суток недели (не сутки 31.08)', () => {
+        // Пользователь: «"За неделю: 53,60 т" — это 53,60 т за сутки
+        // 31.08.2026». Счётчик должен складывать показания, переданные
+        // за каждые сутки ПОЛНОЙ недели (24.08–30.08), а не показывать
+        // свежие сутки текущей недели.
         const recs = [
-            { curr: 5,   dateCurr: '9/1/2026' },   // вт этой недели
-            { curr: 3.5, dateCurr: '8/31/2026' },  // пн этой недели
-            { curr: 9,   dateCurr: '9/6/2026' },   // вс этой недели
-            { curr: 100, dateCurr: '8/30/2026' },  // ПРОШЛАЯ вс — вне недели
-            { curr: 200, dateCurr: '9/7/2026' }    // СЛЕДУЮЩИЙ пн — вне недели
+            { curr: 53.60, dateCurr: '8/31/2026' },   // пн ТЕКУЩЕЙ (неполной) недели
+            { curr: 51.20, dateCurr: '8/30/2026' },   // вс полной недели
+            { curr: 52.40, dateCurr: '8/29/2026' },   // сб
+            { curr: 50.80, dateCurr: '8/28/2026' },   // пт
+            { curr: 49.60, dateCurr: '8/27/2026' },   // чт
+            { curr: 48.40, dateCurr: '8/26/2026' },   // ср
+            { curr: 47.20, dateCurr: '8/25/2026' },   // вт
+            { curr: 46.00, dateCurr: '8/24/2026' },   // пн
+            { curr: 44.00, dateCurr: '8/23/2026' }    // вс позапрошлой недели — вне
+        ];
+        const w = fns.flowWeekCounterStats(recs, new Date(2026, 8, 1));  // вт 01.09
+        assertEqual(Math.round(w.sum * 100) / 100, 345.6, 'сумма = 46+47,2+48,4+49,6+50,8+52,4+51,2 (семь суток полной недели)');
+        assertEqual(w.days, 7, 'семь разных дат полной недели');
+        assertFalse(w.sum === 53.60, 'НЕ показания одних суток 31.08');
+    });
+
+    test('Гкал за полную неделю складываются по тому же принципу', () => {
+        const recs = [
+            { curr: 51.20, dateCurr: '8/30/2026', gcal: 0.221 },
+            { curr: 52.40, dateCurr: '8/29/2026', gcal: 0.226 },
+            { curr: 50.80, dateCurr: '8/28/2026', gcal: 0.219 },
+            { curr: 53.60, dateCurr: '8/31/2026', gcal: 0.230 },   // текущая неделя — вне
+            { curr: 49.60, dateCurr: '8/27/2026' }                  // Гкал не введена
         ];
         const w = fns.flowWeekCounterStats(recs, new Date(2026, 8, 2));  // ср
-        assertEqual(w.sum, 17.5, 'сумма = 3,5 + 5 + 9 (пн..вс текущей недели)');
-        assertEqual(w.days, 3, 'три разных даты с записями');
+        assertEqual(Math.round(w.sum * 100) / 100, 204, 'сумма т = 49,6+50,8+52,4+51,2');
+        assertEqual(Math.round(w.gcal * 1000) / 1000, 0.666, 'сумма Гкал = 0,219+0,226+0,221');
+        assertEqual(w.gcalDays, 3, 'три даты с введённой Гкал');
+        assertEqual(w.days, 4, 'четыре даты с суточными записями');
+    });
+
+    test('Гкал из СТАРОЙ правки даты не считается (свежая запись сверху)', () => {
+        const recs = [
+            { curr: 6,     dateCurr: '8/25/2026' },              // свежая правка: Гкал убрана
+            { curr: 2,     dateCurr: '8/25/2026', gcal: 9 },     // старая правка — не считается
+            { curr: 4,     dateCurr: '8/24/2026', gcal: 1.5 }
+        ];
+        const w = fns.flowWeekCounterStats(recs, new Date(2026, 8, 2));  // ср
+        assertEqual(w.sum, 10, 'т = 6 (свежая) + 4');
+        assertEqual(w.gcal, 1.5, 'Гкал только из свежей записи 24.08');
+        assertEqual(w.gcalDays, 1, 'одна дата с Гкал');
     });
 
     test('Агрегаты «за неделю/месяц» (entryType) не учитываются', () => {
         const recs = [
-            { curr: 5,    dateCurr: '9/1/2026' },
-            { curr: 700,  dateCurr: '9/1/2026', entryType: 'неделя' },
-            { curr: 3000, dateCurr: '8/31/2026', entryType: 'месяц' }
+            { curr: 5,    dateCurr: '8/26/2026' },
+            { curr: 700,  dateCurr: '8/26/2026', entryType: 'неделя' },
+            { curr: 3000, dateCurr: '8/25/2026', entryType: 'месяц' }
         ];
         const w = fns.flowWeekCounterStats(recs, new Date(2026, 8, 2));
         assertEqual(w.sum, 5, 'агрегаты проигнорированы');
@@ -435,30 +490,33 @@ describe('Task 289 — flowWeekCounterStats: текущая календарна
 
     test('Правка за тот же день не задваивает счётчик (свежая запись сверху)', () => {
         const recs = [
-            { curr: 6, dateCurr: '9/1/2026' },   // свежее (выше в архиве)
-            { curr: 2, dateCurr: '9/1/2026' },   // старая правка той же даты
-            { curr: 4, dateCurr: '8/31/2026' }
+            { curr: 6, dateCurr: '8/26/2026' },   // свежее (выше в архиве)
+            { curr: 2, dateCurr: '8/26/2026' },   // старая правка той же даты
+            { curr: 4, dateCurr: '8/25/2026' }
         ];
         const w = fns.flowWeekCounterStats(recs, new Date(2026, 8, 2));
-        assertEqual(w.sum, 10, 'сумма = 6 (свежая за 01.09) + 4');
+        assertEqual(w.sum, 10, 'сумма = 6 (свежая за 26.08) + 4');
         assertEqual(w.days, 2, 'две даты');
     });
 
-    test('Записей нет → sum=0, days=0', () => {
+    test('Записей нет → sum=0, days=0, gcal=0, gcalDays=0', () => {
         const w = fns.flowWeekCounterStats([], new Date(2026, 8, 2));
         assertEqual(w.sum, 0, 'сумма 0');
         assertEqual(w.days, 0, 'дней 0');
+        assertEqual(w.gcal, 0, 'Гкал 0');
+        assertEqual(w.gcalDays, 0, 'дат с Гкал 0');
     });
 
-    test('Мусорные записи (null, кривая дата) не роняют счётчик', () => {
+    test('Мусорные записи (null, кривая дата, галимые Гкал) не роняют счётчик', () => {
         const recs = [
             { curr: 5, dateCurr: 'мусор' },
-            { curr: 4, dateCurr: '9/2/2026' },
+            { curr: 4, dateCurr: '8/25/2026', gcal: 'abc' },
             null
         ];
         const w = fns.flowWeekCounterStats(recs, new Date(2026, 8, 2));
         assertEqual(w.sum, 4, 'мусорная дата пропущена');
         assertEqual(w.days, 1, 'одна валидная дата');
+        assertEqual(w.gcalDays, 0, 'нечисловая Гкал не считается');
     });
 
     test('now без Date → берётся текущая дата (не падает)', () => {
@@ -469,7 +527,30 @@ describe('Task 289 — flowWeekCounterStats: текущая календарна
     });
 });
 
-describe('Task 289 — клиент: счётчик «За неделю» в заголовке хронологии', () => {
+describe('Task 290 — flowWeekRangeLabel: подпись периода полной недели', () => {
+
+    test('Неделя внутри одного года: «24.08–30.08.2026»', () => {
+        assertEqual(fns.flowWeekRangeLabel(new Date(2026, 7, 24), new Date(2026, 7, 30)),
+            '24.08–30.08.2026', 'ДД.ММ–ДД.ММ.ГГГГ');
+    });
+
+    test('Неделя через границу месяца: «28.09–04.10.2026»', () => {
+        assertEqual(fns.flowWeekRangeLabel(new Date(2026, 8, 28), new Date(2026, 9, 4)),
+            '28.09–04.10.2026', 'месяцы разные, год один — год один раз');
+    });
+
+    test('Неделя через границу года: обе даты с годом «28.12.2026–03.01.2027»', () => {
+        assertEqual(fns.flowWeekRangeLabel(new Date(2026, 11, 28), new Date(2027, 0, 3)),
+            '28.12.2026–03.01.2027', 'годы разные — обе даты полностью');
+    });
+
+    test('Невалидные даты → пустая строка', () => {
+        assertEqual(fns.flowWeekRangeLabel(null, new Date(2026, 7, 30)), '', 'null → ""');
+        assertEqual(fns.flowWeekRangeLabel(new Date(NaN), new Date(2026, 7, 30)), '', 'Invalid → ""');
+    });
+});
+
+describe('Task 290 — клиент: счётчик «За неделю» в заголовке хронологии', () => {
 
     test('_buildWeekCounterHtml: метод определён, гвард dailyMode (только №1)', () => {
         assertTrue(INDEX_SRC.indexOf('_buildWeekCounterHtml: function(records, meter)') !== -1,
@@ -490,17 +571,53 @@ describe('Task 289 — клиент: счётчик «За неделю» в з�
         assertTrue(m !== null, 'вызов с new Date()');
     });
 
-    test('Нет суточных записей на неделе → «За неделю: —»', () => {
-        const m = INDEX_SRC.match(/\(wk\.days > 0\)\s*\?\s*\(this\._fmtNum\(wk\.sum\)\s*\+\s*' '\s*\+\s*this\._esc\(meter\.unit\)\)\s*:\s*'—'/);
+    test('Период недели подписан в счётчике (flowWeekRangeLabel)', () => {
+        assertTrue(INDEX_SRC.indexOf('var period = flowWeekRangeLabel(wk.start, wk.end);') !== -1,
+            'период из start/end полной недели');
+        assertTrue(INDEX_SRC.indexOf("'>За неделю ' + this._esc(period) + ': ' + valStr + '</span>'") !== -1,
+            'рендер: «За неделю 24.08–30.08.2026: …»');
+    });
+
+    test('Значения т + Гкал за полную неделю (Гкал — если есть)', () => {
+        const m = INDEX_SRC.match(/\(wk\.days > 0\)\s*\?\s*\(this\._fmtNum\(wk\.sum\)\s*\+\s*' '\s*\+\s*this\._esc\(meter\.unit\)/);
+        assertTrue(m !== null, 'т: _fmtNum(wk.sum) + unit');
+        assertTrue(INDEX_SRC.indexOf("wk.gcal.toFixed(3).replace('.', ',') + ' Гкал'") !== -1,
+            'Гкал: 3 знака, запятая');
+        assertTrue(INDEX_SRC.indexOf('(wk.gcalDays > 0') !== -1,
+            'Гкал показывается только когда есть значения за неделю');
+    });
+
+    test('Нет суточных записей на полной неделе → «За неделю …: —»', () => {
+        const m = INDEX_SRC.match(/\(wk\.days > 0\)[\s\S]*?\?\s*[\s\S]*?\)\s*:\s*'—'/);
         assertTrue(m !== null, 'тернарник: days > 0 → значение, иначе «—»');
     });
 
-    test('CSS счётчика: .flow-week-counter (тёмная + светлая)', () => {
+    test('CSS счётчика: .flow-week-counter (тёмная + светлая) + перенос', () => {
         assertTrue(INDEX_SRC.indexOf('.flow-week-counter {') !== -1, 'базовый стиль');
         assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .flow-week-counter {') !== -1, 'светлая тема');
         assertTrue(INDEX_SRC.indexOf('<span class="flow-archive-title-text">') !== -1,
             'span текста заголовка в рендере');
         assertTrue(INDEX_SRC.indexOf('.flow-archive-title {') !== -1, 'заголовок (flex-строка)');
+        // Task 290: счётчик длиннее (период + Гкал) — разрешён перенос
+        assertTrue(INDEX_SRC.indexOf('flex-wrap: wrap;') !== -1,
+            '.flow-archive-title: flex-wrap (перенос на узких экранах)');
+        const css = INDEX_SRC.slice(
+            INDEX_SRC.indexOf('.flow-week-counter {'),
+            INDEX_SRC.indexOf('.flow-archive-empty'));
+        assertTrue(css.indexOf('white-space: normal;') !== -1,
+            'внутренний перенос текста счётчика разрешён');
+        assertTrue(css.indexOf('text-align: right;') !== -1,
+            'счётчик прижат вправо');
+    });
+
+    test('Счётчик не пишет в архив (чистый рендер)', () => {
+        const start = INDEX_SRC.indexOf('_buildWeekCounterHtml: function');
+        const end = INDEX_SRC.indexOf('// Рендер секции хронологии');
+        const body = INDEX_SRC.slice(start, end);
+        assertFalse(body.indexOf('_submitPeriodEntry') !== -1,
+            'нет записи показаний из счётчика');
+        assertFalse(body.indexOf('updatePeriodReading') !== -1,
+            'нет серверных вызовов из счётчика');
     });
 });
 
