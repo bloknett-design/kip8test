@@ -81,8 +81,6 @@ const PURE_FUNCTIONS = [
     'flowPrevMonthRange',
     'flowDateToInputVal',
     'flowDateToMdy',
-    'flowCountStats',
-    'flowPluralRecords',
     'flowEntryTypeAcc',
 ];
 
