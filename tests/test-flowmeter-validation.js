@@ -718,16 +718,16 @@ describe('Task 223+224+228: график архива — условный ис�
                    'pickValue должен использовать r.consumption для не-dailyMode (Task 228)');
     });
 
-    test('Заголовок: «Показания» для dailyMode, «Расход» для остальных', () => {
+    test('Заголовок: «Показания (посуточно)» для dailyMode, «Расход» для остальных (Task 292)', () => {
         var body = chartBody();
-        // chartTitle = dailyMode ? 'Показания' : 'Расход'
-        assertTrue(body.indexOf("'Показания'") !== -1,
-                   'Должна быть строка «Показания» для dailyMode');
+        // chartTitle = dailyMode ? 'Показания (посуточно)' : 'Расход' (Task 292)
+        assertTrue(body.indexOf("'Показания (посуточно)'") !== -1,
+                   'Должна быть строка «Показания (посуточно)» для dailyMode (Task 292)');
         assertTrue(body.indexOf("'Расход'") !== -1,
                    'Должна быть строка «Расход» для не-dailyMode');
         // Тернарный оператор
         assertTrue(body.indexOf("chartTitle = dailyMode") !== -1 ||
-                   body.indexOf("dailyMode ? 'Показания' : 'Расход'") !== -1,
+                   body.indexOf("dailyMode ? 'Показания (посуточно)' : 'Расход'") !== -1,
                    'Должен быть тернарный выбор заголовка по dailyMode');
     });
 

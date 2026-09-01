@@ -22,6 +22,10 @@
 //   двоеточия (подпись и значение неразрывны); строки заголовка и
 //   счётчика получили НЕПРОЗРАЧНЫЙ фон (зебра детальной карточки
 //   #372e2a/#463e38 — сетка страницы не просвечивает).
+// Task 292: заголовок графика для dailyMode (Хозрасчёт №1) —
+//   «Показания (посуточно), т»: уточнение, что график строится
+//   только по суточным записям (Task 286); для остальных
+//   хозрасчётов — «Расход», как прежде.
 //
 // ЧТО ПРОВЕРЯЕТСЯ:
 //   A. Standalone-хелперы (песочница extract-functions):
@@ -39,7 +43,8 @@
 //      непрозрачные фоны, чистый рендер без записи в архив),
 //      Task 289 — форма недели убрана,
 //      Task 288 — счётчик контроля удалён, бейджи «нед»/«мес»,
-//      график — только суточные записи, SW v537.
+//      график — только суточные записи,
+//      Task 292 — заголовок dailyMode «Показания (посуточно)», SW v538.
 //   C. Серверные справочные копии (.gs): ветка entryType в
 //      updateReading, _writePeriodEntry (только архив, prev=0,
 //      hard-проверки), колонка R (entryType) в архиве,
@@ -376,9 +381,9 @@ describe('Task 286 — клиент: CSS и SW', () => {
             'светлая тема');
     });
 
-    test('SW-кэш поднят до v537 (Task 291 — фронтенд менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v537'") !== -1,
-            'CACHE_VERSION = kipia-test-v537');
+    test('SW-кэш поднят до v538 (Task 292 — фронтенд менялся)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v538'") !== -1,
+            'CACHE_VERSION = kipia-test-v538');
         assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v534'") !== -1,
             'старой версии v534 нет');
     });
@@ -659,6 +664,49 @@ describe('Task 290/291 — клиент: счётчик «За неделю» в
             'нет записи показаний из счётчика');
         assertFalse(body.indexOf('updatePeriodReading') !== -1,
             'нет серверных вызовов из счётчика');
+    });
+});
+
+// ============================================================
+// E. Task 292 — заголовок графика: уточнение «посуточно»
+// ============================================================
+
+describe('Task 292 — заголовок графика: «Показания (посуточно)» для dailyMode', () => {
+
+    function chartBody() {
+        var fnIdx = INDEX_SRC.indexOf('_buildArchiveChart: function');
+        var fnEnd = INDEX_SRC.indexOf('return html;', fnIdx);
+        return INDEX_SRC.slice(fnIdx, fnEnd);
+    }
+
+    test('dailyMode: «Показания (посуточно)» + единица → «Показания (посуточно), т»', () => {
+        var body = chartBody();
+        assertTrue(body.indexOf("'Показания (посуточно)'") !== -1,
+            'строка «Показания (посуточно)» для dailyMode');
+        assertTrue(body.indexOf("chartTitle + ', ' + this._esc(unit)") !== -1,
+            'единица приписывается через запятую');
+    });
+
+    test('НЕ-dailyMode: ветка «Расход» не тронута (Task 228)', () => {
+        var body = chartBody();
+        assertTrue(body.indexOf("'Расход'") !== -1,
+            '«Расход» для остальных хозрасчётов');
+        assertFalse(body.indexOf("'Показания'") !== -1,
+            'голого «Показания» больше нет — только с уточнением (посуточно)');
+    });
+
+    test('График по-прежнему строится только из dayRecords (Task 286 не тронут)', () => {
+        assertTrue(INDEX_SRC.indexOf('dayRecords = records.filter') !== -1,
+            'фильтрация dayRecords на месте');
+        assertTrue(INDEX_SRC.indexOf('this._buildArchiveChart(dayRecords, meter)') !== -1,
+            'график — только суточные записи');
+    });
+
+    test('SW-кэш: v537 → v538 (Task 292 — только фронтенд, сервер не менялся)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v538'") !== -1,
+            'CACHE_VERSION = kipia-test-v538');
+        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v537'") !== -1,
+            'старой версии v537 нет');
     });
 });
 
