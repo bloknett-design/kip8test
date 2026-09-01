@@ -17,6 +17,11 @@
 //   (т + Гкал), период подписан («24.08–30.08.2026»); в начале
 //   каждой недели счётчик сам переходит на новую закрывшуюся
 //   неделю, БЕЗ записи в архив.
+// Task 291: счётчик «За неделю» перенесён ОТДЕЛЬНОЙ строкой ПОД
+//   заголовок «Хронология показаний»; перенос текста — только после
+//   двоеточия (подпись и значение неразрывны); строки заголовка и
+//   счётчика получили НЕПРОЗРАЧНЫЙ фон (зебра детальной карточки
+//   #372e2a/#463e38 — сетка страницы не просвечивает).
 //
 // ЧТО ПРОВЕРЯЕТСЯ:
 //   A. Standalone-хелперы (песочница extract-functions):
@@ -29,11 +34,12 @@
 //      flowEntryTypeAcc — винительный падеж.
 //   B. Клиент (index.html, статика): chips (сутки/месяц), поля дат,
 //      ветка submitInput (только месяц), маршрут updatePeriodReading,
-//      счётчик «За неделю» в заголовке хронологии (период + т +
-//      Гкал + перенос CSS, чистый рендер без записи в архив),
+//      счётчик «За неделю» — отдельной строкой под заголовком
+//      хронологии (период + т + Гкал, перенос после двоеточия,
+//      непрозрачные фоны, чистый рендер без записи в архив),
 //      Task 289 — форма недели убрана,
 //      Task 288 — счётчик контроля удалён, бейджи «нед»/«мес»,
-//      график — только суточные записи, SW v536.
+//      график — только суточные записи, SW v537.
 //   C. Серверные справочные копии (.gs): ветка entryType в
 //      updateReading, _writePeriodEntry (только архив, prev=0,
 //      hard-проверки), колонка R (entryType) в архиве,
@@ -370,9 +376,9 @@ describe('Task 286 — клиент: CSS и SW', () => {
             'светлая тема');
     });
 
-    test('SW-кэш поднят до v536 (Task 289 — фронтенд менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v536'") !== -1,
-            'CACHE_VERSION = kipia-test-v536');
+    test('SW-кэш поднят до v537 (Task 291 — фронтенд менялся)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v537'") !== -1,
+            'CACHE_VERSION = kipia-test-v537');
         assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v534'") !== -1,
             'старой версии v534 нет');
     });
@@ -550,7 +556,7 @@ describe('Task 290 — flowWeekRangeLabel: подпись периода пол�
     });
 });
 
-describe('Task 290 — клиент: счётчик «За неделю» в заголовке хронологии', () => {
+describe('Task 290/291 — клиент: счётчик «За неделю» в хронологии', () => {
 
     test('_buildWeekCounterHtml: метод определён, гвард dailyMode (только №1)', () => {
         assertTrue(INDEX_SRC.indexOf('_buildWeekCounterHtml: function(records, meter)') !== -1,
@@ -559,11 +565,14 @@ describe('Task 290 — клиент: счётчик «За неделю» в з�
             'только Хозрасчёт №1 (суточный ввод)');
     });
 
-    test('Счётчик — в строку заголовка «Хронология показаний» (обе ветки рендера)', () => {
-        // Ищем исходный фрагмент кода рендера (в кавычках, как в index.html):
-        const titleRow = "'<div class=\"flow-archive-title\"><span class=\"flow-archive-title-text\">Хронология показаний</span>' + weekCounterHtml + '</div>'";
+    test('Task 291: счётчик — ОТДЕЛЬНОЙ строкой ПОД заголовком (обе ветки рендера)', () => {
+        // Заголовок — чистая строка без счётчика, счётчик — следующей
+        // строкой (в обеих ветках: пустой архив и основная):
+        const titleRow = "'<div class=\"flow-archive-title\">Хронология показаний</div>' + weekCounterHtml";
         assertEqual(INDEX_SRC.split(titleRow).length - 1, 2,
-            'заголовок с weekCounterHtml — и в пустой, и в основной ветке');
+            'заголовок + weekCounterHtml отдельной строкой — и в пустой, и в основной ветке');
+        assertFalse(INDEX_SRC.indexOf('flow-archive-title-text') !== -1,
+            'внутренний span заголовка (flex-раскладка Task 289/290) удалён');
     });
 
     test('flowWeekCounterStats вызывается с текущей датой', () => {
@@ -574,8 +583,29 @@ describe('Task 290 — клиент: счётчик «За неделю» в з�
     test('Период недели подписан в счётчике (flowWeekRangeLabel)', () => {
         assertTrue(INDEX_SRC.indexOf('var period = flowWeekRangeLabel(wk.start, wk.end);') !== -1,
             'период из start/end полной недели');
-        assertTrue(INDEX_SRC.indexOf("'>За неделю ' + this._esc(period) + ': ' + valStr + '</span>'") !== -1,
-            'рендер: «За неделю 24.08–30.08.2026: …»');
+        // Ищем литеральный фрагмент исходника рендера:
+        const labelSpan = '><span class="flow-week-counter-label">За неделю \' + this._esc(period) + \':</span>';
+        assertTrue(INDEX_SRC.indexOf(labelSpan) !== -1,
+            'рендер подписи: «За неделю 24.08–30.08.2026:»');
+    });
+
+    test('Task 291: структура строки — подпись и значение неразрывны, перенос после двоеточия', () => {
+        // Значение — отдельный спан после пробела: единственная точка
+        // переноса — пробел после двоеточия
+        assertTrue(INDEX_SRC.indexOf("' <span class=\"flow-week-counter-value\">' + valStr + '</span></div>'") !== -1,
+            'рендер значения: <span value> через пробел после подписи');
+        const css = INDEX_SRC.slice(
+            INDEX_SRC.indexOf('.flow-week-counter-row {'),
+            INDEX_SRC.indexOf('.flow-archive-empty'));
+        assertTrue(css.indexOf('.flow-week-counter-label,') !== -1 &&
+            css.indexOf('.flow-week-counter-value {') !== -1,
+            'CSS подписи и значения');
+        // Подпись и значение — каждый неразрывен: перенос ВОЗМОЖЕН
+        // только между ними (после двоеточия)
+        assertEqual(css.split('white-space: nowrap;').length - 1, 1,
+            'white-space: nowrap на обоих спанах одним правилом');
+        assertFalse(css.indexOf('white-space: normal;') !== -1,
+            'старого переноса внутри счётчика (Task 290) нет');
     });
 
     test('Значения т + Гкал за полную неделю (Гкал — если есть)', () => {
@@ -592,22 +622,33 @@ describe('Task 290 — клиент: счётчик «За неделю» в з�
         assertTrue(m !== null, 'тернарник: days > 0 → значение, иначе «—»');
     });
 
-    test('CSS счётчика: .flow-week-counter (тёмная + светлая) + перенос', () => {
-        assertTrue(INDEX_SRC.indexOf('.flow-week-counter {') !== -1, 'базовый стиль');
-        assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .flow-week-counter {') !== -1, 'светлая тема');
-        assertTrue(INDEX_SRC.indexOf('<span class="flow-archive-title-text">') !== -1,
-            'span текста заголовка в рендере');
-        assertTrue(INDEX_SRC.indexOf('.flow-archive-title {') !== -1, 'заголовок (flex-строка)');
-        // Task 290: счётчик длиннее (период + Гкал) — разрешён перенос
-        assertTrue(INDEX_SRC.indexOf('flex-wrap: wrap;') !== -1,
-            '.flow-archive-title: flex-wrap (перенос на узких экранах)');
-        const css = INDEX_SRC.slice(
-            INDEX_SRC.indexOf('.flow-week-counter {'),
+    test('CSS счётчика: .flow-week-counter-row (тёмная + светлая) + непрозрачные фоны', () => {
+        assertTrue(INDEX_SRC.indexOf('.flow-week-counter-row {') !== -1, 'базовый стиль');
+        assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .flow-week-counter-row {') !== -1, 'светлая тема');
+        assertTrue(INDEX_SRC.indexOf('.flow-archive-title {') !== -1, 'заголовок (блочная строка)');
+        // Task 291: непрозрачные фоны обеих строк — сетка страницы
+        // (20×20) не просвечивает; цвета = зебра детальной карточки
+        const titleCss = INDEX_SRC.slice(
+            INDEX_SRC.indexOf('.flow-archive-title {'),
+            INDEX_SRC.indexOf('.flow-week-counter-row {'));
+        assertTrue(titleCss.indexOf('background: #372e2a;') !== -1,
+            'заголовок: непрозрачный #372e2a (тёмная)');
+        const rowCss = INDEX_SRC.slice(
+            INDEX_SRC.indexOf('.flow-week-counter-row {'),
             INDEX_SRC.indexOf('.flow-archive-empty'));
-        assertTrue(css.indexOf('white-space: normal;') !== -1,
-            'внутренний перенос текста счётчика разрешён');
-        assertTrue(css.indexOf('text-align: right;') !== -1,
-            'счётчик прижат вправо');
+        assertTrue(rowCss.indexOf('background: #463e38;') !== -1,
+            'счётчик: непрозрачный #463e38 (тёмная)');
+        assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .flow-archive-title {') !== -1 &&
+            INDEX_SRC.indexOf('background: #f5f0eb;') !== -1,
+            'заголовок: #f5f0eb (светлая)');
+        assertTrue(INDEX_SRC.indexOf('background: #ebe5de;') !== -1,
+            'счётчик: #ebe5de (светлая)');
+        // Flex-раскладка заголовка (Task 289/290) убрана
+        const flexProps = ['display: flex;', 'justify-content: space-between;', 'flex-wrap: wrap;'];
+        flexProps.forEach(function(p) {
+            assertFalse(titleCss.indexOf(p) !== -1,
+                'заголовок больше не flex: ' + p);
+        });
     });
 
     test('Счётчик не пишет в архив (чистый рендер)', () => {
