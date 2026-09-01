@@ -361,8 +361,8 @@ describe('Task 279 — статические инварианты (фронт/i
             'лог о самолечении');
     });
 
-    test('SW-кэш поднят до v532 (Task 286 — фронтенд менялся: ввод за период)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v532'") !== -1,
-            'CACHE_VERSION = kipia-test-v532');
+    test('SW-кэш поднят до v532 (Task 287 — фронтенд менялся: счётчик периода)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v533'") !== -1,
+            'CACHE_VERSION = kipia-test-v533');
     });
 });

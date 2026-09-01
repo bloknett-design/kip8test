@@ -1,5 +1,5 @@
 // tests/test-flow-period-input.js
-// Task 286: ввод «расход за неделю/месяц» для Хозрасчёта №1 +
+// Task 286 + Task 287: ввод «расход за неделю/месяц» для Хозрасчёта №1 +
 // суммарный счётчик переданных показаний (контроль, без архива).
 //
 // ЗАДАЧА (по заявке пользователя и уточнениям):
@@ -10,30 +10,40 @@
 //     (meters-строка не меняется, «Последние показания» остаются
 //     суточными).
 //   • Суммарный счётчик переданных показаний: сумма (т + Гкал) и
-//     число записей/дней за сутки / 7 дней / текущий месяц —
-//     только суточные записи (агрегаты не считаются), вычисляется
-//     на клиенте, ничего не пишет («без архива»).
+//     число записей/дней — вычисляется на клиенте, ничего не пишет
+//     («без архива»). Периоды (Task 287):
+//       – «За неделю» — КАЛЕНДАРНАЯ неделя (пн–вс текущей),
+//         было «за 7 дней» (скользящее окно);
+//       – «За месяц» — ПРЕДЫДУЩИЙ полный месяц; пока не введут
+//         показания за новый прошедший месяц — откат назад к
+//         последнему месяцу с записями;
+//       – строка «За сутки» удалена;
+//       – фон блока — НЕпрозрачный (блок сидит прямо на сетке
+//         страницы).
 //
 // ЧТО ПРОВЕРЯЕТСЯ:
 //   A. Standalone-хелперы (песочница extract-functions):
 //      flowPrevWeekRange / flowPrevMonthRange — границы прошедших
 //      периодов (пн–вс, календарный месяц, включая январь);
 //      flowDateToInputVal / flowDateToMdy — конвертация дат;
-//      flowCountStats — счётчик: периоды, суммы, записи/дни,
-//      исключение агрегатов, legacy-записи без entryType = сутки;
+//      flowCountStats — счётчик: календарная неделя (границы пн/вс,
+//      включая переход месяца/года), предыдущий месяц с откатом
+//      (в т.ч. по агрегату «за месяц»), исключение агрегатов
+//      (нет двойного учёта), legacy-записи = сутки;
 //      flowPluralRecords — склонение «1 запись / 2 записи / 5 записей».
 //   B. Клиент (index.html, статика): chips периода, поля дат,
 //      ветка submitInput, отдельный маршрут updatePeriodReading
 //      (защита от старого сервера — «Unknown action», meters-строка
-//      не портится), блок «Передано показаний» (только №1), бейджи
+//      не портится), блок «Передано показаний» (только №1, две строки
+//      «За неделю (…)/За <месяц>», непрозрачный фон), бейджи
 //      «нед»/«мес» в хронологии, график — только суточные записи,
-//      CSS (тёмная/светлая), SW v532.
+//      CSS (тёмная/светлая), SW v533.
 //   C. Серверные справочные копии (.gs): ветка entryType в
 //      updateReading, _writePeriodEntry (только архив, prev=0,
 //      hard-проверки), колонка R (entryType) в архиве,
 //      самовосстановление заголовка R1, чтение 18 колонок,
 //      пропуск агрегатов в getRecentAllMeters, маршрут в Code.gs,
-//      node --check всех трёх файлов.
+//      node --check всех трёх файлов. Task 287 сервер НЕ менял.
 
 const fs = require('fs');
 const path = require('path');
@@ -192,9 +202,11 @@ describe('Task 286 — flowEntryTypeAcc: винительный падеж («з
     });
 });
 
-describe('Task 286 — flowCountStats: счётчик переданных показаний', () => {
+describe('Task 286+287 — flowCountStats: счётчик переданных показаний', () => {
 
-    // «Сегодня» для тестов: 01.09.2026 (вторник)
+    // «Сегодня» для тестов: 01.09.2026 (вторник).
+    // Текущая календарная неделя: пн 31.08 – вс 06.09.2026.
+    // Предыдущий полный месяц: август 2026.
     const NOW = new Date(2026, 8, 1);
 
     // Эталонная суточная запись архива №1 (consumption = curr, т.к. prev=0)
@@ -207,74 +219,70 @@ describe('Task 286 — flowCountStats: счётчик переданных по�
         };
     }
 
-    test('Пустой архив → все нули', () => {
+    // ============================================================
+    // Неделя: КАЛЕНДАРНАЯ (пн–вс текущей), не скользящее окно
+    // ============================================================
+
+    test('Границы недели: пн 31.08 – вс 06.09 (даты в res.week.start/end)', () => {
         const st = fns.flowCountStats([], NOW);
-        assertEqual(st.today.count, 0, 'today.count = 0');
-        assertEqual(st.week.count, 0, 'week.count = 0');
-        assertEqual(st.month.count, 0, 'month.count = 0');
-        assertEqual(st.today.sum, 0, 'today.sum = 0');
+        assertEqual(fns.flowDateToMdy(st.week.start), '8/31/2026', 'start = понедельник текущей недели');
+        assertEqual(fns.flowDateToMdy(st.week.end), '9/6/2026', 'end = воскресенье текущей недели');
     });
 
-    test('Записи сегодня: сумма + количество + Гкал', () => {
-        // Две записи за 01.09.2026 (повторный ввод/правка)
+    test('Неделя — календарная, НЕ скользящее окно 7 дней: сб прошлой недели не входит', () => {
+        // 01.09 (вт) входит; 31.08 (пн) входит; 30.08 (вс прошлой недели) — НЕТ
+        // (старое окно «7 дней» включало бы 26.08–01.09, т.е. и 30.08)
         const recs = [
-            dayRec('9/1/2026', 12.5, 30.1),
-            dayRec('9/1/2026', 13.0, 31.2)
+            dayRec('9/1/2026', 12.5),
+            dayRec('8/31/2026', 10.0),
+            dayRec('8/30/2026', 99)    // воскресенье ПРОШЛОЙ недели — вне
         ];
         const st = fns.flowCountStats(recs, NOW);
-        assertEqual(st.today.count, 2, '2 записи за сегодня');
-        assertEqual(st.today.days, 1, '1 уникальный день');
-        assertEqual(st.today.sum, 25.5, 'сумма расхода 12.5+13.0');
-        assertEqual(st.today.gcal, 61.3, 'сумма Гкал 30.1+31.2');
-        assertEqual(st.month.count, 2, 'сегодня входит и в месяц');
-    });
-
-    test('Окно «за 7 дней» включает границы [today−6, today]', () => {
-        const recs = [
-            dayRec('8/26/2026', 10),   // today−6 — нижняя граница (входит)
-            dayRec('9/1/2026', 11),    // сегодня — верхняя граница (входит)
-            dayRec('8/25/2026', 99)    // today−7 — НЕ входит
-        ];
-        const st = fns.flowCountStats(recs, NOW);
-        assertEqual(st.week.count, 2, '26.08 и 01.09 входят, 25.08 — нет');
-        assertEqual(st.week.sum, 21, '10+11');
+        assertEqual(st.week.count, 2, 'пн и вт текущей недели');
+        assertEqual(st.week.sum, 22.5, '12.5 + 10.0');
         assertEqual(st.week.days, 2, '2 разных дня');
     });
 
-    test('Месяц: только записи текущего календарного месяца', () => {
+    test('Неделя через границу месяца: пн в прошлом месяце (31.08) входит', () => {
+        // Неделя 31.08–06.09 пересекает месяцы — обе части считаются
         const recs = [
-            dayRec('9/1/2026', 12.5),
-            dayRec('9/30/2026', 11),    // 30.09 — тоже сентябрь (запись «из будущего»)
-            dayRec('8/31/2026', 999),   // август — НЕ входит
-            dayRec('9/5/2025', 888)     // сентябрь прошлого года — НЕ входит
+            dayRec('9/6/2026', 3, undefined, undefined),   // вс текущей недели
+            dayRec('8/31/2026', 4)                          // пн текущей недели
         ];
         const st = fns.flowCountStats(recs, NOW);
-        assertEqual(st.month.count, 2, 'только сентябрь 2026');
-        assertEqual(st.month.sum, 23.5, '12.5+11');
-        assertEqual(st.month.days, 2, '2 дня');
+        assertEqual(st.week.count, 2, 'пн и вс одной недели (разные месяцы)');
+        assertEqual(st.week.sum, 7, '3 + 4');
     });
 
-    test('Записи «за неделю/месяц» (агрегаты) НЕ считаются — нет двойного учёта', () => {
+    test('Неделя начинается с понедельника, а не с воскресенья (RU-календарь)', () => {
+        // «Сегодня» — воскресенье 06.09.2026: неделя = пн 31.08 – вс 06.09
+        const sunday = new Date(2026, 8, 6);
+        const st = fns.flowCountStats([], sunday);
+        assertEqual(fns.flowDateToMdy(st.week.start), '8/31/2026', 'пн 31.08');
+        assertEqual(fns.flowDateToMdy(st.week.end), '9/6/2026', 'вс 06.09');
+        // «Сегодня» — понедельник 07.09.2026: уже СЛЕДУЮЩАЯ неделя
+        const monday = new Date(2026, 8, 7);
+        const st2 = fns.flowCountStats([], monday);
+        assertEqual(fns.flowDateToMdy(st2.week.start), '9/7/2026', 'пн 07.09');
+        assertEqual(fns.flowDateToMdy(st2.week.end), '9/13/2026', 'вс 13.09');
+    });
+
+    test('Неделя через границу года: вс 03.01.2027 → неделя пн 28.12–вс 03.01', () => {
+        const st = fns.flowCountStats([], new Date(2027, 0, 3));
+        assertEqual(fns.flowDateToMdy(st.week.start), '12/28/2026', 'пн 28.12.2026');
+        assertEqual(fns.flowDateToMdy(st.week.end), '1/3/2027', 'вс 03.01.2027');
+    });
+
+    test('Агрегаты «за неделю/месяц» НЕ считаются в неделе (нет двойного учёта)', () => {
         const recs = [
-            dayRec('9/1/2026', 12.5, 30.1),                       // сутки (legacy, без entryType)
-            dayRec('8/25/2026', 85.4, 210.2, 'неделя'),           // агрегат недели — исключён
-            dayRec('8/31/2026', 360.2, 900.0, 'месяц'),           // агрегат месяца — в окне 7 дней, но исключён
-            dayRec('8/28/2026', 1.0, undefined, 'Сутки'),         // регистр — нормализуется в сутки, считается
-            dayRec('8/27/2026', 7.7, undefined, 'сутки')          // явные сутки — считается
+            dayRec('9/1/2026', 12.5, 30.1),
+            dayRec('8/31/2026', 85.4, 210.2, 'неделя'),   // агрегат недели (пн текущей недели) — исключён
+            dayRec('8/31/2026', 360.2, 900.0, 'месяц')    // агрегат месяца — исключён
         ];
         const st = fns.flowCountStats(recs, NOW);
-        // Сегодня: только 01.09 (12.5)
-        assertEqual(st.today.count, 1, 'агрегат не считается за сегодня');
-        assertEqual(st.today.sum, 12.5, 'только суточная запись за 01.09');
-        // Окно 7 дней [26.08–01.09]: 01.09 (12.5) + 28.08 (1.0) + 27.08 (7.7);
-        // агрегат 31.08 (360.2, «месяц») в окне, но исключён
-        assertEqual(st.week.count, 3, '3 суточные записи в окне (агрегаты не в счёт)');
-        assertEqual(st.week.sum, 21.2, '12.5 + 1.0 + 7.7');
-        assertEqual(st.week.days, 3, '3 разных дня');
-        // Месяц сентябрь: только 01.09 (остальные записи — август)
-        assertEqual(st.month.count, 1, 'агрегат месяца не учтён');
-        assertEqual(st.month.sum, 12.5, 'двойного учёта нет');
-        assertEqual(st.month.gcal, 30.1, 'Гкал только суточной записи (900.0 агрегата не в счёт)');
+        assertEqual(st.week.count, 1, 'только суточная запись 01.09');
+        assertEqual(st.week.sum, 12.5, 'агрегаты не в сумме');
+        assertEqual(st.week.gcal, 30.1, 'Гкал только суточной записи');
     });
 
     test('Legacy-записи без entryType считаются как сутки (обратная совместимость)', () => {
@@ -285,30 +293,168 @@ describe('Task 286 — flowCountStats: счётчик переданных по�
               dateCurr: '8/31/2026', gcal: null }   // entryType вообще нет (undefined)
         ];
         const st = fns.flowCountStats(recs, NOW);
-        assertEqual(st.today.count, 1, 'пустой entryType = сутки');
-        assertEqual(st.today.sum, 1.0, 'consumption из legacy-строки (91.11−90.11=1.0)');
-        assertEqual(st.week.count, 2, 'undefined entryType = сутки');
+        assertEqual(st.week.count, 2, 'пустой/undefined entryType = сутки');
+        assertEqual(st.week.sum, 3.5, 'consumption из legacy-строк');
     });
 
-    test('Метки периода с регистром: «Сутки»/«НЕДЕЛЯ» нормализуются', () => {
+    test('Метки с регистром: «НЕДЕЛЯ»/« Месяц » (trim+lower) — агрегаты, не в счётчике недели', () => {
         const recs = [
-            dayRec('9/1/2026', 5, undefined, 'неделя'),    // агрегат — исключена
-            dayRec('8/30/2026', 3, undefined, ' НЕДЕЛЯ ')   // trim+lower → агрегат — исключена
+            dayRec('9/1/2026', 5, undefined, ' НЕДЕЛЯ '),
+            dayRec('8/31/2026', 3, undefined, 'Месяц')
         ];
         const st = fns.flowCountStats(recs, NOW);
-        assertEqual(st.today.count, 0, 'неделя (в любом регистре) — не сутки');
-        assertEqual(st.week.count, 0, 'недельный агрегат не в счётчике');
+        assertEqual(st.week.count, 0, 'агрегаты в любом регистре — не сутки');
     });
 
     test('sum расхода может быть отрицательной (rollover счётчика) — не абсолютизируем', () => {
-        const recs = [dayRec('9/1/2026', 5)];  // consumption = 5
-        const st = fns.flowCountStats(recs, NOW);
-        assertEqual(st.today.sum, 5, 'consumption как есть');
-        // отрицательный кейс:
         const recs2 = [{ meterId: 1, prev: 100, curr: 20, consumption: -80,
-                         dateCurr: '8/31/2026', gcal: null, entryType: '' }];
+                         dateCurr: '9/1/2026', gcal: null, entryType: '' }];
         const st2 = fns.flowCountStats(recs2, NOW);
         assertEqual(st2.week.sum, -80, 'отрицательный расход виден в счётчике — сигнал о проблеме');
+    });
+
+    // ============================================================
+    // Месяц: предыдущий полный, с откатом назад пока записей нет
+    // ============================================================
+
+    test('Пустой архив → нули, месяц = предыдущий (август), неделя = текущая', () => {
+        const st = fns.flowCountStats([], NOW);
+        assertEqual(st.week.count, 0, 'week.count = 0');
+        assertEqual(st.month.count, 0, 'month.count = 0');
+        assertEqual(st.month.sum, 0, 'month.sum = 0');
+        assertEqual(fns.flowDateToMdy(st.month.start), '8/1/2026', 'month.start = 1-е число предыдущего месяца');
+    });
+
+    test('Месяц: предыдущий календарный месяц (август), НЕ текущий', () => {
+        const recs = [
+            dayRec('8/31/2026', 10.0, 30.1),
+            dayRec('8/5/2026', 2.0),
+            dayRec('9/1/2026', 12.5)     // сентябрь (текущий) — НЕ входит
+        ];
+        const st = fns.flowCountStats(recs, NOW);
+        assertEqual(st.month.count, 2, 'только записи августа');
+        assertEqual(st.month.sum, 12.0, '10.0 + 2.0');
+        assertEqual(st.month.gcal, 30.1, 'Гкал августа');
+        assertEqual(st.month.days, 2, '2 разных дня августа');
+        assertEqual(fns.flowDateToMdy(st.month.start), '8/1/2026', 'выбран август');
+    });
+
+    test('Агрегат «за месяц» в прошлом месяце НЕ суммируется с суточными (двойной учёт)', () => {
+        const recs = [
+            dayRec('8/31/2026', 10.0),
+            dayRec('8/30/2026', 8.0),
+            dayRec('8/31/2026', 360.2, 900.0, 'месяц')   // агрегат августа — в счёт не идёт
+        ];
+        const st = fns.flowCountStats(recs, NOW);
+        assertEqual(st.month.count, 2, 'только суточные');
+        assertEqual(st.month.sum, 18.0, '10.0 + 8.0');
+        assertEqual(st.month.gcal, 0, 'Гкал агрегата не в счёт');
+        assertEqual(st.month.aggOnly, false, 'обычный режим (есть суточные)');
+    });
+
+    test('ОТКАТ: предыдущий месяц пуст → показываем последний месяц с записями', () => {
+        // Август пуст, июль с записями → месяц = июль
+        // («показывать показания за предыдущий месяц до тех пор, пока не
+        //  введут показания за новый полный прошедший месяц» — Task 287)
+        const recs = [
+            dayRec('9/1/2026', 9.0),      // текущий месяц
+            dayRec('7/31/2026', 5.0),     // июль
+            dayRec('7/15/2026', 3.0)      // июль
+        ];
+        const st = fns.flowCountStats(recs, NOW);
+        assertEqual(fns.flowDateToMdy(st.month.start), '7/1/2026', 'откат к июлю (август пуст)');
+        assertEqual(st.month.count, 2, 'записи июля');
+        assertEqual(st.month.sum, 8.0, '5.0 + 3.0');
+    });
+
+    test('ОТКАТ через несколько пустых месяцев: записи только в мае → месяц = май', () => {
+        const recs = [
+            dayRec('5/3/2026', 2.0),
+            dayRec('5/20/2026', 4.0),
+            dayRec('9/1/2026', 9.0)
+        ];
+        const st = fns.flowCountStats(recs, NOW);
+        assertEqual(fns.flowDateToMdy(st.month.start), '5/1/2026', 'откат к маю');
+        assertEqual(st.month.count, 2, 'записи мая');
+        assertEqual(st.month.sum, 6.0, '2.0 + 4.0');
+    });
+
+    test('ОТКАТ останавливается на агрегате «за месяц»: введённый агрегат = «показания введены»', () => {
+        // Август пуст; июль закрыт агрегатом «за месяц» (700 т) → показываем
+        // июль ПО АГРЕГАТУ (aggOnly) — ровно как в заявке: пока не введут
+        // показания за август, показываем предыдущий введённый месяц
+        const recs = [
+            dayRec('9/1/2026', 9.0),
+            { meterId: 1, prev: 0, curr: 700, consumption: 700,
+              datePrev: '7/1/2026', dateCurr: '7/31/2026',
+              gcal: 2400, entryType: 'месяц' }
+        ];
+        const st = fns.flowCountStats(recs, NOW);
+        assertEqual(fns.flowDateToMdy(st.month.start), '7/1/2026', 'откат к июлю (агрегат)');
+        assertEqual(st.month.aggOnly, true, 'режим «только агрегат»');
+        assertEqual(st.month.count, 1, 'одна запись — показания за месяц');
+        assertEqual(st.month.sum, 700, 'сумма = расход за месяц');
+        assertEqual(st.month.gcal, 2400, 'Гкал агрегата');
+    });
+
+    test('Месяц БЕЗ суточных, но с агрегатом: показываем агрегат (aggOnly)', () => {
+        // Август суточных не имеет, но введён агрегат «за август» →
+        // показываем август по агрегату, а не «нет записей»
+        const recs = [
+            dayRec('9/1/2026', 9.0),
+            { meterId: 1, prev: 0, curr: 940.5, consumption: 940.5,
+              datePrev: '8/1/2026', dateCurr: '8/31/2026',
+              gcal: 3100, entryType: 'месяц' }
+        ];
+        const st = fns.flowCountStats(recs, NOW);
+        assertEqual(fns.flowDateToMdy(st.month.start), '8/1/2026', 'август (агрегат есть)');
+        assertEqual(st.month.aggOnly, true, 'aggOnly');
+        assertEqual(st.month.count, 1, '1 запись');
+        assertEqual(st.month.sum, 940.5, 'расход за август');
+    });
+
+    test('Недельный агрегат НЕ считается «показаниями за месяц» (откат не останавливается на нём)', () => {
+        // В августе только недельный агрегат, суточных нет → месячных
+        // показаний за август нет → «нет записей» (недельный агрегат не
+        // переключает месяц)
+        const recs = [
+            dayRec('9/1/2026', 9.0),
+            dayRec('8/30/2026', 100, undefined, 'неделя')
+        ];
+        const st = fns.flowCountStats(recs, NOW);
+        assertEqual(fns.flowDateToMdy(st.month.start), '8/1/2026', 'август остаётся (ниже записей нет)');
+        assertEqual(st.month.count, 0, 'недельный агрегат не в счёт');
+        assertEqual(st.month.aggOnly, true, 'aggOnly-ветка, но пустая');
+    });
+
+    test('Записи только в ТЕКУЩЕМ месяце (свежая установка) → предыдущий, «нет записей»', () => {
+        const recs = [dayRec('9/1/2026', 9.0)];
+        const st = fns.flowCountStats(recs, NOW);
+        assertEqual(fns.flowDateToMdy(st.month.start), '8/1/2026', 'август — нет данных');
+        assertEqual(st.month.count, 0, 'пусто');
+    });
+
+    test('Январь: предыдущий месяц = декабрь ПРОШЛОГО года', () => {
+        const st = fns.flowCountStats([dayRec('12/31/2026', 3.0)], new Date(2027, 0, 15));
+        assertEqual(fns.flowDateToMdy(st.month.start), '12/1/2026', 'декабрь 2026');
+        assertEqual(st.month.count, 1, 'запись 31.12 входит');
+        // и у пустого архива тоже декабрь 2026
+        const st2 = fns.flowCountStats([], new Date(2027, 0, 15));
+        assertEqual(fns.flowDateToMdy(st2.month.start), '12/1/2026', 'пустой архив: декабрь 2026');
+    });
+
+    test('Агрегат «за месяц» в ТЕКУЩЕМ месяце не приоткрывает будущий период', () => {
+        // dateCurr агрегата = 30.09.2026 (текущий месяц) — месяц остаётся августом
+        const recs = [
+            dayRec('8/31/2026', 1.0),
+            { meterId: 1, prev: 0, curr: 950, consumption: 950,
+              datePrev: '9/1/2026', dateCurr: '9/30/2026',
+              gcal: null, entryType: 'месяц' }
+        ];
+        const st = fns.flowCountStats(recs, NOW);
+        assertEqual(fns.flowDateToMdy(st.month.start), '8/1/2026', 'текущий месяц не показываем');
+        assertEqual(st.month.count, 1, 'запись августа');
+        assertEqual(st.month.sum, 1.0, 'сумма августа');
     });
 });
 
@@ -448,11 +594,24 @@ describe('Task 286 — клиент: счётчик «Передано пока�
         assertTrue(m !== null, 'guard: не-№1 → пустой блок');
     });
 
-    test('Три строки: за сутки / за 7 дней / за месяц', () => {
-        assertTrue(INDEX_SRC.indexOf('За сутки (') !== -1, 'строка «За сутки (дата)»');
-        assertTrue(INDEX_SRC.indexOf('За 7 дней (') !== -1, 'строка «За 7 дней (диапазон)»');
-        assertTrue(INDEX_SRC.indexOf("monthLabel.toLowerCase()") !== -1,
-            'строка «За сентябрь» — название месяца');
+    test('Task 287: ДВЕ строки — «За неделю (пн–вс)» и «За <месяц>»; «За сутки» удалена', () => {
+        assertFalse(INDEX_SRC.indexOf('За сутки (') !== -1, 'строки «За сутки (дата)» больше нет');
+        assertFalse(INDEX_SRC.indexOf('За 7 дней (') !== -1, 'строки «За 7 дней (диапазон)» больше нет');
+        assertTrue(INDEX_SRC.indexOf('За неделю (') !== -1, 'строка «За неделю (диапазон пн–вс)»');
+        assertTrue(INDEX_SRC.indexOf("monthLabel = 'За ' + FLOW_MONTHS_RU[") !== -1,
+            'строка «За <месяц>» — название месяца из разрешённого');
+        // Год в подписи месяца — только когда месяц НЕ текущего года
+        // (откат назад может показать и позапрошлый год)
+        assertTrue(INDEX_SRC.indexOf('monthLabel += \' \' + mStart.getFullYear()') !== -1,
+            'подпись года для старых месяцев');
+    });
+
+    test('Task 287: неделя — календарная (пн–вс), подпись из stats.week.start/end', () => {
+        assertTrue(INDEX_SRC.indexOf('fmtShort(stats.week.start) + \'–\' + fmtShort(stats.week.end)') !== -1,
+            'подпись недели = пн–вс текущей календарной недели');
+        // Подпись строится из ГРАНИЦ из flowCountStats (не пересчитывается в UI)
+        const m = INDEX_SRC.match(/var weekAgo = new Date\(now\.getFullYear\(\), now\.getMonth\(\), now\.getDate\(\) - 6\);/);
+        assertFalse(m !== null, 'старое скользящее окно «7 дней назад» удалено');
     });
 
     test('Каждая строка: сумма т + Гкал + число записей (за M дн.)', () => {
@@ -521,15 +680,32 @@ describe('Task 286 — клиент: CSS и SW', () => {
             'светлая тема значений');
     });
 
+    test('Task 287: фон блока счётчика НЕпрозрачный (тёмная + светлая)', () => {
+        // Блок сидит прямо на фоне страницы с сеткой — сплошной цвет,
+        // без альфы (rgba/hsla), в обеих темах
+        const dark = INDEX_SRC.match(/\.flow-stats-section \{[^}]*\}/);
+        assertTrue(dark !== null, 'правило найдено');
+        if (dark) {
+            const bgm = dark[0].match(/background:\s*#([0-9a-fA-F]{6})\s*;/);
+            assertTrue(bgm !== null, 'тёмная тема: background = сплошной HEX без альфы');
+        }
+        const light = INDEX_SRC.match(/\[data-theme="light"\] \.flow-stats-section \{[^}]*\}/);
+        assertTrue(light !== null, 'правило светлой темы найдено');
+        if (light) {
+            const bgm2 = light[0].match(/background:\s*#([0-9a-fA-F]{6})\s*;/);
+            assertTrue(bgm2 !== null, 'светлая тема: background = сплошной HEX без альфы');
+        }
+    });
+
     test('CSS: бейдж периода (тёмная + светлая)', () => {
         assertTrue(INDEX_SRC.indexOf('.flow-arch-period-badge {') !== -1, 'бейдж');
         assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .flow-arch-period-badge {') !== -1,
             'светлая тема');
     });
 
-    test('SW-кэш поднят до v532 (Task 286 — фронтенд менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v532'") !== -1,
-            'CACHE_VERSION = kipia-test-v532');
+    test('SW-кэш поднят до v533 (Task 287 — фронтенд менялся)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v533'") !== -1,
+            'CACHE_VERSION = kipia-test-v533');
     });
 
     test('Регрессия: WEB_APP_URL не тронут (AKfycbyt…, Task 284)', () => {
