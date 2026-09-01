@@ -42,7 +42,7 @@
  */
 
 /** URL деплоя (заполните после первого деплоя). */
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzgPtyya6eMCql4pxZiOyYkfJaBsMRLvKK5bzrsbZpLa5zoNtxSoKeNYJauQVIOtlz2rg/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyt2sjbJ8xT5UPKDlYj4q-CV-5pH_Yrv5COrg0PIpp92snpQULUNtJC__pMnQ0h6feNlA/exec'; // Task 284: актуальное развёртывание (см. index.html)
 
 /**
  * Обработка POST-запросов от PWA.
