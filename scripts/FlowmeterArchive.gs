@@ -42,6 +42,13 @@
 //                      JUMP_HIGH / JUMP_LOW / PERIOD_MISMATCH / TEMP_OUT_OF_RANGE /
 //                      GCAL_RATIO / DUPLICATE (soft-confirm, попадают в archive
 //                      с пометкой).
+//   R: entryType      — тип записи (Task 286): 'сутки' (обычный ввод и все
+//                      legacy-записи до Task 286 — пусто в R = сутки) /
+//                      'неделя' / 'месяц' («расход за период» — агрегат от
+//                      Тэкон-19 по Хозрасчёту №1; meters-строка при этом не
+//                      меняется, curr = расход за период, datePrev/dateCurr =
+//                      границы периода). Заголовок R самовосстанавливается в
+//                      appendToArchive при первой записи с типом (см. ниже).
 // ============================================================
 
 var FlowmeterArchive = {
@@ -105,14 +112,28 @@ var FlowmeterArchive = {
   //              нет. Hard-block-коды (SIGN_NEG, DATE_INCONSISTENT) сюда не
   //              попадают, т.к. показания не сохраняются (caller возвращает
   //              ошибку до вызова appendToArchive).
+  //   entryType — Task 286: тип записи — 'сутки' (обычный ввод; legacy-строки
+  //              без R = сутки) / 'неделя' / 'месяц' («расход за период» —
+  //              только архив, meters-строка не меняется). Пишется в R=18.
+  //              Необязательный параметр (undefined = пусто в R, трактуется
+  //              как 'сутки' при чтении в listArchive).
   // ============================================================
-  appendToArchive: function(meterId, hoz, prev, curr, datePrev, dateCurr, temp, gcal, unit, period, role, name, comment, anomaly) {
+  appendToArchive: function(meterId, hoz, prev, curr, datePrev, dateCurr, temp, gcal, unit, period, role, name, comment, anomaly, entryType) {
     var sheet = this._getSheet();
     if (!sheet) {
       // Лист архива не создан — тихо пропускаем (не блокируем основной flow)
       Logger.log('Archive sheet not found — skipping archive write');
       return;
     }
+
+    // Task 286: самовосстановление заголовка R1 ('entryType') — на случай,
+    // если лист архива был создан до Task 286 и колонки R нет в шапке.
+    // Идемпотентно: после первой записи заголовок уже стоит, перезаписи нет.
+    try {
+      if (String(sheet.getRange(1, 18).getValue() || '') === '') {
+        sheet.getRange(1, 18).setValue('entryType');
+      }
+    } catch (e) { /* не критично — заголовок косметика */ }
 
     var consumption = (curr || 0) - (prev || 0);
 
@@ -126,12 +147,12 @@ var FlowmeterArchive = {
     }
 
     // Добавляем строку в конец листа.
-    // Структура (17 столбцов A–Q, Task 100 добавил K=Gcal, Task 197 — P=comment,
-    // Task 199 — Q=anomaly):
+    // Структура (18 столбцов A–R, Task 100 добавил K=Gcal, Task 197 — P=comment,
+    // Task 199 — Q=anomaly, Task 286 — R=entryType):
     //   A meterId, B hoz, C prev, D curr, E consumption,
     //   F datePrev, G dateCurr, H daysBetween, I unit, J temp,
     //   K Gcal (Task 100), L period, M modRole, N modName, O timestamp,
-    //   P comment (Task 197), Q anomaly (Task 199)
+    //   P comment (Task 197), Q anomaly (Task 199), R entryType (Task 286)
     sheet.appendRow([
       meterId,                                                                    // A: meterId
       hoz || '',                                                                  // B: hoz
@@ -149,10 +170,12 @@ var FlowmeterArchive = {
       name || '',                                                                 // N: modName
       new Date(),                                                                  // O: timestamp
       String(comment || ''),                                                       // P: comment (Task 197)
-      String(anomaly || '')                                                        // Q: anomaly (Task 199)
+      String(anomaly || ''),                                                       // Q: anomaly (Task 199)
+      String(entryType || '')                                                      // R: entryType (Task 286)
     ]);
 
-    Logger.log('Archive: meterId=' + meterId + ', prev=' + prev + ', curr=' + curr + ', consumption=' + consumption + ', gcal=' + (gcal || '—'));
+    Logger.log('Archive: meterId=' + meterId + ', prev=' + prev + ', curr=' + curr + ', consumption=' + consumption + ', gcal=' + (gcal || '—') +
+               (entryType ? (', entryType=' + entryType) : ''));
   },
 
   // ============================================================
@@ -236,9 +259,10 @@ var FlowmeterArchive = {
       return { ok: true, data: { records: [], meterId: meterId } };
     }
 
-    // Читаем все данные (столбцы A–Q, 17 столбцов; Task 100 добавил K=Gcal,
-    // Task 197 добавил P=comment, Task 199 добавил Q=anomaly)
-    var range = sheet.getRange(this.DATA_START_ROW, 1, lastRow - this.DATA_START_ROW + 1, 17);
+    // Читаем все данные (столбцы A–R, 18 столбцов; Task 100 добавил K=Gcal,
+    // Task 197 добавил P=comment, Task 199 добавил Q=anomaly,
+    // Task 286 добавил R=entryType)
+    var range = sheet.getRange(this.DATA_START_ROW, 1, lastRow - this.DATA_START_ROW + 1, 18);
     var values = range.getValues();
 
     var records = [];
@@ -246,6 +270,11 @@ var FlowmeterArchive = {
       var row = values[i];
       // Фильтруем по meterId (col A = 0)
       if (parseInt(row[0], 10) !== meterId) continue;
+
+      // Task 286: тип записи (R=18). Пусто у legacy-строк = 'сутки'.
+      // Нормализация на сервере — клиент получает готовое значение.
+      var entryTypeRaw = String(row[17] || '').trim().toLowerCase();
+      var entryType = (entryTypeRaw === 'неделя' || entryTypeRaw === 'месяц') ? entryTypeRaw : 'сутки';
 
       var record = {
         meterId:     parseInt(row[0], 10),
@@ -266,7 +295,8 @@ var FlowmeterArchive = {
                        ? row[14].toISOString()
                        : String(row[14] || ''),
         comment:     String(row[15] || '').trim(),    // P=16 — Task 197
-        anomaly:     String(row[16] || '').trim()    // Q=17 — Task 199
+        anomaly:     String(row[16] || '').trim(),   // Q=17 — Task 199
+        entryType:   entryType                       // R=18 — Task 286
       };
       records.push(record);
     }
@@ -302,6 +332,10 @@ var FlowmeterArchive = {
   // @returns {Array} — массив объектов:
   //   { meterId, hoz, prev, curr, consumption, dateCurr, modName, timestamp }
   // Берёт самую свежую запись для каждого meterId (по dateCurr).
+  // Task 286: записи «за неделю/месяц» (R='неделя'/'месяц') ПРОПУСКАЮТСЯ —
+  // агрегат за период не должен участвовать в суточных сравнениях
+  // WRONG_METER (иначе ложные срабатывания: недельный расход в ~7 раз
+  // больше суточного).
   // Не требует авторизации — вызывается сервером из updateReading
   // и из listRules (для клиента, через маршрут flowmeter.getRecentAllMeters).
   // ============================================================
@@ -313,8 +347,8 @@ var FlowmeterArchive = {
     var lastRow = sheet.getLastRow();
     if (lastRow < 2) return [];
 
-    // A..Q = 17 колонок
-    var range = sheet.getRange(this.DATA_START_ROW, 1, lastRow - this.DATA_START_ROW + 1, 17);
+    // A..R = 18 колонок (Task 286: R=entryType)
+    var range = sheet.getRange(this.DATA_START_ROW, 1, lastRow - this.DATA_START_ROW + 1, 18);
     var data = range.getValues();
 
     var byMeter = {};
@@ -327,6 +361,10 @@ var FlowmeterArchive = {
       var row = data[i];
       var mid = parseInt(row[0], 10); // A=meterId
       if (!mid) continue;
+
+      // Task 286: агрегаты «за неделю/месяц» не участвуют (см. докстринг)
+      var etRaw = String(row[17] || '').trim().toLowerCase();
+      if (etRaw === 'неделя' || etRaw === 'месяц') continue;
 
       var dateCurr = row[6]; // G=dateCurr
       if (!(dateCurr instanceof Date)) continue;
@@ -410,11 +448,14 @@ function flowmeterInitArchive(force) {
   //   A=1 meterId, B=2 hoz, C=3 prev, D=4 curr, E=5 consumption,
   //   F=6 datePrev, G=7 dateCurr, H=8 daysBetween, I=9 unit, J=10 temp,
   //   K=11 Gcal, L=12 period, M=13 modRole, N=14 modName, O=15 timestamp,
-  //   P=16 comment (Task 197), Q=17 anomaly (Task 199).
+  //   P=16 comment (Task 197), Q=17 anomaly (Task 199), R=18 entryType (Task 286).
   // В предыдущей версии init-функции заголовки I/J и N/O были перепутаны
   // (I='temp' вместо 'unit', N='timestamp' вместо 'modName') — это
   // расходилось с реальной структурой данных в appendToArchive. Теперь
   // заголовки строго соответствуют позициям данных.
+  // ВНИМАНИЕ (Task 286): этот init одноразовый и у живых таблиц уже выполнен —
+  // заголовок R=entryType при первой записи с типом самовосстанавливается
+  // в appendToArchive, повторно запускать flowmeterInitArchive НЕ нужно.
   var headers = [
     'meterId',       // A=1
     'hoz',           // B=2
@@ -432,7 +473,8 @@ function flowmeterInitArchive(force) {
     'modName',       // N=14 (fix: было 'timestamp')
     'timestamp',     // O=15 (fix: было пропущено)
     'comment',       // P=16 — Task 197
-    'anomaly'        // Q=17 — Task 199
+    'anomaly',       // Q=17 — Task 199
+    'entryType'      // R=18 — Task 286
   ];
 
   // Записываем заголовки

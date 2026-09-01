@@ -8,6 +8,11 @@
 // Эндпоинты (вызываются через doPost):
 //   flowmeter.list         — прочитать все позиции расходомеров
 //   flowmeter.updateReading — обновить показания одной позиции
+//                            Task 286: payload.entryType='неделя'|'месяц' —
+//                            ввод «расход за период» (только в архив,
+//                            meters-строка не меняется; hard-проверки те же,
+//                            soft-валидация пропускается — правила
+//                            откалиброваны на суточные значения)
 //   flowmeter.setComment   — Task 195: комментарий к последним показаниям
 //                            (только для автора показаний)
 //
@@ -198,7 +203,18 @@ var Flowmeter = {
   // ============================================================
   // flowmeter.updateReading — обновить показания одной позиции
   // ============================================================
-  // payload: { token, id, prev, curr, datePrev, dateCurr, temp, gcal }
+  // payload: { token, id, prev, curr, datePrev, dateCurr, temp, gcal,
+  //            entryType }  ← Task 286
+  //   entryType — тип записи:
+  //     'сутки' (по умолчанию, пусто/undefined = legacy-сутки) —
+  //       обычный ввод: обновляется meters-строка (D–G, I, J, L–N) + архив;
+  //     'неделя' / 'месяц' (Task 286, только Хозрасчёт №1) —
+  //       «расход за период»: запись ТОЛЬКО в hozraschet_archive
+  //       (R=entryType), meters-строка НЕ трогается — «Последние
+  //       показания» в карточке остаются последними СУТОЧНЫМИ.
+  //       prev всегда 0 → consumption в архиве = введённый расход.
+  //       isEdit НЕ поддерживается (запись нельзя «изменить» — при ошибке
+  //       вводится заново; история сохраняется в архиве).
   // Возвращает: { ok: true, data: { id: N } }
   //
   // Записывает в строку (id + 1):
@@ -212,6 +228,17 @@ var Flowmeter = {
     var id = parseInt(payload.id, 10);
     if (!id || id < 1) {
       return { ok: false, error: 'Некорректный id позиции' };
+    }
+
+    // Task 286: нормализация типа записи. Допустимые значения:
+    // 'сутки' (по умолчанию), 'неделя', 'месяц' — строка на русском,
+    // попадает в hozraschet_archive.R как есть (читаемо в таблице).
+    var entryType = String(payload.entryType || 'сутки').trim().toLowerCase();
+    if (entryType !== 'неделя' && entryType !== 'месяц') entryType = 'сутки';
+
+    // Task 286: «расход за период» — отдельная ветка (только архив)
+    if (entryType === 'неделя' || entryType === 'месяц') {
+      return this._writePeriodEntry(payload, user, id, entryType);
     }
 
     // Task 205: Хозрасчёт №1 (id=1) — особый режим «расход за предыдущие сутки».
@@ -444,13 +471,112 @@ var Flowmeter = {
         payload.temp, payload.gcal, unitVal, periodVal,
         user.role || '', user.name || user.email || '',  // Task 109: имя (если есть) или email
         '',  // Task 237: новая запись — без комментария (ожидание setComment)
-        anomalyDetail  // Task 199: строка с кодами аномалий для archive.Q
+        anomalyDetail,  // Task 199: строка с кодами аномалий для archive.Q
+        'сутки'  // Task 286: тип записи (R=18); legacy-строки без R = 'сутки'
       );
     } catch (archiveErr) {
       Logger.log('Archive write failed (non-critical): ' + archiveErr.message);
     }
 
     return { ok: true, data: { id: id } };
+  },
+
+  // ============================================================
+  // Task 286: _writePeriodEntry — «расход за неделю/месяц» (только архив)
+  // ============================================================
+  // Вызывается из updateReading при entryType='неделя'|'месяц'
+  // (клиент отправляет только для Хозрасчёта №1 — расход пара по Тэкон-19).
+  //
+  // Отличия от суточного ввода:
+  //   • meters-строка НЕ обновляется — «Последние показания» в карточке
+  //     остаются последними СУТОЧНЫМИ; modRole/modName/modTimestamp (L–N)
+  //     и активный комментарий (O) не затрагиваются;
+  //   • запись идёт ТОЛЬКО в hozraschet_archive: A= meterId, C= prev (0),
+  //     D= curr (расход за период), E= consumption (= curr),
+  //     F= datePrev (начало периода), G= dateCurr (конец периода),
+  //     H= daysBetween, K= Gcal (опционально), R= entryType;
+  //   • soft-валидация (ValidationRules.compute) ПРОПУСКАЕТСЯ — правила
+  //     (max_cons, min_cons и т.д.) откалиброваны на суточные значения,
+  //     недельный/месячный агрегат дал бы ложные JUMP_HIGH/PERIOD_MISMATCH;
+  //   • остаются hard-проверки (как SIGN_NEG / DATE_INCONSISTENT у суток):
+  //     отрицательное значение; дата конца раньше даты начала;
+  //   • isEdit не поддерживается — игнорируется (передаётся как новый ввод);
+  //   • ошибка записи в архив здесь КРИТИЧНА (архив — единственное
+  //     хранилище записи) → возвращаем ok:false, а не глотаем.
+  // ============================================================
+  _writePeriodEntry: function(payload, user, id, entryType) {
+    var sheet = this._getSheet();
+    if (!sheet) {
+      return { ok: false, error: 'Лист не найден' };
+    }
+
+    // Строка в таблице: id + 1 (строка 1 — заголовки, строка 2 — id=1)
+    var rowNum = id + 1;
+    var lastRow = sheet.getLastRow();
+    if (rowNum > lastRow) {
+      return { ok: false, error: 'Позиция id=' + id + ' не найдена' };
+    }
+
+    // --- Hard-проверки (зеркало SIGN_NEG / DATE_INCONSISTENT) ---
+    var currVal = parseFloat(payload.curr);
+    if (isNaN(currVal)) {
+      return { ok: false, error: 'Некорректное значение расхода' };
+    }
+    if (currVal < 0) {
+      return { ok: false, error: 'sign_neg',
+               message: 'Отрицательное значение расхода: ' + currVal +
+                        '. Проверьте, не введён ли знак «минус» случайно.' };
+    }
+
+    var datePrevObj = this._clientToDateObj(payload.datePrev);
+    var dateCurrObj = this._clientToDateObj(payload.dateCurr);
+    if (datePrevObj && dateCurrObj && dateCurrObj < datePrevObj) {
+      return { ok: false, error: 'date_inconsistent',
+               message: 'Дата конца периода раньше даты начала: ' +
+                        payload.datePrev + ' → ' + payload.dateCurr +
+                        '. Проверьте даты периода.' };
+    }
+
+    // Гкал — необязательное поле (как у суточного ввода №1, Task 206)
+    var gcalVal = null;
+    if (payload.gcal !== null && payload.gcal !== undefined && payload.gcal !== '') {
+      gcalVal = parseFloat(payload.gcal);
+      if (isNaN(gcalVal)) gcalVal = null;
+    }
+
+    // Данные позиции из meters-строки (только чтение — не запись)
+    var hozName = String(sheet.getRange(rowNum, 2).getValue() || '');
+    var unitVal = String(sheet.getRange(rowNum, 8).getValue() || '');
+    var periodVal = String(sheet.getRange(rowNum, 11).getValue() || '');
+
+    // Аудит (по паттерну суточного ввода); падеж — винительный
+    // («за неделю»/«за месяц», не «за неделя»)
+    var entryTypeAcc = (entryType === 'неделя') ? 'неделю' : entryType;
+    try {
+      Utils.audit(user.email, 'FLOWMETER_UPDATE_READING', '', '',
+        'Расходомер id=' + id + ': расход за ' + entryTypeAcc + ' = ' + currVal +
+        ' ' + unitVal + ' (' + payload.datePrev + ' — ' + payload.dateCurr + ')');
+    } catch (e) { /* audit log — не критично */ }
+
+    // Единственная запись — в архив (ошибка = неуспех, не глотаем)
+    try {
+      FlowmeterArchive.appendToArchive(
+        id, hozName,
+        0, currVal,   // prev=0 → consumption (E) = введённый расход за период
+        payload.datePrev, payload.dateCurr,
+        null,         // temp — нет для №1 (Тэкон-19 не отдаёт температуру)
+        gcalVal, unitVal, periodVal,
+        user.role || '', user.name || user.email || '',
+        '',           // comment — пусто (setComment работает с суточными)
+        '',           // anomaly — soft-валидация пропущена
+        entryType     // Task 286: R=18 — 'неделя' | 'месяц'
+      );
+    } catch (archiveErr) {
+      Logger.log('Archive write failed (period entry): ' + archiveErr.message);
+      return { ok: false, error: 'Ошибка записи в архив: ' + archiveErr.message };
+    }
+
+    return { ok: true, data: { id: id, entryType: entryType } };
   },
 
   // ============================================================

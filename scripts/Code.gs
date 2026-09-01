@@ -140,6 +140,17 @@ function doPost(e) {
       case 'flowmeter.updateReading':
         return _json(Flowmeter.updateReading(payload));
 
+      // Task 286: ввод «расход за неделю/месяц» (Хозрасчёт №1) — только архив.
+      // Отдельный маршрут (не updateReading) — чтобы СТАРЫЙ сервер без
+      // поддержки типов записей возвращал «Unknown action» и НИЧЕГО не писал,
+      // а не трактовал недельный агрегат как суточные показания (это
+      // испортило бы meters-строку). payload.entryType='неделя'|'месяц'
+      // уже задан клиентом → Flowmeter.updateReading ветвится в
+      // _writePeriodEntry (meters-строка не трогается, soft-валидация
+      // пропускается). Ответ: {ok, data:{id, entryType}}.
+      case 'flowmeter.updatePeriodReading':
+        return _json(Flowmeter.updateReading(payload));
+
       // Task 195: комментарий к последним показаниям (только автор показаний)
       case 'flowmeter.setComment':
         return _json(Flowmeter.setComment(payload));

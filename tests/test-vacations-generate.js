@@ -361,8 +361,8 @@ describe('Task 279 — статические инварианты (фронт/i
             'лог о самолечении');
     });
 
-    test('SW-кэш поднят до v531 (Task 284 — фронтенд менялся: URL деплоя)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v531'") !== -1,
-            'CACHE_VERSION = kipia-test-v531');
+    test('SW-кэш поднят до v532 (Task 286 — фронтенд менялся: ввод за период)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v532'") !== -1,
+            'CACHE_VERSION = kipia-test-v532');
     });
 });
