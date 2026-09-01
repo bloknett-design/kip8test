@@ -21,7 +21,7 @@
 //   5. Конкатенация запроса не тронута: '?action=' + encodeURIComponent
 //   6. Справочная константа WEB_APP_URL в Code.gs синхронна
 //      (информационная — на работу сервера не влияет)
-//   7. SW-кэш поднят до kipia-test-v534 (фронтенд менялся)
+//   7. SW-кэш поднят до kipia-test-v535 (фронтенд менялся)
 //   8. VacationsDiagnose.gs подсказывает верный URL (AKfycbyt…)
 //   9. node --check Code.gs — синтаксис валиден после правки
 
@@ -83,9 +83,9 @@ describe('Task 284 — URL развёртывания в KipAuth', () => {
             'старый URL из подсказки убран');
     });
 
-    test('SW-кэш поднят до v534 (Task 288 — фронтенд менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v534'") !== -1,
-            'CACHE_VERSION = kipia-test-v534');
+    test('SW-кэш поднят до v535 (Task 289 — фронтенд менялся)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v535'") !== -1,
+            'CACHE_VERSION = kipia-test-v535');
     });
 
     test('node --check: Code.gs синтаксически валиден', () => {

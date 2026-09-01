@@ -20,7 +20,9 @@
 //   E: consumption   — расход = curr − prev
 //   F: datePrev      — дата предыдущих показаний (Date object)
 //   G: dateCurr      — дата текущих показаний (Date object)
-//   H: daysBetween   — кол-во дней между датами
+//   H: daysBetween   — кол-во дней между датами (для записей «за
+//                      период» недели/месяца — ВКЛЮЧИТЕЛЬНО: 01.08–31.08
+//                      = 31 полный день; Task 289)
 //   I: temp          — температура среды (число или пусто)
 //   J: unit          — единица измерения (т, м³)
 //   K: Gcal          — гигакалории пара (число или пусто; Task 100)
@@ -144,6 +146,15 @@ var FlowmeterArchive = {
     if (datePrevObj && dateCurrObj) {
       daysBetween = Math.round((dateCurrObj - datePrevObj) / 86400000);
       if (daysBetween < 0) daysBetween = 0;
+      // Task 289: записи «за период» (неделя/месяц) — дни считаются
+      // ВКЛЮЧИТЕЛЬНО: период 01.08–31.08 = 31 полный день (не 30),
+      // неделя пн–вс = 7 дней. Суточные записи — прежняя семантика
+      // (разница дат), чтобы не задеть валидацию PERIOD_MISMATCH
+      // (ValidationRules считает daysBetween по датам самостоятельно).
+      var etNorm = String(entryType || '').trim().toLowerCase();
+      if (etNorm === 'неделя' || etNorm === 'месяц') {
+        daysBetween = daysBetween + 1;
+      }
     }
 
     // Добавляем строку в конец листа.

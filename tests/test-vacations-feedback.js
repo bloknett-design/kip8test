@@ -158,9 +158,9 @@ describe('Task 282 — serverMessage: пояснение сервера дохо
         assertTrue(!!load, 'loadVacations (страница) не показывает _apiErrText');
     });
 
-    test('SW-кэш поднят до v534 (Task 288 — фронтенд менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v534'") !== -1,
-            'CACHE_VERSION = kipia-test-v534');
+    test('SW-кэш поднят до v535 (Task 289 — фронтенд менялся)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v535'") !== -1,
+            'CACHE_VERSION = kipia-test-v535');
     });
 });
 

@@ -75,10 +75,10 @@ const PURE_FUNCTIONS = [
     '_flowParseDate',
     '_flowFmt',
     'flowBuildAnomalyModalHtml',
-    // Task 286: ввод «расход за период» (неделя/месяц) + счётчик
-    // переданных показаний (сутки / 7 дней / текущий месяц)
-    'flowPrevWeekRange',
+    // Task 286/289: ввод «расход за месяц» (форма «за неделю» убрана в
+    // Task 289) + счётчик «За неделю» из суточных данных
     'flowPrevMonthRange',
+    'flowWeekCounterStats',
     'flowDateToInputVal',
     'flowDateToMdy',
     'flowEntryTypeAcc',
