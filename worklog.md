@@ -2362,3 +2362,173 @@ Stage Summary:
   Далее выполняется перенос партии Tasks 286-292 в боевой kip8
   (задача 292-kip8) по указанию пользователя. Следующий номер: 293.
 - Локальная дата: 2026-09-01 (Asia/Novosibirsk, UTC+07:00).
+---
+Task ID: 293
+Agent: main (Super Z)
+Task: Задача 293 (kip8test, Этап 1 системы доступа) — RoleMatrixInit.gs:
+      одноразовая инициализация листов matrix/permissions/roles в таблице
+      KIP8_Access (13 прав × 12 ролей, чекбоксы, идемпотентность).
+
+Work Log:
+- v1 упал у пользователя на _createMatrixSheet:206 (частичная
+  инициализация); v2 — фикс setItalic → setFontStyle('italic') (Range
+  API) + roleMatrixCleanup для недосозданных листов; v3 — закрепление
+  ДО объединения (merge A1:O1 пересекал границу закрепления столбцов).
+- v4 — ПРИЧИНА «пустых листов» v3: merge строк 1-2 на всю ширину при
+  закреплённых столбцах создаёт состояние, которое Google Sheets не
+  может отобразить (API молчит, UI/экспорт показывают пустоту).
+  Лечение: закрепление столбцов убрано полностью; _mergeRow никогда
+  не объединяет через границу; _verifyCreated — самопроверка ЧТЕНИЕМ
+  (бросок при провале); roleMatrixStatus() — диагностика.
+- Пользователь запустил v4: «Готово… matrix 17×15, permissions 17×8,
+  roles 16×5 — ОК». Таблица скачана и сверена (task294-verify-v4.py):
+  все 156 галочек совпали с картой пользователя, листы отображаются,
+  связка users!role ↔ matrix!B подтверждена.
+- Мок-тест 42/42 (модель «merge через границу отравляет лист»,
+  регрессия провала v3, тихая потеря данных ловится самопроверкой).
+- Коммиты: 5eb996d → c6b46b9 → 03c94e5 → 8d96d2c.
+- ⚠️ roleMatrixCleanup() НЕ запускать (удалит живые данные); init
+  повторно НЕ запускать.
+
+Stage Summary:
+- Этап 1 закрыт: листы созданы, данные верны, приложение работает по
+  старой карте (галочки до Этапа 2 ни на что не влияют).
+  Следующий номер: 294.
+
+---
+Task ID: 294
+Agent: main (Super Z)
+Task: Задача 294 (kip8test, Этап 2) — RoleMatrix.gs: серверное чтение
+      матрицы доступа KIP8_Access.
+
+Work Log:
+- API: roleMatrixGetAccess(role) / roleMatrixHasPermission(role, perm)
+  / roleMatrixGetAccessForEmail(email) / roleMatrixInvalidateCache /
+  roleMatrixDebug.
+- Принципы: ДИНАМИКА (границы данных ПО КОНТЕНТУ — листы несут
+  стилевой холст A1:Z1000, getLastRow()=1000 при данных 17×15);
+  FAIL-CLOSED (никаких исключений — сайт не падает из-за матрицы;
+  роль/email не найдены, листа нет, битый кэш → доступ закрыт);
+  АДМИН ВСЕГДА ВСЕ ПРАВА (кроме режимного kipios.restricted — по
+  чекбоксу; admin.panel неотключаем — защита от самоблокировки);
+  кэш CacheService TTL 300с.
+- task294-mock-test.js: 133/133 на РЕАЛЬНЫХ данных таблицы (12 ролей,
+  13 прав, ловушка холста 1000×26, динамика, сброс галочек админа,
+  битый кэш, реальные email → роли).
+- Коммит 233e51f; push (Task 294-push, PAT от 24.08.2026 в
+  /home/z/.kip_pat). Копии → download/kip8test/.
+  DEPLOY-Task294-role-matrix.md.
+
+Stage Summary:
+- Этап 2 готов: сервер умеет читать права. Деплой пользователя:
+  вставить RoleMatrix.gs в Apps Script, проверить roleMatrixDebug
+  (13 прав / 12 ролей / предупреждений нет). Следующий номер: 295.
+
+---
+Task ID: 295
+Agent: main (Super Z)
+Task: Задача 295 (kip8test, Этап 3) — серверный шлюз прав по матрице:
+      RoleMatrixGate.gs + интеграция Code.gs / Flowmeter.gs /
+      WorkSchedule.gs.
+
+Work Log:
+- RoleMatrixGate.gs (новый): rmRequirePerm(token, permId, context) —
+  гейт «токен→Utils→роль→матрица» ДО вызова модулей, fail-closed,
+  каждый отказ — аудит RM_ACCESS_DENIED (email/роль/право/действие);
+  rmGetMyAccess(token) — карта прав клиента (case getMyAccess,
+  no_session по конвенции doPost); rmGateStatus — диагностика
+  «роль×ключевые права».
+- Code.gs: GATE_ACTIONS (admin*→admin.panel; cableJournal.appendRow/
+  updateRow/deleteRow→cablejournal.edit — модулей в репо нет, гейт
+  роутером — единственная проверка); чтения не гейтятся; защита от
+  частичного деплоя — typeof-проверка, legacy-режим с однократным
+  console.error.
+- Flowmeter.gs / WorkSchedule.gs: _requireRead/_requireEdit →
+  flowmeter.view/flowmeter.input, workschedule.view/workschedule.edit
+  из матрицы (READ_ROLES/INPUT_ROLES и READ/WRITE_ROLES — legacy-запас).
+- ИЗМЕНЕНИЯ ПОВЕДЕНИЯ (осознанные, по матрице Task 293): «ИТР8 pro» —
+  просмотр графика работы (ранее Task 204 — только Админ); «ИТР ИОС» —
+  ввод показаний расходомеров (ранее дежурный+Админ);
+  workschedule.edit — только Админ (без изменений).
+- task295-mock-test.js: 75/75 в 4 контекстах (маршрутизация Code.gs,
+  реальные модули с матрицей, матрица отсутствует → fail-closed для
+  всех, legacy-режим); регресс 133/133 + сьют 1324/0.
+- Коммит a1126b7, push, ls-remote сверен. Пользователь задеплоил
+  4 файла + New version AKfycbyt…; rmGateStatus «Utils: OK /
+  RoleMatrix: OK», 12/12 строк таблицы прав совпали, fail-closed
+  подтверждён под «Общим доступом» (295-подтверждение).
+
+Stage Summary:
+- Этап 3 сдан и подтверждён на живом сервере: матрица — источник
+  истины прав на сервере. DEPLOY-Task295-role-matrix-gate.md.
+  Следующий номер: 296.
+
+---
+Task ID: 296
+Agent: main (Super Z)
+Task: Задача 296 (kip8test, Этап 4) — фикс репорта «ИТР ИОС → ввод
+      показаний не работает» + переключение клиента на серверную
+      карту прав.
+
+Work Log:
+- Диагноз: Flowmeter.gs пускал «ИТР ИОС» по матрице (Этап 3), но
+  index.html строил кнопку «Ввести показания» по захардкоженному
+  _INPUT_READINGS_ROLES=[дежурный, Админ] — кнопки не существовало.
+- KipAuth: _serverAccess (карта getMyAccess) + _fetchMyAccess()
+  при входе/загрузке/heartbeat (правка галочки доезжает до открытой
+  вкладки ≤ ~10 мин; ошибки молча → легаси) + _applyServerAccess —
+  ОВЕРЛЕЙ ROLE_ACCESS от нетронутого снимка _accessBase (права →
+  группы страниц; found=false → матричные разделы снимаются —
+  fail-closed; кэш kip8_my_access — валиден только для той же роли,
+  убирает мигание при старте); _resetServerAccess в logout/
+  handleSessionExpired. FlowmeterData._computeCanInputReadings —
+  приоритет flowmeter.input из матрицы (легаси-список — запас).
+- Тесты: task296-mock-test.js 95/95 (KipAuth/FlowmeterData — брейс-
+  матчинг из index.html; оверлей 12 ролей == легаси, кроме двух
+  осознанных; fail-режимы; кэш; хуки); browser-check 20/20 (ИТР ИОС —
+  кнопка есть; ИТР8 pro — «График работы» виден, кнопок ввода нет;
+  гость — без getMyAccess; 0 JS-ошибок; посев localStorage с префиксом
+  kip8test:); регресс 133/133 + 75/75 + сьют 1324/0. SW v538 → v539.
+- Коммит 3bf42a4, push; GitHub Pages отдаёт v539. Копии →
+  download/kip8test/. DEPLOY-Task296-role-matrix-client.md.
+- Пользователь подтвердил: «проверил несколько прав, работает».
+
+Stage Summary:
+- Все 4 этапа системы доступа по матрице KIP8_Access завершены в
+  kip8test. Партия 293-296 перенесена в боевой kip8 (kip8@623ffd0,
+  kipia-v410, паритет 1324/0 — Task 296-перенос; Apps Script не
+  трогался, ОДИН бэкенд на оба сайта). Следующий номер: 297.
+
+---
+Task ID: 297
+Agent: main (Super Z)
+Task: Задача 297 — порядок в kip8test: системный промт обновлён до
+      post-Task 296 (был post-Task 292), worklog репо дополнен
+      записями Tasks 293-296 (пропущены в спринте Этапов 1-4).
+
+Work Log:
+- Промт (scripts/task297-update-prompt.py по образцу kip8-скрипта):
+  строка 3 — post-Task 296 (Этапы 1-4, v539, 1324/0, подтверждение
+  пользователя, перенос в kip8@623ffd0/v410); строка 9 — кэш
+  kipia-test-v539; «Карта ролей доступа» → «Матрица доступа
+  KIP8_Access» (ссылка 1TmmNZLU…, 3 места); примечания об источнике
+  истины прав («Карта ролей», «Полная матрица», READ_ROLES/
+  INPUT_ROLES — legacy-запас); секция Apps Script: RoleMatrix-файлы,
+  эндпоинты getMyAccess / workSchedule.* / flowmeter.*
+  (updatePeriodReading и др.), гейт rmRequirePerm в архитектуре auth;
+  localStorage + kip8_my_access; «Доработка роли» — галочками матрицы
+  без деплоев; «Перенос в kip8» — scripts/*.gs + последний перенос.
+- Актуализированы счётчики: 93 страницы, ~39 тыс. строк / ~2.4 MB,
+  1324 теста (стек, структура, команды проверки), позиции модулей
+  (KipAuth ~28 137 / KipFav ~29 692 / KipCableJournal ~31 050 /
+  FlowmeterData ~32 900), WEB_APP_URL ~строка 28 144; в «Источниках»
+  развёртывание пользователя AKfycbyt… (было старое AKfycbztm… —
+  двух-развёртывания ловушка Task 284).
+- Worklog репо: записи 293/294/295/296 (компакт из журнала сессии).
+- Тесты: сьют 1324/0 (проверен прогоном). Изменения docs-only: SW не
+  менялся (v539), деплой не нужен — GitHub Pages подхватит сам.
+
+Stage Summary:
+- kip8test в порядке: промт соответствует состоянию post-Task 296,
+  история задач 293-296 отражена в worklog репо. Следующий номер: 298.
+- Локальная дата: 2026-09-02 (Asia/Novosibirsk, UTC+07:00).
