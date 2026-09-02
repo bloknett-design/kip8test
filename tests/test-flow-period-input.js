@@ -44,7 +44,7 @@
 //      Task 289 — форма недели убрана,
 //      Task 288 — счётчик контроля удалён, бейджи «нед»/«мес»,
 //      график — только суточные записи,
-//      Task 292 — заголовок dailyMode «Показания (посуточно)», SW v538.
+//      Task 292 — заголовок dailyMode «Показания (посуточно)»; SW → v539 (Task 296).
 //   C. Серверные справочные копии (.gs): ветка entryType в
 //      updateReading, _writePeriodEntry (только архив, prev=0,
 //      hard-проверки), колонка R (entryType) в архиве,
@@ -381,9 +381,9 @@ describe('Task 286 — клиент: CSS и SW', () => {
             'светлая тема');
     });
 
-    test('SW-кэш поднят до v538 (Task 292 — фронтенд менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v538'") !== -1,
-            'CACHE_VERSION = kipia-test-v538');
+    test('SW-кэш поднят до v539 (Task 296 — фронтенд менялся)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v539'") !== -1,
+            'CACHE_VERSION = kipia-test-v539');
         assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v534'") !== -1,
             'старой версии v534 нет');
     });
@@ -702,9 +702,9 @@ describe('Task 292 — заголовок графика: «Показания (
             'график — только суточные записи');
     });
 
-    test('SW-кэш: v537 → v538 (Task 292 — только фронтенд, сервер не менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v538'") !== -1,
-            'CACHE_VERSION = kipia-test-v538');
+    test('SW-кэш: v538 → v539 (Task 296 — только фронтенд, сервер не менялся)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v539'") !== -1,
+            'CACHE_VERSION = kipia-test-v539');
         assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v537'") !== -1,
             'старой версии v537 нет');
     });
