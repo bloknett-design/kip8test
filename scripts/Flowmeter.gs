@@ -70,14 +70,21 @@ var Flowmeter = {
   // Строка, с которой начинаются данные (1-based, после заголовков)
   DATA_START_ROW: 2,
 
-  // Роли с правом чтения расходомеров
+  // Роли с правом чтения расходомеров (LEGACY-запас, Task 295:
+  // рабочая проверка — право flowmeter.view из МАТРИЦЫ KIP8_Access,
+  // список ниже — только если RoleMatrixGate.gs не задеплоен)
   // Task 112: убран 'КИП ИОС pro' — по карте ролей фильтр 10 = нет
   // Task 116: добавлен 'КИП8 pro' — по карте ролей фильтр 10 = да
   READ_ROLES: ['КИП ИОС дежурный', 'ИТР8', 'ИТР8 pro', 'ИТР ИОС',
                'КИП8 pro', 'Админ'],
 
-  // Роли с правом ввода показаний (запись)
+  // Роли с правом ввода показаний (LEGACY-запас, Task 295: рабочая
+  // проверка — право flowmeter.input из МАТРИЦЫ; по матрице (Task 293)
+  // ввод также имеют «ИТР ИОС» — осознанное расширение против списка)
   INPUT_ROLES: ['КИП ИОС дежурный', 'Админ'],
+
+  // Task 295: флаг однократного предупреждения о legacy-режиме
+  _rmgLegacyWarned: false,
 
   // ============================================================
   // Получить лист таблицы по имени, с fallback на первый лист
@@ -93,10 +100,18 @@ var Flowmeter = {
 
   // ============================================================
   // Авторизация: чтение
-  // По паттерну CableJournal._requireRead, но без throw —
-  // возвращает { user } или { error: {ok:false,...} }
+  // Task 295: право flowmeter.view из МАТРИЦЫ KIP8_Access
+  // (лист matrix, строка 4). Если RoleMatrixGate.gs не задеплоен —
+  // прежняя проверка по READ_ROLES (legacy-режим).
+  // Возвращает { user } или { error: {ok:false,...} }
   // ============================================================
   _requireRead: function(token) {
+    if (typeof rmRequirePerm === 'function') {
+      var g = rmRequirePerm(token, 'flowmeter.view', 'Flowmeter');
+      if (!g.ok) return { error: { ok: false, error: g.error } };
+      return { user: g.user };
+    }
+    this._rmgLegacyWarn('Flowmeter._requireRead');
     if (!token) return { error: { ok: false, error: 'no_session' } };
     var session = Utils.findSessionByToken(token);
     if (!session) return { error: { ok: false, error: 'no_session' } };
@@ -111,10 +126,19 @@ var Flowmeter = {
 
   // ============================================================
   // Авторизация: запись (ввод показаний)
-  // По паттерну CableJournal._requireEdit, но без throw —
-  // возвращает { user } или { error: {ok:false,...} }
+  // Task 295: право flowmeter.input из МАТРИЦЫ. ИЗМЕНЕНИЕ ПОВЕДЕНИЯ
+  // (осознанное, матрица Task 293): «ИТР ИОС» теперь ВВОДИТ показания
+  // (раньше — только дежурный и Админ). Роль без галочки — отказ,
+  // матрица недоступна — отказ для всех (fail-closed).
+  // Возвращает { user } или { error: {ok:false,...} }
   // ============================================================
   _requireEdit: function(token) {
+    if (typeof rmRequirePerm === 'function') {
+      var g = rmRequirePerm(token, 'flowmeter.input', 'Flowmeter');
+      if (!g.ok) return { error: { ok: false, error: g.error } };
+      return { user: g.user };
+    }
+    this._rmgLegacyWarn('Flowmeter._requireEdit');
     if (!token) return { error: { ok: false, error: 'no_session' } };
     var session = Utils.findSessionByToken(token);
     if (!session) return { error: { ok: false, error: 'no_session' } };
@@ -129,6 +153,17 @@ var Flowmeter = {
       return { error: { ok: false, error: 'access_denied' } };
     }
     return { user: user };
+  },
+
+  // Task 295: однократное предупреждение о работе без матрицы
+  _rmgLegacyWarn: function(where) {
+    if (this._rmgLegacyWarned) return;
+    this._rmgLegacyWarned = true;
+    try {
+      console.error('[Flowmeter] RoleMatrixGate.gs не задеплоен — ' + where +
+        ' работает по legacy-списку READ_ROLES/INPUT_ROLES. ' +
+        'Вставьте RoleMatrix.gs + RoleMatrixGate.gs в проект.');
+    } catch (e) { /* ignore */ }
   },
 
   // ============================================================

@@ -115,14 +115,21 @@ var WorkSchedule = {
   // Строка, с которой начинаются данные
   DATA_START_ROW: 2,
 
-  // Роли с правом чтения графика
+  // Роли с правом чтения графика (LEGACY-запас, Task 295: рабочая
+  // проверка — право workschedule.view из МАТРИЦЫ KIP8_Access)
   // Task 204: только Админ. Ранее было ['КИП ИОС', 'КИП ИОС pro', 'КИП ИОС дежурный',
   // 'ИТР8', 'ИТР8 pro', 'ИТР ИОС', 'Админ'] — доступ сужен по запросу заказчика.
+  // ИЗМЕНЕНИЕ ПОВЕДЕНИЯ Task 295 (осознанное, матрица Task 293):
+  // «ИТР8 pro» получает ПРОСМОТР графика (workschedule.view=✓ в матрице).
   READ_ROLES: ['Админ'],
 
   // Роли с правом записи (генерация, ручные правки, добавление сотрудников/инструктажей)
-  // Task 204: только Админ.
+  // (LEGACY-запас, Task 295: рабочая проверка — workschedule.edit из МАТРИЦЫ;
+  // в матрице право только у «Админа» — совпадает со списком)
   WRITE_ROLES: ['Админ'],
+
+  // Task 295: флаг однократного предупреждения о legacy-режиме
+  _rmgLegacyWarned: false,
 
   // Соответствие тип мероприятия → код статуса в Записи_графика
   TRAINING_TYPE_TO_STATUS: {
@@ -142,6 +149,17 @@ var WorkSchedule = {
   },
 
   _requireRead: function(token) {
+    // Task 295: право workschedule.view из МАТРИЦЫ KIP8_Access
+    // (лист matrix, строка 4). ИЗМЕНЕНИЕ ПОВЕДЕНИЯ (осознанное,
+    // матрица Task 293): «ИТР8 pro» теперь видит график (ранее Task 204 —
+    // только Админ). Legacy-список READ_ROLES — только если
+    // RoleMatrixGate.gs не задеплоен.
+    if (typeof rmRequirePerm === 'function') {
+      var g = rmRequirePerm(token, 'workschedule.view', 'WorkSchedule');
+      if (!g.ok) return { error: { ok: false, error: g.error } };
+      return { user: g.user };
+    }
+    this._rmgLegacyWarn('WorkSchedule._requireRead');
     if (!token) return { error: { ok: false, error: 'no_session' } };
     var session = Utils.findSessionByToken(token);
     if (!session) return { error: { ok: false, error: 'no_session' } };
@@ -154,6 +172,15 @@ var WorkSchedule = {
   },
 
   _requireWrite: function(token) {
+    // Task 295: право workschedule.edit из МАТРИЦЫ. В матрице право
+    // только у «Админа» — поведение не меняется. Матрица недоступна →
+    // отказ для всех (fail-closed, включая админа, до восстановления).
+    if (typeof rmRequirePerm === 'function') {
+      var g = rmRequirePerm(token, 'workschedule.edit', 'WorkSchedule');
+      if (!g.ok) return { error: { ok: false, error: g.error } };
+      return { user: g.user };
+    }
+    this._rmgLegacyWarn('WorkSchedule._requireWrite');
     if (!token) return { error: { ok: false, error: 'no_session' } };
     var session = Utils.findSessionByToken(token);
     if (!session) return { error: { ok: false, error: 'no_session' } };
@@ -167,6 +194,17 @@ var WorkSchedule = {
       return { error: { ok: false, error: 'access_denied' } };
     }
     return { user: user };
+  },
+
+  // Task 295: однократное предупреждение о работе без матрицы
+  _rmgLegacyWarn: function(where) {
+    if (this._rmgLegacyWarned) return;
+    this._rmgLegacyWarned = true;
+    try {
+      console.error('[WorkSchedule] RoleMatrixGate.gs не задеплоен — ' + where +
+        ' работает по legacy-списку READ_ROLES/WRITE_ROLES. ' +
+        'Вставьте RoleMatrix.gs + RoleMatrixGate.gs в проект.');
+    } catch (e) { /* ignore */ }
   },
 
   // Конвертация строки ISO YYYY-MM-DD → Date (без timezone-сдвига)

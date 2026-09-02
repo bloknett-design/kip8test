@@ -38,11 +38,56 @@
  *   Flowmeter.updateReading(payload)       → {ok, data/error}
  *   Flowmeter.setComment(payload)          → {ok, data/error}  // Task 195
  *   FlowmeterArchive.listArchive(payload)  → {ok, data/error}
+ *   RoleMatrixGate (Task 295):
+ *     getMyAccess(token) → {userId, email, role, roleId, isAdmin,
+ *                           permissions, granted, warnings}
+ *     Гейт GATE_ACTIONS: admin* → admin.panel, каб. журнал (записи)
+ *     → cablejournal.edit — по матрице KIP8_Access (до модуля).
  * ============================================================
  */
 
 /** URL деплоя (заполните после первого деплоя). */
 const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyt2sjbJ8xT5UPKDlYj4q-CV-5pH_Yrv5COrg0PIpp92snpQULUNtJC__pMnQ0h6feNlA/exec'; // Task 284: актуальное развёртывание (см. index.html)
+
+// ==========================================================================
+// Task 295 (Этап 3): серверный шлюз прав по МАТРИЦЕ KIP8_Access.
+// Действие → требуемое право (perm_id из листа matrix). Проверка
+// выполняется ДО вызова модуля (rmRequirePerm из RoleMatrixGate.gs).
+// Гейтится только то, что НЕ проверяется внутри модулей репо
+// (Flowmeter/WorkSchedule проверяют матрицу сами внутри
+// _requireRead/_requireEdit/_requireWrite), — админ-действия и
+// записи в кабельный журнал (модули Admin/CableJournal в репо
+// отсутствуют, их внутренние проверки заменить нельзя).
+// Чтения (cableJournal.list и т.п.) не гейтятся — доступ к данным
+// фильтруется внутри самих модулей, как и раньше.
+// ЗАЩИТА ОТ ЧАСТИЧНОГО ДЕПЛОЯ: если RoleMatrixGate.gs не вставлен в
+// проект, проверки пропускаются (legacy-режим, как до Этапа 3), в
+// консоль пишется однократное предупреждение.
+// ==========================================================================
+const GATE_ACTIONS = {
+  // Админ-панель: всё администрирование (пользователи, сессии, логи)
+  'adminListUsers':     'admin.panel',
+  'adminUpdateRole':    'admin.panel',
+  'adminResetLogin':    'admin.panel',
+  'adminCreateUser':    'admin.panel',
+  'adminListSessions':  'admin.panel',
+  'adminListLogs':      'admin.panel',
+  // Кабельный журнал — записи (чтение не гейтится, см. выше)
+  'cableJournal.appendRow': 'cablejournal.edit',
+  'cableJournal.updateRow': 'cablejournal.edit',
+  'cableJournal.deleteRow': 'cablejournal.edit'
+};
+
+/** Однократное (за выполнение) предупреждение о пропущенном гейте. */
+var _gateLegacyWarned = false;
+
+function _gateLegacyWarn(action) {
+  if (_gateLegacyWarned) return;
+  _gateLegacyWarned = true;
+  console.error('[Code.gs] RoleMatrixGate.gs не задеплоен — проверка прав ' +
+    'для «' + action + '» и других гейтов ПРОПУЩЕНА (legacy-режим). ' +
+    'Вставьте RoleMatrix.gs + RoleMatrixGate.gs в проект и сделайте новый деплой.');
+}
 
 /**
  * Обработка POST-запросов от PWA.
@@ -55,6 +100,19 @@ function doPost(e) {
     const payload = e.postData && e.postData.contents
       ? JSON.parse(e.postData.contents)
       : {};
+
+    // === Task 295: гейт прав по матрице (до вызова модуля) ===
+    const requiredPerm = GATE_ACTIONS[action];
+    if (requiredPerm) {
+      if (typeof rmRequirePerm === 'function') {
+        const gate = rmRequirePerm(payload.token, requiredPerm, action);
+        if (!gate.ok) {
+          return _json({ ok: false, error: gate.error }); // no_session | access_denied
+        }
+      } else {
+        _gateLegacyWarn(action); // частичный деплой — работаем как раньше
+      }
+    }
 
     let result;
     switch (action) {
@@ -81,7 +139,16 @@ function doPost(e) {
         result = Sessions.logout(payload.token);
         break;
 
-      // === Админ-эндпоинты (требуют роль "Админ") ===
+      // === Task 295: карта прав текущего пользователя из МАТРИЦЫ ===
+      // (для клиента; невалидный токен → {ok:false, error:'no_session'})
+      case 'getMyAccess':
+        if (typeof rmGetMyAccess !== 'function') {
+          throw new Error('RoleMatrixGate.gs не задеплоен (getMyAccess недоступен)');
+        }
+        result = rmGetMyAccess(payload.token);
+        break;
+
+      // === Админ-эндпоинты (гейт Task 295: право admin.panel) ===
       case 'adminListUsers':
         result = Admin.listUsers(payload.token);
         break;
