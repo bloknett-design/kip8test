@@ -36,6 +36,16 @@
  *   roleMatrixInit() теперь распознаёт частичную инициализацию
  *   (есть matrix, нет permissions/roles) и подсказывает, что делать.
  *
+ * v3 (02.09.2026): исправлена ошибка v2 — «Невозможно закрепить
+ *   столбцы, в которых содержится только часть объединенных ячеек»:
+ *   закрепление строк/столбцов теперь выполняется ДО объединения
+ *   ячеек и записи данных (в v2 объединённая строка 1 пересекала
+ *   границу закрепления столбцов A|B, и setFrozenColumns(2) падал);
+ *   объединение строк 1–2 идёт через _mergeRow() с запасным
+ *   разбиением по границе закрепления; строка 2 (инструкция)
+ *   теперь объединена на всю ширину листа — в v2 перенос текста
+ *   был зажат шириной колонки A.
+ *
  * РАСШИРЕНИЕ В БУДУЩЕМ (когда появятся новые разделы/функционалы):
  *   Новое право  = новая колонка в matrix (строка 4 — perm_id,
  *                  строка 5 — название) + строка в permissions.
@@ -213,21 +223,52 @@ function _softProtect(range, description) {
   }
 }
 
+// Объединяет строку row на всю ширину листа (колонки 1..lastCol) и
+// возвращает диапазон ДЛЯ ТЕКСТА. Вызывать строго ПОСЛЕ закрепления
+// (setFrozenRows/setFrozenColumns): если объединённая ячейка пересекает
+// границу закрепления, сам вызов setFrozenColumns падает с исключением
+// «Невозможно закрепить столбцы…» (ошибка v2). Если окружение не
+// разрешает объединение ЧЕРЕЗ границу закрепления — строка разбивается
+// на два блока: 1..frozen и frozen+1..lastCol (текст — в правом, более
+// широком блоке; фон ставится на всю строку, шов не виден).
+function _mergeRow(sheet, row, lastCol) {
+  try {
+    return sheet.getRange(row, 1, 1, lastCol).merge();
+  } catch (e) {
+    var frozen = 0;
+    try { frozen = sheet.getFrozenColumns(); } catch (e2) { frozen = 0; }
+    if (frozen <= 0 || frozen >= lastCol) { throw e; }
+    Logger.log('Полное объединение строки ' + row + ' недоступно — разбиваю по границе закрепления: ' + e);
+    if (frozen > 1) { sheet.getRange(row, 1, 1, frozen).merge(); }
+    return sheet.getRange(row, frozen + 1, 1, lastCol - frozen).merge();
+  }
+}
+
 function _createMatrixSheet(ss) {
   var sheet = ss.insertSheet('matrix');
   sheet.setTabColor('#2d7d46');
 
   var nRoles = INIT_ROLES.length;
   var nPerms = INIT_PERMISSIONS.length;
+  var lastCol = 2 + nPerms;
 
-  // r1: заголовок
-  var r1 = sheet.getRange('A1:' + _colLetter(2 + nPerms) + '1');
-  r1.merge().setValue('ЛИСТ: matrix — МАТРИЦА ДОСТУПА РОЛЕЙ (роль × право; галочка = доступ разрешён)')
+  // ЗАКРЕПЛЕНИЕ — СТРОГО ДО объединения ячеек и записи данных.
+  // В v2 объединённая строка 1 (A1:O1) пересекала границу закрепления
+  // столбцов A|B, и setFrozenColumns(2) падал с исключением.
+  sheet.setFrozenRows(5);
+  sheet.setFrozenColumns(2);
+
+  // r1: заголовок (объединение с запасным разбиением по границе)
+  var r1 = _mergeRow(sheet, 1, lastCol);
+  r1.setValue('ЛИСТ: matrix — МАТРИЦА ДОСТУПА РОЛЕЙ (роль × право; галочка = доступ разрешён)')
     .setFontWeight('bold').setFontSize(12).setVerticalAlignment('middle');
   _headerStyle(r1, '#1a3c5e', true);
+  sheet.getRange(1, 1, 1, lastCol).setBackground('#1a3c5e');
 
-  // r2: инструкция
-  sheet.getRange('A2').setValue(
+  // r2: инструкция — объединена на всю ширину (в v2 не была объединена,
+  // перенос текста был зажат шириной колонки A)
+  var r2 = _mergeRow(sheet, 2, lastCol);
+  r2.setValue(
     'ИНСТРУКЦИЯ: источник истины для системы доступа приложения. Строка 4 — технические ID (НЕ переименовывать, не удалять), строка 5 — названия. ' +
     'Колонка A — role_id (технический, не менять), колонка B — название роли (должно ТОЧНО совпадать с role в листе users). ' +
     'НОВОЕ ПРАВО: добавить колонку (строка 4 = perm_id, строка 5 = название) и строку в лист permissions. ' +
@@ -283,8 +324,7 @@ function _createMatrixSheet(ss) {
   sheet.setColumnWidth(1, 110);           // role_id
   sheet.setColumnWidth(2, 130);           // Роль
   for (var w = 3; w <= 2 + nPerms; w++) { sheet.setColumnWidth(w, 64); }
-  sheet.setFrozenRows(5);
-  sheet.setFrozenColumns(2);
+  // Закрепление выполнено выше — ДО объединения ячеек (см. _mergeRow).
   sheet.getRange(6, 1, nRoles, 1).setBackground('#f5f5f5');
   sheet.getRange(6, 2, nRoles, 1).setBackground('#eef3f8');
   // Чередование строк для читаемости
@@ -306,17 +346,24 @@ function _createPermissionsSheet(ss) {
   sheet.setTabColor('#8a8a8a');
 
   var n = INIT_PERMISSIONS.length;
-  var r1 = sheet.getRange('A1:H1');
-  r1.merge().setValue('ЛИСТ: permissions — реестр прав доступа (справочник)')
+
+  // ЗАКРЕПЛЕНИЕ — до объединения ячеек (см. комментарий в _createMatrixSheet)
+  sheet.setFrozenRows(4);
+  sheet.setFrozenColumns(2);
+
+  var r1 = _mergeRow(sheet, 1, 8);
+  r1.setValue('ЛИСТ: permissions — реестр прав доступа (справочник)')
     .setFontWeight('bold').setFontSize(12);
   _headerStyle(r1, '#1a3c5e', true);
-  sheet.getRange('A2').setValue(
+  sheet.getRange(1, 1, 1, 8).setBackground('#1a3c5e');
+  var r2 = _mergeRow(sheet, 2, 8);
+  r2.setValue(
     'ИНСТРУКЦИЯ: справочник всех прав приложения, расширяется при добавлении новых разделов/функционалов. ' +
     'perm_id (A) — технический ID, латиница, НЕ переименовывать и не удалять (на него ссылается matrix строка 4). ' +
     'Название (B) — показывается в админ-панели. Конфликт с (E) — perm_id через запятую, с которыми право взаимоисключается. ' +
     'Системное (F) — право, которое нельзя отключать (admin.panel). Активно (G) — временное выключение права без удаления.')
     .setWrap(true).setFontSize(9).setFontStyle('italic').setFontColor('#333333');
-  sheet.setRowHeight(2, 70);
+  sheet.setRowHeight(2, 90);
   sheet.getRange('A3').setValue('Сгенерировано: ' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd.MM.yyyy') + ' • Task 293')
     .setFontSize(9).setFontColor('#777777');
 
@@ -335,7 +382,7 @@ function _createPermissionsSheet(ss) {
   sheet.setColumnWidth(3, 380); sheet.setColumnWidth(4, 110);
   sheet.setColumnWidth(5, 130); sheet.setColumnWidth(6, 90);
   sheet.setColumnWidth(7, 80);  sheet.setColumnWidth(8, 90);
-  sheet.setFrozenRows(4); sheet.setFrozenColumns(2);
+  // Закрепление выполнено выше — ДО объединения ячеек.
 
   _softProtect(sheet.getRange(4, 1, 1, 8), 'permissions: строка заголовков — не редактировать');
 }
@@ -345,16 +392,23 @@ function _createRolesSheet(ss) {
   sheet.setTabColor('#8a8a8a');
 
   var n = INIT_ROLES.length;
-  var r1 = sheet.getRange('A1:E1');
-  r1.merge().setValue('ЛИСТ: roles — реестр ролей (справочник)')
+
+  // ЗАКРЕПЛЕНИЕ — до объединения ячеек (см. комментарий в _createMatrixSheet)
+  sheet.setFrozenRows(4);
+  sheet.setFrozenColumns(2);
+
+  var r1 = _mergeRow(sheet, 1, 5);
+  r1.setValue('ЛИСТ: roles — реестр ролей (справочник)')
     .setFontWeight('bold').setFontSize(12);
   _headerStyle(r1, '#1a3c5e', true);
-  sheet.getRange('A2').setValue(
+  sheet.getRange(1, 1, 1, 5).setBackground('#1a3c5e');
+  var r2 = _mergeRow(sheet, 2, 5);
+  r2.setValue(
     'ИНСТРУКЦИЯ: Название роли (B) должно ТОЧНО совпадать со значением role в листе users — по нему сервер находит роль пользователя. ' +
     'Системные роли (D): «Запрет», «Общий доступ», «Админ» — защищены от удаления. Роль «Админ» всегда имеет все права (строка в matrix не нужна «полная» — сервер гарантирует). ' +
     'Порядок (E) — сортировка в админ-панели. role_id (A) — технический, НЕ переименовывать.')
     .setWrap(true).setFontSize(9).setFontStyle('italic').setFontColor('#333333');
-  sheet.setRowHeight(2, 70);
+  sheet.setRowHeight(2, 90);
   sheet.getRange('A3').setValue('Сгенерировано: ' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd.MM.yyyy') + ' • Task 293')
     .setFontSize(9).setFontColor('#777777');
 
@@ -371,7 +425,7 @@ function _createRolesSheet(ss) {
   sheet.setColumnWidth(1, 120); sheet.setColumnWidth(2, 140);
   sheet.setColumnWidth(3, 420); sheet.setColumnWidth(4, 90);
   sheet.setColumnWidth(5, 70);
-  sheet.setFrozenRows(4); sheet.setFrozenColumns(2);
+  // Закрепление выполнено выше — ДО объединения ячеек.
 
   _softProtect(sheet.getRange(4, 1, 1, 5), 'roles: строка заголовков — не редактировать');
 }
