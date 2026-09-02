@@ -46,6 +46,29 @@
  *   теперь объединена на всю ширину листа — в v2 перенос текста
  *   был зажат шириной колонки A.
  *
+ * v4 (02.09.2026): найдена и устранена ПРИЧИНА «пустых листов»
+ *   после v3. Объединение строк 1–2 на всю ширину листа при
+ *   закреплённых столбцах A–B создаёт состояние, которое Google
+ *   Sheets НЕ МОЖЕТ ОТРИСОВАТЬ: API принимает merge() без ошибки,
+ *   но UI и экспорт xlsx показывают лист полностью ПУСТЫМ
+ *   (подтверждено скачиванием таблицы после запуска v3 у
+ *   пользователя: листы matrix/permissions/roles существуют,
+ *   закрепления 5×2/4×2 на месте, непустых ячеек — 0; те же 3
+ *   предупреждения «Нельзя объединять закрепленные и
+ *   незакрепленные столбцы» — от protect() диапазонов через ту
+ *   же границу). Лечение — вернуться к проверенному стилю
+ *   СУЩЕСТВУЮЩИХ листов users/sessions/config (там строки 1–2
+ *   объединены на всю ширину A1:E1/A2:E2 при закреплении ТОЛЬКО
+ *   строк): закрепление столбцов полностью убрано из всех трёх
+ *   листов; _mergeRow() застрахован и никогда не создают
+ *   объединение через границу. Плюс: таблица-цель всегда
+ *   открывается по ID KIP8_Access (адрес пишется в журнал);
+ *   самопроверка созданных листов ЧТЕНИЕМ из таблицы
+ *   (_verifyCreated — данные записаны + лист отображаем),
+ *   итоговое сообщение содержит результаты проверки; новая
+ *   функция roleMatrixStatus() — диагностика состояния листов
+ *   в любой момент (в т.ч. распознаёт «повреждённые» листы v3).
+ *
  * РАСШИРЕНИЕ В БУДУЩЕМ (когда появятся новые разделы/функционалы):
  *   Новое право  = новая колонка в matrix (строка 4 — perm_id,
  *                  строка 5 — название) + строка в permissions.
@@ -55,9 +78,10 @@
  *   динамически: количество строк/колонок не фиксировано.
  */
 
-// Если скрипт запускается в проекте, НЕ привязанном к таблице —
-// укажите ID таблицы здесь (иначе оставьте как есть: используется
-// активная таблица проекта). По умолчанию — ID файла KIP8_Access.
+// ЦЕЛЕВАЯ таблица — KIP8_Access. Скрипт v4 всегда открывает её по ID
+// (независимо от того, в каком проекте Apps Script запущен) и пишет
+// адрес таблицы в журнал выполнения — исключает запись «не в ту
+// таблицу» и путаницу с активной таблицей проекта.
 var FALLBACK_SPREADSHEET_ID = '1TmmNZLUArWH38F6NX0gMGar8LMNMQomm_FaGZv9osyk';
 
 // ==========================================================================
@@ -121,10 +145,10 @@ var INIT_MATRIX = {
 // ==========================================================================
 
 function roleMatrixInit() {
-  var ss = SpreadsheetApp.getActive();
-  if (!ss) {
-    ss = SpreadsheetApp.openById(FALLBACK_SPREADSHEET_ID);
-  }
+  // Всегда работаем с целевой таблицей по ID — независимо от проекта,
+  // в котором запущен скрипт (адрес таблицы пишется в журнал).
+  var ss = SpreadsheetApp.openById(FALLBACK_SPREADSHEET_ID);
+  Logger.log('Целевая таблица: «' + ss.getName() + '» — ' + ss.getUrl());
 
   // --- Идемпотентность: не перезаписывать существующее ---
   if (ss.getSheetByName('matrix')) {
@@ -148,9 +172,23 @@ function roleMatrixInit() {
   _createPermissionsSheet(ss); created.push('permissions');
   _createRolesSheet(ss);       created.push('roles');
 
+  // --- Самопроверка результата ЧТЕНИЕМ из таблицы ---
+  var errs = _verifyCreated(ss);
+  if (errs.length > 0) {
+    throw new Error('Самопроверка после создания НЕ ПРОШЛА: ' + errs.join('; ') +
+      '. Запустите roleMatrixCleanup() и roleMatrixInit() снова; если повторится — приложите журнал выполнения.');
+  }
+
+  var m = ss.getSheetByName('matrix');
+  var p = ss.getSheetByName('permissions');
+  var g = ss.getSheetByName('roles');
   var summary = 'Готово. Созданы листы: ' + created.join(', ') +
     '. Прав: ' + INIT_PERMISSIONS.length + ', ролей: ' + INIT_ROLES.length + '.' +
-    ' Проверьте галочки в «matrix» и следуйте инструкции на строках 1–3 листа.';
+    ' Самопроверка чтения: matrix ' + m.getLastRow() + '×' + m.getLastColumn() +
+    ' (A6=\'' + m.getRange('A6').getValue() + '\'), permissions ' +
+    p.getLastRow() + '×' + p.getLastColumn() + ', roles ' +
+    g.getLastRow() + '×' + g.getLastColumn() + ' — ОК.' +
+    ' Проверьте галочки в «matrix» (вкладки внизу таблицы, последние в списке).';
   Logger.log(summary);
   return summary;
 }
@@ -161,8 +199,8 @@ function roleMatrixInit() {
 // ==========================================================================
 
 function roleMatrixCleanup() {
-  var ss = SpreadsheetApp.getActive();
-  if (!ss) { ss = SpreadsheetApp.openById(FALLBACK_SPREADSHEET_ID); }
+  var ss = SpreadsheetApp.openById(FALLBACK_SPREADSHEET_ID);
+  Logger.log('Целевая таблица: «' + ss.getName() + '» — ' + ss.getUrl());
   var deleted = [];
   var names = ['matrix', 'permissions', 'roles'];
   for (var i = 0; i < names.length; i++) {
@@ -172,6 +210,41 @@ function roleMatrixCleanup() {
   var msg = deleted.length
     ? 'Удалены листы: ' + deleted.join(', ') + '. Теперь запустите roleMatrixInit().'
     : 'Листы matrix / permissions / roles не найдены — нечего удалять. Можно запускать roleMatrixInit().';
+  Logger.log(msg);
+  return msg;
+}
+
+// ==========================================================================
+// ДИАГНОСТИКА: состояние листов матрицы (запускать в любой момент,
+// ничего не меняет). Распознаёт «повреждённые» листы v2/v3 —
+// объединение через границу закрепления столбцов: лист существует,
+// но отображается ПУСТЫМ.
+// ==========================================================================
+
+function roleMatrixStatus() {
+  var ss = SpreadsheetApp.openById(FALLBACK_SPREADSHEET_ID);
+  var lines = ['Таблица: «' + ss.getName() + '» — ' + ss.getUrl()];
+  var names = ['matrix', 'permissions', 'roles'];
+  for (var i = 0; i < names.length; i++) {
+    var sh = ss.getSheetByName(names[i]);
+    if (!sh) {
+      lines.push('· ' + names[i] + ': ОТСУТСТВУЕТ (инициализация не выполнялась или выполнен cleanup)');
+      continue;
+    }
+    var line = '· ' + names[i] + ': ' + sh.getLastRow() + '×' + sh.getLastColumn() +
+      ', закрепление ' + sh.getFrozenRows() + ' стр. × ' + sh.getFrozenColumns() + ' кол.';
+    if (!_isRenderable(sh)) {
+      line += ' — ⚠ ПОВРЕЖДЁН: объединение пересекает границу закрепления столбцов, лист отображается ПУСТЫМ. Лечение: roleMatrixCleanup() + roleMatrixInit().';
+    } else if (sh.getFrozenColumns() > 0) {
+      line += ' — ⚠ закрепление столбцов (' + sh.getFrozenColumns() + ') в v4 не используется (остаток v2/v3?) — рекомендуется roleMatrixCleanup() + roleMatrixInit().';
+    } else if (sh.getLastRow() <= 1 && sh.getLastColumn() <= 1) {
+      line += ' — ⚠ ПУСТОЙ (данных нет). Лечение: roleMatrixCleanup() + roleMatrixInit().';
+    } else {
+      line += ' — ОК';
+    }
+    lines.push(line);
+  }
+  var msg = lines.join('\n');
   Logger.log(msg);
   return msg;
 }
@@ -223,25 +296,81 @@ function _softProtect(range, description) {
   }
 }
 
-// Объединяет строку row на всю ширину листа (колонки 1..lastCol) и
-// возвращает диапазон ДЛЯ ТЕКСТА. Вызывать строго ПОСЛЕ закрепления
-// (setFrozenRows/setFrozenColumns): если объединённая ячейка пересекает
-// границу закрепления, сам вызов setFrozenColumns падает с исключением
-// «Невозможно закрепить столбцы…» (ошибка v2). Если окружение не
-// разрешает объединение ЧЕРЕЗ границу закрепления — строка разбивается
-// на два блока: 1..frozen и frozen+1..lastCol (текст — в правом, более
-// широком блоке; фон ставится на всю строку, шов не виден).
-function _mergeRow(sheet, row, lastCol) {
-  try {
-    return sheet.getRange(row, 1, 1, lastCol).merge();
-  } catch (e) {
-    var frozen = 0;
-    try { frozen = sheet.getFrozenColumns(); } catch (e2) { frozen = 0; }
-    if (frozen <= 0 || frozen >= lastCol) { throw e; }
-    Logger.log('Полное объединение строки ' + row + ' недоступно — разбиваю по границе закрепления: ' + e);
-    if (frozen > 1) { sheet.getRange(row, 1, 1, frozen).merge(); }
-    return sheet.getRange(row, frozen + 1, 1, lastCol - frozen).merge();
+// Самопроверка созданных листов ЧТЕНИЕМ из таблицы: данные реально
+// записаны и лист отображаем (нет объединений через границу закрепления
+// столбцов — иначе Google Sheets показывает лист пустым).
+function _verifyCreated(ss) {
+  var errs = [];
+
+  var m = ss.getSheetByName('matrix');
+  if (!m) { errs.push('лист matrix не найден'); }
+  else {
+    if (!_isRenderable(m)) { errs.push('matrix: объединение пересекает границу закрепления столбцов (лист будет отображаться пустым)'); }
+    var a4 = String(m.getRange('A4').getValue() || '');
+    if (a4 !== 'role_id') { errs.push('matrix!A4 = "' + a4 + '" (ожидался "role_id")'); }
+    var a6 = String(m.getRange('A6').getValue() || '');
+    if (!a6) { errs.push('matrix!A6 пуст (ожидался ID первой роли)'); }
+    if (m.getLastRow() < 5 + INIT_ROLES.length) { errs.push('matrix: последняя строка ' + m.getLastRow() + ' (ожидается ' + (5 + INIT_ROLES.length) + ')'); }
+    if (m.getLastColumn() < 2 + INIT_PERMISSIONS.length) { errs.push('matrix: последняя колонка ' + m.getLastColumn() + ' (ожидается ' + (2 + INIT_PERMISSIONS.length) + ')'); }
   }
+
+  var p = ss.getSheetByName('permissions');
+  if (!p) { errs.push('лист permissions не найден'); }
+  else {
+    if (!_isRenderable(p)) { errs.push('permissions: объединение пересекает границу закрепления столбцов'); }
+    if (String(p.getRange('A4').getValue() || '') !== 'perm_id') { errs.push('permissions!A4 ≠ "perm_id"'); }
+    if (p.getLastRow() < 4 + INIT_PERMISSIONS.length) { errs.push('permissions: последняя строка ' + p.getLastRow() + ' (ожидается ' + (4 + INIT_PERMISSIONS.length) + ')'); }
+  }
+
+  var g = ss.getSheetByName('roles');
+  if (!g) { errs.push('лист roles не найден'); }
+  else {
+    if (!_isRenderable(g)) { errs.push('roles: объединение пересекает границу закрепления столбцов'); }
+    if (String(g.getRange('A4').getValue() || '') !== 'role_id') { errs.push('roles!A4 ≠ "role_id"'); }
+    if (g.getLastRow() < 4 + INIT_ROLES.length) { errs.push('roles: последняя строка ' + g.getLastRow() + ' (ожидается ' + (4 + INIT_ROLES.length) + ')'); }
+  }
+
+  return errs;
+}
+
+// Лист отображается корректно, только если ни одно объединение не
+// пересекает границу закрепления СТОЛБЦОВ (проверка «повреждённости» —
+// состояния, при котором Google Sheets показывает лист пустым).
+function _isRenderable(sheet) {
+  var frozen = 0;
+  try { frozen = sheet.getFrozenColumns() || 0; } catch (e) { frozen = 0; }
+  if (frozen <= 0) { return true; }
+  var lastCol = sheet.getLastColumn();
+  if (lastCol <= frozen) { return true; }
+  var lastRow = Math.max(sheet.getLastRow() || 1, sheet.getFrozenRows() || 0, 2);
+  var merges = sheet.getRange(1, 1, lastRow, lastCol).getMergedRanges();
+  for (var i = 0; i < merges.length; i++) {
+    if (merges[i].getColumn() <= frozen &&
+        merges[i].getColumn() + merges[i].getNumColumns() - 1 > frozen) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Объединяет строку row (колонки 1..lastCol) и возвращает диапазон
+// ДЛЯ ТЕКСТА. НИКОГДА не создаёт объединение через границу закрепления
+// СТОЛБЦОВ: Apps Script принимает такое объединение БЕЗ ошибки, но
+// Google Sheets не может его отобразить — весь лист выглядит пустым
+// (причина «пустых листов» после v3). Поэтому в v4 закрепление столбцов
+// вообще не используется (только строки — ровно как в существующих
+// листах users/sessions с их A1:E1/A2:E2), а этот хеллер — страховка
+// на будущее: если столбцы всё же закреплены, строка сразу разбивается
+// на два блока: 1..frozen и frozen+1..lastCol (текст — в правом, широком
+// блоке; фон ставится на всю строку, шов не виден).
+function _mergeRow(sheet, row, lastCol) {
+  var frozen = 0;
+  try { frozen = sheet.getFrozenColumns() || 0; } catch (e) { frozen = 0; }
+  if (frozen <= 0 || frozen >= lastCol) {
+    return sheet.getRange(row, 1, 1, lastCol).merge();
+  }
+  if (frozen > 1) { sheet.getRange(row, 1, 1, frozen).merge(); }
+  return sheet.getRange(row, frozen + 1, 1, lastCol - frozen).merge();
 }
 
 function _createMatrixSheet(ss) {
@@ -252,11 +381,13 @@ function _createMatrixSheet(ss) {
   var nPerms = INIT_PERMISSIONS.length;
   var lastCol = 2 + nPerms;
 
-  // ЗАКРЕПЛЕНИЕ — СТРОГО ДО объединения ячеек и записи данных.
-  // В v2 объединённая строка 1 (A1:O1) пересекала границу закрепления
-  // столбцов A|B, и setFrozenColumns(2) падал с исключением.
+  // ЗАКРЕПЛЕНИЕ — только СТРОКИ (в точности как в существующих листах
+  // users/sessions: строки 1–4 закреплены, столбцы — НЕТ). Закрепление
+  // столбцов в v2/v3 комбинировалось с объединением строк 1–2 на всю
+  // ширину — Google Sheets такое не отображает: лист выглядит пустым
+  // (см. v4 в шапке файла). Порядок «сначала закрепление, потом
+  // объединения» сохранён из v3.
   sheet.setFrozenRows(5);
-  sheet.setFrozenColumns(2);
 
   // r1: заголовок (объединение с запасным разбиением по границе)
   var r1 = _mergeRow(sheet, 1, lastCol);
@@ -324,7 +455,6 @@ function _createMatrixSheet(ss) {
   sheet.setColumnWidth(1, 110);           // role_id
   sheet.setColumnWidth(2, 130);           // Роль
   for (var w = 3; w <= 2 + nPerms; w++) { sheet.setColumnWidth(w, 64); }
-  // Закрепление выполнено выше — ДО объединения ячеек (см. _mergeRow).
   sheet.getRange(6, 1, nRoles, 1).setBackground('#f5f5f5');
   sheet.getRange(6, 2, nRoles, 1).setBackground('#eef3f8');
   // Чередование строк для читаемости
@@ -347,9 +477,9 @@ function _createPermissionsSheet(ss) {
 
   var n = INIT_PERMISSIONS.length;
 
-  // ЗАКРЕПЛЕНИЕ — до объединения ячеек (см. комментарий в _createMatrixSheet)
+  // ЗАКРЕПЛЕНИЕ — только строки, по образцу существующих листов (v4);
+  // столбцы НЕ закрепляем (причина «пустых листов» v3 — см. шапку).
   sheet.setFrozenRows(4);
-  sheet.setFrozenColumns(2);
 
   var r1 = _mergeRow(sheet, 1, 8);
   r1.setValue('ЛИСТ: permissions — реестр прав доступа (справочник)')
@@ -382,7 +512,6 @@ function _createPermissionsSheet(ss) {
   sheet.setColumnWidth(3, 380); sheet.setColumnWidth(4, 110);
   sheet.setColumnWidth(5, 130); sheet.setColumnWidth(6, 90);
   sheet.setColumnWidth(7, 80);  sheet.setColumnWidth(8, 90);
-  // Закрепление выполнено выше — ДО объединения ячеек.
 
   _softProtect(sheet.getRange(4, 1, 1, 8), 'permissions: строка заголовков — не редактировать');
 }
@@ -393,9 +522,9 @@ function _createRolesSheet(ss) {
 
   var n = INIT_ROLES.length;
 
-  // ЗАКРЕПЛЕНИЕ — до объединения ячеек (см. комментарий в _createMatrixSheet)
+  // ЗАКРЕПЛЕНИЕ — только строки, по образцу существующих листов (v4);
+  // столбцы НЕ закрепляем (причина «пустых листов» v3 — см. шапку).
   sheet.setFrozenRows(4);
-  sheet.setFrozenColumns(2);
 
   var r1 = _mergeRow(sheet, 1, 5);
   r1.setValue('ЛИСТ: roles — реестр ролей (справочник)')
@@ -425,7 +554,6 @@ function _createRolesSheet(ss) {
   sheet.setColumnWidth(1, 120); sheet.setColumnWidth(2, 140);
   sheet.setColumnWidth(3, 420); sheet.setColumnWidth(4, 90);
   sheet.setColumnWidth(5, 70);
-  // Закрепление выполнено выше — ДО объединения ячеек.
 
   _softProtect(sheet.getRange(4, 1, 1, 5), 'roles: строка заголовков — не редактировать');
 }
