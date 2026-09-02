@@ -29,6 +29,13 @@
  *   - Технические строки/колонки защищены «мягкой» защитой
  *     (warning-only): редактирование возможно, но с предупреждением.
  *
+ * v2 (02.09.2026): исправлена ошибка v1 — у Range в Apps Script нет
+ *   метода setItalic(), заменён на setFontStyle('italic') (3 места);
+ *   добавлена функция roleMatrixCleanup() — удаление листов матрицы
+ *   (для пересоздания или после сбоя на середине);
+ *   roleMatrixInit() теперь распознаёт частичную инициализацию
+ *   (есть matrix, нет permissions/roles) и подсказывает, что делать.
+ *
  * РАСШИРЕНИЕ В БУДУЩЕМ (когда появятся новые разделы/функционалы):
  *   Новое право  = новая колонка в matrix (строка 4 — perm_id,
  *                  строка 5 — название) + строка в permissions.
@@ -106,16 +113,18 @@ var INIT_MATRIX = {
 function roleMatrixInit() {
   var ss = SpreadsheetApp.getActive();
   if (!ss) {
-    if (FALLBACK_SPREADSHEET_ID.indexOf('placeholder') !== -1) {
-      throw new Error('Скрипт не привязан к таблице. Откройте Apps Script из таблицы KIP8_Access (Расширения → Apps Script) или укажите FALLBACK_SPREADSHEET_ID в начале файла.');
-    }
     ss = SpreadsheetApp.openById(FALLBACK_SPREADSHEET_ID);
   }
 
   // --- Идемпотентность: не перезаписывать существующее ---
   if (ss.getSheetByName('matrix')) {
+    // Частичная инициализация (сбой на середине, как в v1)?
+    if (!ss.getSheetByName('permissions') || !ss.getSheetByName('roles')) {
+      throw new Error('Обнаружена незавершённая инициализация: лист «matrix» есть, но «permissions»/«roles» — нет. ' +
+        'Запустите функцию roleMatrixCleanup(), затем снова roleMatrixInit().');
+    }
     var msg = 'Лист «matrix» уже существует — инициализация НЕ выполнена (ничего не изменено). ' +
-      'Для пересоздания удалите листы matrix / permissions / roles вручную и запустите снова.';
+      'Для пересоздания запустите roleMatrixCleanup() и затем roleMatrixInit().';
     Logger.log(msg);
     return msg;
   }
@@ -134,6 +143,27 @@ function roleMatrixInit() {
     ' Проверьте галочки в «matrix» и следуйте инструкции на строках 1–3 листа.';
   Logger.log(summary);
   return summary;
+}
+
+// ==========================================================================
+// ОЧИСТКА: удаляет листы matrix / permissions / roles (для пересоздания
+// или после сбоя на середине). Существующие листы таблицы НЕ трогает.
+// ==========================================================================
+
+function roleMatrixCleanup() {
+  var ss = SpreadsheetApp.getActive();
+  if (!ss) { ss = SpreadsheetApp.openById(FALLBACK_SPREADSHEET_ID); }
+  var deleted = [];
+  var names = ['matrix', 'permissions', 'roles'];
+  for (var i = 0; i < names.length; i++) {
+    var sh = ss.getSheetByName(names[i]);
+    if (sh) { ss.deleteSheet(sh); deleted.push(names[i]); }
+  }
+  var msg = deleted.length
+    ? 'Удалены листы: ' + deleted.join(', ') + '. Теперь запустите roleMatrixInit().'
+    : 'Листы matrix / permissions / roles не найдены — нечего удалять. Можно запускать roleMatrixInit().';
+  Logger.log(msg);
+  return msg;
 }
 
 // ==========================================================================
@@ -203,7 +233,7 @@ function _createMatrixSheet(ss) {
     'НОВОЕ ПРАВО: добавить колонку (строка 4 = perm_id, строка 5 = название) и строку в лист permissions. ' +
     'НОВАЯ РОЛЬ: добавить строку ниже последней (A = role_id, B = название) и строку в лист roles. ' +
     'Роль «Админ» всегда сохраняет все права. Задвоение ID недопустимо.')
-    .setWrap(true).setFontSize(9).setItalic(true).setFontColor('#333333');
+    .setWrap(true).setFontSize(9).setFontStyle('italic').setFontColor('#333333');
   sheet.setRowHeight(2, 90);
 
   // r3: версия/дата
@@ -285,7 +315,7 @@ function _createPermissionsSheet(ss) {
     'perm_id (A) — технический ID, латиница, НЕ переименовывать и не удалять (на него ссылается matrix строка 4). ' +
     'Название (B) — показывается в админ-панели. Конфликт с (E) — perm_id через запятую, с которыми право взаимоисключается. ' +
     'Системное (F) — право, которое нельзя отключать (admin.panel). Активно (G) — временное выключение права без удаления.')
-    .setWrap(true).setFontSize(9).setItalic(true).setFontColor('#333333');
+    .setWrap(true).setFontSize(9).setFontStyle('italic').setFontColor('#333333');
   sheet.setRowHeight(2, 70);
   sheet.getRange('A3').setValue('Сгенерировано: ' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd.MM.yyyy') + ' • Task 293')
     .setFontSize(9).setFontColor('#777777');
@@ -323,7 +353,7 @@ function _createRolesSheet(ss) {
     'ИНСТРУКЦИЯ: Название роли (B) должно ТОЧНО совпадать со значением role в листе users — по нему сервер находит роль пользователя. ' +
     'Системные роли (D): «Запрет», «Общий доступ», «Админ» — защищены от удаления. Роль «Админ» всегда имеет все права (строка в matrix не нужна «полная» — сервер гарантирует). ' +
     'Порядок (E) — сортировка в админ-панели. role_id (A) — технический, НЕ переименовывать.')
-    .setWrap(true).setFontSize(9).setItalic(true).setFontColor('#333333');
+    .setWrap(true).setFontSize(9).setFontStyle('italic').setFontColor('#333333');
   sheet.setRowHeight(2, 70);
   sheet.getRange('A3').setValue('Сгенерировано: ' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd.MM.yyyy') + ' • Task 293')
     .setFontSize(9).setFontColor('#777777');
