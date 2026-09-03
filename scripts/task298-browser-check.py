@@ -117,9 +117,12 @@ with sync_playwright() as p:
     check('F: маркер переработки у «д» (ws-overtime)', page.evaluate("!!document.querySelector('#wsGridWrap td.ws-cell.ws-overtime')"))
 
     # 4. План отпуска в пустых ячейках: буква «ОТ»
+    # Task 305: на сменных по циклу днях рядом с «ОТ» появляется бейдж
+    # плановой смены («ОТД»/«ОТН» — текст чипа в textContent) — план
+    # начинается с «ОТ», бейдж не меняет смысл проверки
     vac_cells = page.evaluate("Array.from(document.querySelectorAll('#wsGridWrap td.ws-cell.ws-vac-plan')).map(td=>td.textContent.trim())")
-    check('G: пустые ячейки плана отпуска показывают «ОТ»', len(vac_cells) > 0 and all(t == 'ОТ' for t in vac_cells), str(vac_cells[:5]))
-    check('H: 7 дней плана (14–20.09)', len([t for t in vac_cells if t == 'ОТ']) == 7, len(vac_cells))
+    check('G: пустые ячейки плана отпуска показывают «ОТ»', len(vac_cells) > 0 and all(t.startswith('ОТ') for t in vac_cells), str(vac_cells[:5]))
+    check('H: 7 дней плана (14–20.09)', len([t for t in vac_cells if t.startswith('ОТ')]) == 7, len(vac_cells))
 
     # 5. Тултип ячейки плана — «заполнится кодом «ОТ»»
     tip = page.evaluate("var el=document.querySelector('#wsGridWrap td.ws-cell.ws-vac-plan'); el? el.getAttribute('title') : ''")

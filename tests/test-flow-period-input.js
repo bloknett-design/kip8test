@@ -381,9 +381,9 @@ describe('Task 286 — клиент: CSS и SW', () => {
             'светлая тема');
     });
 
-    test('SW-кэш поднят до v543 (Task 298 — фронтенд менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v543'") !== -1,
-            'CACHE_VERSION = kipia-test-v543');
+    test('SW-кэш поднят до v544 (Task 298 — фронтенд менялся)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v544'") !== -1,
+            'CACHE_VERSION = kipia-test-v544');
         assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v534'") !== -1,
             'старой версии v534 нет');
     });
@@ -703,8 +703,8 @@ describe('Task 292 — заголовок графика: «Показания (
     });
 
     test('SW-кэш: v538 → v539 (Task 296 — только фронтенд, сервер не менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v543'") !== -1,
-            'CACHE_VERSION = kipia-test-v543');
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v544'") !== -1,
+            'CACHE_VERSION = kipia-test-v544');
         assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v537'") !== -1,
             'старой версии v537 нет');
     });
