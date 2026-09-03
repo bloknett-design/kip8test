@@ -136,7 +136,8 @@ with sync_playwright() as p:
     popup_html = page.evaluate("document.getElementById('wsCellPopup') ? document.getElementById('wsCellPopup').innerHTML : ''")
     rows = page.evaluate("document.querySelectorAll('#wsCellPopup .ws-popup-row').length")
     check('K: попап открыт', popup_html != '', popup_html[:80])
-    check('L: в попапе 18 строк (16 кодов + «— выходной» + «Дополнительно…»)', rows == 18, rows)
+    # Task 303: + строка «+ Мероприятие…» (быстрое добавление события)
+    check('L: в попапе 19 строк (16 кодов + «— выходной» + «+ Мероприятие…» + «Дополнительно…»)', rows == 19, rows)
     for code in ['Д8','Д7,2','д','н','ОТ','У','ОВ','ПР','*','.']:
         check('M: попап содержит код «%s»' % code, ('>' + code + '<') in popup_html.replace('\n',''))
     check('N: старых кодов «О» (отпуск) и «П» (прогул) в попапе НЕТ', ('>О<' not in popup_html) and ('>П<' not in popup_html))

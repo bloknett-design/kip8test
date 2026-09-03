@@ -361,9 +361,9 @@ describe('Task 279 — статические инварианты (фронт/i
             'лог о самолечении');
     });
 
-    test('SW-кэш поднят до v541 (Task 298 — сервер+фронтенд: коды статусов Т-12/Т-13)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v541'") !== -1,
-            'CACHE_VERSION = kipia-test-v541');
+    test('SW-кэш поднят до v542 (Task 298 — сервер+фронтенд: коды статусов Т-12/Т-13)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v542'") !== -1,
+            'CACHE_VERSION = kipia-test-v542');
     });
 });
 
