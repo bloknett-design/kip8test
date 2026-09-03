@@ -42,7 +42,7 @@
 // показания» — по правам матрицы, правка галочки меняет сайт без
 // релиза (обновление при входе/загрузке/heartbeat ≤ ~10 мин);
 // «ИТР ИОС» — ввод показаний, «ИТР8 pro» — просмотр графика работы.
-const CACHE_VERSION = 'kipia-test-v540';
+const CACHE_VERSION = 'kipia-test-v541';
 const CACHE_NAME = CACHE_VERSION;
 
 // Отдельный кэш для картинок Google Drive (превью + полные).

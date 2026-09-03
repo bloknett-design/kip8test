@@ -2652,3 +2652,49 @@ Stage Summary:
   склеенным «Д8, Д7,2» будет заменена эталонными 16 кодами (склейка
   разведена обязательно — код это PK). Следующий номер: 300.
 - Локальная дата: 2026-09-03 (Asia/Novosibirsk, UTC+07:00).
+
+---
+Task ID: 302
+Agent: main (Super Z)
+Task: По заявке пользователя: синхронизировать fallback index.html и
+      эталон StatusCodesInit.gs с новым цветом «Д7,2» = как у «Д8»
+      #FFF9C4 (пользователь поменял цвет в живом листе 03.09.2026).
+
+Work Log:
+- Контекст: пользователь поменял цвет Д7,2 в живом листе
+  «Коды_статусов» на цвет Д8 #FFF9C4 (введён с опечаткой #FFF9C5 —
+  визуально неотличимо; рекомендовано поправить ячейку). Задача —
+  привести две копии цвета в коде к #FFF9C4.
+- index.html (fallback-набор 16 кодов, строка ~35323): Д7,2
+  #FFF176 → #FFF9C4.
+- scripts/StatusCodesInit.gs (эталон SC_STATUS_CODES, строка ~119):
+  Д7,2 #FFF176 → #FFF9C4 + комментарий «Task 302». Проверено:
+  _scValidateData не требует уникальности ЦВЕТОВ (только кодов) —
+  одинаковый цвет Д8/Д7,2 валиден; клиент различает ячейки по коду
+  (текст виден поверх заливки).
+- SW-кэш v540 → v541 (sw.js + 6 тест-файлов: test-deploy-url,
+  test-flow-period-input, test-prod-calendar, test-vacations-feedback,
+  test-vacations-generate, test-work-schedule — глобальная замена).
+- Сопутствующая синхронизация мок-цветов: CODES_SHEET в
+  test-vacations-generate.js (Д7,2 #FFF176 → #FFF9C4), мок-набор в
+  scripts/task298-browser-check.py; цвета Д7,2 в DEPLOY-Task298/
+  Task299-доках обновлены на #FFF9C4.
+- Верификация: node tests/run-all.js — 1345/0; task299-mock-test.js —
+  76/76 (сверка эталон ↔ fallback по-прежнему сходится: оба #FFF9C4);
+  node --check StatusCodesInit.gs OK.
+- Системный промт: post-Task 302 (строка 3, демотация 299) + контекст
+  Task 300–301 (проверки живой таблицы: шаблоны/Дни_цикла исправлены
+  пользователем, «Записи_графика» очищена, таблица готова к
+  «Сформировать»).
+- Коммит + push (PAT-протокол, URL сброшен). Копии →
+  download/kip8test/.
+
+Stage Summary:
+- Task 302 выполнен: цвет Д7,2 синхронизирован (#FFF9C4) в fallback
+  index.html и эталоне StatusCodesInit.gs; SW v541; тесты 1345/0,
+  мок 76/76. Деплой: только фронтенд (GitHub Pages + Ctrl+Shift+R
+  ×1–2), Apps Script НЕ трогался; WorkSchedule.gs не менялся.
+  Пользователю: поправить опечатку в живом листе (#FFF9C5 →
+  #FFF9C4); updateCycleDaysTemplate2() по-прежнему не перезапускать.
+  Следующий номер: 303.
+- Локальная дата: 2026-09-03 (Asia/Novosibirsk, UTC+07:00).
