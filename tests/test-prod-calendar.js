@@ -487,17 +487,16 @@ describe('ProdCalendar: утилиты', () => {
 });
 
 describe('Task 260: интеграция в index.html', () => {
-    test('HTML: кнопка «Обновить» в тулбаре шахматки (Task 272)', () => {
-        assertTrue(html.indexOf('id="wsCalChip"') !== -1 &&
-                   html.indexOf('wsCalChipText') !== -1,
-            'кнопка wsCalChip с текстовым элементом');
-        assertTrue(html.indexOf('onclick="ProdCalendar.confirmRefresh()"') !== -1,
-            'клик по кнопке открывает диалог подтверждения ProdCalendar.confirmRefresh()');
-        assertTrue(html.indexOf('>Обновить</span>') !== -1,
-            'надпись кнопки — «Обновить» (была «Календарь»)');
-        assertTrue(/id="wsCalChip"[\s\S]{0,600}?class="ws-cal-chip"/.test(html) ||
-                   /class="ws-cal-chip"[\s\S]{0,600}?id="wsCalChip"/.test(html),
-            'кнопка в тулбаре (рядом с селектами месяца/года)');
+    test('HTML: кнопка «Обновить» УДАЛЕНА — кнопки объединены (Task 306)', () => {
+        assertTrue(html.indexOf('id="wsCalChip"') === -1,
+            'кнопка wsCalChip удалена из тулбара (объединена с «Сформировать»)');
+        assertTrue(html.indexOf('wsCalChipText') === -1,
+            'текстовый элемент кнопки удалён');
+        assertTrue(html.indexOf('onclick="ProdCalendar.confirmRefresh()"') === -1,
+            'онклик confirmRefresh удалён (диалога больше нет)');
+        // «Сформировать» — единственная кнопка действия в тулбаре
+        assertTrue(html.indexOf('id="wsGenerateBtn"') !== -1,
+            'кнопка wsGenerateBtn осталась единственной кнопкой действия');
     });
     test('HTML: шторка настроек календаря УДАЛЕНА (Task 272)', () => {
         assertTrue(html.indexOf('id="wsCalOverlay"') === -1 &&
@@ -540,10 +539,11 @@ describe('Task 260: интеграция в index.html', () => {
         assertTrue(html.indexOf('thTitle = d + \' \' + dow + \' — \' + dInfo.title') !== -1,
             'тултип заголовка с названием праздника');
     });
-    test('CSS: стили кнопки, праздника и окошка', () => {
-        assertTrue(html.indexOf('.ws-cal-chip {') !== -1, 'стили кнопки «Обновить»');
-        assertTrue(html.indexOf('.ws-cal-chip:disabled') !== -1,
-            'стиль выключенной кнопки на время обновления (Task 272)');
+    test('CSS: стили праздника и окошка (стили кнопки удалены)', () => {
+        assertTrue(html.indexOf('.ws-cal-chip {') === -1,
+            'стили кнопки «Обновить» удалены (Task 306 — кнопки объединены)');
+        assertTrue(html.indexOf('.ws-cal-chip:disabled') === -1,
+            'стиль выключенной кнопки удалён');
         assertTrue(html.indexOf('.ws-grid thead th.ws-day-col.ws-feast {') !== -1,
             'стили праздника в шапке');
         assertTrue(html.indexOf('.ws-cp-day.k-hol') !== -1,
@@ -551,10 +551,10 @@ describe('Task 260: интеграция в index.html', () => {
         assertTrue(html.indexOf('.ws-cal-panel {') !== -1,
             'стили окошка календаря в тулбаре');
     });
-    test('SW: версия кэша kipia-test-v544 (Task 298)', () => {
+    test('SW: версия кэша kipia-test-v545 (Task 298)', () => {
         const sw = fs.readFileSync(path.resolve(__dirname, '..', 'sw.js'), 'utf8');
-        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v544'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v544');
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v545'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v545');
     });
     test('Тултип ячейки содержит название праздника', () => {
         assertTrue(html.indexOf('titleParts.splice(1, 0, cellInfo.title);') !== -1,
@@ -1196,29 +1196,27 @@ describe('Task 266: окошко столбиками, слева в баре �
 // верхнем углу бара
 // ============================================================
 
-describe('Task 272: кнопка «Обновить» и диалог подтверждения', () => {
-    test('JS: confirmRefresh — диалог с источником и кнопкой «Обновить»', () => {
-        assertTrue(html.indexOf('confirmRefresh: function') !== -1,
-            'метод confirmRefresh определён');
-        assertTrue(html.indexOf("{ title: 'Обновление календаря', okText: 'Обновить' }") !== -1,
-            'диалог: заголовок «Обновление календаря», кнопка «Обновить»');
-        assertTrue(html.indexOf("'Источник: ' + srcLabel") !== -1,
-            'в сообщении — подпись источника данных');
-        assertTrue(html.indexOf("'\\nОбновить производственный календарь на ' + ym.y + ' год?'") !== -1,
-            'вопрос подтверждения обновления года');
+describe('Task 272→306: кнопка «Обновить» объединена с «Сформировать»', () => {
+    test('JS: confirmRefresh УДАЛЁН — обновление идёт тихо с формированием', () => {
+        assertTrue(html.indexOf('confirmRefresh: function') === -1,
+            'метод confirmRefresh удалён (диалог не нужен)');
+        assertTrue(html.indexOf("{ title: 'Обновление календаря', okText: 'Обновить' }") === -1,
+            'диалог обновления удалён');
     });
     test('JS: подпись источника legalic — как в заявке', () => {
         const { PC } = makePC();
         assertEqual(PC._sourceLabel('legalic'),
             'calendar.legalic.ru (федеральный, официальные нормы)');
     });
-    test('JS: refreshNow — кнопка «Обновление…» на время запроса', () => {
-        assertTrue(html.indexOf("'Обновление…'") !== -1,
-            'надпись «Обновление…» на кнопке во время обновления');
+    test('JS: refreshNow(silent) — тихий режим без тостов (Task 306)', () => {
+        assertTrue(html.indexOf('refreshNow: function(silent)') !== -1,
+            'параметр silent — обновление в составе «Сформировать»');
         assertTrue(html.indexOf('ensureYear(ym.y, true)') !== -1,
             'обновление — принудительное (force=true, TTL игнорируется)');
-        assertTrue(html.indexOf("'Календарь обновлён'") !== -1,
-            'тост об успешном обновлении');
+        assertTrue(html.indexOf("if (!silent && typeof KipToast !== 'undefined'") !== -1,
+            'тосты только в НЕтихом режиме');
+        assertTrue(html.indexOf('getElementById(\'wsCalChip\')') === -1,
+            'манипуляция кнопкой wsCalChip удалена');
     });
     test('JS: _currentYM берёт год из WorkSchedule или текущей даты', () => {
         assertTrue(html.indexOf('_currentYM: function') !== -1,
@@ -1226,12 +1224,16 @@ describe('Task 272: кнопка «Обновить» и диалог подтв
         assertTrue(html.indexOf('this._sy') === -1 && html.indexOf('this._sm') === -1,
             'поля шторки _sy/_sm удалены');
     });
-    test('HTML: иконка кнопки — круговые стрелки (не календарь)', () => {
-        const icon = html.match(/id="wsCalChip"[\s\S]{0,400}?<svg[^>]*>([\s\S]*?)<\/svg>/);
-        assertTrue(!!icon, 'svg-иконка внутри кнопки');
-        assertTrue(icon[1].indexOf('polyline') !== -1,
-            'иконка обновления — круговые стрелки (polyline)');
-        assertTrue(icon[1].indexOf('<rect') === -1,
-            'старая иконка календаря (rect) удалена');
+    test('JS: WorkSchedule._refreshProdCalendarQuiet — тихое обновление', () => {
+        assertTrue(html.indexOf('_refreshProdCalendarQuiet: function') !== -1,
+            'хелпер тихого обновления определён');
+        assertTrue(html.indexOf('ProdCalendar.refreshNow(true);') !== -1,
+            'вызов в тихом режиме (silent=true)');
+        const genPart = html.slice(html.indexOf('_doGenerateMonth: function'));
+        assertTrue(genPart.indexOf('this._refreshProdCalendarQuiet();') !== -1,
+            '_doGenerateMonth обновляет календарь');
+        const genYear = html.slice(html.indexOf('_doGenerateYear: function'));
+        assertTrue(genYear.indexOf('this._refreshProdCalendarQuiet();') !== -1,
+            '_doGenerateYear обновляет календарь');
     });
 });

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # Task 305: browser-check «График работы» — бейдж плановой смены на
 # днях отпуска (формат мероприятия, правый нижний угол).
+# Task 306: бейдж — ТОЛЬКО у «сменных» (заявка пользователя):
+# дневной 023 в отпуске бейдж НЕ показывает.
 # Playwright + мок fetch (перехват POST к Apps Script по action).
 #
 # СТЕHД: 017 «сменный» (шаблон 1: Д/Н/вых×3, старт 31.08.2026 —
@@ -8,10 +10,11 @@
 # 15=Д, 16=Н, 17–19=вых, 20=Д, 25=Д…); отпуск 05–16.09 (12 «ОТ»).
 # 023 «дневной» (шаблон 2: Д8×5/вых×2, старт 07.09.2026);
 # отпуск 21–25.09 БЕЗ записей (план «ОТ» до «Сформировать»).
-# Ожидание: дни отпуска на сменных по циклу днях показывают «ОТ» +
-# бейдж Д/Н/Д8; цикловые выходные в отпуске — без бейджа; сменные,
-# больничные и пустые дни — без бейджа; слой мероприятий (Task 303)
-# не пострадал.
+# Ожидание (Task 305 + 306): дни отпуска 017 на сменных по циклу
+# днях показывают «ОТ» + бейдж Д/Н; цикловые выходные в отпуске —
+# без бейджа; 023 «дневной» в отпуске — план «ОТ» БЕЗ бейджа
+# (фильтр empIsShift); сменные, больничные и пустые дни — без
+# бейджа; слой мероприятий (Task 303) не пострадал.
 import json, sys, time
 from playwright.sync_api import sync_playwright
 
@@ -221,9 +224,9 @@ with sync_playwright() as p:
     })()""")
     check('F: серия смен под отпуском 017 = Д,Н,Д,Н,Д,Н',
           series and series['out'] == ['Д','Н','Д','Н','Д','Н'], series)
-    # 017: 6 бейджей; 023: план 21–25 = Д8 ×5; итого 11
-    check('F2: всего бейджей смен в сетке = 11 (6 у 017 + 5 у 023-план)',
-          series and series['total'] == 11, series)
+    # 017: 6 бейджей; Task 306: 023 «дневной» бейджей НЕ показывает
+    check('F2: всего бейджей смен в сетке = 6 (только у 017 — дневной 023 без бейджа)',
+          series and series['total'] == 6, series)
 
     # G. 01.09 — сменный день «Н» без бейджа (код уже основной)
     info1 = page.evaluate("""(function(){
@@ -276,7 +279,8 @@ with sync_playwright() as p:
     check('I: 25.09 — «Б» без бейджа (не семейство отпусков)',
           info25 and info25['text'].startswith('Б') and info25['badges'] == 0, info25)
 
-    # J. 023, 21.09: ПЛАН отпуска (пустая ячейка) + бейдж «Д8»
+    # J. 023, 21.09: ПЛАН отпуска (пустая ячейка), БЕЗ бейджа (Task 306:
+    # бейдж плановой смены — только у «сменных»; дневной его не показывает)
     infop = page.evaluate("""(function(){
         var rows = document.querySelectorAll('#wsGridWrap tbody tr');
         for (var r=0;r<rows.length;r++){
@@ -294,9 +298,8 @@ with sync_playwright() as p:
         return null;
     })()""")
     check('J: 21.09 (023) — план «ОТ» (ws-vac-plan)', infop and infop['plan'] and infop['text'].startswith('ОТ'), infop)
-    check('J2: бейдж плановой смены «Д8» — сплошной (#FFF9C4)',
-          infop and infop['badge'] == 'Д8' and infop['bg'] == 'rgb(255, 249, 196)' and
-          not infop['dashed'], infop)
+    check('J2: Task 306 — бейджа плановой смены у дневного НЕТ',
+          infop and infop['badge'] is None and infop['dashed'] is None, infop)
 
     # K. 023, 14.09: обычная смена «Д8» — бейджа нет
     info14 = page.evaluate("""(function(){
@@ -329,10 +332,10 @@ with sync_playwright() as p:
     check('L: тултип 05.09 — «по циклу (Дни_цикла): День…»',
           'по циклу (Дни_цикла): День' in tip, tip[:200])
 
-    # M. Тултип плана 21.09: план отпуска + плановая смена
+    # M. Тултип плана 21.09: план отпуска БЕЗ плановой смены (Task 306)
     tipp = infop['title'] if infop and 'title' in infop else ''
-    check('M: тултип 21.09 — план «заполнится кодом «ОТ»» + «по циклу»',
-          ('заполнится кодом' in tipp) and ('по циклу (Дни_цикла): День' in tipp), tipp[:250])
+    check('M: тултип 21.09 — план «заполнится кодом «ОТ»», БЕЗ «по циклу»',
+          ('заполнится кодом' in tipp) and ('по циклу' not in tipp), tipp[:250])
 
     # N. Геометрия: бейджи в пределах своих ячеек (мобильная вёрстка)
     geom = page.evaluate("""(function(){
@@ -347,7 +350,7 @@ with sync_playwright() as p:
         return { total: total, bad: bad };
     })()""")
     check('N: все бейджи в пределах ячеек (мобильная, 375px)',
-          geom and geom['bad'] == 0 and geom['total'] >= 11, geom)
+          geom and geom['bad'] == 0 and geom['total'] >= 6, geom)
 
     # Скриншот мобильной вёрстки (строки с отпусками)
     page.screenshot(path='scripts/task305-proof-mobile.png', full_page=False)
@@ -367,7 +370,7 @@ with sync_playwright() as p:
         return { total: total, bad: bad };
     })()""")
     check('O: бейджи в пределах ячеек (десктоп, 1280px)',
-          geom2 and geom2['bad'] == 0 and geom2['total'] >= 11, geom2)
+          geom2 and geom2['bad'] == 0 and geom2['total'] >= 6, geom2)
     page.screenshot(path='scripts/task305-proof-desktop.png', full_page=False)
 
     # P. JS-ошибок нет

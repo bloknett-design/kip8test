@@ -346,11 +346,17 @@ describe('Task 305 — клиент: рендер бейджа плановой 
             '_VAC_CODES объявлен: отпуск ежегодный + учебный');
     });
 
-    test('JS: условие бейджа — основной код отпуска ИЛИ план «Отпуска»', () => {
+    test('JS: условие бейджа — только «сменный» + отпуск/план «Отпуска»', () => {
         assertTrue(INDEX_SRC.indexOf(
-            "var vacMain = (status && this._VAC_CODES.indexOf(status) >= 0) ||") !== -1,
+            "var empIsShift = String(emp['тип'] || '').trim() === 'сменный';") !== -1,
+            'Task 306: фильтр по типу — бейдж только у сменных');
+        assertTrue(INDEX_SRC.indexOf(
+            'var vacMain = empIsShift &&') !== -1,
+            'vacMain: условие типа в составе (дневные — без бейджа)');
+        assertTrue(INDEX_SRC.indexOf(
+            "((status && this._VAC_CODES.indexOf(status) >= 0) ||") !== -1,
             'vacMain: запись/правка с кодом отпуска');
-        assertTrue(INDEX_SRC.indexOf("(!status && !!vacPlan);") !== -1,
+        assertTrue(INDEX_SRC.indexOf("(!status && !!vacPlan));") !== -1,
             'vacMain: пустая ячейка внутри плана отпуска');
     });
 
@@ -408,8 +414,8 @@ describe('Task 305 — сервер: приоритет отпуска не тр
             'замена в toInsert (строка шага 3)');
     });
 
-    test('SW: версия кэша kipia-test-v544 (Task 305 — клиент менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v544'") !== -1,
-            'CACHE_VERSION = kipia-test-v544');
+    test('SW: версия кэша kipia-test-v545 (Task 305 — клиент менялся)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v545'") !== -1,
+            'CACHE_VERSION = kipia-test-v545');
     });
 });

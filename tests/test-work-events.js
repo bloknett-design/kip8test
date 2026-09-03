@@ -318,8 +318,8 @@ describe('Task 303 — симуляция generateMonth: слой меропри
 describe('Task 303 — клиент: бейдж мероприятия в ячейке', () => {
 
     test('JS: слой мероприятий — константы кодов', () => {
-        assertTrue(INDEX_SRC.indexOf("_EVENT_CODES: ['И', 'ОБ', 'ПЗ']") !== -1,
-            '_EVENT_CODES объявлен');
+        assertTrue(INDEX_SRC.indexOf("_EVENT_CODES: ['И', 'ОБ', 'ПЗ', 'ПР', '*']") !== -1,
+            '_EVENT_CODES объявлен (Task 306: + ПР и *)');
         assertTrue(INDEX_SRC.indexOf("_ABSENCE_CODES: ['ОТ', 'У', 'ОВ', 'Б', 'ПР']") !== -1,
             '_ABSENCE_CODES объявлен (бейдж скрыт на днях отсутствия)');
     });
@@ -396,12 +396,14 @@ describe('Task 303 — клиент: попап ячейки и быстрое �
 
 describe('Task 303 — сервер: генерация со слоем мероприятий', () => {
 
-    test('_isEventStatusCode: И/ОБ/ПЗ — true, остальное — false', () => {
+    test('_isEventStatusCode: И/ОБ/ПЗ/ПР/* — true, остальное — false', () => {
         assertTrue(WS_SRC.indexOf('_isEventStatusCode: function') !== -1);
-        ['И', 'ОБ', 'ПЗ'].forEach(c => {
+        ['И', 'ОБ', 'ПЗ', 'ПР'].forEach(c => {
             assertTrue(WS_SRC.indexOf("status === '" + c + "'") !== -1,
                 'код ' + c + ' в проверке');
         });
+        assertTrue(WS_SRC.indexOf("status === '*'") !== -1,
+            'код * в проверке (Task 306)');
     });
 
     test('generateMonth: плановая карта plannedStatus (шаги 3/4/4.6)', () => {
