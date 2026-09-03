@@ -32,6 +32,17 @@
 //   Дни_цикла, Инструктажи, Записи_графика, Сводка_по_месяцам,
 //   Отпуска (Task 274)
 //
+// Task 304: таб_№ во ВСЕХ листах хранится ТЕКСТОМ. appendRow/
+//   setValues пишут значения по USER_ENTERED-семантике Google
+//   Sheets — числоподобная строка «0871» становится ЧИСЛОМ 871
+//   (ведущий ноль теряется, таб перестаёт сопоставляться со
+//   справочником «Сотрудники»: бейдж мероприятия молча пропадал).
+//   Теперь перед записью таб-ячейкам ставится текстовый формат '@'
+//   (см. _appendRowKeepText), а generateMonth возвращает warnings —
+//   мероприятия/отпуска с таб_номер не из справочника видны в тосте
+//   «Сформировать» (раньше это была тихая ошибка). Починка уже
+//   испорченных ячеек — scripts/TabNumbersFix.gs (fixTabNumbers).
+//
 // Структура листа «Сотрудники» (заголовки в строке 1, данные со строки 2):
 //   A: таб_номер              — табельный номер (строка, PK)
 //   B: ФИО
@@ -165,6 +176,25 @@ var WorkSchedule = {
     var ss = SpreadsheetApp.openById(this.SPREADSHEET_ID);
     var sheet = ss.getSheetByName(name);
     return sheet;
+  },
+
+  // Task 304: дописать строку в ЛИСТ с текстовым форматом таб-колонок.
+  // ЗАЧЕМ: appendRow/setValues применяют USER_ENTERED-семантику
+  // Google Sheets — числоподобная строка «0871» становится ЧИСЛОМ
+  // 871, ведущий ноль теряется. Таб_№ хранится текстом во всех
+  // листах (как в справочнике «Сотрудники»): до записи значения
+  // нужным ячейкам ставится формат '@' (plain text), затем строка
+  // пишется одним setValues (позиция = getLastRow()+1 — та же, куда
+  // писал бы appendRow). textCols — 1-based номера текстовых колонок.
+  _appendRowKeepText: function(sheet, rowValues, textCols) {
+    var newRow = sheet.getLastRow() + 1;
+    if (textCols && textCols.length) {
+      for (var i = 0; i < textCols.length; i++) {
+        sheet.getRange(newRow, textCols[i]).setNumberFormat('@');
+      }
+    }
+    sheet.getRange(newRow, 1, 1, rowValues.length).setValues([rowValues]);
+    return newRow;
   },
 
   _requireRead: function(token) {
@@ -707,6 +737,12 @@ var WorkSchedule = {
     var eventGenerated = 0;     // вставлено строк И/ОБ/ПЗ (дни без смены)
     var eventRestored = 0;      // смен восстановлено из-под мероприятий
     var eventRemoved = 0;       // удалено устаревших строк мероприятий
+    // Task 304: ВИДИМЫЕ предупреждения генерации. Таб_номер
+    // мероприятия/отпуска не из справочника «Сотрудники» (например,
+    // «871» вместо «0871» — потерян ведущий ноль) ДО Task 304
+    // работал ТИХО: бейдж не показывался, записи не сопоставлялись.
+    // Возвращаются в data.warnings и видны в тосте «Сформировать».
+    var warnings = [];
     for (var ti = 0; ti < trainings.length; ti++) {
       var t = trainings[ti];
       var codeFor = this.TRAINING_TYPE_TO_STATUS[t.тип];
@@ -714,6 +750,12 @@ var WorkSchedule = {
       var tStart = this._parseIsoDate(t.дата_начала);
       var tEnd   = this._parseIsoDate(t.дата_окончания) || tStart;
       if (!tStart) continue;
+
+      // Task 304: таб_номер не из справочника — предупреждение
+      if (!perEmployee[t['таб_номер']]) {
+        warnings.push('Мероприятие id=' + t.id + ' (' + t.дата_начала + '): таб_номер «' +
+                      t['таб_номер'] + '» не найден в «Сотрудниках» — вероятно, потерян ведущий ноль');
+      }
 
       // Для каждого дня мероприятия в текущем месяце
       var cur = new Date(Math.max(tStart.getTime(), monthStart.getTime()));
@@ -821,6 +863,13 @@ var WorkSchedule = {
       var vEnd   = this._parseIsoDate(v.дата_окончания) || vStart;
       if (!vStart) continue;
 
+      // Task 304: таб_номер не из справочника — предупреждение
+      if (!perEmployee[v['таб_номер']]) {
+        warnings.push('Отпуск id=' + (v.id === null ? '—' : v.id) + ' (' + v.дата_начала +
+                      '): таб_номер «' + v['таб_номер'] +
+                      '» не найден в «Сотрудниках» — вероятно, потерян ведущий ноль');
+      }
+
       // Для каждого календарного дня периода в текущем месяце
       // (включая Сб/Вс — отпуск в календарных днях)
       var vc = new Date(Math.max(vStart.getTime(), monthStart.getTime()));
@@ -925,6 +974,9 @@ var WorkSchedule = {
     var insertCount = toInsert.length;
     if (insertCount > 0) {
       var lastRow = entriesSheet.getLastRow();
+      // Task 304: колонка B (таб_№) — текстовый формат ДО записи:
+      // «0871» не должен превратиться в число 871 (USER_ENTERED)
+      entriesSheet.getRange(lastRow + 1, 2, insertCount, 1).setNumberFormat('@');
       var targetRange = entriesSheet.getRange(lastRow + 1, 1, insertCount, 10);
       targetRange.setValues(toInsert);
     }
@@ -969,7 +1021,8 @@ var WorkSchedule = {
                   ', дней мероприятий ' + trainingDays +
                   ' (строк И/ОБ/ПЗ ' + eventGenerated +
                   ', восстановлено смен ' + eventRestored +
-                  ', удалено мероприятий ' + eventRemoved + ')';
+                  ', удалено мероприятий ' + eventRemoved +
+                  (warnings.length ? ', предупреждений ' + warnings.length : '') + ')';
     try {
       Utils.audit(user.email, 'WORKSCHEDULE_GENERATE_MONTH', '', '', summary);
     } catch (e) { /* ignore */ }
@@ -991,6 +1044,8 @@ var WorkSchedule = {
         eventGenerated:    eventGenerated,  // вставлено строк И/ОБ/ПЗ (дни без смены)
         eventRestored:     eventRestored,   // смен восстановлено из-под мероприятий
         eventRemoved:      eventRemoved,    // удалено устаревших строк мероприятий
+        // Task 304: таб_номера не из справочника (потерянные нули и пр.)
+        warnings:          warnings,
         perEmployee: perEmployee,
         monthStart: this._toIsoDate(monthStart),
         daysInMonth: daysInMonth
@@ -1082,6 +1137,7 @@ var WorkSchedule = {
     if (foundRow > 0) {
       // Обновление существующей
       sheet.getRange(foundRow, 1).setValue(dateObj);
+      sheet.getRange(foundRow, 2).setNumberFormat('@');  // Task 304: таб_№ текстом
       sheet.getRange(foundRow, 2).setValue(tabNo);
       sheet.getRange(foundRow, 3).setValue(status);
       sheet.getRange(foundRow, 4).setValue(переработка);
@@ -1092,9 +1148,10 @@ var WorkSchedule = {
       sheet.getRange(foundRow, 9).setValue(инструкция);
       sheet.getRange(foundRow, 10).setValue(комментарий);
     } else {
-      // Вставка новой
-      sheet.appendRow([dateObj, tabNo, status, переработка, праздник, 'руч', new Date(),
-                       замещает ? замещает : null, инструкция, комментарий]);
+      // Вставка новой (Task 304: B — таб_№ — текстовым форматом)
+      this._appendRowKeepText(sheet, [dateObj, tabNo, status, переработка, праздник,
+                       'руч', new Date(), замещает ? замещает : null, инструкция,
+                       комментарий], [2]);
     }
 
     try {
@@ -1189,12 +1246,13 @@ var WorkSchedule = {
     var position  = String(payload.должность || '').trim();
     var comment   = String(payload.комментарий || '').slice(0, 500);
 
-    sheet.appendRow([
+    // Task 304: A (таб_номер) — текст: «0871» не должен стать числом 871
+    this._appendRowKeepText(sheet, [
       tabNo, fio, tip, smena || null, patId || null,
       startCycle, hireDate, null,  // H=дата_увольнения — пусто
       0,  // в_архиве=0
       position, comment
-    ]);
+    ], [1]);
 
     try {
       Utils.audit(user.email, 'WORKSCHEDULE_ADD_EMPLOYEE', '', '',
@@ -1248,7 +1306,9 @@ var WorkSchedule = {
     }
     var newId = maxId + 1;
 
-    sheet.appendRow([newId, tabNo, tip, tema, startDate, endDate, duration, comment]);
+    // Task 304: B (таб_№) — текст, ведущие нули не теряются
+    this._appendRowKeepText(sheet,
+      [newId, tabNo, tip, tema, startDate, endDate, duration, comment], [2]);
 
     try {
       Utils.audit(user.email, 'WORKSCHEDULE_ADD_TRAINING', '', '',
@@ -1376,7 +1436,8 @@ var WorkSchedule = {
     }
     var newId = maxId + 1;
 
-    sheet.appendRow([newId, tabNo, part, startDate, endDate, comment]);
+    // Task 304: B (таб_номер) — текст, ведущие нули не теряются
+    this._appendRowKeepText(sheet, [newId, tabNo, part, startDate, endDate, comment], [2]);
 
     try {
       Utils.audit(user.email, 'WORKSCHEDULE_ADD_VACATION', '', '',

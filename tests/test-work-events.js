@@ -43,6 +43,7 @@ const INDEX_SRC = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf
 class MockSheet {
     constructor(rows) {
         this.rows = rows || [];   // включая строку 1 (шапка)
+        this.fmtCalls = [];       // Task 304: вызовы setNumberFormat
     }
     getLastRow() { return this.rows.length; }
     getRange(row, col, numRows, numCols) {
@@ -73,6 +74,13 @@ class MockSheet {
             setValue(v) {
                 while (self.rows.length < row) self.rows.push([]);
                 self.rows[row - 1][col - 1] = v;
+            },
+            // Task 304: реальный Sheets применяет формат к ячейке;
+            // мок только протоколирует вызов — тесты проверяют,
+            // что таб-ячейкам ставится '@' ДО записи значения
+            setNumberFormat(fmt) {
+                self.fmtCalls.push({ row: row, col: col,
+                                     numRows: numRows, numCols: numCols, fmt: fmt });
             }
         };
     }

@@ -169,8 +169,11 @@ describe('Task 275: VacationsInit.gs — инициализация листа �
         const ws = fs.readFileSync(wsPath, 'utf8');
         const appendInit = 'appendRow([maxId, row.tab, row.part, row.start, row.end, row.comment])';
         assertTrue(gs.indexOf(appendInit) !== -1, 'appendRow демо не в формате 6 полей');
-        // Сервер пишет так же: appendRow([newId, tabNo, part, startDate, endDate, comment])
-        assertTrue(ws.indexOf('appendRow([newId, tabNo, part, startDate, endDate, comment])') !== -1,
+        // Task 304: appendRow на сервере заменён на _appendRowKeepText —
+        // те же 6 полей, но таб-ячейке (B) ставится «@» ДО записи:
+        // «0871» не превращается в число 871 (USER_ENTERED-семантика
+        // Google Sheets) — таб сопоставляется со справочником
+        assertTrue(ws.indexOf('_appendRowKeepText(sheet, [newId, tabNo, part, startDate, endDate, comment], [2])') !== -1,
             'addVacation сменил формат записи — тест устарел');
     });
 

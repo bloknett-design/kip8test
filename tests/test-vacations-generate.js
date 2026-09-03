@@ -34,6 +34,7 @@ const SW_SRC = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
 class MockSheet {
     constructor(rows) {
         this.rows = rows || [];   // включая строку 1 (шапка)
+        this.fmtCalls = [];       // Task 304: вызовы setNumberFormat
     }
     getLastRow() { return this.rows.length; }
     getRange(row, col, numRows, numCols) {
@@ -64,6 +65,13 @@ class MockSheet {
             setValue(v) {
                 while (self.rows.length < row) self.rows.push([]);
                 self.rows[row - 1][col - 1] = v;
+            },
+            // Task 304: реальный Sheets применяет формат к ячейке;
+            // мок только протоколирует вызов — тесты проверяют,
+            // что таб-ячейкам ставится '@' ДО записи значения
+            setNumberFormat(fmt) {
+                self.fmtCalls.push({ row: row, col: col,
+                                     numRows: numRows, numCols: numCols, fmt: fmt });
             }
         };
     }
@@ -361,9 +369,9 @@ describe('Task 279 — статические инварианты (фронт/i
             'лог о самолечении');
     });
 
-    test('SW-кэш поднят до v542 (Task 298 — сервер+фронтенд: коды статусов Т-12/Т-13)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v542'") !== -1,
-            'CACHE_VERSION = kipia-test-v542');
+    test('SW-кэш поднят до v543 (Task 298 — сервер+фронтенд: коды статусов Т-12/Т-13)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v543'") !== -1,
+            'CACHE_VERSION = kipia-test-v543');
     });
 });
 
