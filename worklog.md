@@ -2769,3 +2769,87 @@ Stage Summary:
   (WorkSchedule.gs + New version), фронтенд SW v542. Сентябрь-2026
   совместим без миграции. Следующий номер: 304.
 - Локальная дата: 2026-09-03 (Asia/Novosibirsk, UTC+07:00).
+
+---
+Task ID: 304
+Agent: main (Super Z)
+Task: По заявке пользователя — баг: «при добавлении инструктажа
+      из приложения в таблице Инструктажи таб_№, начинающиеся на 0,
+      записываются без нулей (0871 → 871)».
+
+Work Log:
+- Диагноз по живой таблице (live5.xlsx, выгрузка 03.09.2026):
+  «Инструктажи» строка id=4 («Повторный», 30.09, Романов Д.А.) —
+  B=871 ЧИСЛО (fmt General), остальные таб — текст; Сотрудники/
+  Отпуска/Записи_графика — таб текстовые ('@'). Причина: appendRow
+  пишет значения по USER_ENTERED-семантике Sheets — числоподобная
+  строка «0871» → число 871. Следствия: таб не сопоставляется со
+  справочником (entryIndex/perEmployee/_eventsAt — строгое
+  сравнение строк) → бейдж Task 303 молча не показывается,
+  generateMonth вставил бы строку-сироту; осиротевших строк нет
+  (пользователь не перегенерировал после добавления).
+- Сервер WorkSchedule.gs: НОВЫЙ хелпер _appendRowKeepText(sheet,
+  row, textCols) — таб-ячейкам setNumberFormat('@') ДО setValues
+  (позиция getLastRow()+1 = позиция appendRow); заменил appendRow
+  во ВСЕХ 4 путях записи таб_№: addEmployee (A), addTraining (B),
+  addVacation (B), setManualEntry (B — вставка + обновление);
+  вызовов .appendRow( в файле больше нет. generateMonth: '@' на
+  диапазон вставки колонки B до setValues(toInsert).
+- Видимость: generateMonth возвращает data.warnings[] — мероприя-
+  тия/отпуска с таб_номер не из справочника (perEmployee строится
+  по ВСЕМ сотрудникам до фильтра шаблона — без ложных срабатыва-
+  ний); summary/аудит дополнены счётчиком; док-шапка + алгоритм
+  generateMonth обновлены.
+- Клиент index.html: тосты «Сформировать месяц/год» — warnings
+  («⚠ … таб_номер «871» не найден в «Сотрудниках» — вероятно,
+  потерян ведущий ноль», макс. 3 + «(и ещё N)»; genWarns/
+  totalWarns); страница «Инструктажи» — красный маркер «⚠ нет в
+  справочнике» (.ws-tr-warn; тёмная #ef5350 / светлая #d32f2f).
+- НОВЫЙ scripts/TabNumbersFix.gs — разовая починка испорченных
+  ячеек (стиль StatusCodesInit.gs Task 299): tabNumbersStatus() —
+  диагностика без записи; fixTabNumbers() — «871»→«0871» (справоч-
+  ник, сопоставление без ведущих нулей; неоднозначные пары
+  пропускаются), числа→текст, колонки таб_№ 4 листов в текстовый
+  формат на весь столбец, самопроверка повторным сканом, идемпо-
+  тентность; SPREADSHEET_ID тот же.
+- Тесты: НОВЫЙ tests/test-tab-numbers.js — 22 (симуляция записи
+  addTraining/addVacation/addEmployee/setManualEntry×2/generate-
+  Month на мок-таблицах с протоколированием setNumberFormat в
+  fmtCalls; симуляция TabNumbersFix.gs: «871»→«0871» + 2741-число
+  → текст + идемпотентность + диагностика без записи; статика:
+  нет .appendRow(, 4 вызова хелпера, '@' до setValues, warnings/
+  ws-tr-warn в клиенте, SW v543, TabNumbersFix-функции). Моки
+  test-work-events/test-vacations-generate/test-vacations-feedback
+  дополнены setNumberFormat (fmtCalls); стат-проверка test-
+  vacations-init (addVacation) обновлена под _appendRowKeepText;
+  run-all: 1373 → 1395/0.
+- SW v542 → v543 (sw.js + 6 тест-файлов, глобальная замена).
+- Верификация: node --check (WorkSchedule.gs, TabNumbersFix.gs,
+  тест) OK; task299-mock 76/76; НОВЫЙ scripts/task304-browser-
+  check.py — 10/10 (Playwright + мок fetch, порт 8925: регресс
+  бейджа «И» Task 303; маркер «⚠ нет в справочнике» у таб «17»,
+  маркера нет у «017»; тост месяца с warnings / чистый; тост года
+  «(и ещё 9)»; 0 JS-ошибок; скриншоты task304-proof-*.png; VLM ×2
+  — маркер и тост читаются); task303-browser-check 20/20;
+  task298-browser-check 29/29. Проверка живого листа: Д7,2 =
+  #FFF9C4 — пользователь ПОПРАВИЛ опечатку Task 302.
+- Документация: scripts/DEPLOY-Task304-tab-text.md (деплой:
+  Apps Script WorkSchedule.gs заменить + New version; один раз
+  TabNumbersFix.gs → fixTabNumbers() (или вручную '0871); GitHub
+  Pages + Ctrl+Shift+R ×1–2); Системный промт — версия post-Task
+  304 (post-Task 303 → «предыдущая»).
+- Коммит ac9c5f4 + push (PAT-протокол, URL сброшен, проверено);
+  копии → download/kip8test/.
+
+Stage Summary:
+- Task 304 выполнен и запушен: таб_№ во всех листах пишется
+  ТЕКСТОМ («0871» больше не станет числом 871) на всех 4 путях
+  записи + генерация; потерянные нули стали ВИДИМЫ (warnings в
+  тосте «Сформировать», маркер «⚠ нет в справочнике»); разовая
+  починка живых данных — TabNumbersFix.gs. Тесты 1395/0, мок
+  76/76, browser 10/10 + 20/20 + 29/29, VLM ×2. ДЕПЛОЙ:
+  Apps Script WorkSchedule.gs заменить + New version, затем один
+  раз fixTabNumbers() (или вручную: Инструктажи!B 871 → '0871);
+  фронтенд SW v543 (Ctrl+Shift+R ×1–2). Схема листов и логика
+  Task 303 не меняются. Следующий номер: 305.
+- Локальная дата: 2026-09-03 (Asia/Novosibirsk, UTC+07:00).
