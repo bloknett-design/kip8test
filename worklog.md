@@ -3270,3 +3270,31 @@ Stage Summary:
   ячейки и карточки (add+delete — сервер не менялся); ручные д/н —
   рамка по краям. Сервер/листы НЕ трогать. Следующий шаг: перенос в
   kip8 (Task 309-перенос). Номер задачи: 310.
+
+---
+Task ID: 309-перенос (справка)
+Agent: main (Super Z)
+Task: Перенос Task 309 в боевой kip8 (справочная запись в kip8test).
+
+Work Log:
+- kip8@ce51d1b «feat: Task 309 (перенос из kip8test@5640d60)…» —
+  один инкремент SW kipia-v413→v414; патч index.html 780 строк
+  (git apply, чисто); тесты 1457→1476/0 (паритет, +19 Task 309);
+  task309-browser-check 27/27 на реальном kip8/index.html (порт
+  8928); task307-browser-check актуализирован (18/4 → 22/22),
+  task308 21/21.
+- kip8-desktop@15d4146 «auto: sync content from kip8@ce51d1b» —
+  автосинк сработал; CI Tests: success (1476/0); Build Desktop —
+  артефакты (релиз не нужен).
+- kip8test-desktop@86ed2e8 «auto: sync index.html from
+  kip8test@5640d60».
+- kip8test docs-only: «Последний перенос» = Task 309 →
+  kip8@ce51d1b; таблица репо kip8 v414.
+
+Stage Summary:
+- Task 309 развёрнут во все 4 репо: kip8test@5640d60 (v548,
+  1476/0), kip8@ce51d1b (v414, 1476/0, browser 27/27),
+  kip8-desktop@15d4146 (автосинк, CI success), kip8test-desktop@
+  86ed2e8 (автосинк). Пользователю: Ctrl+Shift+R ×1–2 на обоих
+  сайтах; Apps Script и листы НЕ трогать (сервер не менялся);
+  десктоп — перезапустить приложение. Следующий номер: 310.
