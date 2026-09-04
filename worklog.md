@@ -3327,3 +3327,26 @@ Stage Summary:
 - Деплой пользователя: GitHub Pages сам; Ctrl+Shift+R ×1–2 на обоих
   сайтах; Apps Script и листы НЕ трогать; десктоп — перезапустить.
 - Следующий номер задачи: 311.
+
+---
+Task ID: 311-перенос
+Agent: main (Super Z)
+Task: Перенос Task 311 из kip8test@a949052 в боевой kip8 (PAT от 24.08.2026).
+
+Work Log:
+- kip8@30be9a0: патч index.html 765 строк (git apply, чисто); sw.js
+  kipia-v415→v416; тесты — test-task311.js копия (v550→v416) + 13 файлов
+  с адаптацией (v550→v416, v549→v415); сьют 1498→1511/0 (ПАРИТЕТ).
+- Верификация kip8: task311-browser-check 24/24 (порт 8936, реальный
+  kip8/index.html); регресс: task309 26/26, task310 20/20, task307
+  20/20, task308 21/21 (скрипты актуализированы под Task 311).
+- kip8 промт: версия post-Task 311 + буллет + «Последняя принятая
+  партия» 298-311; DEPLOY-Task311-card-clean-nohover-headadd.md; пруфы.
+- Desktop: kip8-desktop/kip8test-desktop — автосинк через
+  sync-to-desktop.yml (запущен пушем index.html).
+
+Stage Summary:
+- Код Task 311 в бою: kip8@30be9a0, kipia-v416, паритет 1511/0.
+  Пользователю: Ctrl+Shift+R ×1–2 на обоих сайтах; Apps Script и листы
+  НЕ трогать; десктопы — перезапустить приложение после автосинка.
+  Следующий номер: 312.
