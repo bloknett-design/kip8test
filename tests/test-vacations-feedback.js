@@ -151,16 +151,17 @@ describe('Task 282 — serverMessage: пояснение сервера дохо
             'ошибка удаления должна показывать пояснение сервера');
     });
 
-    test('страница «Отпуска»: сообщение об ошибке списка — через _apiErrText', () => {
-        // \b отсекает _loadVacations (грид шахматки, Task 274) —
-        // проверяем именно loadVacations страницы «Отпуска»
-        const load = INDEX_SRC.match(/\bloadVacations: function\(\) \{[\s\S]*?self\._apiErrText\(err\)/);
-        assertTrue(!!load, 'loadVacations (страница) не показывает _apiErrText');
+    test('страница «Отпуска» удалена (Task 308) — ошибок списка больше нет', () => {
+        // Task 308: страница «Отпуска» и её loadVacations удалены —
+        // сообщение об ошибке списка показывать негде; пояснение
+        // сервера остаётся в формах: submitVacationForm и удаление
+        const load = INDEX_SRC.match(/\bloadVacations: function\(\) \{/);
+        assertTrue(!load, 'loadVacations (страница) удалён вместе со страницей');
     });
 
     test('SW-кэш поднят до v539 (Task 296 — фронтенд менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v546'") !== -1,
-            'CACHE_VERSION = kipia-test-v546');
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v547'") !== -1,
+            'CACHE_VERSION = kipia-test-v547');
     });
 });
 

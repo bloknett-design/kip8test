@@ -138,19 +138,18 @@ with sync_playwright() as p:
     page.wait_for_timeout(2500)
     check('B: шахматка отрисована', page.evaluate("document.querySelector('#wsGridWrap table')") is not None)
 
-    # C. Субнавигация: 3 кнопки, без «Сотрудники»
+    # C. Субнавигация: Task 307 убрал «Сотрудники», Task 308 убрал полосу
+    #    ЦЕЛИКОМ (вкладки «Инструктажи»/«Отпуска» удалены со страницами)
     sub = page.evaluate("""(function(){
-        var s = document.querySelector('#page-work-schedule .ws-subnav');
-        var btns = s ? s.querySelectorAll('.ws-subnav-btn') : [];
-        var labels = [];
-        for (var i=0;i<btns.length;i++) labels.push(btns[i].textContent.trim());
-        return { count: btns.length, labels: labels,
-                 active: s ? (s.querySelector('.ws-subnav-btn.active')||{}).textContent : null };
+        var s = document.querySelectorAll('#page-work-schedule .ws-subnav');
+        var all = document.querySelectorAll('.ws-subnav');
+        var btns = document.querySelectorAll('.ws-subnav-btn');
+        return { strips: s.length, stripsAll: all.length, btns: btns.length };
     })()""")
-    check('C: субнавигация — 3 кнопки (Шахматка/Инструктажи/Отпуска), без «Сотрудники»',
-          sub['count'] == 3 and sub['labels'] == ['Шахматка','Инструктажи','Отпуска'] and
-          'Сотрудники' not in sub['labels'], sub)
-    check('C2: активная кнопка — «Шахматка»', sub['active'] == 'Шахматка', sub)
+    check('C: субнавигация УДАЛЕНА (Task 308): 0 полос, 0 кнопок (Task 307: без «Сотрудники»)',
+          sub['strips'] == 0 and sub['stripsAll'] == 0 and sub['btns'] == 0, sub)
+    check('C2: активная страница — шахматка (модуль одностраничный)',
+          page.evaluate("(function(){var a=document.querySelector('.page-content.active');return a? a.id : '';})()") == 'page-work-schedule')
 
     # D. Кнопка «+ Сотрудник» в тулбаре над шахматкой
     tb = page.evaluate("""(function(){
@@ -217,31 +216,37 @@ with sync_playwright() as p:
     })()""")
     check('F4: НОВАЯ СТРОКА «Сидоров» в шахматке', new_row is not None, new_row)
 
-    # G. Инструктажи: субнав 3 кнопки, страница жива
+    # G. Страницы «Инструктажи»/«Отпуска» УДАЛЕНЫ (Task 308) —
+    #    бейдж мероприятия жив в сетке (мок: 017, 10.09, тема видна)
     page.evaluate("navigateTo('work-schedule-trainings')")
-    page.wait_for_timeout(1200)
-    tr = page.evaluate("""(function(){
-        var s = document.querySelector('#page-work-schedule-trainings .ws-subnav');
-        var btns = s ? s.querySelectorAll('.ws-subnav-btn') : [];
-        var labels = [];
-        for (var i=0;i<btns.length;i++) labels.push(btns[i].textContent.trim());
-        var list = document.getElementById('wsTrainingsList');
-        return { labels: labels, hasCard: list ? list.innerHTML.indexOf('Иванов') !== -1 : false };
-    })()""")
-    check('G: «Инструктажи» — субнав 3 кнопки, карточки живы',
-          tr['labels'] == ['Шахматка','Инструктажи','Отпуска'] and tr['hasCard'], tr)
-
-    # H. Отпуска: субнав 3 кнопки
+    page.wait_for_timeout(800)
     page.evaluate("navigateTo('work-schedule-vacations')")
-    page.wait_for_timeout(1200)
-    vac = page.evaluate("""(function(){
-        var s = document.querySelector('#page-work-schedule-vacations .ws-subnav');
-        var btns = s ? s.querySelectorAll('.ws-subnav-btn') : [];
-        var labels = [];
-        for (var i=0;i<btns.length;i++) labels.push(btns[i].textContent.trim());
-        return labels;
+    page.wait_for_timeout(800)
+    tr = page.evaluate("""(function(){
+        var act = document.querySelector('.page-content.active');
+        var trPage = document.getElementById('page-work-schedule-trainings');
+        var vacPage = document.getElementById('page-work-schedule-vacations');
+        var vacBtn = document.getElementById('wsVacBtn');
+        var tds = document.querySelectorAll('#wsGridWrap td.ws-cell');
+        var hasBadge = false, hasTip = false;
+        for (var i=0;i<tds.length;i++){
+            var oc = tds[i].getAttribute('onclick') || '';
+            if (oc.indexOf("'2026-09-10'") !== -1 && oc.indexOf("'017'") !== -1) {
+                hasBadge = !!tds[i].querySelector('.ws-ev-badge');
+                hasTip = (tds[i].getAttribute('title')||'').indexOf('Повторный по охране труда') !== -1;
+                break;
+            }
+        }
+        return { trPage: !!trPage, vacPage: !!vacPage, active: act ? act.id : '',
+                 vacBtn: !!vacBtn, vacBtnHidden: vacBtn ? vacBtn.hidden : null,
+                 hasBadge: hasBadge, hasTip: hasTip };
     })()""")
-    check('H: «Отпуска» — субнав 3 кнопки', vac == ['Шахматка','Инструктажи','Отпуска'], vac)
+    check('G: страницы «Инструктажи»/«Отпуска» удалены (Task 308); бейдж мероприятия в сетке жив',
+          not tr['trPage'] and not tr['vacPage'] and tr['hasBadge'] and tr['hasTip'], tr)
+
+    # H. Кнопка «+ Отпуск» (Task 308) в тулбаре — видна Админу
+    check('H: «+ Отпуск» (Task 308) в тулбаре — есть и видна Админу, страницы «Отпуска» нет',
+          tr['vacBtn'] and tr['vacBtnHidden'] is False and not tr['vacPage'], tr)
 
     # I. Прямая навигация на удалённую страницу — не падает
     page.evaluate("navigateTo('work-schedule-employees')")

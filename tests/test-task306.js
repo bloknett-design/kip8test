@@ -295,17 +295,28 @@ describe('Task 306 — клиент: новые коды мероприятий'
             });
     });
 
-    test('JS: _renderTrainings — единая карта кодов', () => {
-        assertTrue(INDEX_SRC.indexOf(
-            "var code = this._trainingCodeOf(t.тип) || '?';") !== -1,
-            'код карточки — из _trainingCodeOf (была inline-тернарка)');
+    test('JS: карта кодов _trainingCodeOf жива (Task 308: страница удалена)', () => {
+        // Task 308: страница «Инструктажи» и _renderTrainings удалены;
+        // единая карта кодов жива — ей пользуется слой событий
+        // в ячейках шахматки (_eventsAt: бейджи И/ОБ/ПЗ/ПР/*)
+        assertTrue(INDEX_SRC.indexOf('_trainingCodeOf: function') !== -1,
+            'карта _trainingCodeOf жива');
+        const ev = INDEX_SRC.match(/_eventsAt: function\(isoDate, tabNo\) \{[\s\S]*?\n        \},/);
+        assertTrue(!!ev && ev[0].indexOf('this._trainingCodeOf(t.тип)') !== -1,
+            '_eventsAt берёт код из _trainingCodeOf (бейджи в ячейках)');
     });
 
-    test('CSS: цветные плашки типов ПР и * (справочные цвета)', () => {
-        assertTrue(INDEX_SRC.indexOf('.ws-tr-card .ws-tr-type.ws-type-ПР { background: #EF5350;') !== -1,
-            'ПР — красный справочника');
-        assertTrue(INDEX_SRC.indexOf('.ws-tr-card .ws-tr-type.ws-type-\\* { background: #FFAB91;') !== -1,
-            '* — оранжевый справочника (селектор с escape)');
+    test('CSS: плашки типов удалены со страницей (Task 308), цвета — в справочнике', () => {
+        // Task 308: карточки .ws-tr-card существовали только на удалённой
+        // странице «Инструктажи» — их цветные плашки удалены. Цвета ПР/*
+        // остаются в справочнике «Коды_статусов» (попап ячейки берёт их
+        // из ответа getStatusCodes — _statusMeta)
+        assertTrue(INDEX_SRC.indexOf('.ws-tr-type.ws-type-ПР') === -1,
+            'правило .ws-tr-type.ws-type-ПР удалено (мёртвое)');
+        assertTrue(INDEX_SRC.indexOf('.ws-tr-type.ws-type-\\*') === -1,
+            'правило .ws-tr-type.ws-type-* удалено (мёртвое)');
+        assertTrue(INDEX_SRC.indexOf('_statusMeta: function') !== -1,
+            'цвета кодов в попапе — из справочника (_statusMeta жив)');
     });
 });
 
@@ -383,8 +394,8 @@ describe('Task 306 — клиент: одна кнопка «Сформиров�
             'окошко календаря (нормы) осталось');
     });
 
-    test('SW: версия кэша kipia-test-v546 (Task 306 — клиент менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v546'") !== -1,
-            'CACHE_VERSION = kipia-test-v546');
+    test('SW: версия кэша kipia-test-v547 (Task 306 — клиент менялся)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v547'") !== -1,
+            'CACHE_VERSION = kipia-test-v547');
     });
 });

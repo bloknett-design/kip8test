@@ -3126,3 +3126,62 @@ Stage Summary:
 - Промт kip8test: «Последний перенос» = Task 307 → kip8@a113fd2,
   kipia-v412, паритет 1444/0; таблица репо: kip8 v412.
 - Локальная дата: 2026-09-03 (Asia/Novosibirsk, UTC+07:00).
+
+---
+Task ID: 308
+Agent: main (Super Z)
+Task: По заявке пользователя: «Убери вкладки "Инструктажи" и
+      "Отпуска", а кнопку "Добавить отпуск" перемести в бар над
+      шахматкой к остальным кнопкам» (продолжение линии Task 307 —
+      одностраничный модуль «График работы»).
+
+Work Log:
+- РЕАЛИЗАЦИЯ в kip8test: страницы #page-work-schedule-trainings и
+  #page-work-schedule-vacations удалены ЦЕЛИКОМ (дивы, внутренности
+  wsTrainingsList/wsAddTrainingBar/wsVacYearSel/wsVacSummary/
+  wsVacationsList/wsAddVacationBar, хуки navigateTo, PAGE_PARENTS/
+  PAGE_LABELS, _WORK_SCHEDULE_PAGES → ['work-schedule']); СУБНАВИГАЦИЯ
+  .ws-subnav удалена ЦЕЛИКОМ (все 3 полосы) — модуль одностраничный.
+  JS удалены: initTrainingsPage/loadTrainings/_renderTrainings/
+  initVacationsPage/onVacYearChange/loadVacations/_renderVacations;
+  ЖИВЫ: _loadTrainings/_loadVacations (Promise.all в loadGrid),
+  _trainingCodeOf/_eventsAt/_statusMeta, шторки #wsTrSheet (попап
+  ячейки «+ Мероприятие…», Task 303) и #wsVacSheet, deleteTraining/
+  deleteVacation (API-методы), хелперы _vacDays/_vacDaysInYear.
+  НОВАЯ кнопка «+ Отпуск» (#wsVacBtn .ws-addvac-btn) в ws-toolbar-main:
+  селекты → «+ Сотрудник» → «+ Отпуск» → «Сформировать»; общий стиль
+  с .ws-addemp-btn (нейтральный, 34px, светлая тема); видимость по
+  _canEdit в init(). _loadVacations теперь заполняет и _VAC_PAGE +
+  _vacYear = _year (шторка: свободная часть + пересечения; год плана
+  = год шахматки). submitVacationForm → loadGrid() (план «ОТ» в
+  пустых ячейках) + прежний тост про «Сформировать». Мёртвый CSS
+  удалён (.ws-subnav*, .ws-trainings-list, .ws-tr-card*, .ws-tr-type*,
+  .ws-add-bar/.ws-add-btn, .ws-vac-toolbar/.ws-vac-summary,
+  .ws-vac-card*, .ws-vac-badge*; живы .ws-vac-form-info/hint).
+  Сервер/листы НЕ менялись.
+- Тесты: 1444 → 1457/0 (+13 Task 308; обновлены блоки Task 249/267/
+  269/274/307 и файлы test-task306/test-vacations-feedback/
+  test-vacations-generate — \b-границы для loadTrainings/loadVacations);
+  SW kipia-test-v546→v547 (sw.js + 9 тест-файлов).
+- Верификация: node --check OK (4 script-блока); НОВЫЙ scripts/
+  task308-browser-check.py 21/21 (субнавигации нет; кнопка в тулбаре
+  между «+ Сотрудник» и «Сформировать», 34px, Админ видит/«ИТР8 pro»
+  нет; шторка с «Период: 14 кал. дн.»; submit → addVacation →
+  loadGrid → ПЛАН «ОТ» в ячейке 22.09 c ws-vac-plan и «часть 1»;
+  попап «+ Мероприятие…» жив с префиллом; navigateTo на удалённые
+  страницы не падает; 375px/1280px; 0 JS-ошибок); регресс: task298
+  29/29, task303 20/20, task304 10/10, task305 20/20, task306 29/29,
+  task307 22/22 (304/306/307 актуализированы под новую реальность);
+  VLM ×2.
+- Промт post-Task 308 (90 страниц, v547, аннотации Task 274/307,
+  запись Task 308); DEPLOY-Task308-subnav-trainings-vacations.md;
+  scripts/task308-update-prompt.py.
+
+Stage Summary:
+- Task 308 готов в kip8test: модуль «График работы» одностраничный
+  (только шахматка); добавление отпуска — «+ Отпуск» в тулбаре, год
+  плана = год шахматки; мероприятия — через попап ячейки. Известная
+  особенность: интерфейсного удаления периодов временно нет (кнопки
+  были на удалённых страницах), методы deleteVacation/deleteTraining
+  живы. Сервер НЕ менялся — Apps Script/листы не трогать.
+  Следующий шаг: перенос в kip8 (Task 308-перенос). Номер задачи: 309.

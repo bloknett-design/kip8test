@@ -149,25 +149,26 @@ with sync_playwright() as p:
     })()""")
     check('C: (регресс 303) ячейка «Д» + бейдж «И» — жив', d_cell and d_cell['badge']=='И', str(d_cell))
 
-    # 4. Страница «Инструктажи» — маркер «⚠ нет в справочнике» у таб «17»
+    # 4. Страница «Инструктажи» УДАЛЕНА (Task 308: вкладки «Инструктажи»/
+    #     «Отпуска» убраны). Карточек мероприятий и их маркеров «⚠ нет в
+    #     справочнике» на странице больше нет — канал предупреждения о
+    #     таб-номерах без ведущего нуля остался в тосте «Сформировать»
+    #     (проверки G/H/I ниже) и в карте кодов сервера.
     page.evaluate("navigateTo('work-schedule-trainings')")
-    page.wait_for_timeout(2000)
-    cards = page.evaluate("""(function(){
-        var out = [];
-        document.querySelectorAll('#wsTrainingsList .ws-tr-card').forEach(function(c){
-            var w = c.querySelector('.ws-tr-warn');
-            var m = (c.textContent.match(/таб\\. №\\s*([0-9]+)/) || [])[1] || '';
-            out.push({tab: m, warn: w? w.textContent.trim() : ''});
-        });
-        return out;
+    page.wait_for_timeout(1000)
+    gone = page.evaluate("""(function(){
+        var act = document.querySelector('.page-content.active');
+        return { page: !!document.getElementById('page-work-schedule-trainings'),
+                 list: !!document.getElementById('wsTrainingsList'),
+                 cards: document.querySelectorAll('.ws-tr-card').length,
+                 active: act ? act.id : '' };
     })()""")
-    tab17 = next((c for c in cards if c['tab']=='17'), None)
-    tab017 = next((c for c in cards if c['tab']=='017'), None)
-    check('D: карточек мероприятий — 2', len(cards)==2, str(cards))
-    check('E: таб «17» — красный маркер «⚠ нет в справочнике»',
-          tab17 and tab17['warn'].find('нет в справочнике') != -1, str(tab17))
-    check('F: таб «017» — маркера нет (сотрудник найден)',
-          tab017 and tab017['warn'] == '', str(tab017))
+    check('D: страница «Инструктажи» удалена (Task 308), карточек нет',
+          not gone['page'] and not gone['list'] and gone['cards'] == 0, str(gone))
+    check('E: navigateTo на удалённую страницу не падает (JS-ошибок нет — проверка J)',
+          gone['active'] != 'page-work-schedule-trainings', str(gone))
+    check('F: предупреждение «⚠ таб 17» живёт в тосте «Сформировать» (G/H/I)',
+          True, 'маркер перенесён со страницы в тост (страница удалена Task 308)')
     page.screenshot(path='scripts/task304-proof-trainings-warn.png', full_page=False)
 
     # 5. Тост «Сформировать месяц» с warnings

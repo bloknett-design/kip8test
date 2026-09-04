@@ -249,28 +249,79 @@ with sync_playwright() as p:
           ('Прогул' in tip22['title']) and ('по циклу' not in tip22['title']),
           tip22['title'][:250] if tip22 else '')
 
-    # G. Страница «Инструктажи»: карточки ПР и * с плашками
+    # G. Страница «Инструктажи» УДАЛЕНА (Task 308) — карточек с плашками
+    #    ПР/* больше нет; цвета новых типов по-прежнему видны пользователю:
+    #    бейдж в ячейке (D2: #EF5350) и свотч в попапе ячейки (справочник
+    #    «Коды_статусов» → _statusMeta)
     page.evaluate("navigateTo('work-schedule-trainings')")
-    page.wait_for_timeout(2000)
-    cards = page.evaluate("""(function(){
-        var out = [];
-        document.querySelectorAll('#wsTrainingsList .ws-tr-card').forEach(function(c){
-            var tp = c.querySelector('.ws-tr-type');
-            out.push({ code: tp ? tp.textContent.trim() : '',
-                       cls: tp ? (tp.className || '') : '',
-                       bg: tp ? getComputedStyle(tp).backgroundColor : '' });
-        });
-        return out;
+    page.wait_for_timeout(1000)
+    gone = page.evaluate("""(function(){
+        var act = document.querySelector('.page-content.active');
+        return { page: !!document.getElementById('page-work-schedule-trainings'),
+                 cards: document.querySelectorAll('.ws-tr-card').length,
+                 plaques: document.querySelectorAll('.ws-tr-type').length,
+                 active: act ? act.id : '' };
     })()""")
-    codes_seen = [c['code'] for c in cards]
-    check('G: карточек мероприятий — 3 (ПР, *, ПР)',
-          len(cards) == 3 and codes_seen.count('ПР') == 2 and codes_seen.count('*') == 1, cards)
-    pr_card = next((c for c in cards if c['code'] == 'ПР'), None)
-    star_card = next((c for c in cards if c['code'] == '*'), None)
-    check('G2: плашка «ПР» — класс ws-type-ПР, цвет #EF5350',
-          pr_card and 'ws-type-ПР' in pr_card['cls'] and pr_card['bg'] == 'rgb(239, 83, 80)', pr_card)
-    check('G3: плашка «*» — класс ws-type-*, цвет #FFAB91',
-          star_card and 'ws-type-*' in star_card['cls'] and star_card['bg'] == 'rgb(255, 171, 145)', star_card)
+    check('G: страница «Инструктажи» удалена (Task 308) — карточек/плашек нет',
+          not gone['page'] and gone['cards'] == 0 and gone['plaques'] == 0, gone)
+
+    # G2/G3: свотчи ПР и * в попапе ячейки — цвета справочника
+    page.evaluate("navigateTo('work-schedule')")
+    page.wait_for_timeout(1200)
+    page.evaluate("""(function(){
+        var tds = document.querySelectorAll('#wsGridWrap td.ws-cell');
+        for (var i=0;i<tds.length;i++){
+            var oc = tds[i].getAttribute('onclick') || '';
+            if (oc.indexOf("'2026-09-01'") !== -1 && oc.indexOf("'017'") !== -1) { tds[i].click(); return; }
+        }
+    })()""")
+    page.wait_for_timeout(600)
+    pr_pop = page.evaluate("""(function(){
+        var popup = document.getElementById('wsCellPopup');
+        var rows = popup ? popup.querySelectorAll('.ws-popup-row') : [];
+        for (var i=0;i<rows.length;i++){
+            var code = rows[i].querySelector('.ws-popup-code');
+            if (code && code.textContent.trim() === 'ПР') {
+                var sw = rows[i].querySelector('.ws-popup-swatch');
+                return { code: 'ПР', bg: sw ? getComputedStyle(sw).backgroundColor : '' };
+            }
+        }
+        return null;
+    })()""")
+    check('G2: попап ячейки — строка «ПР» со свотчем #EF5350 (справочник жив)',
+          pr_pop and pr_pop['bg'] == 'rgb(239, 83, 80)', pr_pop)
+    page.evaluate("""(function(){
+        var closer = document.querySelector('.ws-popup-closer');
+        if (closer) closer.click();
+    })()""")
+    page.wait_for_timeout(400)
+    page.evaluate("""(function(){
+        var tds = document.querySelectorAll('#wsGridWrap td.ws-cell');
+        for (var i=0;i<tds.length;i++){
+            var oc = tds[i].getAttribute('onclick') || '';
+            if (oc.indexOf("'2026-09-02'") !== -1 && oc.indexOf("'017'") !== -1) { tds[i].click(); return; }
+        }
+    })()""")
+    page.wait_for_timeout(600)
+    star_pop = page.evaluate("""(function(){
+        var popup = document.getElementById('wsCellPopup');
+        var rows = popup ? popup.querySelectorAll('.ws-popup-row') : [];
+        for (var i=0;i<rows.length;i++){
+            var code = rows[i].querySelector('.ws-popup-code');
+            if (code && code.textContent.trim() === '*') {
+                var sw = rows[i].querySelector('.ws-popup-swatch');
+                return { code: '*', bg: sw ? getComputedStyle(sw).backgroundColor : '' };
+            }
+        }
+        return null;
+    })()""")
+    check('G3: попап ячейки — строка «*» со свотчем #FFAB91 (справочник жив)',
+          star_pop and star_pop['bg'] == 'rgb(255, 171, 145)', star_pop)
+    page.evaluate("""(function(){
+        var closer = document.querySelector('.ws-popup-closer');
+        if (closer) closer.click();
+    })()""")
+    page.wait_for_timeout(300)
     page.screenshot(path='scripts/task306-proof-trainings.png', full_page=False)
 
     # H. Форма «Новое мероприятие»: 5 типов

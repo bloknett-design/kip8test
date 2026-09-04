@@ -334,13 +334,17 @@ describe('Task 279 — статические инварианты (фронт/i
             'накопление totalVacDays в цикле 12 месяцев');
     });
 
-    test('кнопка «Удалить» скрывается без id (обе секции страницы «Отпуска»)', () => {
-        assertTrue(INDEX_SRC.indexOf('delBtn = vv.id') !== -1,
-            'основной список: кнопка только при vv.id');
-        assertTrue(INDEX_SRC.indexOf('this._canEdit && u.id') !== -1,
-            'секция «нет в справочнике»: кнопка только при u.id');
-        assertTrue(INDEX_SRC.indexOf('>без id</span>') !== -1,
-            'подсказка «без id» вместо кнопки');
+    test('кнопка «Удалить» без id: логика страницы удалена (Task 308), сервер жив', () => {
+        // Task 308: страница «Отпуска» и _renderVacations удалены —
+        // интерфейсные проверки vv.id/u.id ушли вместе с карточками.
+        // deleteVacation-метод жив (API); сервер по-прежнему валидирует
+        // id в listVacations и самолечит их VacationsInit.gs
+        assertTrue(INDEX_SRC.indexOf('delBtn = vv.id') === -1,
+            'рендер кнопки по vv.id удалён вместе со страницей');
+        assertTrue(INDEX_SRC.indexOf('this._canEdit && u.id') === -1,
+            'секция «нет в справочнике» удалена');
+        assertTrue(INDEX_SRC.indexOf('deleteVacation: function') !== -1,
+            'метод deleteVacation жив (серверный эндпоинт без изменений)');
     });
 
     test('WorkSchedule.gs: парсер текстовых дат и пустые id', () => {
@@ -370,8 +374,8 @@ describe('Task 279 — статические инварианты (фронт/i
     });
 
     test('SW-кэш поднят до v544 (Task 298 — сервер+фронтенд: коды статусов Т-12/Т-13)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v546'") !== -1,
-            'CACHE_VERSION = kipia-test-v546');
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v547'") !== -1,
+            'CACHE_VERSION = kipia-test-v547');
     });
 });
 
