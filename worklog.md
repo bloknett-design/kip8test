@@ -3185,3 +3185,25 @@ Stage Summary:
   были на удалённых страницах), методы deleteVacation/deleteTraining
   живы. Сервер НЕ менялся — Apps Script/листы не трогать.
   Следующий шаг: перенос в kip8 (Task 308-перенос). Номер задачи: 309.
+
+---
+Task ID: 308-перенос (справка)
+Agent: main (Super Z)
+Task: Перенос Task 308 в боевой kip8 (справочная запись в kip8test).
+
+Work Log:
+- kip8@1165b78 «feat: Task 308 (перенос из kip8test@9698926)…» —
+  один инкремент SW kipia-v412→v413; патч index.html 818 строк
+  (git apply, чисто); тесты 1457/0 (паритет); task308-browser-check
+  21/21 на реальном kip8/index.html (порт 8928).
+- kip8-desktop@31afcbc «auto: sync content from kip8@1165b78» —
+  автосинк сработал; CI Tests: success (1457/0).
+- kip8test-desktop@0821771 «auto: sync index.html from
+  kip8test@9698926».
+- Промт kip8test: «Последний перенос» = Task 308 → kip8@1165b78;
+  таблица репо kip8 v413 (docs-only).
+
+Stage Summary:
+- Task 308 развёрнут во все 4 репо. Пользователю: Ctrl+Shift+R ×1–2
+  на обоих сайтах; Apps Script и листы НЕ трогать; десктоп —
+  перезапустить приложение. Следующий номер: 309.
