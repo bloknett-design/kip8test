@@ -315,8 +315,8 @@ with sync_playwright() as p:
     check('L: десктоп 1280px — «ИТР8 pro» (просмотр): кнопки нет, заголовок БЕЗ функции добавления',
           ro['empGone'] and ro['grid'] and ro['headPlain'] and ro['noPlus'], ro)
     check('L2: «Сформировать» тоже скрыта (паритет видимости)', ro['genHidden'] is True, ro)
-    check('L3: десктоп — ряд nowrap, окошко календаря справа от кнопок',
-          ro['noWrap'] and ro['calVisible'] and ro['calAfterMain'], ro)
+    check('L3: десктоп — окошко календаря в баре СПРАВА от кнопок (Task 315: ряд кнопок переносится в своей 1/3, окна — равные части)',
+          ro['calVisible'] and ro['calAfterMain'], ro)
     check('M: JS-ошибок нет (десктоп, 0 pageerror)', len(js_errors2) == 0, js_errors2[:3])
     ctx2.close()
     browser.close()

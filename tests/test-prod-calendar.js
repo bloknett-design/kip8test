@@ -554,10 +554,10 @@ describe('Task 260: интеграция в index.html', () => {
         assertTrue(html.indexOf('.ws-cal-panel {') !== -1,
             'стили окошка календаря в тулбаре');
     });
-    test('SW: версия кэша kipia-test-v553 (Task 298)', () => {
+    test('SW: версия кэша kipia-test-v554 (Task 298)', () => {
         const sw = fs.readFileSync(path.resolve(__dirname, '..', 'sw.js'), 'utf8');
-        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v553'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v553');
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v554'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v554');
     });
     test('Task 311: тултип ячейки убран; название праздника — в попапе клика', () => {
         // Task 311: пояснительные тултипы с ячеек шахматки убраны;
@@ -1146,17 +1146,21 @@ describe('Task 266: окошко столбиками, слева в баре �
         assertTrue(/\.ws-cal-panel \{[^}]*overscroll-behavior:\s*contain/.test(html),
             'скролл окошка не тянет страницу');
     });
-    test('CSS: десктоп — кнопки слева вверху, окно справа (≥1024px, Task 269→272)', () => {
-        const mq = html.match(/@media \(min-width: 1024px\) \{[\s\S]*?\.ws-toolbar \{[\s\S]*?\}/);
-        assertTrue(!!mq, 'media-блок десктопного тулбара');
-        assertTrue(/\.ws-toolbar-main \{[^}]*order:\s*0/.test(html),
-            'кнопки — левая часть бара (order: 0)');
-        assertTrue(/\.ws-toolbar-main \{[^}]*align-self:\s*flex-start/.test(html),
-            'кнопки прижаты к ВЕРХНЕЙ кромке бара (Task 272 — левый верхний угол)');
-        assertFalse(/\.ws-toolbar-main \{[^}]*align-self:\s*flex-end/.test(html),
-            'прижатие к нижней кромке (Task 269) удалено');
-        assertTrue(/\.ws-toolbar-main \{[^}]*flex-wrap:\s*nowrap/.test(html),
-            'ряд кнопок на десктопе — в одну строку');
+    test('CSS: десктоп — три равные части бара (≥1024px, Task 269→272→315)', () => {
+        // Task 315: строка 1 бара (.ws-bar-row) — grid из ТРЁХ РАВНЫХ
+        // частей: кнопки | окно мероприятий | окно времени и праздников
+        assertTrue(/\.ws-bar-row \{[^}]*display:\s*grid/.test(html),
+            'десктоп: строка 1 бара — grid');
+        assertTrue(/\.ws-bar-row \{[^}]*grid-template-columns:\s*1fr 1fr 1fr/.test(html),
+            'бар разделён на ТРИ РАВНЫЕ части (1fr 1fr 1fr)');
+        const mq = html.match(/@media \(min-width: 1024px\) \{[\s\S]*?\.ws-toolbar-main \{[\s\S]*?\}/);
+        assertTrue(!!mq, 'десктопное правило ряда кнопок');
+        assertTrue(mq[0].indexOf('flex-wrap: wrap') !== -1,
+            'ряд кнопок в своей трети переносится, не выпирает');
+        assertFalse(/\.ws-toolbar-main \{[^}]*order:\s*0/.test(html),
+            'компоновка order (Task 269/272) удалена — теперь grid');
+        assertFalse(/\.ws-toolbar-main \{[^}]*margin-right:\s*auto/.test(html),
+            'прижатие окна вправо (margin-right: auto) удалено');
     });
     test('CSS: высота бара на десктопе — 95px (статическая, Task 270)', () => {
         const re = /@media \(min-width: 1024px\) \{[\s\S]*?\.ws-cal-panel \{[^}]*height:\s*95px/s;

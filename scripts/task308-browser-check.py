@@ -334,8 +334,8 @@ with sync_playwright() as p:
     check('K: десктоп 1280px — «ИТР8 pro» (просмотр): «+ Отпуск» УДАЛЕНА (Task 312), «+ Сотрудник»/«Сформировать» скрыты, сетка жива',
           ro['vacHidden'] is None and ro['empGone'] is True and ro['genHidden'] is True and
           ro['grid'] and ro['subnav'] == 0, ro)
-    check('K2: десктоп — ряд nowrap, окошко календаря справа от кнопок',
-          ro['noWrap'] and ro['calVisible'] and ro['calAfterMain'], ro)
+    check('K2: десктоп — окошко календаря в баре СПРАВА от кнопок (Task 315: ряд кнопок переносится в своей 1/3, окна — равные части)',
+          ro['calVisible'] and ro['calAfterMain'], ro)
     check('L: JS-ошибок нет (десктоп, 0 pageerror)', len(js_errors2) == 0, js_errors2[:3])
     ctx2.close()
     browser.close()

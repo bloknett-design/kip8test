@@ -357,25 +357,31 @@ with sync_playwright() as p:
     page.wait_for_timeout(400)
 
     # I. Task 306-3: тулбар — одна кнопка «Сформировать»
+    # Task 315: кнопки разнесены по строкам тулбара: строка 1
+    # (.ws-toolbar-main) — «Обновить»; строка 2 (.ws-actions-row) —
+    # «Сохранить» (появляется при правках); строка 3
+    # (.ws-generate-row) — «Сформировать»
     toolbar = page.evaluate("""(function(){
         var bar = document.querySelector('.ws-toolbar-main');
         var gen = document.getElementById('wsGenerateBtn');
+        var genRow = document.getElementById('wsGenerateRow');
         var cal = document.getElementById('wsCalChip');
         var labels = [];
         if (bar) bar.querySelectorAll('button').forEach(function(b){
             labels.push((b.id || '?') + ':' + b.textContent.trim());
         });
         return { calChip: !!cal, genBtn: gen ? !gen.hidden : false,
-                 genText: gen ? gen.textContent.trim() : '', buttons: labels };
+                 genText: gen ? gen.textContent.trim() : '',
+                 genRowShown: genRow ? !genRow.hidden : false,
+                 buttons: labels };
     })()""")
     check('I: кнопки «Обновить» (wsCalChip) НЕТ, «Сформировать» видна',
           toolbar and not toolbar['calChip'] and toolbar['genBtn'] and
           toolbar['genText'] == 'Сформировать', toolbar)
-    check('I2: Task 314 — в тулбаре «Обновить» + «Сформировать» + «Сохранить» (новая кнопка обновления данных)',
+    check('I2: Task 314/315 — «Обновить» в строке 1; «Сформировать» — в строке 3 (.ws-generate-row)',
           toolbar and any('wsRefreshBtn:Обновить' in b for b in toolbar['buttons']) and
-          any('wsGenerateBtn:Сформировать' in b for b in toolbar['buttons']) and
-          any('wsSaveBtn:Сохранить' in b for b in toolbar['buttons']) and
-          len(toolbar['buttons']) == 3, toolbar)
+          toolbar['genRowShown'] and toolbar['genText'] == 'Сформировать' and
+          not any('wsGenerateBtn' in b for b in toolbar['buttons']), toolbar)
 
     # J. Клик «Сформировать» → диалог → «Текущий месяц» → генерация +
     #    тихое обновление календаря (spy)
