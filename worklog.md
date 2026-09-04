@@ -3104,3 +3104,25 @@ Stage Summary:
   VLM ×2. ДЕПЛОЙ: только GitHub Pages (SW v546, Ctrl+Shift+R ×1–2);
   Apps Script и листы НЕ трогать. Следующий номер: 308.
 - Локальная дата: 2026-09-03 (Asia/Novosibirsk, UTC+07:00).
+
+---
+Task ID: 307-перенос (справка)
+Agent: main (Super Z)
+Task: Перенос Task 307 в боевой kip8 (справочная запись в kip8test).
+
+Work Log:
+- kip8@a113fd2 «feat: Task 307 (перенос из kip8test@7ec7612)…» —
+  один инкремент SW kipia-v411→v412; патч index.html 348 строк
+  (чисто, изоляционный дифф 55 строк = базовый); тесты 1444/0
+  (паритет); task307-browser-check 22/22 на реальном kip8/index.html.
+- kip8-desktop@44f8072 «auto: sync content from kip8@a113fd2» —
+  расширенный автосинк (index.html + sw.js + scripts/*.gs + tests)
+  сработал автоматически; CI kip8-desktop: 1444 passed / 0 failed.
+- Все workflows kip8 на a113fd2: CI Tests success, pages success,
+  Sync content success, Build Desktop — сборка артефактов.
+- Сервер WorkSchedule.gs и листы НЕ менялись: Apps Script не трогать.
+
+Stage Summary:
+- Промт kip8test: «Последний перенос» = Task 307 → kip8@a113fd2,
+  kipia-v412, паритет 1444/0; таблица репо: kip8 v412.
+- Локальная дата: 2026-09-03 (Asia/Novosibirsk, UTC+07:00).
