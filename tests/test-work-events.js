@@ -376,12 +376,19 @@ describe('Task 303 — клиент: попап ячейки и быстрое �
     });
 
     test('JS: openTrainingForm принимает префилл (сотрудник + дата)', () => {
-        assertTrue(INDEX_SRC.indexOf('openTrainingForm: function(prefillTab, prefillDate)') !== -1,
-            'сигнатура с параметрами префилла');
+        // Task 309: третий параметр editTraining — режим правки;
+        // префилл сотрудника/даты остался (быстрое добавление Task 303)
+        assertTrue(INDEX_SRC.indexOf('openTrainingForm: function(prefillTab, prefillDate, editTraining)') !== -1,
+            'сигнатура с параметрами префилла + правки');
         assertTrue(INDEX_SRC.indexOf('if (prefillTab) empSel.value = String(prefillTab);') !== -1,
             'сотрудник вписывается в форму');
         assertTrue(INDEX_SRC.indexOf('var today = prefillDate || this._isoDate(new Date());') !== -1,
             'дата ячейки подставляется (фолбэк — сегодня)');
+        // Task 309: режим правки — префилл значений записи + заголовок
+        assertTrue(INDEX_SRC.indexOf("sheetTitle.textContent = 'Правка мероприятия'") !== -1,
+            'режим правки меняет заголовок шторки');
+        assertTrue(INDEX_SRC.indexOf("submitBtn.textContent = 'Сохранить'") !== -1,
+            'режим правки меняет подпись кнопки');
     });
 
     test('JS: после addTraining/deleteTraining шахматка перезагружается', () => {
