@@ -215,8 +215,8 @@ with sync_playwright() as p:
           '—' not in pop['mainCodes'] and 'выходной' not in pop['rowNames'], pop['mainCodes'])
     check('D3: коды мероприятий (И/ОБ/ПЗ) НЕ в списке основных статусов',
           all(c not in pop['mainCodes'] for c in ['И','ОБ','ПЗ','ПР','*']), pop['mainCodes'])
-    check('D4: основные коды — только статусы из листа (Д/Д8/Н/д/н/ОТ/·)',
-          pop['mainCodes'] and pop['mainCodes'][0] == 'Д' and '.' in pop['mainCodes'], pop['mainCodes'])
+    check('D4: основные коды — только статусы из листа (Д/Д8/Н/д/н/ОТ/·); Task 314 — код «.» в попапе = символ «·»',
+          pop['mainCodes'] and pop['mainCodes'][0] == 'Д' and '\u00b7' in pop['mainCodes'] and '.' not in pop['mainCodes'], pop['mainCodes'])
     check('D5: текущий статус «Д» подсвечен', pop['activeCode'] == 'Д', pop['activeCode'])
     check('D6: Task 313 — окно «Мероприятия в этот день» НАД окном кодов (Иванов, 02.06)',
           pop['evOpen'] and pop['evTitle'] and pop['evHasTr'] and
@@ -298,9 +298,10 @@ with sync_playwright() as p:
         }
         return null;
     })()""")
-    # rgb(250, 249, 245) = #FAF9F5
-    check('F: ячейка «.» — белый фон #FAF9F5 (rgb(250,249,245)), код в ячейке',
-          dotCell is not None and dotCell['bg'] == 'rgb(250, 249, 245)' and dotCell['text'].find('.') != -1, dotCell)
+    # Task 314: «.»-ячейка = фон ПУСТОЙ ячейки сетки #EEF0F2
+    # (rgb(238,240,242); было #FAF9F5 — цвет страницы), символ «·»
+    check('F: Task 314 — ячейка «.» — фон ПУСТОЙ ячейки #EEF0F2 (rgb(238,240,242)), символ «·», без inline-фона',
+          dotCell is not None and dotCell['bg'] == 'rgb(238, 240, 242)' and dotCell['text'].find('\u00b7') != -1, dotCell)
 
     # G. Карточка Иванов: строка «+ Отпуск…» в блоке отпусков
     page.click('td.ws-emp-col[data-tab="017"]')

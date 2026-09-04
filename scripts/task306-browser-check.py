@@ -168,7 +168,10 @@ with sync_playwright() as p:
             if (tds[0].textContent.indexOf('Петров') !== -1 && tds[22]) {
                 var b2 = tds[22].querySelector('.ws-ev-badge');
                 out.petr22 = { text: tds[22].textContent.trim(), plan: tds[22].classList.contains('ws-vac-plan'),
-                               badges: tds[22].querySelectorAll('.ws-ev-badge').length };
+                               badges: tds[22].querySelectorAll('.ws-ev-badge').length,
+                               shift: tds[22].querySelectorAll('.ws-ev-shift').length,
+                               ev: b2 ? {text: b2.textContent.trim(),
+                                         dashed: b2.classList.contains('ws-ev-pending')} : null };
             }
         }
         out.total = document.querySelectorAll('.ws-ev-badge.ws-ev-shift').length;
@@ -178,9 +181,11 @@ with sync_playwright() as p:
           shift_info and shift_info['ivan05'] and
           shift_info['ivan05']['text'].startswith('ОТ') and shift_info['ivan05']['badge'] == 'Д',
           shift_info)
-    check('C2: 023 (дневной) 22.09 — план «ОТ», бейджей НЕТ (фильтр empIsShift)',
+    check('C2: 023 (дневной) 22.09 — план «ОТ», бейджа СМЕНЫ нет (фильтр empIsShift жив); Task 314 — событие «ПР» пунктирным бейджем',
           shift_info and shift_info['petr22'] and shift_info['petr22']['plan'] and
-          shift_info['petr22']['badges'] == 0, shift_info)
+          shift_info['petr22']['shift'] == 0 and
+          shift_info['petr22']['ev'] and shift_info['petr22']['ev']['text'] == 'ПР' and
+          shift_info['petr22']['ev']['dashed'], shift_info)
     check('C3: бейджей плановой смены в сетке = 6 (только 017: 05/10/15=Д, 06/11/16=Н)',
           shift_info and shift_info['total'] == 6, shift_info)
 
@@ -233,11 +238,15 @@ with sync_playwright() as p:
     # Скриншот сетки: бейдж «ПР» на «Н», пунктирный «*», бейджи Д/Н под «ОТ»
     page.screenshot(path='scripts/task306-proof-grid.png', full_page=False)
 
-    # F. Событие на дне плана отпуска — бейджа нет (Task 311: тултипа тоже нет —
-    #    событие показывает карточка сотрудника и попап клика)
-    check('F: 22.09 (023) — событие-прогул: бейджа нет (правило Task 303 живо)',
-          shift_info and shift_info['petr22'] and shift_info['petr22']['badges'] == 0,
-          'см. C2 (событие — в карточке/попапе клика)')
+    # F. Событие на дне плана отпуска — Task 314: событие-прогул
+    #    теперь ВИДНО пунктирным бейджем «ПР» (заявка: «мероприятия —
+    #    маленькими бейджами-«иконками»»; раньше — только тултип,
+    #    Task 311 тултипы убрал — событие жило лишь в попапе/карточке)
+    check('F: 22.09 (023) — событие-прогул: пунктирный бейдж «ПР» на дне плана (Task 314)',
+          shift_info and shift_info['petr22'] and
+          shift_info['petr22']['ev'] and shift_info['petr22']['ev']['text'] == 'ПР' and
+          shift_info['petr22']['ev']['dashed'],
+          'см. C2')
     tip22 = page.evaluate("""(function(){
         var rows = document.querySelectorAll('#wsGridWrap tbody tr');
         for (var r=0;r<rows.length;r++){
@@ -362,8 +371,11 @@ with sync_playwright() as p:
     check('I: кнопки «Обновить» (wsCalChip) НЕТ, «Сформировать» видна',
           toolbar and not toolbar['calChip'] and toolbar['genBtn'] and
           toolbar['genText'] == 'Сформировать', toolbar)
-    check('I2: в тулбаре только Сформировать и Сохранить (без Обновить)',
-          toolbar and all(('Обновить' not in b) for b in toolbar['buttons']), toolbar)
+    check('I2: Task 314 — в тулбаре «Обновить» + «Сформировать» + «Сохранить» (новая кнопка обновления данных)',
+          toolbar and any('wsRefreshBtn:Обновить' in b for b in toolbar['buttons']) and
+          any('wsGenerateBtn:Сформировать' in b for b in toolbar['buttons']) and
+          any('wsSaveBtn:Сохранить' in b for b in toolbar['buttons']) and
+          len(toolbar['buttons']) == 3, toolbar)
 
     # J. Клик «Сформировать» → диалог → «Текущий месяц» → генерация +
     #    тихое обновление календаря (spy)

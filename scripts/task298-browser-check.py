@@ -112,7 +112,12 @@ with sync_playwright() as p:
     # 3. Ячейки с новыми кодами: Д8 и «.» и «д»
     cells_text = page.evaluate("Array.from(document.querySelectorAll('#wsGridWrap td.ws-cell')).map(td=>td.textContent.trim())")
     check('C: ячейка «Д8» отрисована (запись дневного)', 'Д8' in cells_text)
-    check('D: ячейка «.» (плановый выходной) отрисована', '.' in cells_text)
+    # Task 314: «.»-ячейка рендерится как ПУСТАЯ — символ «·» (U+00B7),
+    # без inline-фона; маркер — класс ws-dot-code (селектор/тесты)
+    dot_cell = page.evaluate("""(function(){var td=document.querySelector('#wsGridWrap td.ws-cell.ws-dot-code');
+        return td? {text: td.textContent.trim(), bg: td.style.background} : null;})()""")
+    check('D: ячейка «.» (плановый выходной) отрисована — символ «·», класс ws-dot-code (Task 314)',
+          dot_cell is not None and dot_cell['text'] == '\u00b7' and dot_cell['bg'] == '', str(dot_cell))
     check('E: ячейка «д» (работа в выходной, строчная) отрисована', 'д' in cells_text)
     check('F: маркер переработки у «д» (ws-overtime)', page.evaluate("!!document.querySelector('#wsGridWrap td.ws-cell.ws-overtime')"))
 
@@ -143,8 +148,13 @@ with sync_playwright() as p:
     # Task 312: «— выходной —» удалена, И/ОБ/ПЗ/ПР/* отфильтрованы:
     # 16 − 5 мероприятий = 11 кодов + «+ Мероприятие…» + «Дополнительно…»
     check('L: в попапе 13 строк (11 статусов + «+ Мероприятие…» + «Дополнительно…»; Task 312)', rows == 13, rows)
-    for code in ['Д8','Д7,2','д','н','ОТ','У','ОВ','.']:
+    # Task 314: код «.» в попапе — символ «·» (как в ячейке),
+    # свотч ws-swatch-dot (фон пустой ячейки, без inline-стиля)
+    for code in ['Д8','Д7,2','д','н','ОТ','У','ОВ']:
         check('M: попап содержит код «%s»' % code, ('>' + code + '<') in popup_html.replace('\n',''))
+    check('M: Task 314 — попап показывает «·» для кода «.»', ('>\u00b7<') in popup_html.replace('\n',''))
+    check('M4: Task 314 — свотч «·» — класс ws-swatch-dot, без inline-стиля',
+          ('ws-swatch-dot' in popup_html) and (page.evaluate("(function(){var s=document.querySelector('#wsCellPopup .ws-swatch-dot');return s? (s.getAttribute('style')||'') : 'x';})()") == ''))
     # Task 312: коды мероприятий в списке основных НЕТ
     for code in ['ПР','И','ОБ','ПЗ','*']:
         check('M2: Task 312 — мероприятия «%s» в списке основных НЕТ' % code, ('>' + code + '<') not in popup_html.replace('\n',''))

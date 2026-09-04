@@ -42,7 +42,7 @@
 //       (белый, как фон пустых ячеек с точкой — светлая тема
 //       --bg-primary #FAF9F5); ОСНОВНОЕ значение пользователь
 //       меняет в листе «Коды_статусов» сам (код #FAF9F5).
-//   SW: kipia-test-v552 (Task 313: v551 → v552 — окно мероприятий
+//   SW: kipia-test-v553 (Task 313: v551 → v552 — окно мероприятий
 //       над окном кодов + подсветка сегодняшней даты).
 //
 // Запуск: через tests/run-all.js (require './test-task312.js').
@@ -86,8 +86,9 @@ describe('Task 312 — кнопка «+ Отпуск»: тулбар → кар�
         assertFalse(/\[data-theme="light"\] \.ws-addvac-btn/.test(INDEX_SRC),
             'светлая тема «+ Отпуск» удалена');
         // ряд кнопок одного роста живёт без «+ Отпуск»
-        assertTrue(/\.ws-month-sel, \.ws-year-sel, \.ws-generate-btn, \.ws-save-btn \{[^}]*height:\s*34px/.test(INDEX_SRC),
-            'единая высота 34px (Task 269) — без .ws-addvac-btn');
+        // Task 314: + .ws-refresh-btn («Обновить») — один рост
+        assertTrue(/\.ws-month-sel, \.ws-year-sel, \.ws-generate-btn, \.ws-save-btn, \.ws-refresh-btn \{[^}]*height:\s*34px/.test(INDEX_SRC),
+            'единая высота 34px (Task 269/314) — без .ws-addvac-btn');
     });
 
     test('JS: init() больше не ищет wsVacBtn', () => {
@@ -243,35 +244,73 @@ describe('Task 312 — попап ячейки: «— выходной —» и 
     });
 });
 
-describe('Task 312 — цвет «.» (плановый выходной) — белый', () => {
+describe('Task 312/314 — «.» (плановый выходной): символ «·», фон как пустая ячейка', () => {
 
-    test('JS: fallback-цвет «.» = #FAF9F5 (как пустая ячейка с точкой)', () => {
-        // Основное значение пользователь меняет в листе «Коды_статусов»
-        // (табель_КИП_ИОС) сам; fallback в клиенте синхронизирован:
-        // светлая тема --bg-primary = #FAF9F5 — фон пустых ячеек
+    test('JS: fallback-цвет «.» = #EEF0F2 (фон ЯЧЕЕК сетки, светлая тема)', () => {
+        // Task 314: «.»-ячейка красится CSS-классом ws-dot-code —
+        // фон ПУСТОЙ ячейки в любой теме; цвет листа/фолбэка к фону
+        // ячейки НЕ применяется (значение справочное для листа:
+        // #EEF0F2 — фон ячеек светлой темы, Task 250; #FAF9F5 —
+        // это цвет СТРАНИЦЫ, ячейки чуть темнее)
         const lc = fnBody(INDEX_SRC, '_loadStatusCodes: function');
-        assertTrue(lc.indexOf("{code:'.',    name:'Плановый выходной день', color:'#FAF9F5'}") !== -1,
-            'fallback «.» — #FAF9F5');
+        assertTrue(lc.indexOf("{code:'.',    name:'Плановый выходной день', color:'#EEF0F2'}") !== -1,
+            'fallback «.» — #EEF0F2 (фон ячеек светлой темы)');
         assertFalse(lc.indexOf("color:'#CFD8DC'") !== -1,
             'старый серо-голубой #CFD8DC не остался');
     });
 
+    test('JS: «.»-ячейка — класс ws-dot-code, inline-фон НЕ ставится', () => {
+        const rc = fnBody(INDEX_SRC, '_renderCell: function');
+        assertTrue(rc.indexOf("var isDotCode = (status === '.');") !== -1,
+            'детектор «.» в _renderCell');
+        assertTrue(rc.indexOf("if (isDotCode) classes.push('ws-dot-code');") !== -1,
+            'класс-маркер ws-dot-code');
+        assertTrue(rc.indexOf('if (showMainCode) style') !== -1,
+            'inline-фон только для «настоящих» статусов (не «.»)');
+        // символ в ячейке — «·» (U+00B7) как у пустых
+        assertTrue(rc.indexOf("(showMainCode ? status : (vacPlan ? 'ОТ' : '·'))") !== -1,
+            '«.» и пустая ячейка показывают один и тот же «·»');
+    });
+
+    test('JS: попап/select — символ «·», свотч ws-swatch-dot', () => {
+        const rp = fnBody(INDEX_SRC, '_renderCellPopup: function');
+        assertTrue(rp.indexOf("var isDot = (c.code === '.');") !== -1,
+            'детектор «.» в попапе');
+        assertTrue(rp.indexOf("this._esc(isDot ? '·' : c.code)") !== -1,
+            'метка «·» в строке кода');
+        assertTrue(rp.indexOf('ws-popup-swatch ws-swatch-dot') !== -1,
+            'свотч «.» — фон пустой ячейки (тема)');
+        const fs2 = fnBody(INDEX_SRC, '_fillStatusSelect: function');
+        assertTrue(fs2.indexOf("var label = (c.code === '.') ? '·' : c.code;") !== -1,
+            'select «Дополнительно…»: метка «·», value «.»');
+    });
+
+    test('CSS: ws-dot-code — фон пустой ячейки, обе темы', () => {
+        const dark = /\.ws-grid tbody td\.ws-cell\.ws-dot-code \{[^}]*background:\s*var\(--bg-primary,\s*#1a2233\);/.test(INDEX_SRC);
+        assertTrue(dark, '«.»-ячейка — var(--bg-primary, #1a2233)');
+        const light = /\[data-theme="light"\] \.ws-grid tbody td\.ws-cell\.ws-dot-code \{[^}]*background:\s*#eef0f2;/.test(INDEX_SRC);
+        assertTrue(light, 'светлая тема: «.»-ячейка = #eef0f2 (как пустые)');
+        const sw = /\.ws-popup-swatch\.ws-swatch-dot \{[^}]*background:\s*var\(--bg-primary,\s*#1a2233\);/.test(INDEX_SRC);
+        assertTrue(sw, 'свотч «.» в попапе — фон пустой ячейки');
+    });
+
     test('CSS: фон пустых ячеек — --bg-primary (эталон цвета)', () => {
         // Пустые ячейки с точкой: background: var(--bg-primary, #1a2233);
-        // светлая тема задаёт --bg-primary: #FAF9F5 — «белый» цвет,
-        // который пользователь ставит в таблицу кодов
+        // светлая тема задаёт --bg-primary: #FAF9F5 — фон СТРАНИЦЫ; фон
+        // ЯЧЕЕК сетки светлой темы — #eef0f2 (Task 250) — его и берёт
+        // «.»-ячейка (совпадение с пустой в любой теме)
         const m = /\.ws-grid tbody td\.ws-cell \{[^}]*background:\s*var\(--bg-primary,\s*#1a2233\);/.test(INDEX_SRC);
         assertTrue(m, 'пустая ячейка — var(--bg-primary, #1a2233)');
         const light = INDEX_SRC.indexOf('--bg-primary: #FAF9F5;') !== -1;
-        assertTrue(light, 'светлая тема: --bg-primary = #FAF9F5 (код для листа)');
+        assertTrue(light, 'светлая тема: --bg-primary = #FAF9F5');
     });
 });
 
 describe('Task 312 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v552', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v552'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v552');
+    test('SW: версия кэша kipia-test-v553', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v553'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v553');
         assertFalse(SW_SRC.indexOf('kipia-test-v550') !== -1,
             'старой версии v550 нет');
     });

@@ -42,7 +42,7 @@
 //   "Ошибка: self.loadTrainings is not a function"»):
 //     — вызовы удалённых страниц loadTrainings()/loadVacations()
 //       больше не встречаются; вместо них loadGrid().
-//   SW: kipia-test-v552.
+//   SW: kipia-test-v553.
 //
 // Запуск: через tests/run-all.js (require './test-task309.js').
 
@@ -265,7 +265,8 @@ describe('Task 309 — правка и удаление мероприятий',
         assertTrue(editBranch.indexOf("'Мероприятие обновлено'") !== -1,
             'тост об обновлении');
         // сбой частичного шага — сетка перезагружается и ошибка видна
-        assertTrue(editBranch.indexOf('self.loadGrid();') !== -1,
+        // Task 314: loadGrid(true) — только сеть после правок
+        assertTrue(editBranch.indexOf('self.loadGrid(true);') !== -1,
             'сетка перезагружается после правки (и при сбое)');
         // сервер не менялся: updateTraining НЕ добавлялся
         assertFalse(INDEX_SRC.indexOf('workSchedule.updateTraining') !== -1,
@@ -363,22 +364,23 @@ describe('Task 309 — регресс-фиксы Task 308 (loadTrainings/loadVac
 
     test('JS: добавление/удаление мероприятия и удаление отпуска перезагружают сетку', () => {
         const stf = fnBody(INDEX_SRC, 'submitTrainingForm: function');
-        assertTrue(stf.indexOf('self.loadGrid();') !== -1,
-            'submitTrainingForm (создание) → loadGrid');
+        // Task 314: loadGrid(true) — свежие данные с сервера
+        assertTrue(stf.indexOf('self.loadGrid(true);') !== -1,
+            'submitTrainingForm (создание) → loadGrid(true)');
         const ddt = fnBody(INDEX_SRC, '_doDeleteTraining: function');
-        assertTrue(ddt.indexOf('self.loadGrid();') !== -1,
-            '_doDeleteTraining → loadGrid');
+        assertTrue(ddt.indexOf('self.loadGrid(true);') !== -1,
+            '_doDeleteTraining → loadGrid(true)');
         const ddv = fnBody(INDEX_SRC, '_doDeleteVacation: function');
-        assertTrue(ddv.indexOf('self.loadGrid();') !== -1,
-            '_doDeleteVacation → loadGrid (план «ОТ» обновляется)');
+        assertTrue(ddv.indexOf('self.loadGrid(true);') !== -1,
+            '_doDeleteVacation → loadGrid(true) (план «ОТ» обновляется)');
     });
 });
 
 describe('Task 309 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v552', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v552'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v552');
+    test('SW: версия кэша kipia-test-v553', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v553'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v553');
         assertFalse(SW_SRC.indexOf('kipia-test-v547') !== -1,
             'старой версии v547 нет');
     });

@@ -321,7 +321,7 @@ describe('Task 303 — клиент: бейдж мероприятия в яче
         assertTrue(INDEX_SRC.indexOf("_EVENT_CODES: ['И', 'ОБ', 'ПЗ', 'ПР', '*']") !== -1,
             '_EVENT_CODES объявлен (Task 306: + ПР и *)');
         assertTrue(INDEX_SRC.indexOf("_ABSENCE_CODES: ['ОТ', 'У', 'ОВ', 'Б', 'ПР']") !== -1,
-            '_ABSENCE_CODES объявлен (бейдж скрыт на днях отсутствия)');
+            '_ABSENCE_CODES объявлен (Task 314: бейджи видны и на днях отсутствия — константа-справочник)');
     });
 
     test('JS: хелперы слоя — _eventsAt / _trainingCodeOf / _statusMeta', () => {
@@ -335,9 +335,13 @@ describe('Task 303 — клиент: бейдж мероприятия в яче
         assertTrue(INDEX_SRC.indexOf('ws-ev-badge') !== -1, 'чип бейджа');
         assertTrue(INDEX_SRC.indexOf("classes.push('ws-has-events')") !== -1,
             'класс ячейки с мероприятиями');
-        // бейдж не дублирует основной код (день-мероприятие без смены)
-        assertTrue(INDEX_SRC.indexOf('if (events[evi].code !== status) badgeEvents.push(events[evi]);') !== -1,
-            'код-мероприятие не дублируется бейджем');
+        // Task 314: статус-мероприятие (И/ОБ/ПЗ/ПР/* как основной код
+        // от generateMonth) рисуется ТОЛЬКО бейджем — виртуальное
+        // событие из статуса, если записи в «Инструктажи» нет
+        assertTrue(INDEX_SRC.indexOf('events = events.concat([{ code: status, training: null }]);') !== -1,
+            'виртуальный бейдж из статуса-мероприятия (событие удалено — день не «слепнет»)');
+        assertTrue(INDEX_SRC.indexOf('var solidBadges = !!status;') !== -1,
+            'сплошные бейджи при любом статусе (вкл. дни отсутствия — Task 314)');
     });
 
     test('JS: пунктирный бейдж на пустой ячейке (ws-ev-pending)', () => {
@@ -402,11 +406,12 @@ describe('Task 303 — клиент: попап ячейки и быстрое �
 
     test('JS: после addTraining/deleteTraining шахматка перезагружается', () => {
         const addPart = INDEX_SRC.slice(INDEX_SRC.indexOf('workSchedule.addTraining'));
-        assertTrue(addPart.indexOf('self.loadGrid();') !== -1,
-            'addTraining → loadGrid (бейдж появляется сразу)');
+        // Task 314: loadGrid(true) — после правок только сеть
+        assertTrue(addPart.indexOf('self.loadGrid(true);') !== -1,
+            'addTraining → loadGrid(true) (бейдж появляется сразу)');
         const delPart = INDEX_SRC.slice(INDEX_SRC.indexOf('_doDeleteTraining: function'));
-        assertTrue(delPart.indexOf('self.loadGrid();') !== -1,
-            'deleteTraining → loadGrid (бейдж исчезает сразу)');
+        assertTrue(delPart.indexOf('self.loadGrid(true);') !== -1,
+            'deleteTraining → loadGrid(true) (бейдж исчезает сразу)');
     });
 });
 

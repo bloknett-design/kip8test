@@ -393,8 +393,10 @@ describe('Task 305 — клиент: рендер бейджа плановой 
     });
 
     test('JS: loadGrid подгружает шаблоны ротации (свежий цикл)', () => {
+        // Task 314: окно расширено — у loadGrid(force) появились
+        // кэш-ветки до Promise.all
         const lg = INDEX_SRC.slice(INDEX_SRC.indexOf('loadGrid: function'),
-                                    INDEX_SRC.indexOf('loadGrid: function') + 1400);
+                                    INDEX_SRC.indexOf('loadGrid: function') + 2600);
         assertTrue(lg.indexOf('this._loadPatterns(),') !== -1,
             '_loadPatterns в Promise.all сетки');
         assertTrue(lg.indexOf('_loadVacations()') !== -1,
@@ -421,8 +423,8 @@ describe('Task 305 — сервер: приоритет отпуска не тр
             'замена в toInsert (строка шага 3)');
     });
 
-    test('SW: версия кэша kipia-test-v552 (Task 305 — клиент менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v552'") !== -1,
-            'CACHE_VERSION = kipia-test-v552');
+    test('SW: версия кэша kipia-test-v553 (Task 305 — клиент менялся)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v553'") !== -1,
+            'CACHE_VERSION = kipia-test-v553');
     });
 });

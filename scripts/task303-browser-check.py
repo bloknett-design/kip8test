@@ -164,25 +164,41 @@ with sync_playwright() as p:
     })()""")
     check('G: «Н» без мероприятий — бейджа нет', no_badge)
 
-    # 6. День-мероприятие без смены (09.09, «И») — код основной, бейджа нет
+    # 6. День-мероприятие без смены (09.09, «И») — Task 314:
+    #    НЕ основной код (ячейка «·» как пустая) + СПЛОШНОЙ бейдж «И»
     ev_day = page.evaluate("""(function(){
         var tds = document.querySelectorAll('#wsGridWrap td.ws-cell');
         for (var i=0;i<tds.length;i++){
-            if (tds[i].textContent.trim()==='И') return {badge: !!tds[i].querySelector('.ws-ev-badge')};
+            var b = tds[i].querySelector('.ws-ev-badge');
+            if (b && b.textContent.trim()==='И' && !b.classList.contains('ws-ev-pending')
+                && tds[i].className.indexOf('ws-status-empty')!==-1) {
+                return {text: tds[i].textContent.trim().replace('\u00b7','DOT'),
+                        badge: b.textContent, solid: true, bg: b.style.background,
+                        inline: tds[i].style.background};
+            }
         }
         return null;
     })()""")
-    check('H: «И» без смены — код в ячейке, бейджа нет (не дублируем)', ev_day and ev_day['badge']==False, str(ev_day))
+    check('H: Task 314 — «И» без смены: ячейка «·» (НЕ код «И»), СПЛОШНОЙ бейдж «И», без inline-фона',
+          ev_day and ev_day['text'].startswith('DOT') and ev_day['badge']=='И' and ev_day['inline']=='', str(ev_day))
 
-    # 7. Отпуск (ОТ) с мероприятием — бейдж скрыт
+    # 7. Отпуск (ОТ) с мероприятием — Task 314: бейдж теперь ВИДЕН
+    #    (заявка: «мероприятия отображаются в ячейках маленькими
+    #    бейджами-«иконками»» — и на днях отсутствия)
     ot_badge = page.evaluate("""(function(){
         var tds = document.querySelectorAll('#wsGridWrap td.ws-cell');
         for (var i=0;i<tds.length;i++){
-            if (tds[i].textContent.trim()==='ОТ') return !!tds[i].querySelector('.ws-ev-badge');
+            if (tds[i].textContent.trim().indexOf('ОТ')===0) {
+                var b = tds[i].querySelector('.ws-ev-badge');
+                return {has: !!b, text: b? b.textContent.trim() : '',
+                        solid: b? !b.classList.contains('ws-ev-pending') : false,
+                        bg: b? b.style.background : ''};
+            }
         }
         return null;
     })()""")
-    check('I: «ОТ» с мероприятием — бейдж скрыт (событие в тултипе)', ot_badge==False, str(ot_badge))
+    check('I: Task 314 — «ОТ» с мероприятием: СПЛОШНОЙ бейдж «И» на дне отсутствия',
+          ot_badge and ot_badge['has'] and ot_badge['solid'], str(ot_badge))
 
     # 8. Пустая ячейка с мероприятием (05.09, обучение) — пунктирный бейдж
     pending = page.evaluate("""(function(){

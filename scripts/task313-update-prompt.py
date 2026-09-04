@@ -20,9 +20,9 @@ src = ''.join(lines)
 
 reps = [
     ('> **Текущая версия кэша:** `kipia-test-v551`',
-     '> **Текущая версия кэша:** `kipia-test-v552`'),
+     '> **Текущая версия кэша:** `kipia-test-v553`'),
     ('| `kip8test` | PWA | `kipia-test-v551` |',
-     '| `kip8test` | PWA | `kipia-test-v552` |'),
+     '| `kip8test` | PWA | `kipia-test-v553` |'),
 ]
 for old, new in reps:
     n = src.count(old)
