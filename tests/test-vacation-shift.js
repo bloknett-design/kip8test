@@ -379,10 +379,17 @@ describe('Task 305 — клиент: рендер бейджа плановой 
             'бейдж в составе HTML ячейки');
     });
 
-    test('JS: тултип дня отпуска — плановая смена по циклу', () => {
-        assertTrue(INDEX_SRC.indexOf(
+    test('JS: Task 311 — тултип смены убран; бейдж смены в ячейке жив', () => {
+        // Task 311: пояснительные тултипы с ячеек шахматки убраны;
+        // плановая смена дня отпуска остаётся бейджем в ячейке
+        // (ws-ev-badge ws-ev-shift, код смены)
+        assertFalse(INDEX_SRC.indexOf(
             "titleParts.push('по циклу (Дни_цикла): ' + shiftName);") !== -1,
-            'строка тултипа с полным названием смены');
+            'строка тултипа с полным названием смены удалена (Task 311)');
+        assertFalse(INDEX_SRC.indexOf('var shiftName =') !== -1,
+            'переменная shiftName не собирается (тултипа нет)');
+        assertTrue(INDEX_SRC.indexOf('ws-ev-shift') !== -1,
+            'бейдж плановой смены (ws-ev-shift) в ячейке жив');
     });
 
     test('JS: loadGrid подгружает шаблоны ротации (свежий цикл)', () => {
@@ -414,8 +421,8 @@ describe('Task 305 — сервер: приоритет отпуска не тр
             'замена в toInsert (строка шага 3)');
     });
 
-    test('SW: версия кэша kipia-test-v549 (Task 305 — клиент менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v549'") !== -1,
-            'CACHE_VERSION = kipia-test-v549');
+    test('SW: версия кэша kipia-test-v550 (Task 305 — клиент менялся)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v550'") !== -1,
+            'CACHE_VERSION = kipia-test-v550');
     });
 });

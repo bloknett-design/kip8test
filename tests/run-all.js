@@ -43,6 +43,7 @@ require('./test-vacation-shift.js');
 require('./test-task306.js');
 require('./test-task309.js');
 require('./test-task310.js');
+require('./test-task311.js');
 require('./test-deploy-url.js');
 
 // Запускаем

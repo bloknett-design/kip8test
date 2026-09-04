@@ -482,11 +482,13 @@ describe('График работы — WorkSchedule', () => {
         // кодов» удалены — Task 252 вернул коды в ячейки и убрал легенду
         // целиком (см. describe Task 252 ниже). Историческая заметка.
 
-        test('JS: tooltip показывает название статуса, а не код', () => {
-            assertTrue(html.indexOf("var statusName = status;") !== -1,
-                'Должна быть переменная statusName (поиск названия по коду)');
-            assertTrue(html.indexOf("titleParts.push('статус: ' + (statusName || '—'));") !== -1,
-                'Tooltip: «статус: <название>» вместо кода');
+        test('JS: Task 311 — tooltip статуса убран (пояснения — в попапе клика)', () => {
+            // Task 311: пояснительные тултипы с ячеек шахматки убраны —
+            // название статуса показывает попап клика (_renderCellPopup)
+            assertFalse(html.indexOf("var statusName = status;") !== -1,
+                'переменная statusName удалена (тултип не собирается)');
+            assertFalse(html.indexOf("titleParts.push('статус: '") !== -1,
+                'строка «статус: …» больше не пишется в title');
         });
 
         test('JS: переработка — класс ws-overtime (маркер-точка вместо underline)', () => {
@@ -683,8 +685,10 @@ describe('График работы — WorkSchedule', () => {
             const re = /\.ws-grid tbody td\.ws-cell\.ws-pending \{[^}]*outline:\s*2px dashed/;
             assertTrue(re.test(html),
                 'CSS: ws-pending — пунктирная рамка (маркер несохранённой ячейки)');
-            assertTrue(html.indexOf("if (isPending) titleParts.push('не сохранено');") !== -1,
-                'Tooltip несохранённой ячейки — «не сохранено»');
+            // Task 311: тултип «не сохранено» убран вместе с остальными
+            // пояснительными окнами при наведении (рамка-маркер осталась)
+            assertFalse(html.indexOf("if (isPending) titleParts.push('не сохранено');") !== -1,
+                'текст «не сохранено» из title удалён (Task 311)');
         });
 
         test('JS: _renderGrid накладывает _PENDING на серверные данные', () => {
@@ -828,13 +832,13 @@ describe('График работы — WorkSchedule', () => {
                 'Inline-фон задаётся только статусным ячейкам');
         });
 
-        test('JS: tooltip и маркеры Task 250/251 не тронуты', () => {
-            assertTrue(html.indexOf("titleParts.push('статус: ' + (statusName || '—'));") !== -1,
-                'Tooltip: «статус: <название>» (Task 250) — на месте');
+        test('JS: маркеры Task 250/251 живы (тултипы убраны Task 311)', () => {
             assertTrue(html.indexOf("if (isOvertime) classes.push('ws-overtime');") !== -1,
                 'Маркер переработки ws-overtime (Task 250) — на месте');
             assertTrue(html.indexOf("if (isPending) classes.push('ws-pending');") !== -1,
                 'Маркер несохранённой правки ws-pending (Task 251) — на месте');
+            assertFalse(html.indexOf("titleParts.push('статус: '") !== -1,
+                'тултип статуса (Task 250) убран по заявке (Task 311)');
         });
     });
 
@@ -1199,8 +1203,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v514 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v549") !== -1,
-                'Актуальная версия — kipia-test-v549 (Task 291)');
+            assertTrue(sw.indexOf("kipia-test-v550") !== -1,
+                'Актуальная версия — kipia-test-v550 (Task 291)');
         });
         test('Старая версия v514 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v514") === -1,
@@ -1263,8 +1267,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v516 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v549") !== -1,
-                'Актуальная версия — kipia-test-v549 (Task 291)');
+            assertTrue(sw.indexOf("kipia-test-v550") !== -1,
+                'Актуальная версия — kipia-test-v550 (Task 291)');
         });
     });
 
@@ -1275,8 +1279,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v515 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v549") !== -1,
-                'Актуальная версия — kipia-test-v549 (Task 291)');
+            assertTrue(sw.indexOf("kipia-test-v550") !== -1,
+                'Актуальная версия — kipia-test-v550 (Task 291)');
         });
     });
 
@@ -1286,8 +1290,8 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
         test('v513 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v549") !== -1,
-                'Актуальная версия — kipia-test-v549');
+            assertTrue(sw.indexOf("kipia-test-v550") !== -1,
+                'Актуальная версия — kipia-test-v550');
         });
     });
 
@@ -1480,8 +1484,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v517 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v549") !== -1,
-                'Актуальная версия — kipia-test-v549 (Task 291)');
+            assertTrue(sw.indexOf("kipia-test-v550") !== -1,
+                'Актуальная версия — kipia-test-v550 (Task 291)');
         });
         test('Старая версия v517 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v517") === -1,
@@ -1495,9 +1499,9 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v549', () => {
-            assertTrue(sw.indexOf("kipia-test-v549") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v549 (Task 290)');
+        test('CACHE_VERSION = kipia-test-v550', () => {
+            assertTrue(sw.indexOf("kipia-test-v550") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v550 (Task 290)');
         });
         test('Старая версия v517 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v517") === -1,
@@ -1865,9 +1869,9 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v549', () => {
-            assertTrue(sw.indexOf("kipia-test-v549") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v549 (Task 290)');
+        test('CACHE_VERSION = kipia-test-v550', () => {
+            assertTrue(sw.indexOf("kipia-test-v550") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v550 (Task 290)');
         });
         test('Старая версия v523 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v523") === -1,
@@ -1963,11 +1967,13 @@ describe('График работы — WorkSchedule', () => {
 
         test('CSS: единая высота всех элементов ряда кнопок (34px)', () => {
             // Task 306: .ws-cal-chip убран из списка — кнопка «Обновить» удалена
-            // Task 307: + .ws-addemp-btn («+ Сотрудник» в тулбаре)
-            // Task 308: + .ws-addvac-btn («+ Отпуск» в тулбаре)
-            const re = /\.ws-month-sel, \.ws-year-sel, \.ws-generate-btn, \.ws-save-btn,\s*\n\s*\.ws-addemp-btn,\s*\n\s*\.ws-addvac-btn \{[^}]*height:\s*34px[^}]*box-sizing:\s*border-box/;
+            // Task 307: + .ws-addemp-btn; Task 311: − .ws-addemp-btn — кнопка
+            // «+ Сотрудник» удалена из тулбара (добавление — заголовок «Сотрудник»)
+            const re = /\.ws-month-sel, \.ws-year-sel, \.ws-generate-btn, \.ws-save-btn,\s*\n\s*\.ws-addvac-btn \{[^}]*height:\s*34px[^}]*box-sizing:\s*border-box/;
             assertTrue(re.test(html),
-                'селекты, «+ Сотрудник», «+ Отпуск», «Сформировать» и «Сохранить» — одного роста');
+                'селекты, «+ Отпуск», «Сформировать» и «Сохранить» — одного роста');
+            assertFalse(html.indexOf('.ws-addemp-btn') !== -1,
+                'стиль удалённой кнопки «+ Сотрудник» не остался (Task 311)');
             assertTrue(html.indexOf('.ws-cal-chip {') === -1 &&
                        html.indexOf('.ws-cal-chip:') === -1,
                 'мёртвые стили удалённой кнопки не остались (упоминания в комментариях не в счёт)');
@@ -2240,9 +2246,9 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v549', () => {
-            assertTrue(sw.indexOf("kipia-test-v549") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v549 (Task 290)');
+        test('CACHE_VERSION = kipia-test-v550', () => {
+            assertTrue(sw.indexOf("kipia-test-v550") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v550 (Task 290)');
         });
         test('Старая версия v525 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v525") === -1,
@@ -2634,8 +2640,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v527 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v549") !== -1,
-                'Актуальная версия — kipia-test-v549');
+            assertTrue(sw.indexOf("kipia-test-v550") !== -1,
+                'Актуальная версия — kipia-test-v550');
         });
         test('Старая версия v527 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v527") === -1,
@@ -2877,9 +2883,11 @@ describe('Task 298 — коды статусов Т-12/Т-13: клиентски
             'легаси-код добавляется временной опцией');
     });
 
-    test('JS: тултип плана отпуска — «заполнится кодом «ОТ»»', () => {
-        assertTrue(html.indexOf("заполнится кодом «ОТ» при «Сформировать»") !== -1,
-            'текст тултипа обновлён на «ОТ»');
+    test('JS: Task 311 — тултип плана отпуска убран (вся информация — в попапе клика)', () => {
+        // Task 311: пояснительные тултипы с ячеек шахматки убраны;
+        // код плана «ОТ» остаётся в ячейке (класс ws-vac-plan + рамка)
+        assertFalse(html.indexOf("заполнится кодом «ОТ» при «Сформировать»") !== -1,
+            'подсказка «заполнится кодом…» из тултипа удалена (Task 311)');
         assertFalse(html.indexOf("заполнится кодом «О» при") !== -1,
             'старого текста с «О» нет');
     });
@@ -2912,10 +2920,10 @@ describe('Task 298 — коды статусов Т-12/Т-13: клиентски
             'счётчик 16 в заголовке эндпоинтов');
     });
 
-    test('SW: кэш поднят до kipia-test-v549 (Task 298)', () => {
+    test('SW: кэш поднят до kipia-test-v550 (Task 298)', () => {
         const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
-        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v549'") !== -1,
-            'CACHE_VERSION = kipia-test-v549');
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v550'") !== -1,
+            'CACHE_VERSION = kipia-test-v550');
         assertFalse(sw.indexOf("CACHE_VERSION = 'kipia-test-v539'") !== -1,
             'старой версии v539 нет');
     });
@@ -2954,31 +2962,32 @@ describe('Task 307 — вкладка «Сотрудники» удалена, �
             '0 полос ws-subnav (Task 308: одностраничный модуль)');
     });
 
-    test('HTML: кнопка «+ Сотрудник» в тулбаре над шахматкой', () => {
-        const m = html.match(/<button[^>]*id="wsEmpBtn"[^>]*>/);
-        assertTrue(!!m, 'кнопка #wsEmpBtn есть');
-        assertTrue(html.indexOf('id="wsEmpBtn"') < html.indexOf('id="wsGenerateBtn"'),
-            'кнопка стоит в ряду тулбара РЯДОМ с «Сформировать» (до неё)');
-        assertTrue(m[0].indexOf('WorkSchedule.openEmployeeForm()') !== -1,
-            'onclick → openEmployeeForm (прежний bottom-sheet)');
-        assertTrue(m[0].indexOf('title="Добавить сотрудника"') !== -1,
-            'title с полным названием действия');
-        assertTrue(m[0].indexOf('hidden') !== -1,
-            'скрыта по умолчанию (видимость — по _canEdit, как «Сформировать»)');
-        // кнопка ВНУТРИ .ws-toolbar-main страницы work-schedule
-        const ws = html.slice(html.indexOf('id="page-work-schedule"'),
-                              html.indexOf('id="page-work-schedule-trainings"'));
-        assertTrue(ws.indexOf('id="wsEmpBtn"') !== -1 &&
-                   ws.indexOf('ws-toolbar-main') !== -1,
-            'кнопка внутри бара над шахматкой');
+    test('HTML: Task 311 — кнопка «+ Сотрудник» УДАЛЕНА; заголовок «Сотрудник» — триггер', () => {
+        // Task 311: кнопка из тулбара удалена — добавление сотрудника
+        // выполняет заголовок колонки «Сотрудник» в шапке сетки
+        // (класс ws-emp-head-add + onclick openEmployeeForm в _renderGrid)
+        assertTrue(html.indexOf('id="wsEmpBtn"') === -1,
+            'кнопка #wsEmpBtn удалена из тулбара');
+        // рендер шапки: заголовок получает класс/onclick/плюсик
+        const grid = html.slice(html.indexOf('_renderGrid: function'),
+                                html.indexOf('_fitGrid: function'));
+        assertTrue(grid.indexOf('ws-emp-head-add') !== -1,
+            'заголовок «Сотрудник» несёт класс ws-emp-head-add (редакторам)');
+        assertTrue(grid.indexOf('onclick="WorkSchedule.openEmployeeForm()"') !== -1,
+            'клик заголовка → openEmployeeForm (прежний bottom-sheet)');
+        assertTrue(grid.indexOf('ws-emp-head-plus') !== -1,
+            'плюсик-индикатор у заголовка (редакторам)');
+        assertTrue(grid.indexOf("this._canEdit ? ' ws-emp-head-add' : ''") !== -1,
+            'класс/клик вешаются по праву записи (_canEdit)');
     });
 
-    test('JS: видимость кнопки — init() по _canEdit (как «Сформировать»)', () => {
-        const init = html.slice(html.indexOf('var genBtn = document.getElementById(\'wsGenerateBtn\');'),
+    test('JS: Task 311 — init() не трогает wsEmpBtn; видимость решает _renderGrid', () => {
+        const init = html.slice(html.indexOf("var genBtn = document.getElementById('wsGenerateBtn');"),
                                 html.indexOf('this._attachFitResize()'));
-        assertTrue(init.indexOf("var empBtn = document.getElementById('wsEmpBtn');") !== -1 &&
-                   init.indexOf('empBtn.hidden = !this._canEdit;') !== -1,
-            'init() показывает «+ Сотрудник» только ролям с правом правки');
+        assertFalse(init.indexOf("getElementById('wsEmpBtn')") !== -1,
+            'init() больше не ищет кнопку (кнопки нет)');
+        assertTrue(init.indexOf("var vacBtn = document.getElementById('wsVacBtn');") !== -1,
+            '«+ Отпуск» (Task 308) в init жив — не задет Task 311');
     });
 
     test('JS: initEmployeesPage/loadEmployees/_renderEmployees удалены', () => {
@@ -3029,11 +3038,14 @@ describe('Task 307 — вкладка «Сотрудники» удалена, �
         });
     });
 
-    test('CSS: .ws-addemp-btn — нейтральная кнопка тулбара', () => {
-        // Task 308: селектор общий с .ws-addvac-btn (детали — в describe Task 308)
-        const re = /\.ws-addemp-btn,\s*\n\s*\.ws-addvac-btn \{[^}]*background:\s*var\(--bg-tertiary[^}]*font-weight:\s*600[^}]*cursor:\s*pointer;/;
+    test('CSS: Task 311 — .ws-addemp-btn удалён; .ws-addvac-btn — один', () => {
+        // Task 311: кнопка «+ Сотрудник» удалена — стиль остался только
+        // у «+ Отпуск» (Task 308)
+        const re = /\.ws-addvac-btn \{[^}]*background:\s*var\(--bg-tertiary[^}]*font-weight:\s*600[^}]*cursor:\s*pointer;/;
         assertTrue(re.test(html), 'нейтральный фон в духе селектов, жирный текст');
-        assertTrue(/\[data-theme="light"\] \.ws-addemp-btn,\s*\n\s*\[data-theme="light"\] \.ws-addvac-btn \{[^}]*background:\s*rgba\(240, 240, 240, 0\.95\)/.test(html),
+        assertFalse(html.indexOf('.ws-addemp-btn') !== -1,
+            'стиль «+ Сотрудник» не остался (кнопка удалена)');
+        assertTrue(/\[data-theme="light"\] \.ws-addvac-btn \{[^}]*background:\s*rgba\(240, 240, 240, 0\.95\)/.test(html),
             'светлая тема — в тон селектов тулбара');
     });
 
@@ -3057,9 +3069,9 @@ describe('Task 307 — вкладка «Сотрудники» удалена, �
             '.ws-add-bar/.ws-add-btn удалены (Task 308: страницы больше нет)');
     });
 
-    test('SW: кэш поднят до kipia-test-v549 (Task 309; история: v547 — Task 308)', () => {
-        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v549'") !== -1,
-            'CACHE_VERSION = kipia-test-v549');
+    test('SW: кэш поднят до kipia-test-v550 (Task 309; история: v547 — Task 308)', () => {
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v550'") !== -1,
+            'CACHE_VERSION = kipia-test-v550');
     });
 });
 
@@ -3117,12 +3129,15 @@ describe('Task 308 — вкладки «Инструктажи»/«Отпуск�
     test('HTML: кнопка «+ Отпуск» в тулбаре над шахматкой', () => {
         const m = html.match(/<button[^>]*id="wsVacBtn"[^>]*>/);
         assertTrue(!!m, 'кнопка #wsVacBtn есть');
-        const iEmp = html.indexOf('id="wsEmpBtn"');
         const iVac = html.indexOf('id="wsVacBtn"');
         const iGen = html.indexOf('id="wsGenerateBtn"');
-        assertTrue(iVac !== -1 && iEmp !== -1 && iGen !== -1, 'кнопки тулбара найдены');
-        assertTrue(iEmp < iVac && iVac < iGen,
-            'порядок ряда: селекты → «+ Сотрудник» → «+ Отпуск» → «Сформировать»');
+        // Task 311: «+ Сотрудник» из ряда убрана — порядок:
+        // селекты → «+ Отпуск» → «Сформировать»
+        assertTrue(iVac !== -1 && iGen !== -1, 'кнопки тулбара найдены');
+        assertTrue(iVac < iGen,
+            'порядок ряда: селекты → «+ Отпуск» → «Сформировать» (Task 311: «+ Сотрудник» удалена)');
+        assertTrue(html.indexOf('id="wsEmpBtn"') === -1,
+            'кнопки «+ Сотрудник» в тулбаре больше нет (Task 311)');
         assertTrue(m[0].indexOf('WorkSchedule.openVacationForm()') !== -1,
             'onclick → openVacationForm (прежний bottom-sheet)');
         assertTrue(m[0].indexOf('title="Добавить период отпуска"') !== -1,
@@ -3241,13 +3256,17 @@ describe('Task 308 — вкладки «Инструктажи»/«Отпуск�
             'части 1–3 в селекте');
     });
 
-    test('CSS: .ws-addvac-btn — стиль в общем правиле с «+ Сотрудник»', () => {
-        const re = /\.ws-addemp-btn,\s*\n\s*\.ws-addvac-btn \{[^}]*background:\s*var\(--bg-tertiary[^}]*font-weight:\s*600[^}]*cursor:\s*pointer;/;
+    test('CSS: .ws-addvac-btn — свой стиль (Task 311: «+ Сотрудник» удалена)', () => {
+        // Task 311: кнопка «+ Сотрудник» удалена — правило живёт
+        // только для «+ Отпуск»
+        const re = /\.ws-addvac-btn \{[^}]*background:\s*var\(--bg-tertiary[^}]*font-weight:\s*600[^}]*cursor:\s*pointer;/;
         assertTrue(re.test(html),
-            'нейтральный фон в духе селектов, жирный текст — как у «+ Сотрудник»');
-        const h = /\.ws-month-sel, \.ws-year-sel, \.ws-generate-btn, \.ws-save-btn,\s*\n\s*\.ws-addemp-btn,\s*\n\s*\.ws-addvac-btn \{[^}]*height:\s*34px/;
+            'нейтральный фон в духе селектов, жирный текст');
+        const h = /\.ws-month-sel, \.ws-year-sel, \.ws-generate-btn, \.ws-save-btn,\s*\n\s*\.ws-addvac-btn \{[^}]*height:\s*34px/;
         assertTrue(h.test(html), 'единая высота 34px (правило Task 269)');
-        assertTrue(/\[data-theme="light"\] \.ws-addemp-btn,\s*\n\s*\[data-theme="light"\] \.ws-addvac-btn \{/.test(html),
+        assertFalse(html.indexOf('.ws-addemp-btn') !== -1,
+            'мёртвый стиль «+ Сотрудник» не остался (Task 311)');
+        assertTrue(/\[data-theme="light"\] \.ws-addvac-btn \{/.test(html),
             'светлая тема — в тон селектов тулбара');
     });
 
@@ -3269,9 +3288,9 @@ describe('Task 308 — вкладки «Инструктажи»/«Отпуск�
             'светлая тема строки дней жива');
     });
 
-    test('SW: кэш поднят до kipia-test-v549 (Task 308)', () => {
-        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v549'") !== -1,
-            'CACHE_VERSION = kipia-test-v549');
+    test('SW: кэш поднят до kipia-test-v550 (Task 308)', () => {
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v550'") !== -1,
+            'CACHE_VERSION = kipia-test-v550');
         assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v546'") === -1,
             'старой версии v546 нет');
     });

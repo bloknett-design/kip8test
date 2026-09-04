@@ -343,8 +343,10 @@ describe('Task 303 — клиент: бейдж мероприятия в яче
     test('JS: пунктирный бейдж на пустой ячейке (ws-ev-pending)', () => {
         assertTrue(INDEX_SRC.indexOf('ws-ev-pending') !== -1,
             'пунктирный бейдж-подсказка (аналог ws-vac-plan)');
-        assertTrue(INDEX_SRC.indexOf('заполнится кодом «') !== -1,
-            'тултип «заполнится кодом … при Сформировать»');
+        // Task 311: пояснительный тултип убран — подсказка
+        // «заполнится при Сформировать» больше не в title
+        assertFalse(INDEX_SRC.indexOf('заполнится кодом «') !== -1,
+            'тултип «заполнится кодом … при Сформировать» удалён (Task 311)');
     });
 
     test('CSS: бейдж — правый нижний угол, тёмный текст, обе темы', () => {
@@ -356,10 +358,16 @@ describe('Task 303 — клиент: бейдж мероприятия в яче
             'светлая тема пунктирного бейджа');
     });
 
-    test('JS: тултип ячейки — мероприятия с темой и датой', () => {
-        const m = INDEX_SRC.match(/titleParts\.push\(\(evtMeta\.name \|\| events\[evt\]\.code\) \+[\s\S]{0,200}/);
-        assertTrue(!!m, 'строка тултипа мероприятия');
-        assertTrue(INDEX_SRC.indexOf('events[evt].training.тема') !== -1, 'тема в тултипе');
+    test('JS: Task 311 — тултип мероприятий убран; тема — в попапе клика', () => {
+        // Task 311: пояснительные тултипы с ячеек убраны; мероприятия
+        // с темой показывает секция «Мероприятия в этот день» попапа
+        assertFalse(/titleParts\.push\(\(evtMeta\.name/.test(INDEX_SRC),
+            'строка тултипа мероприятия удалена');
+        const popupPart = INDEX_SRC.slice(
+            INDEX_SRC.indexOf('_renderCellPopup: function'),
+            INDEX_SRC.indexOf('_openCellPopup: function'));
+        assertTrue(popupPart.indexOf('deT.тема') !== -1,
+            'тема мероприятия — в попапе клика (секция мероприятий)');
     });
 });
 

@@ -195,19 +195,21 @@ with sync_playwright() as p:
         return null;
     })()""")
     check('J: пустая ячейка + пунктирный бейдж «ОБ»', pending and pending['badge']=='ОБ' and pending['cell']=='·ОБ', str(pending))
-    check('K: тултип: «заполнится кодом «ОБ» при «Сформировать»»',
-          pending and 'заполнится кодом «ОБ»' in (pending['tip'] or ''), str(pending and (pending['tip'] or '')[:120]))
+    # Task 311: тултипы с ячеек убраны — подсказку заменяет пунктирный бейдж
+    check('K: Task 311 — тултип подсказки убран (title пуст), пунктирный бейдж жив',
+          pending and pending['badge'] == 'ОБ' and not (pending['tip'] or ''), str(pending and (pending['tip'] or '')[:120]))
 
-    # 9. Тултип ячейки «Д» — тема мероприятия
+    # 9. (Task 311) Тултип ячейки «Д» убран — тема мероприятия в попапе
+    #    клика (проверка M ниже) и в карточке сотрудника
     tip_d = page.evaluate("""(function(){
         var tds = document.querySelectorAll('#wsGridWrap td.ws-cell');
         for (var i=0;i<tds.length;i++){
-            if (tds[i].textContent.trim()==='ДИ') return tds[i].getAttribute('title');
+            if (tds[i].textContent.trim()==='ДИ') return tds[i].getAttribute('title') || '';
         }
         return '';
     })()""")
-    check('L: тултип «Д»+И: тема «Повторный инструктаж по ОТ и ПБ»',
-          'Повторный инструктаж по ОТ и ПБ' in tip_d, str(tip_d[:160]))
+    check('L: Task 311 — тултип «Д»+И убран (title пуст)',
+          tip_d == '', str(tip_d[:160]))
 
     # 10. Попап ячейки с мероприятием (01.09, 017): секция + 20 строк
     page.evaluate("""(function(){

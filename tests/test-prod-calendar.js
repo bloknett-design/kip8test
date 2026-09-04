@@ -531,13 +531,16 @@ describe('Task 260: интеграция в index.html', () => {
         assertTrue(html.indexOf("if (dayOff) classes.push('ws-weekend');") !== -1,
             'класс ws-weekend — по календарю (Сб/Вс + праздники + переносы)');
     });
-    test('JS: шапка шахматки — ws-holiday/ws-feast + тултип с названием', () => {
+    test('JS: шапка шахматки — ws-holiday/ws-feast (Task 311: тултип убран)', () => {
         assertTrue(html.indexOf("var isFeast = dInfo ? !!dInfo.holiday : false;") !== -1,
             'праздник определяется по ProdCalendar.dayInfo');
         assertTrue(html.indexOf("' ws-feast'") !== -1,
             'класс ws-feast для праздников');
-        assertTrue(html.indexOf('thTitle = d + \' \' + dow + \' — \' + dInfo.title') !== -1,
-            'тултип заголовка с названием праздника');
+        // Task 311: пояснительные тултипы с ячеек/шапки убраны —
+        // названия праздников показывает окошко производственного
+        // календаря в тулбаре (.ws-cal-panel, Task 264)
+        assertFalse(html.indexOf('thTitle = d + \' \' + dow + \' — \' + dInfo.title') !== -1,
+            'тултип заголовка с названием праздника удалён (Task 311)');
     });
     test('CSS: стили праздника и окошка (стили кнопки удалены)', () => {
         assertTrue(html.indexOf('.ws-cal-chip {') === -1,
@@ -551,14 +554,16 @@ describe('Task 260: интеграция в index.html', () => {
         assertTrue(html.indexOf('.ws-cal-panel {') !== -1,
             'стили окошка календаря в тулбаре');
     });
-    test('SW: версия кэша kipia-test-v549 (Task 298)', () => {
+    test('SW: версия кэша kipia-test-v550 (Task 298)', () => {
         const sw = fs.readFileSync(path.resolve(__dirname, '..', 'sw.js'), 'utf8');
-        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v549'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v549');
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v550'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v550');
     });
-    test('Тултип ячейки содержит название праздника', () => {
-        assertTrue(html.indexOf('titleParts.splice(1, 0, cellInfo.title);') !== -1,
-            'название вставляется в тултип ячейки');
+    test('Task 311: тултип ячейки убран; название праздника — в попапе клика', () => {
+        // Task 311: пояснительные тултипы с ячеек шахматки убраны;
+        // название праздника остаётся в заголовке попапа выбора статуса
+        assertFalse(html.indexOf('titleParts.splice(1, 0, cellInfo.title);') !== -1,
+            'вставка названия в тултип ячейки удалена (Task 311)');
         assertTrue(html.indexOf('popupDate += \' · \' + pdInfo.title;') !== -1,
             'название — в заголовке попапа выбора статуса');
     });
@@ -1106,8 +1111,10 @@ describe('Task 264: окошко календаря в баре кнопок г�
             'звёздочка у числа дня в шапке шахматки');
         assertTrue(html.indexOf('* — сокращённый предпраздничный день') !== -1,
             'легенда звёздочки в окошке');
-        assertTrue(html.indexOf('(сокращённый день, −1 час)') !== -1,
-            'пояснение в тултипе шапки');
+        // Task 311: пояснительный тултип шапки убран — расшифровка
+        // звёздочки живёт в легенде окошка календаря (выше)
+        assertFalse(html.indexOf('(сокращённый день, −1 час)') !== -1,
+            'пояснение в тултипе шапки удалено (Task 311)');
     });
 });
 

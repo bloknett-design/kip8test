@@ -151,27 +151,29 @@ with sync_playwright() as p:
     check('C2: активная страница — шахматка (модуль одностраничный)',
           page.evaluate("(function(){var a=document.querySelector('.page-content.active');return a? a.id : '';})()") == 'page-work-schedule')
 
-    # D. Кнопка «+ Сотрудник» в тулбаре над шахматкой
+    # D. (Task 311) Кнопка «+ Сотрудник» УДАЛЕНА из тулбара — её функцию
+    #    выполняет заголовок «Сотрудник» в шапке сетки
     tb = page.evaluate("""(function(){
         var b = document.getElementById('wsEmpBtn');
         var g = document.getElementById('wsGenerateBtn');
-        if (!b) return null;
-        var inMain = !!b.closest('.ws-toolbar-main');
-        var inPage = !!b.closest('#page-work-schedule');
-        return { text: b.textContent.trim(), hidden: b.hidden, title: b.title,
-                 inMain: inMain, inPage: inPage,
+        var th = document.querySelector('#wsGridWrap thead th.ws-emp-col');
+        var plus = th ? th.querySelector('.ws-emp-head-plus') : null;
+        var cs = th ? getComputedStyle(th) : null;
+        return { btnGone: !b,
                  genHidden: g ? g.hidden : null,
-                 before: g ? (b.compareDocumentPosition(g) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0 : null,
-                 h: b.getBoundingClientRect().height };
+                 headCls: th ? th.className : '',
+                 headClick: th ? th.getAttribute('onclick') : '',
+                 cursor: cs ? cs.cursor : '',
+                 plus: plus ? plus.textContent : null };
     })()""")
-    check('D: «+ Сотрудник» в тулбаре (ws-toolbar-main, страница work-schedule), видна Админу',
-          tb and tb['text'] == '+ Сотрудник' and not tb['hidden'] and tb['inMain'] and tb['inPage'], tb)
-    check('D2: стоит в ряду ДО «Сформировать»; высота 34px', 
-          tb and tb['before'] and not tb['genHidden'] and abs(tb['h'] - 34) < 1.5, tb)
-    check('D3: title = «Добавить сотрудника»', tb and tb['title'] == 'Добавить сотрудника', tb)
+    check('D: Task 311 — кнопка «+ Сотрудник» удалена; заголовок «Сотрудник» = кнопка',
+          tb['btnGone'] and (not tb['genHidden']) and
+          'ws-emp-head-add' in tb['headCls'] and
+          'openEmployeeForm' in tb['headClick'] and
+          tb['cursor'] == 'pointer' and tb['plus'] == '+', tb)
 
-    # E. Клик «+ Сотрудник» → bottom-sheet формы
-    page.click('#wsEmpBtn')
+    # E. Клик по заголовку «Сотрудник» → bottom-sheet формы
+    page.click('#wsGridWrap thead th.ws-emp-col')
     page.wait_for_timeout(700)
     sheet = page.evaluate("""(function(){
         var sh = document.getElementById('wsEmpSheet');
@@ -241,8 +243,10 @@ with sync_playwright() as p:
                  vacBtn: !!vacBtn, vacBtnHidden: vacBtn ? vacBtn.hidden : null,
                  hasBadge: hasBadge, hasTip: hasTip };
     })()""")
-    check('G: страницы «Инструктажи»/«Отпуска» удалены (Task 308); бейдж мероприятия в сетке жив',
-          not tr['trPage'] and not tr['vacPage'] and tr['hasBadge'] and tr['hasTip'], tr)
+    # Task 311: пояснительный тултип мероприятия с ячейки убран —
+    # событие показывает бейдж в ячейке и секция попапа клика
+    check('G: страницы «Инструктажи»/«Отпуска» удалены; бейдж жив, тултип убран (Task 311)',
+          not tr['trPage'] and not tr['vacPage'] and tr['hasBadge'] and not tr['hasTip'], tr)
 
     # H. Кнопка «+ Отпуск» (Task 308) в тулбаре — видна Админу
     check('H: «+ Отпуск» (Task 308) в тулбаре — есть и видна Админу, страницы «Отпуска» нет',
@@ -298,14 +302,18 @@ with sync_playwright() as p:
         var g = document.getElementById('wsGenerateBtn');
         var cal = document.getElementById('wsCalPanel');
         var main = document.querySelector('.ws-toolbar-main');
-        return { empHidden: b ? b.hidden : null, genHidden: g ? g.hidden : null,
+        var th = document.querySelector('#wsGridWrap thead th.ws-emp-col');
+        var plus = th ? th.querySelector('.ws-emp-head-plus') : null;
+        return { empGone: !b, genHidden: g ? g.hidden : null,
                  calAfterMain: (cal && main) ? (cal.getBoundingClientRect().left > main.getBoundingClientRect().right) : null,
                  calVisible: cal ? !cal.hidden : null,
                  noWrap: main ? getComputedStyle(main).flexWrap !== 'wrap' : null,
-                 grid: !!document.querySelector('#wsGridWrap table') };
+                 grid: !!document.querySelector('#wsGridWrap table'),
+                 headPlain: th ? th.className.indexOf('ws-emp-head-add') === -1 : null,
+                 noPlus: !plus };
     })()""")
-    check('L: десктоп 1280px — «ИТР8 pro» (просмотр): «+ Сотрудник» СКРЫТА, сетка жива',
-          ro['empHidden'] is True and ro['grid'], ro)
+    check('L: десктоп 1280px — «ИТР8 pro» (просмотр): кнопки нет, заголовок БЕЗ функции добавления',
+          ro['empGone'] and ro['grid'] and ro['headPlain'] and ro['noPlus'], ro)
     check('L2: «Сформировать» тоже скрыта (паритет видимости)', ro['genHidden'] is True, ro)
     check('L3: десктоп — ряд nowrap, окошко календаря справа от кнопок',
           ro['noWrap'] and ro['calVisible'] and ro['calAfterMain'], ro)

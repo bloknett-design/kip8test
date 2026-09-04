@@ -161,16 +161,16 @@ with sync_playwright() as p:
         return { text: b.textContent.trim(), hidden: b.hidden, title: b.title,
                  inMain: !!b.closest('.ws-toolbar-main'),
                  inPage: !!b.closest('#page-work-schedule'),
-                 afterEmp: e ? (e.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0 : null,
+                 empGone: !e,
                  beforeGen: g ? (b.compareDocumentPosition(g) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0 : null,
-                 genHidden: g ? g.hidden : null, empHidden: e ? e.hidden : null,
+                 genHidden: g ? g.hidden : null,
                  h: b.getBoundingClientRect().height };
     })()""")
     check('D: «+ Отпуск» в тулбаре (ws-toolbar-main, страница work-schedule), видна Админу',
           tb and tb['text'] == '+ Отпуск' and not tb['hidden'] and tb['inMain'] and tb['inPage'], tb)
-    check('D2: порядок ряда: «+ Сотрудник» → «+ Отпуск» → «Сформировать»; высота 34px',
-          tb and tb['afterEmp'] and tb['beforeGen'] and not tb['genHidden'] and
-          not tb['empHidden'] and abs(tb['h'] - 34) < 1.5, tb)
+    check('D2: Task 311 — «+ Сотрудник» удалена; порядок: селекты → «+ Отпуск» → «Сформировать»; 34px',
+          tb and tb['empGone'] and tb['beforeGen'] and not tb['genHidden'] and
+          abs(tb['h'] - 34) < 1.5, tb)
     check('D3: title = «Добавить период отпуска»', tb and tb['title'] == 'Добавить период отпуска', tb)
 
     # E. Клик «+ Отпуск» → bottom-sheet формы
@@ -225,9 +225,10 @@ with sync_playwright() as p:
         }
         return null;
     })()""")
-    check('F4: ячейка Петрова 22.09 — план «ОТ» (класс ws-vac-plan, тултип «часть 1»)',
+    # Task 311: тултипы с ячеек убраны — проверяем класс и код «ОТ»
+    check('F4: ячейка Петрова 22.09 — план «ОТ» (класс ws-vac-plan; Task 311: тултипа нет)',
           plan_cell is not None and 'ws-vac-plan' in plan_cell['cls'] and
-          plan_cell['text'] == 'ОТ' and 'часть 1' in plan_cell['title'], plan_cell)
+          plan_cell['text'] == 'ОТ' and plan_cell['title'] == '', plan_cell)
 
     # G. Регресс Task 303: попап ячейки → «+ Мероприятие…» → шторка с префиллом
     page.evaluate("""(function(){
@@ -323,7 +324,7 @@ with sync_playwright() as p:
         var g = document.getElementById('wsGenerateBtn');
         var cal = document.getElementById('wsCalPanel');
         var main = document.querySelector('.ws-toolbar-main');
-        return { vacHidden: b ? b.hidden : null, empHidden: e ? e.hidden : null,
+        return { vacHidden: b ? b.hidden : null, empGone: !e,
                  genHidden: g ? g.hidden : null,
                  calAfterMain: (cal && main) ? (cal.getBoundingClientRect().left > main.getBoundingClientRect().right) : null,
                  calVisible: cal ? !cal.hidden : null,
@@ -332,7 +333,7 @@ with sync_playwright() as p:
                  subnav: document.querySelectorAll('.ws-subnav').length };
     })()""")
     check('K: десктоп 1280px — «ИТР8 pro» (просмотр): «+ Отпуск» СКРЫТА (паритет с «+ Сотрудник»/«Сформировать»), сетка жива',
-          ro['vacHidden'] is True and ro['empHidden'] is True and ro['genHidden'] is True and
+          ro['vacHidden'] is True and ro['empGone'] is True and ro['genHidden'] is True and
           ro['grid'] and ro['subnav'] == 0, ro)
     check('K2: десктоп — ряд nowrap, окошко календаря справа от кнопок',
           ro['noWrap'] and ro['calVisible'] and ro['calAfterMain'], ro)

@@ -124,9 +124,9 @@ with sync_playwright() as p:
     check('G: пустые ячейки плана отпуска показывают «ОТ»', len(vac_cells) > 0 and all(t.startswith('ОТ') for t in vac_cells), str(vac_cells[:5]))
     check('H: 7 дней плана (14–20.09)', len([t for t in vac_cells if t.startswith('ОТ')]) == 7, len(vac_cells))
 
-    # 5. Тултип ячейки плана — «заполнится кодом «ОТ»»
-    tip = page.evaluate("var el=document.querySelector('#wsGridWrap td.ws-cell.ws-vac-plan'); el? el.getAttribute('title') : ''")
-    check('I: тултип плана: «заполнится кодом «ОТ»»', 'заполнится кодом «ОТ»' in tip, tip[:100])
+    # 5. (Task 311) Тултипы с ячеек убраны — план показывает код «ОТ»
+    tip = page.evaluate("var el=document.querySelector('#wsGridWrap td.ws-cell.ws-vac-plan'); el? (el.getAttribute('title')||'') : ''")
+    check('I: Task 311 — тултип плана убран (title пуст)', tip == '', tip[:100])
 
     # 6. Цвет фона статусной ячейки «Д8» = из справочника
     bg = page.evaluate("""(function(){var tds=document.querySelectorAll('#wsGridWrap td.ws-cell');

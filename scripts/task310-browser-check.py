@@ -191,8 +191,9 @@ with sync_playwright() as p:
           plain is not None and 'ws-manual-dn' not in plain['cls'] and
           plain['content'] == 'none', plain)
 
-    # D. КАРТОЧКА ИВАНОВА: нет «Старт цикла»; отпуск 01–14.06 =
-    #    13 дней за вычетом 12.06; итог с лимитом 42
+    # D. КАРТОЧКА ИВАНОВА (Task 311: открытие — ТОЛЬКО клик):
+    #    нет «Старт цикла»; отпуск 01–14.06 = 13 дней за вычетом 12.06;
+    #    итог года с лимитом 42 — УБРАН из карточки (Task 311)
     page.click('td.ws-emp-col[data-tab="017"]')
     page.wait_for_timeout(500)
     iv = page.evaluate("""(function(){
@@ -207,24 +208,25 @@ with sync_playwright() as p:
                  hasHire: txt.indexOf('15.03.2024') !== -1,
                  hasPart: txt.indexOf('01.06.2026 — 14.06.2026') !== -1,
                  hasNet: txt.indexOf('13 дней') !== -1 && txt.indexOf('(−1 праздн.)') !== -1,
-                 hasTotal: txt.indexOf('Итого в году: 13 дней') !== -1,
-                 hasHolNote: txt.indexOf('(вычтено праздников: 1)') !== -1,
-                 hasLimit: txt.indexOf('лимит 42') !== -1,
+                 hasTotal: txt.indexOf('Итого в году: 13 дней') === -1,
+                 hasHolNote: txt.indexOf('(вычтено праздников: 1)') === -1,
+                 hasLimit: txt.indexOf('лимит 42') === -1,
+                 noTotalNode: !pp.querySelector('.ws-emp-total'),
                  overClass: total.className || '',
                  overRed: (total.className || '').indexOf('ws-emp-overlimit') === -1 };
     })()""")
     check('D: карточка Иванова — «Старт цикла» НЕТ, поля профиля живы',
           iv['active'] and iv['noStartCycle'] and iv['noStartVal'] and
           iv['hasType'] and iv['hasPos'] and iv['hasHire'], iv)
-    check('D2: отпуск 01–14.06 — «13 дней (−1 праздн.)», итог «13 дней … лимит 42»',
+    check('D2: отпуск 01–14.06 — «13 дней (−1 праздн.)»; итог «Итого … лимит 42» УБРАН (Task 311)',
           iv['hasPart'] and iv['hasNet'] and iv['hasTotal'] and
-          iv['hasHolNote'] and iv['hasLimit'] and iv['overRed'], iv)
+          iv['hasHolNote'] and iv['hasLimit'] and iv['noTotalNode'] and iv['overRed'], iv)
     page.screenshot(path='scripts/task310-proof-card-net.png', full_page=False)
     page.click('#wsEmpPopupCloser', position={'x': 10, 'y': 10})
     page.wait_for_timeout(300)
 
-    # E. КАРТОЧКА ПЕТРОВА: 43 чистых дня (45 кал. − 2 праздн.) —
-    #    ПРЕВЫШЕНИЕ лимита, красный класс
+    # E. КАРТОЧКА ПЕТРОВА (Task 311: красный итог из карточки убран —
+    #    лимит контролирует шторка «+ Отпуск», см. H ниже)
     page.click('td.ws-emp-col[data-tab="023"]')
     page.wait_for_timeout(500)
     pet = page.evaluate("""(function(){
@@ -232,32 +234,33 @@ with sync_playwright() as p:
         var txt = pp ? pp.textContent : '';
         var total = pp ? (pp.querySelector('.ws-emp-total')||{}) : {};
         return { active: pp ? pp.classList.contains('active') : false,
-                 hasOver: txt.indexOf('ПРЕВЫШЕН лимит 42 дн.') !== -1,
-                 hasTotal: txt.indexOf('Итого в году: 43 дн.') !== -1,
-                 hasHol: txt.indexOf('вычтено праздников: 2') !== -1,
-                 overClass: (total.className || '').indexOf('ws-emp-overlimit') !== -1,
-                 color: total ? getComputedStyle(total).color : '' };
+                 hasOver: txt.indexOf('ПРЕВЫШЕН лимит 42 дн.') === -1,
+                 hasTotal: txt.indexOf('Итого в году: 43 дн.') === -1,
+                 noTotalNode: !pp.querySelector('.ws-emp-total'),
+                 hasParts: txt.indexOf('Часть 1') !== -1 && txt.indexOf('Часть 2') !== -1,
+                 overClass: (total.className || '').indexOf('ws-emp-overlimit') !== -1 };
     })()""")
-    check('E: карточка Петрова — 43 дн. «ПРЕВЫШЕН лимит 42 дн. (ТК РФ)», класс и красный цвет',
-          pet['active'] and pet['hasOver'] and pet['hasTotal'] and pet['hasHol'] and
-          pet['overClass'], pet)
+    check('E: карточка Петрова — итог/ПРЕВЫШЕНИЕ убраны (Task 311), части периодов живы',
+          pet['active'] and pet['hasOver'] and pet['hasTotal'] and pet['noTotalNode'] and
+          pet['hasParts'] and not pet['overClass'], pet)
     page.click('#wsEmpPopupCloser', position={'x': 10, 'y': 10})
     page.wait_for_timeout(300)
 
-    # F. Тултип плана отпуска в ячейке 12.06 (Иванов): чистые дни
+    # F. (Task 311) Тултип плана отпуска в ячейке 12.06 — title УБРАН
     tip = page.evaluate("""(function(){
         var tds = document.querySelectorAll('#wsGridWrap td.ws-cell');
         for (var i=0;i<tds.length;i++){
             var oc = tds[i].getAttribute('onclick') || '';
             if (oc.indexOf("'2026-06-12'") !== -1 && oc.indexOf("'017'") !== -1) {
-                return { title: tds[i].getAttribute('title') || '' };
+                return { title: tds[i].getAttribute('title') || '',
+                         cls: tds[i].className, text: tds[i].textContent.trim() };
             }
         }
         return null;
     })()""")
-    check('F: тултип плана 12.06 — «13 дн. (−1 праздн.)» и план ОТ',
-          tip is not None and tip['title'].find('13 дн. (−1 праздн.)') != -1 and
-          tip['title'].find('ОТПУСК (план') != -1, tip)
+    check('F: Task 311 — тултип ячейки 12.06 убран; код «ОТ» плана в ячейке жив',
+          tip is not None and tip['title'] == '' and 'ws-vac-plan' in tip['cls'] and
+          tip['text'].find('ОТ') != -1, tip)
 
     # G. ШТОРКА «+ Отпуск»: Иванов 01.07–14.07 — строка периода,
     #    строка лимита года, добавление проходит
@@ -362,11 +365,12 @@ with sync_playwright() as p:
         var txt = pp.textContent;
         return { active: pp.classList.contains('active'),
                  inView: r.left >= 0 && r.right <= window.innerWidth && r.top >= 0,
-                 over: txt.indexOf('ПРЕВЫШЕН лимит 42') !== -1,
-                 noStart: txt.indexOf('Старт цикла') === -1 };
+                 over: txt.indexOf('ПРЕВЫШЕН лимит 42') === -1,
+                 noStart: txt.indexOf('Старт цикла') === -1,
+                 noTotal: txt.indexOf('Итого в году') === -1 };
     })()""")
-    check('K: 375px — карточка в пределах экрана, «Старт цикла» нет, лимит виден',
-          mob['active'] and mob['inView'] and mob['over'] and mob['noStart'], mob)
+    check('K: 375px — карточка в пределах экрана; «Старт цикла»/итог года НЕТ (Task 311)',
+          mob['active'] and mob['inView'] and mob['over'] and mob['noStart'] and mob['noTotal'], mob)
     ovf = pagem.evaluate("(function(){var de=document.documentElement;return {sw:de.scrollWidth,cw:de.clientWidth};})()")
     check('K2: 375px — нет горизонтального переполнения',
           ovf['sw'] <= ovf['cw'] + 2, ovf)
@@ -406,17 +410,17 @@ with sync_playwright() as p:
     })()""")
     check('M: «ИТР8 pro» — кнопка «+ Отпуск» скрыта (лимит защищён от записи)',
           ro['btnHidden'], ro)
-    page2.hover('td.ws-emp-col[data-tab="017"]')
-    page2.wait_for_timeout(700)
+    page2.click('td.ws-emp-col[data-tab="017"]')
+    page2.wait_for_timeout(600)
     ro2 = page2.evaluate("""(function(){
         var pp = document.getElementById('wsEmpPopup');
         var txt = pp ? pp.textContent : '';
         return { active: pp ? pp.classList.contains('active') : false,
                  hasNet: txt.indexOf('13 дней') !== -1,
-                 hasLimit: txt.indexOf('лимит 42') !== -1,
+                 hasLimit: txt.indexOf('лимит 42') === -1,
                  noStart: txt.indexOf('Старт цикла') === -1 };
     })()""")
-    check('M2: «ИТР8 pro» — карточка с чистыми днями и лимитом доступна для просмотра',
+    check('M2: «ИТР8 pro» — карточка по клику (Task 311): чистые дни видны, итога/лимита НЕТ',
           ro2['active'] and ro2['hasNet'] and ro2['hasLimit'] and ro2['noStart'], ro2)
     check('N: JS-ошибок нет (просмотр)', len(js_errors2) == 0, js_errors2[:3])
     ctx2.close()

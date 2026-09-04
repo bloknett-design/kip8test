@@ -151,9 +151,22 @@ with sync_playwright() as p:
     page.wait_for_timeout(2500)
     check('B: шахматка отрисована', page.evaluate("document.querySelector('#wsGridWrap table')") is not None)
 
-    # C. HOVER на поле сотрудника → карточка (данные убранных вкладок)
+    # C. (Task 311) HOVER на поле сотрудника — карточка НЕ открывается;
+    #     данные убранных вкладок проверяются КЛИКОМ (единственный триггер)
     page.hover('td.ws-emp-col[data-tab="017"]')
-    page.wait_for_timeout(700)   # 350 мс открытия + запас
+    page.wait_for_timeout(900)   # больше таймера hover 350 мс + запас
+    nohover = page.evaluate("""(function(){
+        var pp = document.getElementById('wsEmpPopup');
+        return { active: pp ? pp.classList.contains('active') : false,
+                 empty: pp ? !pp.textContent : true };
+    })()""")
+    check('C: Task 311 — наведение НЕ открывает карточку (hover-режим удалён)',
+          (not nohover['active']) and nohover['empty'], nohover)
+    page.mouse.move(640, 400)
+    page.wait_for_timeout(300)
+
+    page.click('td.ws-emp-col[data-tab="017"]')
+    page.wait_for_timeout(500)
     card = page.evaluate("""(function(){
         var pp = document.getElementById('wsEmpPopup');
         var h = pp ? pp.innerHTML : '';
@@ -161,48 +174,34 @@ with sync_playwright() as p:
         return { active: pp ? pp.classList.contains('active') : false,
                  closerActive: closer ? closer.classList.contains('active') : false,
                  title: (pp ? (pp.querySelector('.ws-popup-title')||{}).textContent : ''),
-                 hasProf: h.indexOf('>Сотрудник<') !== -1,
+                 hasProf: h.indexOf('>Сотрудник<') === -1,
                  hasType: h.indexOf('сменный, смена №1') !== -1,
                  hasPos: h.indexOf('Слесарь КИПиА') !== -1,
-                 hasPat: h.indexOf('Сменный сутки/двое') !== -1,
+                 hasPat: h.indexOf('Сменный сутки/двое') === -1,
                  hasHire: h.indexOf('15.03.2024') !== -1,
                  hasComment: h.indexOf('ответственный за КИПиА') !== -1,
                  hasVacSec: h.indexOf('Отпуска · 2026') !== -1,
                  hasVacPart: h.indexOf('Часть 2') !== -1 && h.indexOf('05.09.2026 — 16.09.2026') !== -1,
-                 hasVacTotal: h.indexOf('Итого в году: 12') !== -1,
+                 hasVacTotal: h.indexOf('Итого в году: 12') === -1,
                  hasTrSec: h.indexOf('Мероприятия · Сентябрь 2026') !== -1,
                  hasTrTheme: h.indexOf('Повторный по охране труда') !== -1,
                  hasEdit: h.indexOf('editTraining(') !== -1,
                  hasDel: h.indexOf('deleteTraining(') !== -1 };
     })()""")
-    check('C: hover открыл карточку (hover-режим: кловер НЕ активен)',
-          card['active'] and not card['closerActive'], card)
-    check('C2: шапка «Иванов И. И. · таб. №017» + секция профиля (тип, должность, шаблон, приём, комментарий)',
+    check('C0: клик открыл карточку (прикреплённый режим: кловер активен)',
+          card['active'] and card['closerActive'], card)
+    check('C2: шапка «Иванов И. И. · таб. №017» + профиль (тип, должность, приём, комментарий; Task 311: без строки «Сотрудник» и «Шаблон ротации»)',
           card['title'] == 'Иванов И. И. · таб. №017' and card['hasProf'] and card['hasType'] and
           card['hasPos'] and card['hasPat'] and card['hasHire'] and card['hasComment'], card)
-    check('C3: секция «Отпуска · 2026»: часть 2, 05.09–16.09 (12 дн.), итог года',
+    check('C3: секция «Отпуска · 2026»: часть 2, 05.09–16.09 (Task 311: итога года НЕТ)',
           card['hasVacSec'] and card['hasVacPart'] and card['hasVacTotal'], card)
     check('C4: секция «Мероприятия · Сентябрь 2026»: тема + кнопки ✎/✕ (Админ)',
           card['hasTrSec'] and card['hasTrTheme'] and card['hasEdit'] and card['hasDel'], card)
-    page.screenshot(path='scripts/task309-proof-hover-card.png', full_page=False)
-
-    # C5. Уход курсора с ячейки → карточка закрылась (задержка 400 мс)
-    page.hover('.ws-grid thead th.ws-day-col')   # уходим на шапку дней
-    page.wait_for_timeout(900)
-    closed1 = page.evaluate("!document.getElementById('wsEmpPopup').classList.contains('active')")
-    check('C5: уход курсора закрыл hover-карточку (≈400 мс)', closed1)
-
-    # C6. Hover → курсор в сам попап → карточка НЕ закрывается (кнопки кликабельны)
-    page.hover('td.ws-emp-col[data-tab="017"]')
-    page.wait_for_timeout(700)
-    page.hover('#wsEmpPopup')
-    page.wait_for_timeout(900)
-    still = page.evaluate("document.getElementById('wsEmpPopup').classList.contains('active')")
-    check('C6: вход курсора в карточку отменил закрытие (mouseenter)', still)
+    page.screenshot(path='scripts/task309-proof-click-card.png', full_page=False)
+    page.click('#wsEmpPopupCloser', position={'x': 10, 'y': 10})
+    page.wait_for_timeout(300)
 
     # D. КЛИК по полю сотрудника → прикреплённый режим (кловер active)
-    page.hover('td.ws-emp-col[data-tab="023"]')
-    page.wait_for_timeout(700)
     page.click('td.ws-emp-col[data-tab="023"]')
     page.wait_for_timeout(400)
     pinned = page.evaluate("""(function(){
@@ -424,7 +423,7 @@ with sync_playwright() as p:
                  inView: r.left >= 0 && r.right <= window.innerWidth && r.top >= 0,
                  w: Math.round(r.width),
                  hasSections: pp.textContent.indexOf('Отпуска · 2026') !== -1 &&
-                              pp.textContent.indexOf('Сотрудник') !== -1 };
+                              pp.textContent.indexOf('Мероприятия · ') !== -1 };
     })()""")
     check('K: 375px — тап открыл карточку, попап в пределах экрана',
           mob['active'] and mob['inView'] and mob['hasSections'], mob)
@@ -466,18 +465,18 @@ with sync_playwright() as p:
     })()""")
     page2.wait_for_timeout(2500)
     # (вернули мероприятие для просмотра — id 3)
-    page2.hover('td.ws-emp-col[data-tab="017"]')
-    page2.wait_for_timeout(700)
+    page2.click('td.ws-emp-col[data-tab="017"]')
+    page2.wait_for_timeout(600)
     ro = page.evaluate if False else page2.evaluate("""(function(){
         var pp = document.getElementById('wsEmpPopup');
         var h = pp ? pp.innerHTML : '';
         return { active: pp ? pp.classList.contains('active') : false,
-                 hasInfo: h.indexOf('Отпуска · 2026') !== -1 || h.indexOf('Сотрудник') !== -1,
+                 hasInfo: h.indexOf('Отпуска · 2026') !== -1 || h.indexOf('Тип') !== -1,
                  hasEdit: h.indexOf('editTraining(') !== -1,
                  hasDel: h.indexOf('deleteTraining(') !== -1,
                  canEdit: WorkSchedule._canEdit };
     })()""")
-    check('M: «ИТР8 pro» — hover открывает карточку (справка), кнопок ✎/✕ НЕТ',
+    check('M: «ИТР8 pro» — клик открывает карточку (справка; Task 311: hover нет), кнопок ✎/✕ НЕТ',
           ro['active'] and ro['hasInfo'] and not ro['hasEdit'] and not ro['hasDel'] and
           ro['canEdit'] is False, ro)
     check('N: JS-ошибок нет (просмотр, 0 pageerror)', len(js_errors2) == 0, js_errors2[:3])

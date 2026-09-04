@@ -14,13 +14,13 @@
 //   Карточка сотрудника:
 //     — элементы #wsEmpPopup/#wsEmpPopupCloser в HTML;
 //     — td.ws-emp-col получает data-tab + onclick onEmpCellClick;
-//     — hover-делегирование (mouseover/mouseout на wsGridWrap,
-//       (hover: hover), задержки 350/400 мс, вход в попап отменяет
-//       закрытие — кнопки кликабельны);
-//     — клик — прикреплённый режим (кловер active);
-//     — _renderEmpPopup: три секции (профиль «Сотрудники», отпуска
-//       года с фильтром _vacDaysInYear и итогом, мероприятия месяца
-//       с кнопками ✎/✕ только редакторам);
+//     — (Task 311: hover-режим УДАЛЁН — единственный триггер КЛИК;
+//       _attachEmpPopupHover и таймеры 350/400 мс исчезли);
+//     — клик — карточка всегда прикреплена (кловер active);
+//     — _renderEmpPopup: профиль (Task 311: без строки-заголовка
+//       «Сотрудник» и без «Шаблон ротации»), отпуска года с фильтром
+//       _vacDaysInYear (Task 311: итог-строка года убрана),
+//       мероприятия месяца с кнопками ✎/✕ только редакторам;
 //     — Esc и взаимная блокировка с попапом ячейки.
 //   Правка/удаление мероприятий:
 //     — кнопки ✎/✕ в попапе ячейки («Мероприятия в этот день»)
@@ -42,7 +42,7 @@
 //   "Ошибка: self.loadTrainings is not a function"»):
 //     — вызовы удалённых страниц loadTrainings()/loadVacations()
 //       больше не встречаются; вместо них loadGrid().
-//   SW: kipia-test-v549.
+//   SW: kipia-test-v550.
 //
 // Запуск: через tests/run-all.js (require './test-task309.js').
 
@@ -82,52 +82,49 @@ describe('Task 309 — карточка сотрудника у колонки �
         const gridPart = INDEX_SRC.slice(
             INDEX_SRC.indexOf('_renderGrid: function'),
             INDEX_SRC.indexOf('_fitGrid: function'));
-        assertTrue(gridPart.indexOf("td.getAttribute('data-tab')") === -1,
-            'рендер не читает атрибуты (читает только hover-делегат)');
         assertTrue(gridPart.indexOf('data-tab=') !== -1,
-            'колонка ФИО несёт data-tab для hover-делегата');
+            'колонка ФИО несёт data-tab для обработчика клика');
         assertTrue(gridPart.indexOf('WorkSchedule.onEmpCellClick(event,') !== -1,
             'клик по колонке ФИО открывает карточку');
-        assertTrue(gridPart.indexOf('Карточка сотрудника: профиль, отпуска, мероприятия') !== -1,
-            'title-подсказка на колонке');
+        // Task 311: пояснительный тултип с ячейки убран
+        assertFalse(gridPart.indexOf('Карточка сотрудника: профиль, отпуска, мероприятия') !== -1,
+            'title-подсказка на колонке убрана (Task 311)');
     });
 
-    test('JS: hover-делегирование в init — mouseover/mouseout, (hover: hover), таймеры', () => {
-        const initPart = INDEX_SRC.slice(
-            INDEX_SRC.indexOf('init: function'),
-            INDEX_SRC.indexOf('_refreshFromUrlState: function'));
-        assertTrue(initPart.indexOf('_attachEmpPopupHover();') !== -1,
-            'init навешивает hover-делегирование');
-        const hoverPart = fnBody(INDEX_SRC, '_attachEmpPopupHover: function');
-        assertTrue(hoverPart.indexOf("addEventListener('mouseover'") !== -1,
-            'делегат mouseover на контейнере сетки');
-        assertTrue(hoverPart.indexOf("addEventListener('mouseout'") !== -1,
-            'делегат mouseout на контейнере сетки');
-        assertTrue(hoverPart.indexOf("(hover: hover)") !== -1,
-            'тач-устройства без hover игнорируются (карточка — по клику)');
-        assertTrue(hoverPart.indexOf('}, 350);') !== -1,
-            'открытие по наведению — с задержкой 350 мс');
-        assertTrue(hoverPart.indexOf("td.getAttribute('data-tab')") !== -1,
-            'таб-номер берётся из data-tab ячейки');
-        // вход в попап отменяет закрытие (кнопки кликабельны)
-        assertTrue(hoverPart.indexOf("popup.addEventListener('mouseenter'") !== -1,
-            'mouseenter попапа отменяет закрытие');
-        assertTrue(hoverPart.indexOf("popup.addEventListener('mouseleave'") !== -1,
-            'mouseleave попапа планирует закрытие');
-        // защита от повторного навешивания
-        assertTrue(hoverPart.indexOf('_empHoverAttached') !== -1,
-            'слушатели навешиваются один раз');
+    test('JS: Task 311 — hover-режим карточки УДАЛЁН (только клик)', () => {
+        // Пояснительные окна при наведении убраны по заявке: единственный
+        // триггер карточки — клик по колонке ФИО (в т.ч. на таче).
+        assertFalse(INDEX_SRC.indexOf('_attachEmpPopupHover') !== -1,
+            'метод _attachEmpPopupHover удалён (и вызов из init)');
+        assertFalse(INDEX_SRC.indexOf('_empHoverAttached') !== -1,
+            'флаг повторного навешивания удалён');
+        assertFalse(/_empOpenTimer/.test(INDEX_SRC),
+            'таймер открытия 350 мс удалён');
+        assertFalse(/_empCloseTimer/.test(INDEX_SRC),
+            'таймер закрытия 400 мс удалён');
+        assertFalse(INDEX_SRC.indexOf("_scheduleEmpPopupClose") !== -1,
+            'планировщик закрытия по mouseleave удалён');
+        // у попапа не осталось mouseenter/mouseleave-слушателей
+        assertFalse(INDEX_SRC.indexOf("popup.addEventListener('mouseenter'") !== -1,
+            'mouseenter попапа не слушается');
+        assertFalse(INDEX_SRC.indexOf("popup.addEventListener('mouseleave'") !== -1,
+            'mouseleave попапа не слушается');
+        // сетка не слушает mouseover/mouseout для карточки
+        assertFalse(INDEX_SRC.indexOf("wrap.addEventListener('mouseover'") !== -1,
+            'mouseover на контейнере сетки удалён');
+        assertFalse(INDEX_SRC.indexOf("wrap.addEventListener('mouseout'") !== -1,
+            'mouseout на контейнере сетки удалён');
     });
 
     test('JS: клик — прикреплённый режим (кловер active, Esc закрывает)', () => {
         const clickPart = fnBody(INDEX_SRC, 'onEmpCellClick: function');
-        assertTrue(clickPart.indexOf('_openEmpPopup(td, tabNo, true)') !== -1,
-            'клик открывает карточку в прикреплённом режиме');
+        assertTrue(clickPart.indexOf('this._openEmpPopup(td, tabNo);') !== -1,
+            'клик открывает карточку (Task 311: без параметра pinned — режим всегда один)');
         assertTrue(clickPart.indexOf('this.closeCellPopup();') !== -1,
             'взаимная блокировка: статусный попап закрывается');
         const openPart = fnBody(INDEX_SRC, '_openEmpPopup: function');
-        assertTrue(openPart.indexOf("closer.classList.toggle('active', !!pinned)") !== -1,
-            'кловер активен только в прикреплённом режиме');
+        assertTrue(openPart.indexOf("closer.classList.add('active')") !== -1,
+            'кловер активен — карточка всегда прикреплена (клик)');
         // Esc: обработчик init закрывает ОБА попапа
         const escIdx = INDEX_SRC.indexOf("if (ev.key === 'Escape')");
         assertTrue(escIdx !== -1 &&
@@ -139,32 +136,43 @@ describe('Task 309 — карточка сотрудника у колонки �
             'onCellClick закрывает карточку сотрудника');
     });
 
-    test('JS: _renderEmpPopup — три секции данных из убранных вкладок', () => {
+    test('JS: _renderEmpPopup — блоки данных из убранных вкладок', () => {
         const rp = fnBody(INDEX_SRC, '_renderEmpPopup: function');
-        assertTrue(rp.indexOf('<div class="ws-popup-sec">Сотрудник</div>') !== -1,
-            'секция профиля (бывшая вкладка «Сотрудники»)');
+        // Task 311: строка-заголовок «Сотрудник» убрана — профиль
+        // идёт сразу после шапки ФИО (без секции «Сотрудник»)
+        assertFalse(rp.indexOf('<div class="ws-popup-sec">Сотрудник</div>') !== -1,
+            'строка-заголовок «Сотрудник» убрана (Task 311)');
         assertTrue(rp.indexOf('<div class="ws-popup-sec">Отпуска · ') !== -1,
             'секция отпусков (бывшая вкладка «Отпуска»)');
         assertTrue(rp.indexOf('<div class="ws-popup-sec">Мероприятия · ') !== -1,
             'секция мероприятий (бывшая вкладка «Инструктажи»)');
-        // профиль: поля карточки (Task 310: «Старт цикла» убрана
-        // из карточки по заявке — данные в шторке «+ Сотрудник»)
-        ['Тип', 'Должность', 'Шаблон ротации', 'Дата приёма', 'Комментарий']
+        // профиль: поля карточки (Task 310: «Старт цикла» убрана;
+        // Task 311: «Шаблон ротации» убрана по заявке)
+        ['Тип', 'Должность', 'Дата приёма', 'Комментарий']
             .forEach(f => assertTrue(rp.indexOf("['" + f + "',") !== -1,
                 'поле профиля «' + f + '»'));
-        // шаблон ротации — имя из _PATTERNS
-        assertTrue(rp.indexOf('this._PATTERNS[pi].name') !== -1,
-            'имя шаблона берётся из загруженных шаблонов');
+        assertFalse(rp.indexOf("['Шаблон ротации',") !== -1,
+            'поле «Шаблон ротации» убрано (Task 311)');
+        // шаблон больше не ищется в _PATTERNS для карточки
+        assertFalse(rp.indexOf('this._PATTERNS[pi].name') !== -1,
+            'поиск имени шаблона в _PATTERNS удалён из карточки');
     });
 
-    test('JS: отпуска в карточке — фильтр по году (_vacDaysInYear) и итог дней', () => {
+    test('JS: отпуска в карточке — фильтр по году, чистые дни, БЕЗ итога года', () => {
         const rp = fnBody(INDEX_SRC, '_renderEmpPopup: function');
         assertTrue(rp.indexOf('this._vacDaysInYear(v, this._year)') !== -1,
             'периоды фильтруются по году шахматки');
-        assertTrue(rp.indexOf('Итого в году: ') !== -1,
-            'итог дней года');
-        assertTrue(rp.indexOf("this._plural(vacTotal, ['день', 'дня', 'дней'])") !== -1,
-            'русское окончание для итога');
+        assertTrue(rp.indexOf('this._vacNetDaysInYear(vv, this._year)') !== -1,
+            'дни периода — чистые (за вычетом праздников, Task 310)');
+        // Task 311: строка-итог «Итого в году» убрана из карточки
+        assertFalse(rp.indexOf('Итого в году: ') !== -1,
+            'итог-строка года убрана (Task 311)');
+        assertFalse(rp.indexOf('ws-emp-total') !== -1,
+            'класс ws-emp-total больше не рендерится');
+        assertFalse(rp.indexOf('ws-emp-overlimit') !== -1,
+            'красная строка превышения из карточки ушла');
+        assertFalse(rp.indexOf('this._plural(vacTotal,') !== -1,
+            'итог больше не склоняется (строки нет)');
         assertTrue(rp.indexOf('нет запланированных периодов') !== -1,
             'пустое состояние секции отпусков');
     });
@@ -191,9 +199,6 @@ describe('Task 309 — карточка сотрудника у колонки �
             'кловер деактивируется');
         assertTrue(cp.indexOf('this._empPinned = false;') !== -1,
             'флаг прикрепления сброшен');
-        assertTrue(cp.indexOf('_cancelEmpPopupOpen') !== -1 &&
-            cp.indexOf('_cancelEmpPopupClose') !== -1,
-            'отложенные таймеры отменяются');
     });
 });
 
@@ -368,9 +373,9 @@ describe('Task 309 — регресс-фиксы Task 308 (loadTrainings/loadVac
 
 describe('Task 309 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v549', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v549'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v549');
+    test('SW: версия кэша kipia-test-v550', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v550'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v550');
         assertFalse(SW_SRC.indexOf('kipia-test-v547') !== -1,
             'старой версии v547 нет');
     });

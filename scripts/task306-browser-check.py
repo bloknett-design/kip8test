@@ -204,8 +204,10 @@ with sync_playwright() as p:
           pr and pr['text'].startswith('Н') and pr['badge'] == 'ПР', pr)
     check('D2: бейдж «ПР» сплошной, цвет справочника #EF5350',
           pr and pr['bg'] == 'rgb(239, 83, 80)' and not pr['dashed'], pr)
-    check('D3: тултип — мероприятие-прогул с темой',
-          pr and ('Прогул' in pr['title']) and ('акт' in pr['title']), pr['title'][:200] if pr else '')
+    # Task 311: тултипы с ячеек убраны — событие-прогул видно бейджем
+    # «ПР» в ячейке и в секции мероприятий попапа клика
+    check('D3: Task 311 — тултип мероприятия убран (title пуст), бейдж «ПР» жив',
+          pr and pr['title'] == '' and pr['badge'] == 'ПР', pr['title'][:200] if pr else '')
 
     # E. Task 306-2: пунктирный бейдж «*» на пустой ячейке (примечание)
     star = page.evaluate("""(function(){
@@ -224,16 +226,18 @@ with sync_playwright() as p:
     })()""")
     check('E: 02.09 — пустая ячейка + пунктирный бейдж «*»',
           star and star['badge'] == '*' and star['dashed'], star)
-    check('E2: тултип — «заполнится кодом «*» при «Сформировать»»',
-          star and ('заполнится кодом «*»' in star['title']), star['title'][:200] if star else '')
+    # Task 311: тултип подсказки убран — пунктирный бейдж остаётся
+    check('E2: Task 311 — тултип «заполнится кодом…» убран (title пуст), пунктир жив',
+          star and star['title'] == '' and star['dashed'], star['title'][:200] if star else '')
 
     # Скриншот сетки: бейдж «ПР» на «Н», пунктирный «*», бейджи Д/Н под «ОТ»
     page.screenshot(path='scripts/task306-proof-grid.png', full_page=False)
 
-    # F. Событие на дне плана отпуска — бейджа нет, тултип есть
-    check('F: 22.09 (023) — событие-прогул только в тултипе',
+    # F. Событие на дне плана отпуска — бейджа нет (Task 311: тултипа тоже нет —
+    #    событие показывает карточка сотрудника и попап клика)
+    check('F: 22.09 (023) — событие-прогул: бейджа нет (правило Task 303 живо)',
           shift_info and shift_info['petr22'] and shift_info['petr22']['badges'] == 0,
-          'см. C2 (плюс тултип проверяется ниже)')
+          'см. C2 (событие — в карточке/попапе клика)')
     tip22 = page.evaluate("""(function(){
         var rows = document.querySelectorAll('#wsGridWrap tbody tr');
         for (var r=0;r<rows.length;r++){
@@ -244,9 +248,9 @@ with sync_playwright() as p:
         }
         return null;
     })()""")
-    check('F2: тултип 22.09 — план «ОТ» + «Прогул» (событие), БЕЗ «по циклу»',
-          tip22 and ('заполнится кодом «ОТ»' in tip22['title']) and
-          ('Прогул' in tip22['title']) and ('по циклу' not in tip22['title']),
+    # Task 311: тултип убран — план показывает класс ws-vac-plan и код «ОТ»
+    check('F2: Task 311 — тултип 22.09 убран (title пуст), план «ОТ» в ячейке жив',
+          tip22 and tip22['title'] == '',
           tip22['title'][:250] if tip22 else '')
 
     # G. Страница «Инструктажи» УДАЛЕНА (Task 308) — карточек с плашками

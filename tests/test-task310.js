@@ -38,7 +38,7 @@
 //       ДО вызова addVacation (на сервер не уходит);
 //     — подсказка шторки упоминает ст. 120 и лимит 42 дня.
 //   Тултип плана отпуска в ячейке: чистые дни + «(−N праздн.)».
-//   SW: kipia-test-v549.
+//   SW: kipia-test-v550.
 //
 // Запуск: через tests/run-all.js (require './test-task310.js').
 
@@ -148,12 +148,12 @@ describe('Task 310 — карточка: «Старт цикла» убран', 
             'строки «Старт цикла» в выводе карточки нет');
         assertTrue(rep.indexOf("emp['старт_цикла']") === -1,
             'поле старт_цикла в карточке не читается');
-        // остальные поля профиля живы
+        // остальные поля профиля живы (Task 311: «Шаблон ротации»
+        // тоже убрана из карточки — см. test-task309/311)
         assertTrue(rep.indexOf("'Тип'") !== -1 && rep.indexOf("'Должность'") !== -1,
             'Тип и Должность на месте');
-        assertTrue(rep.indexOf("'Шаблон ротации'") !== -1 &&
-            rep.indexOf("'Дата приёма'") !== -1,
-            'Шаблон ротации и Дата приёма на месте');
+        assertTrue(rep.indexOf("'Дата приёма'") !== -1,
+            'Дата приёма на месте');
     });
 
     test('JS: шторка «+ Сотрудник» поле не тронута (label wsEmpStart жив)', () => {
@@ -243,26 +243,28 @@ describe('Task 310 — праздники ТК РФ × дни отпуска (ф
     });
 });
 
-describe('Task 310 — карточка: итог года с вычетом праздников + лимит 42', () => {
+describe('Task 310 — карточка: чистые дни периодов (Task 311: итог года убран)', () => {
 
-    test('JS: итог считается _vacNetDaysInYear, сноски и лимит в рендере', () => {
+    test('JS: дни периодов чистые (_vacNetDaysInYear), пометка праздников; итог года УБРАН', () => {
         const rep = fnBody(INDEX_SRC, '_renderEmpPopup: function');
         assertTrue(rep.indexOf('_vacNetDaysInYear(vv, this._year)') !== -1,
             'дни периода в году — чистые (за вычетом праздников)');
-        assertTrue(rep.indexOf('vacTotal += vNet;') !== -1,
-            'итог суммирует чистые дни');
-        assertTrue(rep.indexOf('вычтено праздников: ') !== -1,
-            'сноска о вычтенных праздниках');
         assertTrue(rep.indexOf('(−') !== -1 && rep.indexOf(' праздн.)') !== -1,
             'строка периода помечает вычтенные праздники');
-        assertTrue(rep.indexOf('ws-emp-overlimit') !== -1,
-            'класс превышения лимита');
-        assertTrue(rep.indexOf('ПРЕВЫШЕН лимит ') !== -1,
-            'текст превышения');
-        assertTrue(rep.indexOf('· лимит ') !== -1,
-            'обычный итог показывает лимит');
-        assertTrue(rep.indexOf('_VAC_YEAR_LIMIT') !== -1,
-            'лимит из константы (42)');
+        // Task 311: строка-итог «Итого в году» (и красный класс
+        // ws-emp-overlimit) убраны из карточки — лимит контролирует
+        // шторка «+ Отпуск» (строка годового лимита + блокировка)
+        assertFalse(rep.indexOf('vacTotal +=') !== -1,
+            'итог больше не суммируется в карточке (Task 311)');
+        assertFalse(rep.indexOf('Итого в году') !== -1,
+            'итог-строка года убрана (Task 311)');
+        assertFalse(rep.indexOf('ws-emp-overlimit') !== -1,
+            'класс превышения из рендера карточки ушёл');
+        assertFalse(rep.indexOf('ПРЕВЫШЕН лимит ') !== -1,
+            'текст превышения из карточки ушёл');
+        // лимит из константы остался — для шторки «+ Отпуск»
+        assertTrue(INDEX_SRC.indexOf('_VAC_YEAR_LIMIT: 42') !== -1,
+            'константа лимита живёт (шторка «+ Отпуск»)');
     });
 
     test('JS: константа _VAC_YEAR_LIMIT = 42 с обоснованием ТК РФ', () => {
@@ -273,11 +275,13 @@ describe('Task 310 — карточка: итог года с вычетом п�
             'комментарий: 28 осн. + 7 ст. 117 + 7 ст. 118 (хим. производство)');
     });
 
-    test('CSS: ws-emp-overlimit красный в обеих темах', () => {
-        assertTrue(INDEX_SRC.indexOf('.ws-emp-total.ws-emp-overlimit') !== -1,
-            'тёмная тема: правило есть');
-        assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .ws-emp-total.ws-emp-overlimit') !== -1,
-            'светлая тема: правило есть');
+    test('CSS: Task 311 — ws-emp-total/ws-emp-overlimit удалены (итог в карточке убран)', () => {
+        assertFalse(INDEX_SRC.indexOf('.ws-emp-total.ws-emp-overlimit') !== -1,
+            'правило тёмной темы удалено (строки-итога больше нет)');
+        assertFalse(INDEX_SRC.indexOf('[data-theme="light"] .ws-emp-total.ws-emp-overlimit') !== -1,
+            'правило светлой темы удалено');
+        assertFalse(INDEX_SRC.indexOf('.ws-emp-total {') !== -1,
+            'базовый стиль итог-строки удалён');
     });
 });
 
@@ -347,29 +351,35 @@ describe('Task 310 — шторка «+ Отпуск»: лимит года и �
     });
 });
 
-describe('Task 310 — тултип плана отпуска в ячейке', () => {
+describe('Task 310/311 — тултип плана отпуска в ячейке (УДАЛЁН)', () => {
 
-    test('JS: чистые дни + пометка праздников в тултипе', () => {
+    test('JS: Task 311 — тултипы (title) с ячеек шахматки убраны', () => {
         const rc = INDEX_SRC.slice(
             INDEX_SRC.indexOf('_renderCell: function'),
             INDEX_SRC.indexOf('generateYear: function'));
-        const i = rc.indexOf('ОТПУСК (план');
-        assertTrue(i !== -1, 'тултип плана на месте');
-        assertTrue(rc.indexOf('_vacNetDays(vacPlan)') !== -1,
-            'дни — чистые (_vacNetDays)');
-        assertTrue(rc.indexOf('праздн.') !== -1,
-            'пометка о вычтенных праздниках');
-        assertTrue(rc.indexOf('заполнится кодом «ОТ» при «Сформировать»') !== -1,
-            'подсказка про «Сформировать» жива');
+        // Task 311: пояснительные окна при наведении на ячейки
+        // шахматки убраны — вся информация в попапе клика
+        assertFalse(rc.indexOf('ОТПУСК (план') !== -1,
+            'тултип плана отпуска убран');
+        assertFalse(rc.indexOf('title="' + "' + this._escAttr") !== -1,
+            'рендер ячейки не собирает title-атрибут');
+        assertFalse(rc.indexOf('titleParts') !== -1,
+            'сборка тултипа из частей удалена');
+        assertFalse(rc.indexOf('заполнится кодом «ОТ» при «Сформировать»') !== -1,
+            'подсказка «Сформировать» из тултипа убрана (есть в попапе клика)');
+        // при этом сам код плана «ОТ» в ячейке остался
+        assertTrue(rc.indexOf("'ОТ'") !== -1,
+            'код плана «ОТ» в ячейке жив');
     });
 });
 
 describe('Task 310 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v549', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v549'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v549');
-        assertFalse(SW_SRC.indexOf('kipia-test-v548') !== -1,
-            'старой версии v548 нет');
+    test('SW: версия кэша kipia-test-v550', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v550'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v550');
+        // Task 311 поднял версию до v550 — v549 (версия Task 310) ушла
+        assertFalse(SW_SRC.indexOf('kipia-test-v549') !== -1,
+            'старой версии v549 нет');
     });
 });

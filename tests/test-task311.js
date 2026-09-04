@@ -1,0 +1,249 @@
+// tests/test-task311.js
+// Task 311 — зачистка карточки сотрудника, пояснительных окон
+// при наведении и кнопки «+ Сотрудник». Заявка пользователя:
+//   «В карточке сотрудника убери строки "Шаблон ротации",
+//    "Сотрудник", "Итого в году". Убери пояснительные окна при
+//    наведении на ячейки сотрудников и шахматки. Кнопку
+//    "+ Сотрудник" убери, а её функцию должно выполнять заглавие
+//    ячеек сотрудников "Сотрудник", расположенное в шапке над ними.»
+//
+// ЧТО ПРОВЕРЯЕТСЯ (статические инварианты клиента):
+//   Карточка сотрудника (_renderEmpPopup):
+//     — строка-заголовок «Сотрудник» (секция профиля) убрана —
+//       поля идут сразу после шапки ФИО;
+//     — поле «Шаблон ротации» не рендерится (данные живы в шторке
+//       «+ Сотрудник» и на сервере);
+//     — итог-строка года отпусков не рендерится (лимит 42 дн.
+//       контролирует шторка «+ Отпуск» — Task 310);
+//     — CSS ws-emp-total / ws-emp-overlimit удалены вместе со строкой.
+//   Пояснительные окна при наведении:
+//     — карточка сотрудника открывается ТОЛЬКО кликом: hover-делегат
+//       (_attachEmpPopupHover, таймеры 350/400 мс, mouseenter/
+//       mouseleave попапа, mouseover/mouseout контейнера) удалён;
+//     — ячейки шахматки и шапка сетки не несут title-атрибутов:
+//       titleParts/статус/праздник/мероприятия/план отпуска/смена
+//       по циклу — всё убрано (информация в попапе клика и окошке
+//       производственного календаря в тулбаре);
+//     — title-подсказка на колонке ФИО убрана.
+//   Кнопка «+ Сотрудник» → заголовок «Сотрудник»:
+//     — кнопка #wsEmpBtn и класс .ws-addemp-btn удалены (HTML+CSS);
+//     — заголовок thead th.ws-emp-col получает класс ws-emp-head-add,
+//       onclick openEmployeeForm и плюсик-индикатор (только _canEdit);
+//     — зрителям — обычный заголовок без клика (класса/onclick нет);
+//     — двойная защита: openEmployeeForm сам проверяет право записи.
+//   SW: kipia-test-v550 (один инкремент с v549 Task 310).
+//
+// Запуск: через tests/run-all.js (require './test-task311.js').
+
+const fs = require('fs');
+const path = require('path');
+const { test, describe, assertTrue, assertFalse } = require('./test-helpers.js');
+
+const INDEX_SRC = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+const SW_SRC = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
+
+// Вырезка тела функции: от сигнатуры до следующего «имя: function»
+// на том же уровне отступов (8 пробелов — методы WorkSchedule)
+function fnBody(src, signature) {
+    const i = src.indexOf(signature);
+    if (i === -1) return '';
+    const rest = src.slice(i + signature.length);
+    const m = rest.match(/^[\s\S]*?\n        [a-zA-Z_]+: function/);
+    return m ? m[0] : rest;
+}
+
+describe('Task 311 — карточка: строки «Шаблон ротации», «Сотрудник», «Итого в году» убраны', () => {
+
+    test('JS: _renderEmpPopup — без поля «Шаблон ротации»', () => {
+        const rp = fnBody(INDEX_SRC, '_renderEmpPopup: function');
+        assertFalse(rp.indexOf("['Шаблон ротации',") !== -1,
+            'поле «Шаблон ротации» не рендерится');
+        assertFalse(rp.indexOf('_PATTERNS[pi]') !== -1,
+            'поиск имени шаблона в _PATTERNS удалён из карточки');
+        // поле живо в шторке добавления сотрудника (данные не потеряны)
+        const sheet = INDEX_SRC.slice(
+            INDEX_SRC.indexOf('id="wsEmpSheet"'),
+            INDEX_SRC.indexOf('</div>', INDEX_SRC.indexOf('id="wsEmpSheet"')));
+        assertTrue(INDEX_SRC.indexOf('for="wsEmpPattern"') !== -1,
+            'шторка «+ Сотрудник»: поле шаблона живо (wsEmpPattern)');
+    });
+
+    test('JS: _renderEmpPopup — без строки-заголовка «Сотрудник»', () => {
+        const rp = fnBody(INDEX_SRC, '_renderEmpPopup: function');
+        assertFalse(rp.indexOf('<div class="ws-popup-sec">Сотрудник</div>') !== -1,
+            'строка-заголовок «Сотрудник» не рендерится (профиль — сразу после шапки)');
+        // секции отпусков и мероприятий остались (заголовками-строками)
+        assertTrue(rp.indexOf('<div class="ws-popup-sec">Отпуска · ') !== -1,
+            'секция отпусков жива');
+        assertTrue(rp.indexOf('<div class="ws-popup-sec">Мероприятия · ') !== -1,
+            'секция мероприятий жива');
+    });
+
+    test('JS: _renderEmpPopup — без итога года отпусков', () => {
+        const rp = fnBody(INDEX_SRC, '_renderEmpPopup: function');
+        assertFalse(rp.indexOf('Итого в году: ') !== -1,
+            'итог-строка года не рендерится');
+        assertFalse(rp.indexOf('ws-emp-total') !== -1,
+            'класс итог-строки не рендерится');
+        assertFalse(rp.indexOf('vacTotal') !== -1,
+            'переменная итога удалена');
+        // дни периодов — чистые (Task 310), с пометкой праздников
+        assertTrue(rp.indexOf('_vacNetDaysInYear(vv, this._year)') !== -1,
+            'чистые дни периода на месте');
+        // лимит 42 жив в шторке «+ Отпуск» (Task 310 — не задет)
+        assertTrue(INDEX_SRC.indexOf('_VAC_YEAR_LIMIT: 42') !== -1,
+            'константа лимита 42 жива для шторки «+ Отпуск»');
+        const svf = fnBody(INDEX_SRC, 'submitVacationForm: function');
+        assertTrue(svf.indexOf('usedNet + addNet > this._VAC_YEAR_LIMIT') !== -1,
+            'блокировка превышения в шторке жива');
+    });
+
+    test('CSS: ws-emp-total / ws-emp-overlimit удалены (строки-итога нет)', () => {
+        assertFalse(INDEX_SRC.indexOf('.ws-emp-total {') !== -1,
+            'базовый стиль итог-строки удалён');
+        assertFalse(INDEX_SRC.indexOf('.ws-emp-total.ws-emp-overlimit') !== -1,
+            'красный стиль тёмной темы удалён');
+        assertFalse(INDEX_SRC.indexOf('[data-theme="light"] .ws-emp-total') !== -1,
+            'правила светлой темы удалены');
+    });
+});
+
+describe('Task 311 — пояснительные окна при наведении убраны', () => {
+
+    test('JS: карточка сотрудника — hover-режим удалён (только клик)', () => {
+        assertFalse(INDEX_SRC.indexOf('_attachEmpPopupHover: function') !== -1,
+            'метод hover-делегата удалён');
+        assertFalse(INDEX_SRC.indexOf('_attachEmpPopupHover();') !== -1,
+            'вызов из init удалён');
+        assertFalse(INDEX_SRC.indexOf('_empHoverAttached') !== -1,
+            'флаг навешивания удалён');
+        assertFalse(/_empOpenTimer/.test(INDEX_SRC),
+            'таймер открытия (350 мс) удалён');
+        assertFalse(/_empCloseTimer/.test(INDEX_SRC),
+            'таймер закрытия (400 мс) удалён');
+        assertFalse(INDEX_SRC.indexOf('_scheduleEmpPopupClose') !== -1,
+            'планировщик закрытия удалён');
+        assertFalse(INDEX_SRC.indexOf("wrap.addEventListener('mouseover'") !== -1,
+            'mouseover контейнера сетки не слушается');
+        assertFalse(INDEX_SRC.indexOf("wrap.addEventListener('mouseout'") !== -1,
+            'mouseout контейнера сетки не слушается');
+        assertFalse(INDEX_SRC.indexOf("popup.addEventListener('mouseenter'") !== -1,
+            'mouseenter попапа не слушается');
+        assertFalse(INDEX_SRC.indexOf("popup.addEventListener('mouseleave'") !== -1,
+            'mouseleave попапа не слушается');
+        assertFalse(INDEX_SRC.indexOf("(hover: hover)") !== -1,
+            'медиа-запрос hover больше не проверяется (клик один для всех)');
+        // клик остаётся единственным триггером
+        const clickPart = fnBody(INDEX_SRC, 'onEmpCellClick: function');
+        assertTrue(clickPart.indexOf('this._openEmpPopup(td, tabNo);') !== -1,
+            'клик открывает карточку');
+        const openPart = fnBody(INDEX_SRC, '_openEmpPopup: function');
+        assertTrue(openPart.indexOf("closer.classList.add('active')") !== -1,
+            'кловер активен (карточка всегда прикреплена)');
+        assertTrue(openPart.indexOf('this._empPinned = true;') !== -1,
+            'режим всегда прикреплённый');
+    });
+
+    test('JS: колонка ФИО — title-подсказка убрана', () => {
+        const gridPart = INDEX_SRC.slice(
+            INDEX_SRC.indexOf('_renderGrid: function'),
+            INDEX_SRC.indexOf('_fitGrid: function'));
+        assertFalse(gridPart.indexOf('Карточка сотрудника: профиль, отпуска, мероприятия') !== -1,
+            'title «Карточка сотрудника…» с ячейки убран');
+    });
+
+    test('JS: ячейки шахматки — title-атрибуты убраны (_renderCell)', () => {
+        const rc = INDEX_SRC.slice(
+            INDEX_SRC.indexOf('_renderCell: function'),
+            INDEX_SRC.indexOf('generateYear: function'));
+        assertFalse(rc.indexOf('titleParts') !== -1,
+            'сборка тултипа из частей удалена');
+        assertFalse(rc.indexOf('title="') !== -1,
+            'рендер не пишет title-атрибут в ячейку');
+        // при этом содержимое ячейки живо: код статуса, бейджи, маркеры
+        assertTrue(rc.indexOf("classes.push('ws-pending')") !== -1,
+            'маркер несохранённой правки жив');
+        assertTrue(rc.indexOf("classes.push('ws-overtime')") !== -1,
+            'маркер переработки жив');
+        assertTrue(rc.indexOf('ws-ev-badge') !== -1,
+            'бейдж мероприятия жив');
+    });
+
+    test('JS: шапка сетки — тултипы праздников/сокращённых убраны', () => {
+        const gridPart = INDEX_SRC.slice(
+            INDEX_SRC.indexOf('_renderGrid: function'),
+            INDEX_SRC.indexOf('_fitGrid: function'));
+        assertFalse(gridPart.indexOf('thTitle') !== -1,
+            'сборка thTitle удалена');
+        assertFalse(gridPart.indexOf('_escAttr(thTitle)') !== -1,
+            'title в заголовках дней не пишется');
+        // звёздочка сокращённого дня осталась в шапке
+        assertTrue(gridPart.indexOf('ws-short-star') !== -1,
+            'звёздочка сокращённого дня в шапке жива');
+        // названия праздников — в окошке производственного календаря
+        assertTrue(INDEX_SRC.indexOf('.ws-cal-panel {') !== -1,
+            'окошко календаря в тулбаре жива');
+    });
+});
+
+describe('Task 311 — кнопка «+ Сотрудник» → заголовок «Сотрудник»', () => {
+
+    test('HTML: кнопка #wsEmpBtn удалена из тулбара', () => {
+        assertFalse(INDEX_SRC.indexOf('id="wsEmpBtn"') !== -1,
+            'кнопки #wsEmpBtn нет в разметке');
+        assertFalse(INDEX_SRC.indexOf('ws-addemp-btn') !== -1,
+            'класс .ws-addemp-btn удалён (HTML и CSS)');
+        // «+ Отпуск» (Task 308) не задет
+        assertTrue(INDEX_SRC.indexOf('id="wsVacBtn"') !== -1,
+            'кнопка «+ Отпуск» жива');
+    });
+
+    test('JS: _renderGrid — заголовок «Сотрудник» становится кнопкой (редакторам)', () => {
+        const gridPart = INDEX_SRC.slice(
+            INDEX_SRC.indexOf('_renderGrid: function'),
+            INDEX_SRC.indexOf('_fitGrid: function'));
+        assertTrue(gridPart.indexOf("this._canEdit ? ' ws-emp-head-add' : ''") !== -1,
+            'класс ws-emp-head-add — только ролям с правом правки');
+        assertTrue(gridPart.indexOf('onclick="WorkSchedule.openEmployeeForm()"') !== -1,
+            'клик заголовка → openEmployeeForm');
+        assertTrue(gridPart.indexOf('<i class="ws-emp-head-plus">+</i>') !== -1,
+            'плюсик-индикатор у заголовка (редакторам)');
+        // двойная защита: openEmployeeForm сам проверяет право записи
+        const oef = fnBody(INDEX_SRC, 'openEmployeeForm: function');
+        assertTrue(oef.indexOf('if (!this._canEdit) return;') !== -1,
+            'openEmployeeForm проверяет право записи (зритель — мимо)');
+    });
+
+    test('CSS: ws-emp-head-add — курсор-палец, подсветка, плюсик', () => {
+        assertTrue(INDEX_SRC.indexOf('.ws-grid thead th.ws-emp-col.ws-emp-head-add { cursor: pointer; }') !== -1,
+            'курсор-палец на заголовке-кнопке');
+        assertTrue(INDEX_SRC.indexOf('.ws-grid thead th.ws-emp-col.ws-emp-head-add:hover {') !== -1,
+            'подсветка при наведении');
+        assertTrue(INDEX_SRC.indexOf('.ws-grid thead th.ws-emp-col .ws-emp-head-plus {') !== -1,
+            'стиль плюсика-индикатора');
+        assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .ws-grid thead th.ws-emp-col.ws-emp-head-add:hover {') !== -1,
+            'светлая тема подсветки');
+    });
+
+    test('JS: init() больше не управляет видимостью кнопки сотрудника', () => {
+        const init = INDEX_SRC.slice(
+            INDEX_SRC.indexOf('init: function'),
+            INDEX_SRC.indexOf('_refreshFromUrlState: function'));
+        assertFalse(init.indexOf("getElementById('wsEmpBtn')") !== -1,
+            'init не ищет wsEmpBtn (кнопки нет)');
+        // шапка перерисовывается при каждом рендере — видимость
+        // решается в _renderGrid по _canEdit, отдельного флага не нужно
+        assertTrue(init.indexOf("var vacBtn = document.getElementById('wsVacBtn');") !== -1,
+            'видимость «+ Отпуск» в init не задета');
+    });
+});
+
+describe('Task 311 — Service Worker', () => {
+
+    test('SW: версия кэша kipia-test-v550', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v550'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v550');
+        assertFalse(SW_SRC.indexOf('kipia-test-v549') !== -1,
+            'старой версии v549 нет');
+    });
+});
