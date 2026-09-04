@@ -3298,3 +3298,32 @@ Stage Summary:
   86ed2e8 (автосинк). Пользователю: Ctrl+Shift+R ×1–2 на обоих
   сайтах; Apps Script и листы НЕ трогать (сервер не менялся);
   десктоп — перезапустить приложение. Следующий номер: 310.
+
+## Task 310-перенос — kip8@1e488d8 (рамка д/н 1px, «Старт цикла», отпуск × праздники × лимит 42)
+
+**Дата:** 2026-09-04 · **kip8 SW:** kipia-v414→v415 · **Сервер/листы:** не менялись
+
+- Task 310 реализован в kip8test@5fe5ab1 (код, тесты 1476→1498/0,
+  SW kipia-test-v548→v549, task310-browser-check 20/20, VLM ×3) —
+  см. запись Task 310 выше.
+- ПЕРЕНОС в kip8 (1e488d8): патч index.html 379 строк (git apply,
+  чисто); sw.js kipia-v414→v415; tests/ — test-task310.js копия с
+  адаптацией версий (kipia-test-v549→v415, v548→v414), test-task309.js
+  и test-work-schedule.js копии с адаптацией + актуализацией под
+  Task 310 (рамка ::before, «Старт цикла» из списка полей, окно
+  submitVacationForm 2600→4600), 10 файлов бамп v414→v415, run-all.js
+  +require; сьют 1498/0 (ПАРИТЕТ).
+- Верификация kip8: task310-browser-check.py (порт 8934) — 20/20 на
+  РЕАЛЬНОМ kip8/index.html; task309 27/27, task307 22/22,
+  task308 21/21 (порт 8928 из каталога kip8); VLM ×3.
+- Промт kip8: post-Task 310, запись «Перенос Task 310», партия
+  298-310, счётчики 1498/28 файлов/v415;
+  DEPLOY-Task310-vac-holidays-limit.md.
+- KIP8-DESKTOP: автосинк cf600fa «auto: sync content from
+  kip8@1e488d8»; CI Tests — success (1498/0); Build Desktop —
+  артефакты (релиз не нужен).
+- KIP8TEST-DESKTOP: автосинк bc3e085 «auto: sync index.html from
+  kip8test@5fe5ab1».
+- Деплой пользователя: GitHub Pages сам; Ctrl+Shift+R ×1–2 на обоих
+  сайтах; Apps Script и листы НЕ трогать; десктоп — перезапустить.
+- Следующий номер задачи: 311.
