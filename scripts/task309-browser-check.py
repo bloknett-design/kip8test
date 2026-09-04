@@ -350,15 +350,26 @@ with sync_playwright() as p:
             var oc = tds[i].getAttribute('onclick') || '';
             if (oc.indexOf("'2026-09-12'") !== -1 && oc.indexOf("'023'") !== -1) {
                 var cs = getComputedStyle(tds[i]);
+                // Task 310: рамка — псевдоэлемент ::before (border 1px
+                // + border-radius 3px, как у свотча миниатюры), а не
+                // box-shadow (было inset 2px в Task 309)
+                var bf = getComputedStyle(tds[i], '::before');
                 return { cls: tds[i].className, text: tds[i].textContent.trim(),
-                         shadow: cs.boxShadow };
+                         shadow: cs.boxShadow,
+                         bfContent: bf.content,
+                         bfBorderTop: bf.borderTopWidth,
+                         bfBorderStyle: bf.borderTopStyle,
+                         bfRadius: bf.borderTopLeftRadius,
+                         bfPointerEvents: bf.pointerEvents };
             }
         }
         return null;
     })()""")
-    check('I2: ячейка получила «д» с классом ws-manual-dn и inset-рамкой 2px',
+    check('I2: ячейка получила «д» с классом ws-manual-dn и рамкой ::before 1px + radius',
           frame is not None and 'ws-manual-dn' in frame['cls'] and
-          frame['text'] == 'д' and 'inset' in frame['shadow'] and '2px' in frame['shadow'], frame)
+          frame['text'] == 'д' and frame['bfContent'] != 'none' and
+          frame['bfBorderTop'] == '1px' and frame['bfBorderStyle'] == 'solid' and
+          frame['bfRadius'] == '3px' and frame['bfPointerEvents'] == 'none', frame)
 
     # I3. Плановая «Н» Иванова 01.09 (авто) — БЕЗ рамки (только ручные д/н)
     auto = page.evaluate("""(function(){

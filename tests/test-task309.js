@@ -35,12 +35,14 @@
 //   Рамка ручных д/н:
 //     — _renderCell: класс ws-manual-dn при источник «руч» и статусе
 //       д/н (виден и до сохранения — pending даёт «руч»);
-//     — CSS: box-shadow inset 2px, тёмная и светлая темы.
+//     — CSS: ::before рамка 1px с закруглёнными углами (Task 310
+//       переработала box-shadow 2px → border 1px + radius 3px),
+//       тёмная и светлая темы.
 //   Регресс-фиксы Task 308 (заявка «добавляю мероприятие — тост
 //   "Ошибка: self.loadTrainings is not a function"»):
 //     — вызовы удалённых страниц loadTrainings()/loadVacations()
 //       больше не встречаются; вместо них loadGrid().
-//   SW: kipia-test-v548.
+//   SW: kipia-test-v549.
 //
 // Запуск: через tests/run-all.js (require './test-task309.js').
 
@@ -145,8 +147,9 @@ describe('Task 309 — карточка сотрудника у колонки �
             'секция отпусков (бывшая вкладка «Отпуска»)');
         assertTrue(rp.indexOf('<div class="ws-popup-sec">Мероприятия · ') !== -1,
             'секция мероприятий (бывшая вкладка «Инструктажи»)');
-        // профиль: поля карточки
-        ['Тип', 'Должность', 'Шаблон ротации', 'Старт цикла', 'Дата приёма', 'Комментарий']
+        // профиль: поля карточки (Task 310: «Старт цикла» убрана
+        // из карточки по заявке — данные в шторке «+ Сотрудник»)
+        ['Тип', 'Должность', 'Шаблон ротации', 'Дата приёма', 'Комментарий']
             .forEach(f => assertTrue(rp.indexOf("['" + f + "',") !== -1,
                 'поле профиля «' + f + '»'));
         // шаблон ротации — имя из _PATTERNS
@@ -289,15 +292,33 @@ describe('Task 309 — рамка ручных д/н', () => {
             'рамка не вешается на авто-коды');
     });
 
-    test('CSS: ws-manual-dn — inset 2px рамка, тёмная и светлая темы', () => {
-        assertTrue(INDEX_SRC.indexOf('.ws-grid tbody td.ws-cell.ws-manual-dn {') !== -1,
-            'базовое правило');
-        assertTrue(INDEX_SRC.indexOf('box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.85);') !== -1,
-            'тёмная тема: светлая рамка 2px по краям (как у миниатюры)');
-        assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .ws-grid tbody td.ws-cell.ws-manual-dn {') !== -1,
+    test('CSS: ws-manual-dn — ::before рамка 1px с закруглением (Task 310), обе темы', () => {
+        // Task 310: рамка 1px с ЗАКРУГЛЁННЫМИ углами — как у миниатюры
+        // .ws-popup-swatch (border 1px + border-radius 3px). Было 2px
+        // box-shadow без скругления (Task 309).
+        assertTrue(INDEX_SRC.indexOf('.ws-grid tbody td.ws-cell.ws-manual-dn::before {') !== -1,
+            'правило ::before (border-collapse: collapse игнорирует radius на td)');
+        const rule = INDEX_SRC.slice(
+            INDEX_SRC.indexOf('.ws-grid tbody td.ws-cell.ws-manual-dn::before {'),
+            INDEX_SRC.indexOf('}', INDEX_SRC.indexOf('.ws-grid tbody td.ws-cell.ws-manual-dn::before {')));
+        assertTrue(rule.indexOf('border: 1px solid rgba(255, 255, 255, 0.85)') !== -1,
+            'тёмная тема: рамка 1px (не 2px)');
+        assertTrue(rule.indexOf('border-radius: 3px') !== -1,
+            'углы закруглены — как у свотча миниатюры');
+        assertTrue(rule.indexOf('pointer-events: none') !== -1,
+            'клики по ячейке проходят сквозь рамку');
+        assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .ws-grid tbody td.ws-cell.ws-manual-dn::before {') !== -1,
             'светлая тема: правило есть');
-        assertTrue(INDEX_SRC.indexOf('box-shadow: inset 0 0 0 2px rgba(38, 50, 56, 0.75);') !== -1,
-            'светлая тема: тёмная рамка 2px');
+        const ruleLight = INDEX_SRC.slice(
+            INDEX_SRC.indexOf('[data-theme="light"] .ws-grid tbody td.ws-cell.ws-manual-dn::before {'),
+            INDEX_SRC.indexOf('}', INDEX_SRC.indexOf('[data-theme="light"] .ws-grid tbody td.ws-cell.ws-manual-dn::before {')));
+        assertTrue(ruleLight.indexOf('border-color: rgba(38, 50, 56, 0.75)') !== -1,
+            'светлая тема: тёмная рамка 1px');
+        // box-shadow-вариант Task 309 полностью ушёл
+        assertFalse(INDEX_SRC.indexOf('box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.85)') !== -1,
+            'инсет-тень 2px удалена');
+        assertFalse(INDEX_SRC.indexOf('box-shadow: inset 0 0 0 2px rgba(38, 50, 56, 0.75)') !== -1,
+            'светлая 2px тень удалена');
     });
 
     test('CSS: колонка ФИО интерактивна (cursor + сплошная подсветка hover)', () => {
@@ -347,9 +368,9 @@ describe('Task 309 — регресс-фиксы Task 308 (loadTrainings/loadVac
 
 describe('Task 309 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v548', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v548'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v548');
+    test('SW: версия кэша kipia-test-v549', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v549'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v549');
         assertFalse(SW_SRC.indexOf('kipia-test-v547') !== -1,
             'старой версии v547 нет');
     });
