@@ -224,7 +224,8 @@ with sync_playwright() as p:
     closed2 = page.evaluate("!document.getElementById('wsEmpPopup').classList.contains('active')")
     check('D2: клик по фону-кловеру закрыл карточку', closed2)
 
-    # E. Попап ячейки с мероприятием: кнопки ✎/✕ в секции «Мероприятия в этот день»
+    # E. Попап ячейки с мероприятием: кнопки ✎/✕ в окне «Мероприятия в
+    #    этот день» (Task 313: окно НАД окном кодов, секция переехала)
     page.evaluate("""(function(){
         var tds = document.querySelectorAll('#wsGridWrap td.ws-cell');
         for (var i=0;i<tds.length;i++){
@@ -235,18 +236,20 @@ with sync_playwright() as p:
     page.wait_for_timeout(700)
     pop = page.evaluate("""(function(){
         var popup = document.getElementById('wsCellPopup');
-        var h = popup ? popup.innerHTML : '';
+        var ev = document.getElementById('wsEventsPopup');
+        var h = ev ? ev.innerHTML : '';
         return { active: popup ? popup.classList.contains('active') : false,
+                 evOpen: ev ? ev.classList.contains('active') : false,
                  hasSec: h.indexOf('Мероприятия в этот день') !== -1,
                  hasTheme: h.indexOf('Повторный по охране труда') !== -1,
                  hasEdit: h.indexOf('editTraining(1)') !== -1,
                  hasDel: h.indexOf('deleteTraining(1)') !== -1 };
     })()""")
-    check('E: попап ячейки: секция мероприятий с темой и кнопками ✎/✕ (id=1)',
-          pop['active'] and pop['hasSec'] and pop['hasTheme'] and pop['hasEdit'] and pop['hasDel'], pop)
+    check('E: окно «Мероприятия в этот день»: секция с темой и кнопками ✎/✕ (id=1)',
+          pop['active'] and pop['evOpen'] and pop['hasSec'] and pop['hasTheme'] and pop['hasEdit'] and pop['hasDel'], pop)
 
-    # F. ✎ в попапе ячейки → шторка «Правка мероприятия» с префиллом
-    page.click('#wsCellPopup .ws-popup-act:not(.ws-popup-act-del)')
+    # F. ✎ в окне мероприятий → шторка «Правка мероприятия» с префиллом
+    page.click('#wsEventsPopup .ws-popup-act:not(.ws-popup-act-del)')
     page.wait_for_timeout(700)
     trs = page.evaluate("""(function(){
         var sh = document.getElementById('wsTrSheet');
@@ -258,14 +261,15 @@ with sync_playwright() as p:
                  tema: (document.getElementById('wsTrTitle')||{}).value,
                  start: (document.getElementById('wsTrStart')||{}).value,
                  end: (document.getElementById('wsTrEnd')||{}).value,
-                 cellPopupClosed: !document.getElementById('wsCellPopup').classList.contains('active') };
+                 cellPopupClosed: !document.getElementById('wsCellPopup').classList.contains('active'),
+                 evPopupClosed: !document.getElementById('wsEventsPopup').classList.contains('active') };
     })()""")
     check('F: шторка «Правка мероприятия», кнопка «Сохранить», префилл записи',
           trs['active'] and trs['title'] == 'Правка мероприятия' and trs['btn'] == 'Сохранить' and
           trs['tab'] == '017' and trs['type'] == 'инструктаж' and
           trs['tema'] == 'Повторный по охране труда' and
           trs['start'] == '2026-09-10' and trs['end'] == '2026-09-10' and
-          trs['cellPopupClosed'], trs)
+          trs['cellPopupClosed'] and trs['evPopupClosed'], trs)
     page.screenshot(path='scripts/task309-proof-edit-sheet.png', full_page=False)
 
     # G. Сохранение правки (новая тема) → add + delete на сервере, тост, перезагрузка

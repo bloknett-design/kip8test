@@ -269,7 +269,8 @@ with sync_playwright() as p:
     check('G: страница «Инструктажи» удалена (Task 308) — карточек/плашек нет',
           not gone['page'] and gone['cards'] == 0 and gone['plaques'] == 0, gone)
 
-    # G2/G3: свотчи ПР и * в попапе ячейки — цвета справочника
+    # G2/G3: свотчи ПР и * в окне «Мероприятия в этот день» (Task 313:
+    #     окно НАД окном кодов) — цвета справочника
     page.evaluate("navigateTo('work-schedule')")
     page.wait_for_timeout(1200)
     page.evaluate("""(function(){
@@ -281,7 +282,7 @@ with sync_playwright() as p:
     })()""")
     page.wait_for_timeout(600)
     pr_pop = page.evaluate("""(function(){
-        var popup = document.getElementById('wsCellPopup');
+        var popup = document.getElementById('wsEventsPopup');
         var rows = popup ? popup.querySelectorAll('.ws-popup-row') : [];
         for (var i=0;i<rows.length;i++){
             var code = rows[i].querySelector('.ws-popup-code');
@@ -292,7 +293,7 @@ with sync_playwright() as p:
         }
         return null;
     })()""")
-    check('G2: попап ячейки — строка «ПР» со свотчем #EF5350 (справочник жив)',
+    check('G2: окно мероприятий — строка «ПР» со свотчем #EF5350 (справочник жив)',
           pr_pop and pr_pop['bg'] == 'rgb(239, 83, 80)', pr_pop)
     page.evaluate("""(function(){
         var closer = document.querySelector('.ws-popup-closer');
@@ -308,7 +309,7 @@ with sync_playwright() as p:
     })()""")
     page.wait_for_timeout(600)
     star_pop = page.evaluate("""(function(){
-        var popup = document.getElementById('wsCellPopup');
+        var popup = document.getElementById('wsEventsPopup');
         var rows = popup ? popup.querySelectorAll('.ws-popup-row') : [];
         for (var i=0;i<rows.length;i++){
             var code = rows[i].querySelector('.ws-popup-code');
@@ -319,7 +320,7 @@ with sync_playwright() as p:
         }
         return null;
     })()""")
-    check('G3: попап ячейки — строка «*» со свотчем #FFAB91 (справочник жив)',
+    check('G3: окно мероприятий — строка «*» со свотчем #FFAB91 (справочник жив)',
           star_pop and star_pop['bg'] == 'rgb(255, 171, 145)', star_pop)
     page.evaluate("""(function(){
         var closer = document.querySelector('.ws-popup-closer');

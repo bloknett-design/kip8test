@@ -9,8 +9,11 @@
 #   3) убрать строку «— выходной —» (кода «—» нет в «Коды_статусов»);
 #   4) цвет «.» — белый #FAF9F5 (мок листа имитирует замену в таблице;
 #      fallback клиента синхронизирован в Task 312).
-# Playwright + мок fetch (Apps Script по action; внешние источники
-# производственного календаря закрыты 404 — фолбэки праздников).
+# Task 313 (актуализация регресса): секция «Мероприятия в этот день»
+# переехала из окна кодов в ОТДЕЛЬНОЕ окно #wsEventsPopup над ним —
+# проверки D6/E2 смотрят событие в новом окне, в окне кодов секции
+# больше нет. Playwright + мок fetch (Apps Script по action; внешние
+# источники производственного календаря закрыты 404 — фолбэки).
 import json, sys
 from urllib.parse import unquote
 from playwright.sync_api import sync_playwright
@@ -175,7 +178,9 @@ with sync_playwright() as p:
     click_cell(page, '2026-06-02', '017')
     pop = page.evaluate("""(function(){
         var cp = document.getElementById('wsCellPopup');
+        var evp = document.getElementById('wsEventsPopup');
         var txt = cp ? cp.textContent : '';
+        var evTxt = evp ? evp.textContent : '';
         var rows = cp ? cp.querySelectorAll('.ws-popup-row') : [];
         var mainCodes = [];
         for (var i=0;i<rows.length;i++) {
@@ -198,7 +203,10 @@ with sync_playwright() as p:
                  rowNames: rowNames,
                  activeCode: active ? (active.querySelector('.ws-popup-code')||{}).textContent : null,
                  hasWeekendRow: txt.indexOf('выходной') !== -1,
-                 hasEventsSec: txt.indexOf('Мероприятия в этот день') !== -1,
+                 hasEventsSecInCodes: txt.indexOf('Мероприятия в этот день') !== -1,
+                 evOpen: evp ? evp.classList.contains('active') : false,
+                 evTitle: evTxt.indexOf('Мероприятия в этот день') !== -1,
+                 evHasTr: evTxt.indexOf('ОТ и ПБ') !== -1,
                  hasAddEvent: txt.indexOf('+ Мероприятие…') !== -1,
                  hasMore: txt.indexOf('Дополнительно…') !== -1 };
     })()""")
@@ -210,8 +218,11 @@ with sync_playwright() as p:
     check('D4: основные коды — только статусы из листа (Д/Д8/Н/д/н/ОТ/·)',
           pop['mainCodes'] and pop['mainCodes'][0] == 'Д' and '.' in pop['mainCodes'], pop['mainCodes'])
     check('D5: текущий статус «Д» подсвечен', pop['activeCode'] == 'Д', pop['activeCode'])
-    check('D6: секция «Мероприятия в этот день» жива (Иванов, 02.06)',
-          pop['hasEventsSec'] and pop['txt'].find('ОТ и ПБ') != -1, pop['txt'][:300])
+    check('D6: Task 313 — окно «Мероприятия в этот день» НАД окном кодов (Иванов, 02.06)',
+          pop['evOpen'] and pop['evTitle'] and pop['evHasTr'] and
+          (not pop['hasEventsSecInCodes']),
+          {'evOpen': pop['evOpen'], 'evTitle': pop['evTitle'], 'evHasTr': pop['evHasTr'],
+           'secInCodes': pop['hasEventsSecInCodes']})
     check('D7: «+ Мероприятие…» и «Дополнительно…» живы',
           pop['hasAddEvent'] and pop['hasMore'])
     page.screenshot(path='scripts/task312-proof-cell-popup.png', full_page=False)
@@ -236,7 +247,9 @@ with sync_playwright() as p:
     click_cell(page, '2026-06-03', '023')
     popE = page.evaluate("""(function(){
         var cp = document.getElementById('wsCellPopup');
+        var evp = document.getElementById('wsEventsPopup');
         var txt = cp ? cp.textContent : '';
+        var evTxt = evp ? evp.textContent : '';
         var active = cp ? cp.querySelector('.ws-popup-row.ws-popup-active') : null;
         var rows = cp ? cp.querySelectorAll('.ws-popup-row:not(.ws-popup-event):not(.ws-popup-more)') : [];
         var codes = [];
@@ -247,13 +260,14 @@ with sync_playwright() as p:
         return { open: cp ? cp.classList.contains('active') : false,
                  active: !!active,
                  codes: codes,
-                 hasSec: txt.indexOf('Мероприятия в этот день') !== -1,
-                 hasTr: txt.indexOf('ОТ и ПБ') !== -1 };
+                 evOpen: evp ? evp.classList.contains('active') : false,
+                 evTitle: evTxt.indexOf('Мероприятия в этот день') !== -1,
+                 hasTr: evTxt.indexOf('ОТ и ПБ') !== -1 };
     })()""")
     check('E: ячейка «И» (день события): попап открыт, И НЕ в списке основных',
           popE['open'] and 'И' not in popE['codes'], popE['codes'])
-    check('E2: активной строки нет (код-мероприятие отфильтрован), событие — в секции',
-          (not popE['active']) and popE['hasSec'] and popE['hasTr'], popE)
+    check('E2: активной строки нет (код-мероприятие отфильтрован), событие — в окне мероприятий (Task 313)',
+          (not popE['active']) and popE['evOpen'] and popE['evTitle'] and popE['hasTr'], popE)
     page.screenshot(path='scripts/task312-proof-event-day.png', full_page=False)
 
     # E3. «Дополнительно…» на ячейке «И»: текущее значение-мероприятие живо
@@ -431,10 +445,12 @@ with sync_playwright() as p:
     click_cell(page2, '2026-06-02', '017')
     ro2 = page2.evaluate("""(function(){
         var cp = document.getElementById('wsCellPopup');
-        return { open: cp ? cp.classList.contains('active') : false };
+        var evp = document.getElementById('wsEventsPopup');
+        return { open: cp ? cp.classList.contains('active') : false,
+                 evOpen: evp ? evp.classList.contains('active') : false };
     })()""")
-    check('M3: «ИТР8 pro» — клик по ячейке попап НЕ открывает (нет прав)',
-          ro2['open'] is False, ro2)
+    check('M3: «ИТР8 pro» — клик по ячейке попап НЕ открывает (нет прав; оба окна)',
+          ro2['open'] is False and ro2['evOpen'] is False, ro2)
     check('N: JS-ошибок нет (просмотр)', len(js_errors2) == 0, js_errors2[:3])
     ctx2.close()
     browser.close()

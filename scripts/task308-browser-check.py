@@ -225,7 +225,8 @@ with sync_playwright() as p:
           plan_cell is not None and 'ws-vac-plan' in plan_cell['cls'] and
           plan_cell['text'] == 'ОТ' and plan_cell['title'] == '', plan_cell)
 
-    # G. Регресс Task 303: попап ячейки → «+ Мероприятие…» → шторка с префиллом
+    # G. Регресс Task 303 (Task 313: окно мероприятий — НАД окном кодов):
+    #    попап ячейки → «+ Мероприятие…» → шторка с префиллом
     page.evaluate("""(function(){
         var tds = document.querySelectorAll('#wsGridWrap td.ws-cell');
         for (var i=0;i<tds.length;i++){
@@ -236,14 +237,17 @@ with sync_playwright() as p:
     page.wait_for_timeout(700)
     pop = page.evaluate("""(function(){
         var popup = document.getElementById('wsCellPopup');
-        var html = popup ? popup.innerHTML : '';
+        var evp = document.getElementById('wsEventsPopup');
+        var html = evp ? evp.innerHTML : '';
+        var chtml = popup ? popup.innerHTML : '';
         return { active: popup ? popup.classList.contains('active') : false,
+                 evOpen: evp ? evp.classList.contains('active') : false,
                  hasSec: html.indexOf('Мероприятия в этот день') !== -1,
                  hasTheme: html.indexOf('Повторный по охране труда') !== -1,
-                 hasAdd: html.indexOf('onPopupAddEvent') !== -1 };
+                 hasAdd: chtml.indexOf('onPopupAddEvent') !== -1 };
     })()""")
-    check('G: попап ячейки: секция «Мероприятия в этот день» с темой + строка «+ Мероприятие…»',
-          pop['active'] and pop['hasSec'] and pop['hasTheme'] and pop['hasAdd'], pop)
+    check('G: окно «Мероприятия в этот день» (Task 313) с темой + «+ Мероприятие…» в окне кодов',
+          pop['active'] and pop['evOpen'] and pop['hasSec'] and pop['hasTheme'] and pop['hasAdd'], pop)
     page.evaluate("WorkSchedule.onPopupAddEvent()")
     page.wait_for_timeout(700)
     trs = page.evaluate("""(function(){

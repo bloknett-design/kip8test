@@ -211,20 +211,31 @@ with sync_playwright() as p:
     check('L: Task 311 — тултип «Д»+И убран (title пуст)',
           tip_d == '', str(tip_d[:160]))
 
-    # 10. Попап ячейки с мероприятием (01.09, 017): секция + 20 строк
+    # 10. Попап ячейки с мероприятием (01.09, 017): Task 313 — окно
+    #     мероприятий НАД окном кодов (секция переехала из попапа)
     page.evaluate("""(function(){
         var tds = document.querySelectorAll('#wsGridWrap td.ws-cell');
         for (var i=0;i<tds.length;i++){ if (tds[i].textContent.trim()==='ДИ') { tds[i].click(); return; } }
     })()""")
     page.wait_for_timeout(600)
-    popup_html = page.evaluate("document.getElementById('wsCellPopup')? document.getElementById('wsCellPopup').innerHTML : ''")
+    pop_m = page.evaluate("""(function(){
+        var cp = document.getElementById('wsCellPopup');
+        var ev = document.getElementById('wsEventsPopup');
+        return { codesOpen: cp ? cp.classList.contains('active') : false,
+                 evOpen: ev ? ev.classList.contains('active') : false,
+                 codesHtml: cp ? cp.innerHTML : '',
+                 evHtml: ev ? ev.innerHTML : '' };
+    })()""")
     rows = page.evaluate("document.querySelectorAll('#wsCellPopup .ws-popup-row').length")
-    check('M: секция «Мероприятия в этот день» в попапе', 'Мероприятия в этот день' in popup_html)
+    check('M: Task 313 — окно «Мероприятия в этот день» над окном кодов (секция переехала)',
+          pop_m['codesOpen'] and pop_m['evOpen'] and
+          ('Мероприятия в этот день' in pop_m['evHtml']) and
+          ('Мероприятия в этот день' not in pop_m['codesHtml']))
     check('N: строка события с темой (справочная, некликабельная)',
-          'Повторный инструктаж по ОТ и ПБ' in popup_html and 'ws-popup-event' in popup_html)
-    check('O: «+ Мероприятие…» в попапе (быстрое добавление)', '+ Мероприятие…' in popup_html)
-    check('P: строк в попапе 14 (11 статусов + событие + «+Мероприятие» + «Дополнительно»; Task 312)',
-          rows == 14, rows)
+          'Повторный инструктаж по ОТ и ПБ' in pop_m['evHtml'] and 'ws-popup-event' in pop_m['evHtml'])
+    check('O: «+ Мероприятие…» в попапе (быстрое добавление)', '+ Мероприятие…' in pop_m['codesHtml'])
+    check('P: строк в окне кодов 13 (11 статусов + «+Мероприятие» + «Дополнительно»; Task 312/313)',
+          rows == 13, rows)
 
     # 11. Попап ячейки БЕЗ мероприятий: 19 строк (без секции)
     page.evaluate("WorkSchedule.closeCellPopup()")

@@ -30,8 +30,9 @@
 //       УДАЛЕНА; ws-popup-swatch-empty не используется; очистка
 //       ячейки — «Дополнительно…» (select + удаление);
 //     — коды мероприятий (_EVENT_CODES: И/ОБ/ПЗ/ПР/*) исключены
-//       из списка основных статусов; справка/действия — секция
-//       «Мероприятия в этот день» и «+ Мероприятие…» живы;
+//       из списка основных статусов; справка/действия — окно
+//       «Мероприятия в этот день» (Task 313: вынесено ИЗ окна кодов
+//       в отдельное окно НАД ним) и «+ Мероприятие…» живы;
 //     — «Дополнительно…» (select «Статус»): мероприятия не
 //       предлагаются, ТЕКУЩЕЕ значение-мероприятие остаётся
 //       опцией (generateMonth пишет его на день события без
@@ -41,7 +42,8 @@
 //       (белый, как фон пустых ячеек с точкой — светлая тема
 //       --bg-primary #FAF9F5); ОСНОВНОЕ значение пользователь
 //       меняет в листе «Коды_статусов» сам (код #FAF9F5).
-//   SW: kipia-test-v551 (один инкремент с v550 Task 311).
+//   SW: kipia-test-v552 (Task 313: v551 → v552 — окно мероприятий
+//       над окном кодов + подсветка сегодняшней даты).
 //
 // Запуск: через tests/run-all.js (require './test-task312.js').
 
@@ -196,10 +198,19 @@ describe('Task 312 — попап ячейки: «— выходной —» и 
             'константа _EVENT_CODES жива (слой мероприятий Task 303/306)');
     });
 
-    test('JS: секция «Мероприятия в этот день» и «+ Мероприятие…» живы', () => {
+    test('JS: Task 313 — секция мероприятий вынесена из _renderCellPopup', () => {
+        // Task 313: секция «Мероприятия в этот день» переехала из
+        // окна кодов в ОТДЕЛЬНОЕ окно #wsEventsPopup над ним; в самом
+        // _renderCellPopup строк-событий и заголовка секции больше нет
+        // (проверяются МАРКЕРЫ РЕНДЕРА — комментарии кода упоминают
+        // переезд и не должны ломать инвариант)
         const cp = fnBody(INDEX_SRC, '_renderCellPopup: function');
-        assertTrue(cp.indexOf('Мероприятия в этот день') !== -1,
-            'секция справки о событиях дня жива');
+        assertFalse(cp.indexOf('ws-popup-sec') !== -1,
+            'Task 313: заголовка секции в окне кодов нет');
+        assertFalse(cp.indexOf('ws-popup-event') !== -1,
+            'Task 313: строк-событий в окне кодов нет');
+        assertFalse(cp.indexOf('this._eventsAt(') !== -1,
+            'Task 313: _renderCellPopup не собирает события (рендер — в _renderEventsPopup)');
         assertTrue(cp.indexOf('WorkSchedule.onPopupAddEvent()') !== -1,
             '«+ Мероприятие…» жив (добавление событий)');
         assertTrue(cp.indexOf('WorkSchedule.onPopupMore()') !== -1,
@@ -258,9 +269,9 @@ describe('Task 312 — цвет «.» (плановый выходной) — б
 
 describe('Task 312 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v551', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v551'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v551');
+    test('SW: версия кэша kipia-test-v552', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v552'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v552');
         assertFalse(SW_SRC.indexOf('kipia-test-v550') !== -1,
             'старой версии v550 нет');
     });
