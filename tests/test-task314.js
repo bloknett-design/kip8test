@@ -27,20 +27,23 @@
 //     (строковые инварианты — test-work-events.js; VM-рендер — здесь)
 //   Локальная копия + кнопка:
 //     — HTML: #wsRefreshBtn (после селектов, до «Сформировать»,
-//       ВСЕМ ролям — без hidden) + #wsCacheStamp;
+//       ВСЕМ ролям — без hidden); Task 317: возраст данных —
+//       в ИНФОРМАЦИОННОМ ОКНЕ #wsRefreshTip (наведение), штамп
+//       #wsCacheStamp из бара УДАЛЁН;
 //     — CSS: .ws-refresh-btn/.ws-refreshing/@keyframes wsRefreshSpin/
-//       .ws-cache-stamp; 34px в общем правиле ряда;
+//       .ws-refresh-tip (Task 317); 34px в общем правиле ряда;
 //     — JS: ключ kip8_ws_cache_v1; init() открывает из кэша;
 //       loadGrid(force): кэш-ветка без сети, сеть после правок
 //       (loadGrid(true) ×11 у мутаций), сетка не мигает при
 //       обновлении (keepGrid), _cacheWrite после загрузки;
 //       refreshData: _loadStatusCodes(true) + loadGrid(true) + тост
-//       + блокировка повторных кликов; штамп «данные от …»;
+//       + блокировка повторных кликов; строка «данные от …» —
+//       в тултип (Task 317);
 //     — VM-СИМУЛЯЦИЯ кэша: полный/чужой/неполный вид, roundtrip
-//       записи, лимит 12 видов, формат штампа, битый JSON;
+//       записи, лимит 12 видов, формат даты тултипа, битый JSON;
 //     — VM-СИМУЛЯЦИЯ _renderCell: «.»/статус-мероприятие/отсутствие/
 //       пустая+событие/смена+событие/план+событие.
-//   SW: kipia-test-v555.
+//   SW: kipia-test-v556.
 //
 // Запуск: через tests/run-all.js (require './test-task314.js').
 
@@ -85,9 +88,8 @@ describe('Task 314 — кнопка «Обновить» + штамп (HTML)', (
         const iYear = ws.indexOf('id="wsYearSel"');
         const iRefresh = ws.indexOf('id="wsRefreshBtn"');
         const iGen = ws.indexOf('id="wsGenerateBtn"');
-        const iStamp = ws.indexOf('id="wsCacheStamp"');
-        assertTrue(iYear !== -1 && iRefresh !== -1 && iGen !== -1 && iStamp !== -1,
-            'кнопка и штамп есть в тулбаре');
+        assertTrue(iYear !== -1 && iRefresh !== -1 && iGen !== -1,
+            'кнопка есть в тулбаре');
         assertTrue(iYear < iRefresh && iRefresh < iGen,
             '«Обновить» — после селектов месяца/года, до «Сформировать»');
         // кнопка не hidden — обновление доступно и ЗРИТЕЛЯМ
@@ -102,15 +104,25 @@ describe('Task 314 — кнопка «Обновить» + штамп (HTML)', (
             'иконка-стрелка обновления (SVG)');
     });
 
-    test('HTML: штамп #wsCacheStamp — рядом с кнопкой', () => {
+    test('HTML: тултип #wsRefreshTip — возраст данных по наведению (Task 317)', () => {
         const ws = INDEX_SRC.slice(INDEX_SRC.indexOf('id="page-work-schedule"'),
                                     INDEX_SRC.indexOf('id="wsGridWrap"'));
         const iRefresh = ws.indexOf('id="wsRefreshBtn"');
-        const iStamp = ws.indexOf('id="wsCacheStamp"');
-        assertTrue(iRefresh !== -1 && iStamp !== -1 && iStamp > iRefresh,
-            'штамп сразу после кнопки «Обновить»');
-        assertTrue(ws.indexOf('class="ws-cache-stamp"') !== -1,
-            'класс штампа');
+        const iTip = ws.indexOf('id="wsRefreshTip"');
+        assertTrue(iRefresh !== -1 && iTip > iRefresh,
+            'информационное окно рядом с кнопкой «Обновить»');
+        assertTrue(ws.indexOf('id="wsRefreshTipDate"') !== -1,
+            'строка-дата #wsRefreshTipDate (заполняет _updateCacheStamp)');
+        assertTrue(ws.indexOf('class="ws-rt-desc"') !== -1,
+            'описание кнопки — вторичная строка (бывший title)');
+        // штамп ИЗ БАРА УБРАН (заявка Task 317: «данные от …» — в окно)
+        assertTrue(ws.indexOf('id="wsCacheStamp"') === -1,
+            'штамп #wsCacheStamp из бара удалён');
+        assertTrue(INDEX_SRC.indexOf('.ws-cache-stamp') === -1,
+            'класс .ws-cache-stamp удалён (мёртвый стиль)');
+        const btn = ws.slice(iRefresh - 100, iRefresh + 500);
+        assertFalse(/title="[^"]{20,}/.test(btn),
+            'нативного длинного title у кнопки больше нет (было бы двойное окно)');
     });
 
     test('HTML: «Сформировать» жива отдельно (обновление ≠ формирование)', () => {
@@ -149,9 +161,15 @@ describe('Task 314 — CSS кнопки/штампа', () => {
         assertTrue(re.test(INDEX_SRC), '.ws-refresh-btn в правиле высоты Task 269');
     });
 
-    test('CSS: .ws-cache-stamp — мелкий вторичный текст с ellipsis', () => {
-        const re = /\.ws-cache-stamp \{[^}]*font-size:\s*11px[^}]*text-overflow:\s*ellipsis;/;
-        assertTrue(re.test(INDEX_SRC), 'стиль штампа «данные от …»');
+    test('CSS: .ws-refresh-tip — окно по наведению (Task 317)', () => {
+        const re = /\.ws-refresh-tip \{[^}]*position:\s*fixed[^}]*pointer-events:\s*none;/;
+        assertTrue(re.test(INDEX_SRC), 'fixed, клики проходят сквозь окно');
+        assertTrue(INDEX_SRC.indexOf('.ws-refresh-tip[hidden] { display: none; }') !== -1,
+            'скрытие [hidden] перекрывает display');
+        assertTrue(/\.ws-rt-date \{[^}]*font-weight:\s*700/.test(INDEX_SRC),
+            'строка-дата — жирная');
+        assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .ws-refresh-tip') !== -1,
+            'светлая тема окна');
     });
 });
 
@@ -250,10 +268,10 @@ describe('Task 314 — VM: локальная копия (поведение)', 
             _map: map
         };
     }
-    // мок document (штамп)
+    // мок document (тултип «данные от …», Task 317: #wsRefreshTipDate)
     function mkDoc() {
-        const el = { textContent: '', title: '' };
-        return { getElementById: id => (id === 'wsCacheStamp' ? el : null), _el: el };
+        const el = { textContent: '' };
+        return { getElementById: id => (id === 'wsRefreshTipDate' ? el : null), _el: el };
     }
 
     function mkCtx(store, doc) {
@@ -383,18 +401,19 @@ describe('Task 314 — VM: локальная копия (поведение)', 
         assertTrue('2026-09' in saved.views, 'текущий вид записан');
     });
 
-    test('штамп: «данные от ДД.ММ, ЧЧ:ММ»; без данных — пусто', () => {
+    test('тултип: «данные от ДД.ММ, ЧЧ:ММ»; без данных — подсказка (Task 317)', () => {
         const store = mkStore(), doc = mkDoc();
         const ctx = mkCtx(store, doc);
         ctx._cacheTs = 0;
         ctx._updateCacheStamp();
-        assertEqual(doc._el.textContent, '', 'нет данных — штамп пуст');
+        assertEqual(doc._el.textContent, 'локальных данных ещё нет',
+            'нет данных — подсказка в окне');
         // 04.09.2026 14:22 по локальному времени объекта Date
         const d = new Date(2026, 8, 4, 14, 22, 0);
         ctx._cacheTs = d.getTime();
         ctx._updateCacheStamp();
         assertEqual(doc._el.textContent, 'данные от 04.09, 14:22',
-            'формат штампа');
+            'формат даты в информационном окне');
     });
 
     test('_ymKey — YYYY-MM с ведущим нулём', () => {
@@ -556,9 +575,9 @@ describe('Task 314 — VM: _renderCell (символ «·», бейджи мер
 // ------------------------------------------------------------
 describe('Task 314 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v555', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v555'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v555');
+    test('SW: версия кэша kipia-test-v556', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v556'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v556');
         assertFalse(SW_SRC.indexOf('kipia-test-v552') !== -1,
             'старой версии v552 нет');
     });

@@ -357,12 +357,12 @@ with sync_playwright() as p:
     page.wait_for_timeout(400)
 
     # I. Task 306-3: тулбар — одна кнопка «Сформировать»
-    # Task 315: кнопки разнесены по строкам тулбара: строка 1
-    # (.ws-toolbar-main) — «Обновить»; строка 2 (.ws-actions-row) —
-    # «Сохранить» (появляется при правках); строка 3
-    # (.ws-generate-row) — «Сформировать»
+    # Task 315/317: кнопки разнесены по рядам КОЛОНКИ кнопок
+    # (.ws-toolbar-main): ряд 1 (.ws-toolbar-row) — «Обновить»;
+    # ряд 2 (.ws-actions-row) — «Сохранить» (при правках);
+    # ряд 3 (.ws-generate-row) — «Сформировать»
     toolbar = page.evaluate("""(function(){
-        var bar = document.querySelector('.ws-toolbar-main');
+        var bar = document.querySelector('.ws-toolbar-row');
         var gen = document.getElementById('wsGenerateBtn');
         var genRow = document.getElementById('wsGenerateRow');
         var cal = document.getElementById('wsCalChip');
@@ -378,7 +378,7 @@ with sync_playwright() as p:
     check('I: кнопки «Обновить» (wsCalChip) НЕТ, «Сформировать» видна',
           toolbar and not toolbar['calChip'] and toolbar['genBtn'] and
           toolbar['genText'] == 'Сформировать', toolbar)
-    check('I2: Task 314/315 — «Обновить» в строке 1; «Сформировать» — в строке 3 (.ws-generate-row)',
+    check('I2: Task 314/315/317 — «Обновить» в ряду 1; «Сформировать» — в ряду 3 (.ws-generate-row)',
           toolbar and any('wsRefreshBtn:Обновить' in b for b in toolbar['buttons']) and
           toolbar['genRowShown'] and toolbar['genText'] == 'Сформировать' and
           not any('wsGenerateBtn' in b for b in toolbar['buttons']), toolbar)

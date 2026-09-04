@@ -20,8 +20,10 @@
 //   HTML: .ws-bar-row (строка 1: ws-toolbar-main → #wsEventsPanel →
 //     #wsCalPanel — окно мероприятий МЕЖДУ кнопками и окном времени
 //     и праздников); строка 2 .ws-actions-row (#wsSaveBtn +
-//     #wsCancelBtn) ПОД строкой 1; строка 3 .ws-generate-row
-//     (#wsGenerateBtn) ниже строки 2; порядок строк.
+//     #wsCancelBtn) и строка 3 .ws-generate-row (#wsGenerateBtn) —
+//     Task 317: ряды ВНУТРИ колонки кнопок .ws-toolbar-main (было:
+//     отдельные ряды бара во всю ширину), порядок: ряд 1 → ряд 2 →
+//     ряд 3 → окна.
 //   CSS: media ≥1024px — .ws-bar-row grid 1fr 1fr 1fr (ТРИ РАВНЫЕ
 //     части), окна height 95px/justify-self stretch; .ws-events-panel
 //     (95px, скролл, overscroll); ПЕРЕНОС текста: .ws-ep-item
@@ -39,7 +41,7 @@
 //     форматы дат; пустой месяц; счётчик; скрытие hidden),
 //     _updateSaveBtn (n=0 скрыта / n=2 показана), cancelAll
 //     (сброс правок, тост).
-//   SW: kipia-test-v555.
+//   SW: kipia-test-v556.
 //
 // Запуск: через tests/run-all.js (require './test-task315.js').
 
@@ -100,14 +102,14 @@ describe('Task 315 — HTML: бар из трёх частей + строки 2/
     });
 
     test('HTML: строка 2 — .ws-actions-row с «Сохранить» и «Отменить»', () => {
-        const iCal = ws.indexOf('id="wsCalPanel"');
+        const iMain = ws.indexOf('class="ws-toolbar-main"');
         const iAct = ws.indexOf('id="wsActionsRow"');
         const iSave = ws.indexOf('id="wsSaveBtn"');
         const iCancel = ws.indexOf('id="wsCancelBtn"');
         assertTrue(iAct !== -1 && iSave !== -1 && iCancel !== -1,
             'строка 2 и обе кнопки есть');
-        assertTrue(iCal !== -1 && iCal < iAct,
-            'строка 2 — ПОД строкой 1 (после окон бара)');
+        assertTrue(iMain !== -1 && iMain < iAct,
+            'Task 317: строка 2 — ряд КОЛОНКИ кнопок (внутри .ws-toolbar-main)');
         assertTrue(iAct < iSave && iSave < iCancel,
             '«Сохранить» и «Отменить» внутри строки 2, рядом');
         const btn = ws.slice(iCancel - 100, iCancel + 400);
@@ -126,7 +128,7 @@ describe('Task 315 — HTML: бар из трёх частей + строки 2/
         assertTrue(iGenRow !== -1 && iGen !== -1,
             'строка 3 и кнопка «Сформировать» есть');
         assertTrue(iAct !== -1 && iAct < iGenRow,
-            '«Сформировать» — ЕЩЁ НИЖЕ строки 2, в третьей строке');
+            '«Сформировать» — НИЖЕ строки 2, третий ряд колонки кнопок');
         assertTrue(/id="wsGenerateRow"[^>]*\shidden/.test(ws),
             'строка 3 скрыта по умолчанию (видна редакторам — init)');
     });
@@ -488,10 +490,10 @@ describe('Task 315 — VM: кнопки «Сохранить»/«Отменит�
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 315 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v555', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v555') !== -1,
-            'SW поднят до v555 (Task 316 — столбец по наведению/клику)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v556') !== -1,
+    test('SW: версия кэша kipia-test-v556', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v556') !== -1,
+            'SW поднят до v556 (Task 317 — тултип «данные от», три ряда кнопок)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v557') !== -1,
             'лишний инкремент не делался');
     });
 });

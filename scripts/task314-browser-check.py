@@ -275,8 +275,10 @@ with sync_playwright() as p:
               var rows = document.querySelectorAll('#wsGridWrap tbody tr');
               return rows.length === 2;
           })()"""))
-    stamp = page.evaluate("(function(){var e=document.getElementById('wsCacheStamp');return e? e.textContent : null;})()")
-    check('B3: штамп возраста данных «%s»' % STAMP_TEXT, stamp == STAMP_TEXT, stamp)
+    # Task 317: строка «данные от» живёт в тултипе #wsRefreshTip
+    # (дата обновляется и скрытом — текст элемента #wsRefreshTipDate)
+    stamp = page.evaluate("(function(){var e=document.getElementById('wsRefreshTipDate');return e? e.textContent : null;})()")
+    check('B3: дата возраста данных «%s» (в тултипе)' % STAMP_TEXT, stamp == STAMP_TEXT, stamp)
     check('B4: подсветка «сегодня» жива и на кэш-рендере (Task 313)',
           page.evaluate("document.querySelectorAll('#wsGridWrap thead th.ws-today-col').length === 1"))
 
@@ -320,8 +322,8 @@ with sync_playwright() as p:
     toast_msgs = page.evaluate("window.__toasts || []")
     check('C4: тост «Данные графика обновлены»',
           any('Данные графика обновлены' in m for m in toast_msgs), toast_msgs[:3])
-    stamp2 = page.evaluate("(function(){var e=document.getElementById('wsCacheStamp');return e? e.textContent : null;})()")
-    check('C5: штамп обновился (не %s)' % STAMP_TEXT,
+    stamp2 = page.evaluate("(function(){var e=document.getElementById('wsRefreshTipDate');return e? e.textContent : null;})()")
+    check('C5: дата в тултипе обновилась (не %s)' % STAMP_TEXT,
           stamp2 and stamp2 != STAMP_TEXT and stamp2.startswith('данные от '), stamp2)
     saved = page.evaluate("""(function(){
         var c = JSON.parse(localStorage.getItem('kip8_ws_cache_v1'));
@@ -588,7 +590,7 @@ with sync_playwright() as p:
         return { refresh: b ? (!b.hidden && b.offsetParent !== null) : false,
                  generate: g ? !g.hidden : true,
                  grid: !!document.querySelector('#wsGridWrap table'),
-                 stamp: (document.getElementById('wsCacheStamp')||{}).textContent || '' };
+                 stamp: (document.getElementById('wsRefreshTipDate')||{}).textContent || '' };
     })()""")
     check('G: зритель — «Обновить» доступна, «Сформировать» скрыта, сетка жива',
           viewer['refresh'] and not viewer['generate'] and viewer['grid'], viewer)
@@ -596,9 +598,9 @@ with sync_playwright() as p:
     cnt3.reset()
     page3.click('#wsRefreshBtn')
     page3.wait_for_timeout(2200)
-    check('G2: зритель: «Обновить» работает (запросы + штамп)',
+    check('G2: зритель: «Обновить» работает (запросы + дата в тултипе)',
           ws_fetch_count(cnt3) >= 6 and viewer is not None and
-          page3.evaluate("(function(){var e=document.getElementById('wsCacheStamp');return e? e.textContent.indexOf('данные от')===0 : false;})()"),
+          page3.evaluate("(function(){var e=document.getElementById('wsRefreshTipDate');return e? e.textContent.indexOf('данные от')===0 : false;})()"),
           ws_fetch_count(cnt3))
     check('G3: JS-ошибок нет (зритель)', len(js_errors3) == 0, js_errors3[:3])
     ctx3.close()
@@ -640,7 +642,7 @@ with sync_playwright() as p:
     mob = page4.evaluate("""(function(){
         var tb = document.querySelector('.ws-toolbar');
         var b = document.getElementById('wsRefreshBtn');
-        var st = document.getElementById('wsCacheStamp');
+        var st = document.getElementById('wsRefreshTipDate');
         var r = b ? b.getBoundingClientRect() : null;
         var tr = tb ? tb.getBoundingClientRect() : null;
         return { grid: !!document.querySelector('#wsGridWrap table'),
@@ -649,14 +651,14 @@ with sync_playwright() as p:
                  stamp: st ? st.textContent : null,
                  vw: window.innerWidth };
     })()""")
-    check('H: мобильный 375px — тулбар жив, «Обновить» видна и в кадре, штамп на месте',
+    check('H: мобильный 375px — тулбар жив, «Обновить» видна и в кадре, дата в тултипе',
           mob['grid'] and mob['btnVisible'] and mob['btnInToolbar'] and
           mob['stamp'] == STAMP_TEXT, mob)
     page4.click('#wsRefreshBtn')
     page4.wait_for_timeout(2200)
-    check('H2: мобильный — «Обновить» подтянул данные (сетка жива, штамп свежий)',
+    check('H2: мобильный — «Обновить» подтянул данные (сетка жива, дата в тултипе свежая)',
           page4.evaluate("!!document.querySelector('#wsGridWrap table')") and
-          page4.evaluate("(function(){var e=document.getElementById('wsCacheStamp');return e? e.textContent.indexOf('данные от')===0 : false;})()"))
+          page4.evaluate("(function(){var e=document.getElementById('wsRefreshTipDate');return e? e.textContent.indexOf('данные от')===0 : false;})()"))
     page4.screenshot(path='scripts/task314-proof-mobile.png', full_page=False)
     check('H3: JS-ошибок нет (мобильный)', len(js_errors4) == 0, js_errors4[:3])
     ctx4.close()

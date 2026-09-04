@@ -280,12 +280,14 @@ with sync_playwright() as p:
         var s = document.getElementById('wsSaveBtn');
         var c = document.getElementById('wsCancelBtn');
         var cal = document.getElementById('wsCalPanel');
-        if (!r2 || !s || !c || !r3 || !cal) return null;
+        var main = document.querySelector('.ws-toolbar-main');
+        if (!r2 || !s || !c || !r3 || !cal || !main) return null;
         var rr2 = r2.getBoundingClientRect(), rr3 = r3.getBoundingClientRect();
-        var rc = cal.getBoundingClientRect();
+        var rc = cal.getBoundingClientRect(), rm = main.getBoundingClientRect();
         return { r2hidden: r2.hidden, saveHidden: s.hidden, cancelHidden: c.hidden,
                  saveText: s.textContent.trim(), cancelText: c.textContent.trim(),
-                 row2BelowBar: rr2.top >= rc.bottom - 2,
+                 row2InCol: rr2.top >= rm.top - 2 && rr2.bottom <= rm.bottom + 2,
+                 row2NotFullBar: rr2.width <= rm.width + 1,
                  row3BelowRow2: rr3.top >= rr2.bottom - 2,
                  saveVisible: s.offsetParent !== null, cancelVisible: c.offsetParent !== null };
     })()""")
@@ -294,8 +296,8 @@ with sync_playwright() as p:
           st1 and not st1['r2hidden'] and not st1['saveHidden'] and not st1['cancelHidden'] and
           st1['saveText'] == 'Сохранить (1)' and st1['cancelText'] == 'Отменить' and
           st1['saveVisible'] and st1['cancelVisible'], st1)
-    check('G3: строка 2 — ПОД строкой 1 (ниже окон бара)',
-          st1 and st1['row2BelowBar'], st1)
+    check('G3: строка 2 — ВНУТРИ колонки кнопок (Task 317: ряд 2, не полная ширина бара)',
+          st1 and st1['row2InCol'] and st1['row2NotFullBar'], st1)
     check('G4: «Сформировать» (строка 3) — ЕЩЁ НИЖЕ строки 2',
           st1 and st1['row3BelowRow2'], st1)
     page.screenshot(path='scripts/task315-proof-actions.png', full_page=False)
@@ -467,15 +469,15 @@ with sync_playwright() as p:
                  evWidth: ev.offsetWidth, barWidth: bar.offsetWidth,
                  evInViewport: ev.offsetParent !== null,
                  genInViewport: r3.offsetParent !== null,
-                 genBelowEv: rg.top > re.bottom - 2 };
+                 genAboveEv: rg.bottom <= re.top + 2 };
     })()""")
     check('L: мобильный — бар КОЛОНКОЙ (окно мероприятий под кнопками)',
           mob and mob['display'] == 'flex' and mob['evBelowMain'], mob)
     check('L2: окно мероприятий — во всю ширину бара, в кадре',
           mob and abs(mob['evWidth'] - mob['barWidth']) <= 4 and mob['evInViewport'],
           (mob and mob['evWidth'], mob and mob['barWidth']))
-    check('L3: «Сформировать» ниже окон, в кадре',
-          mob and mob['genBelowEv'] and mob['genInViewport'], mob)
+    check('L3: «Сформировать» — в кнопочном блоке НАД окнами (Task 317), в кадре',
+          mob and mob['genAboveEv'] and mob['genInViewport'], mob)
     page3.screenshot(path='scripts/task315-proof-mobile.png', full_page=False)
     check('L4: JS-ошибок нет (мобильный)', len(js_errors3) == 0, js_errors3[:3])
     ctx3.close()

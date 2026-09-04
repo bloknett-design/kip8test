@@ -554,10 +554,10 @@ describe('Task 260: интеграция в index.html', () => {
         assertTrue(html.indexOf('.ws-cal-panel {') !== -1,
             'стили окошка календаря в тулбаре');
     });
-    test('SW: версия кэша kipia-test-v555 (Task 298)', () => {
+    test('SW: версия кэша kipia-test-v556 (Task 298)', () => {
         const sw = fs.readFileSync(path.resolve(__dirname, '..', 'sw.js'), 'utf8');
-        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v555'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v555');
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v556'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v556');
     });
     test('Task 311: тултип ячейки убран; название праздника — в попапе клика', () => {
         // Task 311: пояснительные тултипы с ячеек шахматки убраны;
@@ -1153,10 +1153,8 @@ describe('Task 266: окошко столбиками, слева в баре �
             'десктоп: строка 1 бара — grid');
         assertTrue(/\.ws-bar-row \{[^}]*grid-template-columns:\s*1fr 1fr 1fr/.test(html),
             'бар разделён на ТРИ РАВНЫЕ части (1fr 1fr 1fr)');
-        const mq = html.match(/@media \(min-width: 1024px\) \{[\s\S]*?\.ws-toolbar-main \{[\s\S]*?\}/);
-        assertTrue(!!mq, 'десктопное правило ряда кнопок');
-        assertTrue(mq[0].indexOf('flex-wrap: wrap') !== -1,
-            'ряд кнопок в своей трети переносится, не выпирает');
+        const mq = html.match(/\.ws-toolbar-main \{[^}]*height:\s*95px/);
+        assertTrue(!!mq, 'Task 317: десктопная колонка кнопок — 95px (ровно окна)');
         assertFalse(/\.ws-toolbar-main \{[^}]*order:\s*0/.test(html),
             'компоновка order (Task 269/272) удалена — теперь grid');
         assertFalse(/\.ws-toolbar-main \{[^}]*margin-right:\s*auto/.test(html),
