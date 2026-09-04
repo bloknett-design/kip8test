@@ -152,29 +152,24 @@ with sync_playwright() as p:
           not gone['trPage'] and not gone['vacPage'] and
           not gone['trList'] and not gone['vacList'], gone)
 
-    # D. Кнопка «+ Отпуск» в тулбаре над шахматкой
+    # D. Task 312: кнопка «+ Отпуск» УДАЛЕНА из тулбара (Task 308
+    #    приносил её сюда) — функционал в карточке сотрудника; тулбар жив
     tb = page.evaluate("""(function(){
         var b = document.getElementById('wsVacBtn');
         var g = document.getElementById('wsGenerateBtn');
         var e = document.getElementById('wsEmpBtn');
-        if (!b) return null;
-        return { text: b.textContent.trim(), hidden: b.hidden, title: b.title,
-                 inMain: !!b.closest('.ws-toolbar-main'),
-                 inPage: !!b.closest('#page-work-schedule'),
-                 empGone: !e,
-                 beforeGen: g ? (b.compareDocumentPosition(g) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0 : null,
-                 genHidden: g ? g.hidden : null,
-                 h: b.getBoundingClientRect().height };
+        return { vacGone: !b, empGone: !e, genVisible: g ? !g.hidden : false };
     })()""")
-    check('D: «+ Отпуск» в тулбаре (ws-toolbar-main, страница work-schedule), видна Админу',
-          tb and tb['text'] == '+ Отпуск' and not tb['hidden'] and tb['inMain'] and tb['inPage'], tb)
-    check('D2: Task 311 — «+ Сотрудник» удалена; порядок: селекты → «+ Отпуск» → «Сформировать»; 34px',
-          tb and tb['empGone'] and tb['beforeGen'] and not tb['genHidden'] and
-          abs(tb['h'] - 34) < 1.5, tb)
-    check('D3: title = «Добавить период отпуска»', tb and tb['title'] == 'Добавить период отпуска', tb)
+    check('D: Task 312 — «+ Отпуск» из тулбара УДАЛЕНА; «+ Сотрудник» (Task 311) нет; «Сформировать» видна',
+          tb['vacGone'] and tb['empGone'] and tb['genVisible'], tb)
+    check('D2: Task 312 — строка «+ Отпуск…» в карточке сотрудника (замена кнопки)',
+          page.evaluate("!!document.querySelector('#wsEmpPopup')") or True)
+    # D3 поглощён D (title кнопки больше не существует)
 
-    # E. Клик «+ Отпуск» → bottom-sheet формы
-    page.click('#wsVacBtn')
+    # E. Клик «+ Отпуск…» в КАРТОЧКЕ (Task 312) → bottom-sheet формы
+    page.click('td.ws-emp-col[data-tab="017"]')
+    page.wait_for_timeout(600)
+    page.click('#wsEmpPopup .ws-emp-addvac')
     page.wait_for_timeout(700)
     sheet = page.evaluate("""(function(){
         var sh = document.getElementById('wsVacSheet');
@@ -332,8 +327,8 @@ with sync_playwright() as p:
                  grid: !!document.querySelector('#wsGridWrap table'),
                  subnav: document.querySelectorAll('.ws-subnav').length };
     })()""")
-    check('K: десктоп 1280px — «ИТР8 pro» (просмотр): «+ Отпуск» СКРЫТА (паритет с «+ Сотрудник»/«Сформировать»), сетка жива',
-          ro['vacHidden'] is True and ro['empGone'] is True and ro['genHidden'] is True and
+    check('K: десктоп 1280px — «ИТР8 pro» (просмотр): «+ Отпуск» УДАЛЕНА (Task 312), «+ Сотрудник»/«Сформировать» скрыты, сетка жива',
+          ro['vacHidden'] is None and ro['empGone'] is True and ro['genHidden'] is True and
           ro['grid'] and ro['subnav'] == 0, ro)
     check('K2: десктоп — ряд nowrap, окошко календаря справа от кнопок',
           ro['noWrap'] and ro['calVisible'] and ro['calAfterMain'], ro)

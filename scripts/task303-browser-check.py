@@ -223,8 +223,8 @@ with sync_playwright() as p:
     check('N: строка события с темой (справочная, некликабельная)',
           'Повторный инструктаж по ОТ и ПБ' in popup_html and 'ws-popup-event' in popup_html)
     check('O: «+ Мероприятие…» в попапе (быстрое добавление)', '+ Мероприятие…' in popup_html)
-    check('P: строк в попапе 20 (16 кодов + выходной + событие + «+Мероприятие» + «Дополнительно»)',
-          rows == 20, rows)
+    check('P: строк в попапе 14 (11 статусов + событие + «+Мероприятие» + «Дополнительно»; Task 312)',
+          rows == 14, rows)
 
     # 11. Попап ячейки БЕЗ мероприятий: 19 строк (без секции)
     page.evaluate("WorkSchedule.closeCellPopup()")
@@ -236,7 +236,7 @@ with sync_playwright() as p:
     page.wait_for_timeout(600)
     popup2 = page.evaluate("document.getElementById('wsCellPopup')? document.getElementById('wsCellPopup').innerHTML : ''")
     rows2 = page.evaluate("document.querySelectorAll('#wsCellPopup .ws-popup-row').length")
-    check('Q: попап без событий: 19 строк, секции нет', rows2 == 19 and 'Мероприятия в этот день' not in popup2, rows2)
+    check('Q: попап без событий: 13 строк, секции нет (Task 312: без «— выходной —» и мероприятий)', rows2 == 13 and 'Мероприятия в этот день' not in popup2, rows2)
 
     # 12. «+ Мероприятие…» — форма с префиллом (сотрудник + дата ячейки)
     page.evaluate("""(function(){

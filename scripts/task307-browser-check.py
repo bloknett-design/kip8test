@@ -249,8 +249,8 @@ with sync_playwright() as p:
           not tr['trPage'] and not tr['vacPage'] and tr['hasBadge'] and not tr['hasTip'], tr)
 
     # H. Кнопка «+ Отпуск» (Task 308) в тулбаре — видна Админу
-    check('H: «+ Отпуск» (Task 308) в тулбаре — есть и видна Админу, страницы «Отпуска» нет',
-          tr['vacBtn'] and tr['vacBtnHidden'] is False and not tr['vacPage'], tr)
+    check('H: Task 312 — «+ Отпуск» из тулбара УДАЛЕНА (функционал — в карточке), страницы «Отпуска» нет',
+          (not tr['vacBtn']) and not tr['vacPage'], tr)
 
     # I. Прямая навигация на удалённую страницу — не падает
     page.evaluate("navigateTo('work-schedule-employees')")

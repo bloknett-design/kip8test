@@ -132,15 +132,16 @@ with sync_playwright() as p:
     goto_june(page)
     check('B: шахматка июнь 2026 отрисована', page.evaluate("document.querySelector('#wsGridWrap table')") is not None)
 
-    # C. Кнопки тулбара: «+ Сотрудник» НЕТ, «+ Отпуск» жива
+    # C. Кнопки тулбара: «+ Сотрудник» НЕТ (Task 311), «+ Отпуск» НЕТ
+    # (Task 312 — функционал в карточке сотрудника); «Сформировать» жива
     tb = page.evaluate("""(function(){
         var empBtn = document.getElementById('wsEmpBtn');
         var vacBtn = document.getElementById('wsVacBtn');
         var genBtn = document.getElementById('wsGenerateBtn');
         return { empBtn: !!empBtn, vacBtn: !!vacBtn, genBtn: !!genBtn };
     })()""")
-    check('C: кнопка «+ Сотрудник» (#wsEmpBtn) УДАЛЕНА; «+ Отпуск» и «Сформировать» живы',
-          (not tb['empBtn']) and tb['vacBtn'] and tb['genBtn'], tb)
+    check('C: кнопки «+ Сотрудник» (Task 311) и «+ Отпуск» (Task 312) УДАЛЕНЫ; «Сформировать» жива',
+          (not tb['empBtn']) and (not tb['vacBtn']) and tb['genBtn'], tb)
 
     # D. ЗАГОЛОВОК «Сотрудник» — кнопка добавления (редактору)
     head = page.evaluate("""(function(){

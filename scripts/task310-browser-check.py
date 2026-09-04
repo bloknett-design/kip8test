@@ -263,8 +263,13 @@ with sync_playwright() as p:
           tip['text'].find('ОТ') != -1, tip)
 
     # G. ШТОРКА «+ Отпуск»: Иванов 01.07–14.07 — строка периода,
-    #    строка лимита года, добавление проходит
-    page.click('#wsVacBtn')
+    #    строка лимита года, добавление проходит.
+    #    Task 312: вход в шторку — через строку «+ Отпуск…» в блоке
+    #    отпусков КАРТОЧКИ сотрудника (кнопки в тулбаре больше нет);
+    #    сотрудник уже префиллен (select_option — страховка)
+    page.click('td.ws-emp-col[data-tab="017"]')
+    page.wait_for_timeout(600)
+    page.click('#wsEmpPopup .ws-emp-addvac')
     page.wait_for_timeout(700)
     page.select_option('#wsVacTabNo', '017')
     page.fill('#wsVacStart', '2026-07-01')
@@ -300,7 +305,9 @@ with sync_playwright() as p:
 
     # H. БЛОКИРОВКА ПРЕВЫШЕНИЯ: Петров (уже 43) + 01.08–14.08 →
     #    красная строка «— ПРЕВЫШЕНИЕ», addVacation НЕ вызывается
-    page.click('#wsVacBtn')
+    page.click('td.ws-emp-col[data-tab="023"]')
+    page.wait_for_timeout(600)
+    page.click('#wsEmpPopup .ws-emp-addvac')
     page.wait_for_timeout(700)
     page.select_option('#wsVacTabNo', '023')
     page.fill('#wsVacStart', '2026-08-01')
@@ -402,16 +409,17 @@ with sync_playwright() as p:
         WorkSchedule.onMonthChange();
     })()""")
     page2.wait_for_timeout(2500)
+    page2.click('td.ws-emp-col[data-tab="017"]')
+    page2.wait_for_timeout(600)
     ro = page2.evaluate("""(function(){
         var btn = document.getElementById('wsVacBtn');
         var pp = document.getElementById('wsEmpPopup');
-        return { btnHidden: !btn || btn.offsetParent === null,
-                 cardBtn: pp ? true : false };
+        var addVac = pp ? pp.querySelector('.ws-emp-addvac') : null;
+        return { btnGone: !btn,
+                 noAddVac: !addVac };
     })()""")
-    check('M: «ИТР8 pro» — кнопка «+ Отпуск» скрыта (лимит защищён от записи)',
-          ro['btnHidden'], ro)
-    page2.click('td.ws-emp-col[data-tab="017"]')
-    page2.wait_for_timeout(600)
+    check('M: «ИТР8 pro» — «+ Отпуск» недоступна (Task 312: кнопки нет, строки в карточке нет)',
+          ro['btnGone'] and ro['noAddVac'], ro)
     ro2 = page2.evaluate("""(function(){
         var pp = document.getElementById('wsEmpPopup');
         var txt = pp ? pp.textContent : '';

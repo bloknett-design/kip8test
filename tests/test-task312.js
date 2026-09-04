@@ -1,0 +1,267 @@
+// tests/test-task312.js
+// Task 312 — «+ Отпуск» в карточку сотрудника; попап ячейки без
+// «— выходной —» и кодов мероприятий; цвет «.» — белый.
+// Заявка пользователя:
+//   «В разделе "График работы", в баре над шахматкой убери кнопку
+//    "+ Отпуск", а её функционал перемести в новую кнопку в окно
+//    сотрудника в блок отпуска. В открывающимся окне ячеек шахматки
+//    коды которые добавляются через "+ Мероприятия" убери из списка
+//    основных, они будут добавляться только в виде маленьких иконок
+//    в ячейках. В этом же окне убери самый первый код, которого нет
+//    в таблице кодов " — выходной", а цвет кода "." нужно сделать
+//    белым как в пустых ячейках с точкой (напишешь мне код цвета,
+//    я заменю на него в таблице)».
+//
+// ЧТО ПРОВЕРЯЕТСЯ (статические инварианты клиента):
+//   Кнопка «+ Отпуск» → карточка сотрудника:
+//     — #wsVacBtn и .ws-addvac-btn (HTML + CSS + светлая тема)
+//       удалены; init() больше не управляет видимостью;
+//     — _renderEmpPopup рендерит строку «+ Отпуск…» (класс
+//       ws-emp-addvac, стили строки — ws-popup-row ws-popup-more)
+//       ТОЛЬКО при _canEdit;
+//     — onEmpAddVacation(таб.№): закрыть карточку → открыть форму
+//       с префиллом (closeEmpPopup + openVacationForm(tabNo));
+//     — openVacationForm(tabNo): сотрудник карточки выбирается в
+//       списке ДО onVacEmployeeChange (часть/лимит — сразу его);
+//     — двойная защита: openVacationForm проверяет _canEdit;
+//     — bottom-sheet #wsVacSheet жив без изменений.
+//   Попап ячейки (_renderCellPopup):
+//     — строка «— выходной —» (код «—», нет в «Коды_статусов»)
+//       УДАЛЕНА; ws-popup-swatch-empty не используется; очистка
+//       ячейки — «Дополнительно…» (select + удаление);
+//     — коды мероприятий (_EVENT_CODES: И/ОБ/ПЗ/ПР/*) исключены
+//       из списка основных статусов; справка/действия — секция
+//       «Мероприятия в этот день» и «+ Мероприятие…» живы;
+//     — «Дополнительно…» (select «Статус»): мероприятия не
+//       предлагаются, ТЕКУЩЕЕ значение-мероприятие остаётся
+//       опцией (generateMonth пишет его на день события без
+//       смены — шит не должен «терять» статус ячейки).
+//   Цвет «.»:
+//     — fallback-цвет в _loadStatusCodes: #CFD8DC → #FAF9F5
+//       (белый, как фон пустых ячеек с точкой — светлая тема
+//       --bg-primary #FAF9F5); ОСНОВНОЕ значение пользователь
+//       меняет в листе «Коды_статусов» сам (код #FAF9F5).
+//   SW: kipia-test-v551 (один инкремент с v550 Task 311).
+//
+// Запуск: через tests/run-all.js (require './test-task312.js').
+
+const fs = require('fs');
+const path = require('path');
+const { test, describe, assertTrue, assertFalse } = require('./test-helpers.js');
+
+const INDEX_SRC = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+const SW_SRC = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
+
+// Вырезка тела функции: от сигнатуры до следующего «имя: function»
+// на том же уровне отступов (8 пробелов — методы WorkSchedule)
+function fnBody(src, signature) {
+    const i = src.indexOf(signature);
+    if (i === -1) return '';
+    const rest = src.slice(i + signature.length);
+    const m = rest.match(/^[\s\S]*?\n        [a-zA-Z_]+: function/);
+    return m ? m[0] : rest;
+}
+
+describe('Task 312 — кнопка «+ Отпуск»: тулбар → карточка сотрудника', () => {
+
+    test('HTML: #wsVacBtn удалена из бара над шахматкой', () => {
+        assertTrue(INDEX_SRC.indexOf('id="wsVacBtn"') === -1,
+            'кнопки «+ Отпуск» в тулбаре нет');
+        // бар жив: селекты, «Сформировать», «Сохранить», окошко календаря
+        const ws = INDEX_SRC.slice(INDEX_SRC.indexOf('id="page-work-schedule"'),
+                                   INDEX_SRC.indexOf('id="wsGridWrap"'));
+        assertTrue(ws.indexOf('id="wsMonthSel"') !== -1 &&
+                   ws.indexOf('id="wsYearSel"') !== -1 &&
+                   ws.indexOf('id="wsGenerateBtn"') !== -1 &&
+                   ws.indexOf('id="wsSaveBtn"') !== -1 &&
+                   ws.indexOf('id="wsCalPanel"') !== -1,
+            'бар над шахматкой жив (селекты, «Сформировать», «Сохранить», календарь)');
+    });
+
+    test('CSS: .ws-addvac-btn — правило удалено (тёмная + светлая тема)', () => {
+        assertFalse(INDEX_SRC.indexOf('.ws-addvac-btn') !== -1,
+            'правило .ws-addvac-btn не осталось в CSS');
+        assertFalse(/\[data-theme="light"\] \.ws-addvac-btn/.test(INDEX_SRC),
+            'светлая тема «+ Отпуск» удалена');
+        // ряд кнопок одного роста живёт без «+ Отпуск»
+        assertTrue(/\.ws-month-sel, \.ws-year-sel, \.ws-generate-btn, \.ws-save-btn \{[^}]*height:\s*34px/.test(INDEX_SRC),
+            'единая высота 34px (Task 269) — без .ws-addvac-btn');
+    });
+
+    test('JS: init() больше не ищет wsVacBtn', () => {
+        const init = INDEX_SRC.slice(INDEX_SRC.indexOf('init: function'),
+                                     INDEX_SRC.indexOf('_refreshFromUrlState: function'));
+        assertFalse(init.indexOf("getElementById('wsVacBtn')") !== -1,
+            'init не управляет убранной кнопкой');
+        // «Сформировать» — прежняя логика видимости по _canEdit
+        assertTrue(init.indexOf("var genBtn = document.getElementById('wsGenerateBtn');") !== -1,
+            'видимость «Сформировать» в init не задета');
+    });
+
+    test('JS: _renderEmpPopup — строка «+ Отпуск…» в блоке отпусков', () => {
+        const rp = fnBody(INDEX_SRC, '_renderEmpPopup: function');
+        assertTrue(rp.indexOf('ws-emp-addvac') !== -1,
+            'класс-маркер строки добавления отпуска');
+        assertTrue(rp.indexOf('+ Отпуск…</div>') !== -1,
+            'текст строки «+ Отпуск…»');
+        assertTrue(rp.indexOf('ws-popup-row ws-popup-more ws-emp-addvac') !== -1,
+            'стиль строки — как «+ Мероприятие…» в попапе ячейки');
+        // строка ПОСЛЕ секции «Отпуска · год» и ДО «Мероприятия · месяц»
+        const iVacSec = rp.indexOf('Отпуска · ');
+        const iAddVac = rp.indexOf('ws-emp-addvac');
+        const iTrSec = rp.indexOf('Мероприятия · ');
+        assertTrue(iVacSec !== -1 && iAddVac !== -1 && iTrSec !== -1 &&
+                   iVacSec < iAddVac && iAddVac < iTrSec,
+            'строка «+ Отпуск…» внутри блока отпусков (между секциями)');
+        // только редакторам
+        assertTrue(rp.indexOf('if (this._canEdit) {') !== -1,
+            'рендер строки обёрнут проверкой _canEdit');
+    });
+
+    test('JS: клик строки → onEmpAddVacation(таб. №) с экранированием', () => {
+        const rp = fnBody(INDEX_SRC, '_renderEmpPopup: function');
+        assertTrue(rp.indexOf("WorkSchedule.onEmpAddVacation(\\'") !== -1,
+            'onclick строки зовёт onEmpAddVacation с таб. №');
+        assertTrue(rp.indexOf("this._esc(String(emp['таб_номер'] || ''))") !== -1,
+            'таб. № экранируется _esc (защита от кавычек)');
+    });
+
+    test('JS: onEmpAddVacation — закрыть карточку, открыть форму с префиллом', () => {
+        const fn = fnBody(INDEX_SRC, 'onEmpAddVacation: function');
+        assertTrue(fn.indexOf('this.closeEmpPopup();') !== -1,
+            'карточка закрывается перед шторкой');
+        assertTrue(fn.indexOf('this.openVacationForm(tabNo);') !== -1,
+            'форма открывается с таб. № сотрудника карточки');
+    });
+
+    test('JS: openVacationForm(tabNo) — префилл сотрудника', () => {
+        const fn = fnBody(INDEX_SRC, 'openVacationForm: function');
+        assertTrue(INDEX_SRC.indexOf('openVacationForm: function(tabNo)') !== -1,
+            'сигнатура принимает необязательный таб. №');
+        assertTrue(fn.indexOf('empSel.value = String(tabNo);') !== -1,
+            'выбранный сотрудник устанавливается в списке');
+        // префилл ДО onVacEmployeeChange: часть и лимит года — сразу его
+        const iPrefill = fn.indexOf('empSel.value = String(tabNo);');
+        const iChange = fn.indexOf('this.onVacEmployeeChange();');
+        assertTrue(iPrefill !== -1 && iChange !== -1 && iPrefill < iChange,
+            'префилл раньше onVacEmployeeChange (часть/лимит — для него)');
+        // двойная защита (право записи) не снята
+        assertTrue(fn.indexOf('if (!this._canEdit) return;') !== -1,
+            'openVacationForm проверяет право записи');
+    });
+
+    test('HTML: bottom-sheet «Новый отпуск» жив (без изменений)', () => {
+        assertTrue(INDEX_SRC.indexOf('id="wsVacSheet"') !== -1 &&
+                   INDEX_SRC.indexOf('id="wsVacOverlay"') !== -1 &&
+                   INDEX_SRC.indexOf('id="wsVacTabNo"') !== -1 &&
+                   INDEX_SRC.indexOf('id="wsVacStart"') !== -1 &&
+                   INDEX_SRC.indexOf('id="wsVacEnd"') !== -1,
+            'шторка и поля формы живы');
+        assertTrue(INDEX_SRC.indexOf('WorkSchedule.submitVacationForm()') !== -1,
+            'submit жив (лимит 42 дн. Task 310 — в шторке)');
+    });
+});
+
+describe('Task 312 — попап ячейки: «— выходной —» и коды мероприятий', () => {
+
+    test('JS: строка «— выходной —» удалена из _renderCellPopup', () => {
+        const cp = fnBody(INDEX_SRC, '_renderCellPopup: function');
+        assertFalse(cp.indexOf('>выходной</span>') !== -1,
+            'строки «— выходной —» в попапе нет');
+        assertFalse(cp.indexOf('ws-popup-swatch-empty') !== -1,
+            'пунктирный свотч «выходного» не рендерится');
+        assertFalse(cp.indexOf("WorkSchedule.onPopupStatus(\\'\\')") !== -1,
+            'клик по пустому коду из попапа не вызывается');
+        // шапка и строки статусов живы
+        assertTrue(cp.indexOf('ws-popup-title') !== -1,
+            'заголовок (дата · ФИО) жив');
+        assertTrue(cp.indexOf('ws-popup-row') !== -1 &&
+                   cp.indexOf('ws-popup-swatch') !== -1,
+            'строки «код — название» живы');
+    });
+
+    test('CSS: .ws-popup-swatch-empty — мёртвое правило удалено', () => {
+        assertFalse(INDEX_SRC.indexOf('.ws-popup-swatch-empty {') !== -1,
+            'правило .ws-popup-swatch-empty не осталось');
+        assertTrue(INDEX_SRC.indexOf('.ws-popup-swatch {') !== -1,
+            'базовый свотч жив');
+    });
+
+    test('JS: коды мероприятий исключены из списка основных', () => {
+        const cp = fnBody(INDEX_SRC, '_renderCellPopup: function');
+        assertTrue(cp.indexOf('this._EVENT_CODES.indexOf(c.code) !== -1') !== -1,
+            'фильтр _EVENT_CODES в цикле статусов');
+        // сам список _EVENT_CODES жив (бейджи, секция мероприятий)
+        assertTrue(INDEX_SRC.indexOf("_EVENT_CODES: ['И', 'ОБ', 'ПЗ', 'ПР', '*']") !== -1,
+            'константа _EVENT_CODES жива (слой мероприятий Task 303/306)');
+    });
+
+    test('JS: секция «Мероприятия в этот день» и «+ Мероприятие…» живы', () => {
+        const cp = fnBody(INDEX_SRC, '_renderCellPopup: function');
+        assertTrue(cp.indexOf('Мероприятия в этот день') !== -1,
+            'секция справки о событиях дня жива');
+        assertTrue(cp.indexOf('WorkSchedule.onPopupAddEvent()') !== -1,
+            '«+ Мероприятие…» жив (добавление событий)');
+        assertTrue(cp.indexOf('WorkSchedule.onPopupMore()') !== -1,
+            '«Дополнительно…» жив (расширенная правка)');
+    });
+
+    test('JS: _fillStatusSelect — мероприятия не предлагаются, текущее значение живо', () => {
+        const fn = fnBody(INDEX_SRC, '_fillStatusSelect: function');
+        assertTrue(fn.indexOf('this._EVENT_CODES.indexOf(c.code) !== -1 && c.code !== current') !== -1,
+            'фильтр мероприятий с исключением текущего значения');
+        // option «— выходной —» в select «Дополнительно…» жив
+        // (это НЕ попап: очистка ячейки осталась в расширенной правке)
+        assertTrue(fn.indexOf('<option value="">— выходной —</option>') !== -1,
+            'select шита: «— выходной —» жив (очистка ячейки)');
+        // незнакомое легаси-значение по-прежнему добавляется опцией
+        assertTrue(fn.indexOf('(нет в справочнике)') !== -1,
+            'легаси-значение временно опцией (Task 298)');
+    });
+
+    test('JS: onPopupStatus(\'\') — семантика очистки жива (путь шита)', () => {
+        // Метод onPopupStatus не удалён (submitCellForm и select шита
+        // используют его семантику через _applyCellStatus(''))
+        const fn = fnBody(INDEX_SRC, 'onPopupStatus: function');
+        assertTrue(fn.indexOf('_applyCellStatus') !== -1,
+            'onPopupStatus применяет статус локально');
+        // _applyCellStatus('') — очистка: ручная запись → __delete и т. д.
+        const ap = fnBody(INDEX_SRC, '_applyCellStatus: function');
+        assertTrue(ap.indexOf('__delete') !== -1,
+            'семантика «выходной» в _applyCellStatus жива');
+    });
+});
+
+describe('Task 312 — цвет «.» (плановый выходной) — белый', () => {
+
+    test('JS: fallback-цвет «.» = #FAF9F5 (как пустая ячейка с точкой)', () => {
+        // Основное значение пользователь меняет в листе «Коды_статусов»
+        // (табель_КИП_ИОС) сам; fallback в клиенте синхронизирован:
+        // светлая тема --bg-primary = #FAF9F5 — фон пустых ячеек
+        const lc = fnBody(INDEX_SRC, '_loadStatusCodes: function');
+        assertTrue(lc.indexOf("{code:'.',    name:'Плановый выходной день', color:'#FAF9F5'}") !== -1,
+            'fallback «.» — #FAF9F5');
+        assertFalse(lc.indexOf("color:'#CFD8DC'") !== -1,
+            'старый серо-голубой #CFD8DC не остался');
+    });
+
+    test('CSS: фон пустых ячеек — --bg-primary (эталон цвета)', () => {
+        // Пустые ячейки с точкой: background: var(--bg-primary, #1a2233);
+        // светлая тема задаёт --bg-primary: #FAF9F5 — «белый» цвет,
+        // который пользователь ставит в таблицу кодов
+        const m = /\.ws-grid tbody td\.ws-cell \{[^}]*background:\s*var\(--bg-primary,\s*#1a2233\);/.test(INDEX_SRC);
+        assertTrue(m, 'пустая ячейка — var(--bg-primary, #1a2233)');
+        const light = INDEX_SRC.indexOf('--bg-primary: #FAF9F5;') !== -1;
+        assertTrue(light, 'светлая тема: --bg-primary = #FAF9F5 (код для листа)');
+    });
+});
+
+describe('Task 312 — Service Worker', () => {
+
+    test('SW: версия кэша kipia-test-v551', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v551'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v551');
+        assertFalse(SW_SRC.indexOf('kipia-test-v550') !== -1,
+            'старой версии v550 нет');
+    });
+});

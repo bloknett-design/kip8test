@@ -133,16 +133,23 @@ with sync_playwright() as p:
         for (var i=0;i<tds.length;i++){ if(tds[i].textContent.trim()==='Д8') return tds[i].style.background; } return '';})()""")
     check('J: фон ячейки «Д8» из справочника (rgb(255,249,196) = #FFF9C4)', bg.replace(' ','') == 'rgb(255,249,196)', bg)
 
-    # 7. Попап: клик по пустой ячейке → строки 16 кодов + «— выходной»
+    # 7. Попап: клик по пустой ячейке → строки кодов (Task 312: без
+    #    «— выходной —» и без кодов мероприятий — 11 статусов)
     page.evaluate("document.querySelector('#wsGridWrap td.ws-cell.ws-status-empty') ? document.querySelector('#wsGridWrap td.ws-cell.ws-status-empty').click() : null")
     page.wait_for_timeout(600)
     popup_html = page.evaluate("document.getElementById('wsCellPopup') ? document.getElementById('wsCellPopup').innerHTML : ''")
     rows = page.evaluate("document.querySelectorAll('#wsCellPopup .ws-popup-row').length")
     check('K: попап открыт', popup_html != '', popup_html[:80])
-    # Task 303: + строка «+ Мероприятие…» (быстрое добавление события)
-    check('L: в попапе 19 строк (16 кодов + «— выходной» + «+ Мероприятие…» + «Дополнительно…»)', rows == 19, rows)
-    for code in ['Д8','Д7,2','д','н','ОТ','У','ОВ','ПР','*','.']:
+    # Task 312: «— выходной —» удалена, И/ОБ/ПЗ/ПР/* отфильтрованы:
+    # 16 − 5 мероприятий = 11 кодов + «+ Мероприятие…» + «Дополнительно…»
+    check('L: в попапе 13 строк (11 статусов + «+ Мероприятие…» + «Дополнительно…»; Task 312)', rows == 13, rows)
+    for code in ['Д8','Д7,2','д','н','ОТ','У','ОВ','.']:
         check('M: попап содержит код «%s»' % code, ('>' + code + '<') in popup_html.replace('\n',''))
+    # Task 312: коды мероприятий в списке основных НЕТ
+    for code in ['ПР','И','ОБ','ПЗ','*']:
+        check('M2: Task 312 — мероприятия «%s» в списке основных НЕТ' % code, ('>' + code + '<') not in popup_html.replace('\n',''))
+    check('M3: Task 312 — строки «— выходной —» в попапе НЕТ (имя строки ≠ «Плановый выходной день»)',
+          page.evaluate("(function(){var n=document.querySelectorAll('#wsCellPopup .ws-popup-name');for(var i=0;i<n.length;i++){if((n[i].textContent||'').trim()==='выходной')return false;}return true;})()"))
     check('N: старых кодов «О» (отпуск) и «П» (прогул) в попапе НЕТ', ('>О<' not in popup_html) and ('>П<' not in popup_html))
 
     # 8. Выбор «.» в попапе — ячейка локально перекрашивается, «Сохранить (1)»
@@ -151,13 +158,14 @@ with sync_playwright() as p:
     save_btn = page.evaluate("var b=document.getElementById('wsSaveBtn'); b? {hidden:b.hidden, text:b.textContent} : null")
     check('O: выбор «.» — кнопка «Сохранить (1)»', save_btn and not save_btn['hidden'] and '1' in save_btn['text'], str(save_btn))
 
-    # 9. Расширенная правка: select заполнен 16 кодами + «— выходной»
+    # 9. Расширенная правка: select заполнен кодами + «— выходной»
+    #    (Task 312: мероприятия не предлагаются — 11 кодов + «—»)
     page.evaluate("document.querySelector('#wsGridWrap td.ws-cell').click()")
     page.wait_for_timeout(500)
     page.evaluate("WorkSchedule.onPopupMore()")
     page.wait_for_timeout(500)
     opts = page.evaluate("Array.from(document.querySelectorAll('#wsCellStatus option')).map(o=>o.value)")
-    check('P: select расширенной правки: 17 опций (16 кодов + «—»)', len(opts) == 17, str(opts))
+    check('P: select расширенной правки: 12 опций (11 кодов + «— выходной —»; Task 312)', len(opts) == 12, str(opts))
     check('Q: select содержит «Д7,2» и «.»', 'Д7,2' in opts and '.' in opts)
     opt_texts = page.evaluate("Array.from(document.querySelectorAll('#wsCellStatus option')).map(o=>o.textContent)")
     check('R: опция «Д7,2» с названием', any('Д7,2' in t for t in opt_texts), str(opt_texts[:4]))

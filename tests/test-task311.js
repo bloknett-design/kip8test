@@ -31,7 +31,8 @@
 //       onclick openEmployeeForm и плюсик-индикатор (только _canEdit);
 //     — зрителям — обычный заголовок без клика (класса/onclick нет);
 //     — двойная защита: openEmployeeForm сам проверяет право записи.
-//   SW: kipia-test-v550 (один инкремент с v549 Task 310).
+//   SW: kipia-test-v550 (один инкремент с v549 Task 310; Task 312
+//   поднял до v551 — см. test-task312.js).
 //
 // Запуск: через tests/run-all.js (require './test-task311.js').
 
@@ -193,9 +194,10 @@ describe('Task 311 — кнопка «+ Сотрудник» → заголов�
             'кнопки #wsEmpBtn нет в разметке');
         assertFalse(INDEX_SRC.indexOf('ws-addemp-btn') !== -1,
             'класс .ws-addemp-btn удалён (HTML и CSS)');
-        // «+ Отпуск» (Task 308) не задет
-        assertTrue(INDEX_SRC.indexOf('id="wsVacBtn"') !== -1,
-            'кнопка «+ Отпуск» жива');
+        // Task 312: «+ Отпуск» из тулбара тоже удалена — функционал
+        // переехал строкой «+ Отпуск…» в карточку сотрудника
+        assertFalse(INDEX_SRC.indexOf('id="wsVacBtn"') !== -1,
+            'Task 312: кнопка «+ Отпуск» из тулбара удалена');
     });
 
     test('JS: _renderGrid — заголовок «Сотрудник» становится кнопкой (редакторам)', () => {
@@ -232,17 +234,19 @@ describe('Task 311 — кнопка «+ Сотрудник» → заголов�
         assertFalse(init.indexOf("getElementById('wsEmpBtn')") !== -1,
             'init не ищет wsEmpBtn (кнопки нет)');
         // шапка перерисовывается при каждом рендере — видимость
-        // решается в _renderGrid по _canEdit, отдельного флага не нужно
-        assertTrue(init.indexOf("var vacBtn = document.getElementById('wsVacBtn');") !== -1,
-            'видимость «+ Отпуск» в init не задета');
+        // решается в _renderGrid по _canEdit, отдельного флага не нужно.
+        // Task 312: «+ Отпуск» из тулбара удалена — init её не ищет тоже
+        // (видимость строки «+ Отпуск…» решает _renderEmpPopup)
+        assertFalse(init.indexOf("getElementById('wsVacBtn')") !== -1,
+            'Task 312: видимость «+ Отпуск» из init убрана');
     });
 });
 
 describe('Task 311 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v550', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v550'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v550');
+    test('SW: версия кэша kipia-test-v551', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v551'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v551');
         assertFalse(SW_SRC.indexOf('kipia-test-v549') !== -1,
             'старой версии v549 нет');
     });
