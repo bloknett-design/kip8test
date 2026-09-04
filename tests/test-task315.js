@@ -39,7 +39,7 @@
 //     форматы дат; пустой месяц; счётчик; скрытие hidden),
 //     _updateSaveBtn (n=0 скрыта / n=2 показана), cancelAll
 //     (сброс правок, тост).
-//   SW: kipia-test-v554.
+//   SW: kipia-test-v555.
 //
 // Запуск: через tests/run-all.js (require './test-task315.js').
 
@@ -488,10 +488,10 @@ describe('Task 315 — VM: кнопки «Сохранить»/«Отменит�
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 315 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v554', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v554') !== -1,
-            'SW поднят до v554 (бар + кнопка «Отменить» — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v555') !== -1,
+    test('SW: версия кэша kipia-test-v555', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v555') !== -1,
+            'SW поднят до v555 (Task 316 — столбец по наведению/клику)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v556') !== -1,
             'лишний инкремент не делался');
     });
 });
