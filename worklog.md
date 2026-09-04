@@ -3036,3 +3036,71 @@ post-Task 306 (версия + предыдущая сохранены).
 бейджей НЕТ (до Task 306 показывал «Д7,2»).
 
 Следующий номер задачи: 307.
+
+---
+Task ID: 307
+Agent: main (Super Z)
+Task: По заявке пользователя: «В разделе "График работы" убери
+      вкладку сотрудники, а кнопку "Добавить сотрудника" перемести
+      в бар над шахматкой к остальным кнопкам».
+
+Work Log:
+- Контекст: worklog Tasks 298-306 + промт post-Task 306; кодовые зоны
+  index.html (субнав .ws-subnav ×4, #page-work-schedule-employees,
+  тулбар ws-toolbar-main, WorkSchedule-модуль, PAGE_PARENTS/LABELS,
+  _WORK_SCHEDULE_PAGES, navigateTo-хуки, CSS .ws-emp-card*).
+- Клиент: страница «Сотрудники» УДАЛЕНА ЦЕЛИКОМ (див, субнав-кнопки
+  на 3 оставшихся страницах, хук initEmployeesPage, записи
+  PAGE_PARENTS/PAGE_LABELS, 'work-schedule-employees' из
+  _WORK_SCHEDULE_PAGES, JS initEmployeesPage/loadEmployees/
+  _renderEmployees, мёртвый CSS .ws-emp-card*/.ws-emp-card-header/
+  .ws-employees-list + светлая тема; _loadEmployees жив — им
+  пользуются loadGrid/инструктажи/отпуска).
+- Клиент: НОВАЯ кнопка «+ Сотрудник» (#wsEmpBtn .ws-addemp-btn) в
+  ws-toolbar-main над шахматкой — после селектов, ДО «Сформировать»;
+  нейтральный стиль селектов (var(--bg-tertiary), border, 600),
+  высота 34px (правило Task 269 расширено), title «Добавить
+  сотрудника»; видимость в init() по _canEdit — как у «Сформировать»;
+  клик → прежний bottom-sheet #wsEmpSheet (openEmployeeForm);
+  .ws-toolbar-main flex-wrap: wrap (мобильный складывается в 2
+  строки; десктоп — nowrap); светлая тема — в тон селектов.
+- Клиент: submitEmployeeForm после добавления → loadGrid() (новая
+  строка сотрудника в шахматке) вместо удалённого loadEmployees().
+- Сервер: WorkSchedule.gs и листы НЕ менялись (деплой Apps Script
+  не нужен).
+- Тесты: tests/test-work-schedule.js — НОВЫЙ describe Task 307 (12
+  тестов: страница удалена, субнав 3×3, кнопка в тулбаре/видимость/
+  openEmployeeForm, методы удалены с \b-границей, submit → loadGrid,
+  хуки/карты, шторка жива, CSS, SW); обновлены: субнав 4→3, активный
+  пункт (граница slice → trainings), страницы, PAGE_LABELS/PARENTS
+  (сотрудники убраны), крошки-симуляция удалена, метки заголовков,
+  Task 255 (_posLabel в шахматке), Task 269 (высота 34px + новый
+  класс); v545 → v546 в sw.js + 9 тест-файлах (24+3+4+3+3+3+3+2+2).
+- Сьют: 1433 → 1444 passed / 0 failed.
+- Верификация: node --check OK; task299-mock 76/76; НОВЫЙ
+  scripts/task307-browser-check.py — 22/22 (Playwright, 8927, мок
+  fetch: субнав 3 кнопки; «+ Сотрудник» видна Админу в тулбаре до
+  «Сформировать», 34px; шторка «Новый сотрудник» с фокусом на
+  «Таб. №»; submit → addEmployee(042 «Сидоров») → тост → НОВАЯ
+  СТРОКА в шахматке; «Инструктажи»/«Отпуска» живы; navigateTo
+  ('work-schedule-employees') не падает; 375px — нет горизонтального
+  скролла; десктоп 1280px «ИТР8 pro» — кнопка и «Сформировать»
+  скрыты, окошко календаря справа; 0 JS-ошибок; скриншоты
+  task307-proof-*.png); регресс: task298 29/29, task303 20/20,
+  task304 10/10, task305 20/20, task306 29/29; VLM ×2.
+- Доки: scripts/DEPLOY-Task307-subnav-employees.md (деплой ТОЛЬКО
+  фронтенд); системный промт post-Task 307 (строка 3, счётчики 92
+  страницы/v546/1444, таблица репо v546/v411, аннотация Task 274,
+  запись модуля; обновлятор scripts/task307-update-prompt.py);
+  worklog — эта запись.
+
+Stage Summary:
+- Task 307 выполнен: вкладка «Сотрудники» удалена из субнавигации
+  (3 полосы × 3 кнопки: Шахматка/Инструктажи/Отпуска), страница
+  удалена; кнопка «+ Сотрудник» — в баре над шахматкой рядом с
+  «Сформировать» (видимость по праву правки), после добавления
+  перезагружается шахматка. Сервер/листы не тронуты.
+  Тесты 1444/0, browser 22/22 + регресс 298/303/304/305/306,
+  VLM ×2. ДЕПЛОЙ: только GitHub Pages (SW v546, Ctrl+Shift+R ×1–2);
+  Apps Script и листы НЕ трогать. Следующий номер: 308.
+- Локальная дата: 2026-09-03 (Asia/Novosibirsk, UTC+07:00).

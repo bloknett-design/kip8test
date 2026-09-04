@@ -314,19 +314,23 @@ describe('График работы — WorkSchedule', () => {
             assertTrue(html.indexOf('var WorkSchedule = {') !== -1);
         });
 
-        test('HTML-страницы трёх под-разделов присутствуют', () => {
+        test('HTML-страницы под-разделов (Task 307: без «Сотрудников»)', () => {
             assertTrue(html.indexOf('id="page-work-schedule"') !== -1);
-            assertTrue(html.indexOf('id="page-work-schedule-employees"') !== -1);
             assertTrue(html.indexOf('id="page-work-schedule-trainings"') !== -1);
+            // Task 307: страница «Сотрудники» удалена (кнопка добавления —
+            // в тулбаре над шахматкой)
+            assertTrue(html.indexOf('id="page-work-schedule-employees"') === -1,
+                'страницы «Сотрудники» больше нет (Task 307)');
         });
 
         test('Кнопка меню на странице «Документация ИОС»', () => {
             assertTrue(html.indexOf("navigateTo('work-schedule')") !== -1);
         });
 
-        test('navigateTo вызывает инициализаторы трёх страниц', () => {
+        test('navigateTo вызывает инициализаторы страниц модуля (Task 307)', () => {
             assertTrue(html.indexOf("page === 'work-schedule'") !== -1);
-            assertTrue(html.indexOf("page === 'work-schedule-employees'") !== -1);
+            assertTrue(html.indexOf("page === 'work-schedule-employees'") === -1,
+                'хук work-schedule-employees удалён (Task 307)');
             assertTrue(html.indexOf("page === 'work-schedule-trainings'") !== -1);
         });
 
@@ -374,23 +378,19 @@ describe('График работы — WorkSchedule', () => {
                 'Метка work-schedule должна быть «График работы» (не raw id)');
         });
 
-        test('PAGE_LABELS: метки для подразделов (сотрудники/инструктажи)', () => {
-            const mEmp = labels.match(/'work-schedule-employees':\s+'([^']+)'/);
+        test('PAGE_LABELS: метки для подразделов (инструктажи; Task 307: сотрудники удалены)', () => {
             const mTr = labels.match(/'work-schedule-trainings':\s+'([^']+)'/);
-            assertTrue(!!mEmp, 'PAGE_LABELS должен содержать запись для work-schedule-employees');
+            assertTrue(html.indexOf("'work-schedule-employees':") === -1,
+                'записи work-schedule-employees в PAGE_LABELS нет (Task 307)');
             assertTrue(!!mTr, 'PAGE_LABELS должен содержать запись для work-schedule-trainings');
-            assertEqual(mEmp[1], 'Сотрудники',
-                'Метка work-schedule-employees должна совпадать с заголовком страницы');
             assertEqual(mTr[1], 'Инструктажи и обучения',
                 'Метка work-schedule-trainings должна совпадать с заголовком страницы');
         });
 
         test('PAGE_LABELS: метки не дублируются (единственная запись на страницу)', () => {
             const countMain = (labels.match(/'work-schedule':\s+'/g) || []).length;
-            const countEmp = (labels.match(/'work-schedule-employees':\s+'/g) || []).length;
             const countTr = (labels.match(/'work-schedule-trainings':\s+'/g) || []).length;
             assertEqual(countMain, 1, 'Ровно одна запись work-schedule в PAGE_LABELS');
-            assertEqual(countEmp, 1, 'Ровно одна запись work-schedule-employees в PAGE_LABELS');
             assertEqual(countTr, 1, 'Ровно одна запись work-schedule-trainings в PAGE_LABELS');
         });
 
@@ -404,11 +404,10 @@ describe('График работы — WorkSchedule', () => {
                 'PAGE_PARENTS должен содержать work-schedule → docs-ios (полная цепочка крошек, Task 267)');
         });
 
-        test('PAGE_PARENTS: подразделы с родителем work-schedule', () => {
-            const reEmp = /'work-schedule-employees':\s+'work-schedule'/;
+        test('PAGE_PARENTS: подразделы с родителем work-schedule (Task 307)', () => {
             const reTr = /'work-schedule-trainings':\s+'work-schedule'/;
-            assertTrue(reEmp.test(html),
-                'PAGE_PARENTS: work-schedule-employees → work-schedule (путь «Главная / График работы / Сотрудники»)');
+            assertTrue(html.indexOf("'work-schedule-employees':  'work-schedule'") === -1,
+                'записи work-schedule-employees в PAGE_PARENTS нет (Task 307)');
             assertTrue(reTr.test(html),
                 'PAGE_PARENTS: work-schedule-trainings → work-schedule (путь «Главная / График работы / Инструктажи и обучения»)');
         });
@@ -441,39 +440,11 @@ describe('График работы — WorkSchedule', () => {
             assertEqual(path[2], 'work-schedule');
         });
 
-        test('buildBreadcrumbPath: путь work-schedule-employees = [docs, docs-ios, work-schedule, work-schedule-employees] (Task 267)', () => {
-            const mapMatch = html.match(/const PAGE_PARENTS = \{([\s\S]*?)\n    \};/);
-            assertTrue(!!mapMatch, 'PAGE_PARENTS должен существовать в index.html');
-            const entries = {};
-            const re = /'([a-z0-9-]+)':\s+'([a-z0-9-]+)'/g;
-            let mm;
-            while ((mm = re.exec(mapMatch[1])) !== null) {
-                if (!(mm[1] in entries)) entries[mm[1]] = mm[2];
-            }
-            const path = [];
-            let cur = 'work-schedule-employees';
-            const visited = new Set();
-            while (cur && cur !== 'dashboard' && !visited.has(cur)) {
-                visited.add(cur);
-                path.unshift(cur);
-                cur = entries[cur] || null;
-            }
-            // Task 267: четыре сегмента — Главная / Документация /
-            // Документация ИОС / График работы / Сотрудники
-            assertEqual(path.length, 4,
-                'Путь work-schedule-employees — четыре сегмента через docs → docs-ios → work-schedule');
-            assertEqual(path[0], 'docs');
-            assertEqual(path[1], 'docs-ios');
-            assertEqual(path[2], 'work-schedule');
-            assertEqual(path[3], 'work-schedule-employees');
-        });
-
         test('Метки совпадают с заголовками страниц (page-inline-header-title)', () => {
             // Заголовок страницы — источник истины для метки крошек
             assertTrue(html.indexOf('<div class="page-inline-header-title">График работы</div>') !== -1,
                 'Заголовок страницы work-schedule — «График работы»');
-            assertTrue(html.indexOf('<div class="page-inline-header-title">Сотрудники</div>') !== -1,
-                'Заголовок страницы work-schedule-employees — «Сотрудники»');
+            // Task 307: страница «Сотрудники» удалена — заголовок не проверяем
             assertTrue(html.indexOf('<div class="page-inline-header-title">Инструктажи и обучения</div>') !== -1,
                 'Заголовок страницы work-schedule-trainings — «Инструктажи и обучения»');
         });
@@ -1045,12 +1016,14 @@ describe('График работы — WorkSchedule', () => {
                 'Тернарник: без должности И типа нет пустого блока .ws-emp-pos');
         });
 
-        test('JS: справочник «Сотрудники» — смена в подписи должности (единый формат)', () => {
+        test('JS: справочник «Сотрудники» — смена в подписи должности (единый формат; Task 307: карточки справочника удалены)', () => {
             // Task 255: в карточках справочника фрагмент «· смена N» убран,
             // смена (столбец D) входит в подпись должности справа от неё.
-            assertTrue(html.indexOf("var posLabel = this._posLabel(e);") !== -1 &&
-                       html.indexOf("(posLabel ? ' · ' + this._esc(posLabel) : '')") !== -1,
-                'Карточка: подпись _posLabel справа от тега типа');
+            // Task 307: карточки удалены вместе со страницей — формат
+            // «должность + смена» остаётся в ШАХМАТКЕ (_posLabel) и
+            // попапе ячейки; фрагмент «· смена N» по-прежнему отсутствует
+            assertTrue(html.indexOf("var empPosLabel = this._posLabel(emp);") !== -1,
+                'Шахматка: подпись _posLabel под ФИО (единый формат жив)');
             assertTrue(html.indexOf("· смена ' + e.смена") === -1 &&
                        html.indexOf('· смена не задана') === -1,
                 'Дублирующий отдельный фрагмент смены удалён');
@@ -1207,8 +1180,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v514 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v545") !== -1,
-                'Актуальная версия — kipia-test-v545 (Task 291)');
+            assertTrue(sw.indexOf("kipia-test-v546") !== -1,
+                'Актуальная версия — kipia-test-v546 (Task 291)');
         });
         test('Старая версия v514 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v514") === -1,
@@ -1271,8 +1244,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v516 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v545") !== -1,
-                'Актуальная версия — kipia-test-v545 (Task 291)');
+            assertTrue(sw.indexOf("kipia-test-v546") !== -1,
+                'Актуальная версия — kipia-test-v546 (Task 291)');
         });
     });
 
@@ -1283,8 +1256,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v515 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v545") !== -1,
-                'Актуальная версия — kipia-test-v545 (Task 291)');
+            assertTrue(sw.indexOf("kipia-test-v546") !== -1,
+                'Актуальная версия — kipia-test-v546 (Task 291)');
         });
     });
 
@@ -1294,8 +1267,8 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
         test('v513 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v545") !== -1,
-                'Актуальная версия — kipia-test-v545');
+            assertTrue(sw.indexOf("kipia-test-v546") !== -1,
+                'Актуальная версия — kipia-test-v546');
         });
     });
 
@@ -1488,8 +1461,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v517 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v545") !== -1,
-                'Актуальная версия — kipia-test-v545 (Task 291)');
+            assertTrue(sw.indexOf("kipia-test-v546") !== -1,
+                'Актуальная версия — kipia-test-v546 (Task 291)');
         });
         test('Старая версия v517 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v517") === -1,
@@ -1503,9 +1476,9 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v545', () => {
-            assertTrue(sw.indexOf("kipia-test-v545") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v545 (Task 290)');
+        test('CACHE_VERSION = kipia-test-v546', () => {
+            assertTrue(sw.indexOf("kipia-test-v546") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v546 (Task 290)');
         });
         test('Старая версия v517 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v517") === -1,
@@ -1873,9 +1846,9 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v545', () => {
-            assertTrue(sw.indexOf("kipia-test-v545") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v545 (Task 290)');
+        test('CACHE_VERSION = kipia-test-v546', () => {
+            assertTrue(sw.indexOf("kipia-test-v546") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v546 (Task 290)');
         });
         test('Старая версия v523 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v523") === -1,
@@ -1971,9 +1944,10 @@ describe('График работы — WorkSchedule', () => {
 
         test('CSS: единая высота всех элементов ряда кнопок (34px)', () => {
             // Task 306: .ws-cal-chip убран из списка — кнопка «Обновить» удалена
-            const re = /\.ws-month-sel, \.ws-year-sel, \.ws-generate-btn, \.ws-save-btn \{[^}]*height:\s*34px[^}]*box-sizing:\s*border-box/;
+            // Task 307: + .ws-addemp-btn («+ Сотрудник» в тулбаре)
+            const re = /\.ws-month-sel, \.ws-year-sel, \.ws-generate-btn, \.ws-save-btn,\s*\n\s*\.ws-addemp-btn \{[^}]*height:\s*34px[^}]*box-sizing:\s*border-box/;
             assertTrue(re.test(html),
-                'селекты, «Сформировать» и «Сохранить» — одного роста');
+                'селекты, «+ Сотрудник», «Сформировать» и «Сохранить» — одного роста');
             assertTrue(html.indexOf('.ws-cal-chip {') === -1 &&
                        html.indexOf('.ws-cal-chip:') === -1,
                 'мёртвые стили удалённой кнопки не остались (упоминания в комментариях не в счёт)');
@@ -2246,9 +2220,9 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v545', () => {
-            assertTrue(sw.indexOf("kipia-test-v545") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v545 (Task 290)');
+        test('CACHE_VERSION = kipia-test-v546', () => {
+            assertTrue(sw.indexOf("kipia-test-v546") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v546 (Task 290)');
         });
         test('Старая версия v525 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v525") === -1,
@@ -2504,13 +2478,15 @@ describe('График работы — WorkSchedule', () => {
             assertTrue(html.indexOf('ст. 125 ТК РФ') !== -1);
         });
 
-        test('HTML: субнавигация модуля — 4 полосы по 4 кнопки', () => {
+        test('HTML: субнавигация модуля — 3 полосы по 3 кнопки (Task 307)', () => {
             const strips = html.match(/class="ws-subnav"/g) || [];
-            assertEqual(strips.length, 4, 'полосы ws-subnav на 4 страницах модуля');
-            ['Шахматка', 'Сотрудники', 'Инструктажи', 'Отпуска'].forEach(label => {
+            assertEqual(strips.length, 3, 'полосы ws-subnav на 3 страницах модуля (Task 307)');
+            ['Шахматка', 'Инструктажи', 'Отпуска'].forEach(label => {
                 const cnt = (html.match(new RegExp('ws-subnav-btn[^>]*>' + label + '<', 'g')) || []).length;
-                assertEqual(cnt, 4, 'кнопка «' + label + '» на каждой полосе');
+                assertEqual(cnt, 3, 'кнопка «' + label + '» на каждой полосе (Task 307)');
             });
+            const empBtns = (html.match(/ws-subnav-btn[^>]*>Сотрудники</g) || []).length;
+            assertEqual(empBtns, 0, 'кнопки «Сотрудники» в субнавигации нет (Task 307)');
         });
 
         test('HTML: активный пункт на своей странице', () => {
@@ -2518,7 +2494,7 @@ describe('График работы — WorkSchedule', () => {
             assertTrue(vacPage.indexOf("ws-subnav-btn active\" onclick=\"navigateTo('work-schedule-vacations')") !== -1,
                 '«Отпуска» активна на своей странице');
             const wsPage = html.slice(html.indexOf('id="page-work-schedule"'),
-                                      html.indexOf('id="page-work-schedule-employees"'));
+                                      html.indexOf('id="page-work-schedule-trainings"'));
             assertTrue(wsPage.indexOf("ws-subnav-btn active\" onclick=\"navigateTo('work-schedule')") !== -1,
                 '«Шахматка» активна на своей странице');
         });
@@ -2639,8 +2615,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v527 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v545") !== -1,
-                'Актуальная версия — kipia-test-v545');
+            assertTrue(sw.indexOf("kipia-test-v546") !== -1,
+                'Актуальная версия — kipia-test-v546');
         });
         test('Старая версия v527 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v527") === -1,
@@ -2917,11 +2893,149 @@ describe('Task 298 — коды статусов Т-12/Т-13: клиентски
             'счётчик 16 в заголовке эндпоинтов');
     });
 
-    test('SW: кэш поднят до kipia-test-v545 (Task 298)', () => {
+    test('SW: кэш поднят до kipia-test-v546 (Task 298)', () => {
         const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
-        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v545'") !== -1,
-            'CACHE_VERSION = kipia-test-v545');
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v546'") !== -1,
+            'CACHE_VERSION = kipia-test-v546');
         assertFalse(sw.indexOf("CACHE_VERSION = 'kipia-test-v539'") !== -1,
             'старой версии v539 нет');
+    });
+});
+
+// ============================================================
+// Task 307 — вкладка «Сотрудники» удалена; «+ Сотрудник» в тулбаре
+// ============================================================
+// По заявке пользователя: в разделе «График работы» убрать вкладку
+// «Сотрудники», а кнопку «Добавить сотрудника» переместить в бар над
+// шахматкой к остальным кнопкам. Страница #page-work-schedule-employees
+// удалена целиком; добавление — прежний bottom-sheet #wsEmpSheet
+// (openEmployeeForm), после добавления перезагружается шахматка.
+// ============================================================
+describe('Task 307 — вкладка «Сотрудники» удалена, кнопка «+ Сотрудник» в тулбаре', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const html = fs.readFileSync(path.resolve(__dirname, '..', 'index.html'), 'utf8');
+    const sw = fs.readFileSync(path.resolve(__dirname, '..', 'sw.js'), 'utf8');
+
+    test('HTML: страницы «Сотрудники» нет — див удалён', () => {
+        assertTrue(html.indexOf('id="page-work-schedule-employees"') === -1,
+            'див #page-work-schedule-employees удалён');
+        assertTrue(html.indexOf('id="wsEmployeesList"') === -1 &&
+                   html.indexOf('id="wsEmployeesEmpty"') === -1 &&
+                   html.indexOf('id="wsAddEmployeeBar"') === -1,
+            'внутренности страницы (список/заглушка/бар добавления) удалены');
+    });
+
+    test('HTML: субнавигация без «Сотрудников» — 3 кнопки', () => {
+        assertTrue((html.match(/ws-subnav-btn[^>]*>Сотрудники</g) || []).length === 0,
+            'кнопки «Сотрудники» нет ни на одной полосе');
+        // ровно 3 полосы (шахматка/инструктажи/отпуска)
+        assertEqual((html.match(/class="ws-subnav"/g) || []).length, 3,
+            '3 полосы ws-subnav');
+    });
+
+    test('HTML: кнопка «+ Сотрудник» в тулбаре над шахматкой', () => {
+        const m = html.match(/<button[^>]*id="wsEmpBtn"[^>]*>/);
+        assertTrue(!!m, 'кнопка #wsEmpBtn есть');
+        assertTrue(html.indexOf('id="wsEmpBtn"') < html.indexOf('id="wsGenerateBtn"'),
+            'кнопка стоит в ряду тулбара РЯДОМ с «Сформировать» (до неё)');
+        assertTrue(m[0].indexOf('WorkSchedule.openEmployeeForm()') !== -1,
+            'onclick → openEmployeeForm (прежний bottom-sheet)');
+        assertTrue(m[0].indexOf('title="Добавить сотрудника"') !== -1,
+            'title с полным названием действия');
+        assertTrue(m[0].indexOf('hidden') !== -1,
+            'скрыта по умолчанию (видимость — по _canEdit, как «Сформировать»)');
+        // кнопка ВНУТРИ .ws-toolbar-main страницы work-schedule
+        const ws = html.slice(html.indexOf('id="page-work-schedule"'),
+                              html.indexOf('id="page-work-schedule-trainings"'));
+        assertTrue(ws.indexOf('id="wsEmpBtn"') !== -1 &&
+                   ws.indexOf('ws-toolbar-main') !== -1,
+            'кнопка внутри бара над шахматкой');
+    });
+
+    test('JS: видимость кнопки — init() по _canEdit (как «Сформировать»)', () => {
+        const init = html.slice(html.indexOf('var genBtn = document.getElementById(\'wsGenerateBtn\');'),
+                                html.indexOf('this._attachFitResize()'));
+        assertTrue(init.indexOf("var empBtn = document.getElementById('wsEmpBtn');") !== -1 &&
+                   init.indexOf('empBtn.hidden = !this._canEdit;') !== -1,
+            'init() показывает «+ Сотрудник» только ролям с правом правки');
+    });
+
+    test('JS: initEmployeesPage/loadEmployees/_renderEmployees удалены', () => {
+        // комментарии-памятки Task 307 упоминают имена — проверяем ФОРМЫ функций
+        assertTrue(html.indexOf('initEmployeesPage: function') === -1,
+            'метод initEmployeesPage: function удалён');
+        // \b: '_loadEmployees: function' жив, а 'loadEmployees: function' (метод
+        // страницы) — удалён: граница слова не матчится внутри _loadEmployees
+        assertFalse(/\bloadEmployees:\s*function/.test(html),
+            'loadEmployees: function удалён (_loadEmployees-загрузчик данных жив)');
+        assertTrue(html.indexOf('_renderEmployees: function') === -1,
+            '_renderEmployees: function удалён');
+        assertTrue(html.indexOf('_loadEmployees: function') !== -1,
+            '_loadEmployees жив — нужен шахматке/инструктажам/отпускам');
+    });
+
+    test('JS: submitEmployeeForm перезагружает шахматку (loadGrid)', () => {
+        const i = html.indexOf('submitEmployeeForm: function');
+        assertTrue(i !== -1, 'submitEmployeeForm: function найден');
+        const block = html.slice(i, i + 2200);
+        assertTrue(block.indexOf('self.loadGrid();') !== -1,
+            'после добавления — loadGrid() (новая строка сотрудника в сетке)');
+        assertTrue(block.indexOf('self.loadEmployees();') === -1,
+            'прежний вызов loadEmployees() удалён');
+    });
+
+    test('JS: хук navigateTo и карты страниц/крошек без сотрудников', () => {
+        assertTrue(html.indexOf("page === 'work-schedule-employees'") === -1,
+            'хук navigateTo удалён');
+        assertTrue(html.indexOf("'work-schedule-employees'") === -1,
+            'идентификатора work-schedule-employees нет ни в PAGE_PARENTS, ни в PAGE_LABELS, ни в _WORK_SCHEDULE_PAGES');
+        const m = html.match(/_WORK_SCHEDULE_PAGES:\s*\[([^\]]+)\]/);
+        assertTrue(!!m, '_WORK_SCHEDULE_PAGES найден');
+        assertTrue(m[1].indexOf('work-schedule-employees') === -1,
+            'страница сотрудников исключена из карты ролей');
+        assertTrue(m[1].indexOf('work-schedule-trainings') !== -1 &&
+                   m[1].indexOf('work-schedule-vacations') !== -1,
+            'инструктажи и отпуска остаются');
+    });
+
+    test('HTML: bottom-sheet формы сотрудника жив (без изменений)', () => {
+        ['wsEmpOverlay', 'wsEmpSheet', 'wsEmpTabNo', 'wsEmpFio', 'wsEmpType',
+         'wsEmpPattern', 'wsEmpStart', 'wsEmpPosition', 'wsEmpComment'].forEach(id => {
+            assertTrue(html.indexOf('id="' + id + '"') !== -1, 'id="' + id + '" жив');
+        });
+    });
+
+    test('CSS: .ws-addemp-btn — нейтральная кнопка тулбара', () => {
+        const re = /\.ws-addemp-btn \{[^}]*background:\s*var\(--bg-tertiary[^}]*font-weight:\s*600[^}]*cursor:\s*pointer;/;
+        assertTrue(re.test(html), 'нейтральный фон в духе селектов, жирный текст');
+        assertTrue(/\[data-theme="light"\] \.ws-addemp-btn \{[^}]*background:\s*rgba\(240, 240, 240, 0\.95\)/.test(html),
+            'светлая тема — в тон селектов тулбара');
+    });
+
+    test('CSS: перенос ряда тулбара разрешён (flex-wrap) — кнопка не ломает мобильный', () => {
+        const re = /\.ws-toolbar-main \{[^}]*flex-wrap:\s*wrap;/;
+        assertTrue(re.test(html),
+            'на узких экранах ряд аккуратно складывается (десктоп — nowrap в media)');
+    });
+
+    test('CSS: мёртвые стили страницы сотрудников удалены', () => {
+        ['.ws-emp-card-header {', '.ws-employees-list,'].forEach(sel => {
+            assertTrue(html.indexOf(sel) === -1, 'селектор ' + sel + ' удалён');
+        });
+        assertTrue(html.indexOf('.ws-emp-card {') === -1 &&
+                   html.indexOf('.ws-emp-card,') === -1 &&
+                   html.indexOf('.ws-emp-card .') === -1,
+            'scoped-правила .ws-emp-card* удалены (комментарии-памятки не в счёт)');
+        // ws-add-bar/ws-add-btn живы — страница инструктажей/отпусков использует
+        assertTrue(html.indexOf('.ws-add-bar {') !== -1 && html.indexOf('.ws-add-btn {') !== -1,
+            '.ws-add-bar/.ws-add-btn живы (инструктажи/отпуска)');
+    });
+
+    test('SW: кэш поднят до kipia-test-v546 (Task 307)', () => {
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v546'") !== -1,
+            'CACHE_VERSION = kipia-test-v546');
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v545'") === -1,
+            'старой версии v545 нет');
     });
 });
