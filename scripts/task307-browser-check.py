@@ -196,7 +196,10 @@ with sync_playwright() as p:
     page.select_option('#wsEmpType', 'сменный')
     page.select_option('#wsEmpShift', '1')
     page.select_option('#wsEmpPattern', '1')
-    page.fill('#wsEmpPosition', 'Слесарь КИПиА')
+    # Task 318: «Должность» — select (не input): select_option;
+    # опции наполняются асинхронно из листа — даём запросу отработать
+    page.wait_for_timeout(600)
+    page.select_option('#wsEmpPosition', 'Слесарь КИПиА смена №1')
     emp_calls_before = STATE['emp_calls']
     page.click('#wsEmpSheet .flow-input-submit')
     page.wait_for_timeout(2500)

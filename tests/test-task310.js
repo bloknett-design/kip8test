@@ -38,7 +38,7 @@
 //       ДО вызова addVacation (на сервер не уходит);
 //     — подсказка шторки упоминает ст. 120 и лимит 42 дня.
 //   Тултип плана отпуска в ячейке: чистые дни + «(−N праздн.)».
-//   SW: kipia-test-v556.
+//   SW: kipia-test-v557.
 //
 // Запуск: через tests/run-all.js (require './test-task310.js').
 
@@ -149,9 +149,10 @@ describe('Task 310 — карточка: «Старт цикла» убран', 
         assertTrue(rep.indexOf("emp['старт_цикла']") === -1,
             'поле старт_цикла в карточке не читается');
         // остальные поля профиля живы (Task 311: «Шаблон ротации»
-        // тоже убрана из карточки — см. test-task309/311)
-        assertTrue(rep.indexOf("'Тип'") !== -1 && rep.indexOf("'Должность'") !== -1,
-            'Тип и Должность на месте');
+        // тоже убрана из карточки — см. test-task309/311; Task 318:
+        // «Тип» переименована в «Режим работы» — заявка)
+        assertTrue(rep.indexOf("'Режим работы'") !== -1 && rep.indexOf("'Должность'") !== -1,
+            'Режим работы и Должность на месте');
         assertTrue(rep.indexOf("'Дата приёма'") !== -1,
             'Дата приёма на месте');
     });
@@ -375,9 +376,9 @@ describe('Task 310/311 — тултип плана отпуска в ячейк�
 
 describe('Task 310 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v556', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v556'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v556');
+    test('SW: версия кэша kipia-test-v557', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v557'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v557');
         // Task 311 поднял версию до v550 — v549 (версия Task 310) ушла
         assertFalse(SW_SRC.indexOf('kipia-test-v549') !== -1,
             'старой версии v549 нет');

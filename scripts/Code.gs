@@ -270,6 +270,11 @@ function doPost(e) {
       case 'workSchedule.addEmployee':
         return _json(WorkSchedule.addEmployee(payload));
 
+      // Task 318: увольнение — дата_увольнения (H) + в_архиве=1 (I)
+      // в таблице «Сотрудники»; строка остаётся в листе как архив
+      case 'workSchedule.dismissEmployee':
+        return _json(WorkSchedule.dismissEmployee(payload));
+
       case 'workSchedule.addTraining':
         return _json(WorkSchedule.addTraining(payload));
 

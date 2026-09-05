@@ -43,7 +43,7 @@
 //       записи, лимит 12 видов, формат даты тултипа, битый JSON;
 //     — VM-СИМУЛЯЦИЯ _renderCell: «.»/статус-мероприятие/отсутствие/
 //       пустая+событие/смена+событие/план+событие.
-//   SW: kipia-test-v556.
+//   SW: kipia-test-v557.
 //
 // Запуск: через tests/run-all.js (require './test-task314.js').
 
@@ -208,11 +208,12 @@ describe('Task 314 — JS: локальная копия (скелет)', () => 
             'сетка не мигает при принудительном обновлении');
     });
 
-    test('JS: все 11 мутаций перезагружают ТОЛЬКО из сети (loadGrid(true))', () => {
-        // saveAll, генерация ×3, сотрудник, мероприятие ×5, отпуск ×2 —
-        // правки обязаны перечитывать сервер, кэш не подменяет свежее
+    test('JS: все 12 мутаций перезагружают ТОЛЬКО из сети (loadGrid(true))', () => {
+        // saveAll, генерация ×3, сотрудник, мероприятие ×5, отпуск ×2,
+        // увольнение (Task 318) — правки обязаны перечитывать сервер,
+        // кэш не подменяет свежее
         const n = (INDEX_SRC.match(/self\.loadGrid\(true\);/g) || []).length;
-        assertEqual(n, 12, '11 мутаций + 1 в refreshData = 12 вызовов loadGrid(true)');
+        assertEqual(n, 13, '12 мутаций + 1 в refreshData = 13 вызовов loadGrid(true)');
     });
 
     test('JS: refreshData — кнопка обновления (коды + вид + тост)', () => {
@@ -575,9 +576,9 @@ describe('Task 314 — VM: _renderCell (символ «·», бейджи мер
 // ------------------------------------------------------------
 describe('Task 314 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v556', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v556'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v556');
+    test('SW: версия кэша kipia-test-v557', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v557'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v557');
         assertFalse(SW_SRC.indexOf('kipia-test-v552') !== -1,
             'старой версии v552 нет');
     });

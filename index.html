@@ -4420,6 +4420,21 @@
         color: var(--accent-blue, #4a8fc7);
         font-weight: 600;
     }
+    /* Task 318: строка «Уволить…» в карточке сотрудника — опасное
+       действие: КРАСНАЯ (как ✕ удаления мероприятия), а не
+       акцент-синяя; наведение — красная подложка, не синяя */
+    .ws-popup-row.ws-emp-dismiss {
+        color: #ef5350;
+    }
+    .ws-popup-row.ws-emp-dismiss:hover {
+        background: rgba(239, 83, 80, 0.12);
+    }
+    [data-theme="light"] .ws-popup-row.ws-emp-dismiss {
+        color: #c62828;
+    }
+    [data-theme="light"] .ws-popup-row.ws-emp-dismiss:hover {
+        background: rgba(229, 57, 53, 0.10);
+    }
     /* Task 303: заголовок секции — события (И/ОБ/ПЗ) из листа
        «Инструктажи». Task 313: класс жив у секций КАРТОЧКИ сотрудника
        («Отпуска · год», «Мероприятия · месяц»); в окне кодов секции
@@ -4613,10 +4628,16 @@
        правки: плюсик-индикатор акцентом у текста, курсор-палец и
        подсветка при наведении; клик открывает шторку #wsEmpSheet
        (openEmployeeForm — внутри ещё проверка _canEdit). Зрителям —
-       обычный заголовок без клика. */
+       обычный заголовок без клика.
+       Task 318: подсветка — СПЛОШНОЙ цвет, как у ячеек ФИО под
+       шапкой (td.ws-emp-col:hover #15202f/#e2e8ef). Заголовок —
+       sticky: прежний ПОЛУПРОЗРАЧНЫЙ rgba-фон на hover делал поле
+       прозрачным (сквозь него просвечивало прокручиваемое тело
+       таблицы — фон «исчезал»); теперь фон МЕНЯЕТ ЦВЕТ, оставаясь
+       непрозрачным. */
     .ws-grid thead th.ws-emp-col.ws-emp-head-add { cursor: pointer; }
     .ws-grid thead th.ws-emp-col.ws-emp-head-add:hover {
-        background: rgba(74, 143, 199, 0.16);
+        background: #15202f;
         color: var(--text-primary, #e0e0e0);
     }
     .ws-grid thead th.ws-emp-col .ws-emp-head-plus {
@@ -4626,7 +4647,7 @@
         margin-left: 6px;
     }
     [data-theme="light"] .ws-grid thead th.ws-emp-col.ws-emp-head-add:hover {
-        background: rgba(42, 93, 143, 0.16);
+        background: #e2e8ef;
     }
     .ws-grid thead th.ws-day-col {
         min-width: 30px;
@@ -5378,6 +5399,35 @@
        когда новый период выводит сотрудника за 42 дн. (ТК РФ) */
     .ws-vac-form-info.ws-vac-overlimit { color: #ef5350; }
     [data-theme="light"] .ws-vac-form-info.ws-vac-overlimit { color: #c62828; }
+    /* Task 318: шторка «Увольнение сотрудника» — ФИО-строка
+       (только чтение, поле не input), пояснение и красная кнопка
+       «Уволить» (опасное действие — стиль как у «Отменить»
+       Task 315, но сплошнее: погашенная красная подложка) */
+    .ws-dismiss-emp {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text-primary, #e0e0e0);
+        padding: 8px 2px 0;
+    }
+    [data-theme="light"] .ws-dismiss-emp { color: #222; }
+    .ws-dismiss-info {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary, rgba(255,255,255,0.6));
+        padding: 2px 2px 8px;
+    }
+    [data-theme="light"] .ws-dismiss-info { color: #777; }
+    .ws-dismiss-submit {
+        background: #e53935;
+        border-color: #e53935;
+    }
+    .ws-dismiss-submit:hover { background: #ef5350; }
+    [data-theme="light"] .ws-dismiss-submit {
+        background: #d32f2f;
+        border-color: #d32f2f;
+        color: #fff;
+    }
+    [data-theme="light"] .ws-dismiss-submit:hover { background: #c62828; }
     [data-theme="light"] .ws-vac-form-hint {
         background: rgba(20, 20, 19, 0.04);
         color: rgba(20, 20, 19, 0.6);
@@ -14833,13 +14883,46 @@
     </div>
     <div class="flow-input-row">
         <div class="flow-input-group" style="flex:0 0 60%;">
+            <!-- Task 318: «Должность» — ВЫПАДАЮЩИЙ список вариантов из
+                 таблицы «Сотрудники» (файл табель_КИП_ИОС): уникальные
+                 должности строк листа (активные + архив), по алфавиту.
+                 Наполняется при открытии шторки — _fillPositionSelect
+                 (listEmployees includeArchived, офлайн/сбой — активные
+                 из _EMPLOYEES); лист — единственный источник истины -->
             <label class="flow-input-label" for="wsEmpPosition">Должность</label>
-            <input type="text" id="wsEmpPosition" class="flow-input-field-small" placeholder="Слесарь по КИПиА" autocomplete="off">
+            <select id="wsEmpPosition" class="flow-input-field-small"></select>
         </div>
     </div>
     <textarea id="wsEmpComment" class="flow-comment-field" rows="2" maxlength="500" placeholder="Комментарий (необязательно)" autocomplete="off"></textarea>
     <button type="button" class="flow-input-submit" onclick="WorkSchedule.submitEmployeeForm()">Добавить</button>
     <button type="button" class="flow-input-cancel" onclick="WorkSchedule.closeEmployeeForm()">Отмена</button>
+</div>
+
+<!-- ===== Task 318: Bottom sheet — увольнение сотрудника (workSchedule) =====
+     Открывается из карточки сотрудника (строка «Уволить…», только
+     редакторам). Записывает дату_увольнения (H) и в_архиве=1 (I) в
+     таблицу «Сотрудники»: сотрудник уходит из шахматки (listEmployees
+     без includeArchived его больше не отдаёт), строка остаётся в
+     листе как АРХИВ. Сервер: workSchedule.dismissEmployee. -->
+<div id="wsDismissOverlay" class="pin-sheet-overlay" onclick="WorkSchedule.closeDismissForm()"></div>
+<div id="wsDismissSheet" class="flow-input-sheet">
+    <div class="flow-input-sheet-handle"></div>
+    <div class="flow-input-sheet-title">Увольнение сотрудника</div>
+    <div class="flow-input-row">
+        <div class="flow-input-group" style="flex:1 1 100%;">
+            <label class="flow-input-label">Сотрудник</label>
+            <div id="wsDismissEmp" class="ws-dismiss-emp">—</div>
+        </div>
+    </div>
+    <div class="flow-input-row">
+        <div class="flow-input-group" style="flex:0 0 60%;">
+            <label class="flow-input-label" for="wsDismissDate">Дата увольнения</label>
+            <input type="date" id="wsDismissDate" class="flow-input-field-small">
+        </div>
+    </div>
+    <div class="ws-dismiss-info">Сотрудник уйдёт из графика — строка останется в архиве справочника «Сотрудники»</div>
+    <button type="button" class="flow-input-submit ws-dismiss-submit" onclick="WorkSchedule.submitDismissForm()">Уволить</button>
+    <button type="button" class="flow-input-cancel" onclick="WorkSchedule.closeDismissForm()">Отмена</button>
 </div>
 
 <!-- ===== Bottom sheet: добавление мероприятия (workSchedule) ===== -->
@@ -35709,6 +35792,12 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         _hoverDay: null,
         _selDay: null,
 
+        // Task 318: таб. № сотрудника шторки увольнения (null — закрыта).
+        // Ставится openDismissForm из карточки, сбрасывается
+        // closeDismissForm; submitDismissForm отправляет пару
+        // {таб_номер, дата_увольнения} → dismissEmployee
+        _dismissTabNo: null,
+
         // Task 314: локальная копия данных графика (localStorage) —
         // график открывается МГНОВЕННО без сети; обновление — кнопкой
         // «Обновить» (refreshData) и авто-сохранением после каждой
@@ -37833,7 +37922,7 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             // не показываются); Task 311 также снят заголовок-строка
             // «Сотрудник» — профиль идёт сразу после шапки ФИО
             var fields = [
-                ['Тип', tipVal],
+                ['Режим работы', tipVal],
                 ['Должность', String(emp['должность'] || '').trim() || '—'],
                 ['Дата приёма', emp['дата_приёма'] ? this._fmtDateRu(emp['дата_приёма']) : '—'],
                 ['Комментарий', String(emp['комментарий'] || '').trim()]
@@ -37846,6 +37935,18 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 html += '<div class="ws-emp-field"><span class="ws-emp-k">' +
                         this._esc(fields[fi][0]) + '</span><span class="ws-emp-v">' +
                         this._esc(fields[fi][1]) + '</span></div>';
+            }
+
+            // Task 318: «Уволить…» — форма увольнения (дата → таблица
+            // «Сотрудники», строка сотрудника уходит из шахматки,
+            // остаётся в архиве справочника). Только ролям с правом
+            // записи — как «+ Отпуск…» (двойная защита в
+            // openDismissForm); красная строка — опасное действие
+            if (this._canEdit) {
+                html += '<div class="ws-popup-row ws-popup-more ws-emp-dismiss"' +
+                        ' title="Увольнение: записать дату, убрать из графика"' +
+                        ' onclick="WorkSchedule.openDismissForm(\'' +
+                        this._esc(String(emp['таб_номер'] || '')) + '\')">Уволить…</div>';
             }
 
             // --- Секция 2: отпуска года шахматки (бывшая вкладка
@@ -38258,7 +38359,10 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             document.getElementById('wsEmpFio').value = '';
             document.getElementById('wsEmpType').value = 'сменный';
             document.getElementById('wsEmpShift').value = '';
-            document.getElementById('wsEmpPosition').value = '';
+            // Task 318: «Должность» — выпадающий список из таблицы
+            // «Сотрудники» (наполняется асинхронно: шторка открывается
+            // сразу, опции появляются по ответу листа)
+            this._fillPositionSelect();
             document.getElementById('wsEmpComment').value = '';
             this.onEmpTypeChange();
 
@@ -38283,6 +38387,141 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             if (typeSel.value !== 'сменный') {
                 document.getElementById('wsEmpShift').value = '';
             }
+        },
+
+        // Task 318: «Должность» в шторке нового сотрудника —
+        // ВЫПАДАЮЩИЙ список вариантов из таблицы «Сотрудники» (файл
+        // табель_КИП_ИОС): уникальные должности ВСЕХ строк листа
+        // (активные + архив — listEmployees includeArchived), по
+        // алфавиту. Сеть/офлайн — fallback на активных _EMPLOYEES
+        // (данные уже загружены листом); выбранное значение при
+        // обновлении опций сохраняется.
+        _fillPositionSelect: function() {
+            var self = this;
+            var sel = document.getElementById('wsEmpPosition');
+            if (!sel) return;
+            this._api('workSchedule.listEmployees', { includeArchived: true })
+                .then(function(data) {
+                    self._fillPositionOptions(sel, data.employees || []);
+                })
+                .catch(function() {
+                    self._fillPositionOptions(sel, self._EMPLOYEES || []);
+                });
+        },
+
+        _fillPositionOptions: function(sel, employees) {
+            var seen = {};
+            var list = [];
+            for (var i = 0; i < (employees || []).length; i++) {
+                var p = String(employees[i]['должность'] || '').trim();
+                if (p && !seen[p]) { seen[p] = true; list.push(p); }
+            }
+            list.sort(function(a, b) { return a.localeCompare(b, 'ru'); });
+            var html = '<option value="">— выберите —</option>';
+            for (var j = 0; j < list.length; j++) {
+                html += '<option value="' + this._escAttr(list[j]) + '">' +
+                        this._esc(list[j]) + '</option>';
+            }
+            var keep = sel.value;
+            sel.innerHTML = html;
+            if (keep) sel.value = keep;
+        },
+
+        // Task 318: увольнение сотрудника — шторка из карточки (строка
+        // «Уволить…»): дата_увольнения записывается в таблицу
+        // «Сотрудники» (+в_архиве=1), сотрудник уходит из шахматки,
+        // строка остаётся в листе как АРХИВ (listEmployees без
+        // includeArchived его больше не отдаёт)
+        openDismissForm: function(tabNo) {
+            if (!this._canEdit) return;
+            var emp = null;
+            for (var i = 0; i < (this._EMPLOYEES || []).length; i++) {
+                if (this._EMPLOYEES[i]['таб_номер'] === tabNo) {
+                    emp = this._EMPLOYEES[i];
+                    break;
+                }
+            }
+            if (!emp) {
+                if (typeof KipToast !== 'undefined') KipToast.show('Сотрудник не найден');
+                return;
+            }
+            this._dismissTabNo = String(emp['таб_номер']);
+            var empDiv = document.getElementById('wsDismissEmp');
+            if (empDiv) {
+                empDiv.textContent = emp['ФИО'] + ' · таб. №' + emp['таб_номер'];
+            }
+            var dateInput = document.getElementById('wsDismissDate');
+            if (dateInput) dateInput.value = this._isoDate(new Date());
+            // карточка закрывается ДО шторки (как «+ Отпуск…»):
+            // z-уровень попапа (9401) ВЫШЕ sheet (201) — открытая
+            // карточка перекрывала бы шторку увольнения
+            this.closeEmpPopup();
+            document.getElementById('wsDismissOverlay').classList.add('active');
+            document.getElementById('wsDismissSheet').classList.add('active');
+            setTimeout(function() {
+                var f = document.getElementById('wsDismissDate');
+                if (f) f.focus();
+            }, 350);
+        },
+
+        closeDismissForm: function() {
+            document.getElementById('wsDismissOverlay').classList.remove('active');
+            document.getElementById('wsDismissSheet').classList.remove('active');
+            this._dismissTabNo = null;
+        },
+
+        submitDismissForm: function() {
+            var tabNo = this._dismissTabNo;
+            var date = document.getElementById('wsDismissDate').value;
+            var self = this;
+            if (!tabNo) { this.closeDismissForm(); return; }
+            if (!date) {
+                if (typeof KipToast !== 'undefined') KipToast.show('Укажите дату увольнения');
+                return;
+            }
+            var fio = '';
+            for (var i = 0; i < (this._EMPLOYEES || []).length; i++) {
+                if (this._EMPLOYEES[i]['таб_номер'] === tabNo) {
+                    fio = this._EMPLOYEES[i]['ФИО'];
+                    break;
+                }
+            }
+            // подтверждение опасного действия (как удаление отпуска):
+            // дата уходит в таблицу «Сотрудники», строка — в архив
+            if (typeof kipConfirm === 'function') {
+                kipConfirm('Уволить ' + fio + '? Дата увольнения ' +
+                           this._fmtDateRu(date) + '. Сотрудник уйдёт из ' +
+                           'графика, строка останется в архиве справочника ' +
+                           '«Сотрудники».', { danger: true })
+                    .then(function(ok) { if (ok) self._doDismiss(tabNo, date); });
+            } else {
+                if (confirm('Уволить ' + fio + ' (' +
+                            this._fmtDateRu(date) + ')?')) {
+                    self._doDismiss(tabNo, date);
+                }
+            }
+        },
+
+        _doDismiss: function(tabNo, date) {
+            var self = this;
+            this._api('workSchedule.dismissEmployee', {
+                'таб_номер': tabNo,
+                'дата_увольнения': date
+            }).then(function() {
+                self.closeDismissForm();
+                // карточка увольняемого закрывается вместе с шторкой
+                self.closeEmpPopup();
+                if (typeof KipToast !== 'undefined' && KipToast.show) {
+                    KipToast.show('Сотрудник уволен и убран из графика');
+                }
+                // как при добавлении: перезагружаем шахматку — строка
+                // сотрудника уходит (listEmployees без архива)
+                self.loadGrid(true);
+            }).catch(function(err) {
+                if (typeof KipToast !== 'undefined' && KipToast.show) {
+                    KipToast.show('Ошибка: ' + self._apiErrText(err));
+                }
+            });
         },
 
         submitEmployeeForm: function() {

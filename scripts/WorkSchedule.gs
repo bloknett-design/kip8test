@@ -14,6 +14,7 @@
 //   workSchedule.setManualEntry   — upsert ручной правки (Б/ОТ/П/замещение)
 //   workSchedule.deleteEntry     — удалить ручную запись
 //   workSchedule.addEmployee      — добавить нового сотрудника
+//   workSchedule.dismissEmployee   — уволить: дата_увольнения (H) + в_архиве=1 (I)
 //   workSchedule.addTraining      — добавить плановое мероприятие
 //   workSchedule.deleteTraining   — удалить мероприятие
 //   workSchedule.listVacations    — план отпусков (Task 274, лист «Отпуска»)
@@ -1276,6 +1277,51 @@ var WorkSchedule = {
     } catch (e) { /* ignore */ }
 
     return { ok: true, data: { таб_номер: tabNo } };
+  },
+
+  // workSchedule.dismissEmployee
+  // payload: { token, таб_номер, дата_увольнения(ISO) }
+  // Увольнение (Task 318): в строке сотрудника таблицы «Сотрудники»
+  //   записывается дата_увольнения (H) и в_архиве=1 (I). Строка НЕ
+  //   удаляется — остаётся в листе как АРХИВ; listEmployees без
+  //   includeArchived сотрудника больше не возвращает → строка уходит
+  //   из шахматки/селектов форм. Перезапись существующей даты
+  //   допустима (идемпотентно — правка даты увольнения).
+  dismissEmployee: function(payload) {
+    var auth = this._requireWrite(payload.token);
+    if (auth.error) return auth.error;
+    var user = auth.user;
+
+    var tabNo = String(payload.таб_номер || '').trim();
+    if (!tabNo) return { ok: false, error: 'invalid_таб_номер' };
+    var dismissDate = this._parseIsoDate(payload.дата_увольнения);
+    if (!dismissDate) return { ok: false, error: 'invalid_дата_увольнения' };
+
+    var sheet = this._getSheet(this.EMPLOYEES_SHEET);
+    if (!sheet) return { ok: false, error: 'sheet_not_found: ' + this.EMPLOYEES_SHEET };
+
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) {
+      return { ok: false, error: 'not_found_таб_номер',
+               message: 'Сотрудник с таб. № ' + tabNo + ' не найден' };
+    }
+
+    // Поиск строки по таб_№ (A — текст, Task 304: ведущие нули)
+    var tabs = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    for (var i = 0; i < tabs.length; i++) {
+      if (String(tabs[i][0]).trim() !== tabNo) continue;
+      var row = i + 2;
+      sheet.getRange(row, 8).setValue(dismissDate);  // H = дата_увольнения
+      sheet.getRange(row, 9).setValue(1);            // I = в_архиве
+      try {
+        Utils.audit(user.email, 'WORKSCHEDULE_DISMISS_EMPLOYEE', '', '',
+          'Уволен сотрудник таб_номер=' + tabNo +
+          ' дата=' + String(payload.дата_увольнения || ''));
+      } catch (e) { /* ignore */ }
+      return { ok: true, data: { таб_номер: tabNo, в_архиве: 1 } };
+    }
+    return { ok: false, error: 'not_found_таб_номер',
+             message: 'Сотрудник с таб. № ' + tabNo + ' не найден' };
   },
 
   // ============================================================

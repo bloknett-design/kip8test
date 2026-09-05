@@ -50,6 +50,7 @@ require('./test-task314.js');
 require('./test-task315.js');
 require('./test-task316.js');
 require('./test-task317.js');
+require('./test-task318.js');
 require('./test-deploy-url.js');
 
 // Запускаем
