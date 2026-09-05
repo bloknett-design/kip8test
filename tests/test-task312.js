@@ -42,7 +42,7 @@
 //       (белый, как фон пустых ячеек с точкой — светлая тема
 //       --bg-primary #FAF9F5); ОСНОВНОЕ значение пользователь
 //       меняет в листе «Коды_статусов» сам (код #FAF9F5).
-//   SW: kipia-test-v562 (Task 313: v551 → v552 — окно мероприятий
+//   SW: kipia-test-v563 (Task 313: v551 → v552 — окно мероприятий
 //       над окном кодов + подсветка сегодняшней даты).
 //
 // Запуск: через tests/run-all.js (require './test-task312.js').
@@ -86,9 +86,10 @@ describe('Task 312 — кнопка «+ Отпуск»: тулбар → кар�
         assertFalse(/\[data-theme="light"\] \.ws-addvac-btn/.test(INDEX_SRC),
             'светлая тема «+ Отпуск» удалена');
         // ряд кнопок одного роста живёт без «+ Отпуск»
-        // Task 314: + .ws-refresh-btn («Обновить») — один рост
-        assertTrue(/\.ws-month-sel, \.ws-year-sel, \.ws-generate-btn, \.ws-save-btn, \.ws-refresh-btn \{[^}]*height:\s*34px/.test(INDEX_SRC),
-            'единая высота 34px (Task 269/314) — без .ws-addvac-btn');
+        // Task 314: + .ws-refresh-btn («Обновить») — один рост;
+        // Task 324: + .ws-totals-btn/.ws-tt-tab (Итоги учёта + вкладки)
+        assertTrue(/\.ws-month-sel, \.ws-year-sel, \.ws-generate-btn, \.ws-save-btn,\n\s*\.ws-refresh-btn, \.ws-totals-btn, \.ws-tt-tab \{[^}]*height:\s*34px/.test(INDEX_SRC),
+            'единая высота 34px (Task 269/314, актуализация Task 324) — без .ws-addvac-btn');
     });
 
     test('JS: init() больше не ищет wsVacBtn', () => {
@@ -308,9 +309,9 @@ describe('Task 312/314 — «.» (плановый выходной): симво
 
 describe('Task 312 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v562', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v562'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v562');
+    test('SW: версия кэша kipia-test-v563', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v563'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v563');
         assertFalse(SW_SRC.indexOf('kipia-test-v550') !== -1,
             'старой версии v550 нет');
     });

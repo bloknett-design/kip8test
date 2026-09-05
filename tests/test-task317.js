@@ -33,7 +33,7 @@
 //     (3 ветки — как в Task 314).
 //   VM: _updateCacheStamp (формат/подсказка), _showRefreshTip/
 //     _hideRefreshTip на моках (скрытие, позиция сверху/снизу).
-//   SW: kipia-test-v562.
+//   SW: kipia-test-v563.
 //
 // Запуск: через tests/run-all.js (require './test-task317.js').
 
@@ -57,9 +57,10 @@ function methodText(src, name) {
 }
 
 // ------------------------------------------------------------
-// HTML: три ряда в колонке кнопок + тултип вместо штампа
+// HTML: два ряда в колонке кнопок + тултип вместо штампа
+// (Task 324: рядов СТАЛО ДВА — нижний ряд один, с блоком итогов)
 // ------------------------------------------------------------
-describe('Task 317 — HTML: колонка кнопок из трёх рядов', () => {
+describe('Task 317 — HTML: колонка кнопок из двух рядов (Task 324)', () => {
 
     const ws = INDEX_SRC.slice(INDEX_SRC.indexOf('id="page-work-schedule"'),
                                 INDEX_SRC.indexOf('id="wsGridWrap"'));
@@ -78,17 +79,21 @@ describe('Task 317 — HTML: колонка кнопок из трёх рядо�
             'класс .ws-toolbar-row у ряда 1');
     });
 
-    test('HTML: три ряда — внутри колонки, окна после неё', () => {
+    test('HTML: два ряда — внутри колонки, окна после неё (Task 324)', () => {
         const iMain = ws.indexOf('class="ws-toolbar-main"');
         const iRow1 = ws.indexOf('id="wsSelectsRow"');
-        const iAct = ws.indexOf('id="wsActionsRow"');
-        const iGen = ws.indexOf('id="wsGenerateRow"');
+        const iBottom = ws.indexOf('id="wsBottomRow"');
         const iEv = ws.indexOf('id="wsEventsPanel"');
         const iCal = ws.indexOf('id="wsCalPanel"');
-        assertTrue(iMain < iRow1 && iRow1 < iAct && iAct < iGen,
-            'колонка: ряд 1 → ряд 2 → ряд 3');
-        assertTrue(iGen < iEv && iEv < iCal,
-            'ряд 3 до окон; окна — СПРАВА от колонки кнопок');
+        assertTrue(iMain < iRow1 && iRow1 < iBottom,
+            'колонка: ряд 1 (селекты) → НИЖНИЙ РЯД (действия + итоги)');
+        assertTrue(iBottom < iEv && iEv < iCal,
+            'нижний ряд до окон; окна — СПРАВА от колонки кнопок');
+        // Task 324: рядов 2/3 больше нет — одна нижняя строка
+        assertFalse(ws.indexOf('id="wsActionsRow"') !== -1,
+            'отдельный ряд 2 удалён (Task 324)');
+        assertFalse(ws.indexOf('id="wsGenerateRow"') !== -1,
+            'отдельный ряд 3 удалён (Task 324)');
     });
 
     test('HTML: штамп из бара удалён', () => {
@@ -129,11 +134,12 @@ describe('Task 317 — CSS: габариты и зазоры', () => {
     });
 
     test('CSS: ряды — flex с gap 8px, wrap (мобильный перенос)', () => {
-        const re = /\.ws-toolbar-row,\s*\n\s*\.ws-actions-row,\s*\n\s*\.ws-generate-row \{[^}]*display:\s*flex[^}]*gap:\s*8px[^}]*flex-wrap:\s*wrap/;
-        assertTrue(re.test(INDEX_SRC), 'общее правило трёх рядов');
-        assertTrue(INDEX_SRC.indexOf('.ws-actions-row[hidden],') !== -1 &&
-                   INDEX_SRC.indexOf('.ws-generate-row[hidden] { display: none; }') !== -1,
-            'скрытие пустых рядов [hidden]');
+        const re = /\.ws-toolbar-row \{[^}]*display:\s*flex[^}]*gap:\s*8px[^}]*flex-wrap:\s*wrap/;
+        assertTrue(re.test(INDEX_SRC), 'общее правило рядов (Task 324: ряд один класс)');
+        // Task 324: скрытие пустых рядов [hidden] удалено — нижний ряд
+        // всегда на виду (кнопки итогов видны всем ролям)
+        assertFalse(INDEX_SRC.indexOf('.ws-actions-row[hidden]') !== -1,
+            'скрытие ряда действий удалено (Task 324)');
     });
 
     test('CSS: десктоп — колонка РОВНО в высоту окон (95px)', () => {
@@ -145,17 +151,19 @@ describe('Task 317 — CSS: габариты и зазоры', () => {
             'перенос выключен (колонка не превышает 95px)');
     });
 
-    test('CSS: десктоп — три ряда × calc((95px − 6px)/3)', () => {
-        const re = /\.ws-toolbar-row,\s*\.ws-actions-row,\s*\.ws-generate-row \{[^}]*height:\s*calc\(\(95px - 6px\) \/ 3\)[^}]*flex-wrap:\s*nowrap[^}]*align-items:\s*stretch/;
+    test('CSS: десктоп — ДВА ряда × calc((95px − 3px)/2) (Task 324)', () => {
+        const re = /\.ws-toolbar-row \{[^}]*height:\s*calc\(\(95px - 3px\) \/ 2\)[^}]*flex-wrap:\s*nowrap[^}]*align-items:\s*stretch/;
         assertTrue(re.test(INDEX_SRC),
-            'высота ряда = (95 − 2×3px) / 3, nowrap, кнопки растягиваются');
-        assertTrue(INDEX_SRC.indexOf('calc((95px - 6px) / 3)') !== -1,
-            'формула ровно в 95px с двумя зазорами 3px');
+            'высота ряда = (95 − 3px) / 2, nowrap, кнопки растягиваются');
+        assertTrue(INDEX_SRC.indexOf('calc((95px - 3px) / 2)') !== -1,
+            'формула ровно в 95px с одним зазором 3px (два ряда — Task 324)');
+        assertFalse(INDEX_SRC.indexOf('calc((95px - 6px) / 3)') !== -1,
+            'формула ТРЁХ рядов (Task 317) удалена');
     });
 
     test('CSS: десктоп — кнопки/селекты во всю высоту ряда', () => {
-        const re = /\.ws-month-sel, \.ws-year-sel, \.ws-generate-btn, \.ws-save-btn,\s*\n\s*\.ws-cancel-btn, \.ws-refresh-btn \{[^}]*height:\s*100%[^}]*padding:\s*4px 12px/;
-        assertTrue(re.test(INDEX_SRC), 'height 100% + компактный padding 4px');
+        const re = /\.ws-month-sel, \.ws-year-sel, \.ws-generate-btn, \.ws-save-btn,\s*\n\s*\.ws-cancel-btn, \.ws-refresh-btn, \.ws-totals-btn, \.ws-tt-tab \{[^}]*height:\s*100%[^}]*padding:\s*4px 12px/;
+        assertTrue(re.test(INDEX_SRC), 'height 100% + компактный padding 4px (+ Итоги/вкладки, Task 324)');
     });
 
     test('CSS: рамка бара — 5px, не меняется', () => {
@@ -316,10 +324,10 @@ describe('Task 317 — JS: тултип «данные от …»', () => {
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 317 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v562', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v562') !== -1,
-            'CACHE_VERSION = kipia-test-v562 (Task 317)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v563') !== -1,
+    test('SW: версия кэша kipia-test-v563', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v563') !== -1,
+            'CACHE_VERSION = kipia-test-v563 (Task 317)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v564') !== -1,
             'лишний инкремент не делался');
     });
 });

@@ -24,7 +24,7 @@
 //   Переименование: 5 мест содержат новую строку, старая из видимых
 //   мест исчезла (заголовок страницы, кнопка меню, PAGE_LABELS,
 //   SUBSECTIONS, сайдбар); в_архиве-пометка и права не тронуты.
-//   Итоги HTML: #wsTotalsBar (клик/клавиатура/aria) ПОСЛЕ
+//   Итоги HTML: Task 324 — кнопка-переключатель «Итоги учёта»
 //   #wsGridWrap внутри #page-work-schedule; #wsTotalsPanel hidden
 //   по умолчанию; вкладки/инфо/«Обновить»/тело.
 //   Итоги CSS: бар (flex/cursor/hover/focus), панель (max-height
@@ -187,48 +187,67 @@ describe('Task 321 — раздел переименован в «Табель �
 // ============================================================
 describe('Task 321 — HTML: боковая шторка итогов справа от шахматки', () => {
 
-    test('HTML: #wsTotalsBar — клик, клавиатура, aria, шеврон (вертикальная ручка)', () => {
-        const i = INDEX_SRC.indexOf('id="wsTotalsBar"');
-        assertTrue(i !== -1, 'бар есть');
+    test('HTML: Task 324 — кнопка «Итоги учёта» в НИЖНЕМ ряду кнопок тулбара', () => {
+        const i = INDEX_SRC.indexOf('id="wsTotalsBtn"');
+        assertTrue(i !== -1, 'кнопка есть');
         const chunk = INDEX_SRC.slice(i, i + 900);
         assertTrue(chunk.indexOf('WorkSchedule.toggleTotals()') !== -1,
             'клик — toggleTotals');
-        assertTrue(chunk.indexOf("event.key === 'Enter' || event.key === ' '") !== -1,
-            'клавиатура Enter/Пробел');
-        assertTrue(chunk.indexOf('aria-expanded') !== -1, 'aria-expanded');
-        assertTrue(chunk.indexOf('id="wsTotalsChev"') !== -1, 'шеврон');
-        assertTrue(chunk.indexOf('role="button"') !== -1, 'role=button');
-        // Task 323: вертикальная ручка с текстом названия по вертикали
-        assertTrue(chunk.indexOf('ws-totals-vbar') !== -1, 'класс вертикального бара');
-        assertTrue(chunk.indexOf('ws-tt-vwrap') !== -1, 'обёртка вертикальных строк');
-        assertTrue(chunk.indexOf('Итоги учёта') !== -1, 'название в баре');
+        assertTrue(chunk.indexOf('aria-pressed') !== -1, 'aria-pressed (переключатель)');
+        assertTrue(chunk.indexOf('Итоги учёта') !== -1, 'название кнопки');
+        // Task 324: вертикальная ручка УДАЛЕНА — ручки больше нет
+        assertFalse(INDEX_SRC.indexOf('id="wsTotalsBar"') !== -1,
+            'вертикальный бар-ручка (Task 323) удалён');
+        assertFalse(INDEX_SRC.indexOf('id="wsTotalsChev"') !== -1,
+            'шеврон ручки удалён');
     });
 
-    test('HTML: #wsTotalsPanel скрыт по умолчанию, вкладки/инфо/кнопка/тело', () => {
+    test('HTML: #wsTotalsPanel скрыт по умолчанию; шапка — ✕/⚠/Обновить (Task 324)', () => {
         const i = INDEX_SRC.indexOf('id="wsTotalsPanel"');
         assertTrue(i !== -1, 'панель есть');
         const chunk = INDEX_SRC.slice(i, i + 1200);
         assertTrue(chunk.indexOf('hidden') !== -1, 'панель скрыта по умолчанию');
-        assertTrue(chunk.indexOf('id="wsTtTabMonth"') !== -1, 'вкладка Месяц');
-        assertTrue(chunk.indexOf('id="wsTtTabYear"') !== -1, 'вкладка Год');
-        assertTrue(chunk.indexOf("WorkSchedule.setTotalsTab('month')") !== -1, 'клик Месяц');
-        assertTrue(chunk.indexOf("WorkSchedule.setTotalsTab('year')") !== -1, 'клик Год');
-        assertTrue(chunk.indexOf('id="wsTtInfo"') !== -1, 'инфо-строка');
+        assertTrue(chunk.indexOf('id="wsTtClose"') !== -1, 'кнопка ✕ (закрыть)');
+        assertTrue(chunk.indexOf('WorkSchedule.toggleTotals()') !== -1,
+            '✕ закрывает шторку (toggleTotals)');
+        assertTrue(chunk.indexOf('id="wsTtWarn"') !== -1, 'аварийная строка ⚠');
         assertTrue(chunk.indexOf('id="wsTtRefresh"') !== -1, 'кнопка Обновить');
         assertTrue(chunk.indexOf('WorkSchedule.reloadTotals()') !== -1, 'клик Обновить');
         assertTrue(chunk.indexOf('id="wsTtBody"') !== -1, 'тело таблиц');
+        // Task 324: вкладки ПЕРЕЕХАЛИ в тулбар, инфо-строка УДАЛЕНА
+        assertFalse(chunk.indexOf('id="wsTtInfo"') !== -1,
+            'пояснительная инфо-строка удалена из шапки (заявка)');
+        assertFalse(chunk.indexOf('ws-tt-tabs') !== -1,
+            'строка вкладок из шапки удалена (вкладки — в тулбаре)');
+    });
+
+    test('HTML: Task 324 — вкладки «Месяц»/«Год» в тулбаре, справа от «Итоги учёта»', () => {
+        const iBtn = INDEX_SRC.indexOf('id="wsTotalsBtn"');
+        const iM = INDEX_SRC.indexOf('id="wsTtTabMonth"');
+        const iY = INDEX_SRC.indexOf('id="wsTtTabYear"');
+        assertTrue(iBtn !== -1 && iM !== -1 && iY !== -1, 'кнопка и вкладки есть');
+        assertTrue(iBtn < iM && iM < iY,
+            'вкладки СПРАВА от кнопки «Итоги учёта» (один ряд, заявка)');
+        const row = INDEX_SRC.indexOf('id="wsBottomRow"');
+        const iGen = INDEX_SRC.indexOf('id="wsGenerateBtn"');
+        const iSave = INDEX_SRC.indexOf('id="wsSaveBtn"');
+        const iCancel = INDEX_SRC.indexOf('id="wsCancelBtn"');
+        assertTrue(row !== -1 && row < iGen && iGen < iSave && iSave < iCancel &&
+            iCancel < iBtn,
+            'НИЖНИЙ РЯД: Сформировать → Сохранить → Отменить → Итоги учёта');
+        assertTrue(INDEX_SRC.indexOf("WorkSchedule.setTotalsTab('month')") !== -1, 'клик Месяц');
+        assertTrue(INDEX_SRC.indexOf("WorkSchedule.setTotalsTab('year')") !== -1, 'клик Год');
     });
 
     test('HTML: шторка в рабочей области — сетка СЛЕВА, итоги СПРАВА (Task 323)', () => {
         const iBody = INDEX_SRC.indexOf('id="wsWsBody"');
         const iGrid = INDEX_SRC.indexOf('id="wsGridWrap"');
         const iDrawer = INDEX_SRC.indexOf('id="wsTotalsDrawer"');
-        const iBar = INDEX_SRC.indexOf('id="wsTotalsBar"');
         const iPanel = INDEX_SRC.indexOf('id="wsTotalsPanel"');
         assertTrue(iBody !== -1, 'рабочая область #wsWsBody есть');
         assertTrue(iBody < iGrid, 'сетка внутри рабочей области');
-        assertTrue(iGrid < iDrawer && iDrawer < iBar && iBar < iPanel,
-            'шторка (бар+панель) идёт ПОСЛЕ контейнера сетки — справа');
+        assertTrue(iGrid < iDrawer && iDrawer < iPanel,
+            'шторка (панель) идёт ПОСЛЕ контейнера сетки — справа');
         const nextBody = INDEX_SRC.indexOf('class="page-content"', iPanel + 100);
         assertTrue(nextBody === -1 || nextBody > iPanel, 'шторка внутри страницы табеля');
     });
@@ -239,24 +258,22 @@ describe('Task 321 — HTML: боковая шторка итогов справ
 // ============================================================
 describe('Task 321 — CSS: итоги в тёмной и светлой теме', () => {
 
-    test('CSS: вертикальный бар-ручка — текст по вертикали, cursor, hover', () => {
-        const m = INDEX_SRC.match(/\.ws-totals-vbar\s*\{[^}]*\}/);
-        assertTrue(!!m, 'правило вертикального бара есть');
+    test('CSS: Task 324 — кнопка «Итоги учёта» в тулбаре, ручка удалена', () => {
+        const m = INDEX_SRC.match(/\.ws-totals-btn\s*\{[^}]*\}/);
+        assertTrue(!!m, 'правило кнопки есть');
         assertTrue(m[0].indexOf('cursor: pointer') !== -1, 'курсор-палец');
-        assertTrue(m[0].indexOf('width: 28px') !== -1, 'узкая полоса у правого края');
-        assertTrue(m[0].indexOf('flex: none') !== -1, 'не сжимается');
-        const cap = INDEX_SRC.match(/\.ws-totals-bar-cap\s*\{[^}]*\}/);
-        assertTrue(!!cap && cap[0].indexOf('writing-mode: vertical-rl') !== -1,
-            'название — ПО ВЕРТИКАЛИ (writing-mode)');
-        assertTrue(/\.ws-totals-vbar:hover,\s*\.ws-totals-vbar:focus-visible\s*\{/.test(INDEX_SRC),
-            'hover и фокус стилизованы (клавиатура)');
+        assertTrue(m[0].indexOf('font-weight: 600') !== -1, 'жирная кнопка-действие');
+        assertTrue(/\.ws-totals-btn\[aria-pressed="true"\]\s*\{[^}]*rgba\(74,\s*143,\s*199,\s*0\.32\)/.test(INDEX_SRC),
+            'открытое состояние — синяя заливка (нажатый переключатель)');
+        assertFalse(INDEX_SRC.indexOf('ws-totals-vbar') !== -1,
+            'правила вертикальной ручки удалены (Task 324)');
         assertFalse(/\.ws-totals-bar\s*\{/.test(INDEX_SRC),
             'прежнего горизонтального бара больше нет');
     });
 
-    test('CSS: шторка — пол-области, выдвигается анимацией (Task 323)', () => {
-        const d = INDEX_SRC.match(/\.ws-tt-drawer\s*\{[^}]*margin-right:\s*calc\(-50%\s*\+\s*28px\)[^}]*\}/);
-        assertTrue(!!d, 'свёрнута: margin-right calc(-50% + 28px) — торчит бар');
+    test('CSS: шторка — пол-области, выдвигается анимацией (Task 323→324)', () => {
+        const d = INDEX_SRC.match(/\.ws-tt-drawer\s*\{[^}]*margin-right:\s*-50%[^}]*\}/);
+        assertTrue(!!d, 'свёрнута: margin-right -50% — за правым краем ПОЛНОСТЬЮ (Task 324: ручки нет)');
         const dr = INDEX_SRC.match(/\.ws-tt-drawer\s*\{[^}]*transition:[^}]*margin-right[^}]*\}/);
         assertTrue(!!dr, 'анимация выдвижения (transition margin-right)');
         assertTrue(/#page-work-schedule\.ws-tt-open \.ws-tt-drawer\s*\{[^}]*margin-right:\s*0/.test(INDEX_SRC),
@@ -301,11 +318,11 @@ describe('Task 321 — CSS: итоги в тёмной и светлой тем�
             'кнопка «Обновить» в фирменном тинте');
     });
 
-    test('CSS: светлая тема панели и бара', () => {
+    test('CSS: светлая тема панели и кнопки итогов (Task 324)', () => {
         assertTrue(/\[data-theme="light"\]\s*\.ws-totals-panel\s*\{[^}]*#e9e7de/.test(INDEX_SRC),
             'фон панели в светлой теме (как окно мероприятий)');
-        assertTrue(/\[data-theme="light"\]\s*\.ws-totals-vbar\s*\{[^}]*#f4f2ec/.test(INDEX_SRC),
-            'фон бара в светлой теме');
+        assertTrue(/\[data-theme="light"\]\s*\.ws-totals-btn\s*\{[^}]*rgba\(240,\s*240,\s*240,\s*0\.95\)/.test(INDEX_SRC),
+            'кнопка «Итоги учёта» в светлой теме (вместо бара, Task 324)');
     });
 
     test('CSS: таблица итогов — sticky шапка, итоговая строка, часы зелёные, зебра', () => {
@@ -322,13 +339,14 @@ describe('Task 321 — CSS: итоги в тёмной и светлой тем�
             'зебра в светлой теме');
     });
 
-    test('CSS: мобильная шторка — fixed-оверлей, тап-зона бара 44px (Task 323)', () => {
+    test('CSS: мобильная шторка — fixed-оверлей, ✕ 44px (Task 323→324)', () => {
         const m = INDEX_SRC.match(/@media \(max-width: 1023px\)\s*\{[\s\S]*?\.ws-tt-drawer\s*\{[^}]*position:\s*fixed[^}]*\}/);
         assertTrue(!!m, 'шторка — fixed-оверлей (место у сетки не отбирает)');
-        const w = INDEX_SRC.match(/@media \(max-width: 1023px\)\s*\{[\s\S]*?\.ws-totals-vbar\s*\{[^}]*width:\s*44px/);
-        assertTrue(!!w, 'тап-зона вертикального бара 44px');
-        const tr = INDEX_SRC.match(/\.ws-tt-drawer\s*\{[^}]*transform:\s*translateX\(calc\(100%\s*-\s*44px\)\)/);
-        assertTrue(!!tr, 'мобайл: свёрнута — торчит бар (transform)');
+        // Task 324: тап-зона у КНОПКИ ✕ шапки (бар-ручки больше нет)
+        const w = INDEX_SRC.match(/@media \(max-width: 1023px\)\s*\{[\s\S]*?\.ws-tt-close\s*\{[^}]*width:\s*44px/);
+        assertTrue(!!w, 'тап-зона ✕ шапки 44px');
+        const tr = INDEX_SRC.match(/\.ws-tt-drawer\s*\{[^}]*transform:\s*translateX\(100%\)/);
+        assertTrue(!!tr, 'мобайл: свёрнута — ПОЛНОСТЬЮ за экраном (Task 324: ручки нет)');
     });
 });
 
@@ -514,11 +532,6 @@ describe('Task 321 — панель: переключатели', () => {
 
     function makeToggleHost() {
         const calls = { render: 0, fit: 0, open: 0, sync: 0 };
-        const bar = {
-            attrs: {},
-            setAttribute: function(k, v) { this.attrs[k] = v; },
-            classList: { state: {}, toggle: function(cls, on) { this.state[cls] = on; } }
-        };
         const panel = { hidden: true };
         // Task 323: страница табеля — классы ws-tt-open (шторка
         // выдвинута) и ws-tt-gridwide (широкий режим сетки)
@@ -534,12 +547,14 @@ describe('Task 321 — панель: переключатели', () => {
                      getPropertyValue: function(k) { return this.props[k] || ''; },
                      removeProperty: function(k) { delete this.props[k]; } }
         };
-        const chev = { textContent: '◂' };
+        // Task 324: переключателем стала КНОПКА ТУЛБАРА (aria-pressed);
+        // шеврона и ручки больше нет
+        const btn = { attrs: {}, setAttribute: function(k, v) { this.attrs[k] = v; } };
         const host = wsHost(['toggleTotals', 'setTotalsTab', 'reloadTotals',
                              '_renderTotals', '_renderTotalsIfOpen',
                              '_ttCloseCleanup'],
             { _totalsOpen: false, _totalsTab: 'month', _YEAR_DATA: { year: 2026 } },
-            mockDoc({ wsTotalsBar: bar, wsTotalsPanel: panel, wsTotalsChev: chev,
+            mockDoc({ wsTotalsBtn: btn, wsTotalsPanel: panel,
                       'page-work-schedule': page,
                       wsTtTabMonth: { classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } },
                       wsTtTabYear: { classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } },
@@ -551,30 +566,27 @@ describe('Task 321 — панель: переключатели', () => {
         // Task 323: новые шаги toggleTotals — заглушки
         host._applyTtHeadVar = function() { return false; };
         host._syncTotalsRows = function() { calls.sync++; };
-        return { host: host, bar: bar, panel: panel, page: page, chev: chev, calls: calls };
+        return { host: host, btn: btn, panel: panel, page: page, calls: calls };
     }
 
-    test('toggleTotals: открыть → панель видна, aria true, классы, шеврон, fitGrid', () => {
+    test('toggleTotals: открыть → панель видна, aria true, классы, fitGrid', () => {
         const t = makeToggleHost();
         t.host.toggleTotals();
         assertEqual(t.panel.hidden, false, 'панель открылась');
-        assertEqual(t.bar.attrs['aria-expanded'], 'true', 'aria-expanded=true');
-        assertEqual(t.bar.classList.state['ws-totals-open'], true, 'класс ws-totals-open');
+        assertEqual(t.btn.attrs['aria-pressed'], 'true', 'aria-pressed=true (кнопка тулбара)');
         // Task 323: классы вида на странице — шторка выдвинута + широкий
         // режим сетки (ползунок прокрутки внизу шахматки)
         assertEqual(t.page.classList.state['ws-tt-open'], true,
             'класс ws-tt-open на странице табеля');
         assertEqual(t.page.classList.state['ws-tt-gridwide'], true,
             'класс ws-tt-gridwide — сетка в широком режиме');
-        assertEqual(t.chev.textContent, '▸', 'шеврон показывает сторону закрытия');
         assertEqual(t.calls.render, 1, 'итоги отрисованы');
         assertEqual(t.calls.fit, 1, 'строки сетки пересчитаны (_fitGrid)');
         assertEqual(t.calls.sync, 1, 'строки итогов синхронизированы');
         // закрыть
         t.host.toggleTotals();
         assertEqual(t.panel.hidden, true, 'панель закрылась');
-        assertEqual(t.bar.attrs['aria-expanded'], 'false', 'aria-expanded=false');
-        assertEqual(t.chev.textContent, '◂', 'шеврон показывает сторону открытия');
+        assertEqual(t.btn.attrs['aria-pressed'], 'false', 'aria-pressed=false');
         assertEqual(t.page.classList.state['ws-tt-open'], false,
             'класс шторки снят — она уехала вправо');
         // сетка держит широкий режим до конца анимации (снимает
@@ -654,12 +666,15 @@ describe('Task 321 — _renderTotalsMonth: таблица месяца', () => {
     const MONTH_METHODS = ['_codeHours', '_totalsZero', '_totalsAgg', '_statusMeta',
                            '_empTypeMap', '_overHours',
                            '_totalsEffectiveEntries', '_fmtTotalsNum', '_esc',
-                           '_renderTotalsMonth'];
+                           '_setTtWarn', '_renderTotalsMonth'];
 
     function makeMonthHost(extra) {
         const els = {
             wsTtBody: { innerHTML: '' },
-            wsTtInfo: { textContent: '' }
+            // Task 324: инфо-строка wsTtInfo УДАЛЕНА — вместо неё
+            // аварийная строка ⚠ шапки (пустая на месяце)
+            wsTtWarn: { textContent: '', hidden: true, attrs: {},
+                        setAttribute: function(k, v) { this.attrs[k] = v; } }
         };
         const host = wsHost(MONTH_METHODS, Object.assign({
             _year: 2026,
@@ -739,8 +754,9 @@ describe('Task 321 — _renderTotalsMonth: таблица месяца', () => {
         assertTrue(h.indexOf('>19,2</td>') !== -1, 'итог переработки 19,2');
     });
 
-    test('инфо: месяц/год + норма календаря + несохранённые правки', () => {
-        // мок ProdCalendar в глобальной области видимости VM
+    test('Task 324: пояснительная инфо-строка УДАЛЕНА — ⚠ пуст', () => {
+        // мок ProdCalendar в глобальной области видимости VM: даже при
+        // наличии календаря и правок инфо в шапку НЕ пишется (заявка)
         global.ProdCalendar = {
             monthStats: function(y, m) {
                 return { workDays: 22, hours40: 176 };
@@ -749,22 +765,21 @@ describe('Task 321 — _renderTotalsMonth: таблица месяца', () => {
         try {
             const t = makeMonthHost({ _PENDING: { '2026-09-05|0871': { 'статус': 'Б' } } });
             t.host._renderTotalsMonth();
-            const info = t.els.wsTtInfo.textContent;
-            assertTrue(info.indexOf('сентябрь 2026') !== -1, 'месяц и год в инфо');
-            assertTrue(info.indexOf('22 раб. дн') !== -1, 'норма дней из календаря');
-            assertTrue(info.indexOf('176') !== -1, 'норма часов из календаря');
-            assertTrue(info.indexOf('несохранённые правки (1)') !== -1,
-                'пометка о несохранённых правках');
+            assertEqual(t.els.wsTtWarn.textContent, '', '⚠ пуст — инфо удалена (заявка)');
+            assertEqual(t.els.wsTtWarn.hidden, true, '⚠ скрыта на месяце');
+            assertFalse(INDEX_SRC.indexOf('id="wsTtInfo"') !== -1,
+                'элемент #wsTtInfo удалён из HTML');
+            assertFalse(methodText(WS_CLIENT, '_renderTotalsMonth').indexOf('wsTtInfo') !== -1,
+                'рендер месяца не пишет инфо-строку');
         } finally {
             delete global.ProdCalendar;
         }
     });
 
-    test('инфо без ProdCalendar — не падает, месяц остаётся', () => {
+    test('рендер без ProdCalendar/инфо — не падает, таблица строится', () => {
         const t = makeMonthHost();
         t.host._renderTotalsMonth();
-        assertTrue(t.els.wsTtInfo.textContent.indexOf('сентябрь 2026') !== -1,
-            'инфо без календаря жив');
+        assertEqual(t.els.wsTtWarn.textContent, '', '⚠ пуст');
         assertTrue(t.els.wsTtBody.innerHTML.indexOf('ws-tt-table') !== -1,
             'таблица построена');
     });
@@ -792,12 +807,15 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
     const YEAR_METHODS = ['_codeHours', '_totalsZero', '_totalsAgg', '_statusMeta',
                           '_empTypeMap', '_overHours',
                           '_fmtTotalsNum', '_esc', '_sortEmployees',
-                          '_loadYearData', '_renderTotalsYear', '_renderTotalsYearTable'];
+                          '_loadYearData', '_renderTotalsYear', '_setTtWarn',
+                          '_renderTotalsYearTable'];
 
     function makeYearHost(apiMock, yearData) {
         const els = {
             wsTtBody: { innerHTML: '' },
-            wsTtInfo: { textContent: '' }
+            // Task 324: инфо-строка удалена — аварийная строка ⚠
+            wsTtWarn: { textContent: '', hidden: true, attrs: {},
+                        setAttribute: function(k, v) { this.attrs[k] = v; } }
         };
         const host = wsHost(YEAR_METHODS, Object.assign({
             _year: 2026,
@@ -925,8 +943,9 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
             'годовые суммы: колонки Дней/Часов');
         assertTrue(h.indexOf('<th title="часы переработки за год — коды д/н">Перераб.</th>') !== -1,
             'Task 322: годовая колонка Перераб.');
-        assertTrue(t.els.wsTtInfo.textContent.indexOf('явки/часы по месяцам') !== -1,
-            'инфо поясняет формат');
+        // Task 324: пояснительная инфо («N г. · явки/часы…») УДАЛЕНА
+        assertEqual(t.els.wsTtWarn.textContent, '', '⚠ пуст — без сбоев');
+        assertEqual(t.els.wsTtWarn.hidden, true, '⚠ скрыта');
     });
 
     test('_renderTotalsYearTable: годовая ПЕРЕРАБОТКА д/н (Task 322)', () => {
@@ -947,7 +966,7 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
         assertTrue(h.indexOf('дней переработки: 1') !== -1, 'дни в тултипе');
     });
 
-    test('_renderTotalsYearTable: failed-месяцы предупреждаются в инфо', () => {
+    test('_renderTotalsYearTable: failed-месяцы — ⚠ в шапке (Task 324)', () => {
         const md = {
             year: 2026, ts: Date.now(), failed: 2,
             months: { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [],
@@ -956,8 +975,11 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
         };
         const t = makeYearHost(null, { _YEAR_DATA: md });
         t.host._renderTotalsYearTable();
-        assertTrue(t.els.wsTtInfo.textContent.indexOf('не загружено месяцев: 2') !== -1,
+        assertTrue(t.els.wsTtWarn.textContent.indexOf('не загружено месяцев: 2') !== -1,
             'предупреждение о неполных данных');
+        assertEqual(t.els.wsTtWarn.hidden, false, '⚠ показана');
+        assertEqual(t.els.wsTtWarn.attrs['title'], t.els.wsTtWarn.textContent,
+            'полный текст — в тултипе');
     });
 
     test('_renderTotalsYear: год кэша ≠ текущий — загрузка заново', async () => {
@@ -975,10 +997,10 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
 // 11. SW: версия кэша
 // ============================================================
 describe('Task 321 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v562 (Task 323)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v562'") !== -1,
-            'CACHE_VERSION = kipia-test-v562');
-        assertFalse(SW_SRC.indexOf('kipia-test-v563') !== -1,
+    test('SW: кэш поднят до kipia-test-v563 (Task 323)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v563'") !== -1,
+            'CACHE_VERSION = kipia-test-v563');
+        assertFalse(SW_SRC.indexOf('kipia-test-v564') !== -1,
             'v561 не существует (один инкремент на Task 321)');
     });
 });

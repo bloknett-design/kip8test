@@ -36,7 +36,7 @@
 //   clientHeight (ползунок), syncTT в конце; рендеры: tfoot
 //   «Итого», БЕЗ .ws-tt-scroll, ws-tt-year (год), год: активные
 //   по порядку сетки + архив ниже; инфо в title.
-//   SW: kipia-test-v562.
+//   SW: kipia-test-v563.
 //
 // Запуск: через tests/run-all.js (require './test-task323.js').
 
@@ -89,56 +89,61 @@ describe('Task 323 — HTML: боковая шторка и вертикальн
             'сетка слева, шторка справа — внутри рабочей области');
     });
 
-    test('HTML: шторка = вертикальный бар + панель', () => {
+    test('HTML: Task 324 — шторка = панель (бар-ручка УДАЛЁН)', () => {
         const iDrawer = INDEX_SRC.indexOf('id="wsTotalsDrawer"');
-        const iBar = INDEX_SRC.indexOf('id="wsTotalsBar"');
         const iPanel = INDEX_SRC.indexOf('id="wsTotalsPanel"');
         assertTrue(iDrawer !== -1, 'шторка есть');
-        assertTrue(iDrawer < iBar && iBar < iPanel,
-            'бар — левый край шторки (ручка), панель — содержимое');
+        assertTrue(iDrawer < iPanel,
+            'панель — содержимое шторки (ручки-бара больше нет, Task 324)');
         const chunk = INDEX_SRC.slice(iDrawer, iDrawer + 1800);
         assertTrue(chunk.indexOf('class="ws-tt-drawer"') !== -1, 'класс шторки');
-        assertTrue(chunk.indexOf('class="ws-totals-vbar"') !== -1, 'класс вертикального бара');
-        assertTrue(chunk.indexOf('ws-tt-vwrap') !== -1, 'обёртка вертикальных надписей');
+        // Task 324: вертикальный бар-ручка удалён — открывает кнопка тулбара
+        assertFalse(chunk.indexOf('class="ws-totals-vbar"') !== -1,
+            'вертикальный бар удалён из шторки (заявка Task 324)');
+        assertFalse(chunk.indexOf('ws-tt-vwrap') !== -1,
+            'обёртка вертикальных надписей удалена');
     });
 
-    test('HTML: название в баре — ВЕРТИКАЛЬНО, шеврон у ручки', () => {
-        const i = INDEX_SRC.indexOf('id="wsTotalsBar"');
-        const chunk = INDEX_SRC.slice(i, i + 1400);
-        assertTrue(chunk.indexOf('Итоги учёта') !== -1, 'название');
-        assertTrue(chunk.indexOf('дни и часы') !== -1, 'подпись');
-        const chevI = chunk.indexOf('id="wsTotalsChev"');
-        const capI = chunk.indexOf('ws-totals-bar-cap');
-        assertTrue(chevI !== -1 && capI !== -1 && chevI < capI,
-            'шеврон сверху ручки, название — под ним');
-        assertTrue(chunk.indexOf('◂') !== -1, 'шеврон «влево» в свёрнутом виде');
+    test('HTML: Task 324 — открытие кнопкой тулбара, закрытие ✕ шапки', () => {
+        const i = INDEX_SRC.indexOf('id="wsTotalsBtn"');
+        const chunk = INDEX_SRC.slice(i, i + 900);
+        assertTrue(chunk.indexOf('WorkSchedule.toggleTotals()') !== -1,
+            'кнопка «Итоги учёта» — toggleTotals');
+        assertTrue(chunk.indexOf('aria-pressed') !== -1,
+            'кнопка — переключатель (aria-pressed)');
+        const x = INDEX_SRC.indexOf('id="wsTtClose"');
+        const xChunk = INDEX_SRC.slice(x, x + 400);
+        assertTrue(xChunk.indexOf('WorkSchedule.toggleTotals()') !== -1,
+            '✕ шапки закрывает шторку');
+        assertFalse(INDEX_SRC.indexOf('id="wsTotalsChev"') !== -1,
+            'шеврон ручки удалён');
+        assertFalse(INDEX_SRC.indexOf('◂') !== -1,
+            'глиф ручки удалён');
     });
 });
 
 // ============================================================
 // 2. CSS: вертикальный текст, шторка, ползунок, мобильная
 // ============================================================
-describe('Task 323 — CSS: шторка, вертикальный текст, ползунок', () => {
-    test('CSS: текст названия — writing-mode: vertical-rl (кап и саб)', () => {
-        const cap = INDEX_SRC.match(/\.ws-totals-bar-cap\s*\{[^}]*\}/);
-        assertTrue(!!cap, 'правило капа');
-        assertTrue(cap[0].indexOf('writing-mode: vertical-rl') !== -1,
-            'название вертикально');
-        const sub = INDEX_SRC.match(/\.ws-totals-bar-sub\s*\{[^}]*\}/);
-        assertTrue(!!sub && sub[0].indexOf('writing-mode: vertical-rl') !== -1,
-            'подпись вертикально');
-        const wrap = INDEX_SRC.match(/\.ws-tt-vwrap\s*\{[^}]*\}/);
-        assertTrue(!!wrap, 'обёртка вертикальных строк');
-        assertTrue(wrap[0].indexOf('overflow: hidden') !== -1,
-            'длинный текст обрезается (низкая область)');
+describe('Task 323 — CSS: шторка, шапка, ползунок', () => {
+    test('CSS: Task 324 — шапка шторки (.ws-tt-head) вместо строки вкладок', () => {
+        const head = INDEX_SRC.match(/\.ws-tt-head\s*\{[^}]*min-height:\s*28px[^}]*\}/);
+        assertTrue(!!head, 'правило шапки шторки (базовая зона 28px)');
+        const close = INDEX_SRC.match(/\.ws-tt-close\s*\{[^}]*display:\s*inline-flex[^}]*\}/);
+        assertTrue(!!close && close[0].indexOf('cursor: pointer') !== -1,
+            'кнопка ✕ — стиль есть (базовое правило)');
+        assertFalse(INDEX_SRC.indexOf('ws-totals-bar-cap') !== -1,
+            'вертикальные надписи ручки удалены');
+        assertFalse(INDEX_SRC.indexOf('writing-mode: vertical-rl') !== -1,
+            'вертикальный текст ручки удалён (ручки больше нет)');
     });
 
     test('CSS: шторка выдвигается справа налево на ПОЛОВИНУ области', () => {
         const d = INDEX_SRC.match(/@media \(min-width: 1024px\)\s*\{[\s\S]*?\.ws-tt-drawer\s*\{[^}]*\}/);
         assertTrue(!!d, 'десктопное правило шторки');
         assertTrue(d[0].indexOf('width: 50%') !== -1, 'ширина — половина рабочей области');
-        assertTrue(d[0].indexOf('margin-right: calc(-50% + 28px)') !== -1,
-            'свёрнута: выступ за правый край, торчит только бар (28px)');
+        assertTrue(d[0].indexOf('margin-right: -50%') !== -1,
+            'Task 324: свёрнута — ПОЛНОСТЬЮ за правым краем (ручки нет)');
         assertTrue(d[0].indexOf('transition: margin-right 0.28s ease') !== -1,
             'анимация выдвижения справа налево');
         const open = INDEX_SRC.match(/#page-work-schedule\.ws-tt-open \.ws-tt-drawer\s*\{[^}]*\}/);
@@ -196,13 +201,26 @@ describe('Task 323 — CSS: шторка, вертикальный текст, �
             'даты центрированы в высокой шапке');
     });
 
-    test('CSS: панель — скролл скрыт (синхронизация), tfoot у низа', () => {
+    test('CSS: Task 324 — панель: ВИДИМЫЙ нижний ползунок + tfoot у низа', () => {
         const b = INDEX_SRC.match(/\.ws-tt-body\s*\{[^}]*\}/);
         assertTrue(!!b && b[0].indexOf('overflow: auto') !== -1, 'скролл-контейнер');
-        assertTrue(!!b && b[0].indexOf('scrollbar-width: none') !== -1,
-            'полосы панели скрыты — скролл синхронный с сеткой');
+        // Task 324 (заявка): горизонтальная полоса ВНИЗУ ШТОРКИ — видимая
+        assertTrue(b[0].indexOf('scrollbar-width: thin') !== -1,
+            'Firefox: тонкие полосы');
         const sb = INDEX_SRC.match(/\.ws-tt-body::-webkit-scrollbar\s*\{[^}]*\}/);
-        assertTrue(!!sb && sb[0].indexOf('display: none') !== -1, 'webkit: скрыты');
+        assertTrue(!!sb && sb[0].indexOf('height: 12px') !== -1,
+            'webkit: горизонтальная полоса ВИДИМАЯ (12px)');
+        assertTrue(!!sb && sb[0].indexOf('width: 0') !== -1,
+            'webkit: вертикальная скрыта (скролл синхронный с сеткой)');
+        const thumb = INDEX_SRC.match(/\.ws-tt-body::-webkit-scrollbar-thumb\s*\{[^}]*\}/);
+        assertTrue(!!thumb && thumb[0].indexOf('background') !== -1,
+            'бегунок шторки окрашен');
+        // Task 324 (заявка): оглавления — ОДНОЙ СТРОКОЙ (без переноса)
+        const th = INDEX_SRC.match(/\.ws-tt-table th\s*\{[^}]*\}/);
+        assertTrue(!!th && th[0].indexOf('white-space: nowrap') !== -1,
+            'оглавления одной строкой (заявка)');
+        assertFalse(th[0].indexOf('white-space: normal;') !== -1,
+            'объявление переноса слов шапки удалено (упоминание в комментарии — история)');
         const tf = INDEX_SRC.match(/\.ws-tt-table tfoot tr\.ws-tt-total td\s*\{[^}]*\}/);
         assertTrue(!!tf && tf[0].indexOf('position: sticky') !== -1 &&
             tf[0].indexOf('bottom: 0') !== -1, 'итоговая строка прилипла к низу панели');
@@ -223,15 +241,15 @@ describe('Task 323 — CSS: шторка, вертикальный текст, �
             'мобайл: список сотрудников НЕ скрыт (строки не совпадают с сеткой)');
     });
 
-    test('CSS: мобильная шторка — fixed, 86vw, transform, тап-зона 44px', () => {
+    test('CSS: мобильная шторка — fixed, 86vw, transform, ✕ 44px (Task 324)', () => {
         const m = INDEX_SRC.match(/\.ws-tt-drawer\s*\{[^}]*position:\s*fixed[^}]*\}/);
         assertTrue(!!m, 'мобильное правило шторки (fixed-оверлей)');
         assertTrue(m[0].indexOf('min(86vw, 560px)') !== -1, 'ширина ~86vw');
-        assertTrue(m[0].indexOf('transform: translateX(calc(100% - 44px))') !== -1,
-            'свёрнута: торчит только бар');
+        assertTrue(m[0].indexOf('transform: translateX(100%)') !== -1,
+            'Task 324: свёрнута — ПОЛНОСТЬЮ за экраном (ручки нет)');
         assertTrue(m[0].indexOf('z-index: 75') !== -1, 'под окнами/барами приложения');
-        const w = INDEX_SRC.match(/\.ws-totals-vbar\s*\{[^}]*width:\s*44px/);
-        assertTrue(!!w, 'тап-зона вертикального бара 44px');
+        const w = INDEX_SRC.match(/\.ws-tt-close\s*\{[^}]*width:\s*44px/);
+        assertTrue(!!w, 'тап-зона ✕ шапки 44px');
         const open = INDEX_SRC.match(/#page-work-schedule\.ws-tt-open \.ws-tt-drawer\s*\{[^}]*transform:\s*none/);
         assertTrue(!!open, 'мобайл: открыта — без сдвига');
     });
@@ -243,9 +261,9 @@ describe('Task 323 — CSS: шторка, вертикальный текст, �
 describe('Task 323 — VM: переключение шторки', () => {
     function makeHost() {
         const calls = { render: 0, fit: 0, sync: 0, cleanup: 0, varSet: 0 };
-        const bar = {
+        // Task 324: переключатель — КНОПКА ТУЛБАРА (aria-pressed)
+        const btn = {
             attrs: {},
-            classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } },
             setAttribute: function(k, v) { this.attrs[k] = v; }
         };
         const panel = { hidden: true };
@@ -264,24 +282,23 @@ describe('Task 323 — VM: переключение шторки', () => {
                 removeProperty: function(k) { delete this.props[k]; }
             }
         };
-        const chev = { textContent: '◂' };
         const host = wsHost(['toggleTotals', '_ttCloseCleanup', '_ttIsWide'],
             { _totalsOpen: false },
-            mockDoc({ wsTotalsBar: bar, wsTotalsPanel: panel, wsTotalsChev: chev,
+            mockDoc({ wsTotalsBtn: btn, wsTotalsPanel: panel,
                       'page-work-schedule': page }));
         host._renderTotals = function() { calls.render++; };
         host._fitGrid = function() { calls.fit++; };
         host._applyTtHeadVar = function() { calls.varSet++; return false; };
         host._syncTotalsRows = function() { calls.sync++; };
-        return { host: host, bar: bar, panel: panel, page: page, chev: chev, calls: calls };
+        return { host: host, btn: btn, panel: panel, page: page, calls: calls };
     }
 
-    test('toggleTotals: открыть — панель, aria, шеврон ▸, ДВА класса, рендер', () => {
+    test('toggleTotals: открыть — панель, aria-pressed, ДВА класса, рендер', () => {
         const t = makeHost();
         t.host.toggleTotals();
         assertEqual(t.panel.hidden, false, 'панель показана');
-        assertEqual(t.bar.attrs['aria-expanded'], 'true', 'aria');
-        assertEqual(t.chev.textContent, '▸', 'шеврон указывает вправо (закроется туда)');
+        assertEqual(t.btn.attrs['aria-pressed'], 'true',
+            'кнопка тулбара «нажата» (aria-pressed)');
         assertEqual(t.page.classList.state['ws-tt-open'], true, 'ws-tt-open');
         assertEqual(t.page.classList.state['ws-tt-gridwide'], true,
             'ws-tt-gridwide — сетка в широком режиме (ползунок)');
@@ -296,7 +313,7 @@ describe('Task 323 — VM: переключение шторки', () => {
         t.host.toggleTotals();
         t.host.toggleTotals();
         assertEqual(t.panel.hidden, true, 'панель скрыта (шторка уезжает пустой)');
-        assertEqual(t.chev.textContent, '◂', 'шеврон снова «влево»');
+        assertEqual(t.btn.attrs['aria-pressed'], 'false', 'кнопка «отпущена»');
         assertEqual(t.page.classList.state['ws-tt-open'], false, 'шторка свёрнута');
         assertEqual(t.page.classList.state['ws-tt-gridwide'], true,
             'широкий режим держится до конца анимации (320 мс)');
@@ -361,7 +378,7 @@ describe('Task 323 — VM: _applyTtHeadVar', () => {
         const panel = {
             getBoundingClientRect: function() { return { height: 300 }; },
             querySelector: function(sel) {
-                if (sel === '.ws-tt-tabs') {
+                if (sel === '.ws-tt-head') {
                     return { getBoundingClientRect: function() { return { height: tabsH }; } };
                 }
                 if (sel === '.ws-tt-table thead') {
@@ -563,10 +580,13 @@ describe('Task 323 — VM: структура таблиц итогов', () => 
     };
 
     function makeMonthHost() {
-        const els = { wsTtBody: { innerHTML: '' }, wsTtInfo: { textContent: '', attrs: {} } };
+        // Task 324: инфо-строка удалена — ⚠ шапки (пустая на месяце)
+        const els = { wsTtBody: { innerHTML: '' },
+                      wsTtWarn: { textContent: '', hidden: true, attrs: {},
+                                  setAttribute: function(k, v) { this.attrs[k] = v; } } };
         const host = wsHost(['_codeHours', '_totalsZero', '_totalsAgg', '_statusMeta',
                              '_empTypeMap', '_overHours', '_totalsEffectiveEntries',
-                             '_fmtTotalsNum', '_esc', '_renderTotalsMonth'],
+                             '_fmtTotalsNum', '_esc', '_setTtWarn', '_renderTotalsMonth'],
             Object.assign({
                 _year: 2026, _month: 9,
                 _EMPLOYEES: [
@@ -608,18 +628,22 @@ describe('Task 323 — VM: структура таблиц итогов', () => 
         assertTrue(h.indexOf('Иванов И.И.') !== -1, 'ФИО в строке (мобайл)');
     });
 
-    test('месяц: инфо продублировано в title (однострочная зона)', () => {
+    test('месяц: Task 324 — инфо-строка удалена, ⚠ пуст', () => {
         const t = makeMonthHost();
         t.host._renderTotalsMonth();
-        // заглушка wsTtInfo принимает title через setAttribute?
-        // рендер зовёт setAttribute('title', info) — проверяем текстом
+        assertEqual(t.els.wsTtWarn.textContent, '', '⚠ пуст (инфо удалена по заявке)');
+        assertEqual(t.els.wsTtWarn.hidden, true, '⚠ скрыта');
         const txt = methodText(WS_CLIENT, '_renderTotalsMonth');
-        assertTrue(txt.indexOf("infoEl.setAttribute('title', info)") !== -1,
-            'полная инфо — в тултипе');
+        assertTrue(txt.indexOf("_setTtWarn('')") !== -1,
+            'рендер месяца гасит ⚠ (аварий на месяце нет)');
+        assertFalse(txt.indexOf('wsTtInfo') !== -1,
+            'инфо-строка больше не пишется');
     });
 
     test('год: таблица с классом ws-tt-year (колонка сотрудника видна)', () => {
-        const els = { wsTtBody: { innerHTML: '' }, wsTtInfo: { textContent: '' } };
+        const els = { wsTtBody: { innerHTML: '' },
+                      wsTtWarn: { textContent: '', hidden: true, attrs: {},
+                                  setAttribute: function(k, v) { this.attrs[k] = v; } } };
         const md = {
             year: 2026, ts: Date.now(), failed: 0,
             months: { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [],
@@ -629,7 +653,7 @@ describe('Task 323 — VM: структура таблиц итогов', () => 
         };
         const host = wsHost(['_codeHours', '_totalsZero', '_totalsAgg', '_statusMeta',
                              '_empTypeMap', '_overHours', '_fmtTotalsNum', '_esc',
-                             '_sortEmployees', '_renderTotalsYearTable'],
+                             '_sortEmployees', '_setTtWarn', '_renderTotalsYearTable'],
             Object.assign({ _year: 2026, _month: 9,
                 _EMPLOYEES: [ { 'таб_номер': '0871', 'ФИО': 'Иванов И.И.' } ],
                 _STATUS_CODES: [ { code: 'Д', name: 'День (12-час)' } ],
@@ -643,7 +667,9 @@ describe('Task 323 — VM: структура таблиц итогов', () => 
     });
 
     test('год: АКТИВНЫЕ по порядку сетки сверху, архив — ниже (Task 323)', () => {
-        const els = { wsTtBody: { innerHTML: '' }, wsTtInfo: { textContent: '' } };
+        const els = { wsTtBody: { innerHTML: '' },
+                      wsTtWarn: { textContent: '', hidden: true, attrs: {},
+                                  setAttribute: function(k, v) { this.attrs[k] = v; } } };
         const md = {
             year: 2026, ts: Date.now(), failed: 0,
             months: { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [],
@@ -655,7 +681,7 @@ describe('Task 323 — VM: структура таблиц итогов', () => 
         };
         const host = wsHost(['_codeHours', '_totalsZero', '_totalsAgg', '_statusMeta',
                              '_empTypeMap', '_overHours', '_fmtTotalsNum', '_esc',
-                             '_sortEmployees', '_renderTotalsYearTable'],
+                             '_sortEmployees', '_setTtWarn', '_renderTotalsYearTable'],
             Object.assign({ _year: 2026, _month: 9,
                 // сетка: Петров (023) — первая строка
                 _EMPLOYEES: [ { 'таб_номер': '023', 'ФИО': 'Петров П.П.' } ],
@@ -708,10 +734,10 @@ describe('Task 323 — интеграция', () => {
 // 10. SW: версия кэша
 // ============================================================
 describe('Task 323 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v562 (Task 323)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v562'") !== -1,
-            'CACHE_VERSION = kipia-test-v562');
-        assertFalse(SW_SRC.indexOf('kipia-test-v563') !== -1,
+    test('SW: кэш поднят до kipia-test-v563 (Task 323)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v563'") !== -1,
+            'CACHE_VERSION = kipia-test-v563');
+        assertFalse(SW_SRC.indexOf('kipia-test-v564') !== -1,
             'v563 не существует (один инкремент на Task 323)');
     });
 });

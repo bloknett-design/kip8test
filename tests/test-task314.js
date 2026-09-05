@@ -43,7 +43,7 @@
 //       записи, лимит 12 видов, формат даты тултипа, битый JSON;
 //     — VM-СИМУЛЯЦИЯ _renderCell: «.»/статус-мероприятие/отсутствие/
 //       пустая+событие/смена+событие/план+событие.
-//   SW: kipia-test-v562.
+//   SW: kipia-test-v563.
 //
 // Запуск: через tests/run-all.js (require './test-task314.js').
 
@@ -157,8 +157,10 @@ describe('Task 314 — CSS кнопки/штампа', () => {
     });
 
     test('CSS: единая высота ряда 34px с «Обновить»', () => {
-        const re = /\.ws-month-sel, \.ws-year-sel, \.ws-generate-btn, \.ws-save-btn, \.ws-refresh-btn \{[^}]*height:\s*34px/;
-        assertTrue(re.test(INDEX_SRC), '.ws-refresh-btn в правиле высоты Task 269');
+        // Task 324: правило расширено — «Итоги учёта» и вкладки итогов
+        // (нижний ряд кнопок) того же роста
+        const re = /\.ws-month-sel, \.ws-year-sel, \.ws-generate-btn, \.ws-save-btn,\n\s*\.ws-refresh-btn, \.ws-totals-btn, \.ws-tt-tab \{[^}]*height:\s*34px/;
+        assertTrue(re.test(INDEX_SRC), '.ws-refresh-btn в правиле высоты Task 269 (+ Task 324)');
     });
 
     test('CSS: .ws-refresh-tip — окно по наведению (Task 317)', () => {
@@ -576,9 +578,9 @@ describe('Task 314 — VM: _renderCell (символ «·», бейджи мер
 // ------------------------------------------------------------
 describe('Task 314 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v562', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v562'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v562');
+    test('SW: версия кэша kipia-test-v563', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v563'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v563');
         assertFalse(SW_SRC.indexOf('kipia-test-v552') !== -1,
             'старой версии v552 нет');
     });

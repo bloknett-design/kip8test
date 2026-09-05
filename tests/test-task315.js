@@ -41,7 +41,7 @@
 //     форматы дат; пустой месяц; счётчик; скрытие hidden),
 //     _updateSaveBtn (n=0 скрыта / n=2 показана), cancelAll
 //     (сброс правок, тост).
-//   SW: kipia-test-v562.
+//   SW: kipia-test-v563.
 //
 // Запуск: через tests/run-all.js (require './test-task315.js').
 
@@ -101,17 +101,25 @@ describe('Task 315 — HTML: бар из трёх частей + строки 2/
             'окно мероприятий — класс ws-events-panel');
     });
 
-    test('HTML: строка 2 — .ws-actions-row с «Сохранить» и «Отменить»', () => {
+    test('HTML: Task 324 — НИЖНИЙ РЯД #wsBottomRow: Сформировать + Сохранить + Отменить + Итоги', () => {
         const iMain = ws.indexOf('class="ws-toolbar-main"');
-        const iAct = ws.indexOf('id="wsActionsRow"');
+        const iRow = ws.indexOf('id="wsBottomRow"');
+        const iGen = ws.indexOf('id="wsGenerateBtn"');
         const iSave = ws.indexOf('id="wsSaveBtn"');
         const iCancel = ws.indexOf('id="wsCancelBtn"');
-        assertTrue(iAct !== -1 && iSave !== -1 && iCancel !== -1,
-            'строка 2 и обе кнопки есть');
-        assertTrue(iMain !== -1 && iMain < iAct,
-            'Task 317: строка 2 — ряд КОЛОНКИ кнопок (внутри .ws-toolbar-main)');
-        assertTrue(iAct < iSave && iSave < iCancel,
-            '«Сохранить» и «Отменить» внутри строки 2, рядом');
+        const iTotals = ws.indexOf('id="wsTotalsBtn"');
+        assertTrue(iRow !== -1 && iGen !== -1 && iSave !== -1 && iCancel !== -1,
+            'нижний ряд и все три кнопки есть');
+        assertTrue(iMain !== -1 && iMain < iRow,
+            'ряд — внутри .ws-toolbar-main (колонка кнопок)');
+        assertTrue(iRow < iGen && iGen < iSave && iSave < iCancel && iCancel < iTotals,
+            'ОДНА СТРОКА (заявка Task 324): Сформировать → Сохранить → Отменить → Итоги');
+        // Task 324: отдельные строки 2/3 (.ws-actions-row/.ws-generate-row)
+        // УДАЛЕНЫ — всё в одном нижнем ряду
+        assertFalse(ws.indexOf('id="wsActionsRow"') !== -1,
+            'отдельная строка 2 (ws-actions-row) удалена');
+        assertFalse(ws.indexOf('id="wsGenerateRow"') !== -1,
+            'отдельная строка 3 (ws-generate-row) удалена');
         const btn = ws.slice(iCancel - 100, iCancel + 400);
         assertTrue(btn.indexOf('onclick="WorkSchedule.cancelAll()"') !== -1,
             'onclick → WorkSchedule.cancelAll()');
@@ -119,23 +127,15 @@ describe('Task 315 — HTML: бар из трёх частей + строки 2/
             '«Отменить» скрыта без правок (появляется при вводе изменений)');
         assertTrue(btn.indexOf('>Отменить</button>') !== -1,
             'текст кнопки — «Отменить»');
-    });
-
-    test('HTML: строка 3 — .ws-generate-row с «Сформировать», ниже строки 2', () => {
-        const iAct = ws.indexOf('id="wsActionsRow"');
-        const iGenRow = ws.indexOf('id="wsGenerateRow"');
-        const iGen = ws.indexOf('id="wsGenerateBtn"');
-        assertTrue(iGenRow !== -1 && iGen !== -1,
-            'строка 3 и кнопка «Сформировать» есть');
-        assertTrue(iAct !== -1 && iAct < iGenRow,
-            '«Сформировать» — НИЖЕ строки 2, третий ряд колонки кнопок');
-        assertTrue(/id="wsGenerateRow"[^>]*\shidden/.test(ws),
-            'строка 3 скрыта по умолчанию (видна редакторам — init)');
+        assertTrue(/id="wsGenerateBtn"[^>]*\shidden/.test(ws),
+            '«Сформировать» скрыта без права записи (init)');
+        assertTrue(ws.indexOf('ws-tb-sep') !== -1,
+            'разделитель между действиями и блоком итогов');
     });
 
     test('HTML: «Сохранить» (saveAll) не изменилась', () => {
         const re = /<button type="button" id="wsSaveBtn" class="ws-save-btn" onclick="WorkSchedule\.saveAll\(\)" hidden>Сохранить<\/button>/;
-        assertTrue(re.test(ws), 'кнопка saveAll — прежняя разметка, в строке 2');
+        assertTrue(re.test(ws), 'кнопка saveAll — прежняя разметка (текст «(N)» ставит JS)');
     });
 });
 
@@ -188,13 +188,18 @@ describe('Task 315 — CSS: компоновка и перенос текста'
             '«02–05.09» не рвётся внутри (nowrap у даты)');
     });
 
-    test('CSS: строки 2/3 — flex-ряд, скрытие [hidden]', () => {
-        assertTrue(/\.ws-actions-row,/.test(INDEX_SRC) &&
-                   /\.ws-generate-row \{/.test(INDEX_SRC),
-            'правила обеих строк');
-        assertTrue(INDEX_SRC.indexOf('.ws-actions-row[hidden],') !== -1 &&
-                   INDEX_SRC.indexOf('.ws-generate-row[hidden] { display: none; }') !== -1,
-            'пустая строка скрыта (display: none по [hidden])');
+    test('CSS: Task 324 — нижний ряд всегда на виду (строки 2/3 удалены)', () => {
+        // Task 315/317: отдельные строки .ws-actions-row/.ws-generate-row
+        // и их скрытия [hidden] УДАЛЕНЫ (Task 324: один нижний ряд,
+        // в нём всегда видны кнопки итогов — ряд не прячется)
+        assertFalse(/\.ws-actions-row\s*\{/.test(INDEX_SRC),
+            'правило строки действий удалено');
+        assertFalse(/\.ws-generate-row\s*\{/.test(INDEX_SRC),
+            'правило строки генерации удалено');
+        assertFalse(INDEX_SRC.indexOf('.ws-actions-row[hidden]') !== -1,
+            'скрытие строки действий удалено (ряд всегда на виду)');
+        assertTrue(/\.ws-bottom-row \.ws-tb-sep \{[^}]*align-self:\s*stretch/.test(INDEX_SRC),
+            'разделитель нижнего ряда — во всю высоту');
     });
 
     test('CSS: .ws-cancel-btn — красная, 34px', () => {
@@ -241,24 +246,25 @@ describe('Task 315 — JS: скелет', () => {
             'подтверждение kipConfirm с danger-кнопкой');
     });
 
-    test('JS: _updateSaveBtn — «Отменить» и строка 2 вместе с «Сохранить»', () => {
+    test('JS: _updateSaveBtn — «Отменить» вместе с «Сохранить»; ряд НЕ прячется (Task 324)', () => {
         const m = methodText(INDEX_SRC, '_updateSaveBtn');
         assertTrue(m.indexOf('var show = this._canEdit && n > 0;') !== -1,
             'видимость = права И есть правки');
         assertTrue(m.indexOf("getElementById('wsCancelBtn')") !== -1,
             'управляет «Отменить»');
-        assertTrue(m.indexOf("getElementById('wsActionsRow')") !== -1 &&
-                   m.indexOf('row.hidden = !show;') !== -1,
-            'управляет всей строкой 2');
+        assertFalse(m.indexOf("getElementById('wsActionsRow')") !== -1,
+            'Task 324: ряд НЕ скрывается — в нижнем ряду всегда есть кнопки итогов');
     });
 
-    test('JS: init скрывает строку 3 по праву записи', () => {
+    test('JS: init скрывает «Сформировать» по праву записи (ряд не трогает)', () => {
         const init = INDEX_SRC.slice(INDEX_SRC.indexOf('init: function'),
                                      INDEX_SRC.indexOf('_refreshFromUrlState: function'));
-        assertTrue(init.indexOf("getElementById('wsGenerateRow')") !== -1,
-            'init берёт строку 3');
-        assertTrue(init.indexOf('genRow.hidden = !this._canEdit;') !== -1,
-            'скрыта без права записи (как кнопка)');
+        assertTrue(init.indexOf("getElementById('wsGenerateBtn')") !== -1,
+            'init берёт кнопку «Сформировать»');
+        assertTrue(init.indexOf('genBtn.hidden = !this._canEdit;') !== -1,
+            'скрыта без права записи');
+        assertFalse(init.indexOf("getElementById('wsGenerateRow')") !== -1,
+            'Task 324: отдельной строки генерации больше нет');
     });
 
     test('JS: _renderGrid вызывает _renderMonthEventsPanel', () => {
@@ -402,14 +408,12 @@ describe('Task 315 — VM: окно мероприятий месяца', () => 
 // ------------------------------------------------------------
 describe('Task 315 — VM: кнопки «Сохранить»/«Отменить»', () => {
 
-    test('VM: _updateSaveBtn — n=0 всё скрыто, n=2 показано', () => {
+    test('VM: _updateSaveBtn — n=0 кнопки скрыты, n=2 показаны', () => {
         const btn = { hidden: false, textContent: '' };
         const cancel = { hidden: false };
-        const row = { hidden: false };
         const document = { getElementById: function(id) {
             if (id === 'wsSaveBtn') return btn;
             if (id === 'wsCancelBtn') return cancel;
-            if (id === 'wsActionsRow') return row;
             return null;
         }};
         const texts = ['_updateSaveBtn'].map(n => methodText(INDEX_SRC, n));
@@ -418,26 +422,23 @@ describe('Task 315 — VM: кнопки «Сохранить»/«Отменит�
         const ctx = make(null, document, null, null, null);
 
         ctx._updateSaveBtn();
-        assertTrue(btn.hidden && cancel.hidden && row.hidden,
-            'без правок: кнопки и строка 2 скрыты');
+        assertTrue(btn.hidden && cancel.hidden,
+            'без правок: «Сохранить»/«Отменить» скрыты (ряд остаётся — кнопки итогов)');
 
         ctx._PENDING = { '2026-09-02|0871': { 'статус': 'Д' },
                          '2026-09-03|0871': { 'статус': 'ОТ' } };
         ctx._updateSaveBtn();
         assertFalse(btn.hidden, '«Сохранить» показана при правках');
         assertFalse(cancel.hidden, '«Отменить» появляется ВМЕСТЕ с «Сохранить»');
-        assertFalse(row.hidden, 'строка 2 показана');
         assertEqual('Сохранить (2)', btn.textContent, 'текст со счётчиком');
     });
 
     test('VM: _updateSaveBtn — зритель без права записи: скрыто', () => {
         const btn = { hidden: false, textContent: '' };
         const cancel = { hidden: false };
-        const row = { hidden: false };
         const document = { getElementById: function(id) {
             if (id === 'wsSaveBtn') return btn;
             if (id === 'wsCancelBtn') return cancel;
-            if (id === 'wsActionsRow') return row;
             return null;
         }};
         const texts = ['_updateSaveBtn'].map(n => methodText(INDEX_SRC, n));
@@ -446,8 +447,8 @@ describe('Task 315 — VM: кнопки «Сохранить»/«Отменит�
             '_canEdit: false, _PENDING: { a: 1 } });');
         const ctx = make(null, document, null, null, null);
         ctx._updateSaveBtn();
-        assertTrue(btn.hidden && cancel.hidden && row.hidden,
-            'зритель: строка 2 скрыта, даже при наличии правок в памяти');
+        assertTrue(btn.hidden && cancel.hidden,
+            'зритель: «Сохранить»/«Отменить» скрыты, даже при наличии правок в памяти');
     });
 
     test('VM: cancelAll — сброс правок, тост, перерисовка', () => {
@@ -490,10 +491,10 @@ describe('Task 315 — VM: кнопки «Сохранить»/«Отменит�
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 315 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v562', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v562') !== -1,
+    test('SW: версия кэша kipia-test-v563', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v563') !== -1,
             'SW поднят до v556 (Task 317 — тултип «данные от», три ряда кнопок)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v563') !== -1,
+        assertFalse(SW_SRC.indexOf('kipia-test-v564') !== -1,
             'лишний инкремент не делался');
     });
 });

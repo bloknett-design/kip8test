@@ -35,7 +35,7 @@
 //   Сервер: listEntries читает 11 колонок (часы: число/null/
 //   нормализация «7,2»); setManualEntry валидирует 0,5..24, пишет
 //   колонку K (обновление и вставка), часы=null без поля, аудит.
-//   SW: kipia-test-v562.
+//   SW: kipia-test-v563.
 //
 // Запуск: через tests/run-all.js (require './test-task322.js').
 
@@ -119,10 +119,10 @@ describe('Task 322 — CSS: оформление итогов и формы ча
         assertTrue(!!l && l[0].indexOf('#a06a13') !== -1, 'янтарный в светлой теме');
     });
 
-    test('CSS: Task 323 — панель БОКОВАЯ (шторка справа), сетка видна', () => {
-        // шторка: свёрнута — торчит только вертикальный бар
-        const d = INDEX_SRC.match(/\.ws-tt-drawer\s*\{[^}]*margin-right:\s*calc\(-50%\s*\+\s*28px\)[^}]*\}/);
-        assertTrue(!!d, 'margin-right calc(-50% + 28px) — свёрнутая шторка');
+    test('CSS: Task 323→324 — панель БОКОВАЯ (шторка справа), сетка видна', () => {
+        // Task 324: свёрнута — ПОЛНОСТЬЮ за правым краем (ручки-бара нет)
+        const d = INDEX_SRC.match(/\.ws-tt-drawer\s*\{[^}]*margin-right:\s*-50%[^}]*\}/);
+        assertTrue(!!d, 'margin-right -50% — свёрнутая шторка за краем (Task 324)');
         assertTrue(/#page-work-schedule\.ws-tt-open \.ws-tt-drawer\s*\{[^}]*margin-right:\s*0/.test(INDEX_SRC),
             'ws-tt-open — шторка выдвинута на пол-области');
         // сетка НЕ скрывается (было Task 322) — итоги рядом с шахматкой
@@ -831,7 +831,7 @@ describe('Task 322 — итоги: слова в шапке и колонка П
 
     const host = wsHost(['_codeHours', '_totalsZero', '_totalsAgg', '_statusMeta',
                          '_empTypeMap', '_overHours', '_totalsEffectiveEntries',
-                         '_fmtTotalsNum', '_esc', '_renderTotalsMonth'], {
+                         '_fmtTotalsNum', '_esc', '_setTtWarn', '_renderTotalsMonth'], {
         _year: 2026,
         _month: 9,
         _EMPLOYEES: [
@@ -852,16 +852,22 @@ describe('Task 322 — итоги: слова в шапке и колонка П
             { code: 'Д', name: 'День (12-час)' },
             { code: 'д', name: 'День в вых./праздник' }
         ]
-    }, mockDoc({ wsTtBody: { innerHTML: '' }, wsTtInfo: { textContent: '' } }));
+        // Task 324: инфо-строка wsTtInfo удалена — ⚠ шапки (пустая на месяце)
+    }, mockDoc({ wsTtBody: { innerHTML: '' },
+                 wsTtWarn: { textContent: '', hidden: true, attrs: {},
+                             setAttribute: function(k, v) { this.attrs[k] = v; } } }));
 
     test('шапка: полный набор слов (День/Ночь/Отпуск/Уч. отпуск/Отгул/Больничный/Прогул/Переработка)', () => {
         host._renderTotalsMonth();
         const h = host._els ? '' : null; // (не используется — читаем ниже)
         const body = (function() {
-            const els = { wsTtBody: { innerHTML: '' }, wsTtInfo: { textContent: '' } };
+            const els = { wsTtBody: { innerHTML: '' },
+                          // Task 324: инфо удалена — ⚠ шапки
+                          wsTtWarn: { textContent: '', hidden: true, attrs: {},
+                                      setAttribute: function(k, v) { this.attrs[k] = v; } } };
             const host2 = wsHost(['_codeHours', '_totalsZero', '_totalsAgg', '_statusMeta',
                                    '_empTypeMap', '_overHours', '_totalsEffectiveEntries',
-                                   '_fmtTotalsNum', '_esc', '_renderTotalsMonth'], {
+                                   '_fmtTotalsNum', '_esc', '_setTtWarn', '_renderTotalsMonth'], {
                 _year: 2026, _month: 9,
                 _EMPLOYEES: host._EMPLOYEES, _ENTRIES: host._ENTRIES,
                 _PENDING: {},
@@ -886,10 +892,13 @@ describe('Task 322 — итоги: слова в шапке и колонка П
     });
 
     test('строки: переработка сменного 12 и дневного 7,2 + итог 19,2', () => {
-        const els = { wsTtBody: { innerHTML: '' }, wsTtInfo: { textContent: '' } };
+        const els = { wsTtBody: { innerHTML: '' },
+                      // Task 324: инфо удалена — ⚠ шапки
+                      wsTtWarn: { textContent: '', hidden: true, attrs: {},
+                                  setAttribute: function(k, v) { this.attrs[k] = v; } } };
         const host2 = wsHost(['_codeHours', '_totalsZero', '_totalsAgg', '_statusMeta',
                                '_empTypeMap', '_overHours', '_totalsEffectiveEntries',
-                               '_fmtTotalsNum', '_esc', '_renderTotalsMonth'], {
+                               '_fmtTotalsNum', '_esc', '_setTtWarn', '_renderTotalsMonth'], {
             _year: 2026, _month: 9,
             _EMPLOYEES: host._EMPLOYEES, _ENTRIES: host._ENTRIES,
             _PENDING: {},
@@ -912,10 +921,10 @@ describe('Task 322 — итоги: слова в шапке и колонка П
 // 11. SW: версия кэша
 // ============================================================
 describe('Task 322 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v562 (Task 322)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v562'") !== -1,
-            'CACHE_VERSION = kipia-test-v562');
-        assertFalse(SW_SRC.indexOf('kipia-test-v563') !== -1,
-            'v563 не существует (один инкремент на Task 322)');
+    test('SW: кэш поднят до kipia-test-v563 (Task 322)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v563'") !== -1,
+            'CACHE_VERSION = kipia-test-v563');
+        assertFalse(SW_SRC.indexOf('kipia-test-v564') !== -1,
+            'v564 не существует (один инкремент на Task 324)');
     });
 });
