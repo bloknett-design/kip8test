@@ -429,8 +429,11 @@ with sync_playwright() as p:
         return { codes: cp ? cp.classList.contains('active') : false,
                  ev: evp ? evp.classList.contains('active') : false };
     })()""")
-    check('M: «ИТР8 pro» — клик по ячейке НЕ открывает ни окно кодов, ни окно мероприятий',
-          (not ro['codes']) and (not ro['ev']), ro)
+    # Task 319 (актуализация): зритель («График работы — просмотр») при клике
+    # по ячейке теперь получает окно «Мероприятия в этот день» (справка,
+    # заявка пользователя); окно выбора кодов по-прежнему НЕ открывается.
+    check('M: «ИТР8 pro» — окно мероприятий ОТКРЫТО, окно кодов НЕ открыто (Task 319)',
+          (not ro['codes']) and ro['ev'], ro)
     # подсветка «сегодня» видна и зрителю (не требует прав)
     today_ro = page2.evaluate("""(function(){
         var m = document.getElementById('wsMonthSel');
