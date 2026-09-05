@@ -202,14 +202,16 @@ describe('Task 321 — HTML: боковая шторка итогов справ
             'шеврон ручки удалён');
     });
 
-    test('HTML: #wsTotalsPanel скрыт по умолчанию; шапка — ✕/⚠/Обновить (Task 324)', () => {
+    test('HTML: #wsTotalsPanel скрыт по умолчанию; шапка — ⚠/Обновить (Task 324 → 325)', () => {
         const i = INDEX_SRC.indexOf('id="wsTotalsPanel"');
         assertTrue(i !== -1, 'панель есть');
         const chunk = INDEX_SRC.slice(i, i + 1200);
         assertTrue(chunk.indexOf('hidden') !== -1, 'панель скрыта по умолчанию');
-        assertTrue(chunk.indexOf('id="wsTtClose"') !== -1, 'кнопка ✕ (закрыть)');
-        assertTrue(chunk.indexOf('WorkSchedule.toggleTotals()') !== -1,
-            '✕ закрывает шторку (toggleTotals)');
+        // Task 325: ✕ из шапки УДАЛЁН — закрытие только кнопкой тулбара
+        assertFalse(chunk.indexOf('id="wsTtClose"') !== -1,
+            'кнопка ✕ удалена (заявка Task 325)');
+        assertFalse(chunk.indexOf('ws-tt-close') !== -1,
+            'класс ✕ удалён');
         assertTrue(chunk.indexOf('id="wsTtWarn"') !== -1, 'аварийная строка ⚠');
         assertTrue(chunk.indexOf('id="wsTtRefresh"') !== -1, 'кнопка Обновить');
         assertTrue(chunk.indexOf('WorkSchedule.reloadTotals()') !== -1, 'клик Обновить');
@@ -221,20 +223,22 @@ describe('Task 321 — HTML: боковая шторка итогов справ
             'строка вкладок из шапки удалена (вкладки — в тулбаре)');
     });
 
-    test('HTML: Task 324 — вкладки «Месяц»/«Год» в тулбаре, справа от «Итоги учёта»', () => {
+    test('HTML: Task 324 → 325 — вкладки «Месяц»/«Год» в ряду 2 итогов, действия — ряд 3', () => {
         const iBtn = INDEX_SRC.indexOf('id="wsTotalsBtn"');
         const iM = INDEX_SRC.indexOf('id="wsTtTabMonth"');
         const iY = INDEX_SRC.indexOf('id="wsTtTabYear"');
         assertTrue(iBtn !== -1 && iM !== -1 && iY !== -1, 'кнопка и вкладки есть');
         assertTrue(iBtn < iM && iM < iY,
             'вкладки СПРАВА от кнопки «Итоги учёта» (один ряд, заявка)');
-        const row = INDEX_SRC.indexOf('id="wsBottomRow"');
+        const iTot = INDEX_SRC.indexOf('id="wsTotalsRow"');
+        const iAct = INDEX_SRC.indexOf('id="wsActionsRow"');
         const iGen = INDEX_SRC.indexOf('id="wsGenerateBtn"');
         const iSave = INDEX_SRC.indexOf('id="wsSaveBtn"');
         const iCancel = INDEX_SRC.indexOf('id="wsCancelBtn"');
-        assertTrue(row !== -1 && row < iGen && iGen < iSave && iSave < iCancel &&
-            iCancel < iBtn,
-            'НИЖНИЙ РЯД: Сформировать → Сохранить → Отменить → Итоги учёта');
+        assertTrue(iTot !== -1 && iTot < iBtn && iY < iAct,
+            'ряд 2 — Итоги учёта/Месяц/Год (Task 325)');
+        assertTrue(iAct !== -1 && iAct < iGen && iGen < iSave && iSave < iCancel,
+            'ряд 3 (НИЖНИЙ): Сформировать → Сохранить → Отменить — ПОД итогами (заявка Task 325)');
         assertTrue(INDEX_SRC.indexOf("WorkSchedule.setTotalsTab('month')") !== -1, 'клик Месяц');
         assertTrue(INDEX_SRC.indexOf("WorkSchedule.setTotalsTab('year')") !== -1, 'клик Год');
     });
@@ -339,12 +343,12 @@ describe('Task 321 — CSS: итоги в тёмной и светлой тем�
             'зебра в светлой теме');
     });
 
-    test('CSS: мобильная шторка — fixed-оверлей, ✕ 44px (Task 323→324)', () => {
+    test('CSS: мобильная шторка — fixed-оверлей (Task 323 → 325: ✕ удалён)', () => {
         const m = INDEX_SRC.match(/@media \(max-width: 1023px\)\s*\{[\s\S]*?\.ws-tt-drawer\s*\{[^}]*position:\s*fixed[^}]*\}/);
         assertTrue(!!m, 'шторка — fixed-оверлей (место у сетки не отбирает)');
-        // Task 324: тап-зона у КНОПКИ ✕ шапки (бар-ручки больше нет)
-        const w = INDEX_SRC.match(/@media \(max-width: 1023px\)\s*\{[\s\S]*?\.ws-tt-close\s*\{[^}]*width:\s*44px/);
-        assertTrue(!!w, 'тап-зона ✕ шапки 44px');
+        // Task 325: ✕ шапки удалён — закрытие на мобиле кнопкой тулбара
+        assertFalse(/\.ws-tt-close\s*\{[^}]*width:\s*44px/.test(INDEX_SRC),
+            'тап-зона ✕ 44px удалена вместе с кнопкой (Task 325)');
         const tr = INDEX_SRC.match(/\.ws-tt-drawer\s*\{[^}]*transform:\s*translateX\(100%\)/);
         assertTrue(!!tr, 'мобайл: свёрнута — ПОЛНОСТЬЮ за экраном (Task 324: ручки нет)');
     });
@@ -997,10 +1001,10 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
 // 11. SW: версия кэша
 // ============================================================
 describe('Task 321 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v563 (Task 323)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v563'") !== -1,
-            'CACHE_VERSION = kipia-test-v563');
-        assertFalse(SW_SRC.indexOf('kipia-test-v564') !== -1,
+    test('SW: кэш поднят до kipia-test-v564 (Task 323)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v564'") !== -1,
+            'CACHE_VERSION = kipia-test-v564');
+        assertFalse(SW_SRC.indexOf('kipia-test-v565') !== -1,
             'v561 не существует (один инкремент на Task 321)');
     });
 });

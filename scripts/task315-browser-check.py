@@ -260,46 +260,54 @@ with sync_playwright() as p:
 
     # ---------- СТРОКИ 2/3: до правок ----------
     st0 = page.evaluate("""(function(){
-        var r2 = document.getElementById('wsActionsRow');
-        var r3 = document.getElementById('wsGenerateRow');
+        var act = document.getElementById('wsActionsRow');
+        var tot = document.getElementById('wsTotalsRow');
+        var s = document.getElementById('wsSaveBtn');
+        var c = document.getElementById('wsCancelBtn');
         var g = document.getElementById('wsGenerateBtn');
-        return { r2hidden: r2 ? r2.hidden : true,
-                 r3hidden: r3 ? r3.hidden : true,
+        return { actHidden: act ? act.hidden : true,
+                 totHidden: tot ? tot.hidden : true,
+                 saveHidden: s ? s.hidden : true,
+                 cancelHidden: c ? c.hidden : true,
                  gHidden: g ? g.hidden : true };
     })()""")
-    check('F: без правок строка 2 скрыта; строка 3 («Сформировать») видна Админу',
-          st0['r2hidden'] and not st0['r3hidden'] and not st0['gHidden'], st0)
+    check('F: ряды 2/3 ВСЕГДА на виду (Task 324/325); «Сформировать» — Админу, без правок Сохранить/Отменить скрыты',
+          not st0['actHidden'] and not st0['totHidden'] and not st0['gHidden'] and
+          st0['saveHidden'] and st0['cancelHidden'], st0)
 
     # ---------- ПРАВКА: строка 2 появляется ----------
     click_cell(page, TODAY_ISO, '017')
     ok_sel = select_popup_code(page, 'Н')
     page.wait_for_timeout(600)
     st1 = page.evaluate("""(function(){
-        var r2 = document.getElementById('wsActionsRow');
-        var r3 = document.getElementById('wsGenerateRow');
+        var act = document.getElementById('wsActionsRow');
+        var tot = document.getElementById('wsTotalsRow');
         var s = document.getElementById('wsSaveBtn');
         var c = document.getElementById('wsCancelBtn');
+        var g = document.getElementById('wsGenerateBtn');
         var cal = document.getElementById('wsCalPanel');
         var main = document.querySelector('.ws-toolbar-main');
-        if (!r2 || !s || !c || !r3 || !cal || !main) return null;
-        var rr2 = r2.getBoundingClientRect(), rr3 = r3.getBoundingClientRect();
-        var rc = cal.getBoundingClientRect(), rm = main.getBoundingClientRect();
-        return { r2hidden: r2.hidden, saveHidden: s.hidden, cancelHidden: c.hidden,
+        if (!act || !s || !c || !g || !tot || !cal || !main) return null;
+        var ra = act.getBoundingClientRect(), rt = tot.getBoundingClientRect();
+        var rg = g.getBoundingClientRect();
+        var rm = main.getBoundingClientRect();
+        return { actHidden: act.hidden, saveHidden: s.hidden, cancelHidden: c.hidden,
                  saveText: s.textContent.trim(), cancelText: c.textContent.trim(),
-                 row2InCol: rr2.top >= rm.top - 2 && rr2.bottom <= rm.bottom + 2,
-                 row2NotFullBar: rr2.width <= rm.width + 1,
-                 row3BelowRow2: rr3.top >= rr2.bottom - 2,
+                 rowInCol: ra.top >= rm.top - 2 && ra.bottom <= rm.bottom + 2,
+                 rowNotFullBar: ra.width <= rm.width + 1,
+                 actBelowTot: ra.top >= rt.bottom - 2,
+                 genBeforeSave: rg.left <= s.getBoundingClientRect().left,
                  saveVisible: s.offsetParent !== null, cancelVisible: c.offsetParent !== null };
     })()""")
     check('G: код выбран в попапе (Н)', ok_sel)
-    check('G2: при правке появляется СТРОКА 2: «Сохранить (1)» + «Отменить»',
-          st1 and not st1['r2hidden'] and not st1['saveHidden'] and not st1['cancelHidden'] and
+    check('G2: при правке появляются «Сохранить (1)» + «Отменить» (ряд 3 действий)',
+          st1 and not st1['actHidden'] and not st1['saveHidden'] and not st1['cancelHidden'] and
           st1['saveText'] == 'Сохранить (1)' and st1['cancelText'] == 'Отменить' and
           st1['saveVisible'] and st1['cancelVisible'], st1)
-    check('G3: строка 2 — ВНУТРИ колонки кнопок (Task 317: ряд 2, не полная ширина бара)',
-          st1 and st1['row2InCol'] and st1['row2NotFullBar'], st1)
-    check('G4: «Сформировать» (строка 3) — ЕЩЁ НИЖЕ строки 2',
-          st1 and st1['row3BelowRow2'], st1)
+    check('G3: ряд 3 — ВНУТРИ колонки кнопок (не полная ширина бара)',
+          st1 and st1['rowInCol'] and st1['rowNotFullBar'], st1)
+    check('G4: ряд 3 — ПОД рядом 2 итогов; «Сформировать» — первая в ряду (Task 325)',
+          st1 and st1['actBelowTot'] and st1['genBeforeSave'], st1)
     page.screenshot(path='scripts/task315-proof-actions.png', full_page=False)
 
     # ---------- «Отменить»: kipConfirm → сброс ----------
@@ -343,8 +351,8 @@ with sync_playwright() as p:
                  cellText: cell ? cell.textContent.trim() : '' };
     })()""")
     toasts = page.evaluate("window.__toasts || []")
-    check('H2: после отмены — _PENDING пуст, строка 2 скрыта',
-          st2['pending'] == 0 and st2['r2hidden'] and st2['saveHidden'] and st2['cancelHidden'], st2)
+    check('H2: после отмены — _PENDING пуст, кнопки скрыты (ряд 3 на виду)',
+          st2['pending'] == 0 and not st2['r2hidden'] and st2['saveHidden'] and st2['cancelHidden'], st2)
     check('H3: тост «Изменения отменены (1)»',
           any('Изменения отменены (1)' in t for t in toasts), toasts[:3])
     check('H4: ячейка вернулась к серверной записи (Д)',
@@ -362,8 +370,8 @@ with sync_playwright() as p:
                  writes: %d };
     })()""" % WRITE_COUNT['setManualEntry'])
     toasts2 = page.evaluate("window.__toasts || []")
-    check('I: «Сохранить» — пакет на сервер (setManualEntry), строка 2 скрыта',
-          st3['writes'] >= 1 and st3['r2hidden'], st3)
+    check('I: «Сохранить» — пакет на сервер (setManualEntry), кнопки скрыты (ряд на виду)',
+          st3['writes'] >= 1 and not st3['r2hidden'], st3)
     check('I2: тост «Сохранено записей: 1»',
           any('Сохранено записей: 1' in t for t in toasts2), toasts2[:3])
 
@@ -422,8 +430,8 @@ with sync_playwright() as p:
                  evShown: ev ? (!ev.hidden && ev.querySelectorAll('.ws-ep-item').length > 0) : false,
                  evCap: ev ? (ev.querySelector('.ws-ep-cap')||{}).textContent : '' };
     })()""")
-    check('K: зритель — строки 2/3 скрыты («Сформировать» нет), сетка жива',
-          viewer['r2hidden'] and viewer['r3hidden'] and viewer['gHidden'] and viewer['grid'], viewer)
+    check('K: зритель — «Сформировать» скрыта (ряды на виду: итоги видны всем), сетка жива',
+          (not viewer['r2hidden']) and viewer['gHidden'] and viewer['grid'], viewer)
     check('K2: зритель видит окно мероприятий месяца',
           viewer['evShown'] and 'Мероприятия ·' in viewer['evCap'], viewer['evCap'])
     check('K3: JS-ошибок нет (зритель)', len(js_errors2) == 0, js_errors2[:3])
@@ -460,15 +468,15 @@ with sync_playwright() as p:
         var bar = document.querySelector('.ws-bar-row');
         var main = document.querySelector('.ws-toolbar-main');
         var ev = document.getElementById('wsEventsPanel');
-        var r3 = document.getElementById('wsGenerateRow');
-        if (!bar || !main || !ev || !r3) return null;
+        var act = document.getElementById('wsActionsRow');
+        if (!bar || !main || !ev || !act) return null;
         var bs = getComputedStyle(bar);
-        var rm = main.getBoundingClientRect(), re = ev.getBoundingClientRect(), rg = r3.getBoundingClientRect();
+        var rm = main.getBoundingClientRect(), re = ev.getBoundingClientRect(), rg = act.getBoundingClientRect();
         return { display: bs.display,
                  evBelowMain: re.top > rm.bottom - 2,
                  evWidth: ev.offsetWidth, barWidth: bar.offsetWidth,
                  evInViewport: ev.offsetParent !== null,
-                 genInViewport: r3.offsetParent !== null,
+                 genInViewport: act.offsetParent !== null,
                  genAboveEv: rg.bottom <= re.top + 2 };
     })()""")
     check('L: мобильный — бар КОЛОНКОЙ (окно мероприятий под кнопками)',
@@ -476,7 +484,7 @@ with sync_playwright() as p:
     check('L2: окно мероприятий — во всю ширину бара, в кадре',
           mob and abs(mob['evWidth'] - mob['barWidth']) <= 4 and mob['evInViewport'],
           (mob and mob['evWidth'], mob and mob['barWidth']))
-    check('L3: «Сформировать» — в кнопочном блоке НАД окнами (Task 317), в кадре',
+    check('L3: ряд 3 действий — в кнопочном блоке НАД окнами, в кадре',
           mob and mob['genAboveEv'] and mob['genInViewport'], mob)
     page3.screenshot(path='scripts/task315-proof-mobile.png', full_page=False)
     check('L4: JS-ошибок нет (мобильный)', len(js_errors3) == 0, js_errors3[:3])

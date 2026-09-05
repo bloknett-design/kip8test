@@ -210,7 +210,7 @@ with sync_playwright() as p:
           page.evaluate("document.getElementById('wsTotalsPanel').hidden"))
 
     # ---------- раскрытие: ВСЯ высота шахматки, до бара с кнопками ----------
-    page.click('#wsTotalsBar')
+    page.click('#wsTotalsBtn')
     page.wait_for_timeout(500)
     check('C: панель раскрылась',
           not page.evaluate("document.getElementById('wsTotalsPanel').hidden"))
@@ -222,18 +222,16 @@ with sync_playwright() as p:
           page.evaluate("document.getElementById('wsGridWrap').getBoundingClientRect().width") < 700)
     layout = page.evaluate("""(function(){
         var tb = document.querySelector('#page-work-schedule .ws-toolbar');
-        var bar = document.getElementById('wsTotalsBar');
         var panel = document.getElementById('wsTotalsPanel');
         var vh = window.innerHeight;
         return {tbBottom: tb.getBoundingClientRect().bottom,
-                barTop: bar.getBoundingClientRect().top,
                 panelTop: panel.getBoundingClientRect().top,
                 panelBottom: panel.getBoundingClientRect().bottom,
                 vh: vh, panelH: panel.getBoundingClientRect().height};
     })()""")
-    check('F: бар итогов — СРАЗУ под баром с кнопками (тулбар)',
-          layout['barTop'] >= layout['tbBottom'] - 2 and
-          layout['barTop'] <= layout['tbBottom'] + 20, layout)
+    check('F: шторка итогов — СРАЗУ под баром с кнопками (тулбар)',
+          layout['panelTop'] >= layout['tbBottom'] - 2 and
+          layout['panelTop'] <= layout['tbBottom'] + 20, layout)
     check('G: панель — ДО НИЗА ОКНА (вся высота шахматки)',
           layout['panelBottom'] >= layout['vh'] - 12, layout)
     check('H: панель высокая (>60% доступной высоты)', layout['panelH'] > 400, layout)
@@ -341,7 +339,7 @@ with sync_playwright() as p:
     page.screenshot(path='task322-proof-year.png', full_page=False)
 
     # ---------- сворачивание: сетка возвращается ----------
-    page.click('#wsTotalsBar')
+    page.click('#wsTotalsBtn')
     page.wait_for_timeout(500)
     check('Q: панель свёрнута, сетка восстановила высоту',
           page.evaluate("document.getElementById('wsTotalsPanel').hidden") and
@@ -408,7 +406,7 @@ with sync_playwright() as p:
 
     # итоги live: переработка Петрова 7,2+6=13,2 — панель открыта
     # (вкладка могла остаться «Год» — явно возвращаемся на месяц)
-    page.click('#wsTotalsBar')
+    page.click('#wsTotalsBtn')
     page.wait_for_timeout(500)
     page.click('#wsTtTabMonth')
     page.wait_for_timeout(300)
@@ -448,7 +446,7 @@ with sync_playwright() as p:
           row023c == '13,2', row023c)
 
     # ---------- сменный: д применяется БЕЗ формы ----------
-    page.click('#wsTotalsBar')
+    page.click('#wsTotalsBtn')
     page.wait_for_timeout(400)
     page.click('#wsGridWrap tbody tr:nth-child(1) td[data-day="11"]')
     page.wait_for_timeout(400)
@@ -505,7 +503,7 @@ with sync_playwright() as p:
     check('AC: светлая — страница/сетка',
           page2.evaluate("document.documentElement.getAttribute('data-theme')") == 'light' and
           page2.evaluate("!!document.querySelector('#wsGridWrap table')"))
-    page2.click('#wsTotalsBar')
+    page2.click('#wsTotalsBtn')
     page2.wait_for_timeout(500)
     check('AD: светлая — шторка на пол-области, сетка рядом (Task 323)',
           page2.evaluate("document.getElementById('wsTotalsPanel').getBoundingClientRect().height") > 400 and
@@ -546,9 +544,9 @@ with sync_playwright() as p:
     open_grid(page3)
     check('AI: мобильный — сетка отрисована',
           page3.evaluate("!!document.querySelector('#wsGridWrap table')"))
-    bar_h = page3.evaluate("document.getElementById('wsTotalsBar').getBoundingClientRect().height")
-    check('AJ: мобильный — тап-зона бара ≥ 40px', bar_h >= 40, bar_h)
-    page3.tap('#wsTotalsBar')
+    bar_h = page3.evaluate("document.getElementById('wsTotalsBtn').getBoundingClientRect().height")
+    check('AJ: мобильный — кнопка итогов ≥ 28px (тап-зона)', bar_h >= 28, bar_h)
+    page3.tap('#wsTotalsBtn')
     page3.wait_for_timeout(500)
     check('AK: мобильный — тап раскрыл панель (≤70vh, свой скролл)',
           not page3.evaluate("document.getElementById('wsTotalsPanel').hidden") and

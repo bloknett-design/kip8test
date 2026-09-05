@@ -36,7 +36,7 @@
 //   clientHeight (ползунок), syncTT в конце; рендеры: tfoot
 //   «Итого», БЕЗ .ws-tt-scroll, ws-tt-year (год), год: активные
 //   по порядку сетки + архив ниже; инфо в title.
-//   SW: kipia-test-v563.
+//   SW: kipia-test-v564.
 //
 // Запуск: через tests/run-all.js (require './test-task323.js').
 
@@ -104,17 +104,16 @@ describe('Task 323 — HTML: боковая шторка и вертикальн
             'обёртка вертикальных надписей удалена');
     });
 
-    test('HTML: Task 324 — открытие кнопкой тулбара, закрытие ✕ шапки', () => {
+    test('HTML: Task 324 → 325 — открытие/закрытие кнопкой тулбара (✕ удалён)', () => {
         const i = INDEX_SRC.indexOf('id="wsTotalsBtn"');
         const chunk = INDEX_SRC.slice(i, i + 900);
         assertTrue(chunk.indexOf('WorkSchedule.toggleTotals()') !== -1,
             'кнопка «Итоги учёта» — toggleTotals');
         assertTrue(chunk.indexOf('aria-pressed') !== -1,
             'кнопка — переключатель (aria-pressed)');
-        const x = INDEX_SRC.indexOf('id="wsTtClose"');
-        const xChunk = INDEX_SRC.slice(x, x + 400);
-        assertTrue(xChunk.indexOf('WorkSchedule.toggleTotals()') !== -1,
-            '✕ шапки закрывает шторку');
+        // Task 325: ✕ шапки удалён — кнопка тулбара ЕДИНСТВЕННЫЙ переключатель
+        assertFalse(INDEX_SRC.indexOf('id="wsTtClose"') !== -1,
+            '✕ шапки удалён (заявка Task 325)');
         assertFalse(INDEX_SRC.indexOf('id="wsTotalsChev"') !== -1,
             'шеврон ручки удалён');
         assertFalse(INDEX_SRC.indexOf('◂') !== -1,
@@ -126,12 +125,15 @@ describe('Task 323 — HTML: боковая шторка и вертикальн
 // 2. CSS: вертикальный текст, шторка, ползунок, мобильная
 // ============================================================
 describe('Task 323 — CSS: шторка, шапка, ползунок', () => {
-    test('CSS: Task 324 — шапка шторки (.ws-tt-head) вместо строки вкладок', () => {
+    test('CSS: Task 324 → 325 — шапка шторки (.ws-tt-head) вместо строки вкладок', () => {
         const head = INDEX_SRC.match(/\.ws-tt-head\s*\{[^}]*min-height:\s*28px[^}]*\}/);
         assertTrue(!!head, 'правило шапки шторки (базовая зона 28px)');
-        const close = INDEX_SRC.match(/\.ws-tt-close\s*\{[^}]*display:\s*inline-flex[^}]*\}/);
-        assertTrue(!!close && close[0].indexOf('cursor: pointer') !== -1,
-            'кнопка ✕ — стиль есть (базовое правило)');
+        // Task 325: ✕ удалён — правило .ws-tt-close удалено, пустая шапка прячется
+        assertFalse(/\.ws-tt-close\s*\{/.test(INDEX_SRC),
+            'правило ✕ удалено (Task 325)');
+        const empty = INDEX_SRC.match(/\.ws-tt-head\.ws-tt-head-empty\s*\{[^}]*min-height:\s*16px[^}]*\}/);
+        assertTrue(!!empty,
+            'пустая шапка сжата до 16px-филлера (Task 325: выравнивание строк)');
         assertFalse(INDEX_SRC.indexOf('ws-totals-bar-cap') !== -1,
             'вертикальные надписи ручки удалены');
         assertFalse(INDEX_SRC.indexOf('writing-mode: vertical-rl') !== -1,
@@ -232,24 +234,26 @@ describe('Task 323 — CSS: шторка, шапка, ползунок', () => {
         const m = INDEX_SRC.match(/@media \(min-width: 1024px\)\s*\{[\s\S]*?\.ws-tt-table:not\(\.ws-tt-year\) th\.ws-tt-emp,\s*\.ws-tt-table:not\(\.ws-tt-year\) td\.ws-tt-emp\s*\{[^}]*display:\s*none[^}]*\}/);
         assertTrue(!!m, 'месяц на десктопе: колонка скрыта — строки по строкам сетки');
         // мобайл: колонка остаётся — мобильный блок таблицы итогов
-        // (компактные ячейки + max-width колонки, БЕЗ display:none)
-        const mob = INDEX_SRC.match(/\.ws-tt-table th, \.ws-tt-table td \{ padding: 5px 8px; \}\s*\.ws-tt-table td\.ws-tt-emp,\s*\.ws-tt-table th\.ws-tt-emp\s*\{[^}]*\}/);
+        // (компактные ячейки; Task 325: кап 150px СНЯТ — ширина по самому
+        // широкому ФИО, БЕЗ display:none)
+        const mob = INDEX_SRC.match(/@media \(max-width: 1023px\)\s*\{\s*\.ws-tt-table th, \.ws-tt-table td \{ padding: 5px 8px; \}\s*\}/);
         assertTrue(!!mob, 'мобильные правила таблицы итогов есть');
-        assertTrue(mob[0].indexOf('max-width: 150px') !== -1,
-            'мобайл: колонка сотрудника осталась (узкая)');
         assertFalse(mob[0].indexOf('display: none') !== -1,
             'мобайл: список сотрудников НЕ скрыт (строки не совпадают с сеткой)');
+        assertFalse(mob[0].indexOf('max-width: 150px') !== -1,
+            'Task 325: кап 150px снят — колонка по самому широкому тексту');
     });
 
-    test('CSS: мобильная шторка — fixed, 86vw, transform, ✕ 44px (Task 324)', () => {
+    test('CSS: мобильная шторка — fixed, 86vw, transform (Task 324 → 325)', () => {
         const m = INDEX_SRC.match(/\.ws-tt-drawer\s*\{[^}]*position:\s*fixed[^}]*\}/);
         assertTrue(!!m, 'мобильное правило шторки (fixed-оверлей)');
         assertTrue(m[0].indexOf('min(86vw, 560px)') !== -1, 'ширина ~86vw');
         assertTrue(m[0].indexOf('transform: translateX(100%)') !== -1,
             'Task 324: свёрнута — ПОЛНОСТЬЮ за экраном (ручки нет)');
         assertTrue(m[0].indexOf('z-index: 75') !== -1, 'под окнами/барами приложения');
-        const w = INDEX_SRC.match(/\.ws-tt-close\s*\{[^}]*width:\s*44px/);
-        assertTrue(!!w, 'тап-зона ✕ шапки 44px');
+        // Task 325: ✕ удалён — на мобиле закрывает та же кнопка тулбара
+        assertFalse(/\.ws-tt-close\s*\{[^}]*width:\s*44px/.test(INDEX_SRC),
+            'тап-зона ✕ 44px удалена вместе с кнопкой');
         const open = INDEX_SRC.match(/#page-work-schedule\.ws-tt-open \.ws-tt-drawer\s*\{[^}]*transform:\s*none/);
         assertTrue(!!open, 'мобайл: открыта — без сдвига');
     });
@@ -387,8 +391,9 @@ describe('Task 323 — VM: _applyTtHeadVar', () => {
                 return null;
             }
         };
-        const host = wsHost(['_applyTtHeadVar'], { _totalsOpen: true },
-            mockDoc({ 'page-work-schedule': page, wsTotalsPanel: panel }));
+        const host = wsHost(['_applyTtHeadVar', '_updateTtHead'], { _totalsOpen: true },
+            mockDoc({ 'page-work-schedule': page, wsTotalsPanel: panel,
+                      wsTtWarn: { hidden: true }, wsTtRefresh: { hidden: false } }));
         return { host: host, page: page };
     }
 
@@ -410,8 +415,9 @@ describe('Task 323 — VM: _applyTtHeadVar', () => {
         t.host._totalsOpen = false;
         assertEqual(t.host._applyTtHeadVar(), false, 'закрыто — нет');
         const panel = { querySelector: function() { return null; } };
-        const host2 = wsHost(['_applyTtHeadVar'], { _totalsOpen: true },
-            mockDoc({ wsTotalsPanel: panel, 'page-work-schedule': t.page }));
+        const host2 = wsHost(['_applyTtHeadVar', '_updateTtHead'], { _totalsOpen: true },
+            mockDoc({ wsTotalsPanel: panel, 'page-work-schedule': t.page,
+                      wsTtWarn: { hidden: true }, wsTtRefresh: { hidden: false } }));
         assertEqual(host2._applyTtHeadVar(), false, 'нет шапки — нет');
     });
 });
@@ -734,10 +740,10 @@ describe('Task 323 — интеграция', () => {
 // 10. SW: версия кэша
 // ============================================================
 describe('Task 323 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v563 (Task 323)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v563'") !== -1,
-            'CACHE_VERSION = kipia-test-v563');
-        assertFalse(SW_SRC.indexOf('kipia-test-v564') !== -1,
-            'v563 не существует (один инкремент на Task 323)');
+    test('SW: кэш поднят до kipia-test-v564 (Task 323)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v564'") !== -1,
+            'CACHE_VERSION = kipia-test-v564');
+        assertFalse(SW_SRC.indexOf('kipia-test-v565') !== -1,
+            'v565 не существует (один инкремент на Task 323)');
     });
 });

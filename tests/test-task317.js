@@ -33,7 +33,7 @@
 //     (3 ветки — как в Task 314).
 //   VM: _updateCacheStamp (формат/подсказка), _showRefreshTip/
 //     _hideRefreshTip на моках (скрытие, позиция сверху/снизу).
-//   SW: kipia-test-v563.
+//   SW: kipia-test-v564.
 //
 // Запуск: через tests/run-all.js (require './test-task317.js').
 
@@ -79,21 +79,19 @@ describe('Task 317 — HTML: колонка кнопок из двух рядо�
             'класс .ws-toolbar-row у ряда 1');
     });
 
-    test('HTML: два ряда — внутри колонки, окна после неё (Task 324)', () => {
+    test('HTML: три ряда — внутри колонки, окна после неё (Task 324 → 325)', () => {
         const iMain = ws.indexOf('class="ws-toolbar-main"');
         const iRow1 = ws.indexOf('id="wsSelectsRow"');
-        const iBottom = ws.indexOf('id="wsBottomRow"');
+        const iTot = ws.indexOf('id="wsTotalsRow"');
+        const iAct = ws.indexOf('id="wsActionsRow"');
         const iEv = ws.indexOf('id="wsEventsPanel"');
         const iCal = ws.indexOf('id="wsCalPanel"');
-        assertTrue(iMain < iRow1 && iRow1 < iBottom,
-            'колонка: ряд 1 (селекты) → НИЖНИЙ РЯД (действия + итоги)');
-        assertTrue(iBottom < iEv && iEv < iCal,
-            'нижний ряд до окон; окна — СПРАВА от колонки кнопок');
-        // Task 324: рядов 2/3 больше нет — одна нижняя строка
-        assertFalse(ws.indexOf('id="wsActionsRow"') !== -1,
-            'отдельный ряд 2 удалён (Task 324)');
+        assertTrue(iMain < iRow1 && iRow1 < iTot && iTot < iAct,
+            'колонка: ряд 1 (селекты) → ряд 2 (итоги) → ряд 3 (действия, Task 325)');
+        assertTrue(iAct < iEv && iEv < iCal,
+            'ряд 3 до окон; окна — СПРАВА от колонки кнопок');
         assertFalse(ws.indexOf('id="wsGenerateRow"') !== -1,
-            'отдельный ряд 3 удалён (Task 324)');
+            'отдельный ряд генерации удалён');
     });
 
     test('HTML: штамп из бара удалён', () => {
@@ -151,14 +149,11 @@ describe('Task 317 — CSS: габариты и зазоры', () => {
             'перенос выключен (колонка не превышает 95px)');
     });
 
-    test('CSS: десктоп — ДВА ряда × calc((95px − 3px)/2) (Task 324)', () => {
-        const re = /\.ws-toolbar-row \{[^}]*height:\s*calc\(\(95px - 3px\) \/ 2\)[^}]*flex-wrap:\s*nowrap[^}]*align-items:\s*stretch/;
-        assertTrue(re.test(INDEX_SRC),
-            'высота ряда = (95 − 3px) / 2, nowrap, кнопки растягиваются');
-        assertTrue(INDEX_SRC.indexOf('calc((95px - 3px) / 2)') !== -1,
-            'формула ровно в 95px с одним зазором 3px (два ряда — Task 324)');
-        assertFalse(INDEX_SRC.indexOf('calc((95px - 6px) / 3)') !== -1,
-            'формула ТРЁХ рядов (Task 317) удалена');
+    test('CSS: десктоп — ТРИ ряда × calc((95px − 6px)/3) (Task 324 → 325)', () => {
+        const m = INDEX_SRC.match(/@media \(min-width: 1024px\)\s*\{[\s\S]*?\.ws-toolbar-row\s*\{[^}]*calc\(\(95px - 6px\) \/ 3\)[^}]*\}/);
+        assertTrue(!!m, 'ряд = (95 − 6px)/3 — ТРИ ряда, два зазора 3px (Task 325)');
+        assertFalse(INDEX_SRC.indexOf('calc((95px - 3px) / 2)') !== -1,
+            'формула двух рядов удалена');
     });
 
     test('CSS: десктоп — кнопки/селекты во всю высоту ряда', () => {
@@ -324,10 +319,10 @@ describe('Task 317 — JS: тултип «данные от …»', () => {
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 317 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v563', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v563') !== -1,
-            'CACHE_VERSION = kipia-test-v563 (Task 317)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v564') !== -1,
+    test('SW: версия кэша kipia-test-v564', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v564') !== -1,
+            'CACHE_VERSION = kipia-test-v564 (Task 317)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v565') !== -1,
             'лишний инкремент не делался');
     });
 });

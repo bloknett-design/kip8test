@@ -209,21 +209,21 @@ with sync_playwright() as p:
     page.wait_for_timeout(1200)
 
     # ---------- 3. Итоги: бар под сеткой, панель скрыта ----------
-    check('L: бар итогов существует и видим',
-          page.evaluate("!!document.getElementById('wsTotalsBar') && !document.getElementById('wsTotalsBar').hidden"))
+    check('L: кнопка «Итоги учёта» существует (ряд 2 тулбара, Task 324→325)',
+          page.evaluate("!!document.getElementById('wsTotalsBtn')") and
+          page.evaluate("!!document.getElementById('wsTotalsBtn').offsetParent"))
     check('M: панель итогов СКРЫТА по умолчанию (не мешает сетке)',
           page.evaluate("document.getElementById('wsTotalsPanel').hidden"))
     geom0 = page.evaluate("""(function(){
         var g = document.getElementById('wsGridWrap').getBoundingClientRect();
-        var b = document.getElementById('wsTotalsBar').getBoundingClientRect();
-        return {gridH: g.height, gridBottom: g.bottom, barTop: b.top, barH: b.height};
+        return {gridH: g.height, gridBottom: g.bottom};
     })()""")
-    # Task 323: бар — ВЕРТИКАЛЬНАЯ ручка СПРАВА от сетки (высота = сетке)
-    check('N: бар-ручка СПРАВА от сетки (вертикальный, во всю высоту)',
-          abs(geom0['barH'] - geom0['gridH']) < 6 and geom0['barH'] > 200, geom0)
+    check('N: вертикальной ручки НЕТ (Task 324) — переключатель в тулбаре',
+          page.evaluate("document.getElementById('wsTotalsBar') === null") and
+          page.evaluate("document.getElementById('wsTotalsChev') === null"))
 
     # ---------- 4. Месяц: таблица итогов ----------
-    page.click('#wsTotalsBar')
+    page.click('#wsTotalsBtn')
     page.wait_for_timeout(500)
     check('O: панель раскрылась, вкладка «Месяц» активна',
           page.evaluate("!document.getElementById('wsTotalsPanel').hidden") and
@@ -266,8 +266,10 @@ with sync_playwright() as p:
     })()""")
     check('S: «Итого» — 6 явок, 59,2 ч (017 43,2 + 023 16)',
           total is not None and total[0] == '6' and total[1] == '59,2', total)
-    info = page.evaluate("document.getElementById('wsTtInfo').textContent")
-    check('T: инфо — месяц + норма календаря', 'раб. дн' in info and 'ч (40-час)' in info, info)
+    cal_txt = page.evaluate("(function(){ var c = document.getElementById('wsCalPanel'); return c ? c.textContent : ''; })()")
+    check('T: инфо-строка УДАЛЕНА (Task 324); норма — в окне календаря тулбара',
+          page.evaluate("document.getElementById('wsTtInfo') === null") and
+          'Рабочих' in cal_txt, cal_txt[:80])
 
     # живое обновление: несохранённая правка меняет итоги сразу
     page.evaluate("""(function(){
@@ -290,8 +292,9 @@ with sync_playwright() as p:
     check('U: несохранённая правка — итоги обновились живьём (явки 3, часы 31,2, Б 2)',
           row017b is not None and row017b[0] == '3' and row017b[1] == '31,2' and row017b[2] == '2',
           row017b)
-    info2 = page.evaluate("document.getElementById('wsTtInfo').textContent")
-    check('V: инфо помечает несохранённые правки', 'несохранённые правки (1)' in info2, info2)
+    save_txt = page.evaluate("document.getElementById('wsSaveBtn').textContent")
+    check('V: несохранённая правка — на кнопке «Сохранить (1)» (Task 324)',
+          save_txt == 'Сохранить (1)', save_txt)
     page.evaluate("WorkSchedule._PENDING = {}; WorkSchedule._renderGrid();")
     page.wait_for_timeout(200)
     page.screenshot(path='task321-proof-month.png', full_page=False)
@@ -361,13 +364,14 @@ with sync_playwright() as p:
     STATE['failMonth'] = True
     page.click('#wsTtRefresh')
     page.wait_for_timeout(900)
-    info3 = page.evaluate("document.getElementById('wsTtInfo').textContent")
-    check('AC: сбой месяца — предупреждение «не загружено месяцев»',
-          'не загружено месяцев: 1' in info3, info3)
+    warn3 = page.evaluate("document.getElementById('wsTtWarn').textContent")
+    check('AC: сбой месяца — предупреждение «не загружено месяцев» в ⚠ шапки',
+          'не загружено месяцев: 1' in warn3 and
+          not page.evaluate("document.getElementById('wsTtWarn').hidden"), warn3)
     STATE['failMonth'] = False
 
     # ---------- 6. Сворачивание: сетка возвращает высоту ----------
-    page.click('#wsTotalsBar')
+    page.click('#wsTotalsBtn')
     page.wait_for_timeout(500)
     check('AD: панель свёрнута, сетка восстановила высоту',
           page.evaluate("document.getElementById('wsTotalsPanel').hidden") and
@@ -387,7 +391,7 @@ with sync_playwright() as p:
           page2.evaluate("!!document.querySelector('#wsGridWrap table')"))
     yr2 = page2.evaluate("document.getElementById('wsYearSel').querySelectorAll('option').length")
     check('AG: светлая — год из 3 пунктов', yr2 == 3, yr2)
-    page2.click('#wsTotalsBar')
+    page2.click('#wsTotalsBtn')
     page2.wait_for_timeout(500)
     panel_bg = page2.evaluate("getComputedStyle(document.getElementById('wsTotalsPanel')).backgroundColor")
     check('AH: светлая — панель в светлых тонах (#e9e7de)',
@@ -408,9 +412,9 @@ with sync_playwright() as p:
     open_grid(page3)
     check('AK: мобильный — сетка отрисована',
           page3.evaluate("!!document.querySelector('#wsGridWrap table')"))
-    bar_h = page3.evaluate("document.getElementById('wsTotalsBar').getBoundingClientRect().height")
-    check('AL: мобильный — тап-зона бара ≥ 40px', bar_h >= 40, bar_h)
-    page3.tap('#wsTotalsBar')
+    bar_h = page3.evaluate("document.getElementById('wsTotalsBtn').getBoundingClientRect().height")
+    check('AL: мобильный — кнопка итогов ≥ 28px (тап-зона)', bar_h >= 28, bar_h)
+    page3.tap('#wsTotalsBtn')
     page3.wait_for_timeout(500)
     check('AM: мобильный — тап раскрыл панель',
           not page3.evaluate("document.getElementById('wsTotalsPanel').hidden"))

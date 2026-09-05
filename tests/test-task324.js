@@ -10,28 +10,40 @@
 // оглавлений в шапке шторки итогов разместить в одни строки.
 // Так же сделать нижнюю горизонтальную полосу прокрутки в шторке
 // итогов учёта».
+// Task 325 (актуализация): «кнопки “Сформировать”, “Сохранить
+// (N)”, “Отменить” разместить в ТРЕТЬЕЙ строке ПОД кнопками
+// “Итоги учёта”, “Месяц” и “Год” (ряд 2 — итоги, ряд 3 —
+// действия); ✕ в шапке шторки УБРАТЬ (закрытие — только кнопкой
+// тулбара); в таблице итогов — ТОНКИЕ ВЕРТИКАЛЬНЫЕ ЛИНИИ
+// разделения ячеек».
 //
-// ЧТО ПРОВЕРЯЕТСЯ:
-//   HTML: нижний ряд #wsBottomRow — ОДНА строка: Сформировать →
-//   Сохранить → Отменить → разделитель → Итоги учёта → Месяц →
-//   Год (вкладки СПРАВА от кнопки); кнопка «Итоги учёта» —
-//   aria-pressed переключатель; отдельные ряды 2/3 (ws-actions-row/
-//   ws-generate-row) удалены; вертикальный бар-ручка (wsTotalsBar/
-//   wsTotalsChev) удалён; шапка шторки .ws-tt-head = ✕ + ⚠ +
-//   «Обновить»; инфо-строка #wsTtInfo удалена.
+// ЧТО ПРОВЕРЯЕТСЯ (после Task 325):
+//   HTML: ряд 2 #wsTotalsRow — «Итоги учёта» → «Месяц» → «Год»
+//   (кнопка — aria-pressed переключатель); ряд 3 #wsActionsRow —
+//   «Сформировать» → «Сохранить» → «Отменить» (заявка: действия —
+//   третьей строкой ПОД итогами); разделитель .ws-tb-sep удалён;
+//   вертикальный бар-ручка (wsTotalsBar/wsTotalsChev) удалён;
+//   шапка шторки .ws-tt-head = ⚠ + «Обновить» (✕ удалён, Task 325);
+//   инфо-строка #wsTtInfo удалена.
 //   CSS: кнопка .ws-totals-btn (+ aria-pressed синяя, светлая
-//   тема); разделитель .ws-tb-sep; два ряда × calc((95px − 3px)/2);
+//   тема); .ws-tb-sep УДАЛЁН; ТРИ ряда × calc((95px − 6px)/3);
 //   шторка свёрнута margin-right: -50% (десктоп) / translateX(100%)
-//   (мобайл); ✕ 44px (мобайл); .ws-tt-head/.ws-tt-close/.ws-tt-warn;
-//   вкладки .ws-tt-tab в тулбаре (рост 34px/100%); полоса прокрутки
-//   ВНИЗУ ШТОРКИ видимая (webkit height 12px, Firefox thin);
-//   оглавления th — white-space: nowrap (одной строкой).
+//   (мобайл); .ws-tt-head[hidden] { display: none } (пустая шапка
+//   прячется, Task 325); .ws-tt-warn; вкладки .ws-tt-tab в тулбаре
+//   (рост 34px/100%); полоса прокрутки ВНИЗУ ШТОРКИ видимая (webkit
+//   height 12px, Firefox thin); оглавления th — white-space:
+//   nowrap (одной строкой); ТОНКИЕ ВЕРТИКАЛЬНЫЕ ЛИНИИ ячеек —
+//   border-right у th/td, последняя колонка — без линии, светлая
+//   тема (Task 325).
 //   VM: toggleTotals — кнопка aria-pressed, без шеврона;
 //   setTotalsTab — открывает ЗАКРЫТУЮ шторку; _updateSaveBtn —
 //   ряд НЕ скрывается; init — только genBtn; _setTtWarn (пусто →
 //   скрыта, текст → показана + title); рендеры без инфо-строки;
-//   _applyTtHeadVar — зона = .ws-tt-head + thead.
-//   SW: kipia-test-v563.
+//   _applyTtHeadVar — зона = .ws-tt-head + thead, ПЕРЕД замером
+//   актуализирует вид шапки (_updateTtHead, Task 325);
+//   _updateTtHead — сжимает пустую шапку до 16px-филлера (⚠ и
+//   «Обновить» скрыты — выравнивание строк сохраняется).
+//   SW: kipia-test-v564.
 //
 // Запуск: через tests/run-all.js (require './test-task324.js').
 
@@ -71,36 +83,41 @@ function mockDoc(els) {
 }
 
 // ============================================================
-// 1. HTML: НИЖНИЙ РЯД кнопок тулбара
+// 1. HTML: ряды 2/3 кнопок тулбара (Task 325)
 // ============================================================
-describe('Task 324 — HTML: нижний ряд кнопок в одну строку', () => {
+describe('Task 324→325 — HTML: ряды кнопок итогов и действий', () => {
 
     const ws = INDEX_SRC.slice(INDEX_SRC.indexOf('id="page-work-schedule"'),
                                 INDEX_SRC.indexOf('id="wsGridWrap"'));
 
-    test('HTML: #wsBottomRow — «Сформировать»/«Сохранить»/«Отменить» В ОДНОМ ряду', () => {
-        const iRow = ws.indexOf('id="wsBottomRow"');
+    test('HTML: #wsActionsRow — «Сформировать»/«Сохранить»/«Отменить» В ОДНОМ ряду (ряд 3)', () => {
+        const iTot = ws.indexOf('id="wsTotalsRow"');
+        const iRow = ws.indexOf('id="wsActionsRow"');
         const iGen = ws.indexOf('id="wsGenerateBtn"');
         const iSave = ws.indexOf('id="wsSaveBtn"');
         const iCancel = ws.indexOf('id="wsCancelBtn"');
-        assertTrue(iRow !== -1, 'нижний ряд есть');
+        assertTrue(iRow !== -1, 'ряд действий есть (Task 325)');
         assertTrue(iGen !== -1 && iSave !== -1 && iCancel !== -1, 'все три кнопки есть');
         assertTrue(iRow < iGen && iGen < iSave && iSave < iCancel,
             'ПОРЯДОК заявки: Сформировать → Сохранить → Отменить — один ряд');
+        assertTrue(iTot !== -1 && iTot < iRow,
+            'ряд 3 — ПОД рядом 2 итогов (заявка Task 325)');
         const row = ws.slice(iRow - 220, iRow + 400);
-        assertTrue(row.indexOf('class="ws-toolbar-row ws-bottom-row"') !== -1,
-            'ряд — класс .ws-toolbar-row .ws-bottom-row');
+        assertTrue(row.indexOf('class="ws-toolbar-row ws-actions-row"') !== -1,
+            'ряд — класс .ws-toolbar-row .ws-actions-row');
+        assertFalse(row.indexOf('class="ws-tb-sep"') !== -1,
+            'разделителя-ЭЛЕМЕНТА в ряду НЕТ (блоки в разных рядах, Task 325)');
         // «Сохранить» — текст «(N)» ставит JS (_updateSaveBtn)
         const m = methodText(WS_CLIENT, '_updateSaveBtn');
         assertTrue(m.indexOf("'Сохранить (' + n + ')'") !== -1,
             'текст «Сохранить (N)» со счётчиком правок');
     });
 
-    test('HTML: кнопка «Итоги учёта» — В НИЖНЕМ ряду, переключатель', () => {
-        const iRow = ws.indexOf('id="wsBottomRow"');
+    test('HTML: кнопка «Итоги учёта» — в ряду 2, переключатель', () => {
+        const iTot = ws.indexOf('id="wsTotalsRow"');
         const iBtn = ws.indexOf('id="wsTotalsBtn"');
         assertTrue(iBtn !== -1, 'кнопка есть');
-        assertTrue(iRow !== -1 && iRow < iBtn, 'кнопка — в нижнем ряду кнопок');
+        assertTrue(iTot !== -1 && iTot < iBtn, 'кнопка — в ряду 2 итогов');
         const chunk = ws.slice(iBtn, iBtn + 500);
         assertTrue(chunk.indexOf('WorkSchedule.toggleTotals()') !== -1, 'клик — toggleTotals');
         assertTrue(chunk.indexOf('aria-pressed="false"') !== -1,
@@ -109,26 +126,27 @@ describe('Task 324 — HTML: нижний ряд кнопок в одну стр
         assertTrue(chunk.indexOf('ws-totals-btn') !== -1, 'класс ws-totals-btn');
     });
 
-    test('HTML: «Месяц»/«Год» — СПРАВА от «Итоги учёта», в том же ряду', () => {
+    test('HTML: «Месяц»/«Год» — СПРАВА от «Итоги учёта», в том же ряду 2', () => {
         const iBtn = ws.indexOf('id="wsTotalsBtn"');
         const iM = ws.indexOf('id="wsTtTabMonth"');
         const iY = ws.indexOf('id="wsTtTabYear"');
-        const iRow = ws.indexOf('id="wsBottomRow"');
-        const rowEnd = ws.indexOf('</div>', iRow);
+        const iTot = ws.indexOf('id="wsTotalsRow"');
+        const iAct = ws.indexOf('id="wsActionsRow"');
         assertTrue(iBtn !== -1 && iM !== -1 && iY !== -1, 'кнопка и вкладки есть');
         assertTrue(iBtn < iM && iM < iY, 'вкладки СПРАВА от «Итоги учёта» (заявка)');
-        assertTrue(iRow < iM && iM < rowEnd, 'вкладки — В НИЖНЕМ ряду тулбара');
+        assertTrue(iTot < iM && iM < iAct, 'вкладки — В РЯДУ 2, до ряда 3 действий');
         const chunk = ws.slice(iM, iY + 300);
         assertTrue(chunk.indexOf("WorkSchedule.setTotalsTab('month')") !== -1, 'клик Месяц');
         assertTrue(chunk.indexOf("WorkSchedule.setTotalsTab('year')") !== -1, 'клик Год');
-        assertTrue(ws.indexOf('ws-tb-sep') !== -1, 'разделитель между действиями и итогами');
+        assertFalse(INDEX_SRC.indexOf('class="ws-tb-sep"') !== -1,
+            'разделитель .ws-tb-sep УДАЛЁН (Task 325)');
     });
 
-    test('HTML: отдельные ряды 2/3 и вертикальная ручка УДАЛЕНЫ', () => {
-        assertFalse(INDEX_SRC.indexOf('id="wsActionsRow"') !== -1,
-            'ряд 2 (.ws-actions-row) удалён');
+    test('HTML: ряды тулбара и вертикальная ручка', () => {
+        assertTrue(INDEX_SRC.indexOf('id="wsActionsRow"') !== -1,
+            'ряд 3 действий ЕСТЬ (Task 325: действия — третьей строкой)');
         assertFalse(INDEX_SRC.indexOf('id="wsGenerateRow"') !== -1,
-            'ряд 3 (.ws-generate-row) удалён');
+            'ряд генерации (.ws-generate-row) удалён');
         assertFalse(INDEX_SRC.indexOf('id="wsTotalsBar"') !== -1,
             'вертикальный бар-ручка удалён (заявка)');
         assertFalse(INDEX_SRC.indexOf('id="wsTotalsChev"') !== -1,
@@ -137,11 +155,12 @@ describe('Task 324 — HTML: нижний ряд кнопок в одну стр
             'класс вертикальной ручки удалён');
     });
 
-    test('HTML: шапка шторки — ✕ + ⚠ + «Обновить», БЕЗ инфо-строки', () => {
+    test('HTML: шапка шторки — ⚠ + «Обновить», БЕЗ ✕ и инфо-строки', () => {
         const iPanel = INDEX_SRC.indexOf('id="wsTotalsPanel"');
         const chunk = INDEX_SRC.slice(iPanel, iPanel + 1100);
         assertTrue(chunk.indexOf('class="ws-tt-head"') !== -1, 'шапка .ws-tt-head');
-        assertTrue(chunk.indexOf('id="wsTtClose"') !== -1, 'кнопка ✕');
+        assertFalse(chunk.indexOf('id="wsTtClose"') !== -1,
+            'кнопка ✕ УДАЛЕНА (заявка Task 325)');
         assertTrue(chunk.indexOf('id="wsTtWarn"') !== -1, 'аварийная строка ⚠');
         assertTrue(chunk.indexOf('id="wsTtRefresh"') !== -1, 'кнопка «Обновить»');
         assertFalse(chunk.indexOf('id="wsTtInfo"') !== -1,
@@ -169,21 +188,22 @@ describe('Task 324 — CSS: кнопки и геометрия', () => {
             'светлая тема кнопки');
     });
 
-    test('CSS: .ws-tb-sep — вертикальный разделитель блока итогов', () => {
-        const m = INDEX_SRC.match(/\.ws-tb-sep\s*\{[^}]*\}/);
-        assertTrue(!!m, 'правило разделителя');
-        assertTrue(m[0].indexOf('width: 1px') !== -1, 'тонкая черта');
-        assertTrue(/\.ws-bottom-row \.ws-tb-sep\s*\{[^}]*align-self:\s*stretch/.test(INDEX_SRC),
-            'на десктопе — во всю высоту ряда');
+    test('CSS: .ws-tb-sep — разделитель УДАЛЁН (Task 325)', () => {
+        assertFalse(/\.ws-tb-sep\s*\{/.test(INDEX_SRC),
+            'правило разделителя удалено (блоки в разных рядах)');
+        assertFalse(/\.ws-bottom-row \.ws-tb-sep/.test(INDEX_SRC),
+            'десктопное правило разделителя удалено');
+        assertFalse(INDEX_SRC.indexOf('class="ws-tb-sep"') !== -1,
+            'сам элемент .ws-tb-sep из разметки удалён');
     });
 
-    test('CSS: ДВА ряда колонки кнопок — calc((95px − 3px)/2)', () => {
+    test('CSS: ТРИ ряда колонки кнопок — calc((95px − 6px)/3) (Task 325)', () => {
         assertTrue(/\.ws-toolbar-main\s*\{[^}]*height:\s*95px/.test(INDEX_SRC),
             'колонка — ровно высота окон (95px, как Task 317)');
-        const m = INDEX_SRC.match(/@media \(min-width: 1024px\)\s*\{[\s\S]*?\.ws-toolbar-row\s*\{[^}]*calc\(\(95px - 3px\) \/ 2\)[^}]*\}/);
-        assertTrue(!!m, 'ряд = (95 − 3px)/2 — ДВА ряда, один зазор 3px');
-        assertFalse(INDEX_SRC.indexOf('calc((95px - 6px) / 3)') !== -1,
-            'формула трёх рядов удалена');
+        const m = INDEX_SRC.match(/@media \(min-width: 1024px\)\s*\{[\s\S]*?\.ws-toolbar-row\s*\{[^}]*calc\(\(95px - 6px\) \/ 3\)[^}]*\}/);
+        assertTrue(!!m, 'ряд = (95 − 6px)/3 — ТРИ ряда, два зазора 3px');
+        assertFalse(INDEX_SRC.indexOf('calc((95px - 3px) / 2)') !== -1,
+            'формула двух рядов удалена');
     });
 
     test('CSS: вкладки «Месяц»/«Год» — общий рост кнопок тулбара', () => {
@@ -203,21 +223,37 @@ describe('Task 324 — CSS: кнопки и геометрия', () => {
         assertTrue(!!m && m[0].indexOf('transform: translateX(100%)') !== -1,
             'мобайл: свёрнута — за экраном');
         const w = INDEX_SRC.match(/\.ws-tt-close\s*\{[^}]*width:\s*44px/);
-        assertTrue(!!w, 'мобайл: тап-зона ✕ 44px (закрытие без ручки)');
+        assertFalse(!!w, 'правила ✕ 44px больше нет (Task 325: ✕ удалён)');
     });
 
-    test('CSS: шапка шторки — .ws-tt-head/.ws-tt-close/.ws-tt-warn', () => {
+    test('CSS: шапка шторки — .ws-tt-head-empty / .ws-tt-warn (Task 325)', () => {
         const head = INDEX_SRC.match(/\.ws-tt-head\s*\{[^}]*min-height:\s*28px[^}]*\}/);
         assertTrue(!!head, 'компактная шапка (28px)');
-        const close = INDEX_SRC.match(/\.ws-tt-close\s*\{[^}]*display:\s*inline-flex[^}]*\}/);
-        assertTrue(!!close && close[0].indexOf('cursor: pointer') !== -1, 'кнопка ✕');
-        assertTrue(/\.ws-tt-close:hover,\s*\n\s*\.ws-tt-close:focus-visible\s*\{/.test(INDEX_SRC),
-            'hover/фокус ✕ стилизованы (клавиатура)');
+        const empty = INDEX_SRC.match(/\.ws-tt-head\.ws-tt-head-empty\s*\{[^}]*min-height:\s*16px[^}]*\}/);
+        assertTrue(!!empty,
+            'пустая шапка СЖИМАЕТСЯ до 16px-филлера (выравнивание строк)');
+        assertFalse(/\.ws-tt-close\s*\{/.test(INDEX_SRC),
+            'правило .ws-tt-close удалено (✕ удалён по заявке)');
         const warn = INDEX_SRC.match(/\.ws-tt-warn\s*\{[^}]*\}/);
         assertTrue(!!warn && warn[0].indexOf('#e0a23c') !== -1,
             '⚠ — янтарная (аварийная)');
         assertTrue(INDEX_SRC.indexOf('.ws-tt-warn[hidden] { display: none; }') !== -1,
             'пустая ⚠ скрыта');
+    });
+
+    test('CSS: ТОНКИЕ ВЕРТИКАЛЬНЫЕ ЛИНИИ ячеек таблицы итогов (Task 325)', () => {
+        const m = INDEX_SRC.match(/\.ws-tt-table th,\n\s*\.ws-tt-table td\s*\{[^}]*\}/);
+        assertTrue(!!m, 'правило th/td таблицы итогов');
+        assertTrue(!!m && m[0].indexOf('border-right: 1px solid') !== -1,
+            'тонкая вертикальная линия между ячейками');
+        assertTrue(!!m && m[0].indexOf('border-bottom: 1px solid') !== -1,
+            'горизонтальные линии — как прежде');
+        const last = INDEX_SRC.match(/\.ws-tt-table th:last-child,\n\s*\.ws-tt-table td:last-child\s*\{[^}]*\}/);
+        assertTrue(!!last && last[0].indexOf('border-right: none') !== -1,
+            'последняя колонка — без линии (таблица не обводится справа)');
+        const light = INDEX_SRC.match(/\[data-theme="light"\] \.ws-tt-table th,\n\s*\[data-theme="light"\] \.ws-tt-table td\s*\{[^}]*\}/);
+        assertTrue(!!light && light[0].indexOf('border-right-color') !== -1,
+            'светлая тема — вертикальные линии тоже');
     });
 
     test('CSS: НИЖНЯЯ ГОРИЗОНТАЛЬНАЯ ПОЛОСА ПРОКРУТКИ В ШТОРКЕ (заявка)', () => {
@@ -350,15 +386,41 @@ describe('Task 324 — VM: переключатели', () => {
         assertFalse(init.indexOf('wsActionsRow') !== -1, 'ряда действий нет');
     });
 
-    test('JS: ✕ шапки и кнопка тулбара — один toggleTotals', () => {
-        const iX = INDEX_SRC.indexOf('id="wsTtClose"');
-        const xChunk = INDEX_SRC.slice(iX, iX + 300);
-        assertTrue(xChunk.indexOf('WorkSchedule.toggleTotals()') !== -1,
-            '✕ вызывает toggleTotals (закрытие)');
+    test('JS: закрытие — ТОЛЬКО кнопка тулбара (✕ удалён, Task 325)', () => {
+        assertFalse(INDEX_SRC.indexOf('id="wsTtClose"') !== -1,
+            '✕ шапки шторки УДАЛЁН (заявка Task 325)');
         const iBtn = INDEX_SRC.indexOf('id="wsTotalsBtn"');
         const bChunk = INDEX_SRC.slice(iBtn, iBtn + 300);
         assertTrue(bChunk.indexOf('WorkSchedule.toggleTotals()') !== -1,
-            'кнопка тулбара вызывает toggleTotals');
+            'кнопка тулбара вызывает toggleTotals — единственный переключатель');
+    });
+
+    test('_updateTtHead: пустая шапка — СЖИМАЕТСЯ до филлера (Task 325)', () => {
+        const head = { hidden: false,
+                       classList: { state: {}, toggle: function(c, on) { this.state[c] = !!on; },
+                                   contains: function(c) { return !!this.state[c]; } } };
+        const warn = { hidden: true };
+        const ref = { hidden: true };
+        const panel = { querySelector: function(sel) {
+            return sel === '.ws-tt-head' ? head : null;
+        } };
+        const host = wsHost(['_updateTtHead'], {},
+            mockDoc({ wsTotalsPanel: panel, wsTtWarn: warn, wsTtRefresh: ref }));
+        host._updateTtHead();
+        assertEqual(head.classList.contains('ws-tt-head-empty'), true,
+            'оба скрыты — шапка сжата (класс филлера)');
+        ref.hidden = false;   // год — «Обновить» виден
+        host._updateTtHead();
+        assertEqual(head.classList.contains('ws-tt-head-empty'), false,
+            'есть «Обновить» — шапка обычная');
+        ref.hidden = true;
+        warn.hidden = false;  // сбой года — ⚠ виден
+        host._updateTtHead();
+        assertEqual(head.classList.contains('ws-tt-head-empty'), false,
+            'есть ⚠ — шапка обычная');
+        const m = methodText(WS_CLIENT, '_applyTtHeadVar');
+        assertTrue(m.indexOf('this._updateTtHead();') !== -1,
+            '_applyTtHeadVar актуализирует шапку ДО замера высоты');
     });
 });
 
@@ -463,8 +525,9 @@ describe('Task 324 — VM: ⚠ шапки и рендеры', () => {
                 return null;
             }
         };
-        const host = wsHost(['_applyTtHeadVar'], { _totalsOpen: true },
-            mockDoc({ 'page-work-schedule': page, wsTotalsPanel: panel }));
+        const host = wsHost(['_applyTtHeadVar', '_updateTtHead'], { _totalsOpen: true },
+            mockDoc({ 'page-work-schedule': page, wsTotalsPanel: panel,
+                      wsTtWarn: { hidden: true }, wsTtRefresh: { hidden: false } }));
         assertEqual(host._applyTtHeadVar(), true, 'высота изменилась');
         assertEqual(page.style.props['--ws-tt-head-h'], '58px',
             'ceil(26,5 + 31,2) = 58px — шапка шторки + шапка таблицы');
@@ -493,10 +556,10 @@ describe('Task 324 — интеграция и SW', () => {
         assertTrue(fg.indexOf('syncTT();') !== -1, 'строки итогов синхронизируются');
     });
 
-    test('SW: версия кэша kipia-test-v563 (Task 324)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v563'") !== -1,
-            'CACHE_VERSION = kipia-test-v563');
-        assertFalse(SW_SRC.indexOf('kipia-test-v564') !== -1,
-            'v564 не существует (один инкремент на Task 324)');
+    test('SW: версия кэша kipia-test-v564 (Task 324)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v564'") !== -1,
+            'CACHE_VERSION = kipia-test-v564');
+        assertFalse(SW_SRC.indexOf('kipia-test-v565') !== -1,
+            'v565 не существует (один инкремент на Task 325)');
     });
 });

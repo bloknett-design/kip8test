@@ -182,64 +182,51 @@ with sync_playwright() as p:
           page.evaluate("!!document.querySelector('#wsGridWrap table')") and
           page.evaluate("document.querySelectorAll('#wsGridWrap tbody tr').length") == 2)
 
-    # ---------- НИЖНИЙ РЯД кнопок тулбара (заявка: один ряд) ----------
+    # ---------- РЯДЫ 2/3 кнопок тулбара (Task 325: итоги — ряд 2, действия — ряд 3) ----------
     rowinfo = page.evaluate("""(function(){
-        var row = document.getElementById('wsBottomRow');
+        var tot = document.getElementById('wsTotalsRow');
+        var act = document.getElementById('wsActionsRow');
         var gen = document.getElementById('wsGenerateBtn');
         var save = document.getElementById('wsSaveBtn');
         var cancel = document.getElementById('wsCancelBtn');
         var btn = document.getElementById('wsTotalsBtn');
         var tm = document.getElementById('wsTtTabMonth');
         var ty = document.getElementById('wsTtTabYear');
-        var sep = row.querySelector('.ws-tb-sep');
-        var kids = row.children;
-        var order = [];
-        for (var i=0;i<kids.length;i++) order.push(kids[i].id || 'sep');
-        var r = row.getBoundingClientRect();
+        var tOrder = [], aOrder = [];
+        for (var i=0;i<tot.children.length;i++) tOrder.push(tot.children[i].id);
+        for (var j=0;j<act.children.length;j++) aOrder.push(act.children[j].id);
+        var rt = tot.getBoundingClientRect();
+        var ra = act.getBoundingClientRect();
         var sel = document.getElementById('wsSelectsRow').getBoundingClientRect();
-        var tbm = row.querySelector('.ws-totals-btn').getBoundingClientRect();
+        var tbm = btn.getBoundingClientRect();
         var tabm = tm.getBoundingClientRect();
-        return {n: kids.length, order: order,
+        var main = document.querySelector('.ws-toolbar-main').getBoundingClientRect();
+        return {tOrder: tOrder, aOrder: aOrder,
                 genHidden: gen.hidden, saveHidden: save.hidden, cancelHidden: cancel.hidden,
                 btnVisible: !btn.hidden, tmVisible: !tm.hidden, tyVisible: !ty.hidden,
-                hasSep: !!sep,
-                rowY: r.y, rowH: r.height, rowW: r.width,
-                selY: sel.y, selH: sel.height,
+                hasSep: !!document.querySelector('.ws-tb-sep'),
+                totY: rt.y, totH: rt.height, actY: ra.y, actH: ra.height,
+                selY: sel.y, selH: sel.height, mainH: main.height,
                 btnX: tbm.x, tmX: tabm.x, tyX: ty.getBoundingClientRect().x,
-                rowTop: r.top,
+                actBelow: ra.y > rt.y + rt.height - 2,
                 noBar: !document.getElementById('wsTotalsBar'),
                 noChev: !document.getElementById('wsTotalsChev'),
                 noInfo: !document.getElementById('wsTtInfo')};
     })()""")
-    check('B: НИЖНИЙ РЯД — все 7 элементов В ОДНУ СТРОКУ (порядок заявки)',
-          rowinfo['order'] == ['wsGenerateBtn','wsSaveBtn','wsCancelBtn','','wsTotalsBtn','wsTtTabMonth','wsTtTabYear'] or
-          rowinfo['order'][:3] == ['wsGenerateBtn','wsSaveBtn','wsCancelBtn'] and
-          rowinfo['order'][4:] == ['wsTotalsBtn','wsTtTabMonth','wsTtTabYear'], rowinfo['order'])
+    check('B: ряд 2 = Итоги/Месяц/Год, ряд 3 = Сформировать/Сохранить/Отменить (Task 325)',
+          rowinfo['tOrder'] == ['wsTotalsBtn','wsTtTabMonth','wsTtTabYear'] and
+          rowinfo['aOrder'] == ['wsGenerateBtn','wsSaveBtn','wsCancelBtn'] and
+          rowinfo['actBelow'], rowinfo)
     check('C: правки/права — Сформировать ВИДЕН, Сохранить/Отменить скрыты (правок нет)',
           (not rowinfo['genHidden']) and rowinfo['saveHidden'] and rowinfo['cancelHidden'], rowinfo)
     check('D: «Итоги учёта»/«Месяц»/«Год» — видны ВСЕМ, вкладки СПРАВА от кнопки',
           rowinfo['btnVisible'] and rowinfo['tmVisible'] and rowinfo['tyVisible'] and
           rowinfo['btnX'] < rowinfo['tmX'] < rowinfo['tyX'])
-    check('E: разделитель между действиями и итогами',
-          rowinfo['hasSep'])
-    # один ряд: все кнопки нижнего ряда на ОДНОЙ высоте
-    onerow = page.evaluate("""(function(){
-        var row = document.getElementById('wsBottomRow');
-        var kids = row.querySelectorAll('button, .ws-tb-sep');
-        var top = null, ok = true;
-        for (var i=0;i<kids.length;i++){
-            if (kids[i].hidden) continue;
-            var t = kids[i].getBoundingClientRect().top;
-            if (top === null) top = t;
-            else if (Math.abs(t - top) > 2) ok = false;
-        }
-        return {ok: ok, top: top, h: row.getBoundingClientRect().height,
-                selH: document.getElementById('wsSelectsRow').getBoundingClientRect().height};
-    })()""")
-    check('F: все кнопки нижнего ряда НА ОДНОЙ строке (top равен)',
-          onerow['ok'], onerow)
-    check('G: ДВА ряда × calc((95−3)/2)=46px — ряды ровные, колонка = 95px',
-          abs(onerow['h'] - 46) < 2.5 and abs(onerow['selH'] - 46) < 2.5, onerow)
+    check('E: разделитель .ws-tb-sep УДАЛЁН (Task 325: блоки в разных рядах)',
+          not rowinfo['hasSep'])
+    check('F/G: ТРИ ряда × calc((95−6)/3)≈29,7px — колонка = 95px (Task 325)',
+          abs(rowinfo['totH'] - 29.67) < 1.5 and abs(rowinfo['actH'] - 29.67) < 1.5 and
+          abs(rowinfo['selH'] - 29.67) < 1.5 and abs(rowinfo['mainH'] - 95) < 1.5, rowinfo)
     check('H: вертикальной ручки и инфо-строки НЕТ (DOM)',
           rowinfo['noBar'] and rowinfo['noChev'] and rowinfo['noInfo'])
 
@@ -289,7 +276,7 @@ with sync_playwright() as p:
     check('P: шапка шторки компактная (✕ + ⚠ + Обновить, БЕЗ вкладок/инфо)',
           layout['headH'] < 46, layout)
 
-    # ---------- шапка шторки: ✕/⚠/Обновить, инфо УДАЛЕНА ----------
+    # ---------- шапка шторки: ⚠/Обновить, ✕ УДАЛЁН (Task 325) ----------
     headinfo = page.evaluate("""(function(){
         var head = document.querySelector('#wsTotalsPanel .ws-tt-head');
         var x = document.getElementById('wsTtClose');
@@ -306,12 +293,13 @@ with sync_playwright() as p:
         return {x: !!x, warn: !!warn, warnHidden: warn ? warn.hidden : null,
                 warnText: warn ? warn.textContent : '',
                 refresh: !!refresh, tabsInHead: tabs.length,
-                headText: vis.replace(/\s+/g, ' ').trim(),
-                xVisible: x ? !x.hidden : false};
+                headText: vis.replace(/\\s+/g, ' ').trim(),
+                headEmpty: head.classList.contains('ws-tt-head-empty')};
     })()""")
-    check('Q: в шапке — ✕ и «Обновить»(год, скрыт); вкладок и ⚠ нет',
-          headinfo['x'] and headinfo['refresh'] and headinfo['tabsInHead'] == 0 and
-          headinfo['warnHidden'] and headinfo['warnText'] == '', headinfo)
+    check('Q: в шапке — «Обновить»(год, скрыт); ✕/вкладок/⚠ нет; пустая → филлер (Task 325)',
+          (not headinfo['x']) and headinfo['refresh'] and headinfo['tabsInHead'] == 0 and
+          headinfo['warnHidden'] and headinfo['warnText'] == '' and
+          headinfo['headEmpty'], headinfo)
     check('R: пояснительный текст «сентябрь · норма · правки» УДАЛЁН (заявка)',
           headinfo['headText'].find('норма') == -1 and
           headinfo['headText'].find('правки') == -1 and
@@ -380,7 +368,7 @@ with sync_playwright() as p:
     check('X: СТРОКИ ИТОГОВ ровно по строкам сотрудников (top совпадает)',
           ok_align and len(align['g']) == 2, align)
     check('Y: шапка сетки = шапка шторки + шапка таблицы (выравнивание)',
-          abs(align['gHeadH'] - align['pHeadH']) <= 2.5 and align['gHeadH'] > 40,
+          abs(align['gHeadH'] - align['pHeadH']) <= 2.5,
           {'gridHead': align['gHeadH'], 'panelZone': align['pHeadH']})
 
     # месяц: колонка сотрудника скрыта; значения; tfoot; зебра
@@ -420,21 +408,20 @@ with sync_playwright() as p:
     saveinfo = page.evaluate("""(function(){
         var save = document.getElementById('wsSaveBtn');
         var cancel = document.getElementById('wsCancelBtn');
-        var row = document.getElementById('wsBottomRow');
         var tds = document.querySelectorAll('#wsTtBody tbody tr')[0].querySelectorAll('td');
         return {saveText: save.textContent, saveHidden: save.hidden,
                 cancelHidden: cancel.hidden,
-                inBottomRow: !!save.closest('#wsBottomRow'),
+                inActionsRow: !!save.closest('#wsActionsRow'),
                 over: tds[10].textContent};
     })()""")
     check('AA: правка ячейки — итоги ЖИВЬЁМ (д → переработка 24)',
           saveinfo['over'] == '24', saveinfo)
-    check('AB: «Сохранить (1)» и «Отменить» появились В НИЖНЕМ РЯДУ (одна строка)',
+    check('AB: «Сохранить (1)» и «Отменить» появились В РЯДУ 3 (действия, Task 325)',
           saveinfo['saveText'] == 'Сохранить (1)' and not saveinfo['saveHidden'] and
-          not saveinfo['cancelHidden'] and saveinfo['inBottomRow'], saveinfo)
-    # «Сохранить (N)» и прочие — по-прежнему одна строка
+          not saveinfo['cancelHidden'] and saveinfo['inActionsRow'], saveinfo)
+    # ряд 3: все кнопки на ОДНОЙ высоте
     onerow2 = page.evaluate("""(function(){
-        var kids = document.querySelectorAll('#wsBottomRow button');
+        var kids = document.querySelectorAll('#wsActionsRow button');
         var top = null, ok = true;
         for (var i=0;i<kids.length;i++){
             if (kids[i].hidden) continue;
@@ -444,7 +431,7 @@ with sync_playwright() as p:
         }
         return ok;
     })()""")
-    check('AC: с правками — все кнопки ПО-ПРЕЖНЕМУ в одну строку', onerow2)
+    check('AC: с правками — кнопки ряда 3 ПО-ПРЕЖНЕМУ в одну строку', onerow2)
     page.evaluate("WorkSchedule._PENDING = {}; WorkSchedule._renderGrid();")
     page.wait_for_timeout(300)
     page.screenshot(path='task324-proof-desktop.png', full_page=False)
@@ -489,8 +476,8 @@ with sync_playwright() as p:
           yearinfo['bodyW'] > yearinfo['bodyC'] + 40, yearinfo)
     page.screenshot(path='task324-proof-year.png', full_page=False)
 
-    # ---------- закрытие ✕ шапки ----------
-    page.click('#wsTtClose')
+    # ---------- закрытие КНОПКОЙ тулбара (Task 325: ✕ удалён) ----------
+    page.click('#wsTotalsBtn')
     page.wait_for_timeout(150)
     closed_now = page.evaluate("""(function(){
         var p = document.getElementById('page-work-schedule');
@@ -499,7 +486,7 @@ with sync_playwright() as p:
                 wide: p.classList.contains('ws-tt-gridwide'),
                 pressed: document.getElementById('wsTotalsBtn').getAttribute('aria-pressed')};
     })()""")
-    check('AH: ✕ закрыл — панель скрыта, gridwide ДЕРЖИТСЯ (анимация)',
+    check('AH: кнопка закрыла — панель скрыта, gridwide ДЕРЖИТСЯ (анимация)',
           closed_now['panel'] and not closed_now['open'] and closed_now['wide'] and
           closed_now['pressed'] == 'false', closed_now)
     page.wait_for_timeout(500)
@@ -566,48 +553,50 @@ with sync_playwright() as p:
     check('AP: мобильная — страница/сетка',
           page3.evaluate("!!document.querySelector('#wsGridWrap table')"))
     mobrow = page3.evaluate("""(function(){
-        var row = document.getElementById('wsBottomRow');
         var btn = document.getElementById('wsTotalsBtn');
         var tm = document.getElementById('wsTtTabMonth');
         var r = btn.getBoundingClientRect();
         var rm = tm.getBoundingClientRect();
+        var tot = !!document.getElementById('wsTotalsRow').offsetParent;
+        var act = !!document.getElementById('wsActionsRow').offsetParent;
         return {btnW: r.width, btnH: r.height,
                 tabW: rm.width, tabH: rm.height,
-                rowH: row.getBoundingClientRect().height,
-                sepVisible: !!document.querySelector('#wsBottomRow .ws-tb-sep')};
+                totVisible: tot, actVisible: act,
+                sepVisible: !!document.querySelector('.ws-tb-sep')};
     })()""")
-    check('AQ: мобильный — кнопки итогов в нижнем ряду (тап-зона ≥34px)',
-          mobrow['btnH'] >= 34 and mobrow['tabH'] >= 34, mobrow)
-    # открытие шторки кнопкой, закрытие ✕ (44px тап-зона)
+    check('AQ: мобильный — ряды итогов/действий видны (тап-зона ≥34px)',
+          mobrow['btnH'] >= 34 and mobrow['tabH'] >= 34 and
+          mobrow['totVisible'] and mobrow['actVisible'] and
+          not mobrow['sepVisible'], mobrow)
+    # открытие шторки кнопкой; закрытие — ТАП МИМО (Task 325: ✕ удалён)
     page3.tap('#wsTotalsBtn')
     page3.wait_for_timeout(600)
     mobopen = page3.evaluate("""(function(){
         var drawer = document.getElementById('wsTotalsDrawer').getBoundingClientRect();
-        var x = document.getElementById('wsTtClose').getBoundingClientRect();
         var body = document.getElementById('wsTtBody').getBoundingClientRect();
         var vw = window.innerWidth;
         return {open: !document.getElementById('wsTotalsPanel').hidden,
                 dX: drawer.x, dW: drawer.width,
-                xH: x.height, xW: x.width,
+                x: !!document.getElementById('wsTtClose'),
                 ttSw: document.getElementById('wsTtBody').scrollWidth,
                 ttCw: document.getElementById('wsTtBody').clientWidth,
                 empVis: getComputedStyle(document.querySelector('#wsTtBody th.ws-tt-emp')).display,
                 bodyH: body.height};
     })()""")
-    check('AR: мобильная шторка открылась (~86vw), ✕ 44px',
+    check('AR: мобильная шторка открылась (~86vw), ✕ НЕТ (Task 325)',
           mobopen['open'] and mobopen['dW'] < 560 and mobopen['dX'] < 375 - 300 and
-          abs(mobopen['xH'] - 44) < 2 and abs(mobopen['xW'] - 44) < 2, mobopen)
+          not mobopen['x'], mobopen)
     check('AS: мобильная — колонка «Сотрудник» ВИДИНА, прокрутка шторки есть',
           mobopen['empVis'] != 'none' and mobopen['ttSw'] > mobopen['ttCw'] + 40, mobopen)
     page3.screenshot(path='task324-proof-mobile.png', full_page=False)
-    page3.tap('#wsTtClose')
+    page3.touchscreen.tap(10, 300)
     page3.wait_for_timeout(500)
     mobclosed = page3.evaluate("""(function(){
         var drawer = document.getElementById('wsTotalsDrawer').getBoundingClientRect();
         return {panel: document.getElementById('wsTotalsPanel').hidden,
                 dX: drawer.x};
     })()""")
-    check('AT: мобильная — ✕ закрыл шторку (уехала за экран)',
+    check('AT: мобильная — тап МИМО закрыл шторку (уехала за экран)',
           mobclosed['panel'] and mobclosed['dX'] > 370, mobclosed)
     check('AU: JS-ошибок нет (мобильный)', len(js_errors3) == 0, js_errors3[:3])
     ctx3.close()

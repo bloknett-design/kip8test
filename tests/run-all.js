@@ -57,6 +57,7 @@ require('./test-task321.js');
 require('./test-task322.js');
 require('./test-task323.js');
 require('./test-task324.js');
+require('./test-task325.js');
 require('./test-deploy-url.js');
 
 // Запускаем

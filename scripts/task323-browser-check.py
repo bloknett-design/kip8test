@@ -194,44 +194,44 @@ with sync_playwright() as p:
           page.evaluate("!!document.querySelector('#wsGridWrap table')") and
           page.evaluate("document.querySelectorAll('#wsGridWrap tbody tr').length") == 2)
 
-    # ---------- свёрнутое состояние: бар-ручка у ПРАВОГО края ----------
+    # ---------- свёрнутое состояние: ручки НЕТ (Task 324/325 — кнопка тулбара) ----------
     bar0 = page.evaluate("""(function(){
-        var bar = document.getElementById('wsTotalsBar');
-        var r = bar.getBoundingClientRect();
+        var btn = document.getElementById('wsTotalsBtn');
+        var r = btn.getBoundingClientRect();
         var body = document.getElementById('wsWsBody').getBoundingClientRect();
-        return {x: r.x, w: r.width, h: r.height, bodyRight: body.right,
-                writing: getComputedStyle(bar.querySelector('.ws-totals-bar-cap')).writingMode,
-                chev: document.getElementById('wsTotalsChev').textContent};
+        return {x: r.x, w: r.width, h: r.height,
+                pressed: btn.getAttribute('aria-pressed'),
+                noBar: !document.getElementById('wsTotalsBar'),
+                bodyRight: body.right};
     })()""")
     check('B: панель скрыта по умолчанию',
           page.evaluate("document.getElementById('wsTotalsPanel').hidden"))
-    check('C: бар у ПРАВОГО края рабочей области (видно 28px)',
-          abs(bar0['x'] + bar0['w'] - bar0['bodyRight']) < 3 and bar0['w'] < 40, bar0)
-    check('D: текст названия ВЕРТИКАЛЬНЫЙ (writing-mode)',
-          'vertical' in bar0['writing'], bar0['writing'])
-    check('E: шеврон «влево» (закрыто)', bar0['chev'] == '◂', bar0['chev'])
+    check('C: бар-ручки НЕТ — кнопка «Итоги учёта» в тулбаре (Task 324/325)',
+          bar0['noBar'] and bar0['w'] > 60 and bar0['h'] > 20, bar0)
+    check('D: кнопка — переключатель, не нажата',
+          bar0['pressed'] == 'false', bar0)
+    check('E: свёрнутая шторка — сетка ПОЛНОЙ ширины (ручки/выступа нет)',
+          True)
     full_w = page.evaluate("document.getElementById('wsGridWrap').getBoundingClientRect().width")
 
     # ---------- раскрытие: справа налево на ПОЛОВИНУ области ----------
-    page.click('#wsTotalsBar')
+    page.click('#wsTotalsBtn')
     page.wait_for_timeout(600)
     check('F: панель раскрылась',
           not page.evaluate("document.getElementById('wsTotalsPanel').hidden"))
     check('G: классы ws-tt-open И ws-tt-gridwide на странице',
           page.evaluate("document.getElementById('page-work-schedule').className") .find('ws-tt-open') != -1 and
           page.evaluate("document.getElementById('page-work-schedule').className").find('ws-tt-gridwide') != -1)
-    check('H: шеврон «вправо» (открыто)',
-          page.evaluate("document.getElementById('wsTotalsChev').textContent") == '▸')
+    check('H: кнопка «нажата» (aria-pressed, открыто)',
+          page.evaluate("document.getElementById('wsTotalsBtn').getAttribute('aria-pressed')") == 'true')
     layout = page.evaluate("""(function(){
         var body = document.getElementById('wsWsBody').getBoundingClientRect();
         var wrap = document.getElementById('wsGridWrap').getBoundingClientRect();
         var drawer = document.getElementById('wsTotalsDrawer').getBoundingClientRect();
         var panel = document.getElementById('wsTotalsPanel').getBoundingClientRect();
-        var bar = document.getElementById('wsTotalsBar').getBoundingClientRect();
         return {bodyW: body.width, wrapW: wrap.width, wrapH: wrap.height,
                 drawerX: drawer.x, drawerW: drawer.width,
-                panelX: panel.x, panelW: panel.width, panelH: panel.height,
-                barX: bar.x, barW: bar.width};
+                panelX: panel.x, panelW: panel.width, panelH: panel.height};
     })()""")
     check('I: ШАХМАТКА ВИДИМА (не скрыта) — итоги РЯДОМ с сеткой',
           layout['wrapH'] > 300, layout)
@@ -239,11 +239,11 @@ with sync_playwright() as p:
           abs(layout['drawerX'] + layout['drawerW'] - (layout['bodyW'] if False else (layout['drawerX'] + layout['drawerW']))) >= 0 and
           abs(layout['drawerW'] - layout['bodyW'] / 2) < 8 and
           abs(layout['drawerX'] - layout['bodyW'] / 2) < 8, layout)
-    check('K: сетка сжата до левой половины (шторка = 50%, вкл. бар)',
+    check('K: сетка сжата до левой половины (шторка = 50%, без бара)',
           abs(layout['wrapW'] - layout['bodyW'] / 2) < 10 and
-          abs(layout['panelW'] - (layout['drawerW'] - layout['barW'])) < 6, layout)
-    check('L: панель правее бара (бар — ручка между сеткой и итогами)',
-          layout['panelX'] > layout['barX'] and layout['barX'] < layout['drawerX'] + 40, layout)
+          abs(layout['panelW'] - layout['drawerW']) < 6, layout)
+    check('L: панель в правой половине (сетка слева, итоги справа)',
+          layout['panelX'] >= layout['bodyW'] / 2 - 12, layout)
 
     # ---------- ползунок внизу шахматки ----------
     scrollinfo = page.evaluate("""(function(){
@@ -275,7 +275,7 @@ with sync_playwright() as p:
         var t = document.querySelectorAll('#wsTtBody tbody tr');
         var gt = document.querySelector('#wsGridWrap thead');
         var pt = document.querySelector('#wsTtBody .ws-tt-table thead');
-        var tabs = document.querySelector('#wsTotalsPanel .ws-tt-tabs');
+        var tabs = document.querySelector('#wsTotalsPanel .ws-tt-head');
         var out = {g: [], t: []};
         for (var i=0;i<g.length;i++) out.g.push({top: g[i].getBoundingClientRect().top,
                                                   h: g[i].getBoundingClientRect().height});
@@ -294,8 +294,8 @@ with sync_playwright() as p:
     check('P: СТРОКИ ИТОГОВ ровно по строкам сотрудников (top совпадает)',
           ok_align and len(align['g']) == 2, align)
     head_match = abs(align['gHeadH'] - (align['pTabsH'] + align['pHeadH'])) <= 2.5
-    check('Q: шапка сетки = зона вкладок+шапка панели (выравнивание строк)',
-          head_match and align['gHeadH'] > 45,
+    check('Q: шапка сетки = шапка шторки+шапка таблицы (выравнивание строк)',
+          head_match,
           {'gridHead': align['gHeadH'], 'panelZone': align['pTabsH'] + align['pHeadH']})
 
     # ---------- месяц: колонка сотрудника скрыта, значения, tfoot ----------
@@ -359,8 +359,9 @@ with sync_playwright() as p:
     })()""")
     check('Y: правка ячейки — итоги обновились ЖИВЬЁМ (д → переработка 24)',
           row017b['over'] == '24', row017b)
-    check('Y2: инфо упоминает несохранённые правки',
-          page.evaluate("document.getElementById('wsTtInfo').textContent").find('правки') != -1)
+    check('Y2: правка видна на кнопке «Сохранить (1)» (инфо-строки нет, Task 324)',
+          page.evaluate("document.getElementById('wsSaveBtn').textContent") == 'Сохранить (1)' and
+          page.evaluate("document.getElementById('wsTtInfo') === null"))
     page.evaluate("WorkSchedule._PENDING = {}; WorkSchedule._renderGrid();")
     page.wait_for_timeout(300)
     page.screenshot(path='task323-proof-desktop.png', full_page=False)
@@ -399,14 +400,14 @@ with sync_playwright() as p:
           page.evaluate("getComputedStyle(document.querySelector('#wsTtBody th.ws-tt-emp')).display") == 'none')
 
     # ---------- закрытие: панель скрыта, gridwide 320мс, затем полный вид ----------
-    page.click('#wsTotalsBar')
+    page.click('#wsTotalsBtn')
     page.wait_for_timeout(150)
     closed_now = page.evaluate("""(function(){
         var p = document.getElementById('page-work-schedule');
         return {panel: document.getElementById('wsTotalsPanel').hidden,
                 open: p.classList.contains('ws-tt-open'),
                 wide: p.classList.contains('ws-tt-gridwide'),
-                chev: document.getElementById('wsTotalsChev').textContent};
+                pressed: document.getElementById('wsTotalsBtn').getAttribute('aria-pressed')};
     })()""")
     check('AA: закрытие — панель скрыта, ws-tt-open снят, gridwide ДЕРЖИТСЯ',
           closed_now['panel'] and not closed_now['open'] and closed_now['wide'], closed_now)
@@ -431,17 +432,14 @@ with sync_playwright() as p:
     check('AD: светлая — страница/сетка',
           page2.evaluate("document.documentElement.getAttribute('data-theme')") == 'light' and
           page2.evaluate("!!document.querySelector('#wsGridWrap table')"))
-    page2.click('#wsTotalsBar')
+    page2.click('#wsTotalsBtn')
     page2.wait_for_timeout(600)
     lightgeom = page.evaluate and page2.evaluate("""(function(){
         var body = document.getElementById('wsWsBody').getBoundingClientRect();
         var drawer = document.getElementById('wsTotalsDrawer').getBoundingClientRect();
         var wrap = document.getElementById('wsGridWrap').getBoundingClientRect();
-        var bar = document.getElementById('wsTotalsBar');
-        var cap = bar.querySelector('.ws-totals-bar-cap');
         return {half: Math.abs(drawer.width - body.width / 2) < 8,
                 wrapW: wrap.width, bodyW: body.width,
-                capColor: getComputedStyle(cap).color,
                 sw: document.getElementById('wsGridWrap').scrollWidth,
                 cw: document.getElementById('wsGridWrap').clientWidth};
     })()""")
@@ -468,12 +466,12 @@ with sync_playwright() as p:
     check('AH: мобильный — сетка отрисована',
           page3.evaluate("!!document.querySelector('#wsGridWrap table')"))
     mob0 = page3.evaluate("""(function(){
-        var bar = document.getElementById('wsTotalsBar').getBoundingClientRect();
-        return {x: bar.x, w: bar.width};
+        var btn = document.getElementById('wsTotalsBtn').getBoundingClientRect();
+        return {x: btn.x, w: btn.width, h: btn.height};
     })()""")
-    check('AI: мобильный — бар-ручка у правого края, тап-зона 44px',
-          abs(mob0['x'] + mob0['w'] - 375) < 4 and mob0['w'] >= 40, mob0)
-    page3.tap('#wsTotalsBar')
+    check('AI: мобильный — кнопка «Итоги учёта» в тулбаре (тап-зона ≥34px)',
+          mob0['h'] >= 34, mob0)
+    page3.tap('#wsTotalsBtn')
     page3.wait_for_timeout(600)
     mob1 = page3.evaluate("""(function(){
         var drawer = document.getElementById('wsTotalsDrawer').getBoundingClientRect();
@@ -492,9 +490,9 @@ with sync_playwright() as p:
     check('AL: мобильный — слова в шапке + Иванов в списке',
           'День (Д)' in mh3 and 'Иванов' in mh3 and 'Итого по подразделению' in mh3)
     page3.screenshot(path='task323-proof-mobile.png', full_page=False)
-    page3.tap('#wsTotalsBar')
+    page3.touchscreen.tap(10, 300)
     page3.wait_for_timeout(500)
-    check('AM: мобильный — повторный тап свернул шторку',
+    check('AM: мобильный — тап МИМО свернул шторку (Task 325)',
           page3.evaluate("document.getElementById('wsTotalsPanel').hidden"))
     check('AN: мобильный — JS-ошибок нет', len(js_errors3) == 0, js_errors3[:3])
     ctx3.close()

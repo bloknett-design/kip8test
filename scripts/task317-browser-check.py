@@ -117,6 +117,7 @@ BAR_JS = """(function(){
     var bList = [];
     for (var i=0;i<btns.length;i++){
         var b = btns[i];
+        if (b.hidden) continue;   // скрытые кнопки не меряем (Task 324/325)
         bList.push({id: b.id, h: b.getBoundingClientRect().height,
                     of: b.scrollHeight > b.clientHeight + 1});
     }
@@ -240,19 +241,16 @@ with sync_playwright() as p:
 
     # ---------- ряды: 2 скрыта (нет правок), 1 и 3 видны ----------
     vis = [r for r in s0['rows'] if not r['hidden']]
-    hid = [r for r in s0['rows'] if r['hidden']]
-    check('F: ряд 2 скрыт без правок; ряды 1 и 3 видны',
-          [r['id'] for r in hid] == ['wsActionsRow'] and
-          [r['id'] for r in vis][0] == 'wsSelectsRow' and
-          [r['id'] for r in vis][-1] == 'wsGenerateRow',
+    check('F: ТРИ ряда всегда на виду: селекты → итоги (2) → действия (3, Task 325)',
+          [r['id'] for r in vis] == ['wsSelectsRow', 'wsTotalsRow', 'wsActionsRow'],
           [(r['id'], r['hidden']) for r in s0['rows']])
     rowH = (95.0 - 6.0) / 3.0
     check('F2: высота каждого ряда = (95−6)/3 ≈ 29.67px',
           all(approx(r['h'], rowH, 0.6) for r in vis),
           [round(r['h'], 2) for r in vis])
-    # зазор между ВИДИМЫМИ рядами = 3px (ряд 2 скрыт: 1 → 3)
+    # зазор между рядами = 3px
     gap13 = vis[1]['y'] - (vis[0]['y'] + vis[0]['h'])
-    check('F3: расстояние между рядами кнопок — 3px (через скрытый слот)',
+    check('F3: расстояние между рядами кнопок — 3px',
           approx(gap13, 3, 0.6) or approx(gap13, 3 + rowH + 3, 0.6), gap13)
     # последний видимый ряд не выходит за колонку
     check('F4: ряд 3 — в пределах колонки (не ниже 95px)',
@@ -355,8 +353,9 @@ with sync_playwright() as p:
     check('L: код выбран в попапе (Н)', ok_sel)
     s1 = bar_state(page)
     vis1 = [r for r in s1['rows'] if not r['hidden']]
-    check('L2: при правке — ТРИ ряда в колонке (1 → 2 → 3)',
-          [r['id'] for r in vis1] == ['wsSelectsRow', 'wsActionsRow', 'wsGenerateRow'],
+    check('L2: при правке — те же ТРИ ряда (кнопки «Сохранить (1)»/«Отменить» в ряду 3)',
+          [r['id'] for r in vis1] == ['wsSelectsRow', 'wsTotalsRow', 'wsActionsRow'] and
+          page.evaluate("document.getElementById('wsSaveBtn').textContent") == 'Сохранить (1)',
           [(r['id'], r['hidden']) for r in s1['rows']])
     check('L3: ряд 2 — ВНУТРИ колонки кнопок (не во всю ширину бара)',
           vis1[1]['w'] <= s1['main']['w'] + 1 and approx(vis1[1]['y'], vis1[0]['y'] + rowH + 3, 1.0),
@@ -402,8 +401,9 @@ with sync_playwright() as p:
     })()""")
     page.wait_for_timeout(800)
     s2 = bar_state(page)
-    check('M: «Отменить» — ряд 2 скрыт, сетка на месте (не прыгает)',
-          [r['id'] for r in s2['rows'] if not r['hidden']] == ['wsSelectsRow', 'wsGenerateRow'] and
+    check('M: «Отменить» — кнопки скрыты (ряды на виду), сетка на месте (не прыгает)',
+          [r['id'] for r in s2['rows'] if not r['hidden']] == ['wsSelectsRow', 'wsTotalsRow', 'wsActionsRow'] and
+          page.evaluate("document.getElementById('wsSaveBtn').hidden") and
           approx(s2['gridY'], gridY0, 1.0), (s2['gridY'], gridY0))
 
     # ---------- светлая тема ----------
@@ -462,13 +462,14 @@ with sync_playwright() as p:
     page2.wait_for_timeout(3000)
     sv = bar_state(page2)
     visv = [r for r in sv['rows'] if not r['hidden']]
-    check('O: зритель — ряды 2/3 скрыты, только ряд 1',
-          [r['id'] for r in visv] == ['wsSelectsRow'],
+    check('O: зритель — ТРИ ряда на виду (итоги видны всем), «Сформировать» скрыта',
+          [r['id'] for r in visv] == ['wsSelectsRow', 'wsTotalsRow', 'wsActionsRow'] and
+          page2.evaluate("document.getElementById('wsGenerateBtn').hidden"),
           [(r['id'], r['hidden']) for r in sv['rows']])
     check('O2: зритель — колонка кнопок и окна РОВНО 95px (ряд не растянулся)',
           approx(sv['main']['h'], 95, 0.6) and approx(sv['ev']['h'], 95, 0.6),
           (sv['main'] and sv['main']['h'], sv['ev']['h']))
-    check('O3: зритель — кнопка ряда 1 прежних габаритов (не 95px!)',
+    check('O3: зритель — видимые кнопки прежних габаритов (не 95px!)',
           all(approx(b['h'], rowH, 1.0) for b in sv['btns']),
           [round(b['h'], 2) for b in sv['btns']])
     page2.hover('#wsRefreshBtn')

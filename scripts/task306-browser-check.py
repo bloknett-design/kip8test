@@ -358,11 +358,14 @@ with sync_playwright() as p:
 
     # I. Task 306-3: тулбар — одна кнопка «Сформировать»
     # Task 315/317: кнопки разнесены по рядам КОЛОНКИ кнопок
-    # (.ws-toolbar-main): ряд 1 (.ws-toolbar-row) — «Обновить»;
-    # ряд 2 (.ws-actions-row) — «Сохранить» (при правках);
-    # ряд 3 (.ws-generate-row) — «Сформировать»
+    # (.ws-toolbar-main); Task 324/325: ряд 1 #wsSelectsRow —
+    # «Обновить»; ряд 2 #wsTotalsRow — «Итоги учёта»/«Месяц»/«Год»;
+    # ряд 3 #wsActionsRow — «Сформировать» (+ «Сохранить» при
+    # правках); отдельные ряды .ws-generate-row/.ws-actions-row
+    # прежних эпох УДАЛЕНЫ (id теперь у РЯДА 3 действий)
     toolbar = page.evaluate("""(function(){
-        var bar = document.querySelector('.ws-toolbar-row');
+        var bar = document.getElementById('wsSelectsRow');
+        var act = document.getElementById('wsActionsRow');
         var gen = document.getElementById('wsGenerateBtn');
         var genRow = document.getElementById('wsGenerateRow');
         var cal = document.getElementById('wsCalChip');
@@ -370,17 +373,24 @@ with sync_playwright() as p:
         if (bar) bar.querySelectorAll('button').forEach(function(b){
             labels.push((b.id || '?') + ':' + b.textContent.trim());
         });
+        var actIds = [];
+        if (act) act.querySelectorAll('button').forEach(function(b){
+            actIds.push(b.id || '?');
+        });
         return { calChip: !!cal, genBtn: gen ? !gen.hidden : false,
                  genText: gen ? gen.textContent.trim() : '',
-                 genRowShown: genRow ? !genRow.hidden : false,
-                 buttons: labels };
+                 genInActions: !!act && gen && act.contains(gen),
+                 actRowVisible: !!act && !!act.offsetParent,
+                 genRowGone: !genRow,
+                 buttons: labels, actIds: actIds };
     })()""")
     check('I: кнопки «Обновить» (wsCalChip) НЕТ, «Сформировать» видна',
           toolbar and not toolbar['calChip'] and toolbar['genBtn'] and
           toolbar['genText'] == 'Сформировать', toolbar)
-    check('I2: Task 314/315/317 — «Обновить» в ряду 1; «Сформировать» — в ряду 3 (.ws-generate-row)',
+    check('I2: Task 314/315/317 → 324/325 — «Обновить» в ряду 1; «Сформировать» — в ряду 3 (#wsActionsRow)',
           toolbar and any('wsRefreshBtn:Обновить' in b for b in toolbar['buttons']) and
-          toolbar['genRowShown'] and toolbar['genText'] == 'Сформировать' and
+          toolbar['genInActions'] and toolbar['actRowVisible'] and
+          toolbar['genRowGone'] and
           not any('wsGenerateBtn' in b for b in toolbar['buttons']), toolbar)
 
     # J. Клик «Сформировать» → диалог → «Текущий месяц» → генерация +

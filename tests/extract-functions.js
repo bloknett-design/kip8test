@@ -246,8 +246,17 @@ function extractFunctions() {
         Promise: Promise,
         setTimeout: setTimeout,
         clearTimeout: clearTimeout,
-        setInterval: setInterval,
-        clearInterval: clearInterval,
+        // Task 325 (флейк-фикс): РЕАЛЬНЫЙ setInterval из eval'а
+        // script-блоков переживал песочницу: _startScrollAuditTimer
+        // (мок-matchMedia = «мобильный») ставил setInterval(
+        // _auditScrollState, 3000), на 3-й секунде (сьют стал длиннее)
+        // аудит падал на моке documentElement (нет style) и убивал
+        // весь прогон. Периодические таймеры приложения (аудит
+        // скролла, heartbeat, проверки связи) извлечённым функциям
+        // НЕ нужны — в песочнице это заглушка; setTimeout —
+        // НАСТОЯЩИЙ (отложенные реакции функций в тестах).
+        setInterval: () => 0,
+        clearInterval: () => {},
         // showToast — мок, чтобы функции не падали при ошибке валидации
         showToast: (msg) => { /* no-op */ },
         // Контейнер для извлечённых функций

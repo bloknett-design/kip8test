@@ -41,7 +41,7 @@
 //     форматы дат; пустой месяц; счётчик; скрытие hidden),
 //     _updateSaveBtn (n=0 скрыта / n=2 показана), cancelAll
 //     (сброс правок, тост).
-//   SW: kipia-test-v563.
+//   SW: kipia-test-v564.
 //
 // Запуск: через tests/run-all.js (require './test-task315.js').
 
@@ -101,25 +101,21 @@ describe('Task 315 — HTML: бар из трёх частей + строки 2/
             'окно мероприятий — класс ws-events-panel');
     });
 
-    test('HTML: Task 324 — НИЖНИЙ РЯД #wsBottomRow: Сформировать + Сохранить + Отменить + Итоги', () => {
+    test('HTML: Task 324 → 325 — ряды 2/3: Сформировать + Сохранить + Отменить (ряд 3)', () => {
         const iMain = ws.indexOf('class="ws-toolbar-main"');
-        const iRow = ws.indexOf('id="wsBottomRow"');
+        const iRow = ws.indexOf('id="wsActionsRow"');
         const iGen = ws.indexOf('id="wsGenerateBtn"');
         const iSave = ws.indexOf('id="wsSaveBtn"');
         const iCancel = ws.indexOf('id="wsCancelBtn"');
-        const iTotals = ws.indexOf('id="wsTotalsBtn"');
+        const iTot = ws.indexOf('id="wsTotalsRow"');
         assertTrue(iRow !== -1 && iGen !== -1 && iSave !== -1 && iCancel !== -1,
-            'нижний ряд и все три кнопки есть');
-        assertTrue(iMain !== -1 && iMain < iRow,
-            'ряд — внутри .ws-toolbar-main (колонка кнопок)');
-        assertTrue(iRow < iGen && iGen < iSave && iSave < iCancel && iCancel < iTotals,
-            'ОДНА СТРОКА (заявка Task 324): Сформировать → Сохранить → Отменить → Итоги');
-        // Task 324: отдельные строки 2/3 (.ws-actions-row/.ws-generate-row)
-        // УДАЛЕНЫ — всё в одном нижнем ряду
-        assertFalse(ws.indexOf('id="wsActionsRow"') !== -1,
-            'отдельная строка 2 (ws-actions-row) удалена');
+            'ряд действий и все три кнопки есть (Task 325)');
+        assertTrue(iMain !== -1 && iMain < iTot && iTot < iRow,
+            'ряды — внутри .ws-toolbar-main: итоги (2) → действия (3)');
+        assertTrue(iRow < iGen && iGen < iSave && iSave < iCancel,
+            'ОДНА СТРОКА (заявка Task 325): Сформировать → Сохранить → Отменить — ПОД итогами');
         assertFalse(ws.indexOf('id="wsGenerateRow"') !== -1,
-            'отдельная строка 3 (ws-generate-row) удалена');
+            'отдельная строка генерации (ws-generate-row) удалена');
         const btn = ws.slice(iCancel - 100, iCancel + 400);
         assertTrue(btn.indexOf('onclick="WorkSchedule.cancelAll()"') !== -1,
             'onclick → WorkSchedule.cancelAll()');
@@ -129,8 +125,8 @@ describe('Task 315 — HTML: бар из трёх частей + строки 2/
             'текст кнопки — «Отменить»');
         assertTrue(/id="wsGenerateBtn"[^>]*\shidden/.test(ws),
             '«Сформировать» скрыта без права записи (init)');
-        assertTrue(ws.indexOf('ws-tb-sep') !== -1,
-            'разделитель между действиями и блоком итогов');
+        assertFalse(INDEX_SRC.indexOf('class="ws-tb-sep"') !== -1,
+            'разделитель .ws-tb-sep удалён (Task 325: блоки в разных рядах)');
     });
 
     test('HTML: «Сохранить» (saveAll) не изменилась', () => {
@@ -188,18 +184,16 @@ describe('Task 315 — CSS: компоновка и перенос текста'
             '«02–05.09» не рвётся внутри (nowrap у даты)');
     });
 
-    test('CSS: Task 324 — нижний ряд всегда на виду (строки 2/3 удалены)', () => {
-        // Task 315/317: отдельные строки .ws-actions-row/.ws-generate-row
-        // и их скрытия [hidden] УДАЛЕНЫ (Task 324: один нижний ряд,
-        // в нём всегда видны кнопки итогов — ряд не прячется)
-        assertFalse(/\.ws-actions-row\s*\{/.test(INDEX_SRC),
-            'правило строки действий удалено');
+    test('CSS: Task 324 → 325 — ряды всегда на виду (строк-обёрток нет)', () => {
+        // Task 315/317/325: правило строки .ws-generate-row и скрытия
+        // строк УДАЛЕНЫ (Task 325: ряды 2/3 — итоги и действия, в ряду 2
+        // всегда видны кнопки итогов — ряды не прячутся)
         assertFalse(/\.ws-generate-row\s*\{/.test(INDEX_SRC),
             'правило строки генерации удалено');
-        assertFalse(INDEX_SRC.indexOf('.ws-actions-row[hidden]') !== -1,
+        assertFalse(/\.ws-actions-row\[hidden\]/.test(INDEX_SRC),
             'скрытие строки действий удалено (ряд всегда на виду)');
-        assertTrue(/\.ws-bottom-row \.ws-tb-sep \{[^}]*align-self:\s*stretch/.test(INDEX_SRC),
-            'разделитель нижнего ряда — во всю высоту');
+        assertFalse(/\.ws-bottom-row \.ws-tb-sep/.test(INDEX_SRC),
+            'разделитель нижнего ряда удалён (Task 325: блоки в разных рядах)');
     });
 
     test('CSS: .ws-cancel-btn — красная, 34px', () => {
@@ -491,10 +485,10 @@ describe('Task 315 — VM: кнопки «Сохранить»/«Отменит�
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 315 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v563', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v563') !== -1,
+    test('SW: версия кэша kipia-test-v564', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v564') !== -1,
             'SW поднят до v556 (Task 317 — тултип «данные от», три ряда кнопок)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v564') !== -1,
+        assertFalse(SW_SRC.indexOf('kipia-test-v565') !== -1,
             'лишний инкремент не делался');
     });
 });
