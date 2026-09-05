@@ -100,6 +100,10 @@
 //   H: замещает (FK на Сотрудники — кого замещали; может быть пусто)
 //   I: инструкция (FK на Инструктажи.id; может быть пусто)
 //   J: комментарий
+//   K: часы (Task 322 — часы переработки кода «д»/«н» дневного
+//      персонала; пусто = не указано. Сменному всегда 12 — поле
+//      не заполняется. ДОБАВЬТЕ заголовок «часы» в ячейку K1 —
+//      данные пишутся и без него, заголовок для читаемости листа)
 //
 // Структура листа «Отпуска» (Task 274 — план периодов отпусков):
 //   A: id (auto-increment)
@@ -322,6 +326,17 @@ var WorkSchedule = {
     var m = ('' + (dt.getMonth() + 1)).padStart(2, '0');
     var d = ('' + dt.getDate()).padStart(2, '0');
     return y + '-' + m + '-' + d;
+  },
+
+  // Task 322: значение колонки K «часы» → число или null.
+  // Ячейка может быть числом (7.2), строкой («7,2»/«7.2»),
+  // пустой или null — нормализуем в число (0.5..24), иначе null
+  // (клиент показывает «не указано», итоги берут фолбэк 8 ч)
+  _wsNumOrNull: function(v) {
+    if (v === null || v === undefined || v === '') return null;
+    var n = typeof v === 'number' ? v : parseFloat(String(v).replace(',', '.'));
+    if (isNaN(n) || n <= 0 || n > 24) return null;
+    return Math.round(n * 10) / 10;
   },
 
   // Количество дней в месяце
@@ -607,8 +622,9 @@ var WorkSchedule = {
     if (lastRow < 2) return { ok: true, data: { entries: [] } };
 
     // Читаем даты (A), таб_номер (B), статус (C), переработка (D), праздник (E),
-    // источник (F), дата_обновления (G), замещает (H), инструкция (I), комментарий (J)
-    var values = sheet.getRange(2, 1, lastRow - 1, 10).getValues();
+    // источник (F), дата_обновления (G), замещает (H), инструкция (I), комментарий (J),
+    // часы (K, Task 322 — часы переработки д/н дневного персонала)
+    var values = sheet.getRange(2, 1, lastRow - 1, 11).getValues();
     var monthStart = new Date(year, month - 1, 1);
     var monthEnd   = new Date(year, month, 1);  // не включительно
 
@@ -629,6 +645,9 @@ var WorkSchedule = {
         замещает:        r[7] === '' || r[7] === null ? null : String(r[7]).trim(),
         инструкция:      r[8] === '' || r[8] === null ? null : parseInt(r[8], 10),
         комментарий:     String(r[9] || '').trim(),
+        // Task 322: часы переработки д/н (число или null); строки
+        // вида «7,2» нормализуются числом
+        часы:            this._wsNumOrNull(r[10]),
         _rowIndex:       i + 2  // 1-based номер строки в листе
       });
     }
@@ -1371,6 +1390,26 @@ var WorkSchedule = {
     var замещает    = payload.замещает ? String(payload.замещает).trim() : '';
     var инструкция  = payload.инструкция ? parseInt(payload.инструкция, 10) : null;
     var комментарий = String(payload.комментарий || '').slice(0, 500);
+    // Task 322: часы переработки кода д/н (дневной персонал) —
+    // колонка K «Записи_графика». Семантика значения:
+    //   • undefined — СТАРЫЙ клиент поля не шлёт → K НЕ ТРАГАЕМ
+    //     (сохранённые часы живут; обратная совместимость с kip8);
+    //   • null/'' — новый клиент чистит часы (статус сменился
+    //     на не-д/н) → пишем null;
+    //   • число 0,5..24 (запятая/точка) → пишем, округляя к 0,1.
+    var часы = undefined;
+    if (payload.часы !== undefined) {
+        if (payload.часы === null || payload.часы === '') {
+            часы = null;
+        } else {
+            часы = parseFloat(String(payload.часы).replace(',', '.'));
+            if (isNaN(часы) || часы < 0.5 || часы > 24) {
+                return { ok: false, error: 'invalid_часы: ' + payload.часы +
+                         ' (ожидалось число 0,5–24)' };
+            }
+            часы = Math.round(часы * 10) / 10;
+        }
+    }
 
     if (foundRow > 0) {
       // Обновление существующей
@@ -1385,19 +1424,27 @@ var WorkSchedule = {
       sheet.getRange(foundRow, 8).setValue(замещает ? замещает : null);
       sheet.getRange(foundRow, 9).setValue(инструкция);
       sheet.getRange(foundRow, 10).setValue(комментарий);
+      // Task 322: часы д/н (K) — undefined (старый клиент) НЕ пишем:
+      // сохранённые часы не затираются; null/число — пишем всегда
+      if (часы !== undefined) {
+        sheet.getRange(foundRow, 11).setValue(часы);
+      }
     } else {
-      // Вставка новой (Task 304: B — таб_№ — текстовым форматом)
+      // Вставка новой (Task 304: B — таб_№ — текстовым форматом;
+      // Task 322: K — часы, undefined → пусто)
       this._appendRowKeepText(sheet, [dateObj, tabNo, status, переработка, праздник,
                        'руч', new Date(), замещает ? замещает : null, инструкция,
-                       комментарий], [2]);
+                       комментарий, часы === undefined ? null : часы], [2]);
     }
 
     try {
       Utils.audit(user.email, 'WORKSCHEDULE_SET_MANUAL', '', '',
-        'Запись ' + payload.date + ' таб_номер=' + tabNo + ' → ' + status);
+        'Запись ' + payload.date + ' таб_номер=' + tabNo + ' → ' + status +
+        (часы !== undefined && часы !== null ? ' (' + часы + ' ч)' : ''));
     } catch (e) { /* ignore */ }
 
-    return { ok: true, data: { date: payload.date, таб_номер: tabNo, статус: status } };
+    return { ok: true, data: { date: payload.date, таб_номер: tabNo, статус: status,
+                               часы: (часы === undefined ? null : часы) } };
   },
 
   // workSchedule.deleteEntry

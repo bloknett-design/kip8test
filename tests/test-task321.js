@@ -44,7 +44,7 @@
 //   _renderTotalsYear (лоадер/ошибка); _renderTotalsYearTable
 //   (12 колонок, «д/ч», суммы, «архив», failed-инфо);
 //   loadGrid(force) сбрасывает _YEAR_DATA + синхронизация месяца.
-//   SW: kipia-test-v560.
+//   SW: kipia-test-v561.
 //
 // Запуск: через tests/run-all.js (require './test-task321.js').
 
@@ -246,14 +246,23 @@ describe('Task 321 — CSS: итоги в тёмной и светлой тем�
             'шеврон разворачивается при открытии');
     });
 
-    test('CSS: .ws-totals-panel — max-height 46vh, скролл, [hidden]', () => {
+    test('CSS: .ws-totals-panel — свой скролл, [hidden]; Task 322: на десктопе — ВСЯ высота шахматки', () => {
         const m = INDEX_SRC.match(/\.ws-totals-panel\s*\{[^}]*\}/);
         assertTrue(!!m, 'правило панели есть');
-        assertTrue(m[0].indexOf('max-height: 46vh') !== -1,
-            'высота не больше половины окна — шахматка остаётся видимой');
         assertTrue(m[0].indexOf('overflow-y: auto') !== -1, 'свой скролл');
         assertTrue(/\.ws-totals-panel\[hidden\]\s*\{\s*display:\s*none/.test(INDEX_SRC),
             'атрибут hidden скрывает панель');
+        assertFalse(INDEX_SRC.indexOf('max-height: 46vh') !== -1,
+            'кап 46vh (Task 321) удалён — панель больше');
+        // Task 322: раскрытая панель — вся высота шахматки (flex: 1)
+        const full = INDEX_SRC.match(/#page-work-schedule\.ws-tt-open \.ws-totals-panel\s*\{[^}]*\}/);
+        assertTrue(!!full, 'правило полной высоты есть');
+        assertTrue(full[0].indexOf('flex: 1 1 auto') !== -1 &&
+            full[0].indexOf('max-height: none') !== -1,
+            'панель растягивается на всё место сетки');
+        // сетка скрыта при открытой панели
+        assertTrue(/#page-work-schedule\.ws-tt-open \.ws-grid-wrap\s*\{[^}]*display:\s*none/.test(INDEX_SRC),
+            'шахматка скрывается — итоги вместо неё');
     });
 
     test('CSS: вкладка active зелёная, «Обновить» — синий тинт', () => {
@@ -272,13 +281,18 @@ describe('Task 321 — CSS: итоги в тёмной и светлой тем�
             'фон бара в светлой теме');
     });
 
-    test('CSS: таблица итогов — sticky шапка, итоговая строка, часы зелёные', () => {
+    test('CSS: таблица итогов — sticky шапка, итоговая строка, часы зелёные, зебра', () => {
         assertTrue(/\.ws-tt-table th\s*\{[^}]*position:\s*sticky/.test(INDEX_SRC),
             'шапка таблицы липнет при скролле');
         assertTrue(/\.ws-tt-table tr\.ws-tt-total td\s*\{[^}]*border-top:\s*2px/.test(INDEX_SRC),
             'итоговая строка — усиленная граница');
         assertTrue(/\.ws-tt-table td\.ws-tt-hours\s*\{[^}]*#4ac771/.test(INDEX_SRC),
             'часы выделены зелёным');
+        // Task 322: зебра строк
+        assertTrue(/\.ws-tt-table tbody tr:nth-child\(even\)\s*\{[^}]*background/.test(INDEX_SRC),
+            'зебра: чётные строки с подложкой');
+        assertTrue(/\[data-theme="light"\] \.ws-tt-table tbody tr:nth-child\(even\)\s*\{[^}]*rgba\(0,\s*0,\s*0/.test(INDEX_SRC),
+            'зебра в светлой теме');
     });
 
     test('CSS: мобильная тач-зона бара (44px) и компактная таблица', () => {
@@ -294,11 +308,13 @@ describe('Task 321 — _codeHours: часы кодов статусов', () => 
 
     const fn = methodFn(WS_CLIENT, '_codeHours');
 
-    test('карта рабочих кодов: Д/Н/д/н=12, Д8=8, Д7,2=7,2', () => {
+    test('карта рабочих кодов: Д/Н=12, Д8=8, Д7,2=7,2; д/н — 0 (переработка)', () => {
         assertEqual(fn.call({}, 'Д'), 12, 'Д → 12');
         assertEqual(fn.call({}, 'Н'), 12, 'Н → 12');
-        assertEqual(fn.call({}, 'д'), 12, 'д (работа в вых.) → 12');
-        assertEqual(fn.call({}, 'н'), 12, 'н (ночь в вых.) → 12');
+        // Task 322: строчные д/н — НЕ рабочее время (переработка —
+        // отдельная ветка _totalsAgg, не карта часов)
+        assertEqual(fn.call({}, 'д'), 0, 'д — переработка, не часы явки');
+        assertEqual(fn.call({}, 'н'), 0, 'н — переработка, не часы явки');
         assertEqual(fn.call({}, 'Д8'), 8, 'Д8 → 8');
         assertEqual(fn.call({}, 'Д7,2'), 7.2, 'Д7,2 → 7,2');
     });
@@ -326,7 +342,8 @@ describe('Task 321 — _codeHours: часы кодов статусов', () => 
 // ============================================================
 describe('Task 321 — _totalsAgg: счётчики по сотрудникам', () => {
 
-    const host = wsHost(['_codeHours', '_totalsZero', '_totalsAgg', '_statusMeta'],
+    const host = wsHost(['_codeHours', '_totalsZero', '_totalsAgg', '_statusMeta',
+                         '_empTypeMap', '_overHours'],
         { _STATUS_CODES: [
             { code: 'Д', name: 'День (12-час, 7:30–19:30)', color: '#FFE082' },
             { code: 'Д8', name: 'День 8-час (7:30–16:30)', color: '#FFF9C4' },
@@ -349,7 +366,7 @@ describe('Task 321 — _totalsAgg: счётчики по сотрудникам'
             { 'дата': '2026-09-08', 'таб_номер': '0871', 'статус': 'И' },
             { 'дата': '2026-09-09', 'таб_номер': '0871', 'статус': '.' }
         ];
-        const agg = host._totalsAgg(entries);
+        const agg = host._totalsAgg(entries, {});
         const a = agg.byTab['0871'];
         assertEqual(a.work, 4, 'явки: Д+Д8+Н+Д7,2');
         assertEqual(a.day, 3, 'дневные смены: Д, Д8, Д7,2');
@@ -362,6 +379,44 @@ describe('Task 321 — _totalsAgg: счётчики по сотрудникам'
         assertEqual(a.total, 9, 'всего записей');
     });
 
+    test('Task 322: д/н — ПЕРЕРАБОТКА (сменный 12, дневной — часы правки/фолбэк 8)', () => {
+        const types = host._empTypeMap([
+            { 'таб_номер': '0871', 'тип': 'сменный' },
+            { 'таб_номер': '023', 'тип': 'дневной' },
+            { 'таб_номер': '077', 'тип': '' }
+        ]);
+        const entries = [
+            // сменный: д и н — по 12
+            { 'дата': '2026-09-05', 'таб_номер': '0871', 'статус': 'д' },
+            { 'дата': '2026-09-06', 'таб_номер': '0871', 'статус': 'н' },
+            // дневной: д с указанными часами 7,2 и без часов (фолбэк 8)
+            { 'дата': '2026-09-05', 'таб_номер': '023', 'статус': 'д', 'часы': 7.2 },
+            { 'дата': '2026-09-07', 'таб_номер': '023', 'статус': 'н' },
+            // без типа: фолбэк как у дневного
+            { 'дата': '2026-09-05', 'таб_номер': '077', 'статус': 'д', 'часы': 4 }
+        ];
+        const agg = host._totalsAgg(entries, types);
+        const a = agg.byTab['0871'];
+        assertEqual(a.work, 0, 'сменный: д/н не явки');
+        assertEqual(a.hours, 0, 'сменный: д/н не рабочие часы');
+        assertEqual(a.day, 0, 'д не дневная смена');
+        assertEqual(a.night, 0, 'н не ночная смена');
+        assertEqual(a.overDays, 2, 'сменный: 2 дня переработки');
+        assertTrue(Math.abs(a.over - 24) < 1e-9, 'сменный: 12+12=24 ч переработки');
+        assertEqual(a.total, 2, 'записи считаются в Всего');
+
+        const b = agg.byTab['023'];
+        assertEqual(b.overDays, 2, 'дневной: 2 дня переработки');
+        assertTrue(Math.abs(b.over - 15.2) < 1e-9, 'дневной: 7,2+8=15,2 ч');
+
+        const c = agg.byTab['077'];
+        assertEqual(c.overDays, 1, 'без типа: день переработки');
+        assertTrue(Math.abs(c.over - 4) < 1e-9, 'без типа: по указанным часам 4');
+
+        assertEqual(agg.grand.overDays, 5, 'итого: 5 дней переработки');
+        assertTrue(Math.abs(agg.grand.over - 43.2) < 1e-9, 'итого: 43,2 ч');
+    });
+
     test('grand — суммы по всем сотрудникам; пустые записи игнорируются', () => {
         const entries = [
             { 'дата': '2026-09-01', 'таб_номер': '0871', 'статус': 'Д' },
@@ -369,7 +424,7 @@ describe('Task 321 — _totalsAgg: счётчики по сотрудникам'
             { 'дата': '2026-09-01', 'таб_номер': '', 'статус': 'Д' },
             { 'дата': '2026-09-02', 'таб_номер': '0871', 'статус': 'ОТ' }
         ];
-        const agg = host._totalsAgg(entries);
+        const agg = host._totalsAgg(entries, {});
         assertEqual(agg.grand.work, 2, 'общие явки: 0871 + 023');
         assertEqual(agg.grand.night, 1, 'общие ночные: 023');
         assertEqual(agg.grand['ОТ'], 1, 'общий отпуск');
@@ -378,9 +433,10 @@ describe('Task 321 — _totalsAgg: счётчики по сотрудникам'
             'пустой таб не создаёт строку');
     });
 
-    test('_totalsZero — форма счётчика', () => {
+    test('_totalsZero — форма счётчика (вкл. переработка Task 322)', () => {
         const z = host._totalsZero();
-        ['work', 'day', 'night', 'hours', 'ОТ', 'У', 'ОВ', 'Б', 'ПР', 'other', 'total']
+        ['work', 'day', 'night', 'hours', 'ОТ', 'У', 'ОВ', 'Б', 'ПР',
+         'over', 'overDays', 'other', 'total']
             .forEach(function(k) {
                 assertEqual(z[k], 0, 'поле ' + k + ' = 0');
             });
@@ -433,10 +489,14 @@ describe('Task 321 — панель: переключатели', () => {
             classList: { state: {}, toggle: function(cls, on) { this.state[cls] = on; } }
         };
         const panel = { hidden: true };
+        // Task 322: страница табеля — класс вида ws-tt-open (сетка
+        // скрыта, панель на всю высоту)
+        const page = { classList: { state: {}, toggle: function(cls, on) { this.state[cls] = on; } } };
         const host = wsHost(['toggleTotals', 'setTotalsTab', 'reloadTotals',
                              '_renderTotals', '_renderTotalsIfOpen'],
             { _totalsOpen: false, _totalsTab: 'month', _YEAR_DATA: { year: 2026 } },
             mockDoc({ wsTotalsBar: bar, wsTotalsPanel: panel,
+                      'page-work-schedule': page,
                       wsTtTabMonth: { classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } },
                       wsTtTabYear: { classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } },
                       wsTtRefresh: { hidden: false } }));
@@ -444,7 +504,7 @@ describe('Task 321 — панель: переключатели', () => {
         host._fitGrid = function() { calls.fit++; };
         host._renderTotalsMonth = function() { calls.render++; };
         host._renderTotalsYear = function() {};
-        return { host: host, bar: bar, panel: panel, calls: calls };
+        return { host: host, bar: bar, panel: panel, page: page, calls: calls };
     }
 
     test('toggleTotals: открыть → панель видна, aria true, класс, рендер, fitGrid', () => {
@@ -453,12 +513,18 @@ describe('Task 321 — панель: переключатели', () => {
         assertEqual(t.panel.hidden, false, 'панель открылась');
         assertEqual(t.bar.attrs['aria-expanded'], 'true', 'aria-expanded=true');
         assertEqual(t.bar.classList.state['ws-totals-open'], true, 'класс ws-totals-open');
+        // Task 322: класс вида на странице — сетка скрыта, панель
+        // занимает всю высоту шахматки
+        assertEqual(t.page.classList.state['ws-tt-open'], true,
+            'класс ws-tt-open на странице табеля');
         assertEqual(t.calls.render, 1, 'итоги отрисованы');
         assertEqual(t.calls.fit, 1, 'строки сетки пересчитаны (_fitGrid)');
         // закрыть
         t.host.toggleTotals();
         assertEqual(t.panel.hidden, true, 'панель закрылась');
         assertEqual(t.bar.attrs['aria-expanded'], 'false', 'aria-expanded=false');
+        assertEqual(t.page.classList.state['ws-tt-open'], false,
+            'класс вида снят — шахматка вернулась');
         assertEqual(t.calls.fit, 2, 'fitGrid и при закрытии');
     });
 
@@ -527,6 +593,7 @@ describe('Task 321 — панель: переключатели', () => {
 describe('Task 321 — _renderTotalsMonth: таблица месяца', () => {
 
     const MONTH_METHODS = ['_codeHours', '_totalsZero', '_totalsAgg', '_statusMeta',
+                           '_empTypeMap', '_overHours',
                            '_totalsEffectiveEntries', '_fmtTotalsNum', '_esc',
                            '_renderTotalsMonth'];
 
@@ -558,7 +625,7 @@ describe('Task 321 — _renderTotalsMonth: таблица месяца', () => {
         return { host: host, els: els };
     }
 
-    test('таблица: строки сотрудников, значения, итог, формат часов', () => {
+    test('таблица: строки сотрудников, значения, итог, формат часов, СЛОВА в шапке', () => {
         const t = makeMonthHost();
         t.host._renderTotalsMonth();
         const h = t.els.wsTtBody.innerHTML;
@@ -573,8 +640,40 @@ describe('Task 321 — _renderTotalsMonth: таблица месяца', () => {
         assertTrue(h.indexOf('ws-tt-total') !== -1, 'класс итоговой строки');
         assertTrue(h.indexOf('<th>Явки</th>') !== -1 && h.indexOf('<th>Часы</th>') !== -1,
             'колонки Явки/Часы');
-        assertTrue(h.indexOf('<th>ОТ</th>') !== -1 && h.indexOf('<th>Б</th>') !== -1,
-            'колонки неявок');
+        // Task 322: шапка — СЛОВА с кодами в скобках (не одиночные
+        // буквы) + колонка «Переработка»
+        assertTrue(h.indexOf('<th>День (Д)</th>') !== -1, 'колонка День (Д)');
+        assertTrue(h.indexOf('<th>Ночь (Н)</th>') !== -1, 'колонка Ночь (Н)');
+        assertTrue(h.indexOf('<th>Отпуск (ОТ)</th>') !== -1, 'колонка Отпуск (ОТ)');
+        assertTrue(h.indexOf('<th>Уч. отпуск (У)</th>') !== -1, 'колонка Уч. отпуск (У)');
+        assertTrue(h.indexOf('<th>Отгул (ОВ)</th>') !== -1, 'колонка Отгул (ОВ)');
+        assertTrue(h.indexOf('<th>Больничный (Б)</th>') !== -1, 'колонка Больничный (Б)');
+        assertTrue(h.indexOf('<th>Прогул (ПР)</th>') !== -1, 'колонка Прогул (ПР)');
+        assertTrue(h.indexOf('<th>Переработка</th>') !== -1, 'колонка Переработка');
+        assertFalse(h.indexOf('<th>Д</th>') !== -1 || h.indexOf('<th>ОТ</th>') !== -1,
+            'одиночных кодов в шапке больше нет');
+        assertTrue(h.indexOf('ws-tt-over') !== -1, 'класс колонки переработки');
+    });
+
+    test('таблица: д/н — колонка переработки (сменный 12, дневной — часы)', () => {
+        const t = makeMonthHost({
+            _ENTRIES: [
+                { 'дата': '2026-09-01', 'таб_номер': '0871', 'статус': 'Д' },
+                { 'дата': '2026-09-05', 'таб_номер': '0871', 'статус': 'д' },
+                { 'дата': '2026-09-03', 'таб_номер': '023', 'статус': 'Д8' },
+                { 'дата': '2026-09-06', 'таб_номер': '023', 'статус': 'д', 'часы': 7.2 }
+            ]
+        });
+        t.host._renderTotalsMonth();
+        const h = t.els.wsTtBody.innerHTML;
+        // Иванов (сменный): явки 1 (Д), часы 12, переработка 12 (д)
+        // Петров (дневной): явки 1 (Д8), часы 8, переработка 7,2 (д с часами)
+        assertTrue(h.indexOf('ws-tt-over') !== -1, 'колонка переработки есть');
+        assertTrue(h.indexOf('дней переработки: 1') !== -1,
+            'тултип с днями переработки');
+        assertTrue(h.indexOf('>12</td>') !== -1, 'переработка Иванова 12 ч');
+        assertTrue(h.indexOf('>7,2</td>') !== -1, 'переработка Петрова 7,2 ч');
+        assertTrue(h.indexOf('>19,2</td>') !== -1, 'итог переработки 19,2');
     });
 
     test('инфо: месяц/год + норма календаря + несохранённые правки', () => {
@@ -628,6 +727,7 @@ describe('Task 321 — _renderTotalsMonth: таблица месяца', () => {
 describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблица', () => {
 
     const YEAR_METHODS = ['_codeHours', '_totalsZero', '_totalsAgg', '_statusMeta',
+                          '_empTypeMap', '_overHours',
                           '_fmtTotalsNum', '_esc', '_sortEmployees',
                           '_loadYearData', '_renderTotalsYear', '_renderTotalsYearTable'];
 
@@ -756,8 +856,28 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
             'архивный сотрудник с пометкой');
         assertTrue(h.indexOf('<th>Дней</th>') !== -1 && h.indexOf('<th>Часов</th>') !== -1,
             'годовые суммы: колонки Дней/Часов');
+        assertTrue(h.indexOf('<th title="часы переработки за год — коды д/н">Перераб.</th>') !== -1,
+            'Task 322: годовая колонка Перераб.');
         assertTrue(t.els.wsTtInfo.textContent.indexOf('явки/часы по месяцам') !== -1,
             'инфо поясняет формат');
+    });
+
+    test('_renderTotalsYearTable: годовая ПЕРЕРАБОТКА д/н (Task 322)', () => {
+        const md = {
+            year: 2026, ts: Date.now(), failed: 0,
+            months: { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [],
+                      9: [ { 'дата': '2026-09-05', 'таб_номер': '0871', 'статус': 'д' } ],
+                      10: [], 11: [], 12: [] },
+            employees: [
+                { 'таб_номер': '0871', 'ФИО': 'Иванов И.И.', 'тип': 'сменный' }
+            ]
+        };
+        const t = makeYearHost(null, { _YEAR_DATA: md });
+        t.host._renderTotalsYearTable();
+        const h = t.els.wsTtBody.innerHTML;
+        assertTrue(h.indexOf('ws-tt-over') !== -1, 'колонка переработки');
+        assertTrue(h.indexOf('>12</td>') !== -1, 'годовая переработка сменного: 12 ч');
+        assertTrue(h.indexOf('дней переработки: 1') !== -1, 'дни в тултипе');
     });
 
     test('_renderTotalsYearTable: failed-месяцы предупреждаются в инфо', () => {
@@ -788,10 +908,10 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
 // 11. SW: версия кэша
 // ============================================================
 describe('Task 321 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v560 (Task 321)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v560'") !== -1,
-            'CACHE_VERSION = kipia-test-v560');
-        assertFalse(SW_SRC.indexOf('kipia-test-v561') !== -1,
+    test('SW: кэш поднят до kipia-test-v561 (Task 321)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v561'") !== -1,
+            'CACHE_VERSION = kipia-test-v561');
+        assertFalse(SW_SRC.indexOf('kipia-test-v562') !== -1,
             'v561 не существует (один инкремент на Task 321)');
     });
 });

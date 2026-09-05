@@ -146,6 +146,11 @@ with sync_playwright() as p:
     })()""")
     page.wait_for_timeout(700)
     page.evaluate("WorkSchedule.onPopupStatus('д')")
+    page.wait_for_timeout(400)
+    # Task 322: дневной персонал — сначала МАЛАЯ ФОРМА ЧАСОВ
+    # (переработка по указанным часам); применяем 8 ч
+    page.evaluate("(function(){ var i = document.getElementById('wsDnHours'); if (i) i.value = '8'; })()")
+    page.evaluate("(function(){ var b = document.querySelector('#wsCellPopup .ws-dn-ok'); if (b) b.click(); })()")
     page.wait_for_timeout(900)
     frame = page.evaluate("""(function(){
         var tds = document.querySelectorAll('#wsGridWrap td.ws-cell');
