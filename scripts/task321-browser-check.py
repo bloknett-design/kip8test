@@ -218,7 +218,9 @@ with sync_playwright() as p:
         var b = document.getElementById('wsTotalsBar').getBoundingClientRect();
         return {gridH: g.height, gridBottom: g.bottom, barTop: b.top, barH: b.height};
     })()""")
-    check('N: бар ПОД сеткой (не перекрывает)', geom0['barTop'] >= geom0['gridBottom'] - 2, geom0)
+    # Task 323: бар — ВЕРТИКАЛЬНАЯ ручка СПРАВА от сетки (высота = сетке)
+    check('N: бар-ручка СПРАВА от сетки (вертикальный, во всю высоту)',
+          abs(geom0['barH'] - geom0['gridH']) < 6 and geom0['barH'] > 200, geom0)
 
     # ---------- 4. Месяц: таблица итогов ----------
     page.click('#wsTotalsBar')
@@ -226,8 +228,11 @@ with sync_playwright() as p:
     check('O: панель раскрылась, вкладка «Месяц» активна',
           page.evaluate("!document.getElementById('wsTotalsPanel').hidden") and
           page.evaluate("document.getElementById('wsTtTabMonth').classList.contains('active')"))
-    check('P: сетка ужалась (панель забрала высоту, _fitGrid)',
-          page.evaluate("document.getElementById('wsGridWrap').getBoundingClientRect().height") < geom0['gridH'])
+    # Task 323: сетка ВИДИМА, сжалась по ШИРИНЕ (шторка заняла правую
+    # половину), высота сохранена
+    wnow = page.evaluate("(function(){ var w = document.getElementById('wsGridWrap').getBoundingClientRect(); var b = document.getElementById('wsWsBody').getBoundingClientRect(); return {w: w.width, h: w.height, bw: b.width}; })()")
+    check('P: сетка сжалась по ШИРИНЕ до половины (шторка справа, Task 323)',
+          wnow['w'] < wnow['bw'] * 0.55 and wnow['h'] > geom0['gridH'] * 0.9, wnow)
     month_html = page.evaluate("document.getElementById('wsTtBody').innerHTML")
     check('Q: таблица месяца построена', 'ws-tt-table' in month_html and 'Иванов' in month_html, month_html[:200])
     row017 = page.evaluate("""(function(){
@@ -409,8 +414,8 @@ with sync_playwright() as p:
     page3.wait_for_timeout(500)
     check('AM: мобильный — тап раскрыл панель',
           not page3.evaluate("document.getElementById('wsTotalsPanel').hidden"))
-    check('AN: мобильный — таблица со скроллом (.ws-tt-scroll)',
-          page3.evaluate("!!document.querySelector('#wsTtBody .ws-tt-scroll')"))
+    check('AN: мобильный — скролл-контейнер сам #wsTtBody (Task 323)',
+          page3.evaluate("(function(){ var b = document.getElementById('wsTtBody'); return getComputedStyle(b).overflow === 'auto' && !document.querySelector('#wsTtBody .ws-tt-scroll'); })()"))
     page3.screenshot(path='task321-proof-mobile.png', full_page=False)
     check('AO: мобильный — JS-ошибок нет', len(js_errors3) == 0, js_errors3[:3])
     ctx3.close()

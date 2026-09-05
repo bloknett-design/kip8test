@@ -216,8 +216,10 @@ with sync_playwright() as p:
           not page.evaluate("document.getElementById('wsTotalsPanel').hidden"))
     check('D: страница получила класс ws-tt-open (вид «итоги»)',
           page.evaluate("document.getElementById('page-work-schedule').classList.contains('ws-tt-open')"))
-    check('E: ШАХМАТКА СКРЫТА (панель заняла её место)',
-          page.evaluate("document.getElementById('wsGridWrap').getBoundingClientRect().height") < 2)
+    # Task 323: шахматка НЕ скрывается — панель рядом, сетка сжата по ширине
+    check('E: ШАХМАТКА ВИДИМА рядом с шторкой (Task 323, пол-области)',
+          page.evaluate("document.getElementById('wsGridWrap').getBoundingClientRect().height") > 300 and
+          page.evaluate("document.getElementById('wsGridWrap').getBoundingClientRect().width") < 700)
     layout = page.evaluate("""(function(){
         var tb = document.querySelector('#page-work-schedule .ws-toolbar');
         var bar = document.getElementById('wsTotalsBar');
@@ -505,9 +507,9 @@ with sync_playwright() as p:
           page2.evaluate("!!document.querySelector('#wsGridWrap table')"))
     page2.click('#wsTotalsBar')
     page2.wait_for_timeout(500)
-    check('AD: светлая — панель раскрыта на всю высоту (сетка скрыта)',
-          page2.evaluate("document.getElementById('wsGridWrap').getBoundingClientRect().height") < 2 and
-          page2.evaluate("document.getElementById('wsTotalsPanel').getBoundingClientRect().height") > 400)
+    check('AD: светлая — шторка на пол-области, сетка рядом (Task 323)',
+          page2.evaluate("document.getElementById('wsTotalsPanel').getBoundingClientRect().height") > 400 and
+          page2.evaluate("document.getElementById('wsGridWrap').getBoundingClientRect().width") < 700)
     zebra2 = page2.evaluate("""(function(){
         var trs = document.querySelectorAll('#wsTtBody tbody tr');
         return {r0: getComputedStyle(trs[0]).backgroundColor,

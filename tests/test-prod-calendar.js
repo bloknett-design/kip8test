@@ -554,10 +554,10 @@ describe('Task 260: интеграция в index.html', () => {
         assertTrue(html.indexOf('.ws-cal-panel {') !== -1,
             'стили окошка календаря в тулбаре');
     });
-    test('SW: версия кэша kipia-test-v561 (Task 298)', () => {
+    test('SW: версия кэша kipia-test-v562 (Task 298)', () => {
         const sw = fs.readFileSync(path.resolve(__dirname, '..', 'sw.js'), 'utf8');
-        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v561'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v561');
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v562'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v562');
     });
     test('Task 311: тултип ячейки убран; название праздника — в попапе клика', () => {
         // Task 311: пояснительные тултипы с ячеек шахматки убраны;
@@ -1230,7 +1230,9 @@ describe('Task 272→306: кнопка «Обновить» объединена
     test('JS: _currentYM берёт год из WorkSchedule или текущей даты', () => {
         assertTrue(html.indexOf('_currentYM: function') !== -1,
             'метод _currentYM определён (замена _sy/_sm шторки)');
-        assertTrue(html.indexOf('this._sy') === -1 && html.indexOf('this._sm') === -1,
+        // Task 323: граница слова — this._syncTotalsRows не считается
+        // за поле шторки _sy
+        assertTrue(!/\bthis\._sy\b/.test(html) && !/\bthis\._sm\b/.test(html),
             'поля шторки _sy/_sm удалены');
     });
     test('JS: WorkSchedule._refreshProdCalendarQuiet — тихое обновление', () => {
