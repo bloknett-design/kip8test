@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 # Task 320: browser-check «График работы» — две правки:
 #   1) «В выпадающем списке выбора года должно быть три года, до и
-#      после текущего» — 7 пунктов (2023..2029 для 2026), было
-#      −1…+2 (2025..2028);
+#      после текущего» — 7 пунктов ±3; Task 321 уточнил: РОВНО 3 —
+#      один год до + текущий + один после (актуальное поведение)
+#      (было −1…+2 — 4 пункта до Task 320, ±3 до Task 321);
 #   2) «При добавлении нового сотрудника, не зависимо от времени
 #      начала цикла, шахматка его рабочих дней должна строиться с
 #      установленной даты, но с учётом выходных и праздничных
@@ -176,10 +177,11 @@ with sync_playwright() as p:
         return {n: opts.length, first: vals[0], last: vals[vals.length-1],
                 sel: sel.value};
     })()""")
-    check('C: год — 7 пунктов (три до + текущий + три после)',
-          yr['n'] == 7, yr)
-    check('D: год — границы %d..%d' % (Y-3, Y+3),
-          int(yr['first']) == Y-3 and int(yr['last']) == Y+3, yr)
+    # Task 321: заявка уточнена — РОВНО три года (−1/текущий/+1)
+    check('C: год — РОВНО 3 пункта (Task 321: один до + текущий + один после)',
+          yr['n'] == 3, yr)
+    check('D: год — границы %d..%d' % (Y-1, Y+1),
+          int(yr['first']) == Y-1 and int(yr['last']) == Y+1, yr)
     check('E: год — текущий выбран', int(yr['sel']) == Y, yr)
     check('F: год — прежних 4 пунктов нет (−1..+2)',
           yr['n'] != 4 and not (int(yr['first']) == Y-1 and int(yr['last']) == Y+2), yr)
@@ -283,10 +285,10 @@ with sync_playwright() as p:
         var sel = document.getElementById('wsYearSel');
         sel.value = String(%d);
         sel.dispatchEvent(new Event('change'));
-    })()""" % (Y-3))
+    })()""" % (Y-1))
     page.wait_for_timeout(1500)
-    check('R: выбор %d (нижняя граница списка) — год применился' % (Y-3),
-          page.evaluate("document.getElementById('wsYearSel').value") == str(Y-3))
+    check('R: выбор %d (нижняя граница списка, Task 321) — год применился' % (Y-1),
+          page.evaluate("document.getElementById('wsYearSel').value") == str(Y-1))
     page.screenshot(path='scripts/task320-proof-years.png')
     # назад к текущему году
     page.evaluate("""(function(){
@@ -310,8 +312,8 @@ with sync_playwright() as p:
         var sel = document.getElementById('wsYearSel');
         return {n: sel.querySelectorAll('option').length, sel: sel.value};
     })()""")
-    check('T: светлая — год 7 пунктов, текущий выбран',
-          yr2['n'] == 7 and int(yr2['sel']) == Y, yr2)
+    check('T: светлая — год 3 пункта (Task 321), текущий выбран',
+          yr2['n'] == 3 and int(yr2['sel']) == Y, yr2)
     page2.evaluate("""(function(){
         var th = document.querySelector('th.ws-emp-head-add');
         if (th) th.click();
@@ -344,10 +346,10 @@ with sync_playwright() as p:
         var cells = document.querySelectorAll('#wsGridWrap td.ws-cell');
         return {n: sel.querySelectorAll('option').length, cells: cells.length,
                 first: sel.querySelector('option').value,
-                last: sel.querySelectorAll('option')[6].value};
+                last: sel.querySelectorAll('option')[2].value};
     })()""")
-    check('W: мобильный — год 7 пунктов (%d..%d), сетка есть' % (Y-3, Y+3),
-          mob['n'] == 7 and int(mob['first']) == Y-3 and int(mob['last']) == Y+3 and
+    check('W: мобильный — год 3 пункта (%d..%d, Task 321), сетка есть' % (Y-1, Y+1),
+          mob['n'] == 3 and int(mob['first']) == Y-1 and int(mob['last']) == Y+1 and
           mob['cells'] > 0, mob)
     page3.screenshot(path='scripts/task320-proof-mobile.png')
     check('X: 0 JS-ошибок (контекст 3)', not js_errors3, js_errors3[:3])

@@ -1752,15 +1752,17 @@ describe('Task 241: «График работы» перемещён в груп
     const htmlPath = path.resolve(__dirname, '..', 'index.html');
     const html = fs.readFileSync(htmlPath, 'utf-8');
 
-    test('Сайдбар: есть sidebar-item с navigateTo(\'work-schedule\') и текстом «График работы»', () => {
+    test('Сайдбар: есть sidebar-item с navigateTo(\'work-schedule\') и текстом «Табель учёта рабочего времени»', () => {
         // После Task 241 пункт находится внутри группы docs-ios как
         // sidebar-item-extra (без иконки, с оранжевым цветом группы).
-        const reItem = /<div class="sidebar-item[^"]*"[^>]*onclick="navigateTo\('work-schedule'\);[^"]*"[^>]*>[\s\S]{0,500}?График работы[\s\S]{0,200}?<\/div>/;
+        // Task 321: раздел переименован («График работы» → «Табель
+        // учёта рабочего времени»).
+        const reItem = /<div class="sidebar-item[^"]*"[^>]*onclick="navigateTo\('work-schedule'\);[^"]*"[^>]*>[\s\S]{0,500}?Табель учёта рабочего времени[\s\S]{0,200}?<\/div>/;
         assertTrue(reItem.test(html),
-            'Ожидался sidebar-item с navigateTo(\'work-schedule\') и текстом «График работы»');
+            'Ожидался sidebar-item с navigateTo(\'work-schedule\') и текстом «Табель учёта рабочего времени»');
     });
 
-    test('Сайдбар: sidebar-item «График работы» имеет id="sidebarWorkScheduleBtn" и style="display:none"', () => {
+    test('Сайдбар: sidebar-item раздела табеля имеет id="sidebarWorkScheduleBtn" и style="display:none"', () => {
         // id — для возможной отдельной проверки в _applyRoleToUI (как sidebarAdminBtn).
         // style="display:none" — чтобы не мелькал до первого запуска _applyRoleToUI.
         const reAttrs = /<div class="sidebar-item[^"]*"[^>]*id="sidebarWorkScheduleBtn"[^>]*style="display:none;"/;
@@ -1782,9 +1784,10 @@ describe('Task 241: «График работы» перемещён в груп
             'Внутри группы docs-ios должен быть sidebar-item с navigateTo(\'work-schedule\')');
     });
 
-    test('Сайдбар: «График работы» расположен ПЕРЕД «Админ-панель» в HTML-разметке', () => {
-        // Логично: оба пункта видимы только Админу; «График работы» (теперь
-        // внутри группы docs-ios) всё ещё идёт раньше sidebarAdminBtn в HTML.
+    test('Сайдбар: раздел табеля расположен ПЕРЕД «Админ-панель» в HTML-разметке', () => {
+        // Логично: оба пункта видимы только Админу; «Табель учёта
+        // рабочего времени» (теперь внутри группы docs-ios) всё ещё
+        // идёт раньше sidebarAdminBtn в HTML.
         const idxWork = html.indexOf('id="sidebarWorkScheduleBtn"');
         const idxAdmin = html.indexOf('id="sidebarAdminBtn"');
         assertTrue(idxWork !== -1 && idxAdmin !== -1 && idxWork < idxAdmin,
@@ -1804,15 +1807,15 @@ describe('Task 241: «График работы» перемещён в груп
             'Группа docs-ios должна иметь статичный счётчик «2»');
     });
 
-    test('Сайдбар: «График работы» НЕ имеет иконки (как sidebar-item-extra внутри группы)', () => {
+    test('Сайдбар: пункт табеля НЕ имеет иконки (как sidebar-item-extra внутри группы)', () => {
         // Внутри групп sidebar-item-extra пункты идут без svg-иконок —
         // только цветной текст. Это соответствует паттерну остальных пунктов
         // групп (Расходомеры, Приборы, Блокировки и т.д.).
         const reItem = /<div class="sidebar-item[^"]*"[^>]*id="sidebarWorkScheduleBtn"[^>]*>[\s\S]{0,300}?<\/div>/;
         const m = reItem.exec(html);
-        assertTrue(m !== null, 'sidebar-item «График работы» должен существовать');
+        assertTrue(m !== null, 'sidebar-item раздела табеля должен существовать');
         assertTrue(m[0].indexOf('<svg') === -1,
-            'sidebar-item «График работы» внутри группы docs-ios не должен содержать <svg> иконку');
+            'sidebar-item табеля внутри группы docs-ios не должен содержать <svg> иконку');
     });
 });
 

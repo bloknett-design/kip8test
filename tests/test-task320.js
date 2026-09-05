@@ -45,7 +45,7 @@
 //   04.11.2026 пусто (фолбэк), 05.11 рабочая; исключение UrlFetchApp —
 //   фолбэк; без UrlFetchApp — фолбэк; месяц ДО старта — ноль записей;
 //   идемпотентность повторной генерации.
-//   SW: kipia-test-v559.
+//   SW: kipia-test-v560 (Task 321 — бамп партии; в Task 320 был v559).
 //
 // Запуск: через tests/run-all.js (require './test-task320.js').
 
@@ -86,19 +86,23 @@ function iso(dt) {
 }
 
 // ============================================================
-// 1. Клиент: список выбора года — три года до и после текущего
+// 1. Клиент: список выбора года — ровно ТРИ года (Task 321
+//    уточнил заявку: «один год до текущего, один после»);
+//    Task 320 делал ±3 — 7 пунктов, избыточно
 // ============================================================
-describe('Task 320 — год в селекте: ±3 года (7 пунктов)', () => {
+describe('Task 320/321 — год в селекте: РОВНО три пункта (−1/текущий/+1)', () => {
 
-    test('JS: init — цикл от this._year - 3 до this._year + 3', () => {
+    test('JS: init — цикл от this._year - 1 до this._year + 1 (Task 321)', () => {
         const init = methodText(WS_CLIENT, 'init');
-        assertTrue(init.indexOf('for (var y = this._year - 3; y <= this._year + 3; y++)') !== -1,
-            'цикл годов: три года до и после текущего');
+        assertTrue(init.indexOf('for (var y = this._year - 1; y <= this._year + 1; y++)') !== -1,
+            'цикл годов: один до текущего, текущий, один после (Task 321)');
+        assertFalse(init.indexOf('for (var y = this._year - 3; y <= this._year + 3; y++)') !== -1,
+            'диапазон ±3 (Task 320) удалён — избыточен');
         assertFalse(init.indexOf('this._year - 1; y <= this._year + 2') !== -1,
-            'прежний диапазон −1…+2 удалён');
+            'старый диапазон −1…+2 тоже отсутствует');
     });
 
-    test('VM: init наполняет select 7 пунктами 2023..2029 (год 2026)', () => {
+    test('VM: init наполняет select 3 пунктами 2025..2027 (год 2026)', () => {
         const init = methodText(WS_CLIENT, 'init');
         const from = init.indexOf('var monthSel = document.getElementById');
         const to = init.indexOf('var role = null');
@@ -116,11 +120,17 @@ describe('Task 320 — год в селекте: ±3 года (7 пунктов)
             }
         });
         const opts = yearSel.innerHTML.match(/<option/g) || [];
-        assertEqual(opts.length, 7, 'семь пунктов: 3 до + текущий + 3 после');
-        assertTrue(yearSel.innerHTML.indexOf('value="2023"') !== -1,
-            'первый — 2023 (2026 − 3)');
-        assertTrue(yearSel.innerHTML.indexOf('value="2029"') !== -1,
-            'последний — 2029 (2026 + 3)');
+        assertEqual(opts.length, 3, 'три пункта: один до + текущий + один после (Task 321)');
+        assertTrue(yearSel.innerHTML.indexOf('value="2025"') !== -1,
+            'первый — 2025 (2026 − 1)');
+        assertTrue(yearSel.innerHTML.indexOf('value="2026"') !== -1,
+            'текущий — 2026');
+        assertTrue(yearSel.innerHTML.indexOf('value="2027"') !== -1,
+            'последний — 2027 (2026 + 1)');
+        assertFalse(yearSel.innerHTML.indexOf('value="2023"') !== -1,
+            '2023 (±3) больше нет');
+        assertFalse(yearSel.innerHTML.indexOf('value="2029"') !== -1,
+            '2029 (±3) больше нет');
         assertTrue(/value="2026"[^>]*selected/.test(yearSel.innerHTML),
             'текущий год выбран');
         const mOpts = monthSel.innerHTML.match(/<option/g) || [];
@@ -704,12 +714,13 @@ describe('Task 320 — сервер: код календаря/генераци�
 // 10. SW
 // ============================================================
 describe('Task 320 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v559 (Task 320)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v559'") !== -1,
-            'CACHE_VERSION = kipia-test-v559');
-    });
-    test('SW: лишний инкремент не делался', () => {
-        assertFalse(SW_SRC.indexOf('kipia-test-v560') !== -1,
-            'v560 не существует (один инкремент на Task 320)');
+    // Task 321: версия поднята дальше (v560) — здесь проверяем, что
+    // минимум Task 320 (v559 → v560 в своё время) был сделан и что
+    // v559 больше не существует
+    test('SW: инкремент Task 320 состоялся (v559 ушел)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v560'") !== -1,
+            'CACHE_VERSION = kipia-test-v560 (актуальная, Task 321)');
+        assertFalse(SW_SRC.indexOf("kipia-test-v559") !== -1,
+            'v559 больше не существует');
     });
 });
