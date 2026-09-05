@@ -330,6 +330,141 @@ var WorkSchedule = {
   },
 
   // ============================================================
+  // Task 320: производственный календарь для КАЛЕНДАРНОГО РЕЖИМА
+  // дневного персонала (generateMonth, шаг 3)
+  // ============================================================
+  // Нерабочий день «дневного» сотрудника: Сб/Вс, нерабочие
+  // праздничные дни, перенесённые выходные. Источники (те же, что у
+  // клиента — ProdCalendar, Task 262):
+  //   1) calendar.legalic.ru RU-FEDERAL export — все дни года с
+  //      типами (WEEKEND / PUBLIC_HOLIDAY / TRANSFERRED_DAY_OFF —
+  //      будний перенесённый выходной / TRANSFERRED_WORKING —
+  //      рабочая суббота, ОТМЕНЯЕТ выходной); кэш CacheService 6 ч
+  //      («Весь год» = 12 выполнений generateMonth — сеть дёргается
+  //      один раз на полгода);
+  //   2) фолбэк без сети/при сбое: Сб/Вс + фиксированные праздники
+  //      ТК РФ ст. 112 + День шахтёра Кузбасса (последнее
+  //      воскресенье августа, регион 42, закон Кемеровской области
+  //      186-ОЗ) — тот же офлайн-фолбэк, что у клиента. БЕЗ
+  //      переносов: будний перенесённый выходной останется рабочим
+  //      до ручной правки (правка ячейки приоритетнее генерации).
+  // День шахтёра накладывается и на данные legalic — региональный
+  // праздник в федеральном календаре отсутствует.
+  _LEGALIC_URL: 'https://calendar.legalic.ru/api/v1/calendars/RU-FEDERAL/export',
+
+  // Нерабочие праздничные дни ТК РФ ст. 112 — карта 'MMDD' → 1
+  _FIXED_HOLIDAYS: {
+    '0101': 1, '0102': 1, '0103': 1, '0104': 1, '0105': 1, '0106': 1,
+    '0107': 1, '0108': 1, '0223': 1, '0308': 1, '0501': 1, '0509': 1,
+    '0612': 1, '1104': 1
+  },
+
+  // Память выполнения: { year, off, full } — годовая генерация шлёт
+  // 12 запросов generateMonth (каждый — отдельное выполнение Apps
+  // Script, глобальное состояние не переживает), память спасает от
+  // повторного разбора в рамках одного вызова
+  _prodCalMem: null,
+
+  _mmdd: function(month, day) {
+    return (month < 10 ? '0' : '') + month + (day < 10 ? '0' : '') + day;
+  },
+
+  // День шахтёра Кузбасса — последнее воскресенье августа (регион 42)
+  _minersDayMmdd: function(year) {
+    var d = new Date(year, 7, 31);
+    d.setDate(d.getDate() - d.getDay());
+    return this._mmdd(8, d.getDate());
+  },
+
+  // Календарь года: { off: {'MMDD': 1}, full } — off помечает
+  // НЕРАБОЧИЕ даты; full=true (legalic) — карта полная (нет в карте
+  // = рабочий, включая рабочие субботы-переносы); full=false
+  // (фолбэк) — карта содержит только праздники, Сб/Вс проверяются
+  // по дню недели. Сбой любого шага — фолбэк (генерация не падает).
+  _getProdCal: function(year) {
+    if (this._prodCalMem && this._prodCalMem.year === year &&
+        this._prodCalMem.off) {
+      return this._prodCalMem;
+    }
+    var off = {};
+    var full = false;
+    try {
+      if (typeof UrlFetchApp !== 'undefined') {
+        var json = null;
+        // кэш скрипта (6 ч): сырой ответ legalic
+        try {
+          if (typeof CacheService !== 'undefined') {
+            var cached = CacheService.getScriptCache().get('ws_prodcal_' + year);
+            if (cached) json = JSON.parse(cached);
+          }
+        } catch (e2) { /* кэш недоступен — идём в сеть */ }
+        if (!json) {
+          var url = this._LEGALIC_URL + '?year=' + year + '&format=json';
+          var resp = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+          if (resp.getResponseCode() === 200) {
+            json = JSON.parse(resp.getContentText());
+            try {
+              if (typeof CacheService !== 'undefined') {
+                CacheService.getScriptCache().put(
+                  'ws_prodcal_' + year, JSON.stringify(json), 21600);
+              }
+            } catch (e3) { /* кэш не критичен */ }
+          }
+        }
+        if (json && json.days && json.days.length) {
+          off = {};   // карта legalic полная — фиксированные не нужны
+          var workOn = {};
+          for (var i = 0; i < json.days.length; i++) {
+            var d = json.days[i];
+            if (!d || !d.date) continue;
+            var m = String(d.date).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (!m) continue;
+            var mmdd = m[2] + m[3];
+            var type = String(d.type || '');
+            if (type === 'WEEKEND' || type === 'PUBLIC_HOLIDAY' ||
+                type === 'TRANSFERRED_DAY_OFF') {
+              off[mmdd] = 1;
+            } else if (type === 'TRANSFERRED_WORKING') {
+              // рабочая суббота-перенос: в off НЕ попадает
+              workOn[mmdd] = 1;
+            }
+            // WORKING / SHORTENED_WORKING — рабочие; неизвестный тип
+            // будущего — не помечаем (страховка: лучше лишний рабочий
+            // день, чем потерянная смена; клиент при неизвестном
+            // типе ориентируется на isWorking)
+          }
+          // День шахтёра — региональный: накладываем, если день не
+          // стал рабочей субботой-переносом (как клиент, Task 262)
+          var md = this._minersDayMmdd(year);
+          if (!workOn[md]) off[md] = 1;
+          full = true;
+        }
+      }
+    } catch (e) { /* сеть/формат — тихий фолбэк на ст. 112 */ }
+    if (!full) {
+      // фолбэк: только праздники (Сб/Вс — по дню недели)
+      for (var fx in this._FIXED_HOLIDAYS) {
+        if (this._FIXED_HOLIDAYS.hasOwnProperty(fx)) off[fx] = 1;
+      }
+      off[this._minersDayMmdd(year)] = 1;
+    }
+    this._prodCalMem = { year: year, off: off, full: full };
+    return this._prodCalMem;
+  },
+
+  // Task 320: день НЕРАБОЧИЙ для дневного персонала?
+  // cal — результат _getProdCal(year)
+  _isNonWorkingDay: function(dt, cal) {
+    if (!cal) return false;   // без календаря — не гейтим
+    var mmdd = this._mmdd(dt.getMonth() + 1, dt.getDate());
+    if (cal.full) return cal.off[mmdd] === 1;
+    // фолбэк: Сб/Вс + праздники ст. 112 (переносов нет)
+    var dw = dt.getDay();
+    if (dw === 0 || dw === 6) return true;
+    return cal.off[mmdd] === 1;
+  },
+
+  // ============================================================
   // Чтение справочников
   // ============================================================
 
@@ -614,6 +749,15 @@ var WorkSchedule = {
   //   3. Для каждого сотрудника с шаблоном:
   //        для каждого дня месяца → статус = pattern_day[day_of_cycle]
   //        если статус есть и в индексе НЕТ записи → вставить source=авто
+  //        Task 320: шахматка строится С УСТАНОВЛЕННОЙ ДАТЫ (старт_цикла)
+  //          — дни ДО старта не заполняются (раньше цикл «разматывался»
+  //          назад отрицательным остатком). Дневному персоналу (тип
+  //          «дневной») — КАЛЕНДАРНЫЙ режим: Сб/Вс и праздничные
+  //          нерабочие дни — пустые выходные; шаблон 5/2 (цикл 7)
+  //          ложится на календарную неделю (Пн=1..Вс=7); рабочие
+  //          субботы-переносы legalic — рабочие. Сменный персонал —
+  //          чистая арифметика цикла от старта (заявка: «не касается
+  //          сменного персонала»)
   //   4. (Task 303) Прогон по инструктажам, пересекающим месяц:
   //        для каждого дня мероприятия в этом месяце:
   //          если есть ручная запись → пропустить (manual priority)
@@ -643,6 +787,12 @@ var WorkSchedule = {
   //        смены → удалить строку.
   //        Ручные строки не трогаются. Повторная генерация сходится к
   //        текущему состоянию листов (идемпотентность).
+  //   4.7 (Task 320) Сверка авто-смен с новыми правилами: авто-записи
+  //        со сменным кодом (не «ОТ», не код мероприятия — их слои
+  //        разобраны в 4.5/4.6) в днях ДО даты старта цикла либо
+  //        (дневной персонал) в нерабочие дни — удаляются.
+  //        Повторная генерация сходится к правилам; ручные правки
+  //        не трогаются. Счётчик — removedShift.
   //   5. Аудит, возврат {generated, updated, removed, perEmployee}
   // ============================================================
   generateMonth: function(payload) {
@@ -696,6 +846,12 @@ var WorkSchedule = {
 
     var perEmployee = {};
     for (var ei2 = 0; ei2 < emps.length; ei2++) perEmployee[emps[ei2]['таб_номер']] = { generated: 0, updated: 0, skipped: 0 };
+    // Task 320: сотрудники по таб_№ — сверка 4.7
+    var empsByTab = {};
+    for (var ei3 = 0; ei3 < emps.length; ei3++) empsByTab[emps[ei3]['таб_номер']] = emps[ei3];
+    // Task 320: производственный календарь года (лениво — только
+    // когда есть дневной персонал с шаблоном)
+    var prodCal = null;
 
     // Task 303: плановая смена дня по шаблону (НЕЗАВИСИМО от наличия
     // записи): "ISO|таб_номер" → код. Нужен шагам 4/4.6: мероприятие
@@ -713,6 +869,12 @@ var WorkSchedule = {
       if (!startDate) continue;
       var cycle = pat.cycle;
 
+      // Task 320: тип «дневной» — календарный режим (Сб/Вс и
+      // праздничные нерабочие дни — пустые выходные); сменный (и
+      // прочие типы) — арифметика цикла, календарь не учитывается
+      var isDayWorker = String(emp.тип || '').trim() === 'дневной';
+      if (isDayWorker && !prodCal) prodCal = this._getProdCal(year);
+
       // Map день_цикла → статус
       var dayToStatus = {};
       for (var di = 0; di < pat.days.length; di++) {
@@ -721,11 +883,29 @@ var WorkSchedule = {
 
       for (var day = 1; day <= daysInMonth; day++) {
         var dt = new Date(year, month - 1, day);
-        // день_цикла = ((dt - startDate).days % cycle) + 1
-        var diffMs = dt.getTime() - startDate.getTime();
-        var diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
-        // Внимание: JS даёт отрицательный остаток для отрицательного diffDays
-        var dayOfCycle = ((diffDays % cycle) + cycle) % cycle + 1;
+        // Task 320: шахматка строится С УСТАНОВЛЕННОЙ ДАТЫ — дни
+        // до старта цикла пустые (обоим типам; раньше цикл
+        // «разматывался» назад отрицательным остатком)
+        if (dt.getTime() < startDate.getTime()) continue;
+        // Task 320: дневной персонал — Сб/Вс и праздничные
+        // нерабочие дни пустые (выходные)
+        if (isDayWorker && this._isNonWorkingDay(dt, prodCal)) continue;
+        var dayOfCycle;
+        if (isDayWorker && cycle === 7) {
+          // Task 320: шаблон 5/2 ложится на календарную неделю:
+          // Пн=1 .. Вс=7 (пример: старт в пятницу 04.09 — пятница
+          // рабочая, 05-06 Сб/Вс пустые, с понедельника 5/2)
+          var dw = dt.getDay();
+          dayOfCycle = (dw === 0) ? 7 : dw;
+        } else {
+          // день_цикла = ((dt - startDate).days % cycle) + 1
+          var diffMs = dt.getTime() - startDate.getTime();
+          var diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+          // Внимание: JS даёт отрицательный остаток для отрицательного
+          // diffDays (Task 320: dt >= startDate — остаток уже
+          // неотрицательный, формула оставлена для паритета с клиентом)
+          dayOfCycle = ((diffDays % cycle) + cycle) % cycle + 1;
+        }
         var status = dayToStatus[dayOfCycle] || '';
         if (!status) continue;  // регулярный выходной → пропустить
 
@@ -987,6 +1167,42 @@ var WorkSchedule = {
       }
     }
 
+    // 4.7 (Task 320) Сверка авто-смен с правилами «шахматка с
+    // установленной даты» и «календарный режим дневного персонала»
+    // (ПОСЛЕ отпускного 4.5 и мероприятийного 4.6: «ОТ»/И-строки уже
+    // разобраны — здесь остаются только сменные авто-коды).
+    // Авто-записи в днях ДО даты старта цикла либо (дневной
+    // персонал) в нерабочие дни — лишние: строки под удаление.
+    // Повторная генерация сходится к правилам (идемпотентность);
+    // РУЧНЫЕ правки не трогаются — поставленная вручную смена в
+    // выходной/до старта остаётся (приоритет ручной правки).
+    var removedShift = 0;
+    for (var sv4 = 0; sv4 < existingEntries.length; sv4++) {
+      var se4 = existingEntries[sv4];
+      if (se4.источник !== 'авто') continue;
+      if (se4.статус === 'ОТ' || this._isEventStatusCode(se4.статус)) continue;
+      if (!(se4._rowIndex && se4._rowIndex > 0)) continue;
+      var emp4 = empsByTab[se4['таб_номер']];
+      if (!emp4 || !emp4.шаблон_ротации || !emp4.старт_цикла) continue;
+      var dt4 = this._parseIsoDate(se4.дата);
+      var st4 = this._parseIsoDate(emp4.старт_цикла);
+      if (!dt4 || !st4) continue;
+      // до даты старта цикла — лишняя смена
+      if (dt4.getTime() < st4.getTime()) {
+        toDeleteRows.push(se4._rowIndex);
+        removedShift++;
+        continue;
+      }
+      // дневной персонал в нерабочий день — лишняя смена
+      if (String(emp4.тип || '').trim() === 'дневной') {
+        if (!prodCal) prodCal = this._getProdCal(year);
+        if (this._isNonWorkingDay(dt4, prodCal)) {
+          toDeleteRows.push(se4._rowIndex);
+          removedShift++;
+        }
+      }
+    }
+
     // 5. Запись в лист
     var insertCount = toInsert.length;
     if (insertCount > 0) {
@@ -1033,6 +1249,7 @@ var WorkSchedule = {
     var summary = 'Сформирован график на ' + String(month).padStart(2, '0') + '.' + year +
                   ': вставлено ' + insertCount + ', обновлено ' + updateCount +
                   ', удалено устаревших отпусков ' + removeCount +
+                  (removedShift ? ', убрано смен вне правил ' + removedShift : '') +
                   ', периодов отпусков ' + vacations.length +
                   ', дней «О» ' + vacationDays +
                   ', дней мероприятий ' + trainingDays +
@@ -1061,6 +1278,10 @@ var WorkSchedule = {
         eventGenerated:    eventGenerated,  // вставлено строк И/ОБ/ПЗ (дни без смены)
         eventRestored:     eventRestored,   // смен восстановлено из-под мероприятий
         eventRemoved:      eventRemoved,    // удалено устаревших строк мероприятий
+        // Task 320: авто-смены вне правил — до даты старта цикла
+        // (обоим типам) и в нерабочие дни дневного персонала; тост
+        // «Сформировать»: «убрано N лишних смен»
+        removedShift:      removedShift,
         // Task 304: таб_номера не из справочника (потерянные нули и пр.)
         warnings:          warnings,
         perEmployee: perEmployee,
