@@ -31,7 +31,7 @@
 //     _renderTotalsYearTable — НЕТ tfoot; _fitGrid — бюджет без
 //     резерва итоговой строки; toggleTotals/setTotalsTab зовут новые
 //     методы.
-//   SW: kipia-test-v567.
+//   SW: kipia-test-v568.
 //
 // Запуск: через tests/run-all.js (require './test-task327.js').
 
@@ -86,16 +86,26 @@ describe('Task 327 — HTML: шторка и тулбар', () => {
             'метод _updateTtTabsVisible (видимость вкладок = шторка)');
     });
 
-    test('HTML: кнопка «Ещё» в шапке шторки (#wsTtMore)', () => {
-        const iPanel = INDEX_SRC.indexOf('id="wsTotalsPanel"');
-        const chunk = INDEX_SRC.slice(iPanel, iPanel + 2600);
-        const iMore = chunk.indexOf('id="wsTtMore"');
-        assertTrue(iMore !== -1, 'кнопка «Ещё» есть');
+    test('HTML: значок-ШЕВРОН «Ещё» на левом краю шторки (#wsTtChv, Task 329)', () => {
+        const iDrawer = INDEX_SRC.indexOf('id="wsTotalsDrawer"');
+        const chunk = INDEX_SRC.slice(iDrawer, iDrawer + 3600);
+        const iChv = chunk.indexOf('id="wsTtChv"');
+        assertTrue(iChv !== -1, 'значок-шеврон на левом краю (заявка Task 329)');
+        assertTrue(iChv < chunk.indexOf('id="wsTotalsPanel"'),
+            'шеврон ДО панели — по внутренней стороне левого края');
         assertTrue(chunk.indexOf('toggleTotalsExtra()') !== -1,
-            'onclick → WorkSchedule.toggleTotalsExtra()');
-        const btn = chunk.slice(iMore, chunk.indexOf('</button>', iMore));
-        assertTrue(/\shidden\b/.test(btn), 'скрыта по умолчанию (только месяц + открытая шторка)');
-        assertTrue(btn.indexOf('Ещё') !== -1, 'текст «Ещё»');
+            'onclick → WorkSchedule.toggleTotalsExtra() (функционал «Ещё»)');
+        const btn = chunk.slice(iChv, chunk.indexOf('</button>', iChv));
+        assertTrue(/\shidden\b/.test(btn), 'скрыт по умолчанию (только месяц + открытая шторка)');
+        assertTrue(btn.indexOf('<svg') !== -1, 'иконка-шеврон (svg)');
+        assertTrue(/aria-pressed="false"/.test(btn), 'aria-pressed (состояние)');
+        assertTrue(btn.indexOf('aria-label') !== -1, 'aria-подпись (видимой подсказки нет)');
+        assertFalse(chunk.indexOf('id="wsTtMore"') !== -1,
+            'кнопка «Ещё» из шапки УДАЛЕНА (заявка Task 329)');
+        // бортик левого края
+        const iEdge = chunk.indexOf('class="ws-tt-edge"');
+        assertTrue(iEdge !== -1 && iEdge < chunk.indexOf('id="wsTotalsPanel"'),
+            'декоративный бортик .ws-tt-edge на левом краю');
     });
 
     test('HTML: БОРДЮРЧИК .ws-tt-foot внизу шторки (заявка)', () => {
@@ -124,16 +134,30 @@ describe('Task 327 — CSS: бордюрчик, «Ещё», равные сто�
             'правило .ws-tt-tab[hidden]');
     });
 
-    test('CSS: .ws-tt-more — кнопка «Ещё» + активная + [hidden]', () => {
-        const m = INDEX_SRC.match(/\.ws-tt-more\s*\{[^}]*\}/);
+    test('CSS: .ws-tt-chv — кнопка-шеврон + активная + [hidden] (Task 329)', () => {
+        const m = INDEX_SRC.match(/\.ws-tt-chv\s*\{[^}]*\}/);
         assertTrue(!!m, 'стиль кнопки');
         assertTrue(!!m && m[0].indexOf('cursor: pointer') !== -1, 'кликабельна');
-        assertTrue(/\.ws-tt-more\.on\s*\{[^}]*rgba\(74,\s*143,\s*199/.test(INDEX_SRC),
+        assertTrue(!!m && /position:\s*absolute/.test(m[0]) && /left:\s*0/.test(m[0]),
+            'на левом краю (absolute, left 0)');
+        assertTrue(!!m && /top:\s*50%/.test(m[0]) && /translateY\(-50%\)/.test(m[0]),
+            'по середине высоты края');
+        assertTrue(/\.ws-tt-chv\.on\s*\{[^}]*rgba\(74,\s*143,\s*199/.test(INDEX_SRC),
             'активное состояние (доп. столбцы включены)');
-        assertTrue(INDEX_SRC.indexOf('.ws-tt-more[hidden] { display: none; }') !== -1,
+        assertTrue(/\.ws-tt-chv\[hidden\]\s*\{\s*display:\s*none/.test(INDEX_SRC),
             'скрытие [hidden]');
-        assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .ws-tt-more') !== -1,
+        assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .ws-tt-chv') !== -1,
             'светлая тема');
+        assertTrue(/\.ws-tt-chv\.on svg\s*\{[^}]*rotate\(180deg\)/.test(INDEX_SRC),
+            'разворот шеврона в активном состоянии');
+        assertFalse(/\.ws-tt-more\s*\{/.test(INDEX_SRC),
+            'стилей прежней кнопки «Ещё» больше нет');
+        // бортик: стальной вертикальный bevel (родственник .ws-tt-foot)
+        const e = INDEX_SRC.match(/\.ws-tt-edge\s*\{[^}]*\}/);
+        assertTrue(!!e && e[0].indexOf('width: 5px') !== -1 && e[0].indexOf('#35648f') !== -1,
+            'декоративный бортик 5px стальной (Task 329)');
+        const el = INDEX_SRC.match(/\[data-theme="light"\] \.ws-tt-edge\s*\{[^}]*\}/);
+        assertTrue(!!el && el[0].indexOf('#b3c2ce') !== -1, 'светлая тема бортика');
     });
 
     test('CSS: БОРДЮРЧИК = .ws-grid-foot шахматки (5px стальной bevel)', () => {
@@ -209,28 +233,33 @@ describe('Task 327 — VM: состояние и кнопки', () => {
         } finally { delete global.document; }
     });
 
-    test('VM: _updateTtMoreBtn — только месяц, «Ещё»/«Меньше»', () => {
-        const fn = methodFn(WS_CLIENT, '_updateTtMoreBtn');
-        const b = { hidden: false, textContent: '', classList: {
-            state: {}, toggle: function(c, o) { this.state[c] = o; } } };
-        global.document = mockDoc({ wsTtMore: b });
+    test('VM: _updateTtChv — только месяц, класс on / aria-pressed (Task 329)', () => {
+        const fn = methodFn(WS_CLIENT, '_updateTtChv');
+        const b = { hidden: false, attrs: {},
+            setAttribute: function(k, v) { this.attrs[k] = v; },
+            classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } };
+        global.document = mockDoc({ wsTtChv: b });
         try {
             const host = { _totalsOpen: true, _totalsTab: 'year', _totalsExtra: true };
             fn.call(host);
-            assertEqual(b.hidden, true, 'год: кнопки «Ещё» нет');
+            assertEqual(b.hidden, true, 'год: значка нет');
             host._totalsTab = 'month';
             host._totalsExtra = false;
             fn.call(host);
-            assertEqual(b.hidden, false, 'месяц: кнопка видна');
-            assertEqual(b.textContent, 'Ещё', 'текст «Ещё» (доп. скрыты)');
-            assertEqual(b.classList.state['on'], false, 'не активна');
+            assertEqual(b.hidden, false, 'месяц: значок виден');
+            assertEqual(b.classList.state['on'], false, 'не активен (доп. скрыты)');
+            assertEqual(b.attrs['aria-pressed'], 'false', 'aria-pressed=false');
+            assertEqual(b.attrs['aria-label'].indexOf('Показать'), 0,
+                'подпись «Показать…»');
             host._totalsExtra = true;
             fn.call(host);
-            assertEqual(b.textContent, 'Меньше', 'текст «Меньше» (доп. показаны)');
-            assertEqual(b.classList.state['on'], true, 'активна');
+            assertEqual(b.classList.state['on'], true, 'активен (доп. показаны)');
+            assertEqual(b.attrs['aria-pressed'], 'true', 'aria-pressed=true');
+            assertEqual(b.attrs['aria-label'].indexOf('Скрыть'), 0,
+                'подпись «Скрыть…»');
             host._totalsOpen = false;
             fn.call(host);
-            assertEqual(b.hidden, true, 'закрытая шторка: кнопка скрыта');
+            assertEqual(b.hidden, true, 'закрытая шторка: значок скрыт');
         } finally {
             delete global.document;
         }
@@ -238,61 +267,60 @@ describe('Task 327 — VM: состояние и кнопки', () => {
 
     test('VM: toggleTotalsExtra — переключение + перерисовка месяца', () => {
         const fn = methodFn(WS_CLIENT, 'toggleTotalsExtra');
-        const calls = { render: 0, more: 0 };
+        const calls = { render: 0, chv: 0 };
         const host = {
             _totalsExtra: false,
-            _updateTtMoreBtn: function() { calls.more++; },
+            _updateTtChv: function() { calls.chv++; },
             _renderTotalsMonth: function() { calls.render++; }
         };
         fn.call(host);
         assertEqual(host._totalsExtra, true, 'включены');
-        assertEqual(calls.more, 1, 'кнопка обновлена');
+        assertEqual(calls.chv, 1, 'шеврон обновлён');
         assertEqual(calls.render, 1, 'таблица перерисована');
         fn.call(host);
         assertEqual(host._totalsExtra, false, 'выключены');
     });
 
-    test('VM: _updateTtHead — «Ещё» удерживает шапку (не empty)', () => {
+    test('VM: _updateTtHead — пустая шапка = только ⚠/«Обновить» (Task 329)', () => {
         const fn = methodFn(WS_CLIENT, '_updateTtHead');
         const head = { classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } };
         const panel = { querySelector: function() { return head; } };
+        // «Ещё» из шапки УДАЛЕНА (Task 329: шеврон — на левом краю,
+        // вне шапки): логика пустоты — как в Task 325 (⚠/Обновить)
         global.document = mockDoc({
             wsTotalsPanel: panel,
             wsTtWarn: { hidden: true },
-            wsTtRefresh: { hidden: true },
-            wsTtMore: { hidden: false }
+            wsTtRefresh: { hidden: true }
         });
         try {
             fn.call({});
-            assertEqual(head.classList.state['ws-tt-head-empty'], false,
-                'шапка не сжимается — «Ещё» видна');
-            // «Ещё» скрыта (год), ⚠/Обновить тоже — шапка пустая
+            assertEqual(head.classList.state['ws-tt-head-empty'], true,
+                'месяц без ⌠/Обновить — шапка сжата (16px-филлер)');
             global.document = mockDoc({
                 wsTotalsPanel: panel,
-                wsTtWarn: { hidden: true },
-                wsTtRefresh: { hidden: true },
-                wsTtMore: { hidden: true }
+                wsTtWarn: { hidden: false },
+                wsTtRefresh: { hidden: true }
             });
             fn.call({});
-            assertEqual(head.classList.state['ws-tt-head-empty'], true,
-                '«Ещё» скрыта — шапка сжата (год без ⚠/Обновить)');
+            assertEqual(head.classList.state['ws-tt-head-empty'], false,
+                '⌠ видна — шапка обычной высоты');
         } finally {
             delete global.document;
         }
     });
 
-    test('JS: toggleTotals зовёт видимость вкладок и «Ещё»', () => {
+    test('JS: toggleTotals зовёт видимость вкладок и шеврона', () => {
         const txt = methodText(WS_CLIENT, 'toggleTotals');
         assertTrue(txt.indexOf('this._updateTtTabsVisible();') !== -1,
             'вкладки появляются/убираются со шторкой');
-        assertTrue(txt.indexOf('this._updateTtMoreBtn();') !== -1,
-            'кнопка «Ещё» синхронна шторке');
+        assertTrue(txt.indexOf('this._updateTtChv();') !== -1,
+            'шеврон «Ещё» синхронен шторке');
     });
 
-    test('JS: setTotalsTab обновляет «Ещё» (год — скрыта)', () => {
+    test('JS: setTotalsTab обновляет шеврон (год — скрыт)', () => {
         const txt = methodText(WS_CLIENT, 'setTotalsTab');
-        assertTrue(txt.indexOf('this._updateTtMoreBtn();') !== -1,
-            'setTotalsTab → _updateTtMoreBtn');
+        assertTrue(txt.indexOf('this._updateTtChv();') !== -1,
+            'setTotalsTab → _updateTtChv');
     });
 });
 
@@ -421,10 +449,10 @@ describe('Task 327 — VM: таблица месяца', () => {
 // 5. Service Worker
 // ============================================================
 describe('Task 327 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v567', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v567'") !== -1,
-            'CACHE_VERSION = kipia-test-v567 (Task 327 — только фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v568') !== -1,
+    test('SW: версия кэша kipia-test-v568', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v568'") !== -1,
+            'CACHE_VERSION = kipia-test-v568 (Task 327 — только фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v569') !== -1,
             'лишний инкремент не делался');
     });
 });

@@ -35,7 +35,7 @@
 //   Сервер: listEntries читает 11 колонок (часы: число/null/
 //   нормализация «7,2»); setManualEntry валидирует 0,5..24, пишет
 //   колонку K (обновление и вставка), часы=null без поля, аудит.
-//   SW: kipia-test-v567.
+//   SW: kipia-test-v568.
 //
 // Запуск: через tests/run-all.js (require './test-task322.js').
 
@@ -119,12 +119,16 @@ describe('Task 322 — CSS: оформление итогов и формы ча
         assertTrue(!!l && l[0].indexOf('#a06a13') !== -1, 'янтарный в светлой теме');
     });
 
-    test('CSS: Task 323→324 — панель БОКОВАЯ (шторка справа), сетка видна', () => {
-        // Task 324: свёрнута — ПОЛНОСТЬЮ за правым краем (ручки-бара нет)
-        const d = INDEX_SRC.match(/\.ws-tt-drawer\s*\{[^}]*margin-right:\s*-50%[^}]*\}/);
-        assertTrue(!!d, 'margin-right -50% — свёрнутая шторка за краем (Task 324)');
-        assertTrue(/#page-work-schedule\.ws-tt-open \.ws-tt-drawer\s*\{[^}]*margin-right:\s*0/.test(INDEX_SRC),
-            'ws-tt-open — шторка выдвинута на пол-области');
+    test('CSS: Task 323→324→329 — панель БОКОВАЯ (шторка справа), сетка видна', () => {
+        // Task 329 (заявка): ширина — по столбцам таблицы (JS _fitTtDrawer);
+        // свёрнута — парковка margin-right = −ширина ТОЖЕ JS (проценты
+        // не умеют «минус собственная ширина»)
+        assertFalse(/\.ws-tt-drawer\s*\{[^}]*width:\s*50%/.test(INDEX_SRC),
+            'фиксированной ширины 50% нет (Task 329)');
+        assertFalse(/\.ws-tt-drawer\s*\{[^}]*margin-right:\s*-50%/.test(INDEX_SRC),
+            'CSS-парковки -50% нет — маржа инлайновая (JS)');
+        assertFalse(/#page-work-schedule\.ws-tt-open \.ws-tt-drawer\s*\{[^}]*margin-right:\s*0/.test(INDEX_SRC),
+            'ws-tt-open маржу НЕ ставит (Task 329)');
         // сетка НЕ скрывается (было Task 322) — итоги рядом с шахматкой
         assertFalse(/#page-work-schedule\.ws-tt-open \.ws-grid-wrap\s*\{[^}]*display:\s*none/.test(INDEX_SRC),
             'сетка видна рядом с шторкой');
@@ -137,6 +141,11 @@ describe('Task 322 — CSS: оформление итогов и формы ча
             'прилипающий tfoot итоговой строки удалён (Task 327)');
         assertFalse(INDEX_SRC.indexOf('max-height: 46vh') !== -1,
             'прежний кап 46vh удалён');
+        // Task 329 (заявка): БОРТИК левого края — вертикальный bevel
+        const edge = INDEX_SRC.match(/\.ws-tt-edge\s*\{[^}]*\}/);
+        assertTrue(!!edge && /width:\s*5px/.test(edge[0]) &&
+            /left:\s*0/.test(edge[0]),
+            'декоративный бортик левого края (Task 329)');
         // колонка «Сотрудник» на десктопе скрыта (месяц)
         assertTrue(/\.ws-tt-table:not\(\.ws-tt-year\) th\.ws-tt-emp[\s\S]*?display:\s*none/.test(INDEX_SRC),
             'список сотрудников в месяце скрыт — строки по строкам сетки');
@@ -914,13 +923,21 @@ describe('Task 322 — итоги: слова в шапке и колонка П
         }, mockDoc(els));
         host2._renderTotalsMonth();
         const b = els.wsTtBody.innerHTML;
-        assertTrue(b.indexOf('>12</td>') !== -1, 'Иванов (сменный): 12 ч');
-        assertTrue(b.indexOf('>7,2</td>') !== -1, 'Петров (дневной): 7,2 ч');
+        // ЧАСЫ остаются часами (это их столбец): Иванов Д=12
+        assertTrue(b.indexOf('>12</td>') !== -1, 'Иванов (сменный): 12 ч в ЧАСАХ');
         // Task 327 (заявка): итоговой строки нет — 19,2 не выводится
         assertFalse(b.indexOf('>19,2</td>') !== -1,
             'итоговой строки нет (заявка Task 327)');
-        assertTrue(b.indexOf('title="дней переработки: 1 (коды д/н)"') !== -1,
-            'дни переработки в тултипе');
+        // Task 329 (заявка): ПЕРЕРАБОТКА — в ДНЯХ (по 1 дню у обоих),
+        // ЧАСЫ — в тултипе ячейки (Петров 7,2 — только в тултипе)
+        assertTrue(/ws-tt-over[^>]*>1<\/td>/.test(b),
+            'переработка в ДНЯХ: по 1 дню (Task 329)');
+        assertTrue(b.indexOf('title="часов переработки: 12 (коды д/н)"') !== -1,
+            'часы переработки в тултипе (сменный 12)');
+        assertTrue(b.indexOf('title="часов переработки: 7,2 (коды д/н)"') !== -1,
+            'часы в тултипе (дневной 7,2)');
+        assertFalse(/ws-tt-over[^>]*>7,2<\/td>/.test(b),
+            'часов в значении переработки нет (Task 329)');
     });
 });
 
@@ -928,10 +945,10 @@ describe('Task 322 — итоги: слова в шапке и колонка П
 // 11. SW: версия кэша
 // ============================================================
 describe('Task 322 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v567 (Task 322)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v567'") !== -1,
-            'CACHE_VERSION = kipia-test-v567');
-        assertFalse(SW_SRC.indexOf('kipia-test-v568') !== -1,
+    test('SW: кэш поднят до kipia-test-v568 (Task 322)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v568'") !== -1,
+            'CACHE_VERSION = kipia-test-v568');
+        assertFalse(SW_SRC.indexOf('kipia-test-v569') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });

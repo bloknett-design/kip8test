@@ -43,7 +43,7 @@
 //   актуализирует вид шапки (_updateTtHead, Task 325);
 //   _updateTtHead — сжимает пустую шапку до 16px-филлера (⚠ и
 //   «Обновить» скрыты — выравнивание строк сохраняется).
-//   SW: kipia-test-v567.
+//   SW: kipia-test-v568.
 //
 // Запуск: через tests/run-all.js (require './test-task324.js').
 
@@ -169,9 +169,21 @@ describe('Task 324→325 — HTML: ряды кнопок итогов и дей�
             'строка вкладок из шапки удалена (вкладки — в тулбаре)');
         assertFalse(chunk.indexOf('id="wsTtTabMonth"') !== -1,
             'вкладок в шапке шторки нет');
-        // Task 327 (заявка): кнопка «Ещё» — скрытые доп. столбцы
-        assertTrue(chunk.indexOf('id="wsTtMore"') !== -1,
-            'кнопка «Ещё» в шапке (доп. столбцы месяца, Task 327)');
+        // Task 327 → 329 (заявка): кнопка «Ещё» из шапки УДАЛЕНА —
+        // функционал на значке-ШЕВРОНЕ левого края шторки (#wsTtChv,
+        // Task 329), ДО панели (сестринский элемент)
+        assertFalse(chunk.indexOf('id="wsTtMore"') !== -1,
+            'кнопка «Ещё» из шапки удалена (Task 329)');
+        const iDrawer = INDEX_SRC.indexOf('id="wsTotalsDrawer"');
+        const dChunk = INDEX_SRC.slice(iDrawer, iDrawer + 3200);
+        assertTrue(dChunk.indexOf('id="wsTtChv"') !== -1,
+            'значок-шеврон #wsTtChv на левом краю (Task 329)');
+        assertTrue(dChunk.indexOf('toggleTotalsExtra()') !== -1,
+            'шеврон несёт функционал «Ещё» (toggleTotalsExtra)');
+        assertTrue(dChunk.indexOf('ws-tt-edge') !== -1,
+            'декоративный бортик .ws-tt-edge левого края (Task 329)');
+        assertTrue(dChunk.indexOf('ws-tt-chv') !== -1,
+            'класс кнопки-шеврона .ws-tt-chv');
         // Task 327 (заявка): бордюрчик внизу шторки
         assertTrue(chunk.indexOf('ws-tt-foot') !== -1,
             'бордюрчик .ws-tt-foot после тела (Task 327)');
@@ -320,13 +332,13 @@ describe('Task 324 — VM: переключатели', () => {
         // Task 327: новые шаги toggleTotals/setTotalsTab — вкладки
         // появляются при открытии (_updateTtTabsVisible) и «Ещё»
         const host = wsHost(['toggleTotals', 'setTotalsTab', '_ttCloseCleanup',
-                             '_updateTtTabsVisible', '_updateTtMoreBtn'],
+                             '_updateTtTabsVisible', '_updateTtChv'],
             { _totalsOpen: false, _totalsTab: 'month', _totalsExtra: false },
             mockDoc({ wsTotalsBtn: btn, wsTotalsPanel: panel,
                       'page-work-schedule': page,
                       wsTtTabMonth: { hidden: true, classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } },
                       wsTtTabYear: { hidden: true, classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } },
-                      wsTtMore: { hidden: true, textContent: '', classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } },
+                      wsTtChv: { hidden: true, attrs: {}, setAttribute: function(k, v) { this.attrs[k] = v; }, classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } },
                       wsTtRefresh: { hidden: false } }));
         host._renderTotals = function() { calls.render++; };
         host._fitGrid = function() { calls.fit++; };
@@ -571,10 +583,10 @@ describe('Task 324 — интеграция и SW', () => {
         assertTrue(fg.indexOf('syncTT();') !== -1, 'строки итогов синхронизируются');
     });
 
-    test('SW: версия кэша kipia-test-v567 (Task 324)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v567'") !== -1,
-            'CACHE_VERSION = kipia-test-v567');
-        assertFalse(SW_SRC.indexOf('kipia-test-v568') !== -1,
+    test('SW: версия кэша kipia-test-v568 (Task 324)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v568'") !== -1,
+            'CACHE_VERSION = kipia-test-v568');
+        assertFalse(SW_SRC.indexOf('kipia-test-v569') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });

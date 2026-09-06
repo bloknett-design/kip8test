@@ -36,7 +36,7 @@
 //   clientHeight (ползунок), syncTT в конце; рендеры: tfoot
 //   «Итого», БЕЗ .ws-tt-scroll, ws-tt-year (год), год: активные
 //   по порядку сетки + архив ниже; инфо в title.
-//   SW: kipia-test-v567.
+//   SW: kipia-test-v568.
 //
 // Запуск: через tests/run-all.js (require './test-task323.js').
 
@@ -140,17 +140,29 @@ describe('Task 323 — CSS: шторка, шапка, ползунок', () => {
             'вертикальный текст ручки удалён (ручки больше нет)');
     });
 
-    test('CSS: шторка выдвигается справа налево на ПОЛОВИНУ области', () => {
+    test('CSS: шторка — ширина по столбцам, JS-маржа (Task 323→324→329)', () => {
         const d = INDEX_SRC.match(/@media \(min-width: 1024px\)\s*\{[\s\S]*?\.ws-tt-drawer\s*\{[^}]*\}/);
         assertTrue(!!d, 'десктопное правило шторки');
-        assertTrue(d[0].indexOf('width: 50%') !== -1, 'ширина — половина рабочей области');
-        assertTrue(d[0].indexOf('margin-right: -50%') !== -1,
-            'Task 324: свёрнута — ПОЛНОСТЬЮ за правым краем (ручки нет)');
+        // Task 329 (заявка): ширина — РОВНО ПО СТОЛБЦАМ таблицы (JS
+        // _fitTtDrawer в px), не половина области; кап 60%
+        assertTrue(d[0].indexOf('max-width: 60%') !== -1,
+            'кап 60% — длинные таблицы прокруткой');
         assertTrue(d[0].indexOf('transition: margin-right 0.28s ease') !== -1,
-            'анимация выдвижения справа налево');
+            'анимация выдвижения справа налево (маржа — JS в px)');
+        assertFalse(d[0].indexOf('width: 50%') !== -1,
+            'фиксированной ширины 50% больше нет (Task 329)');
         const open = INDEX_SRC.match(/#page-work-schedule\.ws-tt-open \.ws-tt-drawer\s*\{[^}]*\}/);
-        assertTrue(!!open && open[0].indexOf('margin-right: 0') !== -1,
-            'открыта: margin 0 — шторка на левой половине экрана');
+        assertFalse(!!open && open[0].indexOf('margin-right: 0') !== -1,
+            'правила маржи у ws-tt-open больше нет — маржа инлайновая (JS)');
+        assertTrue(/#page-work-schedule\.ws-tt-open \.ws-tt-drawer\s*\{[^}]*transform:\s*none/.test(INDEX_SRC),
+            'мобильное правило (transform) осталось');
+        // JS-геометрия: парковка −ширина/анимация к 0 в toggleTotals
+        assertTrue(INDEX_SRC.indexOf("drawer.style.marginRight = (-w0) + 'px';") !== -1,
+            'открытие: старт за краем (−ширина)');
+        assertTrue(INDEX_SRC.indexOf("drawer.style.marginRight = '0px';") !== -1,
+            'открытие: маржа к 0');
+        assertTrue(INDEX_SRC.indexOf("drawer.style.marginRight = (-w1) + 'px';") !== -1,
+            'закрытие: маржа = −ширина');
     });
 
     test('CSS: сетка НЕ скрывается, рабочая область — строка', () => {
@@ -292,9 +304,9 @@ describe('Task 323 — VM: переключение шторки', () => {
             }
         };
         // Task 327: toggleTotals зовёт _updateTtTabsVisible (вкладки
-        // появляются при открытии) и _updateTtMoreBtn («Ещё»)
+        // появляются при открытии) и _updateTtChv («Ещё»)
         const host = wsHost(['toggleTotals', '_ttCloseCleanup', '_ttIsWide',
-                             '_updateTtTabsVisible', '_updateTtMoreBtn'],
+                             '_updateTtTabsVisible', '_updateTtChv'],
             { _totalsOpen: false, _totalsTab: 'month', _totalsExtra: false },
             mockDoc({ wsTotalsBtn: btn, wsTotalsPanel: panel,
                       'page-work-schedule': page }));
@@ -320,15 +332,19 @@ describe('Task 323 — VM: переключение шторки', () => {
         assertEqual(t.calls.sync, 1, 'строки итогов синхронизированы');
     });
 
-    test('toggleTotals: закрыть — панель сразу скрыта, gridwide держится', () => {
+    test('toggleTotals: закрыть — шторка едет С КОНТЕНТОМ (Task 329), gridwide держится', () => {
         const t = makeHost();
         t.host.toggleTotals();
         t.host.toggleTotals();
-        assertEqual(t.panel.hidden, true, 'панель скрыта (шторка уезжает пустой)');
+        // Task 329: панель прячется ПОСЛЕ анимации (_ttCloseCleanup,
+        // 320 мс) — шторка уезжает С КОНТЕНТОМ, не пустой
+        assertEqual(t.panel.hidden, false, 'панель едет с контентом (Task 329)');
         assertEqual(t.btn.attrs['aria-pressed'], 'false', 'кнопка «отпущена»');
         assertEqual(t.page.classList.state['ws-tt-open'], false, 'шторка свёрнута');
         assertEqual(t.page.classList.state['ws-tt-gridwide'], true,
             'широкий режим держится до конца анимации (320 мс)');
+        t.host._ttCloseCleanup();
+        assertEqual(t.panel.hidden, true, 'после уборки панель спрятана');
         assertEqual(t.calls.fit >= 2, true, 'fitGrid при закрытии');
     });
 
@@ -755,10 +771,10 @@ describe('Task 323 — интеграция', () => {
 // 10. SW: версия кэша
 // ============================================================
 describe('Task 323 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v567 (Task 323)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v567'") !== -1,
-            'CACHE_VERSION = kipia-test-v567');
-        assertFalse(SW_SRC.indexOf('kipia-test-v568') !== -1,
+    test('SW: кэш поднят до kipia-test-v568 (Task 323)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v568'") !== -1,
+            'CACHE_VERSION = kipia-test-v568');
+        assertFalse(SW_SRC.indexOf('kipia-test-v569') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });

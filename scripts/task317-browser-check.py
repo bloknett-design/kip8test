@@ -515,8 +515,8 @@ with sync_playwright() as p:
     check('P: мобильный — бар колонкой, все ряды/окна вертикально',
           sm['main']['w'] > 0 and sm['rows'][0]['y'] < sm['ev']['y'] < sm['cal']['y'],
           [(r['id'], round(r['y'],1)) for r in sm['rows']])
-    check('P2: мобильный — кнопки базовые 34px (не сжаты)',
-          all(approx(b['h'], 34, 1.0) for b in sm['btns']),
+    check('P2: мобильный — кнопки базовые 32px (Task 328: немного меньше)',
+          all(approx(b['h'], 32, 1.0) for b in sm['btns']),
           [round(b['h'], 2) for b in sm['btns']])
     gapm = vism[1]['y'] - (vism[0]['y'] + vism[0]['h']) if len(vism) > 1 else None
     check('P3: мобильный — зазор между рядами кнопок 3px',

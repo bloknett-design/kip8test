@@ -216,9 +216,10 @@ describe('Task 321 — HTML: боковая шторка итогов справ
         assertTrue(chunk.indexOf('id="wsTtRefresh"') !== -1, 'кнопка Обновить');
         assertTrue(chunk.indexOf('WorkSchedule.reloadTotals()') !== -1, 'клик Обновить');
         assertTrue(chunk.indexOf('id="wsTtBody"') !== -1, 'тело таблиц');
-        // Task 327 (заявка): кнопка «Ещё» — скрытые доп. столбцы месяца
-        assertTrue(chunk.indexOf('id="wsTtMore"') !== -1, 'кнопка «Ещё» (доп. столбцы, Task 327)');
-        // Task 327 (заявка): БОРДЮРЧИК внизу шторки как у шахматки
+        // Task 327 → 329 (заявка): кнопка «Ещё» из шапки УДАЛЕНА —
+        // функционал на значке-ШЕВРОНЕ левого края (#wsTtChv)
+        assertFalse(chunk.indexOf('id="wsTtMore"') !== -1,
+            'кнопка «Ещё» из шапки удалена (Task 329: шеврон на краю)');
         assertTrue(chunk.indexOf('ws-tt-foot') !== -1, 'бордюрчик .ws-tt-foot (Task 327)');
         // Task 324: вкладки ПЕРЕЕХАЛИ в тулбар, инфо-строка УДАЛЕНА
         assertFalse(chunk.indexOf('id="wsTtInfo"') !== -1,
@@ -279,13 +280,21 @@ describe('Task 321 — CSS: итоги в тёмной и светлой тем�
             'прежнего горизонтального бара больше нет');
     });
 
-    test('CSS: шторка — пол-области, выдвигается анимацией (Task 323→324)', () => {
-        const d = INDEX_SRC.match(/\.ws-tt-drawer\s*\{[^}]*margin-right:\s*-50%[^}]*\}/);
-        assertTrue(!!d, 'свёрнута: margin-right -50% — за правым краем ПОЛНОСТЬЮ (Task 324: ручки нет)');
+    test('CSS: шторка — ширина по столбцам, JS-маржа, анимация (Task 323→324→329)', () => {
+        // Task 329 (заявка): ширина — РОВНО ПО СТОЛБЦАМ таблицы (JS
+        // _fitTtDrawer в px), НЕ половина области; свёрнута — парковка
+        // margin-right = −ширина ТОЖЕ JS (проценты не умеют «минус
+        // собственная ширина»), открытие анимирует маржу к 0
+        assertFalse(/\.ws-tt-drawer\s*\{[^}]*width:\s*50%/.test(INDEX_SRC),
+            'фиксированной ширины 50% больше нет (Task 329)');
+        assertFalse(/\.ws-tt-drawer\s*\{[^}]*margin-right:\s*-50%/.test(INDEX_SRC),
+            'CSS-парковки -50% больше нет — маржа владеет JS');
         const dr = INDEX_SRC.match(/\.ws-tt-drawer\s*\{[^}]*transition:[^}]*margin-right[^}]*\}/);
         assertTrue(!!dr, 'анимация выдвижения (transition margin-right)');
-        assertTrue(/#page-work-schedule\.ws-tt-open \.ws-tt-drawer\s*\{[^}]*margin-right:\s*0/.test(INDEX_SRC),
-            'класс ws-tt-open — шторка выдвинута');
+        const cap = INDEX_SRC.match(/\.ws-tt-drawer\s*\{[^}]*max-width:\s*60%[^}]*\}/);
+        assertTrue(!!cap, 'кап max-width 60% — длинные таблицы прокруткой');
+        assertFalse(/#page-work-schedule\.ws-tt-open \.ws-tt-drawer\s*\{[^}]*margin-right:\s*0/.test(INDEX_SRC),
+            'класс ws-tt-open маржу НЕ ставит (инлайн JS, Task 329)');
         assertTrue(/\.ws-body\s*\{[^}]*flex-direction:\s*row/.test(INDEX_SRC),
             'рабочая область — строка: сетка + шторка');
         assertTrue(/\.ws-totals-panel\[hidden\]\s*\{\s*display:\s*none/.test(INDEX_SRC),
@@ -294,6 +303,14 @@ describe('Task 321 — CSS: итоги в тёмной и светлой тем�
             'кап 46vh (Task 321) удалён');
         assertFalse(/#page-work-schedule\.ws-tt-open \.ws-grid-wrap\s*\{[^}]*display:\s*none/.test(INDEX_SRC),
             'Task 323: сетка НЕ скрывается — итоги рядом с шахматкой');
+        // Task 329: JS-геометрия — парковка/анимация маржи в toggleTotals
+        const tt = INDEX_SRC.match(/toggleTotals: function\(\)[\s\S]{0,2600}?marginRight/);
+        assertTrue(!!tt && INDEX_SRC.indexOf("drawer.style.marginRight = (-w0) + 'px';") !== -1,
+            'открытие: парковка −ширина, затем маржа 0 (JS)');
+        assertTrue(INDEX_SRC.indexOf("drawer.style.marginRight = (-w1) + 'px';") !== -1,
+            'закрытие: маржа = −ширина (уезжает с контентом)');
+        assertTrue(INDEX_SRC.indexOf('void drawer.offsetWidth;') !== -1,
+            'фиксация стартовой позиции синхронным reflow');
     });
 
     test('CSS: широкий режим сетки — ВИДИМЫЙ ползунок внизу (Task 323)', () => {
@@ -563,18 +580,18 @@ describe('Task 321 — панель: переключатели', () => {
         // шеврона и ручки больше нет
         const btn = { attrs: {}, setAttribute: function(k, v) { this.attrs[k] = v; } };
         // Task 327: toggleTotals/setTotalsTab зовут _updateTtTabsVisible
-        // (вкладки появляются при открытии) и _updateTtMoreBtn («Ещё»)
+        // (вкладки появляются при открытии) и _updateTtChv («Ещё»)
         const host = wsHost(['toggleTotals', 'setTotalsTab', 'reloadTotals',
                              '_renderTotals', '_renderTotalsIfOpen',
                              '_ttCloseCleanup', '_updateTtTabsVisible',
-                             '_updateTtMoreBtn'],
+                             '_updateTtChv'],
             { _totalsOpen: false, _totalsTab: 'month', _totalsExtra: false,
               _YEAR_DATA: { year: 2026 } },
             mockDoc({ wsTotalsBtn: btn, wsTotalsPanel: panel,
                       'page-work-schedule': page,
                       wsTtTabMonth: { hidden: true, classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } },
                       wsTtTabYear: { hidden: true, classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } },
-                      wsTtMore: { hidden: true, textContent: '', classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } },
+                      wsTtChv: { hidden: true, attrs: {}, setAttribute: function(k, v) { this.attrs[k] = v; }, classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } },
                       wsTtRefresh: { hidden: false } }));
         host._renderTotals = function() { calls.render++; };
         host._fitGrid = function() { calls.fit++; };
@@ -602,7 +619,9 @@ describe('Task 321 — панель: переключатели', () => {
         assertEqual(t.calls.sync, 1, 'строки итогов синхронизированы');
         // закрыть
         t.host.toggleTotals();
-        assertEqual(t.panel.hidden, true, 'панель закрылась');
+        // Task 329: панель прячется ПОСЛЕ анимации (шторка уезжает
+        // С КОНТЕНТОМ, уборка _ttCloseCleanup по таймеру 320 мс)
+        assertEqual(t.panel.hidden, false, 'панель едет с контентом (Task 329)');
         assertEqual(t.btn.attrs['aria-pressed'], 'false', 'aria-pressed=false');
         assertEqual(t.page.classList.state['ws-tt-open'], false,
             'класс шторки снят — она уехала вправо');
@@ -613,6 +632,7 @@ describe('Task 321 — панель: переключатели', () => {
         t.host._ttCloseCleanup();
         assertEqual(t.page.classList.state['ws-tt-gridwide'], false,
             'после уборки — сетка в обычном виде');
+        assertEqual(t.panel.hidden, true, 'панель спрятана уборкой (Task 329)');
         assertEqual(t.calls.fit >= 2, true, 'fitGrid и при закрытии');
     });
 
@@ -628,11 +648,11 @@ describe('Task 321 — панель: переключатели', () => {
 
     test('setTotalsTab: «Обновить» — только у года (hidden)', () => {
         const refreshBtn = { hidden: false };
-        const host = wsHost(['setTotalsTab', '_updateTtTabsVisible', '_updateTtMoreBtn'],
+        const host = wsHost(['setTotalsTab', '_updateTtTabsVisible', '_updateTtChv'],
             { _totalsTab: 'month', _totalsOpen: true, _totalsExtra: false },
             mockDoc({ wsTtTabMonth: { classList: { state: {}, toggle: function() {} } },
                       wsTtTabYear: { classList: { state: {}, toggle: function() {} } },
-                      wsTtMore: { hidden: false, textContent: '', classList: { state: {}, toggle: function() {} } },
+                      wsTtChv: { hidden: false, attrs: {}, setAttribute: function(k, v) { this.attrs[k] = v; }, classList: { state: {}, toggle: function() {} } },
                       wsTtRefresh: refreshBtn }));
         host._renderTotals = function() {};
         host.setTotalsTab('month');
@@ -740,20 +760,21 @@ describe('Task 321 — _renderTotalsMonth: таблица месяца', () => {
         assertFalse(h.indexOf('<th>Всего</th>') !== -1, 'столбца «Всего» нет (заявка)');
         assertFalse(h.indexOf('<tfoot>') !== -1, 'tfoot не рендерится (заявка)');
         // Task 327 (заявка): ОСНОВНЫЕ столбцы — Явки, Часы,
-        // Переработка (порядок задан), доп. — скрыты до «Ещё»
-        const iY = h.indexOf('<th>Явки</th>');
-        const iCh = h.indexOf('<th>Часы</th>');
-        const iP = h.indexOf('<th>Переработка</th>');
+        // Переработка (порядок задан), доп. — скрыты до шеврона;
+        // Task 329: у th — класс ШИРИНЫ ws-tt-c-* (узкие столбцы)
+        const iY = h.indexOf('<th class="ws-tt-c-work">Явки</th>');
+        const iCh = h.indexOf('<th class="ws-tt-c-hours">Часы</th>');
+        const iP = h.indexOf('<th class="ws-tt-c-over">Переработка</th>');
         assertTrue(iY !== -1 && iCh !== -1 && iP !== -1 &&
                    iY < iCh && iCh < iP,
-            'основные: Явки → Часы → Переработка (порядок — заявка)');
-        // дополнительные столбцы скрыты (кнопка «Ещё»)
-        assertFalse(h.indexOf('<th>День (Д)</th>') !== -1, 'День (Д) скрыт до «Ещё»');
-        assertFalse(h.indexOf('<th>Отгул (ОВ)</th>') !== -1, 'Отгул (ОВ) скрыт до «Ещё»');
+            'основные: Явки → Часы → Переработка (порядок — заявка, классы ширин Task 329)');
+        // дополнительные столбцы скрыты (шеврон левого края)
+        assertFalse(h.indexOf('<th class="ws-tt-c-day">День (Д)</th>') !== -1, 'День (Д) скрыт до шеврона');
+        assertFalse(h.indexOf('<th class="ws-tt-c-ov">Отгул (ОВ)</th>') !== -1, 'Отгул (ОВ) скрыт до шеврона');
         assertTrue(h.indexOf('ws-tt-over') !== -1, 'класс колонки переработки');
     });
 
-    test('таблица: д/н — колонка переработки (сменный 12, дневной — часы)', () => {
+    test('таблица: д/н — колонка переработки В ДНЯХ (Task 329), часы в тултипе', () => {
         const t = makeMonthHost({
             _ENTRIES: [
                 { 'дата': '2026-09-01', 'таб_номер': '0871', 'статус': 'Д' },
@@ -764,13 +785,21 @@ describe('Task 321 — _renderTotalsMonth: таблица месяца', () => {
         });
         t.host._renderTotalsMonth();
         const h = t.els.wsTtBody.innerHTML;
-        // Иванов (сменный): явки 1 (Д), часы 12, переработка 12 (д)
-        // Петров (дневной): явки 1 (Д8), часы 8, переработка 7,2 (д с часами)
+        // Иванов (сменный): явки 1 (Д), часы 12, переработка 1 день (д)
+        // Петров (дневной): явки 1 (Д8), часы 8, переработка 1 день (д)
         assertTrue(h.indexOf('ws-tt-over') !== -1, 'колонка переработки есть');
-        assertTrue(h.indexOf('дней переработки: 1') !== -1,
-            'тултип с днями переработки');
-        assertTrue(h.indexOf('>12</td>') !== -1, 'переработка Иванова 12 ч');
-        assertTrue(h.indexOf('>7,2</td>') !== -1, 'переработка Петрова 7,2 ч');
+        // Task 329 (заявка: «не в часах, а в ДНЯХ»): значение — дни
+        // (по 1 у обоих), ЧАСЫ — в тултипе ячейки
+        assertTrue(h.indexOf('часов переработки: 12') !== -1,
+            'тултип с ЧАСАМИ переработки (сменный 12)');
+        assertTrue(h.indexOf('часов переработки: 7,2') !== -1,
+            'тултип с часами дневного 7,2');
+        assertTrue(/ws-tt-over[^>]*>1<\/td>/.test(h),
+            'значение — ДНИ: по 1 дню у обоих');
+        assertFalse(/ws-tt-over[^>]*>12<\/td>/.test(h),
+            'часов в ЗНАЧЕНИИ переработки больше нет (заявка Task 329)');
+        assertFalse(/ws-tt-over[^>]*>7,2<\/td>/.test(h),
+            'дробных часов в значении переработки нет');
         // Task 327: итоговой строки нет — только строки сотрудников
         assertFalse(h.indexOf('>19,2</td>') !== -1, 'итоговой строки нет (заявка)');
     });
@@ -964,14 +993,14 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
             'архивный сотрудник с пометкой');
         assertTrue(h.indexOf('<th>Дней</th>') !== -1 && h.indexOf('<th>Часов</th>') !== -1,
             'годовые суммы: колонки Дней/Часов');
-        assertTrue(h.indexOf('<th title="часы переработки за год — коды д/н">Перераб.</th>') !== -1,
-            'Task 322: годовая колонка Перераб.');
+        assertTrue(h.indexOf('<th title="дни переработки за год — коды д/н">Перераб.</th>') !== -1,
+            'Task 322 → 329: годовая колонка Перераб. (дни, тултип)');
         // Task 324: пояснительная инфо («N г. · явки/часы…») УДАЛЕНА
         assertEqual(t.els.wsTtWarn.textContent, '', '⚠ пуст — без сбоев');
         assertEqual(t.els.wsTtWarn.hidden, true, '⚠ скрыта');
     });
 
-    test('_renderTotalsYearTable: годовая ПЕРЕРАБОТКА д/н (Task 322)', () => {
+    test('_renderTotalsYearTable: годовая ПЕРЕРАБОТКА д/н В ДНЯХ (Task 322 → 329)', () => {
         const md = {
             year: 2026, ts: Date.now(), failed: 0,
             months: { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [],
@@ -985,8 +1014,11 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
         t.host._renderTotalsYearTable();
         const h = t.els.wsTtBody.innerHTML;
         assertTrue(h.indexOf('ws-tt-over') !== -1, 'колонка переработки');
-        assertTrue(h.indexOf('>12</td>') !== -1, 'годовая переработка сменного: 12 ч');
-        assertTrue(h.indexOf('дней переработки: 1') !== -1, 'дни в тултипе');
+        // Task 329 (заявка): годовая переработка — в ДНЯХ (1),
+        // часы (сменный 12) — в тултипе ячейки
+        assertTrue(/ws-tt-over[^>]*>1<\/td>/.test(h), 'годовая переработка: 1 день');
+        assertTrue(h.indexOf('часов переработки: 12') !== -1, 'часы — в тултипе');
+        assertFalse(h.indexOf('>12</td>') !== -1, 'часов в значении нет (заявка)');
     });
 
     test('_renderTotalsYearTable: failed-месяцы — ⚠ в шапке (Task 324)', () => {
@@ -1020,10 +1052,10 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
 // 11. SW: версия кэша
 // ============================================================
 describe('Task 321 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v567 (Task 323)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v567'") !== -1,
-            'CACHE_VERSION = kipia-test-v567');
-        assertFalse(SW_SRC.indexOf('kipia-test-v568') !== -1,
+    test('SW: кэш поднят до kipia-test-v568 (Task 323)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v568'") !== -1,
+            'CACHE_VERSION = kipia-test-v568');
+        assertFalse(SW_SRC.indexOf('kipia-test-v569') !== -1,
             'v561 не существует (один инкремент на Task 321)');
     });
 });

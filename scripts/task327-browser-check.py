@@ -157,17 +157,16 @@ with sync_playwright() as p:
     s1 = page.evaluate("""(function(){
         var m = document.getElementById('wsTtTabMonth');
         var y = document.getElementById('wsTtTabYear');
-        var more = document.getElementById('wsTtMore');
+        var chv = document.getElementById('wsTtChv');
         return {mHidden: m ? m.hidden : null, yHidden: y ? y.hidden : null,
                 mDisp: m ? getComputedStyle(m).display : null,
-                moreHidden: more ? more.hidden : null,
-                moreText: more ? more.textContent.trim() : null,
+                chvHidden: chv ? chv.hidden : null,
                 open: document.getElementById('page-work-schedule').classList.contains('ws-tt-open')};
     })""")
     check('D: шторка открыта, «Месяц»/«Год» ПОЯВИЛИСЬ (заявка)',
           s1['open'] and (not s1['mHidden']) and (not s1['yHidden']) and s1['mDisp'] != 'none', s1)
-    check('D2: кнопка «Ещё» видна (месяц), текст «Ещё»',
-          (not s1['moreHidden']) and s1['moreText'] == 'Ещё', s1)
+    check('D2: шеврон доп. столбцов виден (месяц; Task 329: функционал «Ещё» на краю)',
+          (not s1['chvHidden']), s1)
 
     # ---------- таблица: столбцы/порядок/равная ширина ----------
     s2 = page.evaluate("""(function(){
@@ -201,16 +200,19 @@ with sync_playwright() as p:
     check('E2: НЕТ «Всего», НЕТ tfoot, НЕТ «Итого» (заявка)',
           (not s2['hasVsego']) and (not s2['hasTfoot']) and (not s2['hasTotal']))
     w = s2['widths']
-    check('E3: столбцы данных РАВНОЙ ширины (заявка)',
-          len(w) == 3 and max(w) - min(w) <= 1, w)
+    # Task 329 (актуализация): столбцы УЗКИЕ по заголовкам (36/38/56 —
+    # заявка «по размеру заглавий в две строки»), НЕ равные
+    check('E3: столбцы данных УЗКИЕ по заголовкам (Task 329: 36/38/56)',
+          len(w) == 3 and approx(w[0], 36, 2) and approx(w[1], 38, 2) and approx(w[2], 56, 2), w)
     check('E4: table-layout fixed + перенос заголовков + центр',
           s2['layout'] == 'fixed' and s2['thWS'] == 'normal' and
           s2['thWrap'] in ('break-word','anywhere') and s2['thAlign'] == 'center',
           (s2['layout'], s2['thWS'], s2['thWrap'], s2['thAlign']))
     # Task 322 semantics (действующая): д/н — ДНИ ПЕРЕРАБОТКИ, не явки:
-    # Иванов: Д+Н = 2 явки/24 ч; д (сменный) = +12 ч переработки
-    check('E5: Иванов — явки 2 (Д+Н), часы 24, переработка 12 (д — Task 322)',
-          s2['ivanov'] == ['2','24','12'], s2['ivanov'])
+    # Иванов: Д+Н = 2 явки/24 ч; д (сменный) = +1 ДЕНЬ переработки
+    # (Task 329: переработка в ДНЯХ, не часах)
+    check('E5: Иванов — явки 2 (Д+Н), часы 24, переработка 1 ДЕНЬ (Task 329)',
+          s2['ivanov'] == ['2','24','1'], s2['ivanov'])
     check('E6: 12 строк сотрудников (без итоговой)', s2['rowCount'] == 12, s2['rowCount'])
 
     # ---------- «Ещё»: скрытые доп. столбцы ----------
@@ -222,7 +224,8 @@ with sync_playwright() as p:
         var ths = table.querySelectorAll('thead th');
         var heads = [];
         for (var i=0;i<ths.length;i++) heads.push(ths[i].textContent.trim());
-        var more = document.getElementById('wsTtMore');
+        var chv = document.getElementById('wsTtChv');
+        var drawer = document.getElementById('wsTotalsDrawer');
         var w = table.getBoundingClientRect().width;
         var rows = table.querySelectorAll('tbody tr');
         var tds = rows[rows.length - 1] ? rows[rows.length - 1].querySelectorAll('td') : [];
@@ -231,22 +234,25 @@ with sync_playwright() as p:
         var tds0 = rows[0].querySelectorAll('td');
         var iv = [];
         for (var j=1;j<tds0.length;j++) iv.push(tds0[j].textContent.trim());
-        return {heads: heads, moreText: more.textContent.trim(),
-                moreOn: more.classList.contains('on'),
-                tableW: w, scrollW: body.scrollWidth,
-                scrollable: body.scrollWidth > body.clientWidth + 2,
+        return {heads: heads,
+                chvOn: chv.classList.contains('on'),
+                chvAria: chv.getAttribute('aria-pressed'),
+                tableW: w, drawerW: drawer.getBoundingClientRect().width,
                 petrov: pv, ivanov: iv};
     })""")
     expected = ['Сотрудник','Явки','Часы','Переработка','Отгул (ОВ)','Больничный (Б)',
                 'Отпуск (ОТ)','Уч. отпуск (У)','Прогул (ПР)','День (Д)','Ночь (Н)','Прочие']
     check('F: «Ещё» — 8 доп. столбцов в ПОРЯДКЕ ЗАЯВКИ (заявка)',
           s3['heads'] == expected, s3['heads'])
-    check('F2: «Ещё» → «Меньше» (активная)', s3['moreText'] == 'Меньше' and s3['moreOn'])
-    check('F3: широкая таблица → горизонтальная прокрутка',
-          s3['scrollable'], (s3['tableW'], s3['scrollW']))
-    # Иванов (Task 322): явки 2, часы 24, перераб 12, день 1 (Д), ночь 1 (Н)
+    check('F2: шеврон ON + aria-pressed (Task 329)',
+          s3['chvOn'] and s3['chvAria'] == 'true')
+    # Task 329 (актуализация): шторка ПЕРЕШИРИВАЕТСЯ по столбцам
+    # (~514px на десктопе — без прокрутки при капе 60%)
+    check('F3: шторка переширотилась по 11 столбцам (Task 329)',
+          approx(s3['drawerW'], 36+38+56+42+64+50+52+50+38+38+50, 6), s3['drawerW'])
+    # Иванов (Task 322/329): явки 2, часы 24, перераб 1 ДЕНЬ, день 1 (Д), ночь 1 (Н)
     check('F4: Иванов доп. — День 1, Ночь 1 (д — только переработка)',
-          s3['ivanov'] == ['2','24','12','0','0','0','0','0','1','1','0'], s3['ivanov'])
+          s3['ivanov'] == ['2','24','1','0','0','0','0','0','1','1','0'], s3['ivanov'])
     # Петров — ПОСЛЕДНЯЯ строка (сменные выше): явки 1 (Д8), часы 8,
     # отпуск 1 (ОТ), день 1, прочие 1 (И)
     check('F5: Петров доп. — Отпуск 1, День 1, Прочие 1',
@@ -293,7 +299,7 @@ with sync_playwright() as p:
     s5 = page.evaluate("""(function(){
         var body = document.getElementById('wsTtBody');
         var table = body.querySelector('table.ws-tt-table');
-        var more = document.getElementById('wsTtMore');
+        var chv = document.getElementById('wsTtChv');
         var txt = body.textContent;
         var rows = table ? table.querySelectorAll('tbody tr') : [];
         // годовые суммы Иванова (месяц 36 + 11×12 = 168)
@@ -302,18 +308,18 @@ with sync_playwright() as p:
         for (var j = tds.length - 3; j < tds.length; j++) last3.push(tds[j].textContent.trim());
         return {hasTfoot: table ? !!table.querySelector('tfoot') : null,
                 hasItogo: txt.indexOf('Итого') !== -1,
-                moreHidden: more ? more.hidden : null,
+                chvHidden: chv ? chv.hidden : null,
                 yearCls: table ? table.classList.contains('ws-tt-year') : null,
                 last3: last3, rowCount: rows.length};
     })""")
     check('H: «Год» — НЕТ итоговой строки (заявка)',
           (not s5['hasTfoot']) and (not s5['hasItogo']))
-    check('H2: «Год» — кнопка «Ещё» скрыта', s5['moreHidden'])
+    check('H2: «Год» — шеврон доп. столбцов скрыт', s5['chvHidden'])
     # Иванов год: явки 2 (месяц) + 11 (по Д в каждом) = 13; часы 24+132=156;
-    # переработка 12 (единственный д — в текущем месяце)
-    check('H3: «Год» — таблица года (12 колонок), суммы 13/156/12',
+    # переработка 1 ДЕНЬ (единственный д — в текущем месяце; Task 329)
+    check('H3: «Год» — таблица года (12 колонок), суммы 13/156/1 (дни)',
           s5['yearCls'] and s5['rowCount'] == 12 and s5['last3'][0] == '13' and
-          s5['last3'][1] == '156' and s5['last3'][2] == '12', (s5['last3'], s5['rowCount']))
+          s5['last3'][1] == '156' and s5['last3'][2] == '1', (s5['last3'], s5['rowCount']))
 
     # ---------- закрытие: вкладки убираются ----------
     page.evaluate("WorkSchedule.toggleTotals()")
@@ -343,21 +349,21 @@ with sync_playwright() as p:
         var heads = [];
         for (var i=0;i<ths.length;i++) heads.push(ths[i].textContent.trim());
         var emp = table.querySelector('tbody td.ws-tt-emp');
-        var more = document.getElementById('wsTtMore');
+        var chv = document.getElementById('wsTtChv');
         var drawer = document.getElementById('wsTotalsDrawer');
         var r = drawer.getBoundingClientRect();
         return {heads: heads, empW: emp ? emp.getBoundingClientRect().width : null,
                 empVisible: emp ? getComputedStyle(emp).display !== 'none' : null,
-                moreHidden: more.hidden, drawerW: r.width};
+                chvHidden: chv.hidden, drawerW: r.width};
     })""")
     check('K: мобайл — шторка ~86vw', approx(s7['drawerW'], 322.5, 30), s7['drawerW'])
     check('K2: мобайл — колонка ФИО видна, основные столбцы',
           s7['empVisible'] and s7['heads'] == ['Сотрудник','Явки','Часы','Переработка'], s7['heads'])
-    check('K3: мобайл — «Ещё» доступна', not s7['moreHidden'])
+    check('K3: мобайл — шеврон доп. столбцов доступен (Task 329)', not s7['chvHidden'])
     page2.evaluate("WorkSchedule.toggleTotalsExtra()")
     page2.wait_for_timeout(300)
     s8 = page2.evaluate("(function(){var t=document.querySelector('#wsTtBody table'); var ths=t.querySelectorAll('thead th'); var b=document.getElementById('wsTtBody'); return {cols: ths.length, scrollable: b.scrollWidth > b.clientWidth + 2};})()")
-    check('K4: мобайл «Ещё» — 12 столбцов + прокрутка',
+    check('K4: мобайл шеврон — 12 столбцов + прокрутка (мин-ширина)',
           s8['cols'] == 12 and s8['scrollable'], s8)
     page2.evaluate("WorkSchedule.toggleTotals()")
     page2.wait_for_timeout(450)

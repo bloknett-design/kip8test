@@ -61,6 +61,7 @@ require('./test-task325.js');
 require('./test-task326.js');
 require('./test-task327.js');
 require('./test-task328.js');
+require('./test-task329.js');
 require('./test-deploy-url.js');
 
 // Запускаем
