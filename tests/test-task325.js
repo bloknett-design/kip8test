@@ -30,7 +30,7 @@
 //   _attachTotalsSync — на МОБАЙЛЕ клик/тап МИМО шторки закрывает
 //   её (✕ удалён): слушатель document click, только <1024px,
 //   клики по #wsTotalsDrawer/#wsTotalsRow не закрывают.
-//   SW: kipia-test-v565.
+//   SW: kipia-test-v566.
 //
 // Запуск: через tests/run-all.js (require './test-task325.js').
 
@@ -125,7 +125,7 @@ describe('Task 325 — HTML: три ряда кнопок и шапка без �
         assertFalse(INDEX_SRC.indexOf('Закрыть панель итогов') !== -1,
             'aria-label «Закрыть панель итогов» удалён');
         const iPanel = INDEX_SRC.indexOf('id="wsTotalsPanel"');
-        const chunk = INDEX_SRC.slice(iPanel, iPanel + 1100);
+        const chunk = INDEX_SRC.slice(iPanel, iPanel + 2400);
         assertTrue(chunk.indexOf('class="ws-tt-head"') !== -1, 'шапка .ws-tt-head');
         assertTrue(chunk.indexOf('id="wsTtWarn"') !== -1, '⚠ остался (аварийный)');
         assertTrue(chunk.indexOf('id="wsTtRefresh"') !== -1, '«Обновить» остался (год)');
@@ -161,15 +161,25 @@ describe('Task 325 — CSS: ширина колонки и линии ячеек
             'фиксированные 200px в ячейках удалены');
     });
 
-    test('CSS: колонка «Сотрудник» итогов — капы и эллипсис удалены', () => {
+    test('CSS: колонка «Сотрудник» итогов (Task 327: fixed-раскладка месяца)', () => {
         const m = INDEX_SRC.match(/\.ws-tt-table th\.ws-tt-emp,\n\s*\.ws-tt-table td\.ws-tt-emp\s*\{[^}]*\}/);
         assertTrue(!!m, 'правило .ws-tt-emp есть');
+        // Task 327 (заявка: равные столбцы): месячная таблица — fixed,
+        // капов 220px/150px нет; ГОД — авто-ширина по ФИО (капов нет тоже)
         assertFalse(/\.ws-tt-table th\.ws-tt-emp,\n\s*\.ws-tt-table td\.ws-tt-emp\s*\{[^}]*max-width/.test(INDEX_SRC),
-            'кап 220px удалён — ширина по самому широкому ФИО');
-        assertFalse(/\.ws-tt-emp[^{]*\{[^}]*text-overflow/.test(INDEX_SRC),
-            'эллипсис колонки итогов удалён');
+            'кап 220px удалён (год — по самому широкому ФИО)');
         assertFalse(/@media \(max-width: 1023px\)\s*\{[^@]*\.ws-tt-emp[^}]*max-width:\s*150px/.test(INDEX_SRC),
             'мобильный кап 150px удалён');
+        // Task 327: месяц — fixed-раскладка, колонке задана ДОЛЯ 42%
+        // (мобайл: ФИО + равные столбцы данных), эллипсис — только
+        // в месячной таблице (год — полные ФИО)
+        const mm = INDEX_SRC.match(/\.ws-tt-table:not\(\.ws-tt-year\) th\.ws-tt-emp,\n\s*\.ws-tt-table:not\(\.ws-tt-year\) td\.ws-tt-emp\s*\{[^}]*\}/);
+        assertTrue(!!mm && mm[0].indexOf('width: 42%') !== -1,
+            'месяц: доля 42% колонки ФИО (fixed-раскладка, Task 327)');
+        assertTrue(!!mm && mm[0].indexOf('text-overflow: ellipsis') !== -1,
+            'месяц: эллипсис ФИО (fixed — не по содержимому)');
+        const fix = INDEX_SRC.match(/\.ws-tt-table:not\(\.ws-tt-year\)\s*\{[^}]*table-layout:\s*fixed/);
+        assertTrue(!!fix, 'месяц: table-layout fixed — равные столбцы (заявка)');
     });
 
     test('CSS: ТОНКИЕ ВЕРТИКАЛЬНЫЕ ЛИНИИ ячеек таблицы итогов', () => {
@@ -425,10 +435,10 @@ describe('Task 325 — VM: мобильное закрытие тапом мим
 // ============================================================
 describe('Task 325 — SW', () => {
 
-    test('SW: версия кэша kipia-test-v565 (Task 325)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v565'") !== -1,
-            'CACHE_VERSION = kipia-test-v565');
-        assertFalse(SW_SRC.indexOf('kipia-test-v566') !== -1,
+    test('SW: версия кэша kipia-test-v566 (Task 325)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v566'") !== -1,
+            'CACHE_VERSION = kipia-test-v566');
+        assertFalse(SW_SRC.indexOf('kipia-test-v567') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });

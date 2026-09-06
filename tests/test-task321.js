@@ -205,7 +205,7 @@ describe('Task 321 — HTML: боковая шторка итогов справ
     test('HTML: #wsTotalsPanel скрыт по умолчанию; шапка — ⚠/Обновить (Task 324 → 325)', () => {
         const i = INDEX_SRC.indexOf('id="wsTotalsPanel"');
         assertTrue(i !== -1, 'панель есть');
-        const chunk = INDEX_SRC.slice(i, i + 1200);
+        const chunk = INDEX_SRC.slice(i, i + 2400);
         assertTrue(chunk.indexOf('hidden') !== -1, 'панель скрыта по умолчанию');
         // Task 325: ✕ из шапки УДАЛЁН — закрытие только кнопкой тулбара
         assertFalse(chunk.indexOf('id="wsTtClose"') !== -1,
@@ -216,6 +216,10 @@ describe('Task 321 — HTML: боковая шторка итогов справ
         assertTrue(chunk.indexOf('id="wsTtRefresh"') !== -1, 'кнопка Обновить');
         assertTrue(chunk.indexOf('WorkSchedule.reloadTotals()') !== -1, 'клик Обновить');
         assertTrue(chunk.indexOf('id="wsTtBody"') !== -1, 'тело таблиц');
+        // Task 327 (заявка): кнопка «Ещё» — скрытые доп. столбцы месяца
+        assertTrue(chunk.indexOf('id="wsTtMore"') !== -1, 'кнопка «Ещё» (доп. столбцы, Task 327)');
+        // Task 327 (заявка): БОРДЮРЧИК внизу шторки как у шахматки
+        assertTrue(chunk.indexOf('ws-tt-foot') !== -1, 'бордюрчик .ws-tt-foot (Task 327)');
         // Task 324: вкладки ПЕРЕЕХАЛИ в тулбар, инфо-строка УДАЛЕНА
         assertFalse(chunk.indexOf('id="wsTtInfo"') !== -1,
             'пояснительная инфо-строка удалена из шапки (заявка)');
@@ -329,11 +333,15 @@ describe('Task 321 — CSS: итоги в тёмной и светлой тем�
             'кнопка «Итоги учёта» в светлой теме (вместо бара, Task 324)');
     });
 
-    test('CSS: таблица итогов — sticky шапка, итоговая строка, часы зелёные, зебра', () => {
+    test('CSS: таблица итогов — sticky шапка, часы зелёные, зебра (Task 327: без Итого)', () => {
         assertTrue(/\.ws-tt-table th\s*\{[^}]*position:\s*sticky/.test(INDEX_SRC),
             'шапка таблицы липнет при скролле');
-        assertTrue(/\.ws-tt-table tr\.ws-tt-total td\s*\{[^}]*border-top:\s*2px/.test(INDEX_SRC),
-            'итоговая строка — усиленная граница');
+        // Task 327 (заявка): итоговая строка УДАЛЕНА — CSS-правил
+        // .ws-tt-total больше нет (упоминание — только в комментариях)
+        assertFalse(/\.ws-tt-total\s*(td|tr)?\s*\{/.test(INDEX_SRC),
+            'CSS-правила итоговой строки удалены (заявка Task 327)');
+        assertFalse(/tfoot tr\.ws-tt-total/.test(INDEX_SRC),
+            'прилипающий tfoot итоговой строки удалён');
         assertTrue(/\.ws-tt-table td\.ws-tt-hours\s*\{[^}]*#4ac771/.test(INDEX_SRC),
             'часы выделены зелёным');
         // Task 322: зебра строк
@@ -554,14 +562,19 @@ describe('Task 321 — панель: переключатели', () => {
         // Task 324: переключателем стала КНОПКА ТУЛБАРА (aria-pressed);
         // шеврона и ручки больше нет
         const btn = { attrs: {}, setAttribute: function(k, v) { this.attrs[k] = v; } };
+        // Task 327: toggleTotals/setTotalsTab зовут _updateTtTabsVisible
+        // (вкладки появляются при открытии) и _updateTtMoreBtn («Ещё»)
         const host = wsHost(['toggleTotals', 'setTotalsTab', 'reloadTotals',
                              '_renderTotals', '_renderTotalsIfOpen',
-                             '_ttCloseCleanup'],
-            { _totalsOpen: false, _totalsTab: 'month', _YEAR_DATA: { year: 2026 } },
+                             '_ttCloseCleanup', '_updateTtTabsVisible',
+                             '_updateTtMoreBtn'],
+            { _totalsOpen: false, _totalsTab: 'month', _totalsExtra: false,
+              _YEAR_DATA: { year: 2026 } },
             mockDoc({ wsTotalsBtn: btn, wsTotalsPanel: panel,
                       'page-work-schedule': page,
-                      wsTtTabMonth: { classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } },
-                      wsTtTabYear: { classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } },
+                      wsTtTabMonth: { hidden: true, classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } },
+                      wsTtTabYear: { hidden: true, classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } },
+                      wsTtMore: { hidden: true, textContent: '', classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } },
                       wsTtRefresh: { hidden: false } }));
         host._renderTotals = function() { calls.render++; };
         host._fitGrid = function() { calls.fit++; };
@@ -615,9 +628,11 @@ describe('Task 321 — панель: переключатели', () => {
 
     test('setTotalsTab: «Обновить» — только у года (hidden)', () => {
         const refreshBtn = { hidden: false };
-        const host = wsHost(['setTotalsTab'], { _totalsTab: 'month', _totalsOpen: true },
+        const host = wsHost(['setTotalsTab', '_updateTtTabsVisible', '_updateTtMoreBtn'],
+            { _totalsTab: 'month', _totalsOpen: true, _totalsExtra: false },
             mockDoc({ wsTtTabMonth: { classList: { state: {}, toggle: function() {} } },
                       wsTtTabYear: { classList: { state: {}, toggle: function() {} } },
+                      wsTtMore: { hidden: false, textContent: '', classList: { state: {}, toggle: function() {} } },
                       wsTtRefresh: refreshBtn }));
         host._renderTotals = function() {};
         host.setTotalsTab('month');
@@ -674,7 +689,8 @@ describe('Task 321 — _renderTotalsMonth: таблица месяца', () => {
 
     function makeMonthHost(extra) {
         const els = {
-            wsTtBody: { innerHTML: '' },
+            // Task 327: рендер месяца зовёт body.querySelector (min-width)
+            wsTtBody: { innerHTML: '', querySelector: function() { return null; } },
             // Task 324: инфо-строка wsTtInfo УДАЛЕНА — вместо неё
             // аварийная строка ⚠ шапки (пустая на месяце)
             wsTtWarn: { textContent: '', hidden: true, attrs: {},
@@ -718,22 +734,22 @@ describe('Task 321 — _renderTotalsMonth: таблица месяца', () => {
             'табельный номер в строке');
         assertTrue(h.indexOf('>24</td>') !== -1, 'часы Иванова: 12+12=24');
         assertTrue(h.indexOf('>16</td>') !== -1, 'часы Петрова: 8+8=16');
-        assertTrue(h.indexOf('Итого по подразделению') !== -1, 'строка Итого');
-        assertTrue(h.indexOf('ws-tt-total') !== -1, 'класс итоговой строки');
-        assertTrue(h.indexOf('<th>Явки</th>') !== -1 && h.indexOf('<th>Часы</th>') !== -1,
-            'колонки Явки/Часы');
-        // Task 322: шапка — СЛОВА с кодами в скобках (не одиночные
-        // буквы) + колонка «Переработка»
-        assertTrue(h.indexOf('<th>День (Д)</th>') !== -1, 'колонка День (Д)');
-        assertTrue(h.indexOf('<th>Ночь (Н)</th>') !== -1, 'колонка Ночь (Н)');
-        assertTrue(h.indexOf('<th>Отпуск (ОТ)</th>') !== -1, 'колонка Отпуск (ОТ)');
-        assertTrue(h.indexOf('<th>Уч. отпуск (У)</th>') !== -1, 'колонка Уч. отпуск (У)');
-        assertTrue(h.indexOf('<th>Отгул (ОВ)</th>') !== -1, 'колонка Отгул (ОВ)');
-        assertTrue(h.indexOf('<th>Больничный (Б)</th>') !== -1, 'колонка Больничный (Б)');
-        assertTrue(h.indexOf('<th>Прогул (ПР)</th>') !== -1, 'колонка Прогул (ПР)');
-        assertTrue(h.indexOf('<th>Переработка</th>') !== -1, 'колонка Переработка');
-        assertFalse(h.indexOf('<th>Д</th>') !== -1 || h.indexOf('<th>ОТ</th>') !== -1,
-            'одиночных кодов в шапке больше нет');
+        // Task 327 (заявка): строки Итого и столбца «Всего» НЕТ
+        assertFalse(h.indexOf('Итого по подразделению') !== -1, 'строки Итого нет (заявка)');
+        assertFalse(h.indexOf('ws-tt-total') !== -1, 'класса итоговой строки нет');
+        assertFalse(h.indexOf('<th>Всего</th>') !== -1, 'столбца «Всего» нет (заявка)');
+        assertFalse(h.indexOf('<tfoot>') !== -1, 'tfoot не рендерится (заявка)');
+        // Task 327 (заявка): ОСНОВНЫЕ столбцы — Явки, Часы,
+        // Переработка (порядок задан), доп. — скрыты до «Ещё»
+        const iY = h.indexOf('<th>Явки</th>');
+        const iCh = h.indexOf('<th>Часы</th>');
+        const iP = h.indexOf('<th>Переработка</th>');
+        assertTrue(iY !== -1 && iCh !== -1 && iP !== -1 &&
+                   iY < iCh && iCh < iP,
+            'основные: Явки → Часы → Переработка (порядок — заявка)');
+        // дополнительные столбцы скрыты (кнопка «Ещё»)
+        assertFalse(h.indexOf('<th>День (Д)</th>') !== -1, 'День (Д) скрыт до «Ещё»');
+        assertFalse(h.indexOf('<th>Отгул (ОВ)</th>') !== -1, 'Отгул (ОВ) скрыт до «Ещё»');
         assertTrue(h.indexOf('ws-tt-over') !== -1, 'класс колонки переработки');
     });
 
@@ -755,7 +771,8 @@ describe('Task 321 — _renderTotalsMonth: таблица месяца', () => {
             'тултип с днями переработки');
         assertTrue(h.indexOf('>12</td>') !== -1, 'переработка Иванова 12 ч');
         assertTrue(h.indexOf('>7,2</td>') !== -1, 'переработка Петрова 7,2 ч');
-        assertTrue(h.indexOf('>19,2</td>') !== -1, 'итог переработки 19,2');
+        // Task 327: итоговой строки нет — только строки сотрудников
+        assertFalse(h.indexOf('>19,2</td>') !== -1, 'итоговой строки нет (заявка)');
     });
 
     test('Task 324: пояснительная инфо-строка УДАЛЕНА — ⚠ пуст', () => {
@@ -816,7 +833,7 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
 
     function makeYearHost(apiMock, yearData) {
         const els = {
-            wsTtBody: { innerHTML: '' },
+            wsTtBody: { innerHTML: '', querySelector: function() { return null; } },
             // Task 324: инфо-строка удалена — аварийная строка ⚠
             wsTtWarn: { textContent: '', hidden: true, attrs: {},
                         setAttribute: function(k, v) { this.attrs[k] = v; } }
@@ -913,7 +930,9 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
         assertTrue(h.indexOf('ws-tt-table') !== -1, 'таблица года построена');
         assertTrue(h.indexOf('1/12') !== -1, 'январь: 1 день/12 часов');
         assertTrue(h.indexOf('2/24') !== -1, 'сентябрь: 2 дня/24 часа');
-        assertTrue(h.indexOf('Итого по подразделению') !== -1, 'итоговая строка');
+        // Task 327 (заявка): итоговой строки в годе больше нет
+        assertFalse(h.indexOf('Итого по подразделению') !== -1,
+            'итоговой строки нет (заявка Task 327)');
     });
 
     test('_renderTotalsYearTable: 12 колонок, архив, суммы, формат д/ч', () => {
@@ -1001,10 +1020,10 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
 // 11. SW: версия кэша
 // ============================================================
 describe('Task 321 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v565 (Task 323)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v565'") !== -1,
-            'CACHE_VERSION = kipia-test-v565');
-        assertFalse(SW_SRC.indexOf('kipia-test-v566') !== -1,
+    test('SW: кэш поднят до kipia-test-v566 (Task 323)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v566'") !== -1,
+            'CACHE_VERSION = kipia-test-v566');
+        assertFalse(SW_SRC.indexOf('kipia-test-v567') !== -1,
             'v561 не существует (один инкремент на Task 321)');
     });
 });

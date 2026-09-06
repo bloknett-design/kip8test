@@ -35,7 +35,7 @@
 //   Сервер: listEntries читает 11 колонок (часы: число/null/
 //   нормализация «7,2»); setManualEntry валидирует 0,5..24, пишет
 //   колонку K (обновление и вставка), часы=null без поля, аудит.
-//   SW: kipia-test-v565.
+//   SW: kipia-test-v566.
 //
 // Запуск: через tests/run-all.js (require './test-task322.js').
 
@@ -128,11 +128,13 @@ describe('Task 322 — CSS: оформление итогов и формы ча
         // сетка НЕ скрывается (было Task 322) — итоги рядом с шахматкой
         assertFalse(/#page-work-schedule\.ws-tt-open \.ws-grid-wrap\s*\{[^}]*display:\s*none/.test(INDEX_SRC),
             'сетка видна рядом с шторкой');
-        // итоговая строка — tfoot, прилипшая к низу панели
-        const tf = INDEX_SRC.match(/\.ws-tt-table tfoot tr\.ws-tt-total td\s*\{[^}]*\}/);
-        assertTrue(!!tf && tf[0].indexOf('position: sticky') !== -1 &&
-            tf[0].indexOf('bottom: 0') !== -1,
-            'итоговая строка прилипает к низу панели');
+        // Task 327 (заявка): итоговая строка (tfoot) УДАЛЕНА — низ панели
+        // закрывает бордюрчик .ws-tt-foot (как .ws-grid-foot шахматки)
+        const tf = INDEX_SRC.match(/\.ws-tt-foot\s*\{[^}]*height:\s*5px[^}]*\}/);
+        assertTrue(!!tf && tf[0].indexOf('#35648f') !== -1,
+            'бордюрчик 5px внизу шторки (заявка Task 327)');
+        assertFalse(/tfoot tr\.ws-tt-total/.test(INDEX_SRC),
+            'прилипающий tfoot итоговой строки удалён (Task 327)');
         assertFalse(INDEX_SRC.indexOf('max-height: 46vh') !== -1,
             'прежний кап 46vh удалён');
         // колонка «Сотрудник» на десктопе скрыта (месяц)
@@ -853,7 +855,7 @@ describe('Task 322 — итоги: слова в шапке и колонка П
             { code: 'д', name: 'День в вых./праздник' }
         ]
         // Task 324: инфо-строка wsTtInfo удалена — ⚠ шапки (пустая на месяце)
-    }, mockDoc({ wsTtBody: { innerHTML: '' },
+    }, mockDoc({ wsTtBody: { innerHTML: '', querySelector: function() { return null; } },
                  wsTtWarn: { textContent: '', hidden: true, attrs: {},
                              setAttribute: function(k, v) { this.attrs[k] = v; } } }));
 
@@ -861,7 +863,7 @@ describe('Task 322 — итоги: слова в шапке и колонка П
         host._renderTotalsMonth();
         const h = host._els ? '' : null; // (не используется — читаем ниже)
         const body = (function() {
-            const els = { wsTtBody: { innerHTML: '' },
+            const els = { wsTtBody: { innerHTML: '', querySelector: function() { return null; } },
                           // Task 324: инфо удалена — ⚠ шапки
                           wsTtWarn: { textContent: '', hidden: true, attrs: {},
                                       setAttribute: function(k, v) { this.attrs[k] = v; } } };
@@ -869,6 +871,8 @@ describe('Task 322 — итоги: слова в шапке и колонка П
                                    '_empTypeMap', '_overHours', '_totalsEffectiveEntries',
                                    '_fmtTotalsNum', '_esc', '_setTtWarn', '_renderTotalsMonth'], {
                 _year: 2026, _month: 9,
+                // Task 327: доп. столбцы — за кнопкой «Ещё» (_totalsExtra)
+                _totalsExtra: true,
                 _EMPLOYEES: host._EMPLOYEES, _ENTRIES: host._ENTRIES,
                 _PENDING: {},
                 _applyTtHeadVar: function() { return false; },
@@ -888,11 +892,12 @@ describe('Task 322 — итоги: слова в шапке и колонка П
         assertTrue(body.indexOf('Прогул (ПР)') !== -1, 'Прогул (ПР)');
         assertTrue(body.indexOf('Переработка') !== -1, 'Переработка');
         assertTrue(body.indexOf('Прочие') !== -1, 'Прочие');
-        assertTrue(body.indexOf('Всего') !== -1, 'Всего');
+        // Task 327 (заявка): столбца «Всего» больше нет
+        assertFalse(body.indexOf('<th>Всего</th>') !== -1, 'столбца «Всего» нет (заявка)');
     });
 
     test('строки: переработка сменного 12 и дневного 7,2 + итог 19,2', () => {
-        const els = { wsTtBody: { innerHTML: '' },
+        const els = { wsTtBody: { innerHTML: '', querySelector: function() { return null; } },
                       // Task 324: инфо удалена — ⚠ шапки
                       wsTtWarn: { textContent: '', hidden: true, attrs: {},
                                   setAttribute: function(k, v) { this.attrs[k] = v; } } };
@@ -911,7 +916,9 @@ describe('Task 322 — итоги: слова в шапке и колонка П
         const b = els.wsTtBody.innerHTML;
         assertTrue(b.indexOf('>12</td>') !== -1, 'Иванов (сменный): 12 ч');
         assertTrue(b.indexOf('>7,2</td>') !== -1, 'Петров (дневной): 7,2 ч');
-        assertTrue(b.indexOf('>19,2</td>') !== -1, 'Итого: 19,2 ч');
+        // Task 327 (заявка): итоговой строки нет — 19,2 не выводится
+        assertFalse(b.indexOf('>19,2</td>') !== -1,
+            'итоговой строки нет (заявка Task 327)');
         assertTrue(b.indexOf('title="дней переработки: 1 (коды д/н)"') !== -1,
             'дни переработки в тултипе');
     });
@@ -921,10 +928,10 @@ describe('Task 322 — итоги: слова в шапке и колонка П
 // 11. SW: версия кэша
 // ============================================================
 describe('Task 322 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v565 (Task 322)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v565'") !== -1,
-            'CACHE_VERSION = kipia-test-v565');
-        assertFalse(SW_SRC.indexOf('kipia-test-v566') !== -1,
+    test('SW: кэш поднят до kipia-test-v566 (Task 322)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v566'") !== -1,
+            'CACHE_VERSION = kipia-test-v566');
+        assertFalse(SW_SRC.indexOf('kipia-test-v567') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });

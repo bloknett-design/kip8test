@@ -43,7 +43,7 @@
 //   актуализирует вид шапки (_updateTtHead, Task 325);
 //   _updateTtHead — сжимает пустую шапку до 16px-филлера (⚠ и
 //   «Обновить» скрыты — выравнивание строк сохраняется).
-//   SW: kipia-test-v565.
+//   SW: kipia-test-v566.
 //
 // Запуск: через tests/run-all.js (require './test-task324.js').
 
@@ -157,7 +157,7 @@ describe('Task 324→325 — HTML: ряды кнопок итогов и дей�
 
     test('HTML: шапка шторки — ⚠ + «Обновить», БЕЗ ✕ и инфо-строки', () => {
         const iPanel = INDEX_SRC.indexOf('id="wsTotalsPanel"');
-        const chunk = INDEX_SRC.slice(iPanel, iPanel + 1100);
+        const chunk = INDEX_SRC.slice(iPanel, iPanel + 2400);
         assertTrue(chunk.indexOf('class="ws-tt-head"') !== -1, 'шапка .ws-tt-head');
         assertFalse(chunk.indexOf('id="wsTtClose"') !== -1,
             'кнопка ✕ УДАЛЕНА (заявка Task 325)');
@@ -169,6 +169,12 @@ describe('Task 324→325 — HTML: ряды кнопок итогов и дей�
             'строка вкладок из шапки удалена (вкладки — в тулбаре)');
         assertFalse(chunk.indexOf('id="wsTtTabMonth"') !== -1,
             'вкладок в шапке шторки нет');
+        // Task 327 (заявка): кнопка «Ещё» — скрытые доп. столбцы
+        assertTrue(chunk.indexOf('id="wsTtMore"') !== -1,
+            'кнопка «Ещё» в шапке (доп. столбцы месяца, Task 327)');
+        // Task 327 (заявка): бордюрчик внизу шторки
+        assertTrue(chunk.indexOf('ws-tt-foot') !== -1,
+            'бордюрчик .ws-tt-foot после тела (Task 327)');
     });
 });
 
@@ -274,14 +280,19 @@ describe('Task 324 — CSS: кнопки и геометрия', () => {
             'светлая тема полосы');
     });
 
-    test('CSS: оглавления таблицы — ОДНОЙ СТРОКОЙ (заявка)', () => {
+    test('CSS: оглавления — ПЕРЕНОС на 2 строки при необходимости (Task 327)', () => {
+        // Task 327 (заявка: «текст заголовков сделай в две строки
+        // для компактности, при необходимости») — свёрнуто правило
+        // Task 324 «одной строкой»: узкие равные столбцы требуют
+        // переноса; у года месяцы — по-прежнему одной строкой
         const th = INDEX_SRC.match(/\.ws-tt-table th\s*\{[^}]*\}/);
-        assertTrue(!!th && th[0].indexOf('white-space: nowrap') !== -1,
-            'слова шапки НЕ переносятся');
-        assertFalse(th[0].indexOf('white-space: normal;') !== -1,
-            'объявление переноса удалено');
-        assertFalse(th[0].indexOf('overflow-wrap: break-word;') !== -1,
-            'разрыв длинных слов шапки удалён');
+        assertTrue(!!th && th[0].indexOf('white-space: normal') !== -1,
+            'слова шапки переносятся (заявка Task 327)');
+        assertTrue(th[0].indexOf('overflow-wrap: break-word') !== -1,
+            'разрыв длинных слов шапки');
+        const thY = INDEX_SRC.match(/\.ws-tt-table\.ws-tt-year th\s*\{[^}]*\}/);
+        assertTrue(!!thY && thY[0].indexOf('white-space: nowrap') !== -1,
+            'год: заголовки-месяцы одной строкой');
     });
 });
 
@@ -306,12 +317,16 @@ describe('Task 324 — VM: переключатели', () => {
                      getPropertyValue: function(k) { return this.props[k] || ''; },
                      removeProperty: function(k) { delete this.props[k]; } }
         };
-        const host = wsHost(['toggleTotals', 'setTotalsTab', '_ttCloseCleanup'],
-            { _totalsOpen: false, _totalsTab: 'month' },
+        // Task 327: новые шаги toggleTotals/setTotalsTab — вкладки
+        // появляются при открытии (_updateTtTabsVisible) и «Ещё»
+        const host = wsHost(['toggleTotals', 'setTotalsTab', '_ttCloseCleanup',
+                             '_updateTtTabsVisible', '_updateTtMoreBtn'],
+            { _totalsOpen: false, _totalsTab: 'month', _totalsExtra: false },
             mockDoc({ wsTotalsBtn: btn, wsTotalsPanel: panel,
                       'page-work-schedule': page,
-                      wsTtTabMonth: { classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } },
-                      wsTtTabYear: { classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } },
+                      wsTtTabMonth: { hidden: true, classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } },
+                      wsTtTabYear: { hidden: true, classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } },
+                      wsTtMore: { hidden: true, textContent: '', classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } },
                       wsTtRefresh: { hidden: false } }));
         host._renderTotals = function() { calls.render++; };
         host._fitGrid = function() { calls.fit++; };
@@ -446,7 +461,7 @@ describe('Task 324 — VM: ⚠ шапки и рендеры', () => {
     });
 
     test('_renderTotalsMonth: инфо НЕ пишется, ⚠ гасится', () => {
-        const els = { wsTtBody: { innerHTML: '' },
+        const els = { wsTtBody: { innerHTML: '', querySelector: function() { return null; } },
                       wsTtWarn: { textContent: 'старое ⚠', hidden: false, attrs: {},
                                   setAttribute: function(k, v) { this.attrs[k] = v; } } };
         const host = wsHost(['_codeHours', '_totalsZero', '_totalsAgg', '_statusMeta',
@@ -474,7 +489,7 @@ describe('Task 324 — VM: ⚠ шапки и рендеры', () => {
     });
 
     test('_renderTotalsYearTable: сбои года — ⚠ в шапке, не инфо', () => {
-        const els = { wsTtBody: { innerHTML: '' },
+        const els = { wsTtBody: { innerHTML: '', querySelector: function() { return null; } },
                       wsTtWarn: { textContent: '', hidden: true, attrs: {},
                                   setAttribute: function(k, v) { this.attrs[k] = v; } } };
         const md = {
@@ -556,10 +571,10 @@ describe('Task 324 — интеграция и SW', () => {
         assertTrue(fg.indexOf('syncTT();') !== -1, 'строки итогов синхронизируются');
     });
 
-    test('SW: версия кэша kipia-test-v565 (Task 324)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v565'") !== -1,
-            'CACHE_VERSION = kipia-test-v565');
-        assertFalse(SW_SRC.indexOf('kipia-test-v566') !== -1,
+    test('SW: версия кэша kipia-test-v566 (Task 324)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v566'") !== -1,
+            'CACHE_VERSION = kipia-test-v566');
+        assertFalse(SW_SRC.indexOf('kipia-test-v567') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });

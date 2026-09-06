@@ -36,7 +36,7 @@
 //   clientHeight (ползунок), syncTT в конце; рендеры: tfoot
 //   «Итого», БЕЗ .ws-tt-scroll, ws-tt-year (год), год: активные
 //   по порядку сетки + архив ниже; инфо в title.
-//   SW: kipia-test-v565.
+//   SW: kipia-test-v566.
 //
 // Запуск: через tests/run-all.js (require './test-task323.js').
 
@@ -217,17 +217,22 @@ describe('Task 323 — CSS: шторка, шапка, ползунок', () => {
         const thumb = INDEX_SRC.match(/\.ws-tt-body::-webkit-scrollbar-thumb\s*\{[^}]*\}/);
         assertTrue(!!thumb && thumb[0].indexOf('background') !== -1,
             'бегунок шторки окрашен');
-        // Task 324 (заявка): оглавления — ОДНОЙ СТРОКОЙ (без переноса)
+        // Task 327 (заявка): заголовки — в ДВЕ строки при необходимости
+        // (свёрнуто Task 324 «одной строкой» — узкие равные столбцы
+        // требуют переноса; у года месяцы — по-прежнему одной строкой)
         const th = INDEX_SRC.match(/\.ws-tt-table th\s*\{[^}]*\}/);
-        assertTrue(!!th && th[0].indexOf('white-space: nowrap') !== -1,
-            'оглавления одной строкой (заявка)');
-        assertFalse(th[0].indexOf('white-space: normal;') !== -1,
-            'объявление переноса слов шапки удалено (упоминание в комментарии — история)');
-        const tf = INDEX_SRC.match(/\.ws-tt-table tfoot tr\.ws-tt-total td\s*\{[^}]*\}/);
-        assertTrue(!!tf && tf[0].indexOf('position: sticky') !== -1 &&
-            tf[0].indexOf('bottom: 0') !== -1, 'итоговая строка прилипла к низу панели');
-        assertTrue(!!tf && tf[0].indexOf('background') !== -1,
-            'итоговая строка непрозрачна (зебра не просвечивает)');
+        assertTrue(!!th && th[0].indexOf('white-space: normal') !== -1,
+            'заголовки переносятся (заявка Task 327)');
+        const thY = INDEX_SRC.match(/\.ws-tt-table\.ws-tt-year th\s*\{[^}]*\}/);
+        assertTrue(!!thY && thY[0].indexOf('white-space: nowrap') !== -1,
+            'год: месяцы одной строкой');
+        // Task 327 (заявка): tfoot итоговой строки УДАЛЁН — низ панели
+        // закрывает бордюрчик .ws-tt-foot (как у шахматки)
+        assertFalse(/tfoot tr\.ws-tt-total/.test(INDEX_SRC),
+            'прилипающий tfoot удалён (заявка Task 327)');
+        const foot = INDEX_SRC.match(/\.ws-tt-foot\s*\{[^}]*height:\s*5px[^}]*\}/);
+        assertTrue(!!foot && foot[0].indexOf('#35648f') !== -1,
+            'бордюрчик .ws-tt-foot 5px внизу шторки');
     });
 
     test('CSS: колонка «Сотрудник» — месяц скрыт на десктопе, год/мобайл видны', () => {
@@ -286,8 +291,11 @@ describe('Task 323 — VM: переключение шторки', () => {
                 removeProperty: function(k) { delete this.props[k]; }
             }
         };
-        const host = wsHost(['toggleTotals', '_ttCloseCleanup', '_ttIsWide'],
-            { _totalsOpen: false },
+        // Task 327: toggleTotals зовёт _updateTtTabsVisible (вкладки
+        // появляются при открытии) и _updateTtMoreBtn («Ещё»)
+        const host = wsHost(['toggleTotals', '_ttCloseCleanup', '_ttIsWide',
+                             '_updateTtTabsVisible', '_updateTtMoreBtn'],
+            { _totalsOpen: false, _totalsTab: 'month', _totalsExtra: false },
             mockDoc({ wsTotalsBtn: btn, wsTotalsPanel: panel,
                       'page-work-schedule': page }));
         host._renderTotals = function() { calls.render++; };
@@ -551,12 +559,15 @@ describe('Task 323 — VM: синхронизация скролла сетка 
 // 7. VM: _fitGrid — бюджет с итоговой строкой и ползунком
 // ============================================================
 describe('Task 323 — VM: _fitGrid учитывает шторку', () => {
-    test('JS: бюджет = область − шапка − полоса − итоговая строка', () => {
+    test('JS: бюджет = область − шапка − полоса (Task 327: Итого удалена)', () => {
         const txt = methodText(WS_CLIENT, '_fitGrid');
         assertTrue(txt.indexOf('var budget = avail - headH - footH - ttFootH;') !== -1,
-            'в бюджете вычитается итоговая строка панели');
-        assertTrue(txt.indexOf("querySelector('#wsTtBody .ws-tt-total')") !== -1,
-            'высота берётся из реального tfoot панели');
+            'формула бюджета прежняя');
+        // Task 327 (заявка): итоговой строки нет — резерв не ищется
+        assertFalse(txt.indexOf("querySelector('#wsTtBody .ws-tt-total')") !== -1,
+            'высота tfoot больше не читается (строки Итого нет)');
+        assertTrue(txt.indexOf('var ttFootH = 0;') !== -1,
+            'резерв — константа 0 (комментарий Task 327)');
     });
 
     test('JS: avail — по МЕНЬШЕМУ из rect и clientHeight (ползунок)', () => {
@@ -587,7 +598,7 @@ describe('Task 323 — VM: структура таблиц итогов', () => 
 
     function makeMonthHost() {
         // Task 324: инфо-строка удалена — ⚠ шапки (пустая на месяце)
-        const els = { wsTtBody: { innerHTML: '' },
+        const els = { wsTtBody: { innerHTML: '', querySelector: function() { return null; } },
                       wsTtWarn: { textContent: '', hidden: true, attrs: {},
                                   setAttribute: function(k, v) { this.attrs[k] = v; } } };
         const host = wsHost(['_codeHours', '_totalsZero', '_totalsAgg', '_statusMeta',
@@ -615,14 +626,17 @@ describe('Task 323 — VM: структура таблиц итогов', () => 
         assertFalse(h.indexOf('ws-tt-scroll') !== -1, 'обёртка .ws-tt-scroll удалена');
     });
 
-    test('месяц: итоговая строка — в tfoot (прилипшая к низу)', () => {
+    test('месяц: НЕТ итоговой строки (Task 327 — заявка)', () => {
         const t = makeMonthHost();
         t.host._renderTotalsMonth();
         const h = t.els.wsTtBody.innerHTML;
-        assertTrue(h.indexOf('</tbody><tfoot><tr class="ws-tt-total">') !== -1,
-            'tfoot после tbody');
-        assertTrue(h.indexOf('Итого по подразделению') !== -1, 'подпись итога');
-        assertTrue(h.indexOf('</tr></tfoot></table>') !== -1, 'закрытие tfoot');
+        // Task 327 (заявка: «убери строку общего количества»): tfoot
+        // «Итого по подразделению» НЕ рендерится — таблицу снизу
+        // закрывает бордюрчик .ws-tt-foot панели
+        assertFalse(h.indexOf('<tfoot>') !== -1, 'tfoot не рендерится');
+        assertFalse(h.indexOf('Итого по подразделению') !== -1, 'подписи итога нет');
+        assertFalse(h.indexOf('ws-tt-total') !== -1, 'класса итоговой строки нет');
+        assertTrue(h.indexOf('</tbody></table>') !== -1, 'таблица закрывается после tbody');
     });
 
     test('месяц: колонка «Сотрудник» рендерится (скрывает CSS на десктопе)', () => {
@@ -647,7 +661,7 @@ describe('Task 323 — VM: структура таблиц итогов', () => 
     });
 
     test('год: таблица с классом ws-tt-year (колонка сотрудника видна)', () => {
-        const els = { wsTtBody: { innerHTML: '' },
+        const els = { wsTtBody: { innerHTML: '', querySelector: function() { return null; } },
                       wsTtWarn: { textContent: '', hidden: true, attrs: {},
                                   setAttribute: function(k, v) { this.attrs[k] = v; } } };
         const md = {
@@ -668,12 +682,13 @@ describe('Task 323 — VM: структура таблиц итогов', () => 
         const h = els.wsTtBody.innerHTML;
         assertTrue(h.indexOf('<table class="ws-tt-table ws-tt-year">') !== -1,
             'класс ws-tt-year — колонка сотрудника на десктопе видна');
-        assertTrue(h.indexOf('</tbody><tfoot><tr class="ws-tt-total">') !== -1,
-            'год: итоговая строка в tfoot');
+        // Task 327 (заявка): итоговой строки в годе больше нет
+        assertFalse(h.indexOf('<tfoot>') !== -1, 'год: tfoot не рендерится (заявка)');
+        assertTrue(h.indexOf('</tbody></table>') !== -1, 'год: таблица закрывается после tbody');
     });
 
     test('год: АКТИВНЫЕ по порядку сетки сверху, архив — ниже (Task 323)', () => {
-        const els = { wsTtBody: { innerHTML: '' },
+        const els = { wsTtBody: { innerHTML: '', querySelector: function() { return null; } },
                       wsTtWarn: { textContent: '', hidden: true, attrs: {},
                                   setAttribute: function(k, v) { this.attrs[k] = v; } } };
         const md = {
@@ -740,10 +755,10 @@ describe('Task 323 — интеграция', () => {
 // 10. SW: версия кэша
 // ============================================================
 describe('Task 323 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v565 (Task 323)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v565'") !== -1,
-            'CACHE_VERSION = kipia-test-v565');
-        assertFalse(SW_SRC.indexOf('kipia-test-v566') !== -1,
+    test('SW: кэш поднят до kipia-test-v566 (Task 323)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v566'") !== -1,
+            'CACHE_VERSION = kipia-test-v566');
+        assertFalse(SW_SRC.indexOf('kipia-test-v567') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });
