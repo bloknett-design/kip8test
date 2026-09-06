@@ -43,7 +43,7 @@
 //     → под кнопкой, без бара → прежнее поведение);
 //     _openEventsOnlyPopup (рендер окна, кловер, позиция, без
 //     окна кодов).
-//   SW: kipia-test-v568.
+//   SW: kipia-test-v569.
 //
 // Запуск: через tests/run-all.js (require './test-task319.js').
 
@@ -368,9 +368,11 @@ describe('Task 319 — тёмная тема: шахматка дней как �
 // ============================================================
 describe('Task 319 — окно кодов и «Мероприятия в этот день»', () => {
 
-    test('CSS: #wsCellPopup .ws-popup-name — 12px + перенос', () => {
-        assertTrue(cssRule(/#wsCellPopup \.ws-popup-name \{[^}]*font-size:\s*12px;[^}]*\}/s),
-            'название кода — 12px (было 13px — «немного меньше»)');
+    test('CSS: #wsCellPopup .ws-popup-name — 10px (Task 330: маленький) + перенос', () => {
+        // Task 330 (заявка): шрифт ОПИСАНИЯ кодов — маленький (10px,
+        // прежде Task 319 12px)
+        assertTrue(cssRule(/#wsCellPopup \.ws-popup-name \{[^}]*font-size:\s*10px;[^}]*\}/s),
+            'название кода — 10px (Task 330: «маленький»)');
         assertTrue(cssRule(/#wsCellPopup \.ws-popup-name \{[^}]*white-space:\s*normal;[^}]*\}/s),
             'перенос по строкам (white-space: normal)');
         assertTrue(cssRule(/#wsCellPopup \.ws-popup-name \{[^}]*overflow-wrap:\s*break-word;[^}]*\}/s),
@@ -508,10 +510,10 @@ describe('Task 319 — окно кодов и «Мероприятия в это
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 319 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v568', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v568') !== -1,
-            'CACHE_VERSION = kipia-test-v568 (Task 319)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v569') !== -1,
+    test('SW: версия кэша kipia-test-v569', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v569') !== -1,
+            'CACHE_VERSION = kipia-test-v569 (Task 319)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v570') !== -1,
             'нет лишнего инкремента');
     });
 });

@@ -35,7 +35,7 @@
 //       позиционируется СТРОГО НАД ним (eTop = top - eh - 8, сдвиг
 //       окна кодов вниз при нехватке места, левые края выровнены);
 //     — closeCellPopup: закрывает ОБА окна.
-//   SW: kipia-test-v568.
+//   SW: kipia-test-v569.
 //
 // Запуск: через tests/run-all.js (require './test-task313.js').
 
@@ -86,9 +86,11 @@ describe('Task 313 — подсветка сегодняшней даты в ш�
         assertTrue(m,
             'ws-today-col: linear-gradient поверх фона th + акцентное число');
         // фон th не перекрыт полупрозрачным background (sticky-шапка
-        // обязана оставаться непрозрачной — иначе сквозь неё видно тело)
-        const thBg = /\.ws-grid thead th \{[^}]*background:\s*var\(--bg-tertiary,\s*#0e1621\);/.test(INDEX_SRC);
-        assertTrue(thBg, 'базовый непрозрачный фон th жив');
+        // обязана оставаться непрозрачной — иначе сквозь неё видно тело);
+        // Task 330: базовый фон шапки — сине-серый сланец #1e293b
+        // (НЕпрозрачный, заявка: «темнее, ближе к сине-серому»)
+        const thBg = /\.ws-grid thead th \{[^}]*background:\s*#1e293b;/.test(INDEX_SRC);
+        assertTrue(thBg, 'базовый непрозрачный фон th жив (#1e293b, Task 330)');
     });
 
     test('CSS: ячейки — inset-«заливка» поверх inline-цветов статусов', () => {
@@ -239,9 +241,9 @@ describe('Task 313 — окно «Мероприятия в этот день» 
 
 describe('Task 313 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v568', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v568'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v568');
+    test('SW: версия кэша kipia-test-v569', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v569'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v569');
         assertFalse(SW_SRC.indexOf('kipia-test-v551') !== -1,
             'старой версии v551 нет');
     });

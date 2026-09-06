@@ -33,7 +33,7 @@
 //     таб_№ (текст, Task 304), пишет H (дата) + I (в_архиве=1),
 //     строка НЕ удаляется; ошибки invalid/not_found; аудит;
 //     маршрут в Code.gs.
-//   SW: kipia-test-v568.
+//   SW: kipia-test-v569.
 //
 // Запуск: через tests/run-all.js (require './test-task318.js').
 
@@ -63,11 +63,14 @@ function methodText(src, name) {
 // ============================================================
 describe('Task 318 — CSS: hover заголовка «Сотрудник +»', () => {
 
-    test('CSS: hover — СПЛОШНОЙ #15202f, как у td.ws-emp-col:hover', () => {
+    test('CSS: hover — СПЛОШНОЙ #2a3a4c (Task 330: светлее сине-серой шапки)', () => {
         const m = INDEX_SRC.match(/th\.ws-emp-col\.ws-emp-head-add:hover \{\s*([^}]*)\}/);
         assertTrue(!!m, 'правило hover живо');
-        assertTrue(m[1].indexOf('background: #15202f') !== -1,
-            'фон — сплошной #15202f (цвет ячеек ФИО под шапкой)');
+        // Task 330: шапка стала сине-серой #1e293b — hover #2a3a4c
+        // (прежде #15202f был светлее старого фона #0e1621 — логика
+        // «hover светлее фона» сохранена на новом цвете)
+        assertTrue(m[1].indexOf('background: #2a3a4c') !== -1,
+            'фон — сплошной #2a3a4c (светлее шапки #1e293b, Task 330)');
         assertFalse(/rgba\(/.test(m[1]),
             'полупрозрачного rgba в hover больше нет — фон НЕ прозрачный');
     });
@@ -633,10 +636,10 @@ describe('Task 318 — Сервер: dismissEmployee (WorkSchedule.gs)', () => {
 // Service Worker
 // ============================================================
 describe('Task 318 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v568', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v568') !== -1,
-            'CACHE_VERSION = kipia-test-v568 (Task 318)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v569') !== -1,
+    test('SW: версия кэша kipia-test-v569', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v569') !== -1,
+            'CACHE_VERSION = kipia-test-v569 (Task 318)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v570') !== -1,
             'лишний инкремент не делался');
     });
 });
