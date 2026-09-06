@@ -36,7 +36,7 @@
 //   clientHeight (ползунок), syncTT в конце; рендеры: tfoot
 //   «Итого», БЕЗ .ws-tt-scroll, ws-tt-year (год), год: активные
 //   по порядку сетки + архив ниже; инфо в title.
-//   SW: kipia-test-v569.
+//   SW: kipia-test-v570.
 //
 // Запуск: через tests/run-all.js (require './test-task323.js').
 
@@ -125,15 +125,20 @@ describe('Task 323 — HTML: боковая шторка и вертикальн
 // 2. CSS: вертикальный текст, шторка, ползунок, мобильная
 // ============================================================
 describe('Task 323 — CSS: шторка, шапка, ползунок', () => {
-    test('CSS: Task 324 → 325 — шапка шторки (.ws-tt-head) вместо строки вкладок', () => {
+    test('CSS: Task 324 → 325 → 331 — шапка шторки (.ws-tt-head) вместо строки вкладок', () => {
         const head = INDEX_SRC.match(/\.ws-tt-head\s*\{[^}]*min-height:\s*28px[^}]*\}/);
         assertTrue(!!head, 'правило шапки шторки (базовая зона 28px)');
-        // Task 325: ✕ удалён — правило .ws-tt-close удалено, пустая шапка прячется
+        // Task 325: ✕ удалён — правило .ws-tt-close удалено;
+        // Task 331 (заявка: «высота шапки столбцов шторки — по высоте
+        // шапки сетки»): ПУСТАЯ шапка (месяц: без ⚠/«Обновить»)
+        // ПРЯЧЕТСЯ ЦЕЛИКОМ — 16px-филлер УДАЛЁН, шапка таблицы итогов
+        // (38px) одна занимает зону шапки сетки
         assertFalse(/\.ws-tt-close\s*\{/.test(INDEX_SRC),
             'правило ✕ удалено (Task 325)');
-        const empty = INDEX_SRC.match(/\.ws-tt-head\.ws-tt-head-empty\s*\{[^}]*min-height:\s*16px[^}]*\}/);
-        assertTrue(!!empty,
-            'пустая шапка сжата до 16px-филлера (Task 325: выравнивание строк)');
+        assertFalse(/\.ws-tt-head\.ws-tt-head-empty/.test(INDEX_SRC),
+            '16px-филлер удалён (Task 331: пустая шапка — display:none)');
+        assertTrue(/\.ws-tt-head\[hidden\]\s*\{\s*display:\s*none/.test(INDEX_SRC),
+            'пустая шапка прячется целиком ([hidden], Task 331)');
         assertFalse(INDEX_SRC.indexOf('ws-totals-bar-cap') !== -1,
             'вертикальные надписи ручки удалены');
         assertFalse(INDEX_SRC.indexOf('writing-mode: vertical-rl') !== -1,
@@ -174,23 +179,25 @@ describe('Task 323 — CSS: шторка, шапка, ползунок', () => {
             'хвост свёрнутой шторки обрезается');
     });
 
-    test('CSS: ПОЛЗУНОК внизу шахматки — видимый, окрашенный', () => {
-        const sb = INDEX_SRC.match(/#page-work-schedule\.ws-tt-gridwide \.ws-grid-wrap::-webkit-scrollbar\s*\{[^}]*\}/);
-        assertTrue(!!sb, 'правило ползунка есть');
-        assertTrue(sb[0].indexOf('height: 12px') !== -1, 'высота 12px');
-        assertTrue(sb[0].indexOf('display: block') !== -1, 'ползунок ВИДИМ (не display:none)');
-        const thumb = INDEX_SRC.match(/#page-work-schedule\.ws-tt-gridwide \.ws-grid-wrap::-webkit-scrollbar-thumb\s*\{[^}]*\}/);
-        assertTrue(!!thumb && thumb[0].indexOf('background') !== -1, 'бегунок окрашен');
-        assertTrue(!!thumb && thumb[0].indexOf('border-radius') !== -1, 'бегунок скруглён');
-        const track = INDEX_SRC.match(/#page-work-schedule\.ws-tt-gridwide \.ws-grid-wrap::-webkit-scrollbar-track\s*\{[^}]*\}/);
-        assertTrue(!!track, 'дорожка стилизована');
-        const ff = INDEX_SRC.match(/#page-work-schedule\.ws-tt-gridwide \.ws-grid-wrap\s*\{[^}]*\}/);
-        assertTrue(!!ff && ff[0].indexOf('scrollbar-width: thin') !== -1,
-            'Firefox: ползунок виден (scrollbar-width)');
-        assertTrue(!!ff && ff[0].indexOf('overflow-x: auto') !== -1,
-            'горизонтальная прокрутка включена');
-        const light = INDEX_SRC.match(/\[data-theme="light"\] #page-work-schedule\.ws-tt-gridwide \.ws-grid-wrap::-webkit-scrollbar-thumb\s*\{[^}]*\}/);
-        assertTrue(!!light, 'ползунок в светлой теме');
+    test('CSS: ПОЛЗУНОК внизу шахматки — КАСТОМНЫЙ, под бордюром (Task 331)', () => {
+        // Task 331 (заявка: «не должно быть полосок вертикальной
+        // прокрутки… в шахматке»): нативные полосы контейнера скрыты
+        // (Firefox thin давал вертикальную полоску), ползунок —
+        // КАСТОМНЫЙ #wsGridHbar в зоне 12px ПОД бордюром .ws-grid-foot
+        assertFalse(/#page-work-schedule\.ws-tt-gridwide \.ws-grid-wrap::-webkit-scrollbar\s*\{[^}]*height:\s*12px/.test(INDEX_SRC),
+            'нативный webkit-ползунок gridwide удалён (Task 331)');
+        assertFalse(/#page-work-schedule\.ws-tt-gridwide \.ws-grid-wrap\s*\{[^}]*scrollbar-width:\s*thin/.test(INDEX_SRC),
+            'нативная thin-полоса gridwide удалена (Task 331)');
+        assertTrue(/\.ws-grid-hbar[\s\S]{0,80}height:\s*12px/.test(INDEX_SRC),
+            'зона ползунка 12px (Task 331)');
+        assertTrue(/\.ws-grid-hbar\.on[\s\S]{0,150}background:\s*rgba\(255,\s*255,\s*255,\s*0\.05\)/.test(INDEX_SRC),
+            'дорожка окрашена (как прежний нативный ползунок)');
+        assertTrue(/\.ws-grid-hbar\.on \.ws-hbar-thumb,[\s\S]*?\.ws-tt-hbar\.on \.ws-hbar-thumb\s*\{[^}]*border-radius:\s*6px/.test(INDEX_SRC),
+            'бегунок скруглён');
+        assertTrue(/id="wsGridHbar" aria-hidden="true"><div class="ws-hbar-thumb"/.test(INDEX_SRC),
+            'ползунок #wsGridHbar в разметке колонки сетки');
+        assertTrue(/\[data-theme="light"\] \.ws-grid-hbar\.on \.ws-hbar-thumb/.test(INDEX_SRC),
+            'ползунок в светлой теме');
     });
 
     test('CSS: сетка в широком режиме — природная ширина, ФИО sticky', () => {
@@ -209,26 +216,29 @@ describe('Task 323 — CSS: шторка, шапка, ползунок', () => {
         assertTrue(!!emp && emp[0].indexOf('background') !== -1,
             'ФИО — непрозрачный фон (не просвечивает прокрутка)');
         const th = INDEX_SRC.match(/#page-work-schedule\.ws-tt-gridwide \.ws-grid thead th\s*\{[^}]*\}/);
-        assertTrue(!!th && th[0].indexOf('var(--ws-tt-head-h, 56px)') !== -1,
+        assertTrue(!!th && th[0].indexOf('var(--ws-tt-head-h, 38px)') !== -1,
             'шапка сетки — высота заголовочной зоны панели (выравнивание строк)');
         assertTrue(!!th && th[0].indexOf('vertical-align: middle') !== -1,
             'даты центрированы в высокой шапке');
     });
 
-    test('CSS: Task 324 — панель: ВИДИМЫЙ нижний ползунок + tfoot у низа', () => {
+    test('CSS: Task 324 → 331 — панель: ползунок КАСТОМНЫЙ под бордюром', () => {
         const b = INDEX_SRC.match(/\.ws-tt-body\s*\{[^}]*\}/);
         assertTrue(!!b && b[0].indexOf('overflow: auto') !== -1, 'скролл-контейнер');
-        // Task 324 (заявка): горизонтальная полоса ВНИЗУ ШТОРКИ — видимая
-        assertTrue(b[0].indexOf('scrollbar-width: thin') !== -1,
-            'Firefox: тонкие полосы');
+        // Task 331 (заявка: «не должно быть полосок вертикальной
+        // прокрутки в шторке»; «полоску горизонтальной прокрутки —
+        // ПОД нижним бордюром, как под шахматкой»): ВСЕ нативные
+        // полосы тела скрыты в обоих движках; горизонтальная
+        // прокрутка — КАСТОМНЫМ ползунком #wsTtHbar ПОД .ws-tt-foot
+        assertTrue(b[0].indexOf('scrollbar-width: none') !== -1,
+            'Firefox: все нативные полосы скрыты (Task 331)');
         const sb = INDEX_SRC.match(/\.ws-tt-body::-webkit-scrollbar\s*\{[^}]*\}/);
-        assertTrue(!!sb && sb[0].indexOf('height: 12px') !== -1,
-            'webkit: горизонтальная полоса ВИДИМАЯ (12px)');
-        assertTrue(!!sb && sb[0].indexOf('width: 0') !== -1,
-            'webkit: вертикальная скрыта (скролл синхронный с сеткой)');
-        const thumb = INDEX_SRC.match(/\.ws-tt-body::-webkit-scrollbar-thumb\s*\{[^}]*\}/);
-        assertTrue(!!thumb && thumb[0].indexOf('background') !== -1,
-            'бегунок шторки окрашен');
+        assertTrue(!!sb && sb[0].indexOf('display: none') !== -1,
+            'webkit: все нативные полосы скрыты (Task 331)');
+        assertFalse(/\.ws-tt-body::-webkit-scrollbar-thumb/.test(INDEX_SRC),
+            'нативного бегунка шторки больше нет');
+        assertTrue(/id="wsTtHbar" aria-hidden="true"><div class="ws-hbar-thumb"/.test(INDEX_SRC),
+            'кастомный ползунок #wsTtHbar ПОД .ws-tt-foot (Task 331)');
         // Task 327 (заявка): заголовки — в ДВЕ строки при необходимости
         // (свёрнуто Task 324 «одной строкой» — узкие равные столбцы
         // требуют переноса; у года месяцы — по-прежнему одной строкой)
@@ -575,23 +585,25 @@ describe('Task 323 — VM: синхронизация скролла сетка 
 // 7. VM: _fitGrid — бюджет с итоговой строкой и ползунком
 // ============================================================
 describe('Task 323 — VM: _fitGrid учитывает шторку', () => {
-    test('JS: бюджет = область − шапка − полоса (Task 327: Итого удалена)', () => {
+    test('JS: бюджет = область − шапка (полоса/ползунок вне контейнера, Task 331)', () => {
         const txt = methodText(WS_CLIENT, '_fitGrid');
-        assertTrue(txt.indexOf('var budget = avail - headH - footH - ttFootH;') !== -1,
-            'формула бюджета прежняя');
+        assertTrue(txt.indexOf('var budget = avail - headH;') !== -1,
+            'формула бюджета: только шапка — полоса и зона ползунка ' +
+            'СТАТИЧНЫЕ, вне контейнера (Task 331)');
         // Task 327 (заявка): итоговой строки нет — резерв не ищется
         assertFalse(txt.indexOf("querySelector('#wsTtBody .ws-tt-total')") !== -1,
             'высота tfoot больше не читается (строки Итого нет)');
-        assertTrue(txt.indexOf('var ttFootH = 0;') !== -1,
-            'резерв — константа 0 (комментарий Task 327)');
+        assertFalse(txt.indexOf('var foot = wrap.querySelector') !== -1,
+            'полоса больше не ищется в контейнере (она статична)');
     });
 
-    test('JS: avail — по МЕНЬШЕМУ из rect и clientHeight (ползунок)', () => {
+    test('JS: avail — из rect контейнера (нативные полосы скрыты, Task 331)', () => {
         const txt = methodText(WS_CLIENT, '_fitGrid');
-        assertTrue(txt.indexOf('var chH = wrap.clientHeight;') !== -1,
-            'высота контента (без ползунка) читается');
-        assertTrue(txt.indexOf('if (chH && chH < avail) avail = chH;') !== -1,
-            'clientHeight (минус ползунок) ограничивает бюджет');
+        assertTrue(txt.indexOf('var avail = Math.floor(wrap.getBoundingClientRect().height + 0.25);') !== -1,
+            'высота области — из реальной геометрии контейнера');
+        assertFalse(txt.indexOf('var chH = wrap.clientHeight;') !== -1,
+            'поправка clientHeight удалена: нативных полос нет — ' +
+            'clientHeight = padding-коробка (Task 331)');
     });
 
     test('JS: подгонка завершается синхронизацией строк итогов', () => {
@@ -771,10 +783,10 @@ describe('Task 323 — интеграция', () => {
 // 10. SW: версия кэша
 // ============================================================
 describe('Task 323 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v569 (Task 323)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v569'") !== -1,
-            'CACHE_VERSION = kipia-test-v569');
-        assertFalse(SW_SRC.indexOf('kipia-test-v570') !== -1,
+    test('SW: кэш поднят до kipia-test-v570 (Task 323)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v570'") !== -1,
+            'CACHE_VERSION = kipia-test-v570');
+        assertFalse(SW_SRC.indexOf('kipia-test-v571') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });

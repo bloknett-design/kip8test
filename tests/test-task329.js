@@ -32,7 +32,7 @@
 //     ширин ws-tt-c-*, ПЕРЕРАБОТКА В ДНЯХ (overDays), часы — в
 //     тултипе; _renderTotalsYearTable — сумма дней; min-width только
 //     на мобайле; пересечение брейкпоинта — сброс/перезамер.
-//   SW: kipia-test-v569.
+//   SW: kipia-test-v570.
 //
 // Запуск: через tests/run-all.js (require './test-task329.js').
 
@@ -116,17 +116,23 @@ describe('Task 329 — HTML: левый край шторки', () => {
 // ============================================================
 describe('Task 329 — CSS: левый край, ширина по столбцам, зебра', () => {
 
-    test('CSS: .ws-tt-edge — вертикальный стальной bevel (обе темы)', () => {
+    test('CSS: .ws-tt-edge — ПОЛОСА 2px как разделитель групп сетки (Task 331)', () => {
         const m = INDEX_SRC.match(/\.ws-tt-edge\s*\{[^}]*\}/);
         assertTrue(!!m, 'правило .ws-tt-edge');
-        assertTrue(!!m && m[0].indexOf('width: 5px') !== -1, 'тонкий: 5px (как .ws-tt-foot)');
+        // Task 331 (заявка: «левый бордюрчик — полосой, как между
+        // сменными и дневными сотрудниками в шахматке»): 2px сплошная
+        // #4a8fc7 / светлая #6e8ba4 (прежде стальной bevel 5px)
+        assertTrue(!!m && m[0].indexOf('width: 2px') !== -1,
+            'тонкая ПОЛОСА: 2px (как tr.ws-group-first сетки)');
         assertTrue(!!m && /left:\s*0/.test(m[0]) && /top:\s*0/.test(m[0]) && /bottom:\s*0/.test(m[0]),
             'во всю высоту левого края');
-        assertTrue(!!m && m[0].indexOf('#35648f') !== -1, 'стальной фон (bevel)');
+        assertTrue(!!m && m[0].indexOf('#4a8fc7') !== -1,
+            'цвет разделителя групп сетки (тёмная)');
         assertTrue(!!m && m[0].indexOf('pointer-events: none') !== -1,
             'мышь не перехватывает (декоративный)');
         const l = INDEX_SRC.match(/\[data-theme="light"\] \.ws-tt-edge\s*\{[^}]*\}/);
-        assertTrue(!!l && l[0].indexOf('#b3c2ce') !== -1, 'светлая тема бортика');
+        assertTrue(!!l && l[0].indexOf('#6e8ba4') !== -1,
+            'светлая тема — как разделитель сетки');
     });
 
     test('CSS: .ws-tt-chv — у левого края, по середине, активная', () => {
@@ -138,6 +144,13 @@ describe('Task 329 — CSS: левый край, ширина по столбц�
             'по середине высоты края');
         assertTrue(!!m && /z-index:\s*6/.test(m[0]), 'поверх таблицы (z 6)');
         assertTrue(!!m && /border-left:\s*none/.test(m[0]), 'примыкает к бортику');
+        // Task 331 (заявка): В ДВА РАЗА УЖЕ (22→11px) и ПРОЗРАЧНЕЕ
+        // (0.92→0.55 — просвечивает накрытая ячейка данных)
+        assertTrue(!!m && m[0].indexOf('width: 11px') !== -1,
+            'кнопка вдвое уже: 11px (Task 331)');
+        assertTrue(!!m && m[0].indexOf('rgba(21, 32, 47, 0.55)') !== -1,
+            'полупрозрачная заливка 0.55 (Task 331)');
+        assertTrue(!!m && /height:\s*48px/.test(m[0]), 'высота прежняя (48px)');
         assertTrue(/\.ws-tt-chv\.on\s*\{[^}]*rgba\(74,\s*143,\s*199/.test(INDEX_SRC),
             'активная — синий тинт');
         assertTrue(/\.ws-tt-chv\.on svg\s*\{[^}]*rotate\(180deg\)/.test(INDEX_SRC),
@@ -381,10 +394,10 @@ describe('Task 329 — VM: закрытие и рендер', () => {
             delete global.document;
         }
         const h = body.innerHTML;
-        // классы ширин на th (Task 329)
-        assertTrue(h.indexOf('<th class="ws-tt-c-work">Явки</th>') !== -1, 'th: класс ws-tt-c-work');
+        // классы ширин на th (Task 329); Task 331: подписи «(дни)»
+        assertTrue(h.indexOf('<th class="ws-tt-c-work">Явки (дни)</th>') !== -1, 'th: класс ws-tt-c-work');
         assertTrue(h.indexOf('<th class="ws-tt-c-hours">Часы</th>') !== -1, 'th: класс ws-tt-c-hours');
-        assertTrue(h.indexOf('<th class="ws-tt-c-over">Переработка</th>') !== -1, 'th: класс ws-tt-c-over');
+        assertTrue(h.indexOf('<th class="ws-tt-c-over">Переработка (дни)</th>') !== -1, 'th: класс ws-tt-c-over');
         // ПЕРЕРАБОТКА В ДНЯХ: Иванов 2 (д+н), Петров 1 (д)
         const overs = h.match(/ws-tt-over[^>]*>\d+<\/td>/g) || [];
         assertEqual(overs.length, 2, 'по ячейке переработки на сотрудника');
@@ -458,10 +471,10 @@ describe('Task 329 — VM: закрытие и рендер', () => {
 // ============================================================
 describe('Task 329 — SW: версия кэша', () => {
 
-    test('SW: кэш поднят до kipia-test-v569 (Task 329)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v569') !== -1,
-            'CACHE_VERSION = kipia-test-v569');
-        assertFalse(SW_SRC.indexOf('kipia-test-v569-OLD') !== -1,
+    test('SW: кэш поднят до kipia-test-v570 (Task 329)', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v570') !== -1,
+            'CACHE_VERSION = kipia-test-v570');
+        assertFalse(SW_SRC.indexOf('kipia-test-v570-OLD') !== -1,
             'старой версии v567 нет');
     });
 });

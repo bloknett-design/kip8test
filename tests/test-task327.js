@@ -31,7 +31,7 @@
 //     _renderTotalsYearTable — НЕТ tfoot; _fitGrid — бюджет без
 //     резерва итоговой строки; toggleTotals/setTotalsTab зовут новые
 //     методы.
-//   SW: kipia-test-v569.
+//   SW: kipia-test-v570.
 //
 // Запуск: через tests/run-all.js (require './test-task327.js').
 
@@ -152,12 +152,15 @@ describe('Task 327 — CSS: бордюрчик, «Ещё», равные сто�
             'разворот шеврона в активном состоянии');
         assertFalse(/\.ws-tt-more\s*\{/.test(INDEX_SRC),
             'стилей прежней кнопки «Ещё» больше нет');
-        // бортик: стальной вертикальный bevel (родственник .ws-tt-foot)
+        // Task 331 (заявка): левый бордюрчик — ПОЛОСА 2px как
+        // разделитель сменных/дневных в шахматке (сетка
+        // tr.ws-group-first: #4a8fc7 / светлая #6e8ba4)
         const e = INDEX_SRC.match(/\.ws-tt-edge\s*\{[^}]*\}/);
-        assertTrue(!!e && e[0].indexOf('width: 5px') !== -1 && e[0].indexOf('#35648f') !== -1,
-            'декоративный бортик 5px стальной (Task 329)');
+        assertTrue(!!e && e[0].indexOf('width: 2px') !== -1 && e[0].indexOf('#4a8fc7') !== -1,
+            'полоса левого края 2px #4a8fc7 (Task 331)');
         const el = INDEX_SRC.match(/\[data-theme="light"\] \.ws-tt-edge\s*\{[^}]*\}/);
-        assertTrue(!!el && el[0].indexOf('#b3c2ce') !== -1, 'светлая тема бортика');
+        assertTrue(!!el && el[0].indexOf('#6e8ba4') !== -1,
+            'светлая тема полосы — как разделитель сетки');
     });
 
     test('CSS: БОРДЮРЧИК = .ws-grid-foot шахматки (5px стальной bevel)', () => {
@@ -281,12 +284,13 @@ describe('Task 327 — VM: состояние и кнопки', () => {
         assertEqual(host._totalsExtra, false, 'выключены');
     });
 
-    test('VM: _updateTtHead — пустая шапка = только ⚠/«Обновить» (Task 329)', () => {
+    test('VM: _updateTtHead — пустая шапка ПРЯЧЕТСЯ (Task 329 → 331)', () => {
         const fn = methodFn(WS_CLIENT, '_updateTtHead');
-        const head = { classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } };
+        const head = { hidden: false };
         const panel = { querySelector: function() { return head; } };
         // «Ещё» из шапки УДАЛЕНА (Task 329: шеврон — на левом краю,
-        // вне шапки): логика пустоты — как в Task 325 (⚠/Обновить)
+        // вне шапки); Task 331: без ⌠/«Обновить» шапка ПРЯЧЕТСЯ
+        // ЦЕЛИКОМ ([hidden], 16px-филлер удалён)
         global.document = mockDoc({
             wsTotalsPanel: panel,
             wsTtWarn: { hidden: true },
@@ -294,15 +298,15 @@ describe('Task 327 — VM: состояние и кнопки', () => {
         });
         try {
             fn.call({});
-            assertEqual(head.classList.state['ws-tt-head-empty'], true,
-                'месяц без ⌠/Обновить — шапка сжата (16px-филлер)');
+            assertEqual(head.hidden, true,
+                'месяц без ⌠/Обновить — шапка скрыта (Task 331)');
             global.document = mockDoc({
                 wsTotalsPanel: panel,
                 wsTtWarn: { hidden: false },
                 wsTtRefresh: { hidden: true }
             });
             fn.call({});
-            assertEqual(head.classList.state['ws-tt-head-empty'], false,
+            assertEqual(head.hidden, false,
                 '⌠ видна — шапка обычной высоты');
         } finally {
             delete global.document;
@@ -377,8 +381,8 @@ describe('Task 327 — VM: таблица месяца', () => {
         const ths = h.match(/<th[^>]*>[^<]*<\/th>/g) || [];
         const names = ths.map(function(x) { return x.replace(/<[^>]*>/g, ''); });
         assertEqual(JSON.stringify(names),
-            JSON.stringify(['Сотрудник', 'Явки', 'Часы', 'Переработка']),
-            'заголовки: Сотрудник + основные в порядке заявки');
+            JSON.stringify(['Сотрудник', 'Явки (дни)', 'Часы', 'Переработка (дни)']),
+            'заголовки: Сотрудник + основные в порядке заявки (Task 331: подписи в днях)');
         assertFalse(h.indexOf('<th>Всего</th>') !== -1, 'столбца «Всего» нет');
         assertFalse(h.indexOf('<tfoot>') !== -1, 'tfoot (общее количество) нет');
     });
@@ -402,10 +406,10 @@ describe('Task 327 — VM: таблица месяца', () => {
         const ths = h.match(/<th[^>]*>[^<]*<\/th>/g) || [];
         const names = ths.map(function(x) { return x.replace(/<[^>]*>/g, ''); });
         assertEqual(JSON.stringify(names), JSON.stringify([
-            'Сотрудник', 'Явки', 'Часы', 'Переработка',
+            'Сотрудник', 'Явки (дни)', 'Часы', 'Переработка (дни)',
             'Отгул (ОВ)', 'Больничный (Б)', 'Отпуск (ОТ)', 'Уч. отпуск (У)',
             'Прогул (ПР)', 'День (Д)', 'Ночь (Н)', 'Прочие'
-        ]), 'порядок заявки: основные + Отгул, Больничный, Отпуск, Уч. отпуск, Прогул, День, Ночь, Прочие');
+        ]), 'порядок заявки: основные (Task 331 — подписи в днях) + Отгул, Больничный, Отпуск, Уч. отпуск, Прогул, День, Ночь, Прочие');
         assertFalse(h.indexOf('<th>Всего</th>') !== -1, 'столбца «Всего» нет даже при «Ещё»');
     });
 
@@ -438,10 +442,12 @@ describe('Task 327 — VM: таблица месяца', () => {
         const txt = methodText(WS_CLIENT, '_fitGrid');
         assertFalse(txt.indexOf("querySelector('#wsTtBody .ws-tt-total')") !== -1,
             'высота tfoot не читается (строки Итого нет)');
-        assertTrue(txt.indexOf('var ttFootH = 0;') !== -1,
-            'резерв = 0 (константа)');
-        assertTrue(txt.indexOf('var budget = avail - headH - footH - ttFootH;') !== -1,
-            'формула бюджета сохранена');
+        // Task 331: полоса и зона ползунка — СТАТИЧНЫЕ, вне контейнера
+        // (колонка .ws-grid-col): бюджет — только шапка
+        assertTrue(txt.indexOf('var budget = avail - headH;') !== -1,
+            'формула бюджета: область − шапка (Task 331)');
+        assertFalse(txt.indexOf('var ttFootH = 0;') !== -1,
+            'резерв-константа удалена (tfoot и полосы вне контейнера)');
     });
 });
 
@@ -449,10 +455,10 @@ describe('Task 327 — VM: таблица месяца', () => {
 // 5. Service Worker
 // ============================================================
 describe('Task 327 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v569', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v569'") !== -1,
-            'CACHE_VERSION = kipia-test-v569 (Task 327 — только фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v570') !== -1,
+    test('SW: версия кэша kipia-test-v570', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v570'") !== -1,
+            'CACHE_VERSION = kipia-test-v570 (Task 327 — только фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v571') !== -1,
             'лишний инкремент не делался');
     });
 });

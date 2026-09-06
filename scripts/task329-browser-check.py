@@ -137,8 +137,10 @@ def setup_ctx(browser, viewport, token, theme=None):
     page.wait_for_timeout(2500)
     return ctx, page, js_errors
 
-# Сумма явных узких ширин (CSS/JS Task 329): свернуто 3 столбца, развёрнуто 11
-W_WORK, W_HOURS, W_OVER = 36, 38, 56
+# Сумма явных узких ширин (CSS/JS Task 329 → 331): свернуто 3 столбца,
+# развёрнуто 11; Task 331 — расширены под «Явки (дни)»/«Переработка
+# (дни)» в 2 строки (заявка: «вся информация видна, без полоски»)
+W_WORK, W_HOURS, W_OVER = 44, 42, 80
 W_EXTRA = [42, 64, 50, 52, 50, 38, 38, 50]   # ОВ, Б, ОТ, У, ПР, День, Ночь, Прочие
 W_COLLAPSED = W_WORK + W_HOURS + W_OVER
 W_EXPANDED = W_COLLAPSED + sum(W_EXTRA)
@@ -210,10 +212,10 @@ with sync_playwright() as p:
     check('D5: шеврон у левого края (left 0), z 6, svg',
           approx(s1['chvL'], 0, 1) and s1['chvZ'] == '6' and s1['svg'], s1)
     check('D6: шеврон по СЕРЕДИНЕ высоты края', approx(s1['chvMid'], 0, 2), s1['chvMid'])
-    check('D7: бортик 5px во всю высоту, у края, стальной (#35648f), мышь не мешает',
-          approx(s1['edgeW'], 5, 0.6) and approx(s1['edgeH'], s1['drH'], 1)
+    check('D7: ПОЛОСА левого края 2px во всю высоту, у края, #4a8fc7 (Task 331: как разделитель групп сетки), мышь не мешает',
+          approx(s1['edgeW'], 2, 0.4) and approx(s1['edgeH'], s1['drH'], 1)
           and approx(s1['edgeL'], 0, 1) and s1['edgePe'] == 'none'
-          and s1['edgeBg'] == 'rgb(53, 100, 143)', s1)
+          and s1['edgeBg'] == 'rgb(74, 143, 199)', s1)
 
     # ---------- узкие столбцы + заголовки в 2 строки ----------
     s2 = page.evaluate("""(function(){
@@ -236,9 +238,10 @@ with sync_playwright() as p:
                 hasTfoot: !!table.querySelector('tfoot'),
                 empDisp: getComputedStyle(table.querySelector('tbody td.ws-tt-emp')).display};
     })""")
-    check('E: столбцы — Сотрудник, Явки, Часы, Переработка (порядок)',
-          s2['heads'] == ['Сотрудник','Явки','Часы','Переработка'], s2['heads'])
-    check('E2: ширины УЗКИЕ по заголовкам (%d/%d/%d ±2)',
+    check('E: столбцы — Сотрудник, Явки (дни), Часы, Переработка (дни) (Task 331: подписи в днях)',
+          s2['heads'] == ['Сотрудник','Явки (дни)','Часы','Переработка (дни)'], s2['heads'])
+    check('E2: ширины УЗКИЕ по заголовкам (%d/%d/%d ±2 — Task 331)'
+          % (W_WORK, W_HOURS, W_OVER),
           approx(s2['widths'][0], W_WORK, 2) and approx(s2['widths'][1], W_HOURS, 2)
           and approx(s2['widths'][2], W_OVER, 2), s2['widths'])
     check('E3: «Переработка» — в ДВЕ строки (контент вдвое выше однострочных)',
@@ -306,8 +309,8 @@ with sync_playwright() as p:
     check('H: шеврон ON (aria-pressed=true)', s5['on'] and s5['aria'] == 'true', s5)
     check('H2: шторка переширотилась на 11 столбцов (≈%dpx)' % W_EXPANDED,
           approx(s5['dw'], W_EXPANDED, 6) and approx(s5['tableW'], W_EXPANDED, 6), (s5['dw'], s5['tableW']))
-    check('H3: доп. столбцы в порядке ЗАЯВКИ',
-          s5['heads'] == ['Явки','Часы','Переработка','Отгул (ОВ)','Больничный (Б)','Отпуск (ОТ)','Уч. отпуск (У)','Прогул (ПР)','День (Д)','Ночь (Н)','Прочие'], s5['heads'])
+    check('H3: доп. столбцы в порядке ЗАЯВКИ (Task 331: подписи в днях)',
+          s5['heads'] == ['Явки (дни)','Часы','Переработка (дни)','Отгул (ОВ)','Больничный (Б)','Отпуск (ОТ)','Уч. отпуск (У)','Прогул (ПР)','День (Д)','Ночь (Н)','Прочие'], s5['heads'])
     check('H4: мин-ширины НЕТ (ширина = столбцы, не прокрутка)',
           not s5['hasMinW'], s5['hasMinW'])
     # обратно
@@ -397,7 +400,7 @@ with sync_playwright() as p:
           s8['pos'] == 'fixed' and s8['transform'] == 'none' and approx(s8['w'], 375*0.86, 4), s8)
     check('L2: шеврон виден (месяц), у левого края, по середине',
           (not s8['chvHidden']) and approx(s8['chvL'], 0, 1) and approx(s8['chvMid'], 0, 2), s8)
-    check('L3: бортик на мобиле', approx(s8['edgeW'], 5, 0.6), s8)
+    check('L3: ПОЛОСА левого края 2px на мобиле (Task 331)', approx(s8['edgeW'], 2, 0.4), s8)
     check('L4: ПЕРЕРАБОТКА — день (мобайл)', s8['overTxt'] == '1', s8)
     check('L5: колонка ФИО в таблице (≈42%)', s8['empW'] and s8['empW'] > 0.35, s8['empW'])
     # «Ещё» на мобиле — прокрутка развёрнутых столбцов
@@ -438,12 +441,13 @@ with sync_playwright() as p:
                 dw: drawer.getBoundingClientRect().width};
     })""")
     check('N: светлая тема включена', s10['light'], s10)
-    check('N2: бортик светлой темы (#b3c2ce)',
-          'rgb(179, 194, 206)' == s10['edgeBg'], s10['edgeBg'])
+    check('N2: полоса края светлой темы — #6e8ba4, как разделитель сетки (Task 331)',
+          'rgb(110, 139, 164)' == s10['edgeBg'], s10['edgeBg'])
     check('N3: зебра ФИО — 7% в светлой теме',
           '0.07' in s10['evenImg'] and s10['oddImg'] == 'none', s10)
-    check('N4: шеврон светлой темы + ширина та же',
-          s10['chvBg'] not in ('', 'rgba(0, 0, 0, 0)') and approx(s10['dw'], W_COLLAPSED, 4), s10)
+    check('N4: шеврон светлой темы ПРОЗРАЧНЫЙ (0.6, Task 331) + ширина та же',
+          s10['chvBg'] not in ('', 'rgba(0, 0, 0, 0)') and s10['chvBg'].endswith('0.6)')
+          and approx(s10['dw'], W_COLLAPSED, 4), s10)
     page3.screenshot(path='task329-proof-light.png', full_page=False)
     check('O: 0 JS-ошибок (светлая)', len(js_errors3) == 0, js_errors3[:3])
     ctx3.close()

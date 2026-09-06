@@ -30,7 +30,7 @@
 //   _attachTotalsSync — на МОБАЙЛЕ клик/тап МИМО шторки закрывает
 //   её (✕ удалён): слушатель document click, только <1024px,
 //   клики по #wsTotalsDrawer/#wsTotalsRow не закрывают.
-//   SW: kipia-test-v569.
+//   SW: kipia-test-v570.
 //
 // Запуск: через tests/run-all.js (require './test-task325.js').
 
@@ -206,10 +206,15 @@ describe('Task 325 — CSS: ширина колонки и линии ячеек
             'формула двух рядов (Task 324) удалена');
     });
 
-    test('CSS: пустая шапка шторки — 16px-филлер', () => {
-        const m = INDEX_SRC.match(/\.ws-tt-head\.ws-tt-head-empty\s*\{[^}]*\}/);
-        assertTrue(!!m && m[0].indexOf('min-height: 16px') !== -1,
-            'шапка без ⚠/«Обновить» сжата (строки идут от верха)');
+    test('CSS: пустая шапка шторки — ПРЯЧЕТСЯ ЦЕЛИКОМ (Task 331)', () => {
+        // Task 331 (заявка: «высота шапки столбцов шторки — по высоте
+        // шапки сетки»): 16px-филлер УДАЛЁН — шапка таблицы итогов (38px)
+        // занимает всю зону шапки сетки; без ⚠/«Обновить» шапка скрыта
+        assertFalse(/\.ws-tt-head\.ws-tt-head-empty/.test(INDEX_SRC),
+            'правило 16px-филлера удалено (Task 331)');
+        const m = INDEX_SRC.match(/\.ws-tt-head\[hidden\]\s*\{\s*display:\s*none[^}]*\}/);
+        assertTrue(!!m,
+            'шапка без ⚠/«Обновить» скрыта ([hidden], строки от верха)');
     });
 });
 
@@ -437,10 +442,10 @@ describe('Task 325 — VM: мобильное закрытие тапом мим
 // ============================================================
 describe('Task 325 — SW', () => {
 
-    test('SW: версия кэша kipia-test-v569 (Task 325)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v569'") !== -1,
-            'CACHE_VERSION = kipia-test-v569');
-        assertFalse(SW_SRC.indexOf('kipia-test-v570') !== -1,
+    test('SW: версия кэша kipia-test-v570 (Task 325)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v570'") !== -1,
+            'CACHE_VERSION = kipia-test-v570');
+        assertFalse(SW_SRC.indexOf('kipia-test-v571') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });

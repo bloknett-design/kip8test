@@ -195,15 +195,16 @@ with sync_playwright() as p:
                 rowCount: rows.length, ivanov: vals,
                 empDisp: getComputedStyle(table.querySelector('tbody td.ws-tt-emp')).display};
     })""")
-    check('E: столбцы — Сотрудник, Явки, Часы, Переработка (ПОРЯДОК — заявка)',
-          s2['heads'] == ['Сотрудник','Явки','Часы','Переработка'], s2['heads'])
+    check('E: столбцы — Сотрудник, Явки (дни), Часы, Переработка (дни) (ПОРЯДОК — заявка; Task 331: подписи в днях)',
+          s2['heads'] == ['Сотрудник','Явки (дни)','Часы','Переработка (дни)'], s2['heads'])
     check('E2: НЕТ «Всего», НЕТ tfoot, НЕТ «Итого» (заявка)',
           (not s2['hasVsego']) and (not s2['hasTfoot']) and (not s2['hasTotal']))
     w = s2['widths']
-    # Task 329 (актуализация): столбцы УЗКИЕ по заголовкам (36/38/56 —
-    # заявка «по размеру заглавий в две строки»), НЕ равные
-    check('E3: столбцы данных УЗКИЕ по заголовкам (Task 329: 36/38/56)',
-          len(w) == 3 and approx(w[0], 36, 2) and approx(w[1], 38, 2) and approx(w[2], 56, 2), w)
+    # Task 329 → 331 (актуализация): столбцы УЗКИЕ по заголовкам
+    # (44/42/80 — расширены под «Явки (дни)»/«Переработка (дни)» в 2
+    # строки, заявка: «вся информация видна, без полоски прокрутки»)
+    check('E3: столбцы данных УЗКИЕ по заголовкам (Task 329/331: 44/42/80)',
+          len(w) == 3 and approx(w[0], 44, 2) and approx(w[1], 42, 2) and approx(w[2], 80, 2), w)
     check('E4: table-layout fixed + перенос заголовков + центр',
           s2['layout'] == 'fixed' and s2['thWS'] == 'normal' and
           s2['thWrap'] in ('break-word','anywhere') and s2['thAlign'] == 'center',
@@ -240,16 +241,16 @@ with sync_playwright() as p:
                 tableW: w, drawerW: drawer.getBoundingClientRect().width,
                 petrov: pv, ivanov: iv};
     })""")
-    expected = ['Сотрудник','Явки','Часы','Переработка','Отгул (ОВ)','Больничный (Б)',
+    expected = ['Сотрудник','Явки (дни)','Часы','Переработка (дни)','Отгул (ОВ)','Больничный (Б)',
                 'Отпуск (ОТ)','Уч. отпуск (У)','Прогул (ПР)','День (Д)','Ночь (Н)','Прочие']
-    check('F: «Ещё» — 8 доп. столбцов в ПОРЯДКЕ ЗАЯВКИ (заявка)',
+    check('F: «Ещё» — 8 доп. столбцов в ПОРЯДКЕ ЗАЯВКИ (заявка; Task 331: подписи в днях)',
           s3['heads'] == expected, s3['heads'])
     check('F2: шеврон ON + aria-pressed (Task 329)',
           s3['chvOn'] and s3['chvAria'] == 'true')
-    # Task 329 (актуализация): шторка ПЕРЕШИРИВАЕТСЯ по столбцам
-    # (~514px на десктопе — без прокрутки при капе 60%)
-    check('F3: шторка переширотилась по 11 столбцам (Task 329)',
-          approx(s3['drawerW'], 36+38+56+42+64+50+52+50+38+38+50, 6), s3['drawerW'])
+    # Task 329 → 331 (актуализация): шторка ПЕРЕШИРИВАЕТСЯ по столбцам
+    # (~550px на десктопе — без прокрутки при капе 60%; 44/42/80)
+    check('F3: шторка переширотилась по 11 столбцам (Task 329/331)',
+          approx(s3['drawerW'], 44+42+80+42+64+50+52+50+38+38+50, 6), s3['drawerW'])
     # Иванов (Task 322/329): явки 2, часы 24, перераб 1 ДЕНЬ, день 1 (Д), ночь 1 (Н)
     check('F4: Иванов доп. — День 1, Ночь 1 (д — только переработка)',
           s3['ivanov'] == ['2','24','1','0','0','0','0','0','1','1','0'], s3['ivanov'])
@@ -270,6 +271,8 @@ with sync_playwright() as p:
         var cs = getComputedStyle(foot);
         var gridFoot = document.querySelector('.ws-grid-foot');
         var gcs = gridFoot ? getComputedStyle(gridFoot) : null;
+        var gfr = gridFoot ? gridFoot.getBoundingClientRect() : { bottom: -999 };
+        var hbar = document.getElementById('wsTtHbar');
         // зебра (фон — на TR, td прозрачны)
         var rows = document.querySelectorAll('#wsTtBody tbody tr');
         var b1 = getComputedStyle(rows[0]).backgroundColor;
@@ -278,17 +281,20 @@ with sync_playwright() as p:
         var gRows = document.querySelectorAll('#wsGridWrap tbody tr');
         var t1 = rows[0].getBoundingClientRect().top;
         var g1 = gRows[0] ? gRows[0].getBoundingClientRect().top : null;
-        return {h: fr.height, atBottom: Math.abs(fr.bottom - pr.bottom) <= 1.5,
+        return {h: fr.height, atBottom: Math.abs(fr.bottom - gfr.bottom) <= 1.5,
                 bg: cs.backgroundColor, bt: cs.borderTopColor, bb: cs.borderBottomColor,
                 gridBg: gcs ? gcs.backgroundColor : null,
                 gridBt: gcs ? gcs.borderTopColor : null,
+                hbarBelow: hbar ? (hbar.getBoundingClientRect().top >= fr.bottom - 1.5) : false,
+                hbarH: hbar ? hbar.getBoundingClientRect().height : 0,
                 zebra: b1 !== b2,
                 rowTop: t1, gridTop: g1, rowDelta: g1 !== null ? Math.abs(t1 - g1) : null};
     })""")
-    check('G: БОРДЮРЧИК внизу шторки — 5px, ТОТ ЖЕ стальной bevel (заявка)',
+    check('G: БОРДЮРЧИК внизу шторки — 5px, ТОТ ЖЕ стальной bevel (заявка; Task 331: уровень = бордюру сетки, ниже — зона ползунка 12px)',
           approx(s4['h'], 5, 0.6) and s4['atBottom'] and
-          s4['bg'] == s4['gridBg'] and s4['bt'] == s4['gridBt'],
-          (s4['h'], s4['bg'], s4['gridBg'], s4['bt'], s4['gridBt']))
+          s4['bg'] == s4['gridBg'] and s4['bt'] == s4['gridBt'] and
+          s4['hbarBelow'] and s4['hbarH'] > 0,
+          (s4['h'], s4['bg'], s4['gridBg'], s4['bt'], s4['gridBt'], s4['hbarBelow'], s4['hbarH']))
     check('G2: зебра строк сохранена', s4['zebra'])
     check('G3: строки итогов — по строкам сетки (±3px)',
           s4['rowDelta'] is not None and s4['rowDelta'] <= 3, s4['rowDelta'])
@@ -357,8 +363,8 @@ with sync_playwright() as p:
                 chvHidden: chv.hidden, drawerW: r.width};
     })""")
     check('K: мобайл — шторка ~86vw', approx(s7['drawerW'], 322.5, 30), s7['drawerW'])
-    check('K2: мобайл — колонка ФИО видна, основные столбцы',
-          s7['empVisible'] and s7['heads'] == ['Сотрудник','Явки','Часы','Переработка'], s7['heads'])
+    check('K2: мобайл — колонка ФИО видна, основные столбцы (Task 331: подписи в днях)',
+          s7['empVisible'] and s7['heads'] == ['Сотрудник','Явки (дни)','Часы','Переработка (дни)'], s7['heads'])
     check('K3: мобайл — шеврон доп. столбцов доступен (Task 329)', not s7['chvHidden'])
     page2.evaluate("WorkSchedule.toggleTotalsExtra()")
     page2.wait_for_timeout(300)

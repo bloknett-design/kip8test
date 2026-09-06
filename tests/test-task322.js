@@ -35,7 +35,7 @@
 //   Сервер: listEntries читает 11 колонок (часы: число/null/
 //   нормализация «7,2»); setManualEntry валидирует 0,5..24, пишет
 //   колонку K (обновление и вставка), часы=null без поля, аудит.
-//   SW: kipia-test-v569.
+//   SW: kipia-test-v570.
 //
 // Запуск: через tests/run-all.js (require './test-task322.js').
 
@@ -141,11 +141,12 @@ describe('Task 322 — CSS: оформление итогов и формы ча
             'прилипающий tfoot итоговой строки удалён (Task 327)');
         assertFalse(INDEX_SRC.indexOf('max-height: 46vh') !== -1,
             'прежний кап 46vh удалён');
-        // Task 329 (заявка): БОРТИК левого края — вертикальный bevel
+        // Task 331 (заявка): левый бордюрчик — ПОЛОСА 2px как
+        // разделитель сменных/дневных (#4a8fc7 / светлая #6e8ba4)
         const edge = INDEX_SRC.match(/\.ws-tt-edge\s*\{[^}]*\}/);
-        assertTrue(!!edge && /width:\s*5px/.test(edge[0]) &&
-            /left:\s*0/.test(edge[0]),
-            'декоративный бортик левого края (Task 329)');
+        assertTrue(!!edge && /width:\s*2px/.test(edge[0]) &&
+            /left:\s*0/.test(edge[0]) && /#4a8fc7/.test(edge[0]),
+            'полоса левого края 2px #4a8fc7 (Task 331)');
         // колонка «Сотрудник» на десктопе скрыта (месяц)
         assertTrue(/\.ws-tt-table:not\(\.ws-tt-year\) th\.ws-tt-emp[\s\S]*?display:\s*none/.test(INDEX_SRC),
             'список сотрудников в месяце скрыт — строки по строкам сетки');
@@ -945,10 +946,10 @@ describe('Task 322 — итоги: слова в шапке и колонка П
 // 11. SW: версия кэша
 // ============================================================
 describe('Task 322 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v569 (Task 322)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v569'") !== -1,
-            'CACHE_VERSION = kipia-test-v569');
-        assertFalse(SW_SRC.indexOf('kipia-test-v570') !== -1,
+    test('SW: кэш поднят до kipia-test-v570 (Task 322)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v570'") !== -1,
+            'CACHE_VERSION = kipia-test-v570');
+        assertFalse(SW_SRC.indexOf('kipia-test-v571') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });

@@ -256,7 +256,8 @@ with sync_playwright() as p:
         var btn = document.getElementById('wsTotalsBtn');
         return {open: !panel.hidden,
                 pressed: btn.getAttribute('aria-pressed'),
-                headEmpty: head.classList.contains('ws-tt-head-empty'),
+                headHidden: head.hidden,
+                headDisp: getComputedStyle(head).display,
                 headH: headRect.height,
                 dW: drawer.width, bW: body.width,
                 x: !!document.getElementById('wsTtClose')};
@@ -264,9 +265,9 @@ with sync_playwright() as p:
     check('G: шторка открыта кнопкой (aria-pressed), ✕ в шапке НЕТ',
           opened['open'] and opened['pressed'] == 'true' and
           opened['x'] == False)
-    check('H: МЕСЯЦ — шапка шторки ПУСТА → СЖАТА до 16px-филлера',
-          opened['headEmpty'] == True and
-          opened['headH'] >= 14 and opened['headH'] <= 19, opened)
+    check('H: МЕСЯЦ — шапка шторки ПУСТА → ПРЯЧЕТСЯ ЦЕЛИКОМ (Task 331: шапка столбцов = шапке сетки)',
+          opened['headHidden'] == True and opened['headDisp'] == 'none' and
+          opened['headH'] < 1, opened)
     check('I: шторка = половина рабочей области',
           abs(opened['dW'] - opened['bW'] / 2) < 4, opened)
 
@@ -419,10 +420,10 @@ with sync_playwright() as p:
         }
         var head = document.querySelector('#wsTotalsPanel .ws-tt-head');
         return {clipped: clipped,
-                headEmpty: head.classList.contains('ws-tt-head-empty')};
+                headHidden: head.hidden};
     })()""")
-    check('U: светлая — ФИО не обрезаны, шапка шторки сжата (месяц)',
-          emp2['clipped'] == 0 and emp2['headEmpty'] == True, emp2)
+    check('U: светлая — ФИО не обрезаны, шапка шторки ПРЯЧЕТСЯ (Task 331)',
+          emp2['clipped'] == 0 and emp2['headHidden'] == True, emp2)
     page2.screenshot(path='task325-proof-light.png', full_page=False)
     check('V: JS-ошибок нет (светлая)', len(js_errors2) == 0, js_errors2[:3])
     ctx2.close()
@@ -464,14 +465,14 @@ with sync_playwright() as p:
         var colW = tds.length ? tds[0].getBoundingClientRect().width : 0;
         return {open: !document.getElementById('wsTotalsPanel').hidden,
                 dW: drawer.width, dX: drawer.x,
-                headEmpty: head.classList.contains('ws-tt-head-empty'),
+                headHidden: head.hidden,
                 x: !!document.getElementById('wsTtClose'),
                 colW: colW, maxW: maxW, pad: pad,
                 rows: tds.length};
     })()""")
-    check('X: мобильная шторка открылась (~86vw), ✕ НЕТ, шапка сжата',
+    check('X: мобильная шторка открылась (~86vw), ✕ НЕТ, шапка ПРЯЧЕНА (Task 331)',
           mopen['open'] and mopen['dW'] < 560 and mopen['x'] == False and
-          mopen['headEmpty'] == True, mopen)
+          mopen['headHidden'] == True, mopen)
     check('Y: мобильная — колонка «Сотрудник» ПО ТЕКСТУ (без капа 150px)',
           mopen['rows'] >= 2 and
           abs(mopen['colW'] - (mopen['maxW'] + mopen['pad'])) < 4 and
