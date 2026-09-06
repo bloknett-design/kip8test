@@ -34,7 +34,7 @@
       "ID": 0,
       "Наименование": "Изменения в перечнях от",
       "Изображение": "",
-      "Тип": "46271.68296655093",
+      "Тип": "46271.75930763889",
       "Предел измерения": "",
       "№ прибора": "",
       "Место установки": "",
@@ -1385,7 +1385,7 @@
     {
       "ID": 52,
       "Наименование": "Расходомер-счетчик массовый",
-      "Изображение": "https://drive.google.com/file/d/1HS-WdWEKSpL0p7D9ItDkXHPsYhHdMYJt/view?usp=sharing",
+      "Изображение": "https://drive.google.com/file/d/1k0d9Gn8zlJ9fXkCn9Iaf3Loe8rdpiTM0/view?usp=sharing",
       "Тип": "Optimass 6400C S10",
       "Предел измерения": "0...1500 л/ч",
       "№ прибора": "G200000007201361",
@@ -1411,7 +1411,7 @@
     {
       "ID": 53,
       "Наименование": "Расходомер-счетчик массовый",
-      "Изображение": "https://drive.google.com/file/d/1HS-WdWEKSpL0p7D9ItDkXHPsYhHdMYJt/view?usp=sharing",
+      "Изображение": "https://drive.google.com/file/d/1k0d9Gn8zlJ9fXkCn9Iaf3Loe8rdpiTM0/view?usp=sharing",
       "Тип": "Optimass 7400",
       "Предел измерения": "0...500 л/ч",
       "№ прибора": "G170000002103130",
@@ -1437,7 +1437,7 @@
     {
       "ID": 54,
       "Наименование": "Расходомер-счетчик массовый",
-      "Изображение": "https://drive.google.com/file/d/1HS-WdWEKSpL0p7D9ItDkXHPsYhHdMYJt/view?usp=sharing",
+      "Изображение": "https://drive.google.com/file/d/1k0d9Gn8zlJ9fXkCn9Iaf3Loe8rdpiTM0/view?usp=sharing",
       "Тип": "Optimass 7400",
       "Предел измерения": "0...500 л/ч",
       "№ прибора": "G190000002103301",
@@ -2113,7 +2113,7 @@
     {
       "ID": 80,
       "Наименование": "Расходомер-счетчик электромагнитный",
-      "Изображение": "https://drive.google.com/file/d/161-2uRyRdA4sCRy2Ehm0BVMOLPaQZA1D/view?usp=sharing",
+      "Изображение": "https://drive.google.com/file/d/1XlqovmrTI0xj6Tkk40p03G7nhIEB-0pf/view?usp=sharing",
       "Тип": "QTLD",
       "Предел измерения": "0...10 м3/ч",
       "№ прибора": "25083153",
