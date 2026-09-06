@@ -357,8 +357,8 @@ with sync_playwright() as p:
           dark['status']['f'] == 'brightness(0.88)', dark['status'])
     check('K4: пустая выходная — #f7d9e3 (не #6e4250)',
           dark['weekend'] and dark['weekend']['bg'] == 'rgb(247, 217, 227)', dark['weekend'])
-    check('K5: шапка сетки — ТЁМНАЯ (заявка только про шахматку дней)',
-          dark['th'] and dark['th']['bg'] == 'rgb(14, 22, 33)', dark['th'])
+    check('K5: шапка сетки — ТЁМНАЯ сине-серая #1e293b (Task 330)',
+          dark['th'] and dark['th']['bg'] == 'rgb(30, 41, 59)', dark['th'])
     check('K6: ФИО-колонка — тёмная',
           dark['emp'] and dark['emp']['bg'] == 'rgb(14, 22, 33)', dark['emp'])
     check('K7: «·»/пустые — вторичный тёмный',
@@ -404,8 +404,8 @@ with sync_playwright() as p:
                 evWs: evName ? getComputedStyle(evName).whiteSpace : null,
                 evActive: evp ? evp.classList.contains('active') : false};
     })()""")
-    check('L: окно кодов открыто, названия — 12px (было 13px)',
-          names and all(n['fs'] == '12px' for n in names['names']) and len(names['names']) >= 4,
+    check('L: окно кодов открыто, названия — 10px (Task 330: маленький)',
+          names and all(n['fs'] == '10px' for n in names['names']) and len(names['names']) >= 4,
           names and [(n['text'], n['fs']) for n in names['names'][:3]])
     check('L2: названия ПЕРЕНОСЯТСЯ (white-space normal, break-word)',
           names and all(n['ws'] == 'normal' and n['ow'] == 'break-word' for n in names['names']),
@@ -458,8 +458,8 @@ with sync_playwright() as p:
           light['empty'] and light['empty']['bg'] == 'rgb(238, 240, 242)' and
           light['empty']['f'] == 'none' and
           light['weekend'] and light['weekend']['bg'] == 'rgb(247, 217, 227)', light)
-    check('N2: светлая — шапка СВЕТЛАЯ (тема не перепутана)',
-          light['th'] and light['th']['bg'] == 'rgba(240, 240, 240, 0.95)', light['th'])
+    check('N2: светлая — шапка СВЕТЛАЯ #bfcad5 (Task 330, тема не перепутана)',
+          light['th'] and light['th']['bg'] == 'rgb(191, 202, 213)', light['th'])
     # перекрестье в светлой — тон мягче
     xy = cell_xy(page2, '017', 5)
     page2.mouse.move(xy[0], xy[1])

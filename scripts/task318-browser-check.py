@@ -176,14 +176,14 @@ with sync_playwright() as p:
     h0 = page.evaluate(head_js)
     check('C: заголовок «Сотрудник +» есть (клик-кнопка, курсор-палец)',
           h0 is not None and h0['clickable'] == 'pointer', h0)
-    check('C2: фон ДО наведения — база шапки #0e1621',
-          h0 and h0['bg'] == 'rgb(14, 22, 33)', h0 and h0['bg'])
+    check('C2: фон ДО наведения — база шапки #1e293b (Task 330)',
+          h0 and h0['bg'] == 'rgb(30, 41, 59)', h0 and h0['bg'])
 
     page.hover('th.ws-emp-head-add')
     page.wait_for_timeout(250)
     h1 = page.evaluate(head_js)
-    check('D: hover — фон СПЛОШНОЙ #15202f (как ячейки ФИО под ней)',
-          h1 and h1['bg'] == 'rgb(21, 32, 47)', h1 and h1['bg'])
+    check('D: hover — фон СПЛОШНОЙ #2a3a4c (Task 330: светлее шапки)',
+          h1 and h1['bg'] == 'rgb(42, 58, 76)', h1 and h1['bg'])
     check('D2: фон НЕ прозрачный (rgb без альфы, не rgba)',
           h1 and h1['bg'].startswith('rgb(') and not h1['bg'].startswith('rgba'), h1 and h1['bg'])
     page.screenshot(path='scripts/task318-proof-hover.png', full_page=False)
@@ -193,7 +193,7 @@ with sync_playwright() as p:
     page.wait_for_timeout(250)
     h2 = page.evaluate(head_js)
     check('D3: уход курсора — фон вернулся к базе (цвет меняется только при hover)',
-          h2 and h2['bg'] == 'rgb(14, 22, 33)', h2 and h2['bg'])
+          h2 and h2['bg'] == 'rgb(30, 41, 59)', h2 and h2['bg'])
 
     # ---------- светлая тема ----------
     page.evaluate("document.documentElement.setAttribute('data-theme','light')")

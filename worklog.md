@@ -4017,3 +4017,47 @@ task330-update-prompt.py (промт post-330, счётчики 2010/48).
 партия 315–330 (k8 v417→v418; в партии серверная часть Task 318 —
 в Apps Script УЖЕ развёрнута, общий бэкенд, в репо kip8 файлы .gs
 синхронизировать). След. задача: 331.
+
+---
+
+## Task 315-330 — ПЕРЕНОС ПАРТИИ в боевой kip8 + kip8-desktop (закрытие)
+
+**Дата:** 2026-09-06
+**Заявка:** «Затем перенеси все последние изменения в боевой kip8 и
+kip8-desktop.»
+
+**Выполнено:**
+- kip8: патч index.html 3950 строк (diff 894afab..f9e1a3c, git apply
+  ЧИСТО; изоляционных строк в диффе 0 — kip8 БЕЗ isolateLocalStorage);
+  sw.js kipia-v417→v418 (один инкремент партии); СЕРВЕРНАЯ ЧАСТЬ
+  синхронизирована файлами (scripts/Code.gs +5, WorkSchedule.gs +336 —
+  Apps Script развёрнут РАНЕЕ в сессиях kip8test, бэкенд общий:
+  WEB_APP_URL kip8 == kip8test); tests/ — все 48 файлов с адаптацией
+  версий (v569→v418, v570→v419, ист. v5XX→v417); Тесты 1584→2010/0
+  (ПАРИТЕТ); node --check 4 блока OK.
+- Верификация браузером на РЕАЛЬНОМ kip8/index.html (13 скриптов,
+  420 проверок): 315=33/33, 316=28/28, 317=49/49, 318=45/45,
+  319=48/48, 320=24/24, 327=30/30, 328=36/36, 329=43/43, 330=27/27 +
+  регресс 312=31/31, 313=30/30, 314=36/36; 321-325 — устаревшие ДО
+  Task 329 (падают одинаково в kip8test и kip8 — superseded 327/329).
+- Скрипты task318/319-browser-check АКТУАЛИЗИРОВАНы под Task 330
+  (шапка #1e293b/#bfcad5, hover #2a3a4c, описания 10px) — в kip8test
+  и kip8 (45/45 и 48/48 в обоих репо).
+- Коммит kip8@2c52f27 (ребейз поверх авто-коммитов данных 2586315),
+  пуш с PAT (remote сброшен); CI Tests / Pages / Sync-to-desktop —
+  success; живой https://bloknett-design.github.io/kip8/ = kipia-v418,
+  все фичи партии в живом index.html (wsTtChv, wsCrossBtn,
+  wsGenerateTip, kip8_ws_cache_v1, dismissEmployee, #1e293b/#bfcad5,
+  10px — проверено).
+- kip8-desktop: автосинк сработал САМ — 23b8635 «auto: sync content
+  from kip8@2c52f27» (sw.js kipia-v418, index.html 44175 строк,
+  фичи на месте; CI success). kip8test-desktop: автосинк bb48d19
+  «auto: sync index.html from kip8test@f9e1a3c» (Task 330; CI
+  success).
+- Доки kip8: DEPLOY-Task315-330-batch-transfer.md,
+  task315-330-transfer-update-prompt.py (промт post-партия: v418,
+  тесты 2010/48, ~44.2 тыс. строк, партия 298-330), worklog-запись.
+
+**Пользователю:** Ctrl+Shift+R ×1–2 на kip8 (SW kipia-v418) и на
+kip8test (SW kipia-test-v569). Apps Script/листы НЕ трогать (серверная
+часть партии развёрнута ранее). Следующий номер задачи: 331.
