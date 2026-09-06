@@ -30,7 +30,7 @@
 //   _attachTotalsSync — на МОБАЙЛЕ клик/тап МИМО шторки закрывает
 //   её (✕ удалён): слушатель document click, только <1024px,
 //   клики по #wsTotalsDrawer/#wsTotalsRow не закрывают.
-//   SW: kipia-test-v571.
+//   SW: kipia-test-v572.
 //
 // Запуск: через tests/run-all.js (require './test-task325.js').
 
@@ -109,8 +109,10 @@ describe('Task 325 — HTML: три ряда кнопок и шапка без �
         // Task 328: перед «Сформировать» стоит кнопка-иконка
         // перекрестья #wsCrossBtn (заявка) — окно поиска расширено.
         // Task 332: САМАЯ ЛЕВАЯ — ещё и кнопка вида #wsViewBtn
-        // (3 svg-иконки + крупный комментарий) — окно расширено снова
-        const chunk = ws.slice(iAct - 80, iAct + 4600);
+        // (3 svg-иконки + крупный комментарий) — окно расширено снова.
+        // Task 333: у кнопки вида ПОДПИСЬ «Вид» (span + комментарий) —
+        // окно расширено ещё раз (4600 → 5000)
+        const chunk = ws.slice(iAct - 80, iAct + 5000);
         const iGen = chunk.indexOf('id="wsGenerateBtn"');
         const iSave = chunk.indexOf('id="wsSaveBtn"');
         const iCancel = chunk.indexOf('id="wsCancelBtn"');
@@ -450,10 +452,10 @@ describe('Task 325 — VM: мобильное закрытие тапом мим
 // ============================================================
 describe('Task 325 — SW', () => {
 
-    test('SW: версия кэша kipia-test-v571 (Task 325)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v571'") !== -1,
-            'CACHE_VERSION = kipia-test-v571');
-        assertFalse(SW_SRC.indexOf('kipia-test-v572') !== -1,
+    test('SW: версия кэша kipia-test-v572 (Task 325)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v572'") !== -1,
+            'CACHE_VERSION = kipia-test-v572');
+        assertFalse(SW_SRC.indexOf('kipia-test-v573') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });

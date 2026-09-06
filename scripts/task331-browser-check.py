@@ -263,10 +263,12 @@ with sync_playwright() as p:
                 gfb: document.getElementById('wsGridFoot').getBoundingClientRect().bottom,
                 tfb: document.querySelector('#wsTotalsPanel .ws-tt-foot').getBoundingClientRect().bottom};
     })""")
-    check('L: ГОД: шапка шторки ВИДНА («Обновить»), 32px',
-          s3['ttHeadDisp'] == 'flex' and approx(s3['ttHeadH'], 32, 1.5), (s3['ttHeadDisp'], s3['ttHeadH']))
+    # Task 332 (заявка): кнопки «Обновить» шапки больше нет; ⚠ скрыт —
+    # шапка ПРЯЧЕТСЯ ЦЕЛИКОМ (Task 331), высота головной зоны года = 0
+    check('L: ГОД: шапки шторки НЕТ (кнопка «Обновить» удалена, ⚠ скрыт)',
+          s3['ttHeadDisp'] == 'none' and approx(s3['ttHeadH'], 0, 1.5), (s3['ttHeadDisp'], s3['ttHeadH']))
     check('L2: ГОД: годовая колонка «Перераб. (дни)»', s3['over'] == 'Перераб. (дни)', s3['over'])
-    check('L3: ГОД: шапка сетки = шапка шторки(32)+thead(38) (строки ровно)',
+    check('L3: ГОД: шапка сетки = голова(0)+thead(38) (строки ровно, Task 332: без «Обновить»)',
           approx(s3['gthead']['height'], s3['ttHeadH'] + s3['tthead']['height'], 1.5),
           (s3['gthead']['height'], s3['ttHeadH'], s3['tthead']['height']))
     check('L4: ГОД: бордюры на одном уровне',
@@ -338,8 +340,12 @@ with sync_playwright() as p:
                 tw: t.style.width, r: thb.getBoundingClientRect().toJSON(),
                 footB: document.querySelector('#wsTotalsPanel .ws-tt-foot').getBoundingClientRect().bottom};
     })""")
-    check('Q: ГОД@1024: ползунок ШТОРКИ ПОД бордюром включён',
-          s7['on'] and s7['sw'] > s7['cw'] + 1
+    # Task 332/333: годовая таблица УЖЕ без «Сотрудника» на десктопе и
+    # влезает в ширину шторки (архива в этом моке нет) — ползунок НЕ
+    # включён (заявка Task 331: «без переполнения зона ПУСТАЯ»), но зона
+    # 12px ПОД бордюром зарезервирована всегда
+    check('Q: ГОД@1024: таблица влезает — ползунок ПУСТ, зона 12px ПОД бордюром',
+          (not s7['on']) and s7['sw'] <= s7['cw'] + 1
           and approx(s7['r']['height'], 12, 0.6)
           and s7['r']['top'] >= s7['footB'] - 1, s7)
     if s7['on']:

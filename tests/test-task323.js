@@ -36,7 +36,7 @@
 //   clientHeight (ползунок), syncTT в конце; рендеры: tfoot
 //   «Итого», БЕЗ .ws-tt-scroll, ws-tt-year (год), год: активные
 //   по порядку сетки + архив ниже; инфо в title.
-//   SW: kipia-test-v571.
+//   SW: kipia-test-v572.
 //
 // Запуск: через tests/run-all.js (require './test-task323.js').
 
@@ -715,7 +715,7 @@ describe('Task 323 — VM: структура таблиц итогов', () => 
         assertTrue(h.indexOf('</tbody></table>') !== -1, 'год: таблица закрывается после tbody');
     });
 
-    test('год: строки — только АКТИВНЫЕ по порядку сетки, архива НЕТ (Task 323 → 332)', () => {
+    test('год: активные — строками сетки, АРХИВ — блоком ниже (Task 323 → 332 → 333)', () => {
         const els = { wsTtBody: { innerHTML: '', querySelector: function() { return null; } },
                       wsTtWarn: { textContent: '', hidden: true, attrs: {},
                                   setAttribute: function(k, v) { this.attrs[k] = v; } } };
@@ -737,17 +737,22 @@ describe('Task 323 — VM: структура таблиц итогов', () => 
                 _STATUS_CODES: [], _YEAR_DATA: md }, RENDER_STUBS), mockDoc(els));
         host._renderTotalsYearTable();
         const h = els.wsTtBody.innerHTML;
-        // Task 332 (заявка: «убери столбец сотрудников»): строки года =
-        // строки сетки (только активные), колонки «Сотрудник» и
-        // архивные строки УДАЛЕНЫ — имена в стик-колонке ФИО шахматки
-        assertEqual((h.match(/<tr>/g) || []).length, 2,
-            'шапка + одна строка активного Петрова (без хвоста архива)');
-        assertFalse(h.indexOf('ws-tt-emp') !== -1,
-            'колонки «Сотрудник» нет (Task 332)');
-        assertFalse(h.indexOf('Сидоров С.С.') !== -1,
-            'архивный Сидоров не рендерится (Task 332)');
-        assertFalse(h.indexOf('архив') !== -1,
-            'бейджа «архив» нет (Task 332)');
+        // Task 333 (заявка: «Архив в годовой таблице всё же нужен»):
+        // активный Петров — в ГЛАВНОЙ таблице (строки года = строки
+        // сетки, колонка «Сотрудник» — мобайл, десктоп — стик-ФИО
+        // сетки, CSS .ws-tt-year:not(.ws-tt-arch)); архивный Сидоров
+        // — ОТДЕЛЬНЫМ БЛОКОМ «Архив» (.ws-tt-arch — своя колонка
+        // «Сотрудник» на любом экране, в сетке архивных строк нет)
+        assertEqual((h.match(/<tr>/g) || []).length, 4,
+            '4 <tr>: шапка+Петров (главная) + шапка+Сидоров (архив)');
+        assertTrue(h.indexOf('ws-tt-arch-cap') !== -1 && h.indexOf('>Архив</div>') !== -1,
+            'подпись «Архив» под таблицей (Task 333)');
+        assertTrue(h.indexOf('ws-tt-year ws-tt-arch') !== -1,
+            'таблица архива — класс ws-tt-arch (Task 333)');
+        assertTrue(h.indexOf('Сидоров С.С.') !== -1,
+            'архивный Сидоров — в блоке архива (Task 333)');
+        assertTrue(h.indexOf('Петров П.П.') !== -1,
+            'активный Петров — строка главной таблицы (Task 333)');
     });
 });
 
@@ -790,10 +795,10 @@ describe('Task 323 — интеграция', () => {
 // 10. SW: версия кэша
 // ============================================================
 describe('Task 323 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v571 (Task 323)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v571'") !== -1,
-            'CACHE_VERSION = kipia-test-v571');
-        assertFalse(SW_SRC.indexOf('kipia-test-v572') !== -1,
+    test('SW: кэш поднят до kipia-test-v572 (Task 323)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v572'") !== -1,
+            'CACHE_VERSION = kipia-test-v572');
+        assertFalse(SW_SRC.indexOf('kipia-test-v573') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });

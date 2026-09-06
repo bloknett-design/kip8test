@@ -174,12 +174,12 @@ with sync_playwright() as p:
     })""")
     check('C: #wsViewBtn в ряду 3, САМАЯ ЛЕВАЯ (левее подсветки)',
           s1['inRow'] and s1['first'] and s1['r']['x'] < s1['crossX'], s1)
-    # десктоп: бар ≥1024 — кнопки во всю высоту ряда (~29,7px), иконки 34px
-    # (медиа-правило .ws-cross-btn в баре); сверяем с РЕАЛЬНЫМ значком
-    # подсветки — кнопка вида должна ему СООТВЕТСТВОВАТЬ (заявка)
+    # десктоп: бар ≥1024 — кнопки во всю высоту ряда (~29,7px); Task 333:
+    # у кнопки вида ПОДПИСЬ «Вид» — она ШИРЕ иконки-подсветки (34px),
+    # высота — та же (ряд)
     s1c = page.evaluate("(function(){ var c=document.getElementById('wsCrossBtn').getBoundingClientRect(); var v=document.getElementById('wsViewBtn').getBoundingClientRect(); return {cw:c.width, ch:c.height, vw:v.width, vh:v.height}; })()")
-    check('C2: размер = значку подсветки (34×высота ряда)',
-          approx(s1c['vw'], s1c['cw'], 1) and approx(s1c['vh'], s1c['ch'], 1), s1c)
+    check('C2: кнопка вида — ШИРЕ значка (подпись «Вид»), высота ряда та же',
+          s1c['vw'] > s1c['cw'] + 20 and approx(s1c['vh'], s1c['ch'], 1), s1c)
     check('C3: НЕТ нативного title (подсказка — информационное окно)', not s1['title'])
     check('C4: полный вид: видна иконка Full, Shift/Day скрыты',
           s1['vis']['full'] and not s1['vis']['shift'] and not s1['vis']['day'], s1['vis'])
@@ -279,31 +279,40 @@ with sync_playwright() as p:
           grid_rows(page) == 12 and page.evaluate("!document.getElementById('wsTotalsBtn').hidden"))
 
     # ---- РАЗДЕЛИТЕЛЬНАЯ ПОЛОСА столбец ФИО | ячейки ----
+    # Task 333: полоса — ПСЕВДОЭЛЕМЕНТ ::after sticky-ячеек (right: 0,
+    # 2px, #4a8fc7) — БОРДЮР border-right 2px УДАЛЁН (в border-collapse
+    # границы sticky-ячеек уезжали при прокрутке — пробы Chromium/Firefox)
     s6 = page.evaluate("""(function(){
         var th = document.querySelector('#wsGridWrap table thead th.ws-emp-col');
         var td = document.querySelector('#wsGridWrap table tbody td.ws-emp-col');
         var sep = document.querySelector('#wsGridWrap table tbody tr.ws-group-first td');
-        var cs = function(el){ var c = getComputedStyle(el); return {w: c.borderRightWidth, s: c.borderRightStyle, col: c.borderRightColor}; };
-        return { th: cs(th), td: cs(td), groupTop: sep ? getComputedStyle(sep).borderTopColor : null };
+        var thA = getComputedStyle(th, '::after');
+        var tdA = getComputedStyle(td, '::after');
+        var cs = function(a){ return {w: a.width, pos: a.position, right: a.right,
+                                      bg: a.backgroundColor, content: a.content}; };
+        return { th: cs(thA), td: cs(tdA), thBorder: getComputedStyle(th).borderRightWidth,
+                 groupTop: sep ? getComputedStyle(sep).borderTopColor : null };
     })""")
-    check('I: полоса у столбца ФИО — 2px solid (шапка)',
-          s6['th']['w'] == '2px' and s6['th']['s'] == 'solid', s6['th'])
+    check('I: полоса у столбца ФИО — ::after 2px absolute (шапка)',
+          s6['th']['w'] == '2px' and s6['th']['pos'] == 'absolute' and s6['th']['content'] != 'none', s6['th'])
     check('I2: цвет полосы = #4a8fc7 (как разделитель сменных/дневных)',
-          s6['td']['col'] == 'rgb(74, 143, 199)' and s6['groupTop'] == 'rgb(74, 143, 199)', (s6['td'], s6['groupTop']))
-    check('I3: полоса в теле — 2px solid', s6['td']['w'] == '2px' and s6['td']['s'] == 'solid', s6['td'])
+          s6['td']['bg'] == 'rgb(74, 143, 199)' and s6['groupTop'] == 'rgb(74, 143, 199)', (s6['td'], s6['groupTop']))
+    check('I3: полоса в теле — ::after 2px (бордюра-2px больше НЕТ)',
+          s6['td']['w'] == '2px' and s6['thBorder'] != '2px', (s6['td'], s6['thBorder']))
 
-    # полоса остаётся при горизонтальной прокрутке (sticky)
+    # полоса остаётся при горизонтальной прокрутке (sticky + ::after)
     page.evaluate("document.getElementById('wsGridWrap').scrollLeft = 400")
     page.wait_for_timeout(200)
     s6b = page.evaluate("""(function(){
         var td = document.querySelector('#wsGridWrap table tbody td.ws-emp-col');
         var r = td.getBoundingClientRect();
         var wrap = document.getElementById('wsGridWrap').getBoundingClientRect();
-        return { color: getComputedStyle(td).borderRightColor, w: getComputedStyle(td).borderRightWidth,
+        var a = getComputedStyle(td, '::after');
+        return { bg: a.backgroundColor, w: a.width,
                  inside: r.left >= wrap.left - 1 && r.right <= wrap.right + 2 };
     })""")
-    check('I4: после прокрутки полоса на месте (sticky-колонка не уехала)',
-          s6b['color'] == 'rgb(74, 143, 199)' and s6b['w'] == '2px' and s6b['inside'], s6b)
+    check('I4: после прокрутки полоса на месте (::after sticky-ячейки)',
+          s6b['bg'] == 'rgb(74, 143, 199)' and s6b['w'] == '2px' and s6b['inside'], s6b)
     page.evaluate("document.getElementById('wsGridWrap').scrollLeft = 0")
 
     # ---- ШТОРКА: ГОД — без «Обновить» и без столбца сотрудников ----
@@ -316,22 +325,33 @@ with sync_playwright() as p:
         var ths = tt ? tt.querySelectorAll('thead th') : [];
         var heads = [];
         for (var i=0;i<ths.length;i++) heads.push(ths[i].textContent.trim());
+        var empTh = tt ? tt.querySelector('thead th.ws-tt-emp') : null;
+        var arch = document.querySelector('#wsTtBody table.ws-tt-arch');
+        var cap = document.querySelector('#wsTtBody .ws-tt-arch-cap');
         return { refreshInDom: !!refresh,
                  warnHidden: document.getElementById('wsTtWarn').hidden,
                  headHidden: head.hidden,
                  heads: heads,
+                 empThDisp: empTh ? getComputedStyle(empTh).display : null,
                  rows: tt ? tt.querySelectorAll('tbody tr').length : 0,
-                 arch: tt ? tt.innerHTML.indexOf('Архивный') : -1,
-                 empCol: tt ? tt.innerHTML.indexOf('ws-tt-emp') : -1,
+                 arch: !!arch,
+                 archRows: arch ? arch.querySelectorAll('tbody tr').length : 0,
+                 archHas: arch ? arch.innerHTML.indexOf('Архивный') : -1,
+                 capTxt: cap ? cap.textContent : null,
                  petrov: tt ? tt.innerHTML.indexOf('Петров') : -1 };
     })""")
     check('J: года: кнопки «Обновить» НЕТ в DOM', not s7['refreshInDom'])
     check('J2: года: шапка шторки спрятана (только ⚠, он скрыт)',
           s7['warnHidden'] and s7['headHidden'])
-    check('J3: года: шапка начинается с месяцев (янв), столбца «Сотрудник» НЕТ',
-          s7['heads'][0] == 'янв' and 'Сотрудник' not in s7['heads'] and s7['empCol'] == -1, s7['heads'])
-    check('J4: года: строк = активным сетки (12), архива НЕТ',
-          s7['rows'] == 12 and s7['arch'] == -1, (s7['rows'], s7['arch']))
+    # Task 333: колонка «Сотрудник» СНОВА в DOM главной таблицы (мобайл),
+    # на ДЕСКТОПЕ скрыта CSS (.ws-tt-year:not(.ws-tt-arch)); архив — блоком
+    check('J3: года: «Сотрудник» в DOM (мобайл), на десктопе СКРЫТ; месяцы следом',
+          s7['heads'][0] == 'Сотрудник' and s7['heads'][1] == 'янв' and
+          s7['empThDisp'] == 'none', (s7['heads'][:2], s7['empThDisp']))
+    check('J4: года: строк главной = активным сетки (12), архив — БЛОКОМ ниже',
+          s7['rows'] == 12 and s7['arch'] and s7['archRows'] == 1 and
+          s7['archHas'] != -1 and s7['capTxt'] == 'Архив',
+          (s7['rows'], s7['archRows'], s7['archHas'], s7['capTxt']))
     check('J5: года: годовые суммы (Дней/Часов/Перераб. (дни)) в конце',
           s7['heads'][-1] == 'Перераб. (дни)' and s7['heads'][-2] == 'Часов' and s7['heads'][-3] == 'Дней', s7['heads'][-3:])
     page.screenshot(path='task332-proof-year.png')
@@ -344,8 +364,9 @@ with sync_playwright() as p:
         return { rows: document.querySelectorAll('#wsTtBody table.ws-tt-year tbody tr').length,
                  ts: WorkSchedule._YEAR_DATA ? WorkSchedule._YEAR_DATA.ts : null };
     })""")
+    # Task 333: 12 активных + 1 архивная строка (блок «Архив», мок 900)
     check('K: «Обновить» тулбара перезагрузил год (кэш свежий, таблица жива)',
-          s8['ts'] is not None and s8['ts'] >= ts0 and s8['rows'] == 12, (ts0, s8))
+          s8['ts'] is not None and s8['ts'] >= ts0 and s8['rows'] == 13, (ts0, s8))
     page.screenshot(path='task332-proof-desktop.png')
     check('L: 0 JS-ошибок (десктоп)', len(js_errors) == 0, js_errors[:3])
     ctx.close()
@@ -398,13 +419,14 @@ with sync_playwright() as p:
         var th = document.querySelector('#wsGridWrap table thead th.ws-emp-col');
         var sep = document.querySelector('#wsGridWrap table tbody tr.ws-group-first td');
         var tip = document.getElementById('wsCrossTip');
+        // Task 333: полоса — ::after (НЕ border-right)
         return { light: document.documentElement.getAttribute('data-theme') === 'light',
-                 td: getComputedStyle(td).borderRightColor, w: getComputedStyle(td).borderRightWidth,
-                 th: getComputedStyle(th).borderRightColor, group: getComputedStyle(sep).borderTopColor,
+                 td: getComputedStyle(td, '::after').backgroundColor, w: getComputedStyle(td, '::after').width,
+                 th: getComputedStyle(th, '::after').backgroundColor, group: getComputedStyle(sep).borderTopColor,
                  tipBg: getComputedStyle(tip).backgroundColor,
                  tipDate: getComputedStyle(tip.querySelector('.ws-rt-date')).color };
     })""")
-    check('P: светлая: полоса #6e8ba4 (шапка и тело, = разделителю групп)',
+    check('P: светлая: полоса ::after #6e8ba4 (шапка и тело, = разделителю групп)',
           s11['td'] == 'rgb(110, 139, 164)' and s11['th'] == 'rgb(110, 139, 164)' and s11['group'] == 'rgb(110, 139, 164)' and s11['w'] == '2px', s11)
     page3.hover('#wsViewBtn')
     page3.wait_for_timeout(300)
@@ -422,13 +444,16 @@ with sync_playwright() as p:
     s12 = page4.evaluate("""(function(){
         var view = document.getElementById('wsViewBtn');
         var cross = document.getElementById('wsCrossBtn');
+        var label = view ? view.querySelector('.ws-view-label') : null;
         return { rows: document.querySelectorAll('#wsGridWrap table tbody tr').length,
                  viewW: view.getBoundingClientRect().width,
                  crossW: cross.getBoundingClientRect().width,
+                 label: label ? label.textContent : null,
                  aria: view.getAttribute('aria-label') };
     })""")
-    check('R: мобайл: кнопка вида в ряду 3 (34px, как подсветка)',
-          approx(s12['viewW'], 34, 2) and approx(s12['crossW'], 34, 2), (s12['viewW'], s12['crossW']))
+    # Task 333: подпись «Вид» — кнопка ШИРЕ иконки-подсветки (не 34px-квадрат)
+    check('R: мобайл: кнопка вида с ПОДПИСЬЮ «Вид» (шире иконки)',
+          s12['label'] == 'Вид' and s12['viewW'] > s12['crossW'] + 20, (s12['label'], s12['viewW'], s12['crossW']))
     page4.click('#wsViewBtn')
     page4.wait_for_timeout(500)
     s13 = page4.evaluate("""(function(){

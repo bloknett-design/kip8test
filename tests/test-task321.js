@@ -1007,17 +1007,24 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
         assertTrue(h.indexOf('1/12') !== -1, 'январь Иванова: 1/12');
         assertTrue(h.indexOf('1/12') !== -1 && h.indexOf('—') !== -1,
             'пустые месяцы — прочерк');
-        // Task 332 (заявка: «убери столбец сотрудников»): колонки
-        // «Сотрудник» и архивные строки в таблице года УДАЛЕНЫ —
-        // строки года = строки сетки (имена — в колонке ФИО шахматки)
-        assertFalse(h.indexOf('ws-tt-emp') !== -1,
-            'колонки «Сотрудник» нет (Task 332)');
-        assertFalse(h.indexOf('Иванов И.И.') !== -1,
-            'имён в таблице года нет (Task 332)');
-        assertFalse(h.indexOf('Сидоров С.С.') !== -1 && h.indexOf('архив') !== -1,
-            'архивный сотрудник не рендерится (Task 332)');
-        assertEqual((h.match(/<tr>/g) || []).length, 2,
-            'шапка + одна строка — активный Иванов (Task 332: без хвоста архива)');
+        // Task 333 (заявка: «Архив в годовой таблице всё же нужен»):
+        // ГЛАВНАЯ таблица — снова с колонкой «Сотрудник» (мобайл;
+        // десктоп CSS прячет .ws-tt-year:not(.ws-tt-arch)), активный
+        // Иванов — строкой сетки; АРХИВ — ОТДЕЛЬНЫМ БЛОКОМ ПОД
+        // таблицей: подпись .ws-tt-arch-cap + таблица .ws-tt-arch
+        // (Сидоров, своя колонка «Сотрудник» на любом экране)
+        assertTrue(h.indexOf('<th class="ws-tt-emp">Сотрудник</th>') !== -1,
+            'главная таблица: шапка с «Сотрудником» (Task 333, мобайл)');
+        assertTrue(h.indexOf('Иванов И.И.') !== -1,
+            'активный Иванов — строка главной таблицы (Task 333)');
+        assertTrue(h.indexOf('ws-tt-arch-cap') !== -1 && h.indexOf('>Архив</div>') !== -1,
+            'подпись «Архив» под таблицей (Task 333)');
+        assertTrue(h.indexOf('ws-tt-year ws-tt-arch') !== -1,
+            'таблица архива — класс ws-tt-arch (Task 333)');
+        assertTrue(h.indexOf('Сидоров С.С.') !== -1,
+            'архивный Сидоров — в блоке архива (Task 333)');
+        assertEqual((h.match(/<tr>/g) || []).length, 4,
+            '4 <tr>: шапка+Иванов (главная) + шапка+Сидоров (архив)');
         assertTrue(h.indexOf('<th>Дней</th>') !== -1 && h.indexOf('<th>Часов</th>') !== -1,
             'годовые суммы: колонки Дней/Часов');
         assertTrue(h.indexOf('<th title="дни переработки за год — коды д/н">Перераб. (дни)</th>') !== -1,
@@ -1079,10 +1086,10 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
 // 11. SW: версия кэша
 // ============================================================
 describe('Task 321 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v571 (Task 323)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v571'") !== -1,
-            'CACHE_VERSION = kipia-test-v571');
-        assertFalse(SW_SRC.indexOf('kipia-test-v572') !== -1,
+    test('SW: кэш поднят до kipia-test-v572 (Task 323)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v572'") !== -1,
+            'CACHE_VERSION = kipia-test-v572');
+        assertFalse(SW_SRC.indexOf('kipia-test-v573') !== -1,
             'v561 не существует (один инкремент на Task 321)');
     });
 });

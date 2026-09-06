@@ -31,7 +31,7 @@
 //     _renderTotalsYearTable — НЕТ tfoot; _fitGrid — бюджет без
 //     резерва итоговой строки; toggleTotals/setTotalsTab зовут новые
 //     методы.
-//   SW: kipia-test-v571.
+//   SW: kipia-test-v572.
 //
 // Запуск: через tests/run-all.js (require './test-task327.js').
 
@@ -421,7 +421,9 @@ describe('Task 327 — VM: таблица месяца', () => {
         assertTrue(h.indexOf('>24</td>') !== -1, 'часы Иванова 12+12');
         assertTrue(h.indexOf('>8</td>') !== -1, 'часы Петрова 8');
         const body = h.match(/<tbody>[\s\S]*?<\/tbody>/);
-        const rows = body ? (body[0].match(/<tr>/g) || []).length : 0;
+        // Task 333: строки могут нести классы (ws-group-first/
+        // ws-hover-row) — считаем <tr> и <tr class=…>
+        const rows = body ? (body[0].match(/<tr[ >]/g) || []).length : 0;
         assertEqual(rows, 2, 'ровно 2 строки сотрудников в tbody (без Итого)');
     });
 
@@ -455,10 +457,10 @@ describe('Task 327 — VM: таблица месяца', () => {
 // 5. Service Worker
 // ============================================================
 describe('Task 327 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v571', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v571'") !== -1,
-            'CACHE_VERSION = kipia-test-v571 (Task 327 — только фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v572') !== -1,
+    test('SW: версия кэша kipia-test-v572', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v572'") !== -1,
+            'CACHE_VERSION = kipia-test-v572 (Task 327 — только фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v573') !== -1,
             'лишний инкремент не делался');
     });
 });
