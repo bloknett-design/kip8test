@@ -213,8 +213,12 @@ describe('Task 321 — HTML: боковая шторка итогов справ
         assertFalse(chunk.indexOf('ws-tt-close') !== -1,
             'класс ✕ удалён');
         assertTrue(chunk.indexOf('id="wsTtWarn"') !== -1, 'аварийная строка ⚠');
-        assertTrue(chunk.indexOf('id="wsTtRefresh"') !== -1, 'кнопка Обновить');
-        assertTrue(chunk.indexOf('WorkSchedule.reloadTotals()') !== -1, 'клик Обновить');
+        // Task 332 (заявка): кнопка «Обновить» из шапки УДАЛЕНА —
+        // годовые данные обновляет кнопка «Обновить» тулбара
+        assertFalse(chunk.indexOf('id="wsTtRefresh"') !== -1,
+            'кнопка «Обновить» шапки удалена (Task 332)');
+        assertFalse(chunk.indexOf('WorkSchedule.reloadTotals()') !== -1,
+            'клик-обработчик удалён (Task 332)');
         assertTrue(chunk.indexOf('id="wsTtBody"') !== -1, 'тело таблиц');
         // Task 327 → 329 (заявка): кнопка «Ещё» из шапки УДАЛЕНА —
         // функционал на значке-ШЕВРОНЕ левого края (#wsTtChv)
@@ -344,8 +348,10 @@ describe('Task 321 — CSS: итоги в тёмной и светлой тем�
             'активная вкладка зелёная (как заголовок мероприятий)');
         assertTrue(/\[data-theme="light"\]\s*\.ws-tt-tab\.active\s*\{[^}]*#1d7a37/.test(INDEX_SRC),
             'светлая тема вкладки');
-        assertTrue(/\.ws-tt-refresh\s*\{[^}]*rgba\(74,\s*143,\s*199/.test(INDEX_SRC),
-            'кнопка «Обновить» в фирменном тинте');
+        // Task 332 (заявка): кнопка «Обновить» шапки удалена —
+        // CSS-правил .ws-tt-refresh больше нет
+        assertFalse(/\.ws-tt-refresh\s*\{/.test(INDEX_SRC),
+            'CSS кнопки «Обновить» удалён (Task 332)');
     });
 
     test('CSS: светлая тема панели и кнопки итогов (Task 324)', () => {
@@ -651,19 +657,27 @@ describe('Task 321 — панель: переключатели', () => {
         assertEqual(t.host._totalsTab, 'month', 'возврат на месяц');
     });
 
-    test('setTotalsTab: «Обновить» — только у года (hidden)', () => {
-        const refreshBtn = { hidden: false };
+    test('setTotalsTab: «Обновить» из шапки УДАЛЁН (Task 332), вкладки живут', () => {
+        // Task 332 (заявка): кнопка «Обновить» шапки шторки удалена —
+        // годовые данные обновляет кнопка «Обновить» тулбара
+        // (loadGrid(true) сбрасывает _YEAR_DATA, Task 321);
+        // setTotalsTab больше НЕ управляет никакой кнопкой обновления
+        assertFalse(INDEX_SRC.indexOf('id="wsTtRefresh"') !== -1,
+            'кнопки #wsTtRefresh нет в HTML');
+        const methodSrc = methodText(WS_CLIENT, 'setTotalsTab');
+        assertFalse(methodSrc.indexOf('wsTtRefresh') !== -1,
+            'setTotalsTab не читает wsTtRefresh (Task 332)');
+        const monthTab = { hidden: false, classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } };
+        const yearTab = { hidden: false, classList: { state: {}, toggle: function(c, o) { this.state[c] = o; } } };
         const host = wsHost(['setTotalsTab', '_updateTtTabsVisible', '_updateTtChv'],
             { _totalsTab: 'month', _totalsOpen: true, _totalsExtra: false },
-            mockDoc({ wsTtTabMonth: { classList: { state: {}, toggle: function() {} } },
-                      wsTtTabYear: { classList: { state: {}, toggle: function() {} } },
-                      wsTtChv: { hidden: false, attrs: {}, setAttribute: function(k, v) { this.attrs[k] = v; }, classList: { state: {}, toggle: function() {} } },
-                      wsTtRefresh: refreshBtn }));
+            mockDoc({ wsTtTabMonth: monthTab, wsTtTabYear: yearTab,
+                      wsTtChv: { hidden: false, attrs: {}, setAttribute: function(k, v) { this.attrs[k] = v; }, classList: { state: {}, toggle: function() {} } } }));
         host._renderTotals = function() {};
-        host.setTotalsTab('month');
-        assertEqual(refreshBtn.hidden, true, 'на месяце кнопка скрыта');
         host.setTotalsTab('year');
-        assertEqual(refreshBtn.hidden, false, 'на годе кнопка видна');
+        assertEqual(host._totalsTab, 'year', 'вкладка года активна');
+        assertEqual(yearTab.classList.state.active, true, 'год — active');
+        assertEqual(monthTab.classList.state.active, false, 'месяц — не active');
     });
 
     test('reloadTotals: годовой кэш сбрасывается, перерисовка', () => {
@@ -993,9 +1007,17 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
         assertTrue(h.indexOf('1/12') !== -1, 'январь Иванова: 1/12');
         assertTrue(h.indexOf('1/12') !== -1 && h.indexOf('—') !== -1,
             'пустые месяцы — прочерк');
-        assertTrue(h.indexOf('Иванов И.И.') !== -1, 'активный сотрудник');
-        assertTrue(h.indexOf('Сидоров С.С.') !== -1 && h.indexOf('архив') !== -1,
-            'архивный сотрудник с пометкой');
+        // Task 332 (заявка: «убери столбец сотрудников»): колонки
+        // «Сотрудник» и архивные строки в таблице года УДАЛЕНЫ —
+        // строки года = строки сетки (имена — в колонке ФИО шахматки)
+        assertFalse(h.indexOf('ws-tt-emp') !== -1,
+            'колонки «Сотрудник» нет (Task 332)');
+        assertFalse(h.indexOf('Иванов И.И.') !== -1,
+            'имён в таблице года нет (Task 332)');
+        assertFalse(h.indexOf('Сидоров С.С.') !== -1 && h.indexOf('архив') !== -1,
+            'архивный сотрудник не рендерится (Task 332)');
+        assertEqual((h.match(/<tr>/g) || []).length, 2,
+            'шапка + одна строка — активный Иванов (Task 332: без хвоста архива)');
         assertTrue(h.indexOf('<th>Дней</th>') !== -1 && h.indexOf('<th>Часов</th>') !== -1,
             'годовые суммы: колонки Дней/Часов');
         assertTrue(h.indexOf('<th title="дни переработки за год — коды д/н">Перераб. (дни)</th>') !== -1,
@@ -1057,10 +1079,10 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
 // 11. SW: версия кэша
 // ============================================================
 describe('Task 321 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v570 (Task 323)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v570'") !== -1,
-            'CACHE_VERSION = kipia-test-v570');
-        assertFalse(SW_SRC.indexOf('kipia-test-v571') !== -1,
+    test('SW: кэш поднят до kipia-test-v571 (Task 323)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v571'") !== -1,
+            'CACHE_VERSION = kipia-test-v571');
+        assertFalse(SW_SRC.indexOf('kipia-test-v572') !== -1,
             'v561 не существует (один инкремент на Task 321)');
     });
 });

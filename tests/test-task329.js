@@ -32,7 +32,7 @@
 //     ширин ws-tt-c-*, ПЕРЕРАБОТКА В ДНЯХ (overDays), часы — в
 //     тултипе; _renderTotalsYearTable — сумма дней; min-width только
 //     на мобайле; пересечение брейкпоинта — сброс/перезамер.
-//   SW: kipia-test-v570.
+//   SW: kipia-test-v571.
 //
 // Запуск: через tests/run-all.js (require './test-task329.js').
 
@@ -91,11 +91,12 @@ describe('Task 329 — HTML: левый край шторки', () => {
         assertTrue(btn.indexOf('<svg') !== -1, 'иконка — svg-стрелка');
         assertTrue(btn.indexOf('aria-pressed') !== -1, 'aria-pressed (состояние)');
         assertTrue(btn.indexOf('aria-label') !== -1, 'aria-label (подпись)');
-        // в шапке — только ⌠ и «Обновить»
+        // в шапке — только ⌠ (Task 332: кнопка «Обновить» удалена)
         const iHead = chunk.indexOf('class="ws-tt-head"');
         const headChunk = chunk.slice(iHead, chunk.indexOf('</div>', iHead) + 6);
         assertTrue(headChunk.indexOf('id="wsTtWarn"') !== -1, '⌠ в шапке');
-        assertTrue(headChunk.indexOf('id="wsTtRefresh"') !== -1, '«Обновить» в шапке');
+        assertFalse(headChunk.indexOf('id="wsTtRefresh"') !== -1,
+            '«Обновить» из шапки удалён (Task 332)');
         assertTrue(headChunk.indexOf('wsTtChv') === -1, 'шеврона в шапке нет');
     });
 
@@ -471,10 +472,10 @@ describe('Task 329 — VM: закрытие и рендер', () => {
 // ============================================================
 describe('Task 329 — SW: версия кэша', () => {
 
-    test('SW: кэш поднят до kipia-test-v570 (Task 329)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v570') !== -1,
-            'CACHE_VERSION = kipia-test-v570');
-        assertFalse(SW_SRC.indexOf('kipia-test-v570-OLD') !== -1,
+    test('SW: кэш поднят до kipia-test-v571 (Task 329)', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v571') !== -1,
+            'CACHE_VERSION = kipia-test-v571');
+        assertFalse(SW_SRC.indexOf('kipia-test-v571-OLD') !== -1,
             'старой версии v567 нет');
     });
 });

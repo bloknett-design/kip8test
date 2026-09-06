@@ -55,7 +55,7 @@
 //   ЦЕНТР: .ws-tt-table th/td — text-align: center (прежде вправо;
 //     колонка «Сотрудник» — по-прежнему слева своими правилами),
 //     годовая таблица — тоже по центру.
-//   SW: kipia-test-v570.
+//   SW: kipia-test-v571.
 //
 // Запуск: через tests/run-all.js (require './test-task331.js').
 
@@ -397,26 +397,26 @@ describe('Task 331 — JS: контроллер кастомных ползун�
         assertEqual(calls2, 0, 'нет пар (_HBARS пуст) — тишина');
     });
 
-    test('VM: _updateTtHead — пустая шапка ПРЯЧЕТСЯ ([hidden])', () => {
+    test('VM: _updateTtHead — пустая шапка ПРЯЧЕТСЯ ([hidden]; Task 332: без «Обновить»)', () => {
         const fn = methodFn(WS_CLIENT, '_updateTtHead');
         const head = { hidden: false };
         const panel = { querySelector: function() { return head; } };
         global.document = mockDoc({
             wsTotalsPanel: panel,
-            wsTtWarn: { hidden: true },
-            wsTtRefresh: { hidden: true }
+            wsTtWarn: { hidden: true }
         });
         try {
+            // Task 332: кнопки «Обновить» шапки больше нет — пустая
+            // шапка = только скрытый ⚠ → шапка спрятана ЦЕЛИКОМ
             fn.call({});
             assertEqual(head.hidden, true,
-                'месяц (без ⚠/«Обновить») — шапка скрыта: шапка столбцов = шапке сетки');
+                'без ⚠ — шапка скрыта: шапка столбцов = шапке сетки');
             global.document = mockDoc({
                 wsTotalsPanel: panel,
-                wsTtWarn: { hidden: true },
-                wsTtRefresh: { hidden: false }
+                wsTtWarn: { hidden: false }
             });
             fn.call({});
-            assertEqual(head.hidden, false, 'год («Обновить») — шапка видна');
+            assertEqual(head.hidden, false, 'год (⚠ сбоев) — шапка видна');
         } finally {
             delete global.document;
         }
@@ -457,10 +457,10 @@ describe('Task 331 — JS: статичный бордюрчик сетки (у�
 // 7. SW: версия кэша
 // ============================================================
 describe('Task 331 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v570', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v570'") !== -1,
-            'CACHE_VERSION = kipia-test-v570');
-        assertFalse(SW_SRC.indexOf('kipia-test-v571') !== -1,
+    test('SW: кэш поднят до kipia-test-v571', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v571'") !== -1,
+            'CACHE_VERSION = kipia-test-v571');
+        assertFalse(SW_SRC.indexOf('kipia-test-v572') !== -1,
             'v571 не существует (один инкремент на Task 331)');
     });
 });

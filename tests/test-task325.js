@@ -30,7 +30,7 @@
 //   _attachTotalsSync — на МОБАЙЛЕ клик/тап МИМО шторки закрывает
 //   её (✕ удалён): слушатель document click, только <1024px,
 //   клики по #wsTotalsDrawer/#wsTotalsRow не закрывают.
-//   SW: kipia-test-v570.
+//   SW: kipia-test-v571.
 //
 // Запуск: через tests/run-all.js (require './test-task325.js').
 
@@ -107,14 +107,20 @@ describe('Task 325 — HTML: три ряда кнопок и шапка без �
     test('HTML: ряд 3 — «Сформировать» → «Сохранить» → «Отменить»', () => {
         const iAct = ws.indexOf('id="wsActionsRow"');
         // Task 328: перед «Сформировать» стоит кнопка-иконка
-        // перекрестья #wsCrossBtn (заявка) — окно поиска расширено
-        const chunk = ws.slice(iAct - 80, iAct + 1900);
+        // перекрестья #wsCrossBtn (заявка) — окно поиска расширено.
+        // Task 332: САМАЯ ЛЕВАЯ — ещё и кнопка вида #wsViewBtn
+        // (3 svg-иконки + крупный комментарий) — окно расширено снова
+        const chunk = ws.slice(iAct - 80, iAct + 4600);
         const iGen = chunk.indexOf('id="wsGenerateBtn"');
         const iSave = chunk.indexOf('id="wsSaveBtn"');
         const iCancel = chunk.indexOf('id="wsCancelBtn"');
+        const iView = chunk.indexOf('id="wsViewBtn"');
+        const iCross = chunk.indexOf('id="wsCrossBtn"');
         assertTrue(iGen !== -1 && iSave !== -1 && iCancel !== -1, 'три кнопки есть');
         assertTrue(iGen < iSave && iSave < iCancel,
             'порядок заявки: Сформировать → Сохранить → Отменить');
+        assertTrue(iView !== -1 && iCross !== -1 && iView < iCross && iCross < iGen,
+            'Task 332: вид → подсветка → Сформировать (слева направо)');
         assertTrue(chunk.indexOf('ws-toolbar-row ws-actions-row') !== -1,
             'ряд 3 — класс .ws-toolbar-row .ws-actions-row');
     });
@@ -130,7 +136,9 @@ describe('Task 325 — HTML: три ряда кнопок и шапка без �
         const chunk = INDEX_SRC.slice(iPanel, iPanel + 2400);
         assertTrue(chunk.indexOf('class="ws-tt-head"') !== -1, 'шапка .ws-tt-head');
         assertTrue(chunk.indexOf('id="wsTtWarn"') !== -1, '⚠ остался (аварийный)');
-        assertTrue(chunk.indexOf('id="wsTtRefresh"') !== -1, '«Обновить» остался (год)');
+        // Task 332 (заявка): кнопка «Обновить» шапки УДАЛЕНА
+        assertFalse(chunk.indexOf('id="wsTtRefresh"') !== -1,
+            '«Обновить» удалён из шапки (Task 332)');
     });
 });
 
@@ -442,10 +450,10 @@ describe('Task 325 — VM: мобильное закрытие тапом мим
 // ============================================================
 describe('Task 325 — SW', () => {
 
-    test('SW: версия кэша kipia-test-v570 (Task 325)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v570'") !== -1,
-            'CACHE_VERSION = kipia-test-v570');
-        assertFalse(SW_SRC.indexOf('kipia-test-v571') !== -1,
+    test('SW: версия кэша kipia-test-v571 (Task 325)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v571'") !== -1,
+            'CACHE_VERSION = kipia-test-v571');
+        assertFalse(SW_SRC.indexOf('kipia-test-v572') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });

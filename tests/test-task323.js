@@ -36,7 +36,7 @@
 //   clientHeight (ползунок), syncTT в конце; рендеры: tfoot
 //   «Итого», БЕЗ .ws-tt-scroll, ws-tt-year (год), год: активные
 //   по порядку сетки + архив ниже; инфо в title.
-//   SW: kipia-test-v570.
+//   SW: kipia-test-v571.
 //
 // Запуск: через tests/run-all.js (require './test-task323.js').
 
@@ -715,7 +715,7 @@ describe('Task 323 — VM: структура таблиц итогов', () => 
         assertTrue(h.indexOf('</tbody></table>') !== -1, 'год: таблица закрывается после tbody');
     });
 
-    test('год: АКТИВНЫЕ по порядку сетки сверху, архив — ниже (Task 323)', () => {
+    test('год: строки — только АКТИВНЫЕ по порядку сетки, архива НЕТ (Task 323 → 332)', () => {
         const els = { wsTtBody: { innerHTML: '', querySelector: function() { return null; } },
                       wsTtWarn: { textContent: '', hidden: true, attrs: {},
                                   setAttribute: function(k, v) { this.attrs[k] = v; } } };
@@ -737,10 +737,17 @@ describe('Task 323 — VM: структура таблиц итогов', () => 
                 _STATUS_CODES: [], _YEAR_DATA: md }, RENDER_STUBS), mockDoc(els));
         host._renderTotalsYearTable();
         const h = els.wsTtBody.innerHTML;
-        const iP = h.indexOf('Петров П.П.');
-        const iS = h.indexOf('Сидоров С.С.');
-        assertTrue(iP !== -1 && iS !== -1, 'оба в таблице');
-        assertTrue(iP < iS, 'активный (по строке сетки) — ВЫШЕ архивного');
+        // Task 332 (заявка: «убери столбец сотрудников»): строки года =
+        // строки сетки (только активные), колонки «Сотрудник» и
+        // архивные строки УДАЛЕНЫ — имена в стик-колонке ФИО шахматки
+        assertEqual((h.match(/<tr>/g) || []).length, 2,
+            'шапка + одна строка активного Петрова (без хвоста архива)');
+        assertFalse(h.indexOf('ws-tt-emp') !== -1,
+            'колонки «Сотрудник» нет (Task 332)');
+        assertFalse(h.indexOf('Сидоров С.С.') !== -1,
+            'архивный Сидоров не рендерится (Task 332)');
+        assertFalse(h.indexOf('архив') !== -1,
+            'бейджа «архив» нет (Task 332)');
     });
 });
 
@@ -783,10 +790,10 @@ describe('Task 323 — интеграция', () => {
 // 10. SW: версия кэша
 // ============================================================
 describe('Task 323 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v570 (Task 323)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v570'") !== -1,
-            'CACHE_VERSION = kipia-test-v570');
-        assertFalse(SW_SRC.indexOf('kipia-test-v571') !== -1,
+    test('SW: кэш поднят до kipia-test-v571 (Task 323)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v571'") !== -1,
+            'CACHE_VERSION = kipia-test-v571');
+        assertFalse(SW_SRC.indexOf('kipia-test-v572') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });

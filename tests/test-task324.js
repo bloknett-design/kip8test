@@ -43,7 +43,7 @@
 //   актуализирует вид шапки (_updateTtHead, Task 325);
 //   _updateTtHead — сжимает пустую шапку до 16px-филлера (⚠ и
 //   «Обновить» скрыты — выравнивание строк сохраняется).
-//   SW: kipia-test-v570.
+//   SW: kipia-test-v571.
 //
 // Запуск: через tests/run-all.js (require './test-task324.js').
 
@@ -155,14 +155,17 @@ describe('Task 324→325 — HTML: ряды кнопок итогов и дей�
             'класс вертикальной ручки удалён');
     });
 
-    test('HTML: шапка шторки — ⚠ + «Обновить», БЕЗ ✕ и инфо-строки', () => {
+    test('HTML: шапка шторки — только ⚠, БЕЗ ✕/инфо/«Обновить» (Task 324 → 332)', () => {
         const iPanel = INDEX_SRC.indexOf('id="wsTotalsPanel"');
         const chunk = INDEX_SRC.slice(iPanel, iPanel + 3200);
         assertTrue(chunk.indexOf('class="ws-tt-head"') !== -1, 'шапка .ws-tt-head');
         assertFalse(chunk.indexOf('id="wsTtClose"') !== -1,
             'кнопка ✕ УДАЛЕНА (заявка Task 325)');
         assertTrue(chunk.indexOf('id="wsTtWarn"') !== -1, 'аварийная строка ⚠');
-        assertTrue(chunk.indexOf('id="wsTtRefresh"') !== -1, 'кнопка «Обновить»');
+        // Task 332 (заявка): кнопка «Обновить» из шапки УДАЛЕНА —
+        // годовые данные обновляет кнопка «Обновить» тулбара
+        assertFalse(chunk.indexOf('id="wsTtRefresh"') !== -1,
+            'кнопка «Обновить» шапки удалена (Task 332)');
         assertFalse(chunk.indexOf('id="wsTtInfo"') !== -1,
             'пояснительный текст шапки УДАЛЁН (заявка)');
         assertFalse(chunk.indexOf('ws-tt-tabs') !== -1,
@@ -433,29 +436,26 @@ describe('Task 324 — VM: переключатели', () => {
             'кнопка тулбара вызывает toggleTotals — единственный переключатель');
     });
 
-    test('_updateTtHead: пустая шапка — ПРЯЧЕТСЯ ЦЕЛИКОМ (Task 325 → 331)', () => {
+    test('_updateTtHead: пустая шапка — ПРЯЧЕТСЯ ЦЕЛИКОМ (Task 325 → 331 → 332)', () => {
         const head = { hidden: false };
         const warn = { hidden: true };
-        const ref = { hidden: true };
         const panel = { querySelector: function(sel) {
             return sel === '.ws-tt-head' ? head : null;
         } };
         const host = wsHost(['_updateTtHead'], {},
-            mockDoc({ wsTotalsPanel: panel, wsTtWarn: warn, wsTtRefresh: ref }));
+            mockDoc({ wsTotalsPanel: panel, wsTtWarn: warn }));
         host._updateTtHead();
         assertEqual(head.hidden, true,
-            'оба скрыты — шапка ПРЯЧЕТСЯ ([hidden] → display:none, Task 331)');
-        ref.hidden = false;   // год — «Обновить» виден
-        host._updateTtHead();
-        assertEqual(head.hidden, false,
-            'есть «Обновить» — шапка обычная');
-        ref.hidden = true;
+            '⚠ скрыт — шапка ПРЯЧЕТСЯ ([hidden] → display:none; Task 332: кнопки «Обновить» больше нет)');
         warn.hidden = false;  // сбой года — ⚠ виден
         host._updateTtHead();
         assertEqual(head.hidden, false,
             'есть ⚠ — шапка обычная');
-        const m = methodText(WS_CLIENT, '_applyTtHeadVar');
-        assertTrue(m.indexOf('this._updateTtHead();') !== -1,
+        const m = methodText(WS_CLIENT, '_updateTtHead');
+        assertFalse(m.indexOf('wsTtRefresh') !== -1,
+            'Task 332: кнопка «Обновить» из логики шапки удалена');
+        const mv = methodText(WS_CLIENT, '_applyTtHeadVar');
+        assertTrue(mv.indexOf('this._updateTtHead();') !== -1,
             '_applyTtHeadVar актуализирует шапку ДО замера высоты');
     });
 });
@@ -594,10 +594,10 @@ describe('Task 324 — интеграция и SW', () => {
         assertTrue(fg.indexOf('syncTT();') !== -1, 'строки итогов синхронизируются');
     });
 
-    test('SW: версия кэша kipia-test-v570 (Task 324)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v570'") !== -1,
-            'CACHE_VERSION = kipia-test-v570');
-        assertFalse(SW_SRC.indexOf('kipia-test-v571') !== -1,
+    test('SW: версия кэша kipia-test-v571 (Task 324)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v571'") !== -1,
+            'CACHE_VERSION = kipia-test-v571');
+        assertFalse(SW_SRC.indexOf('kipia-test-v572') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });

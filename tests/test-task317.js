@@ -34,7 +34,7 @@
 //     (3 ветки — как в Task 314).
 //   VM: _updateCacheStamp (формат/подсказка), _showRefreshTip/
 //     _hideRefreshTip на моках (скрытие, позиция сверху/снизу).
-//   SW: kipia-test-v570.
+//   SW: kipia-test-v571.
 //
 // Запуск: через tests/run-all.js (require './test-task317.js').
 
@@ -246,8 +246,10 @@ describe('Task 317 — JS: тултип «данные от …»', () => {
         assertTrue(iWire !== -1, 'проводка тултипа в init');
         // Task 328: между проводкой «Обновить» и scroll-сбросом живёт
         // проводка окна «Сформировать» (#wsGenerateTip) — окно поиска
-        // расширено, чтобы охватить scroll-слушатель
-        const seg = init.slice(Math.max(0, iWire - 1200), iWire + 2400);
+        // расширено, чтобы охватить scroll-слушатель.
+        // Task 332: добавлены окна #wsCrossTip/#wsViewTip (значок
+        // подсветки и кнопка вида) — окно расширено ещё раз
+        const seg = init.slice(Math.max(0, iWire - 1200), iWire + 5000);
         assertTrue(seg.indexOf("addEventListener('mouseenter'") !== -1 &&
                    seg.indexOf("addEventListener('mouseleave'") !== -1,
             'наведение/уход курсора');
@@ -325,10 +327,10 @@ describe('Task 317 — JS: тултип «данные от …»', () => {
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 317 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v570', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v570') !== -1,
-            'CACHE_VERSION = kipia-test-v570 (Task 317)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v571') !== -1,
+    test('SW: версия кэша kipia-test-v571', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v571') !== -1,
+            'CACHE_VERSION = kipia-test-v571 (Task 317)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v572') !== -1,
             'лишний инкремент не делался');
     });
 });
