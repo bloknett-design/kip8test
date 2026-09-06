@@ -35,7 +35,7 @@
 //   Сервер: listEntries читает 11 колонок (часы: число/null/
 //   нормализация «7,2»); setManualEntry валидирует 0,5..24, пишет
 //   колонку K (обновление и вставка), часы=null без поля, аудит.
-//   SW: kipia-test-v566.
+//   SW: kipia-test-v567.
 //
 // Запуск: через tests/run-all.js (require './test-task322.js').
 
@@ -928,10 +928,10 @@ describe('Task 322 — итоги: слова в шапке и колонка П
 // 11. SW: версия кэша
 // ============================================================
 describe('Task 322 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v566 (Task 322)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v566'") !== -1,
-            'CACHE_VERSION = kipia-test-v566');
-        assertFalse(SW_SRC.indexOf('kipia-test-v567') !== -1,
+    test('SW: кэш поднят до kipia-test-v567 (Task 322)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v567'") !== -1,
+            'CACHE_VERSION = kipia-test-v567');
+        assertFalse(SW_SRC.indexOf('kipia-test-v568') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });

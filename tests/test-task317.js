@@ -21,7 +21,8 @@
 //     с gap 8px и wrap; [hidden] — display:none; десктоп
 //     (media ≥1024px): .ws-toolbar-main height 95px (РОВНО окна),
 //     ряды height calc((95px - 6px)/3) + nowrap + stretch,
-//     кнопки/селекты height 100% + padding 4px 12px; окна
+//     кнопки/селекты height 100% + padding 4px 9px (Task 328 —
+//     заявка: кнопки немного меньше; было 4px 12px); окна
 //     95px/justify-self stretch; .ws-toolbar padding 5px —
 //     НЕ меняется (заявка: рамки бара 5px); тултип — fixed,
 //     pointer-events none, [hidden], z-index, светлая тема.
@@ -33,7 +34,7 @@
 //     (3 ветки — как в Task 314).
 //   VM: _updateCacheStamp (формат/подсказка), _showRefreshTip/
 //     _hideRefreshTip на моках (скрытие, позиция сверху/снизу).
-//   SW: kipia-test-v566.
+//   SW: kipia-test-v567.
 //
 // Запуск: через tests/run-all.js (require './test-task317.js').
 
@@ -157,8 +158,10 @@ describe('Task 317 — CSS: габариты и зазоры', () => {
     });
 
     test('CSS: десктоп — кнопки/селекты во всю высоту ряда', () => {
-        const re = /\.ws-month-sel, \.ws-year-sel, \.ws-generate-btn, \.ws-save-btn,\s*\n\s*\.ws-cancel-btn, \.ws-refresh-btn, \.ws-totals-btn, \.ws-tt-tab \{[^}]*height:\s*100%[^}]*padding:\s*4px 12px/;
-        assertTrue(re.test(INDEX_SRC), 'height 100% + компактный padding 4px (+ Итоги/вкладки, Task 324)');
+        // Task 328 (заявка: кнопки немного меньше): padding 4px 12px →
+        // 4px 9px — правило актуализировано
+        const re = /\.ws-month-sel, \.ws-year-sel, \.ws-generate-btn, \.ws-save-btn,\s*\n\s*\.ws-cancel-btn, \.ws-refresh-btn, \.ws-totals-btn, \.ws-tt-tab \{[^}]*height:\s*100%[^}]*padding:\s*4px 9px/;
+        assertTrue(re.test(INDEX_SRC), 'height 100% + компактный padding 4px 9px (Task 328; + Итоги/вкладки, Task 324)');
     });
 
     test('CSS: рамка бара — 5px, не меняется', () => {
@@ -241,7 +244,10 @@ describe('Task 317 — JS: тултип «данные от …»', () => {
                                      INDEX_SRC.indexOf('_refreshFromUrlState: function'));
         const iWire = init.indexOf('_showRefreshTip');
         assertTrue(iWire !== -1, 'проводка тултипа в init');
-        const seg = init.slice(Math.max(0, iWire - 1200), iWire + 1600);
+        // Task 328: между проводкой «Обновить» и scroll-сбросом живёт
+        // проводка окна «Сформировать» (#wsGenerateTip) — окно поиска
+        // расширено, чтобы охватить scroll-слушатель
+        const seg = init.slice(Math.max(0, iWire - 1200), iWire + 2400);
         assertTrue(seg.indexOf("addEventListener('mouseenter'") !== -1 &&
                    seg.indexOf("addEventListener('mouseleave'") !== -1,
             'наведение/уход курсора');
@@ -319,10 +325,10 @@ describe('Task 317 — JS: тултип «данные от …»', () => {
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 317 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v566', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v566') !== -1,
-            'CACHE_VERSION = kipia-test-v566 (Task 317)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v567') !== -1,
+    test('SW: версия кэша kipia-test-v567', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v567') !== -1,
+            'CACHE_VERSION = kipia-test-v567 (Task 317)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v568') !== -1,
             'лишний инкремент не делался');
     });
 });

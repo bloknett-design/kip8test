@@ -41,7 +41,7 @@
 //     форматы дат; пустой месяц; счётчик; скрытие hidden),
 //     _updateSaveBtn (n=0 скрыта / n=2 показана), cancelAll
 //     (сброс правок, тост).
-//   SW: kipia-test-v566.
+//   SW: kipia-test-v567.
 //
 // Запуск: через tests/run-all.js (require './test-task315.js').
 
@@ -196,9 +196,9 @@ describe('Task 315 — CSS: компоновка и перенос текста'
             'разделитель нижнего ряда удалён (Task 325: блоки в разных рядах)');
     });
 
-    test('CSS: .ws-cancel-btn — красная, 34px', () => {
-        const re = /\.ws-cancel-btn \{[^}]*background:\s*rgba\(255, 107, 107, 0\.14\)[^}]*height:\s*34px/;
-        assertTrue(re.test(INDEX_SRC), 'приглушённо-красная кнопка 34px');
+    test('CSS: .ws-cancel-btn — красная, 32px (Task 328)', () => {
+        const re = /\.ws-cancel-btn \{[^}]*background:\s*rgba\(255, 107, 107, 0\.14\)[^}]*height:\s*32px/;
+        assertTrue(re.test(INDEX_SRC), 'приглушённо-красная кнопка 32px (Task 328 — кнопки меньше)');
         assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .ws-cancel-btn') !== -1,
             'светлая тема кнопки');
     });
@@ -485,10 +485,10 @@ describe('Task 315 — VM: кнопки «Сохранить»/«Отменит�
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 315 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v566', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v566') !== -1,
+    test('SW: версия кэша kipia-test-v567', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v567') !== -1,
             'SW поднят до v556 (Task 317 — тултип «данные от», три ряда кнопок)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v567') !== -1,
+        assertFalse(SW_SRC.indexOf('kipia-test-v568') !== -1,
             'лишний инкремент не делался');
     });
 });

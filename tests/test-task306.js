@@ -363,8 +363,12 @@ describe('Task 306 — клиент: одна кнопка «Сформиров�
             'вызов confirmRefresh не остался');
         const btn = INDEX_SRC.match(/<button[^>]*id="wsGenerateBtn"[^>]*>/);
         assertTrue(!!btn, 'кнопка «Сформировать» есть');
-        assertTrue(btn[0].indexOf('календарь обновится автоматически') !== -1,
-            'title упоминает обновление календаря');
+        // Task 328: нативный title кнопки → информационное окно
+        // #wsGenerateTip (формат кнопки «Обновить»)
+        const iTip = INDEX_SRC.indexOf('id="wsGenerateTip"');
+        const tip = INDEX_SRC.slice(iTip, iTip + 700);
+        assertTrue(tip.indexOf('календарь обновится автоматически') !== -1,
+            'окно #wsGenerateTip упоминает обновление календаря');
     });
 
     test('JS: confirmRefresh удалён; refreshNow(silent) без тостов', () => {
@@ -404,8 +408,8 @@ describe('Task 306 — клиент: одна кнопка «Сформиров�
             'окошко календаря (нормы) осталось');
     });
 
-    test('SW: версия кэша kipia-test-v566 (Task 306 — клиент менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v566'") !== -1,
-            'CACHE_VERSION = kipia-test-v566');
+    test('SW: версия кэша kipia-test-v567 (Task 306 — клиент менялся)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v567'") !== -1,
+            'CACHE_VERSION = kipia-test-v567');
     });
 });

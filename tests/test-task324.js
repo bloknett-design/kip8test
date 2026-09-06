@@ -43,7 +43,7 @@
 //   актуализирует вид шапки (_updateTtHead, Task 325);
 //   _updateTtHead — сжимает пустую шапку до 16px-филлера (⚠ и
 //   «Обновить» скрыты — выравнивание строк сохраняется).
-//   SW: kipia-test-v566.
+//   SW: kipia-test-v567.
 //
 // Запуск: через tests/run-all.js (require './test-task324.js').
 
@@ -213,8 +213,8 @@ describe('Task 324 — CSS: кнопки и геометрия', () => {
     });
 
     test('CSS: вкладки «Месяц»/«Год» — общий рост кнопок тулбара', () => {
-        const m = INDEX_SRC.match(/\.ws-month-sel, \.ws-year-sel, \.ws-generate-btn, \.ws-save-btn,\n\s*\.ws-refresh-btn, \.ws-totals-btn, \.ws-tt-tab\s*\{[^}]*height:\s*34px/);
-        assertTrue(!!m, 'единая высота 34px с вкладками итогов');
+        const m = INDEX_SRC.match(/\.ws-month-sel, \.ws-year-sel, \.ws-generate-btn, \.ws-save-btn,\n\s*\.ws-refresh-btn, \.ws-totals-btn, \.ws-tt-tab\s*\{[^}]*height:\s*32px/);
+        assertTrue(!!m, 'единая высота 32px с вкладками итогов (Task 328 — кнопки меньше)');
         const d = INDEX_SRC.match(/@media \(min-width: 1024px\)\s*\{[\s\S]*?\.ws-month-sel[^}]*height:\s*100%/);
         assertTrue(!!d, 'десктоп: во всю высоту ряда');
     });
@@ -571,10 +571,10 @@ describe('Task 324 — интеграция и SW', () => {
         assertTrue(fg.indexOf('syncTT();') !== -1, 'строки итогов синхронизируются');
     });
 
-    test('SW: версия кэша kipia-test-v566 (Task 324)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v566'") !== -1,
-            'CACHE_VERSION = kipia-test-v566');
-        assertFalse(SW_SRC.indexOf('kipia-test-v567') !== -1,
+    test('SW: версия кэша kipia-test-v567 (Task 324)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v567'") !== -1,
+            'CACHE_VERSION = kipia-test-v567');
+        assertFalse(SW_SRC.indexOf('kipia-test-v568') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });

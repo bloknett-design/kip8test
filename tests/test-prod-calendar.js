@@ -554,10 +554,10 @@ describe('Task 260: интеграция в index.html', () => {
         assertTrue(html.indexOf('.ws-cal-panel {') !== -1,
             'стили окошка календаря в тулбаре');
     });
-    test('SW: версия кэша kipia-test-v566 (Task 298)', () => {
+    test('SW: версия кэша kipia-test-v567 (Task 298)', () => {
         const sw = fs.readFileSync(path.resolve(__dirname, '..', 'sw.js'), 'utf8');
-        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v566'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v566');
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v567'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v567');
     });
     test('Task 311: тултип ячейки убран; название праздника — в попапе клика', () => {
         // Task 311: пояснительные тултипы с ячеек шахматки убраны;
@@ -1012,9 +1012,13 @@ describe('Task 262: интеграция в index.html', () => {
         assertTrue(html.indexOf("_MINERS_DAY_TITLE: 'День шахтёра'") !== -1,
             'константа Дня шахтёра в модуле');
     });
-    test('JS: окошко помечает официальность (тултип) и предварительность', () => {
-        assertTrue(html.indexOf("st.normsOfficial ? ' — официальные данные' : ''") !== -1,
-            'тултип норм окошка: официальные данные');
+    test('JS: окошко помечает предварительность; тултипы окон УБРАНЫ (Task 328)', () => {
+        // Task 328 (заявка): всплывающие подсказки окон бара УБРАНЫ —
+        // официальность норм больше не помечается тултипом
+        assertTrue(html.indexOf("st.normsOfficial ? ' — официальные данные' : ''") === -1,
+            'тултип норм окошка удалён (Task 328)');
+        assertTrue(html.indexOf('ws-cp-norms" title=') === -1,
+            'нативного title у группы норм нет');
         assertTrue(html.indexOf('>предварительно</span>') !== -1,
             'бейдж «предварительно» в окошке');
     });
@@ -1179,9 +1183,10 @@ describe('Task 266: окошко столбиками, слева в баре �
     test('JS: бейдж «официальные нормы» не рендерится', () => {
         assertTrue(html.indexOf('>официальные нормы</span>') === -1,
             'бейдж удалён из renderPanel');
-        // официальность осталась тултипом столбика норм
-        assertTrue(html.indexOf("st.normsOfficial ? ' — официальные данные' : ''") !== -1,
-            'тултип столбика норм помечает официальность');
+        // Task 328 (заявка): тултипы окон бара УБРАНЫ — официальность
+        // не помечается всплывающей подсказкой
+        assertTrue(html.indexOf("st.normsOfficial ? ' — официальные данные' : ''") === -1,
+            'тултип столбика норм удалён (Task 328)');
     });
     test('JS: легенда звёздочки — в конце столбика праздников', () => {
         assertTrue(html.indexOf('ws-cp-legend') !== -1,
