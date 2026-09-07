@@ -132,10 +132,11 @@ with sync_playwright() as p:
     check('M2: «Вид» скрыта (hidden, ширина 0)',
           st['viewHidden'] and st['viewW'] == 0, st)
 
-    # --- 2) зритель — всегда ПОЛНЫЙ вид (сохранённый shift игнорируется) ---
+    # --- 2) зритель — СМЕННЫЙ вид (Task 338: шахматка дневных скрыта;
+    #     Task 337 ставил полный — заявка 338 уточнила) ---
     rows = page.evaluate("document.querySelectorAll('#wsGridWrap tbody tr').length")
-    check('M3: полный вид — ВСЕ строки (сменные + дневные = 2)',
-          rows == len(EMPLOYEES), rows)
+    check('M3: сменный вид — только сменные строки (1)',
+          rows == 1, rows)
     locked = page.evaluate("""(function(){
         var b = document.getElementById('wsViewBtn');
         return { locked: b.classList.contains('ws-view-locked'),
@@ -143,7 +144,7 @@ with sync_playwright() as p:
     })()""")
     check('M4: замка НЕТ (роль не редактор — без приглушения)',
           not locked['locked'], locked)
-    check('M5: aria «сейчас полный»', 'полный' in locked['aria'], locked)
+    check('M5: aria «сейчас сменный» (Task 338)', 'сменный' in locked['aria'], locked)
 
     # --- 3) клик по ячейке — ТОЛЬКО окно мероприятий (окно кодов нет) ---
     page.evaluate("""(function(){
@@ -170,7 +171,7 @@ with sync_playwright() as p:
     page.evaluate("WorkSchedule.cycleView()")
     page.wait_for_timeout(200)
     rows2 = page.evaluate("document.querySelectorAll('#wsGridWrap tbody tr').length")
-    check('M9: программный cycleView — вид НЕ сменился', rows2 == len(EMPLOYEES), rows2)
+    check('M9: программный cycleView — вид НЕ сменился', rows2 == 1, rows2)
 
     check('M10: 0 JS-ошибок (зритель)', len(js_errors) == 0, js_errors[:3])
     ctx.close()
@@ -258,7 +259,7 @@ with sync_playwright() as p:
           26 <= st['rowH'] <= 33, st)
     check('K4: десктоп: подсветка осталась (фича просмотра)', st['crossVisible'], st)
     rows = page.evaluate("document.querySelectorAll('#wsGridWrap tbody tr').length")
-    check('K5: десктоп: полный вид (2 строки)', rows == 2, rows)
+    check('K5: десктоп: сменный вид (1 строка, Task 338)', rows == 1, rows)
     check('K6: 0 JS-ошибок (десктоп-зритель)', len(js_errors) == 0, js_errors[:3])
     ctx.close()
 

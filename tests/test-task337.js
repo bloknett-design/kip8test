@@ -26,7 +26,7 @@
 //   4) cycleView: программный guard — зритель не переключает вид.
 //   Сервер шлюзит каждый запрос rmRequirePerm('workschedule.edit')
 //   — как и прежде; клиентский фикс синхронизирует UX с матрицей.
-//   SW: kipia-test-v576.
+//   SW: kipia-test-v577.
 //
 // Запуск: через tests/run-all.js (require './test-task337.js').
 
@@ -193,7 +193,7 @@ describe('Task 337 — кнопки «Сформировать»/«Вид» по
         assertTrue(els.wsGenerateBtn.hidden === true, '«Сформировать» скрыта');
         assertTrue(els.wsViewBtn.hidden === true, '«Вид» скрыта');
         assertFalse(host._viewLocked === true, 'замок снят (роль — не редактор)');
-        assertEqual(host._view, 'full', 'вид сброшен на полный');
+        assertEqual(host._view, 'shift', 'вид зрителя — сменный (Task 338: дневные скрыты)');
         assertEqual(host._applied.rerender, true, 'сетка перерисована');
     });
 
@@ -240,18 +240,19 @@ describe('Task 337 — кнопки «Сформировать»/«Вид» по
 });
 
 // ============================================================
-// 3. Вид табеля у зрителя — всегда полный
+// 3. Вид табеля у зрителя — сменный (Task 338: шахматка дневных
+// и «Итоги учёта» зрителю не видны)
 // ============================================================
-describe('Task 337 — зритель всегда на полном виде', () => {
+describe('Task 337/338 — зритель всегда на сменном виде', () => {
 
-    test('VM: _initView — зритель-«дежурный» (edit=✗, сохранён shift) → full', () => {
+    test('VM: _initView — зритель-«дежурный» (edit=✗, сохранён day) → shift', () => {
         const host = new Function('localStorage', 'return ({' +
             methodText(WS_CLIENT, '_initView') + '\n' +
             '_computeCanEdit: function() { return false; },' +
             '_applyView: function() { this._applied = true; }' +
-            '});')({ getItem: function() { return 'shift'; } });
+            '});')({ getItem: function() { return 'day'; } });
         host._initView('КИП ИОС дежурный');
-        assertEqual(host._view, 'full', 'зритель — полный вид (не shift!)');
+        assertEqual(host._view, 'shift', 'зритель — сменный вид (дневные скрыты)');
         assertFalse(host._viewLocked === true, 'замка нет (роль не редактор)');
         assertTrue(host._applied === true, '_applyView вызван');
     });
@@ -285,7 +286,7 @@ describe('Task 337 — зритель всегда на полном виде', 
             '_applyView: function() {}' +
             '});')({ getItem: function() { return 'day'; } });
         host._initView('ИТР8 pro');
-        assertEqual(host._view, 'full', 'зритель видит шахматку ЦЕЛИКОМ');
+        assertEqual(host._view, 'shift', 'зритель — сменный вид (Task 338)');
     });
 });
 
@@ -322,10 +323,10 @@ describe('Task 337 — регресс-гейты правки', () => {
 // ============================================================
 describe('Task 337 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v576', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v576'") !== -1,
-            'CACHE_VERSION = kipia-test-v576 (Task 337 — только фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v577') !== -1,
+    test('SW: кэш поднят до kipia-test-v577', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v577'") !== -1,
+            'CACHE_VERSION = kipia-test-v577 (Task 337 — только фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v578') !== -1,
             'лишний инкремент (v577) не сделан');
     });
 
