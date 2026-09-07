@@ -4706,3 +4706,82 @@ Script/листы НЕ трогать. ПЕРЕНОС в kip8: НЕ выполн
 KIPiA-Setup-2.1.8-ia32.exe из Releases kip8-desktop; 64-битным — без
 изменений (x64-файл или автообновление). Сервер/листы/Apps Script
 НЕ тронуты. Следующий номер задачи: 340.
+
+## Task 340 — трёхуровневый доступ к «Графику работы» (view / view.min / edit)
+
+Дата: 2026-09-07. Заявка: «В KIP8_Access на листе matrix … отредактировать
+условия просмотра в столбце workschedule.view и добавить третий столбец
+workschedule.view.min с новыми условиями просмотра, столбец
+workschedule.edit с полным доступом по просмотру и редактированию».
+
+## Сделано (клиент + серверные справочники + матрица-скрипт)
+
+1. УРОВНИ (клиент index.html): НОВЫЙ WorkSchedule._computeViewLevel —
+   'edit' (workschedule.edit: полный доступ), 'view' (workschedule.view:
+   клик по ячейке → окно «Мероприятия в этот день» БЕЗ окна кодов
+   [Task 319 жив]; клик по ФИО → карточка БЕЗ элементов правки
+   («Уволить…»/«+ Отпуск…»/✎/✕ гейтятся _canEdit); все кнопки, кроме
+   «Сформировать»), 'min' (workschedule.view.min: карточка не
+   открывается; скрыты «Сформировать» и «Итоги учёта»; в шахматке
+   скрыты «Мастер КИПиА»), null. ПРИОРИТЕТ: edit > min > view (обе
+   галочки view+min → «min» — прощает неснятую галочку); только min —
+   самодостаточен. Легаси: _WRITE_ROLES → 'edit', прочие → 'view';
+   _computeCanEdit — производная (level==='edit').
+2. КНОПКИ: «Сформировать» — edit (как 337); «Вид» — ВСЕМ уровням
+   (337/338 прятали зрителю — отменено, «Вид» — инструмент просмотра,
+   скрыт только при null); «Итоги» — не уровню min: _applyView
+   (totalsBtn.hidden = !full || minNoTotals, открытая шторка
+   закрывается), toggleTotals/onTotalsPageOpen гейты (шторка,
+   мобильная страница, прямой переход → редирект).
+3. КАРТОЧКИ: _empCardAllowed() (edit/view) — гейт в _renderGrid
+   (onclick ФИО), onEmpCellClick, _openEmpPopup; ws-readonly — только
+   min (уровню view hover ФИО жив — карточка кликабельна).
+4. ШАХМАТКА: _viewEmployees при min скрывает «Мастер КИПиА»
+   (_isMasterKipia: должность, без регистра/ё→е/пробелов, точное
+   совпадение или префикс «мастер кипиа »; «Слесарь КИПиА»/
+   «Начальник участка КИПиА» не тронуты); пересекается с видами
+   shift/day. ВИД ТАБЕЛЯ: зритель подхватывает сохранённый
+   kip8_ws_view_v1 и переключает сам (338 запирал в «сменном» —
+   отменено); замок дежурного-редактора (332/337) жив; cycleView
+   guard — только null.
+5. KipAuth._applyServerAccess: раздел добавляют ЛЮБОЕ из трёх прав.
+   _onRoleUpdate идемпотентен (heartbeat): кнопки — всегда, вид/сетка
+   — при смене уровня/замка.
+6. СЕРВЕР (справочные копии): WorkSchedule.gs _requireRead — чтение
+   дают ЛЮБОЕ из трёх прав (rmRequirePerm('workschedule.view') +
+   g.access.permissions['workschedule.view.min'/'workschedule.edit'];
+   no_session приоритетен) — иначе роль с одним view.min получала бы
+   access_denied; RoleMatrixGate.gs rmGateStatus + колонка M;
+   RoleMatrixTask340Init.gs — ОДНОРАЗОВЫЙ скрипт (идемпотентный):
+   колонка workschedule.view.min в matrix (r4/r5, чекбоксы: все сняты,
+   Админ отмечен), строка в permissions, метка в A3,
+   roleMatrixInvalidateCache; DEPLOY-Task340-workschedule-view-min.md —
+   порядок деплоя (матрица → сервер → галочки) и диагностика.
+
+## Верификация
+- Тесты 2170 → 2216/0 (+46 tests/test-task340.js; адаптация
+  test-task337/338.js под уровни; SW-бамп v577→v578 в 38 файлах,
+  guard→v579 в 20); node --check OK.
+- Браузер scripts/task340-browser-check.py — 38/38 (6 контекстов:
+  мобайл view/min/edit, десктоп min/view, дежурный-замок; 0 JS-ошибок;
+  скриншоты task340-proof-{mobile,desktop}-{view,min}.png); регресс:
+  337 24/24 (адаптирован), 338 34/34 (адаптирован), 334 39/39,
+  335 22/22, 336 20/20.
+- Пуш 2c40a87 → Pages kipia-test-v578 ЖИВОЙ, CI success,
+  kip8test-desktop автосинк d67ce0a.
+- ПЕРЕНОС kip8: патч 493 строк (ЧИСТО); v424→v425; ПАРИТЕТ 2216/0
+  (пуш 5f435e1, Pages kipia-v425 ЖИВОЙ, browser 38/38 на kip8,
+  kip8-desktop автосинк success).
+
+**SW:** kipia-test-v577 → **kipia-test-v578** (kip8: kipia-v424 →
+**kipia-v425**).
+
+**Пользователю:** (1) выполнить DEPLOY-Task340-workschedule-view-min.md
+— вставить RoleMatrixTask340Init.gs в Apps Script и запустить
+task340AddViewMinPermission (добавит столбец workschedule.view.min в
+матрицу), затем заменить _requireRead в WorkSchedule.gs (файл в репо) и
+создать новое развёртывание; (2) в таблице KIP8_Access отметить галочки:
+дежурному (ограниченный просмотр) — workschedule.view.min (галочку
+workschedule.view можно оставить — min сильнее, но чище снять); (3)
+Ctrl+Shift+R ×1–2. Порядок ВАЖЕН: сначала сервер, потом снятие
+workschedule.view у ролей с одним view.min. Следующий номер задачи: 341.
