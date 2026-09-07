@@ -30,7 +30,7 @@
 //   _attachTotalsSync — на МОБАЙЛЕ клик/тап МИМО шторки закрывает
 //   её (✕ удалён): слушатель document click, только <1024px,
 //   клики по #wsTotalsDrawer/#wsTotalsRow не закрывают.
-//   SW: kipia-test-v579.
+//   SW: kipia-test-v580.
 //
 // Запуск: через tests/run-all.js (require './test-task325.js').
 
@@ -452,10 +452,10 @@ describe('Task 325 — VM: мобильное закрытие тапом мим
 // ============================================================
 describe('Task 325 — SW', () => {
 
-    test('SW: версия кэша kipia-test-v579 (Task 325)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v579'") !== -1,
-            'CACHE_VERSION = kipia-test-v579');
-        assertFalse(SW_SRC.indexOf('kipia-test-v580') !== -1,
+    test('SW: версия кэша kipia-test-v580 (Task 325)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v580'") !== -1,
+            'CACHE_VERSION = kipia-test-v580');
+        assertFalse(SW_SRC.indexOf('kipia-test-v581') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });

@@ -1,20 +1,18 @@
 # -*- coding: utf-8 -*-
-# Task 341: browser-check — ПЕЧАТЬ ГРАФИКА РАБОТЫ (кнопка «Печать»,
-# ряд 1 тулбара). Проверки:
-#   • кнопка доступна ВСЕМ уровням (edit/view/min) — на мобайле тоже;
-#   • клик строит печатный лист #wsPrintSheet в <body> (заголовок
-#     с месяцем/годом/видом/нормой, шахматка дней с ФИО и цветами
-#     кодов, план отпуска пунктиром, бейджи мероприятий, колонки
-#     «Дни»/«Часы», итоговая строка, легенда кодов) и зовёт
-#     window.print() (стаб);
-#   • повторный клик ПЕРЕИСПОЛЬЗУЕТ лист (одна нода);
-#   • уровень min: в листе НЕТ «Мастер КИПиА» (фильтр _viewEmployees
-#     Task 340), «Итоги учёта» по-прежнему скрыта (регресс 340);
-#   • пустой график: тост, печати нет, листа нет;
-#   • ЭМУЛЯЦИЯ print-медиа: приложение (#mainApp, #loginScreen)
-#     скрыто, лист показан, вёрстка СВЕТЛАЯ (тёмная тема не
-#     переносится на бумагу) — скриншот-пруф;
-#   • сетка приложения жива (регресс), 0 JS-ошибок во всех контекстах.
+# Task 342: browser-check — КОЛОНКА ПЕРЕРАБОТОК В ПЕЧАТНОЙ ФОРМЕ
+# (заявка: «добавь колонку переработок»; Task 341 — печать).
+# Проверки:
+#   • шапка печатной шахматки — 3 колонки итогов «Дни»/«Часы»/
+#     «Перераб.» (заголовок «Перераб.» + подпись «дни/ч»);
+#   • значения: сменный 017 — «1/12» (12 ч по типу персонала),
+#     дневной 031 — «1/4» (часы правки ячейки), 023 без д/н — «—»;
+#   • итоговая строка — grand «2/16» + подпись с переработкой;
+#   • сноска поясняет формат «Перераб.» (дни/часы, коды д/н);
+#   • регресс 341: красная точка wsp-over в ячейке, переиспользование
+#     листа, print-медиа (приложение скрыто, лист светло-бумажный);
+#   • регресс 340: view/min гейты (кнопка, «Сформировать», фильтр
+#     «Мастер КИПиА»), мобайл, пустой график — тост;
+#   • 0 JS-ошибок во всех контекстах.
 import datetime
 import json
 from urllib.parse import unquote
@@ -28,6 +26,8 @@ CODES = [
   {'code':'Д','name':'День (12-час)','color':'#FFE082'},
   {'code':'Д8','name':'День 8-час','color':'#FFF9C4'},
   {'code':'Н','name':'Ночь (12-час)','color':'#B0BEC5'},
+  {'code':'д','name':'Переработка (день)','color':'#FFAB91'},
+  {'code':'н','name':'Переработка (ночь)','color':'#FF8A80'},
   {'code':'ОТ','name':'Отпуск','color':'#ECEFF1'},
   {'code':'И','name':'Инструктаж','color':'#B3E5FC'},
   {'code':'.','name':'Плановый выходной','color':'#EEF0F2'}
@@ -46,7 +46,11 @@ ENTRIES = [
   {'id':1,'дата':'%04d-%02d-02' % (Y, M),'таб_номер':'017','статус':'Д','источник':'авто'},
   {'id':2,'дата':'%04d-%02d-02' % (Y, M),'таб_номер':'023','статус':'Д8','источник':'авто'},
   {'id':3,'дата':'%04d-%02d-02' % (Y, M),'таб_номер':'031','статус':'Д8','источник':'авто'},
-  {'id':4,'дата':'%04d-%02d-10' % (Y, M),'таб_номер':'017','статус':'И','источник':'авто'}
+  {'id':4,'дата':'%04d-%02d-10' % (Y, M),'таб_номер':'017','статус':'И','источник':'авто'},
+  # Task 342: переработки — коды д/н (выходные/праздники)
+  # 017 сменный → 12 ч; 031 дневной → часы правки (4)
+  {'id':5,'дата':'%04d-%02d-06' % (Y, M),'таб_номер':'017','статус':'д','переработка':1,'источник':'авто'},
+  {'id':6,'дата':'%04d-%02d-06' % (Y, M),'таб_номер':'031','статус':'н','переработка':1,'часы':4,'источник':'авто'}
 ]
 TRAININGS = [
   {'id':7,'таб_номер':'017','тип':'инструктаж','тема':'Вводный','дата_начала':'%04d-%02d-02' % (Y, M),'дата_окончания':'%04d-%02d-02' % (Y, M)}
@@ -94,7 +98,6 @@ def check(name, cond, extra=''):
     print(('  ✓ ' if ok else '  ✗ ') + name + (('  [' + str(extra) + ']') if (extra and not ok) else ''))
 
 DAYS_IN_MONTH = [31,28,31,30,31,30,31,31,30,31,30,31][M-1]
-MONTHS_RU = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря']
 
 def setup_ctx(browser, viewport, token, theme=None, role='КИП ИОС',
               ws_view=False, ws_edit=False, ws_min=False, empty=False, dsf=1):
@@ -122,7 +125,7 @@ def setup_ctx(browser, viewport, token, theme=None, role='КИП ИОС',
     ctx.route('**/exec?**', handle)
     ctx.route('**script.google.com/**', handle)
     def block_external(route):
-        route.fulfill(status=404, content_type='text/plain', body='not found (browser-check t341)')
+        route.fulfill(status=404, content_type='text/plain', body='not found (browser-check t342)')
     ctx.route('**raw.githubusercontent.com/**', block_external)
     ctx.route('**calendar.legalic.ru/**', block_external)
     page.goto('http://localhost:%d/index.html' % PORT, wait_until='domcontentloaded')
@@ -151,7 +154,7 @@ with sync_playwright() as p:
 
     # ========= Контекст 1: ДЕСКТОП 1280 — РЕДАКТОР (edit, тёмная тема) =========
     print('=== Контекст 1: десктоп 1280, edit, тёмная тема ===')
-    ctx, page, js_errors = setup_ctx(browser, {'width':1280,'height':800}, 'bcheck-t341-edit',
+    ctx, page, js_errors = setup_ctx(browser, {'width':1280,'height':800}, 'bcheck-t342-edit',
                                      theme='dark', role='КИП ИОС', ws_edit=True)
     page.evaluate("navigateTo('work-schedule')")
     page.wait_for_timeout(1600)
@@ -160,7 +163,7 @@ with sync_playwright() as p:
         var b = document.getElementById('wsPrintBtn');
         return { hidden: b.hidden, w: b.offsetWidth, label: b.textContent.trim() };
     })()""")
-    check('E1: кнопка «Печать» видна редактору (ряд 1)',
+    check('E1: кнопка «Печать» видна редактору (регресс 341)',
           (not st['hidden']) and st['w'] > 0 and st['label'] == 'Печать', st)
 
     grid_rows = page.evaluate("document.querySelectorAll('#wsGridWrap tbody tr').length")
@@ -176,6 +179,7 @@ with sync_playwright() as p:
                  sumRow: s.querySelectorAll('.wsp-grid tr.wsp-sum').length,
                  legend: s.querySelectorAll('.wsp-legend .wsp-lg').length,
                  totTh: s.querySelectorAll('.wsp-grid thead .wsp-tot').length,
+                 overTh: s.querySelectorAll('.wsp-grid thead .wsp-tot-over').length,
                  nodes: document.querySelectorAll('#wsPrintSheet').length };
     })()""")
     check('E3: window.print() вызван (стаб)', calls == 1, calls)
@@ -185,27 +189,44 @@ with sync_playwright() as p:
           sheet['dayTh'] == DAYS_IN_MONTH, sheet['dayTh'])
     check('E6: строки сотрудников + итоговая', sheet['rows'] == 4 and sheet['sumRow'] == 1,
           (sheet['rows'], sheet['sumRow']))
-    # Task 342: колонок итогов теперь 3 (добавлена «Перераб.»)
-    check('E7: колонки «Дни»/«Часы» в шапке', sheet['totTh'] == 3, sheet['totTh'])
-    check('E8: легенда кодов из справочника', sheet['legend'] == len(CODES), sheet['legend'])
+    # Task 342: было 2 колонки итогов (341) → 3 («Перераб.»)
+    check('O1: колонок итогов 3 — «Дни»/«Часы»/«Перераб.»',
+          sheet['totTh'] == 3 and sheet['overTh'] == 1,
+          (sheet['totTh'], sheet['overTh']))
 
     h = sheet['html']
-    check('E9: заголовок и месяц/год/вид', ('График работы — табель учёта рабочего времени' in h)
-          and ('%d г. · вид табеля: полный' % Y in h or ('%d г.' % Y in h)), True)
-    check('E10: штамп «Распечатано»', 'Распечатано:' in h, True)
-    check('E11: норма месяца (фолбэк календаря)', 'Норма (40-час. неделя):' in h, True)
-    check('E12: inline-цвет статуса из справочника', 'background:#FFE082' in h, True)
-    check('E13: ФИО и должность в строках', ('Иванов Иван Иванович' in h) and ('Слесарь КИПиА' in h), True)
-    check('E14: статус-мероприятие «И» — бейдж (не большой код)',
-          ('wsp-ev">И</span>' in h) and ('<td class="wsp-cell" >И</td>' not in h), True)
-    check('E15: план отпуска — пунктир (wsp-vac)', 'wsp-vac' in h, True)
-    check('E16: итоги сотрудника с записями непустые',
+    check('O2: заголовок «Перераб.» с подписью «дни/ч»',
+          'Перераб.<span>дни/ч</span>' in h, True)
+    check('O3: сменный 017 — «1/12» (тип персонала: смена)',
+          '<td class="wsp-tot wsp-tot-over">1/12</td>' in h, True)
+    check('O4: дневной 031 — «1/4» (часы правки ячейки)',
+          '<td class="wsp-tot wsp-tot-over">1/4</td>' in h, True)
+    check('O5: дневной 023 без д/н — «—»',
+          '<td class="wsp-tot wsp-tot-over">—</td>' in h, True)
+    sum_i = h.find('wsp-sum')
+    sum_row = h[sum_i:h.find('</tr>', sum_i)]
+    check('O6: итоговая строка — grand «2/16» (1+1 день, 12+4 ч)',
+          'wsp-tot-over">2/16</td>' in sum_row, True)
+    check('O7: подпись итога упоминает переработку (дни/ч)',
+          'переработка (дни/ч)' in sum_row, True)
+    check('O8: сноска поясняет формат «Перераб.»',
+          '«Перераб.» — дни/часы переработки' in h, True)
+    check('O9: старая отсылка «учтена в приложении» удалена',
+          'учтена в приложении' not in h, True)
+    check('O10: красная точка переработки в ячейке (регресс 341)',
+          'wsp-over' in h, True)
+    check('E12: inline-цвет статуса из справочника (регресс 341)',
+          'background:#FFE082' in h, True)
+    check('E13: ФИО и должность в строках (регресс 341)',
+          ('Иванов Иван Иванович' in h) and ('Слесарь КИПиА' in h), True)
+    check('E16: итоги сотрудника с записями непустые (регресс 341)',
           ('<td class="wsp-tot">1</td>' in h), True)
 
     # повторный клик — лист переиспользуется
     do_print(page)
     nodes2 = page.evaluate("document.querySelectorAll('#wsPrintSheet').length")
-    check('E17: повторная печать переиспользует лист', nodes2 == 1, nodes2)
+    check('E17: повторная печать переиспользует лист (регресс 341)',
+          nodes2 == 1, nodes2)
 
     # ========= ЭМУЛЯЦИЯ PRINT-МЕДИА (тот же контекст, тёмная тема) =========
     print('=== Контекст 1b: эмуляция print-медиа (тёмная тема приложения) ===')
@@ -223,7 +244,7 @@ with sync_playwright() as p:
     check('P2: #loginScreen скрыт в print', st['login'] == 'none', st['login'])
     check('P3: печатный лист показан (display:block)', st['sheet'] == 'block', st['sheet'])
     check('P4: вёрстка листа СВЕТЛАЯ (тёмный текст)', '17, 31, 36' in st['sheetColor'] or st['sheetColor'] != '', st['sheetColor'])
-    page.screenshot(path='scripts/task341-proof-print-emulation.png', full_page=False)
+    page.screenshot(path='scripts/task342-proof-print-emulation.png', full_page=False)
     page.emulate_media(media='screen')
     page.wait_for_timeout(200)
     back = page.evaluate("(function(){ return getComputedStyle(document.getElementById('wsPrintSheet')).display; })()")
@@ -233,31 +254,33 @@ with sync_playwright() as p:
 
     # ========= Контекст 2: ДЕСКТОП — уровень view («ИТР8 pro») =========
     print('=== Контекст 2: десктоп 1280, уровень view ===')
-    ctx, page, js_errors = setup_ctx(browser, {'width':1280,'height':800}, 'bcheck-t341-view',
+    ctx, page, js_errors = setup_ctx(browser, {'width':1280,'height':800}, 'bcheck-t342-view',
                                      theme='dark', role='ИТР8 pro', ws_view=True)
     page.evaluate("navigateTo('work-schedule')")
     page.wait_for_timeout(1600)
     st = page.evaluate("(function(){ var b = document.getElementById('wsPrintBtn'); return { hidden: b.hidden, w: b.offsetWidth }; })()")
-    check('V1: кнопка «Печать» видна уровню view',
+    check('V1: кнопка «Печать» видна уровню view (регресс 341)',
           (not st['hidden']) and st['w'] > 0, st)
     calls = do_print(page)
     rows = page.evaluate("document.querySelectorAll('#wsPrintSheet .wsp-grid tbody tr').length")
     check('V2: печать работает — window.print + 3 строки', calls == 1 and rows == 4, (calls, rows))
-    check('V3: «Сформировать» скрыта (регресс 340)',
+    ov = page.evaluate("document.querySelectorAll('#wsPrintSheet .wsp-grid thead .wsp-tot-over').length")
+    check('V3: колонка «Перераб.» и уровню view', ov == 1, ov)
+    check('V4: «Сформировать» скрыта (регресс 340)',
           page.evaluate("document.getElementById('wsGenerateBtn').hidden"), True)
-    check('V4: 0 JS-ошибок (view)', len(js_errors) == 0, js_errors[:3])
+    check('V5: 0 JS-ошибок (view)', len(js_errors) == 0, js_errors[:3])
     ctx.close()
 
     # ========= Контекст 3: ДЕСКТОП — уровень min (дежурный) =========
     print('=== Контекст 3: десктоп 1280, уровень min (дежурный) ===')
-    ctx, page, js_errors = setup_ctx(browser, {'width':1280,'height':800}, 'bcheck-t341-min',
+    ctx, page, js_errors = setup_ctx(browser, {'width':1280,'height':800}, 'bcheck-t342-min',
                                      theme='dark', role='КИП ИОС дежурный', ws_min=True)
     page.evaluate("navigateTo('docs-ios')")
     page.wait_for_timeout(150)
     page.evaluate("navigateTo('work-schedule')")
     page.wait_for_timeout(1600)
     st = page.evaluate("(function(){ var b = document.getElementById('wsPrintBtn'); var t = document.getElementById('wsTotalsBtn'); return { hidden: b.hidden, w: b.offsetWidth, totHidden: t.hidden }; })()")
-    check('M1: кнопка «Печать» видна уровню min',
+    check('M1: кнопка «Печать» видна уровню min (регресс 341)',
           (not st['hidden']) and st['w'] > 0, st)
     check('M2: «Итоги учёта» по-прежнему скрыта min (регресс 340)',
           st['totHidden'], st)
@@ -267,7 +290,7 @@ with sync_playwright() as p:
         document.querySelectorAll('#wsPrintSheet .wsp-fio').forEach(function(s){ out.push(s.textContent); });
         return out;
     })()""")
-    check('M3: печать min: «Мастер КИПиА» (Петров) скрыт',
+    check('M3: печать min: «Мастер КИПиА» (Петров) скрыт (регресс 340)',
           calls == 1 and (len(fios) == 2) and not any('Петров' in f for f in fios)
           and any('Иванов' in f for f in fios), fios)
     check('M4: 0 JS-ошибок (min)', len(js_errors) == 0, js_errors[:3])
@@ -275,26 +298,28 @@ with sync_playwright() as p:
 
     # ========= Контекст 4: МОБИЛЬНЫЙ 375 — уровень view =========
     print('=== Контекст 4: мобильный 375, уровень view ===')
-    ctx, page, js_errors = setup_ctx(browser, {'width':375,'height':720}, 'bcheck-t341-mob',
+    ctx, page, js_errors = setup_ctx(browser, {'width':375,'height':720}, 'bcheck-t342-mob',
                                      theme='light', role='ИТР8 pro', ws_view=True, dsf=3)
     page.evaluate("navigateTo('docs-ios')")
     page.wait_for_timeout(150)
     page.evaluate("navigateTo('work-schedule')")
     page.wait_for_timeout(1600)
     st = page.evaluate("(function(){ var b = document.getElementById('wsPrintBtn'); return { hidden: b.hidden, w: b.offsetWidth }; })()")
-    check('B1: кнопка «Печать» видна на мобайле',
+    check('B1: кнопка «Печать» видна на мобайле (регресс 341)',
           (not st['hidden']) and st['w'] > 0, st)
     calls = do_print(page)
     day_th = page.evaluate("document.querySelectorAll('#wsPrintSheet .wsp-grid thead .wsp-day').length")
     check('B2: печать с мобайла работает (все дни в листе)',
           calls == 1 and day_th == DAYS_IN_MONTH, (calls, day_th))
-    page.screenshot(path='scripts/task341-proof-mobile.png')
-    check('B3: 0 JS-ошибок (мобайл)', len(js_errors) == 0, js_errors[:3])
+    ov = page.evaluate("document.querySelectorAll('#wsPrintSheet .wsp-grid thead .wsp-tot-over').length")
+    check('B3: колонка «Перераб.» с мобайла', ov == 1, ov)
+    page.screenshot(path='scripts/task342-proof-mobile.png')
+    check('B4: 0 JS-ошибок (мобайл)', len(js_errors) == 0, js_errors[:3])
     ctx.close()
 
     # ========= Контекст 5: ПУСТОЙ ГРАФИК (нет сотрудников) =========
     print('=== Контекст 5: пустой график — тост, без печати ===')
-    ctx, page, js_errors = setup_ctx(browser, {'width':1280,'height':800}, 'bcheck-t341-empty',
+    ctx, page, js_errors = setup_ctx(browser, {'width':1280,'height':800}, 'bcheck-t342-empty',
                                      theme='dark', role='КИП ИОС', ws_edit=True, empty=True)
     page.evaluate("navigateTo('work-schedule')")
     page.wait_for_timeout(1600)
