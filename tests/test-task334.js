@@ -49,7 +49,7 @@
 //   CSS СУЖЕНИЕ: .ws-grid.ws-narrow th/td.ws-emp-col — 76px,
 //     .ws-tab-no/.ws-emp-pos скрыты; .ws-tt-table.ws-narrow
 //     th/td.ws-tt-emp — 58px, .ws-tt-tabno скрыт (media ≤1023px).
-//   SW: kipia-test-v574.
+//   SW: kipia-test-v575.
 //
 // Запуск: через tests/run-all.js (require './test-task334.js').
 
@@ -511,11 +511,11 @@ describe('Task 334 — сужение ФИО до 4 букв', () => {
         assertTrue(j !== -1, 'span.ws-tt-name и в годовой (yearRow)');
     });
 
-    test('CSS: .ws-grid.ws-narrow — узкая колонка, без таб.номера/должности', () => {
+    test('CSS: .ws-grid.ws-narrow — узкая колонка (Task 336: по ширине текста), без таб.номера/должности', () => {
         const b = ruleBlock('.ws-grid.ws-narrow thead th.ws-emp-col,');
         assertTrue(b.length > 0, 'правило найдено');
-        assertTrue(/width:\s*76px/.test(b), 'ширина 76px');
-        assertTrue(/min-width:\s*76px/.test(b), 'минимум 76px');
+        assertTrue(/width:\s*var\(--ws-emp-nw, 52px\)/.test(b), 'ширина var(--ws-emp-nw) (Task 336 — по сокращённому тексту)');
+        assertTrue(/min-width:\s*var\(--ws-emp-nw, 52px\)/.test(b), 'минимум var(--ws-emp-nw)');
         const i = INDEX_SRC.indexOf(
             '.ws-grid.ws-narrow td.ws-emp-col .ws-tab-no,');
         assertTrue(i !== -1, 'скрытие таб. номера/должности');
@@ -523,10 +523,10 @@ describe('Task 334 — сужение ФИО до 4 букв', () => {
         assertTrue(/display:\s*none/.test(chunk), 'display: none');
     });
 
-    test('CSS: .ws-tt-table.ws-narrow — 58px, без таб.номера', () => {
+    test('CSS: .ws-tt-table.ws-narrow — var(--ws-tt-emp-nw) (Task 336), без таб.номера', () => {
         const b = ruleBlock('.ws-tt-table.ws-narrow th.ws-tt-emp,');
         assertTrue(b.length > 0, 'правило найдено');
-        assertTrue(/width:\s*58px/.test(b), 'ширина 58px');
+        assertTrue(/width:\s*var\(--ws-tt-emp-nw, 48px\)/.test(b), 'ширина var(--ws-tt-emp-nw) (по сокращённому тексту)');
         const i = INDEX_SRC.indexOf('.ws-tt-table.ws-narrow .ws-tt-tabno');
         assertTrue(i !== -1, 'скрытие таб. номера итогов');
         const chunk = INDEX_SRC.slice(i, i + 120);
@@ -561,10 +561,10 @@ describe('Task 334 — сужение ФИО до 4 букв', () => {
 // 6. Service Worker
 // ============================================================
 describe('Task 334 — Service Worker', () => {
-    test('SW: кэш поднят до kipia-test-v574', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v574'") !== -1,
-            'CACHE_VERSION = kipia-test-v574 (Task 334 — только фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v575') !== -1,
-            'лишний инкремент (v575) не сделан');
+    test('SW: кэш поднят до kipia-test-v575', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v575'") !== -1,
+            'CACHE_VERSION = kipia-test-v575 (Task 334 — только фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v576') !== -1,
+            'лишний инкремент (v576) не сделан');
     });
 });

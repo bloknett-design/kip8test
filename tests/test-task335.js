@@ -4,11 +4,12 @@
 //      прибора должен вплотную примыкать к верхнему бару» — при
 //      прокрутке мобильная шапка сжимается до 40px, липкий блок
 //      следует высоте шапки (top 56px → 40px); десктоп-панель —
-//      компенсация верхнего паддинга скролл-зоны (margin-top −16px).
+//      компенсация верхнего паддинга скролл-зоны (Task 336 заменил
+//      неработавший margin-top −16px на :has-правило padding-top: 0).
 //   2) «Колонка с фамилиями сужается не резко, а ПЛАВНО в начале
 //      прокрутки; текст шапки "Сотрудник +" сокращается до "Сотр"» —
-//      CSS transition ширины (0.22s) на колонки ФИО/«Сотрудник»,
-//      порог сужения 0 (сразу в начале прокрутки), span-обмен
+//      CSS transition ширины (0.35s, Task 336 — ещё плавнее) на
+//      колонки ФИО/«Сотрудник», порог сужения 0, span-обмен
 //      заголовка (data-full="Сотрудник"/data-s4="Сотр"), плюсик
 //      шапки скрыт в суженном виде.
 //   3) «В мобильном не сразу работает прокрутка шахматки табеля и
@@ -27,7 +28,7 @@
 //      ws-view-filtered на #page-work-schedule (_applyView),
 //      CSS align-self/flex по контенту, _fitGrid капсулирует высоту
 //      строк природной, остаток раздачи ≤ n-1.
-//   SW: kipia-test-v574.
+//   SW: kipia-test-v575.
 //
 // Запуск: через tests/run-all.js (require './test-task335.js').
 
@@ -78,13 +79,27 @@ describe('Task 335 — карточка прибора: блок вплотну�
         assertTrue(/top:\s*56px/.test(b), 'top: 56px под полной шапкой');
     });
 
-    test('CSS: десктоп-панель — margin-top: −16px (компенсация паддинга зоны)', () => {
+    test('CSS: десктоп-панель — БЕЗ верхнего паддинга зоны (:has, Task 336)', () => {
         const b = ruleBlock('#detailPanel .dev-detail-top {');
         assertTrue(b.length > 0, 'правило панели найдено');
-        assertTrue(/margin-top:\s*-16px/.test(b),
-            'верхний отступ скролл-зоны компенсирован — блок к бару крошек');
+        // Task 336: margin-top: -16px УДАЛЁН — маржа sticky-блока
+        // схлопывалась с маржей .dev-detail-card и не срабатывала;
+        // вместо неё :has-правило ниже убирает padding-top зоны
+        assertFalse(/margin-top:\s*-16px/.test(b),
+            'margin-top: -16 удалён (не работал — схлопывание маржи)');
         assertTrue(/margin-left:\s*-16px/.test(b) && /margin-right:\s*-16px/.test(b),
             'боковые full-bleed маржи на месте (Task 334)');
+    });
+
+    test('CSS: десктоп-панель — :has-правило padding-top: 0 (Task 336)', () => {
+        const i = INDEX_SRC.indexOf(
+            '#detailPanel .detail-panel-body:has(> .dev-detail-card > .dev-detail-top)');
+        assertTrue(i !== -1, ':has-правило найдено');
+        const chunk = INDEX_SRC.slice(i, i + 200);
+        assertTrue(/padding-top:\s*0/.test(chunk), 'padding-top: 0 — блок вплотную к бару');
+        // правило — ПОСЛЕ базового padding: 16px (порядок = приоритет)
+        const base = INDEX_SRC.indexOf('#detailPanel .detail-panel-body {');
+        assertTrue(base !== -1 && i > base, ':has-правило после базового паддинга');
     });
 });
 
@@ -93,23 +108,23 @@ describe('Task 335 — карточка прибора: блок вплотну�
 // ============================================================
 describe('Task 335 — плавное сужение колонки фамилий', () => {
 
-    test('CSS: transition ширины колонки ФИО сетки (0.22s ease)', () => {
+    test('CSS: transition ширины колонки ФИО сетки (0.35s, Task 336 — плавнее)', () => {
         const b = ruleBlock('.ws-grid thead th.ws-emp-col,');
         // первое вхождение — базовое правило; ищем блок transition
         const i = INDEX_SRC.indexOf(
             '.ws-grid thead th.ws-emp-col,\n        .ws-grid tbody td.ws-emp-col {\n            transition');
         assertTrue(i !== -1, 'правило transition колонки ФИО есть');
-        const chunk = INDEX_SRC.slice(i, i + 240);
-        assertTrue(/transition:\s*width 0\.22s ease/.test(chunk), 'width анимируется');
-        assertTrue(/min-width 0\.22s ease/.test(chunk), 'min-width анимируется');
-        assertTrue(/padding 0\.22s ease/.test(chunk), 'padding анимируется');
+        const chunk = INDEX_SRC.slice(i, i + 300);
+        assertTrue(/transition:\s*width 0\.35s cubic-bezier\(0\.4, 0, 0\.2, 1\)/.test(chunk), 'width анимируется (0.35s, мягкая кривая)');
+        assertTrue(/min-width 0\.35s cubic-bezier/.test(chunk), 'min-width анимируется');
+        assertTrue(/padding 0\.35s cubic-bezier/.test(chunk), 'padding анимируется');
     });
 
     test('CSS: transition ширины колонки «Сотрудник» итогов (после базового правила)', () => {
         // правило стоит ПОСЛЕ базового .ws-tt-emp (порядок = приоритет)
         const base = INDEX_SRC.indexOf('.ws-tt-table th.ws-tt-emp,\n    .ws-tt-table td.ws-tt-emp {\n        text-align: left;');
         const i = INDEX_SRC.indexOf(
-            '.ws-tt-table th.ws-tt-emp,\n        .ws-tt-table td.ws-tt-emp {\n            transition: width 0.22s ease;');
+            '.ws-tt-table th.ws-tt-emp,\n        .ws-tt-table td.ws-tt-emp {\n            transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);');
         assertTrue(base !== -1, 'базовое правило на месте');
         assertTrue(i !== -1 && i > base, 'transition-правило после базового');
     });
@@ -361,10 +376,10 @@ describe('Task 335 — десктоп: виды сменные/дневные б
 // SW-версия
 // ============================================================
 describe('Task 335 — версия кэша SW', () => {
-    test('SW: кэш поднят до kipia-test-v574', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v574'") !== -1,
-            'CACHE_VERSION = kipia-test-v574 (Task 335 — только фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v575') !== -1,
-            'лишний инкремент (v575) не сделан');
+    test('SW: кэш поднят до kipia-test-v575', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v575'") !== -1,
+            'CACHE_VERSION = kipia-test-v575 (Task 335 — только фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v576') !== -1,
+            'лишний инкремент (v576) не сделан');
     });
 });
