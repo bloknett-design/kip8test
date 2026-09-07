@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Task 335: browser-check — заявка пользователя (правки/баги Task 334):
 #   • блок картинка+№+Место вплотную к верхнему бару (scrolled 40px);
-#   • плавное сужение колонок фамилий (transition 0.22s, порог 0) +
+#   • плавное сужение колонок фамилий (0.35s Task 336, порог 0) +
 #     шапка «Сотрудник +» → «Сотр»;
 #   • мобильный горизонтальный скролл СРАЗУ (touch-action pan-x pan-y,
 #     без предварительного pinch-zoom);
@@ -168,8 +168,8 @@ with sync_playwright() as p:
                  thProp: th ? getComputedStyle(th).transitionProperty : null,
                  td: td ? getComputedStyle(td).transitionDuration : null };
     })()""")
-    check('M3: transition ширины колонки ФИО (0.22s)',
-          tr and '0.22s' in tr['th'] and '0.22s' in tr['td']
+    check('M3: transition ширины колонки ФИО (0.35s, Task 336 — плавнее)',
+          tr and '0.35s' in tr['th'] and '0.35s' in tr['td']
           and 'width' in (tr['thProp'] or ''), tr)
 
     # --- сужение в начале прокрутки + «Сотр» ---
@@ -220,9 +220,9 @@ with sync_playwright() as p:
     check('M5: месяц на странице — ВСЕ 12 столбцов', tt and tt['cols'] == 12, tt)
     check('M5b: доп. столбцы в списке',
           tt and 'Отгул (ОВ)' in tt['names'] and 'Прочие' in tt['names'], tt['names'] if tt else tt)
-    check('M5c: шапка span «Сотрудник», touch-action pan-x pan-y, transition 0.22s',
+    check('M5c: шапка span «Сотрудник», touch-action pan-x pan-y, transition 0.35s (Task 336)',
           tt and tt['headSpan'] == 'Сотрудник' and tt['ta'] == 'pan-x pan-y'
-          and tt['empTransition'] == '0.22s', tt)
+          and tt['empTransition'] == '0.35s', tt)
 
     # сужение на странице итогов: шапка → «Сотр»
     nar2 = page.evaluate("""(function(){
@@ -391,8 +391,8 @@ with sync_playwright() as p:
         body.scrollTop = 0;
         return { gap0: gap0, gapSc: gapSc, mt: mt };
     })()""")
-    check('D7: панель — блок вплотную (margin-top −16px, зазоры ≈ 0)',
-          panel and panel['mt'] == '-16px' and abs(panel['gap0']) < 4
+    check('D7: панель — блок вплотную (Task 336: padding-top 0 зоны, зазоры ≈ 0)',
+          panel and panel['mt'] == '0px' and abs(panel['gap0']) < 4
           and abs(panel['gapSc']) < 4, panel)
 
     check('D8: 0 JS-ошибок (десктоп)', len(js_errors) == 0, js_errors[:3])
