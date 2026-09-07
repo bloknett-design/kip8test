@@ -2,11 +2,11 @@
 # Task 338: browser-check — заявка пользователя (продолжение Task 337):
 #   «так же у роли "КИП ИОС дежурный" не должны быть видны кнопка
 #    "Итоги учёта", шахматка дневного персонала, карточки сотрудников».
-# ФИКС: зритель (workschedule.view без edit) — вид «сменный» (дневные
-# строки скрыты, «Итоги учёта» скрыта _applyView, страница итогов
-# гейтится), карточки ФИО — гейт _canEdit (onclick не рендерится,
-# onEmpCellClick/_openEmpPopup гейты, класс ws-readonly выключает
-# hover-подсветку ФИО); редактор — всё как прежде.
+# ФИКС (Task 338, адаптировано Task 340 под трёхуровневую схему):
+# зритель (workschedule.view без edit) — УРОВЕНЬ 'view': карточка ФИО
+# открывается read-only (кнопок правки нет), «Вид»/«Итоги» видны в
+# полном виде, клик по ячейке — окно мероприятий; редактор — как прежде;
+# строгий уровень min — в task340-browser-check.py.
 import datetime
 import json
 from urllib.parse import unquote
@@ -121,7 +121,8 @@ with sync_playwright() as p:
     # ========= Контекст 1: мобильный 375 — ЗРИТЕЛЬ «КИП ИОС дежурный» =========
     print('=== Контекст 1: мобильный 375, «КИП ИОС дежурный», матрица edit=✗ ===')
     ctx, page, js_errors = setup_ctx(browser, {'width':375,'height':720}, 'bcheck-t338-viewer',
-                                     theme='dark', role='КИП ИОС дежурный', ws_edit=False, dsf=3)
+                                     theme='dark', role='КИП ИОС дежурный', ws_edit=False, dsf=3,
+                                     saved_view=None)
     goto_tab_mobile(page)
 
     # --- 1) кнопки «Сформировать»/«Вид» скрыты (регресс Task 337) ---
@@ -133,20 +134,16 @@ with sync_playwright() as p:
     })()""")
     check('M1: «Сформировать» скрыта (регресс 337)',
           st['genHidden'] and st['genW'] == 0, st)
-    check('M2: «Вид» скрыта (регресс 337)',
-          st['viewHidden'] and st['viewW'] == 0, st)
+    check('M2: «Вид» ВИДНА уровню view (Task 340)',
+          (not st['viewHidden']) and st['viewW'] > 0, st)
 
-    # --- 2) «Итоги учёта» скрыта (Task 338) ---
+    # --- 2) «Итоги учёта» ВИДНА уровню view в полном виде (Task 340) ---
     st = page.evaluate("""(function(){
         var tb = document.getElementById('wsTotalsBtn');
-        var tm = document.getElementById('wsTtTabMonth');
-        var ty = document.getElementById('wsTtTabYear');
-        return { tbHidden: tb.hidden, tbW: tb.offsetWidth,
-                 tmHidden: tm.hidden, tyHidden: ty.hidden };
+        return { tbHidden: tb.hidden, tbW: tb.offsetWidth };
     })()""")
-    check('M3: «Итоги учёта» скрыта (hidden, ширина 0)',
-          st['tbHidden'] and st['tbW'] == 0, st)
-    check('M4: вкладки «Месяц»/«Год» скрыты', st['tmHidden'] and st['tyHidden'], st)
+    check('M3: «Итоги учёта» ВИДНА уровню view (Task 340, полный вид)',
+          (not st['tbHidden']) and st['tbW'] > 0, st)
 
     # --- 3) шахматка дневных скрыта: только сменные строки ---
     rows = page.evaluate("""(function(){
@@ -159,8 +156,8 @@ with sync_playwright() as p:
         return { n: trs.length, hasDay: fios.some(function(f){ return f.indexOf('Петров') !== -1; }),
                  hasShift: fios.some(function(f){ return f.indexOf('Иванов') !== -1; }) };
     })()""")
-    check('M5: шахматка дневного персонала скрыта (1 строка, только сменный)',
-          rows['n'] == 1 and rows['hasShift'] and not rows['hasDay'], rows)
+    check('M5: полный вид — все строки видны уровню view (Task 340)',
+          rows['n'] == 2 and rows['hasShift'] and rows['hasDay'], rows)
 
     # --- 4) карточки сотрудников: клик по ФИО не открывает ---
     st = page.evaluate("""(function(){
@@ -169,23 +166,29 @@ with sync_playwright() as p:
                  readonly: document.getElementById('page-work-schedule')
                      .classList.contains('ws-readonly') };
     })()""")
-    check('M6: колонка ФИО без onclick (карточка не рендерится)', st['onclick'] is None, st)
-    check('M7: страница в режиме ws-readonly', st['readonly'], st)
+    check('M6: колонка ФИО с onclick (карточка уровням view, Task 340)',
+          st['onclick'] is not None, st)
+    check('M7: ws-readonly НЕТ (уровень view — карточки живы)', not st['readonly'], st)
     page.evaluate("""(function(){
         var td = document.querySelector('#wsGridWrap tbody tr td.ws-emp-col');
         td.dispatchEvent(new MouseEvent('click', {bubbles:true}));
     })()""")
     page.wait_for_timeout(400)
     pop = page.evaluate("""(function(){
-        return { emp: document.getElementById('wsEmpPopup').classList.contains('active'),
-                 closer: document.getElementById('wsEmpPopupCloser').classList.contains('active') };
+        var p = document.getElementById('wsEmpPopup');
+        return { emp: p.classList.contains('active'),
+                 closer: document.getElementById('wsEmpPopupCloser').classList.contains('active'),
+                 html: p.innerHTML };
     })()""")
-    check('M8: клик по ФИО — карточки НЕТ (попап не открыт)', not pop['emp'] and not pop['closer'], pop)
-    # программный вызов — тоже гейт
-    page.evaluate("WorkSchedule._openEmpPopup(null, '017')")
-    page.wait_for_timeout(200)
-    pop2 = page.evaluate("document.getElementById('wsEmpPopup').classList.contains('active')")
-    check('M9: программный _openEmpPopup — карточки нет', not pop2, pop2)
+    check('M8: клик по ФИО — карточка ОТКРЫТА (Task 340)',
+          pop['emp'] and pop['closer'], pop['emp'])
+    # read-only: кнопок правки нет (классы кнопок)
+    check('M8b: карточка READ-ONLY: нет «Уволить…»/«+ Отпуск…»/✎',
+          (pop['html'].find('ws-emp-dismiss') == -1) and
+          (pop['html'].find('ws-emp-addvac') == -1) and
+          (pop['html'].find('ws-popup-act') == -1),
+          {k: pop['html'].find(v) for k, v in {'d':'ws-emp-dismiss','v':'ws-emp-addvac','a':'ws-popup-act'}.items()})
+    page.evaluate("WorkSchedule.closeEmpPopup()")
 
     # --- 5) клик по ячейке дня — окно мероприятий (регресс 337) ---
     page.evaluate("""(function(){
@@ -210,24 +213,27 @@ with sync_playwright() as p:
     check('M11: «Обновить» на месте (выбор года/месяца жив)', st['refresh'], st)
     check('M12: подсветка-перекрестье на месте', st['cross'], st)
 
-    # --- 7) итоги недоступны программно и прямым переходом ---
+    # --- 7) итоги ДОСТУПНЫ уровню view (Task 340, полный вид) ---
     page.evaluate("WorkSchedule.toggleTotals()")
-    page.wait_for_timeout(500)
+    page.wait_for_timeout(700)
     st = page.evaluate("""(function(){
         return { page: document.getElementById('page-ws-totals').classList.contains('active'),
-                 open: WorkSchedule._totalsOpen };
+                 ttPage: !!WorkSchedule._ttPage };
     })()""")
-    check('M13: программный toggleTotals — ни шторки, ни страницы',
-          (not st['page']) and (not st['open']), st)
+    check('M13: программный toggleTotals — мобильная страница итогов ОТКРЫТА',
+          st['page'] and st['ttPage'], st)
+    page.evaluate("navigateTo('work-schedule')")
+    page.wait_for_timeout(400)
     page.evaluate("navigateTo('ws-totals')")
     page.wait_for_timeout(700)
     st = page.evaluate("""(function(){
         return { totals: document.getElementById('page-ws-totals').classList.contains('active'),
-                 ws: document.getElementById('page-work-schedule').classList.contains('active'),
                  ttPage: !!WorkSchedule._ttPage };
     })()""")
-    check('M14: прямой переход на ws-totals → редирект на табель',
-          (not st['totals']) and st['ws'] and (not st['ttPage']), st)
+    check('M14: прямой переход ws-totals — страница итогов открыта (view)',
+          st['totals'] and st['ttPage'], st)
+    page.evaluate("navigateTo('work-schedule')")
+    page.wait_for_timeout(400)
 
     check('M15: 0 JS-ошибок (зритель)', len(js_errors) == 0, js_errors[:3])
     ctx.close()
@@ -281,7 +287,8 @@ with sync_playwright() as p:
     # ========= Контекст 3: ДЕСКТОП 1280 — зритель =========
     print('=== Контекст 3: десктоп 1280, «КИП ИОС дежурный», edit=✗ ===')
     ctx, page, js_errors = setup_ctx(browser, {'width':1280,'height':800}, 'bcheck-t338-desk',
-                                     theme='dark', role='КИП ИОС дежурный', ws_edit=False)
+                                     theme='dark', role='КИП ИОС дежурный', ws_edit=False,
+                                     saved_view=None)
     page.evaluate("navigateTo('work-schedule')")
     page.wait_for_timeout(1600)
 
@@ -298,27 +305,32 @@ with sync_playwright() as p:
         });
         return { n: trs.length, hasDay: fios.some(function(f){ return f.indexOf('Петров') !== -1; }) };
     })()""")
-    check('K1: десктоп: «Итоги учёта» скрыта', st['tbHidden'] and st['tbW'] == 0, st)
-    check('K2: десктоп: дневные скрыты (1 строка)', rows['n'] == 1 and not rows['hasDay'], rows)
+    check('K1: десктоп: «Итоги учёта» ВИДНА уровню view (Task 340)',
+          (not st['tbHidden']) and st['tbW'] > 0, st)
+    check('K2: десктоп: полный вид — все строки (2)', rows['n'] == 2 and rows['hasDay'], rows)
 
-    # шторка итогов не открывается программно (десктоп-путь)
+    # шторка итогов открывается уровню view (десктоп-путь)
     page.evaluate("WorkSchedule.toggleTotals()")
-    page.wait_for_timeout(600)
+    page.wait_for_timeout(700)
     st = page.evaluate("""(function(){
         var p = document.getElementById('page-work-schedule');
         return { open: !!WorkSchedule._totalsOpen,
                  gridwide: p.classList.contains('ws-tt-gridwide') };
     })()""")
-    check('K3: десктоп: шторка итогов не открылась', (not st['open']) and (not st['gridwide']), st)
+    check('K3: десктоп: шторка итогов открылась (view, Task 340)',
+          st['open'] and st['gridwide'], st)
+    page.evaluate("WorkSchedule.toggleTotals()")
+    page.wait_for_timeout(500)
 
-    # карточка по ФИО — не открывается
+    # карточка по ФИО открывается (read-only)
     page.evaluate("""(function(){
         var td = document.querySelector('#wsGridWrap tbody tr td.ws-emp-col');
         td.dispatchEvent(new MouseEvent('click', {bubbles:true}));
     })()""")
     page.wait_for_timeout(300)
     pop = page.evaluate("document.getElementById('wsEmpPopup').classList.contains('active')")
-    check('K4: десктоп: клик ФИО — карточки нет', not pop, pop)
+    check('K4: десктоп: клик ФИО — карточка открылась (view, Task 340)', pop, pop)
+    page.evaluate("WorkSchedule.closeEmpPopup()")
 
     # CSS-правила ws-readonly живы в стилях (hover-нейтрализация ФИО)
     st = page.evaluate("""(function(){

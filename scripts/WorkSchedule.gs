@@ -220,10 +220,28 @@ var WorkSchedule = {
     // матрица Task 293): «ИТР8 pro» теперь видит график (ранее Task 204 —
     // только Админ). Legacy-список READ_ROLES — только если
     // RoleMatrixGate.gs не задеплоен.
+    // Task 340 (трёхуровневый доступ): ЧТЕНИЕ дают ЛЮБОЕ из трёх прав:
+    //   workschedule.view      — обычный просмотр (карточки БЕЗ правки,
+    //                            «Итоги» и «Вид» доступны);
+    //   workschedule.view.min  — ограниченный просмотр (без карточек и
+    //                            «Итогов», скрыты «Мастер КИПиА»);
+    //   workschedule.edit      — полный доступ (подразумевает просмотр).
+    // Роль с ТОЛЬКО workschedule.view.min должна проходить чтение —
+    // иначе раздел не откроется. Одна проверка rmRequirePerm, уровень
+    // смотрим в карте прав (g.access.permissions) — без лишних вызовов
+    // и лишних записей в audit_log
     if (typeof rmRequirePerm === 'function') {
       var g = rmRequirePerm(token, 'workschedule.view', 'WorkSchedule');
-      if (!g.ok) return { error: { ok: false, error: g.error } };
-      return { user: g.user };
+      if (g.ok) return { user: g.user };
+      if (g.error === 'no_session') return { error: { ok: false, error: 'no_session' } };
+      if (g.access && g.access.permissions && (
+            g.access.permissions['workschedule.view.min'] === true ||
+            g.access.permissions['workschedule.edit'] === true)) {
+        // отказ был только по workschedule.view — но право min/edit
+        // тоже даёт чтение (Task 340)
+        return { user: g.user };
+      }
+      return { error: { ok: false, error: g.error } };
     }
     this._rmgLegacyWarn('WorkSchedule._requireRead');
     if (!token) return { error: { ok: false, error: 'no_session' } };

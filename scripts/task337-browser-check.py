@@ -3,9 +3,10 @@
 #   «установил роли "КИП ИОС дежурный" доступ "График работы — просмотр",
 #    а показываются кнопки "Сформировать" и "Вид" и доступно редактирование».
 # ФИКС: право записи — из серверной матрицы (workschedule.edit);
-# зритель (edit=✗) — без кнопок «Сформировать»/«Вид», клик по ячейке —
-# только окно мероприятий, вид — всегда полный; редактор (edit=✓) —
-# кнопки на месте, вид переключается; дежурный-редактор — замок.
+# зритель (edit=✗) — без «Сформировать», клик по ячейке — только окно
+# мероприятий. Task 340 (адаптация): зритель — УРОВЕНЬ 'view':
+# «Вид» видна (просмотр), сохранённый вид подхватывается; редактор
+# (edit=✓) — всё живо; дежурный-редактор — замок.
 import datetime
 import json
 from urllib.parse import unquote
@@ -129,13 +130,13 @@ with sync_playwright() as p:
     })()""")
     check('M1: «Сформировать» скрыта (hidden, ширина 0)',
           st['genHidden'] and st['genW'] == 0, st)
-    check('M2: «Вид» скрыта (hidden, ширина 0)',
-          st['viewHidden'] and st['viewW'] == 0, st)
+    check('M2: «Вид» ВИДНА уровню view (Task 340, ширина > 0)',
+          (not st['viewHidden']) and st['viewW'] > 0, st)
 
-    # --- 2) зритель — СМЕННЫЙ вид (Task 338: шахматка дневных скрыта;
-    #     Task 337 ставил полный — заявка 338 уточнила) ---
+    # --- 2) зритель — СОХРАНЁННЫЙ вид 'shift' (Task 340: зритель
+    #     подхватывает сохранённый вид, как редактор; setup ставит shift) ---
     rows = page.evaluate("document.querySelectorAll('#wsGridWrap tbody tr').length")
-    check('M3: сменный вид — только сменные строки (1)',
+    check('M3: сохранённый вид shift применён — 1 строка (Task 340)',
           rows == 1, rows)
     locked = page.evaluate("""(function(){
         var b = document.getElementById('wsViewBtn');
@@ -167,11 +168,14 @@ with sync_playwright() as p:
     })()""")
     check('M8: заголовок сотрудников НЕ кликабелен (без +)', not head['add'], head)
 
-    # --- 5) программный вызов cycleView — без эффекта ---
+    # --- 5) «Вид» работает у зрителя (Task 340): shift → day ---
     page.evaluate("WorkSchedule.cycleView()")
-    page.wait_for_timeout(200)
-    rows2 = page.evaluate("document.querySelectorAll('#wsGridWrap tbody tr').length")
-    check('M9: программный cycleView — вид НЕ сменился', rows2 == 1, rows2)
+    page.wait_for_timeout(300)
+    vw = page.evaluate("WorkSchedule._view")
+    check('M9: cycleView зрителя переключает вид (shift → day)',
+          vw == 'day', vw)
+    page.evaluate("WorkSchedule.cycleView()")   # day → full (2 строки)
+    page.wait_for_timeout(300)
 
     check('M10: 0 JS-ошибок (зритель)', len(js_errors) == 0, js_errors[:3])
     ctx.close()
@@ -253,8 +257,8 @@ with sync_playwright() as p:
     })()""")
     check('K1: десктоп: «Сформировать» скрыта',
           st['genHidden'] and st['genW'] == 0, st)
-    check('K2: десктоп: «Вид» скрыта',
-          st['viewHidden'] and st['viewW'] == 0, st)
+    check('K2: десктоп: «Вид» ВИДНА уровню view (Task 340)',
+          (not st['viewHidden']) and st['viewW'] > 0, st)
     check('K3: десктоп: ряд действий 3 держит высоту (~29.7px, сетка не прыгает)',
           26 <= st['rowH'] <= 33, st)
     check('K4: десктоп: подсветка осталась (фича просмотра)', st['crossVisible'], st)

@@ -26,7 +26,7 @@
 //   4) cycleView: программный guard — зритель не переключает вид.
 //   Сервер шлюзит каждый запрос rmRequirePerm('workschedule.edit')
 //   — как и прежде; клиентский фикс синхронизирует UX с матрицей.
-//   SW: kipia-test-v577.
+//   SW: kipia-test-v578.
 //
 // Запуск: через tests/run-all.js (require './test-task337.js').
 
@@ -82,7 +82,8 @@ describe('Task 337 — право записи workschedule.edit из матри
 
     test('VM: _computeCanEdit — матрица найдена → строго по чекбоксу', () => {
         const host = new Function('KipAuth', 'return ({' +
-            methodText(WS_CLIENT, '_computeCanEdit') + '\n});');
+            methodText(WS_CLIENT, '_computeCanEdit') + '\n' +
+            methodText(WS_CLIENT, '_computeViewLevel') + '\n});');
         // Дежурный, матрица: workschedule.edit НЕТ (только просмотр)
         assertFalse(host(mockKipAuth({ 'workschedule.edit': false }))._computeCanEdit('КИП ИОС дежурный'),
             'зритель «КИП ИОС дежурный» (edit=false) — НЕ редактор');
@@ -100,6 +101,7 @@ describe('Task 337 — право записи workschedule.edit из матри
     test('VM: _computeCanEdit — матрица недоступна → легаси-список', () => {
         const host = new Function('KipAuth', 'return ({' +
             methodText(WS_CLIENT, '_computeCanEdit') + '\n' +
+            methodText(WS_CLIENT, '_computeViewLevel') + '\n' +
             '_WRITE_ROLES: [\'КИП ИОС\', \'КИП ИОС pro\', \'Админ\'],' +
             '});');
         // null = getMyAccess не получен (старый сервер/сеть)
@@ -117,6 +119,7 @@ describe('Task 337 — право записи workschedule.edit из матри
     test('VM: _computeCanEdit — KipAuth не загружен → легаси-список', () => {
         const host = new Function('KipAuth', 'return ({' +
             methodText(WS_CLIENT, '_computeCanEdit') + '\n' +
+            methodText(WS_CLIENT, '_computeViewLevel') + '\n' +
             '_WRITE_ROLES: [\'КИП ИОС\', \'КИП ИОС pro\', \'Админ\'],' +
             '});');
         assertTrue(host(undefined)._computeCanEdit('КИП ИОС'),
@@ -128,16 +131,22 @@ describe('Task 337 — право записи workschedule.edit из матри
     });
 
     test('VM: _computeCanEdit — роль не задана', () => {
+        // Task 340: живая матрица говорит правами ПОЛЬЗОВАТЕЛЯ (карта
+        // получена по его токену) — роль не важна; пустая роль влияет
+        // только на легаси-ветку (не редактор)
         const host = new Function('KipAuth', 'return ({' +
             methodText(WS_CLIENT, '_computeCanEdit') + '\n' +
+            methodText(WS_CLIENT, '_computeViewLevel') + '\n' +
             '_WRITE_ROLES: [\'КИП ИОС\'],' +
             '});');
-        assertFalse(host(mockKipAuth({ 'workschedule.edit': true }))._computeCanEdit(''),
-            'пустая роль — false');
-        assertFalse(host(mockKipAuth({ 'workschedule.edit': true }))._computeCanEdit(null),
-            'null-роль — false');
-        assertFalse(host(mockKipAuth({ 'workschedule.edit': true }))._computeCanEdit(undefined),
-            'undefined-роль — false');
+        assertTrue(host(mockKipAuth({ 'workschedule.edit': true }))._computeCanEdit(''),
+            'матрица edit=✓ — редактор даже без роли (Task 340)');
+        assertFalse(host(mockKipAuth({}))._computeCanEdit(''),
+            'легаси: пустая роль — не редактор');
+        assertFalse(host(mockKipAuth({}))._computeCanEdit(null),
+            'легаси: null-роль — не редактор');
+        assertFalse(host(mockKipAuth({}))._computeCanEdit(undefined),
+            'легаси: undefined-роль — не редактор');
     });
 });
 
@@ -149,26 +158,25 @@ describe('Task 337 — кнопки «Сформировать»/«Вид» по
     test('SRC: init() прячет ОБЕ кнопки по _canEdit', () => {
         // вычисление права — УНИКАЛЬНАЯ строка init(); окно от неё до
         // конца init-функции (кнопки — в этом же окне, правки Task 337)
-        const i = INDEX_SRC.indexOf('this._canEdit = this._computeCanEdit(role);');
-        assertTrue(i !== -1, 'init: _canEdit через _computeCanEdit');
+        const i = INDEX_SRC.indexOf('this._viewLevel = this._computeViewLevel(role);');
+        assertTrue(i !== -1, 'init: уровень считается при старте (Task 340)');
         const init = INDEX_SRC.slice(i, INDEX_SRC.indexOf('this._attachFitResize()', i));
         assertTrue(init.indexOf("genBtn.hidden = !this._canEdit;") !== -1,
-            'init: «Сформировать» скрыт зрекам');
-        assertTrue(init.indexOf("getElementById('wsViewBtn')") !== -1 &&
-                   init.indexOf("viewBtn.hidden = !this._canEdit;") !== -1,
-            'init: «Вид» скрыт зрителям (Task 337)');
+            'init: «Сформировать» скрыт зрителям');
+        assertTrue(init.indexOf("viewBtn.hidden = (this._viewLevel === null);") !== -1,
+            'init: «Вид» виден всем уровням (Task 340 — просмотр)');
     });
 
     test('SRC: _onRoleUpdate прячет ОБЕ кнопки + замок с учётом права', () => {
         const fn = methodText(WS_CLIENT, '_onRoleUpdate');
-        assertTrue(fn.indexOf('this._computeCanEdit(role)') !== -1,
-            '_onRoleUpdate: _canEdit через _computeCanEdit');
+        assertTrue(fn.indexOf('this._computeViewLevel(role)') !== -1,
+            '_onRoleUpdate: уровень через _computeViewLevel (Task 340)');
         assertTrue(fn.indexOf('this._canEdit = newCanEdit;') !== -1,
             '_onRoleUpdate: право актуализируется (идемпотентно)');
         assertTrue(fn.indexOf("genBtn.hidden = !newCanEdit;") !== -1,
             '_onRoleUpdate: «Сформировать» скрыт зрителям');
-        assertTrue(fn.indexOf("roleViewBtn.hidden = !newCanEdit;") !== -1,
-            '_onRoleUpdate: «Вид» скрыт зрителям');
+        assertTrue(fn.indexOf("roleViewBtn.hidden = (newLevel === null);") !== -1,
+            '_onRoleUpdate: «Вид» скрыт только без прав (Task 340)');
         assertTrue(fn.indexOf("(role === 'КИП ИОС дежурный') && newCanEdit") !== -1,
             'замок дежурного — только если роль редактор матрицы');
         assertTrue(fn.indexOf('var changed =') !== -1,
@@ -186,14 +194,15 @@ describe('Task 337 — кнопки «Сформировать»/«Вид» по
             '_canEdit: true,' +
             '_viewLocked: true,' +  // как будто замок стоял (Task 332)
             '_view: \'shift\',' +
-            '_computeCanEdit: function() { return false; },' +
+            '_viewLevel: \'edit\',' +
+            '_computeViewLevel: function() { return \'view\'; },' +
             '_applyView: function(o) { this._applied = o; }' +
-            '});')(mockDoc(els), { getItem: function() { return 'shift'; } });
+            '});')(mockDoc(els), { getItem: function() { return 'day'; } });
         host._onRoleUpdate('КИП ИОС дежурный');
         assertTrue(els.wsGenerateBtn.hidden === true, '«Сформировать» скрыта');
-        assertTrue(els.wsViewBtn.hidden === true, '«Вид» скрыта');
+        assertTrue(els.wsViewBtn.hidden === false, '«Вид» видна (Task 340 — просмотр)');
         assertFalse(host._viewLocked === true, 'замок снят (роль — не редактор)');
-        assertEqual(host._view, 'shift', 'вид зрителя — сменный (Task 338: дневные скрыты)');
+        assertEqual(host._view, 'day', 'сохранённый вид зрителя применяется (Task 340)');
         assertEqual(host._applied.rerender, true, 'сетка перерисована');
     });
 
@@ -206,9 +215,10 @@ describe('Task 337 — кнопки «Сформировать»/«Вид» по
             methodText(WS_CLIENT, '_onRoleUpdate') + '\n' +
             '_initialized: true,' +
             '_canEdit: false,' +
+            '_viewLevel: \'view\',' +
             '_viewLocked: false,' +
             '_view: \'full\',' +
-            '_computeCanEdit: function() { return true; },' +
+            '_computeViewLevel: function() { return \'edit\'; },' +
             '_applyView: function(o) { this._applied = o; }' +
             '});')(mockDoc(els), { getItem: function() { return 'shift'; } });
         host._onRoleUpdate('КИП ИОС');
@@ -219,23 +229,24 @@ describe('Task 337 — кнопки «Сформировать»/«Вид» по
 
     test('SRC: cycleView — программный guard для зрителя', () => {
         const fn = methodText(WS_CLIENT, 'cycleView');
-        assertTrue(fn.indexOf('if (!this._canEdit) return;') !== -1,
-            'зритель не переключает вид (даже программно)');
+        assertTrue(fn.indexOf('if (this._viewLevel === null) return;') !== -1,
+            'без прав вид не переключается (даже программно)');
     });
 
-    test('VM: cycleView — зритель: вид не меняется, тоста нет', () => {
+    test('VM: cycleView — прав нет: вид не меняется, тоста нет', () => {
         const toasts = [];
-        const host = new Function('KipToast', 'return ({' +
+        const host = new Function('KipToast', 'localStorage', 'return ({' +
             methodText(WS_CLIENT, 'cycleView') + '\n' +
-            '_canEdit: false,' +
+            '_viewLevel: null,' +
             '_viewLocked: false,' +
             '_view: \'full\',' +
             '_applyView: function() { this._appliedCount = (this._appliedCount || 0) + 1; }' +
-            '});')({ show: function(m) { toasts.push(m); } });
+            '});')({ show: function(m) { toasts.push(m); } },
+            { setItem: function() {} });
         host.cycleView();
         assertEqual(host._view, 'full', 'вид остался полный');
         assertEqual(host._appliedCount, undefined, '_applyView не вызван');
-        assertEqual(toasts.length, 0, 'тост не показан (кнопки нет — тихо)');
+        assertEqual(toasts.length, 0, 'тост не показан (прав нет — тихо)');
     });
 });
 
@@ -245,14 +256,14 @@ describe('Task 337 — кнопки «Сформировать»/«Вид» по
 // ============================================================
 describe('Task 337/338 — зритель всегда на сменном виде', () => {
 
-    test('VM: _initView — зритель-«дежурный» (edit=✗, сохранён day) → shift', () => {
+    test('VM: _initView — зритель-«дежурный» (view, сохранён day) → day', () => {
         const host = new Function('localStorage', 'return ({' +
             methodText(WS_CLIENT, '_initView') + '\n' +
-            '_computeCanEdit: function() { return false; },' +
+            '_computeViewLevel: function() { return \'view\'; },' +
             '_applyView: function() { this._applied = true; }' +
             '});')({ getItem: function() { return 'day'; } });
         host._initView('КИП ИОС дежурный');
-        assertEqual(host._view, 'shift', 'зритель — сменный вид (дневные скрыты)');
+        assertEqual(host._view, 'day', 'зритель — сохранённый вид (Task 340)');
         assertFalse(host._viewLocked === true, 'замка нет (роль не редактор)');
         assertTrue(host._applied === true, '_applyView вызван');
     });
@@ -260,7 +271,7 @@ describe('Task 337/338 — зритель всегда на сменном ви�
     test('VM: _initView — редактор «КИП ИОС дежурный» (edit=✓) → shift, замок', () => {
         const host = new Function('localStorage', 'return ({' +
             methodText(WS_CLIENT, '_initView') + '\n' +
-            '_computeCanEdit: function() { return true; },' +
+            '_computeViewLevel: function() { return \'edit\'; },' +
             '_applyView: function() {}' +
             '});')({ getItem: function() { return 'full'; } });
         host._initView('КИП ИОС дежурный');
@@ -271,7 +282,7 @@ describe('Task 337/338 — зритель всегда на сменном ви�
     test('VM: _initView — обычный редактор: сохранённый вид применяется', () => {
         const host = new Function('localStorage', 'return ({' +
             methodText(WS_CLIENT, '_initView') + '\n' +
-            '_computeCanEdit: function() { return true; },' +
+            '_computeViewLevel: function() { return \'edit\'; },' +
             '_applyView: function() {}' +
             '});')({ getItem: function() { return 'day'; } });
         host._initView('КИП ИОС');
@@ -279,14 +290,14 @@ describe('Task 337/338 — зритель всегда на сменном ви�
         assertFalse(host._viewLocked === true, 'замка нет');
     });
 
-    test('VM: _initView — зритель «ИТР8 pro»: сохранённый day игнорируется', () => {
+    test('VM: _initView — зритель «ИТР8 pro»: сохранённый day применяется', () => {
         const host = new Function('localStorage', 'return ({' +
             methodText(WS_CLIENT, '_initView') + '\n' +
-            '_computeCanEdit: function() { return false; },' +
+            '_computeViewLevel: function() { return \'view\'; },' +
             '_applyView: function() {}' +
             '});')({ getItem: function() { return 'day'; } });
         host._initView('ИТР8 pro');
-        assertEqual(host._view, 'shift', 'зритель — сменный вид (Task 338)');
+        assertEqual(host._view, 'day', 'зритель — сохранённый вид (не заперт)');
     });
 });
 
@@ -323,10 +334,10 @@ describe('Task 337 — регресс-гейты правки', () => {
 // ============================================================
 describe('Task 337 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v577', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v577'") !== -1,
-            'CACHE_VERSION = kipia-test-v577 (Task 337 — только фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v578') !== -1,
+    test('SW: кэш поднят до kipia-test-v578', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v578'") !== -1,
+            'CACHE_VERSION = kipia-test-v578 (Task 337 — только фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v579') !== -1,
             'лишний инкремент (v577) не сделан');
     });
 

@@ -23,7 +23,7 @@
 //      _openEmpPopup (программные вызовы тоже). Режим зрителя —
 //      класс ws-readonly на #page-work-schedule: CSS выключает
 //      подсветку наведения ФИО (зебра чётных строк живёт).
-//   SW: kipia-test-v577.
+//   SW: kipia-test-v578.
 //
 // Запуск: через tests/run-all.js (require './test-task338.js').
 
@@ -59,56 +59,55 @@ function mockDoc(els) {
 // ============================================================
 describe('Task 338 — вид зрителя: сменный (итоги/дневные скрыты)', () => {
 
-    test('SRC: _initView — зритель (!canEdit) → shift, замка нет', () => {
+    test('SRC: _initView — зрель не заперт, замок только дежурному-редактору', () => {
         const fn = methodText(WS_CLIENT, '_initView');
-        // обе ветки (замок дежурного-редактора + зритель) — «сменный»
+        // Task 340: принудительный shift — только у замка дежурного-
+        // редактора; зритель (view/min) — сохранённый вид, как редактор
         const cnt = fn.split("this._view = 'shift';").length - 1;
-        assertEqual(cnt, 2, 'две ветки shift: замок и зритель');
-        assertTrue(fn.indexOf("} else if (!canEdit) {") !== -1,
-            'ветка зрителя отдельная (право из матрицы)');
-        assertFalse(fn.indexOf("this._view = 'full';\n            } else {") !== -1,
-            'зритель БОЛЬШЕ не получает полный вид (Task 338)');
+        assertEqual(cnt, 1, 'ветка shift — только замок дежурного');
+        assertFalse(fn.indexOf("} else if (!canEdit) {") !== -1,
+            'ветка принудительного shift зрителя удалена (Task 340)');
+        assertTrue(fn.indexOf("(saved === 'shift' || saved === 'day') ? saved : 'full';") !== -1,
+            'зритель получает сохранённый вид (Task 340)');
     });
 
     test('SRC: _onRoleUpdate — зритель → shift (легаси-вид не применяется)', () => {
         const fn = methodText(WS_CLIENT, '_onRoleUpdate');
-        assertTrue(fn.indexOf("classList.toggle('ws-readonly', !newCanEdit)") !== -1,
-            'класс ws-readonly актуализируется ролью');
-        assertTrue(fn.indexOf(": 'shift';") !== -1,
-            'ветка зрителя — сменный вид (не full)');
-        assertFalse(fn.indexOf(": 'full';") !== -1,
-            'полный вид зрителю больше не ставится');
+        assertTrue(fn.indexOf("classList.toggle('ws-readonly', newLevel === 'min')") !== -1,
+            'ws-readonly — только уровню min (Task 340)');
+        assertTrue(fn.indexOf("(saved === 'shift' || saved === 'day') ? saved : 'full';") !== -1,
+            'зритель — сохранённый вид (Task 340, не принудительный shift)');
     });
 
     test('SRC: init() — страница получает класс ws-readonly', () => {
-        const i = INDEX_SRC.indexOf('this._canEdit = this._computeCanEdit(role);');
-        assertTrue(i !== -1, 'init: _canEdit через _computeCanEdit');
+        const i = INDEX_SRC.indexOf('this._viewLevel = this._computeViewLevel(role);');
+        assertTrue(i !== -1, 'init: уровень через _computeViewLevel (Task 340)');
         const init = INDEX_SRC.slice(i, INDEX_SRC.indexOf('this._attachFitResize()', i));
-        assertTrue(init.indexOf("classList.toggle('ws-readonly', !this._canEdit)") !== -1,
-            'init: ws-readonly по праву из матрицы');
+        assertTrue(init.indexOf("classList.toggle('ws-readonly', this._viewLevel === 'min')") !== -1,
+            'init: ws-readonly — только уровню min');
     });
 
     test('SRC: _applyView — кнопка «Итоги учёта» скрыта вне полного вида', () => {
         const fn = methodText(WS_CLIENT, '_applyView');
-        assertTrue(fn.indexOf("totalsBtn.hidden = !full;") !== -1,
-            'сменный вид прячет «Итоги учёта» (зритель всегда сменный)');
+        assertTrue(fn.indexOf("totalsBtn.hidden = !full || minNoTotals;") !== -1,
+            '«Итоги учёта» скрыты вне полного вида И у уровня min (Task 340)');
         assertTrue(fn.indexOf("viewPage.classList.toggle('ws-view-filtered', !full);") !== -1,
             'класс ws-view-filtered (Task 335) — сетка по высоте контента');
     });
 
     test('SRC: toggleTotals — гейт вида (шторка/кнопка недоступны)', () => {
         const fn = methodText(WS_CLIENT, 'toggleTotals');
-        assertTrue(fn.indexOf("vGate !== 'full' && !this._totalsOpen && !this._ttPage") !== -1,
-            'десктоп: открытие шторки гейчится видом');
-        assertTrue(fn.indexOf("if (vGate !== 'full') return;") !== -1,
-            'мобильная страница итогов — тоже гейт вида');
+        assertTrue(fn.indexOf("(vGate !== 'full' || this._viewLevel === 'min')") !== -1,
+            'десктоп: открытие шторки гейчится видом и уровнем (Task 340)');
+        assertTrue(fn.indexOf("if (vGate !== 'full' || this._viewLevel === 'min') return;") !== -1,
+            'мобильная страница итогов — гейт вида и уровня');
     });
 
     test('VM: onTotalsPageOpen — зритель (вид shift) уходит на табель', () => {
         let navPage = null;
         const host = new Function('navigateTo', 'return ({' +
             methodText(WS_CLIENT, 'onTotalsPageOpen') + '\n' +
-            "_view: 'shift'," +
+            "_view: 'shift', _viewLevel: 'view'," +
             '});')(function(page) { navPage = page; });
         host.onTotalsPageOpen();
         assertEqual(navPage, 'work-schedule', 'редирект на страницу табеля');
@@ -172,27 +171,29 @@ describe('Task 338 — карточки сотрудников скрыты зр
     test('SRC: _renderGrid — onclick ФИО рендерится только редакторам', () => {
         const fn = methodText(WS_CLIENT, '_renderGrid');
         assertTrue(fn.indexOf("? ' onclick=\"WorkSchedule.onEmpCellClick") !== -1,
-            'onclick ФИО — тернарник по _canEdit (как «+» заголовка)');
+            'onclick ФИО — тернарник по _empCardAllowed (Task 340)');
         assertTrue(fn.indexOf("                        : '') +") !== -1,
-            'ветка зрителя — атрибут onclick не рендерится');
+            'ветка без прав — атрибут onclick не рендерится');
     });
 
-    test('VM: onEmpCellClick — зритель: карточка не открывается', () => {
+    test('VM: onEmpCellClick — уровень min: карточка не открывается', () => {
         const host = new Function('return ({' +
             methodText(WS_CLIENT, 'onEmpCellClick') + '\n' +
-            '_canEdit: false,' +
+            "_viewLevel: 'min'," +
+            '_empCardAllowed: function() { return this._viewLevel === \'edit\' || this._viewLevel === \'view\'; },' +
             'closeCellPopup: function() { this.closedCell = true; },' +
             '_openEmpPopup: function() { this.opened = true; }' +
             '});')();
         host.onEmpCellClick({}, '42');
-        assertFalse(host.opened === true, 'попап карточки не открыт');
+        assertFalse(host.opened === true, 'попап карточки не открыт (min)');
         assertFalse(host.closedCell === true, 'ранний выход — до взаимных блокировок');
     });
 
     test('VM: onEmpCellClick — редактор: карточка открывается', () => {
         const host = new Function('return ({' +
             methodText(WS_CLIENT, 'onEmpCellClick') + '\n' +
-            '_canEdit: true,' +
+            "_viewLevel: 'edit'," +
+            '_empCardAllowed: function() { return this._viewLevel === \'edit\' || this._viewLevel === \'view\'; },' +
             'closeCellPopup: function() { this.closedCell = true; },' +
             '_openEmpPopup: function(td, tab) { this.openedTab = tab; }' +
             '});')();
@@ -201,14 +202,15 @@ describe('Task 338 — карточки сотрудников скрыты зр
         assertEqual(host.openedTab, '42', 'карточка открыта с таб. номером');
     });
 
-    test('VM: _openEmpPopup — зритель: DOM не трогается (гейт программы)', () => {
+    test('VM: _openEmpPopup — уровень min: DOM не трогается (гейт программы)', () => {
         // документ-«строгач»: любое обращение к DOM — ошибка
         const strictDoc = {
             getElementById: function() { throw new Error('DOM touched'); }
         };
         const host = new Function('document', 'return ({' +
             methodText(WS_CLIENT, '_openEmpPopup') + '\n' +
-            '_canEdit: false,' +
+            "_viewLevel: 'min'," +
+            '_empCardAllowed: function() { return this._viewLevel === \'edit\' || this._viewLevel === \'view\'; },' +
             '});')(strictDoc);
         let threw = null;
         try { host._openEmpPopup(null, '42'); }
@@ -246,16 +248,18 @@ describe('Task 338 — регрессы прав Task 337', () => {
             'легаси-список не содержит «КИП ИОС дежурный»');
     });
 
-    test('SRC: _computeCanEdit — приоритет серверной матрицы', () => {
-        const fn = methodText(WS_CLIENT, '_computeCanEdit');
+    test('SRC: _computeViewLevel — приоритет серверной матрицы', () => {
+        const fn = methodText(WS_CLIENT, '_computeViewLevel');
         assertTrue(fn.indexOf("KipAuth._serverPerm('workschedule.edit')") !== -1,
             'право записи читается из матрицы KIP8_Access');
+        assertTrue(fn.indexOf("KipAuth._serverPerm('workschedule.view.min')") !== -1,
+            'уровень min тоже из матрицы (Task 340)');
     });
 
-    test('SRC: cycleView — программный guard зрителя', () => {
+    test('SRC: cycleView — программный guard отсутствия прав', () => {
         const fn = methodText(WS_CLIENT, 'cycleView');
-        assertTrue(fn.indexOf('if (!this._canEdit) return;') !== -1,
-            'зритель не переключает вид');
+        assertTrue(fn.indexOf('if (this._viewLevel === null) return;') !== -1,
+            'без прав вид не переключается (Task 340)');
     });
 });
 
@@ -264,10 +268,10 @@ describe('Task 338 — регрессы прав Task 337', () => {
 // ============================================================
 describe('Task 338 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v577', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v577'") !== -1,
-            'CACHE_VERSION = kipia-test-v577 (Task 338 — только фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v578') !== -1,
+    test('SW: кэш поднят до kipia-test-v578', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v578'") !== -1,
+            'CACHE_VERSION = kipia-test-v578 (Task 338 — только фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v579') !== -1,
             'лишний инкремент (v578) не сделан');
     });
 

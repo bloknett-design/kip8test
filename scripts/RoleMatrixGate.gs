@@ -203,18 +203,22 @@ function rmGateStatus() {
   }
 
   // Сводка по ключевым правам (какие роли что проходят)
+  // Task 340: + workschedule.view.min (ограниченный просмотр графика)
   var keyPerms = ['admin.panel', 'cablejournal.edit', 'flowmeter.view',
-                  'flowmeter.input', 'workschedule.view', 'workschedule.edit'];
+                  'flowmeter.input', 'workschedule.view',
+                  'workschedule.view.min', 'workschedule.edit'];
   var matrix = _rmgGetMatrixForStatus();
   if (!matrix.length) {
     lines.push('Матрица: НЕ ЧИТАЕТСЯ (запустите roleMatrixDebug из RoleMatrix.gs)');
   } else {
     lines.push('Ключ: A=админ-панель(admin.panel), C=каб.журнал(cablejournal.edit), ' +
       'F=расх.просмотр(flowmeter.view), I=расх.ввод(flowmeter.input), ' +
-      'G=график.просмотр(workschedule.view), W=график.запись(workschedule.edit); ' +
+      'G=график.просмотр(workschedule.view), M=график.ограниченный(workschedule.view.min), ' +
+      'W=график.запись(workschedule.edit); ' +
       'прописная = право есть, «·» = нет:');
     var legend = { 'admin.panel': 'a', 'cablejournal.edit': 'c', 'flowmeter.view': 'f',
-                   'flowmeter.input': 'i', 'workschedule.view': 'g', 'workschedule.edit': 'w' };
+                   'flowmeter.input': 'i', 'workschedule.view': 'g',
+                   'workschedule.view.min': 'm', 'workschedule.edit': 'w' };
     for (var i = 0; i < matrix.length; i++) {
       var roleName = matrix[i];
       var acc = roleMatrixGetAccess(roleName);
