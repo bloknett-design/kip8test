@@ -118,6 +118,9 @@ BAR_JS = """(function(){
     for (var i=0;i<btns.length;i++){
         var b = btns[i];
         if (b.hidden) continue;   // скрытые кнопки не меряем (Task 324/325)
+        // Task 334: кнопка подсветки на МОБИЛЕ скрыта display:none —
+        // нулевые габариты НЕ ломают замеры высот
+        if (getComputedStyle(b).display === 'none') continue;
         bList.push({id: b.id, h: b.getBoundingClientRect().height,
                     of: b.scrollHeight > b.clientHeight + 1});
     }
@@ -134,10 +137,19 @@ BAR_JS = """(function(){
         tipHidden: tip ? tip.hidden : null,
         tipPE: tip ? getComputedStyle(tip).pointerEvents : '',
         gridY: grid ? grid.getBoundingClientRect().y : null,
-        colW: (br && br.children.length === 3) ?
-              [br.children[0].getBoundingClientRect().width,
-               br.children[1].getBoundingClientRect().width,
-               br.children[2].getBoundingClientRect().width] : []
+        colW: (function(){
+            if (!br) return [];
+            // Task 334: в баре есть ряд чипов .ws-mob-chips (на десктопе
+            // display:none) — меряем только ВИДИМЫЕ части (их по-прежнему 3)
+            var vis = [];
+            for (var i=0;i<br.children.length;i++){
+                if (getComputedStyle(br.children[i]).display !== 'none') vis.push(br.children[i]);
+            }
+            if (vis.length !== 3) return [];
+            return [vis[0].getBoundingClientRect().width,
+                    vis[1].getBoundingClientRect().width,
+                    vis[2].getBoundingClientRect().width];
+        })()
     };
 })()"""
 
@@ -510,6 +522,11 @@ with sync_playwright() as p:
     page3.wait_for_timeout(2500)
     page3.evaluate("navigateTo('work-schedule')")
     page3.wait_for_timeout(3000)
+    # Task 334: окна мероприятий/норм на мобиле изначально СКРЫТЫ —
+    # раскрываем чипами, прежняя геометрия (колонка: ряды → окна)
+    page3.click('#wsChipEvents')
+    page3.click('#wsChipNorms')
+    page3.wait_for_timeout(200)
     sm = bar_state(page3)
     vism = [r for r in sm['rows'] if not r['hidden']]
     check('P: мобильный — бар колонкой, все ряды/окна вертикально',

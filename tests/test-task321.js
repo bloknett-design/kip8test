@@ -308,7 +308,9 @@ describe('Task 321 — CSS: итоги в тёмной и светлой тем�
         assertFalse(/#page-work-schedule\.ws-tt-open \.ws-grid-wrap\s*\{[^}]*display:\s*none/.test(INDEX_SRC),
             'Task 323: сетка НЕ скрывается — итоги рядом с шахматкой');
         // Task 329: JS-геометрия — парковка/анимация маржи в toggleTotals
-        const tt = INDEX_SRC.match(/toggleTotals: function\(\)[\s\S]{0,2600}?marginRight/);
+        // Task 334: мобильная ветка страницы итогов удлинила начало
+        // toggleTotals — окно поиска расширено
+        const tt = INDEX_SRC.match(/toggleTotals: function\(\)[\s\S]{0,4000}?marginRight/);
         assertTrue(!!tt && INDEX_SRC.indexOf("drawer.style.marginRight = (-w0) + 'px';") !== -1,
             'открытие: парковка −ширина, затем маржа 0 (JS)');
         assertTrue(INDEX_SRC.indexOf("drawer.style.marginRight = (-w1) + 'px';") !== -1,
@@ -1086,10 +1088,10 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
 // 11. SW: версия кэша
 // ============================================================
 describe('Task 321 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v572 (Task 323)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v572'") !== -1,
-            'CACHE_VERSION = kipia-test-v572');
-        assertFalse(SW_SRC.indexOf('kipia-test-v573') !== -1,
+    test('SW: кэш поднят до kipia-test-v573 (Task 323)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v573'") !== -1,
+            'CACHE_VERSION = kipia-test-v573');
+        assertFalse(SW_SRC.indexOf('kipia-test-v574') !== -1,
             'v561 не существует (один инкремент на Task 321)');
     });
 });

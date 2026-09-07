@@ -371,8 +371,11 @@ with sync_playwright() as p:
                 pressed: cross.getAttribute('aria-pressed'),
                 rowRight: rr.right <= 375, visible: r.width > 0};
     })""")
-    check('O: мобайл — кнопка 32×32, видна, ВКЛ',
-          s20 and s20['w'] == 32 and s20['h'] == 32 and s20['pressed'] == 'true' and s20['visible'], s20)
+    # Task 334 (заявка): кнопка перекрёстной подсветки на МОБИЛЕ
+    # УБРАНА (функционал не реализуется в мобильной версии) —
+    # проверяем, что она СКРЫТА; десктоп-проверки кнопки выше
+    check('O: мобайл — кнопка подсветки СКРЫТА (Task 334)',
+          s20 and s20['visible'] is False, s20)
     check('O2: мобайл — ряд действий не выпирает за экран', s20 and s20['rowRight'], s20)
     # тумблер на мобайле тоже работает
     page2.evaluate("WorkSchedule.toggleCross()")

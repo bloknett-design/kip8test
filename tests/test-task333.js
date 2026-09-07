@@ -43,7 +43,7 @@
 //   HTML: #wsViewBtn — ПОДПИСЬ «Вид» (span.ws-view-label после
 //     иконок); CSS .ws-view-btn — width: auto + паддинги (не
 //     квадрат-иконка), .ws-view-label — 13px/600.
-//   SW: kipia-test-v572.
+//   SW: kipia-test-v573.
 //
 // Запуск: через tests/run-all.js (require './test-task333.js').
 
@@ -437,9 +437,13 @@ describe('Task 333 — кнопка вида: подпись «Вид»', () => 
         const iEnd = INDEX_SRC.indexOf('</button>', iBtn);
         const chunk = INDEX_SRC.slice(iBtn, iEnd);
         assertTrue(chunk.indexOf('<span class="ws-view-label">Вид</span>') !== -1,
-            'подпись «Вид» в кнопке (после иконок)');
-        assertTrue(chunk.indexOf('wsViewIconFull') !== -1,
-            'иконки видов сохранены (показывают текущий вид)');
+            'подпись «Вид» в кнопке');
+        // Task 334 (заявка: «без значков, просто „Вид“»): иконки
+        // wsViewIconFull/Shift/Day УДАЛЕНЫ из кнопки
+        assertFalse(chunk.indexOf('wsViewIconFull') !== -1,
+            'иконки видов удалены (Task 334 — только текст «Вид»)');
+        assertFalse(chunk.indexOf('<svg') !== -1,
+            'в кнопке вида НЕТ svg-значков (Task 334)');
     });
 
     test('CSS: .ws-view-btn — width auto + паддинги (не квадрат-иконка)', () => {
@@ -466,10 +470,10 @@ describe('Task 333 — кнопка вида: подпись «Вид»', () => 
 // ============================================================
 describe('Task 333 — SW: версия кэша', () => {
 
-    test('SW: кэш поднят до kipia-test-v572 (Task 333)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v572') !== -1,
-            'в sw.js — kipia-test-v572');
-        assertFalse(SW_SRC.indexOf('kipia-test-v573') !== -1,
-            'лишний инкремент (v573) не сделан');
+    test('SW: кэш поднят до kipia-test-v573 (Task 333)', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v573') !== -1,
+            'в sw.js — kipia-test-v573');
+        assertFalse(SW_SRC.indexOf('kipia-test-v574') !== -1,
+            'лишний инкремент (v574) не сделан');
     });
 });

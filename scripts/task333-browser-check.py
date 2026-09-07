@@ -188,8 +188,11 @@ with sync_playwright() as p:
     })()""")
     check('C: кнопка вида — ПОДПИСЬ «Вид»', s1['text'] == 'Вид', s1)
     check('C2: шрифт подписи 13px/600', s1['font'] == '13px/600', s1['font'])
-    check('C3: кнопка ШИРЕ иконки-подсветки, высота ряда та же',
-          s1['viewW'] > s1['crossW'] + 10 and approx(s1['viewH'], s1['crossH'], 2),
+    # Task 334 (заявка: «без значков, просто „Вид“»): в кнопке НЕТ
+    # иконок — ширина по тексту «Вид» (все ещё шире квадратной кнопки
+    # подсветки), высота ряда та же
+    check('C3: кнопка «Вид» (текст) шире иконки-подсветки, высота ряда та же',
+          s1['viewW'] > s1['crossW'] and approx(s1['viewH'], s1['crossH'], 2),
           (s1['viewW'], s1['crossW'], s1['viewH'], s1['crossH']))
     # клик — вид переключается (подпись не сломала цикл)
     page.click('#wsViewBtn')
@@ -378,20 +381,22 @@ with sync_playwright() as p:
     })()""")
     check('L: мобайл — подпись «Вид» видна, кнопка шире иконки',
           s7['text'] == 'Вид' and s7['viewW'] > s7['crossW'] + 8, s7)
+    # Task 334: на мобиле итоги открываются СТРАНИЦЕЙ #page-ws-totals
+    # (таблица — в теле страницы #wsTtPageBody), шторка не используется
     page3.click('#wsTotalsBtn')
     page3.wait_for_timeout(900)
     s8 = page3.evaluate("""(function(){
-        var monthEmp = document.querySelector('#wsTtBody .ws-tt-table tbody td.ws-tt-emp');
+        var monthEmp = document.querySelector('#wsTtPageBody .ws-tt-table tbody td.ws-tt-emp');
         return { monthEmp: monthEmp ? getComputedStyle(monthEmp).display : 'none',
-                 monthName: (document.getElementById('wsTtBody').innerHTML.indexOf('Иванов Иван Иванович') !== -1) };
+                 pageActive: document.getElementById('page-ws-totals').classList.contains('active'),
+                 monthName: (document.getElementById('wsTtPageBody').innerHTML.indexOf('Иванов Иван Иванович') !== -1) };
     })()""")
     check('M: мобайл месяц — колонка «Сотрудник» видна (имена)', s8['monthEmp'] != 'none', s8)
-    # вкладка «Год»: на мобиле кнопка перекрыта fixed-оверлеем шторки
-    # (top 10vh; пре-существующий дизайн) — переключаем тем же onclick
+    # вкладка «Год» (Task 334: переключаем вкладками СТРАНИЦЫ итогов)
     page3.evaluate("WorkSchedule.setTotalsTab('year')")
     page3.wait_for_timeout(1600)
     s9 = page3.evaluate("""(function(){
-        var b = document.getElementById('wsTtBody');
+        var b = document.getElementById('wsTtPageBody');
         var mainEmp = b.querySelector('table.ws-tt-table:not(.ws-tt-arch) tbody td.ws-tt-emp');
         var arch = b.querySelector('table.ws-tt-arch');
         var archEmp = arch ? arch.querySelector('tbody td.ws-tt-emp') : null;

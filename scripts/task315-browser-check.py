@@ -464,6 +464,10 @@ with sync_playwright() as p:
     page3.wait_for_timeout(2500)
     page3.evaluate("navigateTo('work-schedule')")
     page3.wait_for_timeout(3000)
+    # Task 334: окна «Мероприятия»/«Нормы» на мобиле ИЗНАЧАЛЬНО СКРЫТЫ —
+    # раскрываем ЧИПОМ «Мероприятия» (прежняя проверка геометрии окна)
+    page3.click('#wsChipEvents')
+    page3.wait_for_timeout(150)
     mob = page3.evaluate("""(function(){
         var bar = document.querySelector('.ws-bar-row');
         var main = document.querySelector('.ws-toolbar-main');
