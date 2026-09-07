@@ -9,13 +9,15 @@
 //   • нулевая переработка — «—»; сотрудника нет в agg — пусто;
 //   • шапка — двухстрочный заголовок «Перераб./дни-ч» (класс
 //     wsp-tot-over, ширина 12mm — чуть шире «Дни»/«Часы»);
-//   • итоговая строка «Итого» — grand-переработка тем же форматом;
 //   • сноска wsp-foot поясняет формат (раньше писала «переработка
 //     учтена в приложении» — теперь колонка прямо в листе).
+// Task 343 (заявка: «из печати убери строку итогов»): итоговая
+// строка «Итого» (grand) УБРАНА из печати — grand-тесты 342
+// удалены, колонка «Перераб.» остаётся в построчных итогах.
 // Счётчики переработки УЖЕ были в agg (Task 322) — новая только
 // печатная колонка; сетка/«Итоги учёта» на экране не менялись.
 //
-// SW: kipia-test-v580.
+// SW: kipia-test-v581.
 //
 // Запуск: через tests/run-all.js (require './test-task342.js').
 
@@ -97,17 +99,6 @@ describe('Task 342 — разметка _buildPrintHtml (SRC)', () => {
             'значение из счётчиков agg (overDays/over)');
         assertTrue(tail.indexOf('_fmtTotalsNum') !== -1,
             'часы форматируются _fmtTotalsNum (запятая)');
-    });
-
-    test('SRC: итоговая строка — grand-переработка тем же форматом', () => {
-        const b = methodText(WS_CLIENT, '_buildPrintHtml');
-        const i = b.indexOf('agg.grand.overDays');
-        assertTrue(i !== -1, 'grand.overDays используется');
-        // wsp-sum открывает строку «Итого» (~550 символов до
-        // grand-переработки: colspan-подпись + Дни + Часы)
-        const around = b.slice(Math.max(0, i - 700), i + 300);
-        assertTrue(around.indexOf('wsp-sum') !== -1,
-            'в строке «Итого» (wsp-sum)');
     });
 
     test('SRC: сноска поясняет колонку «Перераб.» (а не отсылает в приложение)', () => {
@@ -201,30 +192,6 @@ describe('Task 342 — _buildPrintHtml (VM): значения «Перераб.�
             'пустая ячейка без прочерка');
     });
 
-    test('VM: итоговая строка — grand «1/12» + подпись с переработкой', () => {
-        var agg = {
-            byTab: { '017': { work: 21, hours: 151.2, over: 12, overDays: 1 } },
-            grand: { work: 21, hours: 151.2, over: 12, overDays: 1 }
-        };
-        var html = sheetHost()._buildPrintHtml([EMPS[0]], agg);
-        assertTrue(html.indexOf('wsp-sum') !== -1, 'строка «Итого» есть');
-        var sum = html.slice(html.indexOf('wsp-sum'), html.indexOf('</tr>', html.indexOf('wsp-sum')));
-        assertTrue(sum.indexOf('wsp-tot-over">1/12</td>') !== -1,
-            'grand-переработка «1/12»');
-        assertTrue(sum.indexOf('переработка (дни/ч)') !== -1,
-            'подпись итога упоминает переработку');
-    });
-
-    test('VM: grand без переработки — «—» в итоговой строке', () => {
-        var agg = {
-            byTab: { '017': { work: 21, hours: 151.2, over: 0, overDays: 0 } },
-            grand: { work: 21, hours: 151.2, over: 0, overDays: 0 }
-        };
-        var html = sheetHost()._buildPrintHtml([EMPS[0]], agg);
-        var sum = html.slice(html.indexOf('wsp-sum'), html.indexOf('</tr>', html.indexOf('wsp-sum')));
-        assertTrue(sum.indexOf('wsp-tot-over">—</td>') !== -1, 'прочерк в «Итого»');
-    });
-
     test('VM: сноска wsp-foot — новый текст про «Перераб.»', () => {
         var agg = { byTab: {}, grand: null };
         var html = sheetHost()._buildPrintHtml([EMPS[2]], agg);
@@ -241,15 +208,15 @@ describe('Task 342 — _buildPrintHtml (VM): значения «Перераб.�
 // ============================================================
 describe('Task 342 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v580', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v580'") !== -1,
-            'CACHE_VERSION = kipia-test-v580 (Task 342 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v581') !== -1,
+    test('SW: кэш поднят до kipia-test-v581', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v581'") !== -1,
+            'CACHE_VERSION = kipia-test-v581 (Task 342 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v582') !== -1,
             'лишний инкремент (v581) не сделан');
     });
 
     test('SW: в index.html нет захардкоженной версии кэша', () => {
-        assertFalse(INDEX_SRC.indexOf('kipia-test-v580') !== -1,
+        assertFalse(INDEX_SRC.indexOf('kipia-test-v581') !== -1,
             'клиент не знает номер кэша (версией управляет sw.js)');
     });
 });

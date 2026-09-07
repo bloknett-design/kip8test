@@ -6,7 +6,8 @@
 #     «Перераб.» (заголовок «Перераб.» + подпись «дни/ч»);
 #   • значения: сменный 017 — «1/12» (12 ч по типу персонала),
 #     дневной 031 — «1/4» (часы правки ячейки), 023 без д/н — «—»;
-#   • итоговая строка — grand «2/16» + подпись с переработкой;
+#     Task 343: итоговая строка (grand «2/16») УБРАНА из печати —
+#     ассерты O6/O7 адаптированы на ОТСУТСТВИЕ;
 #   • сноска поясняет формат «Перераб.» (дни/часы, коды д/н);
 #   • регресс 341: красная точка wsp-over в ячейке, переиспользование
 #     листа, print-медиа (приложение скрыто, лист светло-бумажный);
@@ -187,7 +188,8 @@ with sync_playwright() as p:
           sheet and sheet['nodes'] == 1, sheet and sheet['nodes'])
     check('E5: шапка дней — %d колонок' % DAYS_IN_MONTH,
           sheet['dayTh'] == DAYS_IN_MONTH, sheet['dayTh'])
-    check('E6: строки сотрудников + итоговая', sheet['rows'] == 4 and sheet['sumRow'] == 1,
+    # Task 343: итоговая строка убрана — только строки сотрудников
+    check('E6: строки сотрудников, итоговой НЕТ (Task 343)', sheet['rows'] == 3 and sheet['sumRow'] == 0,
           (sheet['rows'], sheet['sumRow']))
     # Task 342: было 2 колонки итогов (341) → 3 («Перераб.»)
     check('O1: колонок итогов 3 — «Дни»/«Часы»/«Перераб.»',
@@ -203,12 +205,10 @@ with sync_playwright() as p:
           '<td class="wsp-tot wsp-tot-over">1/4</td>' in h, True)
     check('O5: дневной 023 без д/н — «—»',
           '<td class="wsp-tot wsp-tot-over">—</td>' in h, True)
-    sum_i = h.find('wsp-sum')
-    sum_row = h[sum_i:h.find('</tr>', sum_i)]
-    check('O6: итоговая строка — grand «2/16» (1+1 день, 12+4 ч)',
-          'wsp-tot-over">2/16</td>' in sum_row, True)
-    check('O7: подпись итога упоминает переработку (дни/ч)',
-          'переработка (дни/ч)' in sum_row, True)
+    check('O6: итоговой строки НЕТ (Task 343) — wsp-sum/«2/16» не выводятся',
+          ('wsp-sum' not in h) and ('2/16' not in h), True)
+    check('O7: подписи итога тоже нет (Task 343)',
+          'переработка (дни/ч)' not in h, True)
     check('O8: сноска поясняет формат «Перераб.»',
           '«Перераб.» — дни/часы переработки' in h, True)
     check('O9: старая отсылка «учтена в приложении» удалена',
@@ -263,7 +263,7 @@ with sync_playwright() as p:
           (not st['hidden']) and st['w'] > 0, st)
     calls = do_print(page)
     rows = page.evaluate("document.querySelectorAll('#wsPrintSheet .wsp-grid tbody tr').length")
-    check('V2: печать работает — window.print + 3 строки', calls == 1 and rows == 4, (calls, rows))
+    check('V2: печать работает — window.print + 3 строки (без итоговой, Task 343)', calls == 1 and rows == 3, (calls, rows))
     ov = page.evaluate("document.querySelectorAll('#wsPrintSheet .wsp-grid thead .wsp-tot-over').length")
     check('V3: колонка «Перераб.» и уровню view', ov == 1, ov)
     check('V4: «Сформировать» скрыта (регресс 340)',

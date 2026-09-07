@@ -4,9 +4,12 @@
 // уровням доступа — фича ПРОСМОТРА) строит печатный лист
 // #wsPrintSheet в <body> (шапка с нормой месяца, шахматка
 // эффективных записей с цветами кодов, план отпуска пунктиром,
-// бейджи мероприятий, переработка точкой, колонки «Дни»/«Часы» —
-// те же счётчики, что во вкладке «Итоги учёта», итоговая строка
-// и легенда кодов) и вызывает window.print().
+// переработка точкой, колонки «Дни»/«Часы» — те же счётчики, что
+// во вкладке «Итоги учёта», и легенда кодов) и вызывает
+// window.print(). Task 343 (заявка: «из печати убери строку итогов
+// и миниатюры иконок мероприятий»): бейджи мероприятий и итоговая
+// строка УБРАНЫ из печати — тесты 341 адаптированы (см.
+// test-task343.js).
 //
 // Печатная вёрстка — @media print (A4 АЛЬБОМНАЯ, всё приложение
 // скрыто через body > *:not(#wsPrintSheet), лист всегда СВЕТЛЫЙ —
@@ -15,7 +18,7 @@
 // display:none. Печатается ТЕКУЩИЙ вид табеля (у уровня min
 // «Мастер КИПиА» скрыт — _viewEmployees, Task 340).
 //
-// SW: kipia-test-v580.
+// SW: kipia-test-v581.
 //
 // Запуск: через tests/run-all.js (require './test-task341.js').
 
@@ -293,26 +296,24 @@ describe('Task 341 — _printCell (VM)', () => {
         assertTrue(td.indexOf('background:') === -1, 'фона нет');
     });
 
-    test('VM: статус-мероприятие (И) — бейдж, ядро пустое', () => {
+    test('VM: статус-мероприятие (И) — ПУСТАЯ ячейка, бейджа НЕТ (Task 343)', () => {
         var td = cellHost({ meta: { code: 'И', color: '#B3E5FC' } })
             ._printCell(5, '2026-09-05', EMP, { 'статус': 'И' });
         assertTrue(td.indexOf('>И</td>') === -1, 'большого кода нет');
-        assertTrue(td.indexOf('wsp-ev"') !== -1, 'бейдж wsp-ev есть');
-        assertTrue(td.indexOf('wsp-ev-plan') === -1, 'сплошной (день сформирован)');
+        assertTrue(td.indexOf('wsp-ev') === -1, 'бейджей мероприятий в печати нет (Task 343)');
     });
 
-    test('VM: событие в ПУСТОЙ ячейке — пунктирный бейдж (план)', () => {
+    test('VM: событие в ПУСТОЙ ячейке — бейджа НЕ видно (Task 343)', () => {
         var td = cellHost({ events: [{ code: 'И', training: 7 }] })
             ._printCell(6, '2026-09-06', EMP, null);
-        assertTrue(td.indexOf('wsp-ev-plan') !== -1, 'пунктирный бейдж');
+        assertTrue(td.indexOf('wsp-ev') === -1, 'плановых бейджей в печати нет');
     });
 
-    test('VM: статус-мероприятие БЕЗ строки в «Инструктажах» — виртуальный бейдж', () => {
+    test('VM: статус-мероприятие БЕЗ строки в «Инструктажах» — виртуального бейджа НЕТ (Task 343)', () => {
         var td = cellHost({ meta: { code: 'ОБ', color: '#D1C4E9' } })
             ._printCell(7, '2026-09-07', EMP, { 'статус': 'ОБ' });
-        assertTrue(td.indexOf('wsp-ev"') !== -1 &&
-                   td.indexOf('ОБ</span>') !== -1,
-            'виртуальный бейдж из статуса');
+        assertTrue(td.indexOf('wsp-ev') === -1 && td.indexOf('ОБ') === -1,
+            'виртуальный бейдж не строится');
     });
 
     test('VM: план отпуска в пустой ячейке — класс wsp-vac', () => {
@@ -430,11 +431,11 @@ describe('Task 341 — _buildPrintHtml (VM)', () => {
             'заголовки колонок итогов');
     });
 
-    test('VM: итоговая строка grand + легенда кодов + пояснения', () => {
+    test('VM: итоговой строки НЕТ (Task 343), легенда и пояснения живы', () => {
         var html = sheetHost()._buildPrintHtml(EMPS, AGG);
-        assertTrue(html.indexOf('wsp-sum') !== -1, 'строка «Итого»');
-        assertTrue(html.indexOf('>40</td>') !== -1, 'итог дней');
-        assertTrue(html.indexOf('>288</td>') !== -1, 'итог часов');
+        assertTrue(html.indexOf('wsp-sum') === -1, 'строки «Итого» нет (Task 343)');
+        assertTrue(html.indexOf('>40</td>') === -1, 'итога дней нет (grand 40)');
+        assertTrue(html.indexOf('>288</td>') === -1, 'итога часов нет (grand 288)');
         assertTrue(html.indexOf('wsp-legend') !== -1, 'легенда кодов');
         assertTrue(html.indexOf('Д — День (12-час)') !== -1, 'расшифровка кода из справочника');
         assertTrue(html.indexOf('wsp-foot') !== -1, 'пояснения внизу');
@@ -481,10 +482,10 @@ describe('Task 341 — _buildPrintHtml (VM)', () => {
 // ============================================================
 describe('Task 341 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v580', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v580'") !== -1,
-            'CACHE_VERSION = kipia-test-v580 (Task 341 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v581') !== -1,
+    test('SW: кэш поднят до kipia-test-v581', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v581'") !== -1,
+            'CACHE_VERSION = kipia-test-v581 (Task 341 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v582') !== -1,
             'лишний инкремент (v580) не сделан');
     });
 
