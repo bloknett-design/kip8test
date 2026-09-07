@@ -31,7 +31,7 @@
 //     _renderTotalsYearTable — НЕТ tfoot; _fitGrid — бюджет без
 //     резерва итоговой строки; toggleTotals/setTotalsTab зовут новые
 //     методы.
-//   SW: kipia-test-v573.
+//   SW: kipia-test-v574.
 //
 // Запуск: через tests/run-all.js (require './test-task327.js').
 
@@ -378,7 +378,9 @@ describe('Task 327 — VM: таблица месяца', () => {
         const t = makeHost();
         t.host._renderTotalsMonth();
         const h = t.els.wsTtBody.innerHTML;
-        const ths = h.match(/<th[^>]*>[^<]*<\/th>/g) || [];
+        // Task 335: заголовок «Сотрудник» — в span.ws-tt-emp-head;
+        // регулярка допускает вложенные теги внутри <th>
+        const ths = h.match(/<th[^>]*>[\s\S]*?<\/th>/g) || [];
         const names = ths.map(function(x) { return x.replace(/<[^>]*>/g, ''); });
         assertEqual(JSON.stringify(names),
             JSON.stringify(['Сотрудник', 'Явки (дни)', 'Часы', 'Переработка (дни)']),
@@ -403,7 +405,9 @@ describe('Task 327 — VM: таблица месяца', () => {
         const t = makeHost({ _totalsExtra: true });
         t.host._renderTotalsMonth();
         const h = t.els.wsTtBody.innerHTML;
-        const ths = h.match(/<th[^>]*>[^<]*<\/th>/g) || [];
+        // Task 335: заголовок «Сотрудник» — в span.ws-tt-emp-head;
+        // регулярка допускает вложенные теги внутри <th>
+        const ths = h.match(/<th[^>]*>[\s\S]*?<\/th>/g) || [];
         const names = ths.map(function(x) { return x.replace(/<[^>]*>/g, ''); });
         assertEqual(JSON.stringify(names), JSON.stringify([
             'Сотрудник', 'Явки (дни)', 'Часы', 'Переработка (дни)',
@@ -457,10 +461,10 @@ describe('Task 327 — VM: таблица месяца', () => {
 // 5. Service Worker
 // ============================================================
 describe('Task 327 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v573', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v573'") !== -1,
-            'CACHE_VERSION = kipia-test-v573 (Task 327 — только фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v574') !== -1,
+    test('SW: версия кэша kipia-test-v574', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v574'") !== -1,
+            'CACHE_VERSION = kipia-test-v574 (Task 327 — только фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v575') !== -1,
             'лишний инкремент не делался');
     });
 });

@@ -43,7 +43,7 @@
 //   HTML: #wsViewBtn — ПОДПИСЬ «Вид» (span.ws-view-label после
 //     иконок); CSS .ws-view-btn — width: auto + паддинги (не
 //     квадрат-иконка), .ws-view-label — 13px/600.
-//   SW: kipia-test-v573.
+//   SW: kipia-test-v574.
 //
 // Запуск: через tests/run-all.js (require './test-task333.js').
 
@@ -360,7 +360,9 @@ describe('Task 333 — год: архив блоком, обновление т�
             h.indexOf('<table class="ws-tt-table ws-tt-year">') <
             h.indexOf('ws-tt-arch-cap'),
             'главная таблица — до блока архива');
-        assertTrue((h.match(/<th class="ws-tt-emp">Сотрудник<\/th>/g) || []).length === 2,
+        // Task 335: шапка «Сотрудник» — span.ws-tt-emp-head («Сотр» при сужении);
+        // обе таблицы (главная + архив) содержат по одному такому span
+        assertTrue((h.match(/<th class="ws-tt-emp"><span class="ws-tt-emp-head"/g) || []).length === 2,
             'шапки «Сотрудник» — у главной (мобайл) и у архива');
     });
 
@@ -470,10 +472,10 @@ describe('Task 333 — кнопка вида: подпись «Вид»', () => 
 // ============================================================
 describe('Task 333 — SW: версия кэша', () => {
 
-    test('SW: кэш поднят до kipia-test-v573 (Task 333)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v573') !== -1,
-            'в sw.js — kipia-test-v573');
-        assertFalse(SW_SRC.indexOf('kipia-test-v574') !== -1,
-            'лишний инкремент (v574) не сделан');
+    test('SW: кэш поднят до kipia-test-v574 (Task 333)', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v574') !== -1,
+            'в sw.js — kipia-test-v574');
+        assertFalse(SW_SRC.indexOf('kipia-test-v575') !== -1,
+            'лишний инкремент (v575) не сделан');
     });
 });

@@ -179,10 +179,10 @@ with sync_playwright() as p:
     # высота — та же (ряд)
     s1c = page.evaluate("(function(){ var c=document.getElementById('wsCrossBtn').getBoundingClientRect(); var v=document.getElementById('wsViewBtn').getBoundingClientRect(); return {cw:c.width, ch:c.height, vw:v.width, vh:v.height}; })()")
     check('C2: кнопка вида — ШИРЕ значка (подпись «Вид»), высота ряда та же',
-          s1c['vw'] > s1c['cw'] + 20 and approx(s1c['vh'], s1c['ch'], 1), s1c)
+          s1c['vw'] > s1c['cw'] + 8 and approx(s1c['vh'], s1c['ch'], 1), s1c)
     check('C3: НЕТ нативного title (подсказка — информационное окно)', not s1['title'])
-    check('C4: полный вид: видна иконка Full, Shift/Day скрыты',
-          s1['vis']['full'] and not s1['vis']['shift'] and not s1['vis']['day'], s1['vis'])
+    check('C4: иконки видов УДАЛЕНЫ (Task 334 — кнопка только с текстом)',
+          s1['vis']['full'] is None and s1['vis']['shift'] is None and s1['vis']['day'] is None, s1['vis'])
 
     # ---- ПОДСКАЗКА кнопки ВИДА (информационное окно) ----
     page.hover('#wsViewBtn')
@@ -228,9 +228,11 @@ with sync_playwright() as p:
     page.click('#wsViewBtn')
     page.wait_for_timeout(500)
     s4 = page.evaluate("""(function(){
+        // Task 334: иконки видов УДАЛЕНЫ (кнопка «Вид» — только текст);
+        // vis = иконок НЕТ в DOM (true)
         var icons = { shift: document.getElementById('wsViewIconShift') };
         return { rows: document.querySelectorAll('#wsGridWrap table tbody tr').length,
-                 vis: !icons.shift.hidden,
+                 vis: !icons.shift,
                  totalsHidden: document.getElementById('wsTotalsBtn').hidden,
                  tabM: document.getElementById('wsTtTabMonth').hidden,
                  tabY: document.getElementById('wsTtTabYear').hidden,
@@ -239,7 +241,7 @@ with sync_playwright() as p:
                  dayRows: (function(){ var n=0; var trs=document.querySelectorAll('#wsGridWrap table tbody tr td.ws-emp-col'); for (var i=0;i<trs.length;i++){ if (trs[i].textContent.indexOf('дневной') !== -1) n++; } return n; })() };
     })""")
     check('F: сменный вид — 11 строк, дневных НЕТ', s4['rows'] == 11 and s4['dayRows'] == 0, s4)
-    check('F2: иконка Shift видна, «Итоги учёта» и вкладки скрыты',
+    check('F2: иконок видов НЕТ (Task 334), «Итоги учёта» и вкладки скрыты',
           s4['vis'] and s4['totalsHidden'] and s4['tabM'] and s4['tabY'], s4)
     check('F3: aria-label «…сменный», выбор сохранён (kip8_ws_view_v1)',
           'сменный' in s4['aria'] and s4['saved'] == 'shift', s4)
@@ -385,11 +387,11 @@ with sync_playwright() as p:
                  aria: view.getAttribute('aria-label'),
                  view: WorkSchedule._view, lockedState: WorkSchedule._viewLocked,
                  totalsHidden: document.getElementById('wsTotalsBtn').hidden,
-                 visShift: !document.getElementById('wsViewIconShift').hidden };
+                 visShift: !document.getElementById('wsViewIconShift') };
     })""")
     check('M: дежурный — вид ЗАПЕРТ на «сменный» (сохранённый day проигнорирован)',
           s9['view'] == 'shift' and s9['lockedState'] and s9['rows'] == 11, s9)
-    check('M2: кнопка вида с классом ws-view-locked, иконка Shift',
+    check('M2: кнопка вида с классом ws-view-locked (иконок нет, Task 334)',
           s9['locked'] and s9['visShift'], s9)
     check('M3: «Итоги учёта» скрыта (шторка недоступна)', s9['totalsHidden'])
     # клик не меняет вид
