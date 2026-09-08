@@ -74,6 +74,9 @@ require('./test-task340.js');
 require('./test-task341.js');
 require('./test-task342.js');
 require('./test-task343.js');
+// Task 346 — политика сессий «1 моб + 1 десктоп» (device в verifyOTP,
+// тост evicted, бейдж устройства в админ-панели, справочник сервера)
+require('./test-task346.js');
 require('./test-deploy-url.js');
 
 // Запускаем

@@ -23,7 +23,7 @@
 //      _openEmpPopup (программные вызовы тоже). Режим зрителя —
 //      класс ws-readonly на #page-work-schedule: CSS выключает
 //      подсветку наведения ФИО (зебра чётных строк живёт).
-//   SW: kipia-test-v581.
+//   SW: kipia-test-v582.
 //
 // Запуск: через tests/run-all.js (require './test-task338.js').
 
@@ -268,10 +268,10 @@ describe('Task 338 — регрессы прав Task 337', () => {
 // ============================================================
 describe('Task 338 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v581', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v581'") !== -1,
-            'CACHE_VERSION = kipia-test-v581 (Task 338 — только фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v582') !== -1,
+    test('SW: кэш поднят до kipia-test-v582', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v582'") !== -1,
+            'CACHE_VERSION = kipia-test-v582 (Task 338 — только фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v583') !== -1,
             'лишний инкремент (v578) не сделан');
     });
 
