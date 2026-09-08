@@ -77,6 +77,9 @@ require('./test-task343.js');
 // Task 346 — политика сессий «1 моб + 1 десктоп» (device в verifyOTP,
 // тост evicted, бейдж устройства в админ-панели, справочник сервера)
 require('./test-task346.js');
+// Task 347 — автосчистка «заброшенных» строк sessions (Utils.cleanupStaleSessions,
+// справочник Utils.gs теперь в репо; вызов из hourlyCleanup в Code.gs)
+require('./test-task347.js');
 require('./test-deploy-url.js');
 
 // Запускаем

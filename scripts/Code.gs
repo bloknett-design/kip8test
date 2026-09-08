@@ -340,6 +340,9 @@ function hourlyCleanup() {
   Utils.cleanupExpiredSessions();
   Utils.cleanupExpiredOtpCodes();
   Utils.cleanupOldAuditLogs();
+  // Task 347: чистка «заброшенных» строк sessions (last_heartbeat старше
+  // STALE_SESSION_DAYS дней, по умолчанию 30) — см. scripts/Utils.gs.
+  Utils.cleanupStaleSessions();
 }
 
 /**

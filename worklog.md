@@ -5142,3 +5142,64 @@ SessionsDevicePolicy.gs в Apps Script, запустить sdpInit, добави
 **SW kip8test:** kipia-test-v582.
 
 Следующий номер задачи: 347.
+
+## Task 347 — Utils.gs в репо + автосчистка «заброшенных» сессий (2026-09-08)
+
+**Заявка:** «обнови Utils.gs сам в репозитории, а я от туда скачаю, и
+заодно проверь, чтобы в репозиториях проектов все файлы были
+актуальными.»
+
+**Контекст (закрытие Task 346):** после деплоя фикса logout тест
+«моб+десктоп → выход из моба → выход из десктопа» показывал
+«another session stays active» у ВТОРОГО logout — по audit_log
+(28.07–08.09, восстановлено скриптом) в листе sessions скопилось 37
+строк-сирот bloknett@gmail.com (входы без выхода; старый logout их не
+удалял; чистки трогали только сессии УДАЛЁННЫХ юзеров). Пользователь
+вычистил руками — тест пройден. Эта задача не даёт мусору копиться.
+
+**Сделано (серверные справочники + синхронизация репо):**
+- `scripts/Utils.gs` — НОВЫЙ справочник (жил только в Apps Script):
+  живой файл пользователя (2026-09-08, включая встроенные Admin и
+  setupTriggers) + `Utils.cleanupStaleSessions()`: удаляет строки
+  sessions с last_heartbeat старше `STALE_SESSION_DAYS` дней (config,
+  дефолт 30; невалидный hb = «молчаливая»), удаление с конца, аудит
+  `SESSION_CLEANUP_STALE` по строке; юзерам без единой оставшейся
+  строки — сброс login_status (`LOGIN_STATUS_AUTO_RESET`,
+  `updateUserStatus(user.row, …)` — первый аргумент НОМЕР СТРОКИ);
+  легаси без user_id удаляются, статус не трогается (самосинхронизация
+  Auth.sendOTP); семантика НЕ «истечение по времени»: живое устройство
+  бьёт heartbeat каждые 5 минут, строка, молчавшая месяц, — удалённое
+  приложение/очищенный браузер;
+- `scripts/Code.gs`: `hourlyCleanup` + вызов `Utils.cleanupStaleSessions()`;
+- `DEPLOY-Task347-utils-stale-sessions-cleanup.md`: замена Utils.gs +
+  1 строка Code.gs + «Новая версия» (Task 284); проверки (Run
+  hourlyCleanup вручную или триггером → SESSION_CLEANUP_STALE в
+  audit_log); порог STALE_SESSION_DAYS; таблица отказоустойчивости; откат;
+- Проверка актуальности всех репо: Sessions.gs / Auth.gs /
+  SessionsDevicePolicy.gs / DEPLOY-Task346 — kip8test ≡ kip8 ≡
+  download/task346 (diff пуст). Рассинхроны десктопов: kip8-desktop/
+  Code.gs отставал на фикс роутера Task 346 — применён (теперь ≡ kip8);
+  kip8test-desktop/Code.gs — снапшот времён Task 118/202 —
+  синхронизирован целиком с kip8test.
+
+**Тесты:** `tests/test-task347.js` +16 (6 SRC-гардов справочников +
+10 VM с моком Utils: старые удаляются/живые остаются; удаление с конца
+по убыванию номеров; статус не трогается при живой сессии; сброс +
+LOGIN_STATUS_AUTO_RESET последней; уже «не выполнен» не
+перезаписывается; легаси без user_id; невалидный last_heartbeat; аудит
+по строке; порог из config; всё живое → ноль) → **2332/0** (было
+2316). VM-нюанс: `instanceof Date` в `vm.runInNewContext` не видит
+main-realm-даты (все строки казались «молчаливыми») → `runInThisContext`.
+
+**Активация:** DEPLOY-Task347-utils-stale-sessions-cleanup.md —
+заменить Utils.gs, добавить `Utils.cleanupStaleSessions();` в
+hourlyCleanup, «Новая версия» (НЕ «Новое развёртывание» — Task 284).
+Триггер hourlyCleanup уже существует — новый не нужен.
+
+**Выдано пользователю:** `download/task347/{Utils.gs, Code.gs,
+DEPLOY-Task347-utils-stale-sessions-cleanup.md}`.
+
+**⚠️ PAT отсутствует** (/home/z/.kip_pat, окружение сброшено) — пуши
+в GitHub НЕ сделаны, изменения локальные.
+
+Следующий номер задачи: 348.
