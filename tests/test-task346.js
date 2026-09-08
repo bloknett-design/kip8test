@@ -465,7 +465,11 @@ function sessionsSandbox(rows, user) {
         audit: function (email, action, ip, ua, details) {
             calls.audits.push({ email: email, action: action, details: String(details) });
         },
-        getSheet: function (name) { return sheet; }
+        getSheet: function (name) { return sheet; },
+        // Task 348: Sessions.gs теперь берёт Utils.withLock — в VM-тестах
+        // замок прокидывается (критическая секция выполняется сразу);
+        // сам замок тестируется в test-task348.js с моком LockService.
+        withLock: function (fn, timeoutMs) { return fn(); }
     };
     const sb = {
         Utils: Utils,
@@ -507,7 +511,10 @@ describe('Task 346 — фикс logout в Sessions.gs (параллельные 
             'приватный helper в объекте Sessions');
         assertTrue(SESSIONS_GS_SRC.indexOf('if (!Sessions._userHasOtherSession(session.user_id, session.email))') !== -1,
             'сброс login_status под условием «других сессий нет»');
-        assertTrue(SESSIONS_GS_SRC.indexOf("Utils.updateUserStatus(user.row, 'вход не выполнен', user.last_login);\n        } else {") !== -1,
+        // Task 348: тело logout теперь внутри Utils.withLock — отступ +2;
+        // проверяем без привязки к точному отступу (regex)
+        const re = new RegExp("updateUserStatus\\(user\\.row, 'вход не выполнен', user\\.last_login\\);\\s*\\}\\s*else\\s*\\{");
+        assertTrue(re.test(SESSIONS_GS_SRC),
             'ветка else: при живой параллельной сессии статус не трогаем');
     });
 

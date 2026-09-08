@@ -80,6 +80,9 @@ require('./test-task346.js');
 // Task 347 — автосчистка «заброшенных» строк sessions (Utils.cleanupStaleSessions,
 // справочник Utils.gs теперь в репо; вызов из hourlyCleanup в Code.gs)
 require('./test-task347.js');
+// Task 348 — Utilities.getUuid() вместо Math.random (токены + OTP) и
+// Utils.withLock (LockService) от гонок; гард node --check всех .gs
+require('./test-task348.js');
 require('./test-deploy-url.js');
 
 // Запускаем

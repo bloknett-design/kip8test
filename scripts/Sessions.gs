@@ -18,6 +18,13 @@
  * createSession, heartbeat и структура листа sessions НЕ менялись.
  * Деплой не требует ни sdpInit, ни правок Code.gs — только замена
  * этого файла (DEPLOY-Task346-sessions-logout-fix.md).
+ *
+ * Task 348 (2026-09-09): heartbeat, logout и getCurrentUser обёрнуты
+ * в Utils.withLock (LockService.getScriptLock) — сериализация мутаций
+ * против гонок: чужой deleteRow между нашим чтением и записью сдвигает
+ * номера строк, и мы попали бы в ЧУЖУЮ строку. createSession собственного
+ * замка НЕ берёт — вызывается под замком Auth.verifyOTP (замок не
+ * реентерабелен). Роутер Code.gs и структура листов НЕ менялись.
  */
 
 const Sessions = {
@@ -34,6 +41,10 @@ const Sessions = {
    * возвращать no_session при каждой проверке.
    */
   createSession: function(user) {
+    // Task 348: собственного замка НЕТ — вызывается ИЗ Auth.verifyOTP
+    // под ЕГО замком (см. Auth.gs). Замок не реентерабельный: взять
+    // его здесь = взаимоблокировка. Если когда-нибудь вызовете
+    // createSession вне verifyOTP — оборачивайте на стороне вызова.
     const token = Utils.generateToken(Utils.getConfig('SESSION_TOKEN_LENGTH', 32));
     const now = new Date();
     Utils.appendRow('sessions', [
@@ -64,33 +75,39 @@ const Sessions = {
   heartbeat: function(token) {
     if (!token) throw new Error('No token');
 
-    const session = Utils.findSessionByToken(token);
-    if (!session) {
-      throw new Error('session_expired');
-    }
+    // Task 348: [чтение сессии → проверки → удаление/запись] под
+    // замком: иначе параллельный logout/resetLogin удаляет строку
+    // выше между нашим чтением и setValue(session.row, 6) — heartbeat
+    // пишет в ЧУЖУЮ строку (номера строк съезжают после любого deleteRow).
+    return Utils.withLock(function() {
+      const session = Utils.findSessionByToken(token);
+      if (!session) {
+        throw new Error('session_expired');
+      }
 
-    // Проверить, что пользователь существует и login_status всё ещё 'вход выполнен'
-    const user = Utils.findUserById(session.user_id);
-    if (!user) {
-      // Пользователь удалён из таблицы — удалить сессию
-      Utils.deleteRow('sessions', session.row);
-      Utils.audit(session.email, 'SESSION_ORPHAN_REMOVED', '', '',
-        'User deleted, session removed during heartbeat');
-      throw new Error('session_expired');
-    }
-    if (user.login_status !== 'вход выполнен') {
-      // Админ сбросил login_status — удалить сессию, выгнать пользователя
-      Utils.deleteRow('sessions', session.row);
-      Utils.audit(session.email, 'FORCE_LOGOUT_ADMIN_RESET', '', '',
-        'login_status is not "вход выполнен" during heartbeat — admin reset');
-      throw new Error('session_expired');
-    }
+      // Проверить, что пользователь существует и login_status всё ещё 'вход выполнен'
+      const user = Utils.findUserById(session.user_id);
+      if (!user) {
+        // Пользователь удалён из таблицы — удалить сессию
+        Utils.deleteRow('sessions', session.row);
+        Utils.audit(session.email, 'SESSION_ORPHAN_REMOVED', '', '',
+          'User deleted, session removed during heartbeat');
+        throw new Error('session_expired');
+      }
+      if (user.login_status !== 'вход выполнен') {
+        // Админ сбросил login_status — удалить сессию, выгнать пользователя
+        Utils.deleteRow('sessions', session.row);
+        Utils.audit(session.email, 'FORCE_LOGOUT_ADMIN_RESET', '', '',
+          'login_status is not "вход выполнен" during heartbeat — admin reset');
+        throw new Error('session_expired');
+      }
 
-    // Обновить last_heartbeat (только для мониторинга, не влияет на валидность)
-    const sheet = Utils.getSheet('sessions');
-    sheet.getRange(session.row, 6).setValue(new Date()); // last_heartbeat = столбец F
+      // Обновить last_heartbeat (только для мониторинга, не влияет на валидность)
+      const sheet = Utils.getSheet('sessions');
+      sheet.getRange(session.row, 6).setValue(new Date()); // last_heartbeat = столбец F
 
-    return { ok: true };
+      return { ok: true };
+    });
   },
 
   /**
@@ -101,34 +118,43 @@ const Sessions = {
   logout: function(token) {
     if (!token) return { ok: true };
 
-    const session = Utils.findSessionByToken(token);
-    if (session) {
-      Utils.deleteRow('sessions', session.row);
-      const user = Utils.findUserById(session.user_id);
-      let keptParallel = false;
-      if (user && user.login_status === 'вход выполнен') {
-        // ============================================================
-        // Task 346: сброс login_status ТОЛЬКО при отсутствии других
-        // сессий. Раньше сброс был безусловным: logout из мобильного
-        // ставил пользователю «вход не выполнен», а heartbeat
-        // параллельного десктопа (каждые 5 минут), увидев статус ≠
-        // «вход выполнен», удалял свою сессию и бросал session_expired —
-        // десктоп выкидывало в гостевой режим. Теперь: пока жива хотя бы
-        // одна другая сессия (моб ИЛИ десктоп) — статус не трогаем,
-        // выйдет последняя — сбросим как раньше.
-        // ============================================================
-        if (!Sessions._userHasOtherSession(session.user_id, session.email)) {
-          Utils.updateUserStatus(user.row, 'вход не выполнен', user.last_login);
-        } else {
-          keptParallel = true;
+    // Task 348: [чтение сессии → удаление строки → проверка «других
+    // сессий» → сброс статуса → аудит] под замком. Гонка с параллельным
+    // heartbeat/resetLogin: любой deleteRow между нашим чтением и
+    // удалением сдвигает номера строк — deleteRow(session.row) попал
+    // бы в ЧУЖУЮ строку, а _userHasOtherSession смотрела бы на уже
+    // несуществующую раскладку. _userHasOtherSession — чистое чтение,
+    // своего замка не берёт (вызывается изнутри нашего).
+    return Utils.withLock(function() {
+      const session = Utils.findSessionByToken(token);
+      if (session) {
+        Utils.deleteRow('sessions', session.row);
+        const user = Utils.findUserById(session.user_id);
+        let keptParallel = false;
+        if (user && user.login_status === 'вход выполнен') {
+          // ============================================================
+          // Task 346: сброс login_status ТОЛЬКО при отсутствии других
+          // сессий. Раньше сброс был безусловным: logout из мобильного
+          // ставил пользователю «вход не выполнен», а heartbeat
+          // параллельного десктопа (каждые 5 минут), увидев статус ≠
+          // «вход выполнен», удалял свою сессию и бросал session_expired —
+          // десктоп выкидывало в гостевой режим. Теперь: пока жива хотя бы
+          // одна другая сессия (моб ИЛИ десктоп) — статус не трогаем,
+          // выйдет последняя — сбросим как раньше.
+          // ============================================================
+          if (!Sessions._userHasOtherSession(session.user_id, session.email)) {
+            Utils.updateUserStatus(user.row, 'вход не выполнен', user.last_login);
+          } else {
+            keptParallel = true;
+          }
         }
+        Utils.audit(session.email, 'LOGOUT', '', '',
+          keptParallel
+            ? 'User logged out (another session stays active — Task 346 parallel mode)'
+            : 'User logged out');
       }
-      Utils.audit(session.email, 'LOGOUT', '', '',
-        keptParallel
-          ? 'User logged out (another session stays active — Task 346 parallel mode)'
-          : 'User logged out');
-    }
-    return { ok: true };
+      return { ok: true };
+    });
   },
 
   /**
@@ -219,48 +245,55 @@ const Sessions = {
   getCurrentUser: function(token) {
     if (!token) throw new Error('no_session');
 
-    const session = Utils.findSessionByToken(token);
-    if (!session) throw new Error('no_session');
+    // Task 348: [чтение сессии → возможные deleteRow (сирота / Запрет /
+    // админ-сброс) → возможная правка роли в строке] под замком: чужой
+    // deleteRow между чтением и записью сдвигает номера строк —
+    // getRange(session.row, 4) и deleteRow(session.row) попали бы в
+    // ЧУЖУЮ строку.
+    return Utils.withLock(function() {
+      const session = Utils.findSessionByToken(token);
+      if (!session) throw new Error('no_session');
 
-    // Получить актуальную роль из users (админ мог изменить)
-    const user = Utils.findUserById(session.user_id);
-    if (!user) {
-      // Пользователь удалён из таблицы
-      Utils.deleteRow('sessions', session.row);
-      throw new Error('no_session');
-    }
+      // Получить актуальную роль из users (админ мог изменить)
+      const user = Utils.findUserById(session.user_id);
+      if (!user) {
+        // Пользователь удалён из таблицы
+        Utils.deleteRow('sessions', session.row);
+        throw new Error('no_session');
+      }
 
-    // Если роль сменилась — обновить в sessions
-    if (user.role !== session.role) {
-      const sheet = Utils.getSheet('sessions');
-      sheet.getRange(session.row, 4).setValue(user.role);
-    }
+      // Если роль сменилась — обновить в sessions
+      if (user.role !== session.role) {
+        const sheet = Utils.getSheet('sessions');
+        sheet.getRange(session.row, 4).setValue(user.role);
+      }
 
-    // Если роль «Запрет» — принудительный logout
-    if (user.role === 'Запрет') {
-      Utils.deleteRow('sessions', session.row);
-      Utils.updateUserStatus(user.row, 'вход не выполнен', user.last_login);
-      Utils.audit(user.email, 'FORCE_LOGOUT_ROLE', '', '', 'Role changed to Запрет');
-      throw new Error('no_session');
-    }
+      // Если роль «Запрет» — принудительный logout
+      if (user.role === 'Запрет') {
+        Utils.deleteRow('sessions', session.row);
+        Utils.updateUserStatus(user.row, 'вход не выполнен', user.last_login);
+        Utils.audit(user.email, 'FORCE_LOGOUT_ROLE', '', '', 'Role changed to Запрет');
+        throw new Error('no_session');
+      }
 
-    // Если админ сбросил login_status — принудительный logout.
-    // Это единственный способ «выгнать» пользователя (помимо смены роли на Запрет
-    // и удаления пользователя). Сессия не истекает по времени.
-    if (user.login_status !== 'вход выполнен') {
-      Utils.deleteRow('sessions', session.row);
-      Utils.audit(user.email, 'FORCE_LOGOUT_ADMIN_RESET', '', '',
-        'login_status is not "вход выполнен" — admin reset');
-      throw new Error('no_session');
-    }
+      // Если админ сбросил login_status — принудительный logout.
+      // Это единственный способ «выгнать» пользователя (помимо смены роли на Запрет
+      // и удаления пользователя). Сессия не истекает по времени.
+      if (user.login_status !== 'вход выполнен') {
+        Utils.deleteRow('sessions', session.row);
+        Utils.audit(user.email, 'FORCE_LOGOUT_ADMIN_RESET', '', '',
+          'login_status is not "вход выполнен" — admin reset');
+        throw new Error('no_session');
+      }
 
-    return {
-      // ВАЖНО (Task 37 / Task 346): user.ID ЗАГЛАВНЫМИ — заголовок листа
-      // users «ID», Utils.getRows() возвращает obj.ID. В живом коде здесь
-      // стояло user.id → undefined, клиент кэшировал пустой userId.
-      userId: user.ID,
-      email: user.email,
-      role: user.role
-    };
+      return {
+        // ВАЖНО (Task 37 / Task 346): user.ID ЗАГЛАВНЫМИ — заголовок листа
+        // users «ID», Utils.getRows() возвращает obj.ID. В живом коде здесь
+        // стояло user.id → undefined, клиент кэшировал пустой userId.
+        userId: user.ID,
+        email: user.email,
+        role: user.role
+      };
+    });
   }
 };

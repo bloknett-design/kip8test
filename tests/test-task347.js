@@ -89,6 +89,15 @@ function cleanupSandbox(rows, users, staleDays) {
     return mock;
 }
 
+// Task 348: cleanupStaleSessions выполняется под Utils.withLock —
+// компилируется через runInThisContext, значит Utils ищется в глобале
+// основного контекста. Замок прокидываем (критическая секция выполняется
+// сразу); сам замок тестируется в test-task348.js с моком LockService.
+// Стрелочная функция внутри cleanupStaleSessions захватывает this (= mock)
+// лексически — на passthrough это не влияет.
+global.Utils = global.Utils || {};
+global.Utils.withLock = global.Utils.withLock || function (fn, timeoutMs) { return fn(); };
+
 // ============================================================
 // 1. SRC-гарды справочников
 // ============================================================

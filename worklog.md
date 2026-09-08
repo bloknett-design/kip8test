@@ -5203,3 +5203,20 @@ DEPLOY-Task347-utils-stale-sessions-cleanup.md}`.
 в GitHub НЕ сделаны, изменения локальные.
 
 Следующий номер задачи: 348.
+
+---
+
+## Task 348 — getUuid + LockService (синхрон с kip8, 2026-09-09)
+
+- `scripts/Utils.gs`, `scripts/Sessions.gs`, `scripts/Auth.gs` —
+  идентичны kip8 (generateToken/generateNumericCode → getUuid;
+  withLock + обёртки createUser/resetLogin/cleanupStaleSessions/
+  heartbeat/logout/getCurrentUser/verifyOTP; createSession и
+  sendOTP без замка — письмо вне критической секции);
+- DEPLOY-Task348-uuid-lockservice.md (синхрон);
+- test-task348.js +28 (синхрон); test-task346.js — точечно
+  (withLock-прокид в мок Utils + regex вместо точного отступа,
+  SW-версии kipia-test-v582 сохранены); run-all.js +require 348;
+- Тесты: **2360/0** (было 2332).
+
+Следующий номер задачи: 349.

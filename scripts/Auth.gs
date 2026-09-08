@@ -13,6 +13,15 @@
  *   • Роутер Code.gs должен вызывать:
  *       Auth.verifyOTP(payload.email, payload.code, payload)
  *   Полный порядок активации — DEPLOY-Task346-sessions-device-policy.md.
+ *
+ * Task 348 (2026-09-09): в verifyOTP все мутации после проверки кода
+ * (markOtpUsed → самосинхронизация → Запрет-чек → createSession →
+ * sdpApplyDevicePolicy → login_status='вход выполнен') выполняются
+ * под Utils.withLock — атомарно против параллельных верификаций
+ * (повторное использование кода, дубль девайс-сессии). sendOTP
+ * замка НЕ берёт: письмо отправляется ВНЕ замка (MailApp медленный,
+ * иначе все входы встанут в очередь за почтой). Роутер и структура
+ * листов НЕ менялись — DEPLOY-Task348-uuid-lockservice.md.
  */
 
 const Auth = {
@@ -262,52 +271,66 @@ const Auth = {
       throw new Error('Неверный код. Осталось попыток: ' + (max - attempts));
     }
 
-    // Код верный — пометить как использованный
-    Utils.markOtpUsed(otp.row);
-
-    // Ещё раз перечитать пользователя (между запросом и верификацией мог
-    // войти другой). Task 346: блокировка «уже выполнен вход» УДАЛЕНА —
-    // параллельный вход (моб + десктоп) разрешён; осталась только
-    // самосинхронизация login_status при отсутствии активных сессий.
-    let freshUser = Utils.findUserByEmail(email);
-    if (freshUser.login_status === 'вход выполнен'
-        && !Utils.userHasActiveSession(freshUser.ID)) {
-      Utils.updateUserStatus(freshUser.row, 'вход не выполнен', freshUser.last_login);
-      Utils.audit(email, 'LOGIN_STATUS_AUTO_RESET', ip, ua,
-        'login_status was "вход выполнен" but no active session — auto-reset (during verify)');
-      freshUser = Utils.findUserByEmail(email);
-    }
-
-    // Проверить, что роль не «Запрет»
-    if (freshUser.role === 'Запрет') {
-      Utils.audit(email, 'LOGIN_BLOCKED_ROLE', ip, ua, 'Role: Запрет');
-      throw new Error('Доступ запрещён. Обратитесь к администратору.');
-    }
-
-    // Создать сессию
-    const session = Sessions.createSession(freshUser);
-
-    // Task 346: политика «1 моб + 1 десктоп» (SessionsDevicePolicy.gs):
-    // записать device в строку новой сессии и вытеснить (удалить) все
-    // ДРУГИЕ сессии этой почты с ТЕМ ЖЕ типом устройства. Инвариант:
-    // ≤1 mobile + ≤1 desktop = не больше двух входов; вход в «другое»
-    // приложение всегда разрешён. FAIL-OPEN: ошибки политики не блокируют
-    // вход; старые клиенты без device — политика пропускается.
+    // Task 348: ВСЕ мутации верификации — одним куском под замком:
+    //   1) markOtpUsed первым действием — двойной submit одного кода
+    //      не сможет верифицироваться дважды;
+    //   2) самосинхронизация login_status атомарна с созданием сессии;
+    //   3) createSession + sdpApplyDevicePolicy + login_status='вход
+    //      выполнен' вместе — параллельный вход того же юзера с тем же
+    //      типом устройства не оставит дубль девайс-строки.
+    // Замок НЕ реентерабельный: Sessions.createSession и
+    // sdpApplyDevicePolicy своих замков НЕ берут (см. Sessions.gs).
+    // Аудит-записи — после замка (критическая секция короткая).
     const t346device = (payload && payload.device) ? String(payload.device).toLowerCase() : '';
     let t346evicted = 0;
-    if (typeof sdpApplyDevicePolicy === 'function') {
-      const t346policy = sdpApplyDevicePolicy(email, t346device, session.token);
-      if (t346policy && t346policy.evicted) {
-        t346evicted = t346policy.evicted;
-      }
-    } else {
-      // SessionsDevicePolicy.gs ещё не добавлен в проект (Шаг 1 DEPLOY) —
-      // вход работает как раньше, без лимитов.
-      console.warn('Task 346: sdpApplyDevicePolicy не найдена — SessionsDevicePolicy.gs не подключён?');
-    }
+    let session = null;
+    let freshUser = null;
+    Utils.withLock(function() {
+      // Код верный — пометить как использованный
+      Utils.markOtpUsed(otp.row);
 
-    // Обновить users: login_status + last_login
-    Utils.updateUserStatus(freshUser.row, 'вход выполнен', new Date());
+      // Ещё раз перечитать пользователя (между запросом и верификацией мог
+      // войти другой). Task 346: блокировка «уже выполнен вход» УДАЛЕНА —
+      // параллельный вход (моб + десктоп) разрешён; осталась только
+      // самосинхронизация login_status при отсутствии активных сессий.
+      freshUser = Utils.findUserByEmail(email);
+      if (freshUser.login_status === 'вход выполнен'
+          && !Utils.userHasActiveSession(freshUser.ID)) {
+        Utils.updateUserStatus(freshUser.row, 'вход не выполнен', freshUser.last_login);
+        Utils.audit(email, 'LOGIN_STATUS_AUTO_RESET', ip, ua,
+          'login_status was "вход выполнен" but no active session — auto-reset (during verify)');
+        freshUser = Utils.findUserByEmail(email);
+      }
+
+      // Проверить, что роль не «Запрет»
+      if (freshUser.role === 'Запрет') {
+        Utils.audit(email, 'LOGIN_BLOCKED_ROLE', ip, ua, 'Role: Запрет');
+        throw new Error('Доступ запрещён. Обратитесь к администратору.');
+      }
+
+      // Создать сессию
+      session = Sessions.createSession(freshUser);
+
+      // Task 346: политика «1 моб + 1 десктоп» (SessionsDevicePolicy.gs):
+      // записать device в строку новой сессии и вытеснить (удалить) все
+      // ДРУГИЕ сессии этой почты с ТЕМ ЖЕ типом устройства. Инвариант:
+      // ≤1 mobile + ≤1 desktop = не больше двух входов; вход в «другое»
+      // приложение всегда разрешён. FAIL-OPEN: ошибки политики не блокируют
+      // вход; старые клиенты без device — политика пропускается.
+      if (typeof sdpApplyDevicePolicy === 'function') {
+        const t346policy = sdpApplyDevicePolicy(email, t346device, session.token);
+        if (t346policy && t346policy.evicted) {
+          t346evicted = t346policy.evicted;
+        }
+      } else {
+        // SessionsDevicePolicy.gs ещё не добавлен в проект (Шаг 1 DEPLOY) —
+        // вход работает как раньше, без лимитов.
+        console.warn('Task 346: sdpApplyDevicePolicy не найдена — SessionsDevicePolicy.gs не подключён?');
+      }
+
+      // Обновить users: login_status + last_login
+      Utils.updateUserStatus(freshUser.row, 'вход выполнен', new Date());
+    });
 
     Utils.audit(email, 'OTP_VERIFIED', ip, ua, 'Role: ' + freshUser.role);
     Utils.audit(email, 'LOGIN_SUCCESS', ip, ua,

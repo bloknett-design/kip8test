@@ -4,6 +4,13 @@
  * Чтение/запись листов, валидация, генерация токенов,
  * нормализация email, rate limiting, cleanup.
  *
+ * Task 348 (2026-09-09): 1) генерация токенов и OTP-кодов переведена
+ * с Math.random (не криптостойкий) на Utilities.getUuid(); 2) добавлен
+ * Utils.withLock(fn, timeoutMs) — сериализация мутаций через
+ * LockService.getScriptLock(); обёрнуты Admin.createUser,
+ * Admin.resetLogin и cleanupStaleSessions (остальные обёртки — в
+ * Sessions.gs и Auth.gs, см. DEPLOY-Task348-uuid-lockservice.md).
+ *
  * Task 347 (2026-09-08): добавлена Utils.cleanupStaleSessions() —
  * чистка «заброшенных» строк листа sessions (last_heartbeat старше
  * N дней; config STALE_SESSION_DAYS, по умолчанию 30). Вызывается
@@ -276,21 +283,75 @@ const Utils = {
     return s;
   },
 
-  /** Сгенерировать случайный токен заданной длины. */
-  generateToken: function(length) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let out = '';
-    for (let i = 0; i < length; i++) {
-      out += chars.charAt(Math.floor(Math.random() * chars.length));
+  // ========================================================================
+  // LOCK (Task 348) — сериализация мутаций против гонок
+  // ========================================================================
+
+  /**
+   * Task 348: выполнить fn под глобальным замком скрипта.
+   * Apps Script обрабатывает запросы ПАРАЛЛЕЛЬНО: любая цепочка
+   * «прочитал → посчитал → записал» может перемешаться с чужой такой
+   * же (дубль ID при createUser; запись/удаление в ЧУЖУЮ строку по
+   * устаревшему номеру при logout/heartbeat; дубль девайс-сессии при
+   * параллельном входе). LockService.getScriptLock() — один замок на
+   * все выполнения скрипта: пока fn выполняется, остальные ждут.
+   *
+   * ПРАВИЛА (нарушать нельзя):
+   *   1. Критическая секция короткая — только чтения/записи таблиц.
+   *      Отправка почты (MailApp) и внешние вызовы — ВНЕ замка.
+   *   2. Замок НЕ реентерабельный: внутри fn НЕ вызывать функции,
+   *      которые сами берут withLock (взаимоблокировка). Чтение
+   *      переносится ВНУТРЬ fn — прочитанное снаружи уже устарело.
+   *   3. tryLock с таймаутом: при таймауте — понятная ошибка
+   *      server_busy (клиент предложит повторить), не вечное молчание.
+   */
+  withLock: function(fn, timeoutMs) {
+    timeoutMs = timeoutMs || 10000;
+    const lock = LockService.getScriptLock();
+    if (!lock.tryLock(timeoutMs)) {
+      throw new Error('server_busy: попробуйте ещё раз через несколько секунд');
     }
-    return out;
+    try {
+      return fn();
+    } finally {
+      lock.releaseLock();
+    }
   },
 
-  /** Сгенерировать числовой код заданной длины (например, 6 = 100000..999999). */
+  /**
+   * Task 348: токен сессии из Utilities.getUuid().
+   * Math.random() — не криптографический генератор (последовательность
+   * теоретически восстанавливается по нескольким значениям), а сессии
+   * бессрочные — украденный токен жил бы вечно. getUuid() — встроенный
+   * криптостойкий источник: один UUID минус 4 дефиса = ровно 32
+   * hex-символа (дефолтная длина токена). Длина параметром сохранена:
+   * если в config SESSION_TOKEN_LENGTH другой размер — доберём вторым
+   * UUID. Старые токены остаются валидными, меняется только генерация
+   * новых (charset [0-9a-f] вместо [A-Za-z0-9], длина та же).
+   */
+  generateToken: function(length) {
+    length = length || 32;
+    let out = '';
+    while (out.length < length) {
+      out += Utilities.getUuid().replace(/-/g, '');
+    }
+    return out.substring(0, length);
+  },
+
+  /**
+   * Task 348: числовой OTP-код тоже из getUuid — из hex-символов UUID
+   * оставляем только цифры 0-9 (в одном UUID их в среднем ~20, для
+   * 6-значного кода хватает с запасом; цикл — страховка). Прежний
+   * Math.random был предсказуемым; лимит попыток MAX_OTP_ATTEMPTS
+   * остаётся второй линией обороны. Возвращает строку — клиент
+   * сравнивает код как текст, формат не изменился.
+   */
   generateNumericCode: function(length) {
-    const min = Math.pow(10, length - 1);
-    const max = Math.pow(10, length) - 1;
-    return String(Math.floor(min + Math.random() * (max - min + 1)));
+    let digits = '';
+    while (digits.length < length) {
+      digits += Utilities.getUuid().replace(/[^0-9]/g, '');
+    }
+    return digits.substring(0, length);
   },
 
   /** Получить IP клиента (из заголовков Apps Script). */
@@ -423,39 +484,47 @@ const Utils = {
    * Возвращает число удалённых строк (для логирования/отладки).
    */
   cleanupStaleSessions: function() {
-    const days = this.getConfig('STALE_SESSION_DAYS', 30);
-    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
-    const rows = this.getRows('sessions');
-    const affected = {}; // user_id -> true (у кого могли исчезнуть все сессии)
-    let removed = 0;
+    // Task 348: мутации под замком (таймаут 30 сек — чистка большого
+    // листа дольше обычной операции). Стрелочная функция: this (= Utils)
+    // сохраняется лексически. Гонка: параллельный logout удаляет строку
+    // между нашим чтением и deleteRow — номер съезжает, чистка удалила бы
+    // ЧУЖУЮ строку. Внутри НЕ вызывать withLock-функции (замок не
+    // реентерабелен).
+    return Utils.withLock(() => {
+      const days = this.getConfig('STALE_SESSION_DAYS', 30);
+      const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+      const rows = this.getRows('sessions');
+      const affected = {}; // user_id -> true (у кого могли исчезнуть все сессии)
+      let removed = 0;
 
-    // Проход 1: удалить устаревшие строки (с конца — нумерация не сбивается)
-    for (let i = rows.length - 1; i >= 0; i--) {
-      const s = rows[i];
-      const hb = (s.last_heartbeat instanceof Date) ? s.last_heartbeat.getTime() : 0;
-      if (hb < cutoff) {
-        this.deleteRow('sessions', s.row);
-        if (s.user_id !== '' && s.user_id !== undefined && s.user_id !== null) {
-          affected[s.user_id] = true;
-        }
-        this.audit(s.email, 'SESSION_CLEANUP_STALE', '', '',
-          'last_heartbeat older than ' + days + ' days — session removed');
-        removed++;
-      }
-    }
-
-    // Проход 2: сбросить login_status тем, у кого сессий не осталось
-    for (const uid in affected) {
-      if (!this.userHasActiveSession(uid)) {
-        const user = this.findUserById(uid);
-        if (user && user.login_status === 'вход выполнен') {
-          this.updateUserStatus(user.row, 'вход не выполнен', user.last_login);
-          this.audit(user.email, 'LOGIN_STATUS_AUTO_RESET', '', '',
-            'No sessions left after stale cleanup');
+      // Проход 1: удалить устаревшие строки (с конца — нумерация не сбивается)
+      for (let i = rows.length - 1; i >= 0; i--) {
+        const s = rows[i];
+        const hb = (s.last_heartbeat instanceof Date) ? s.last_heartbeat.getTime() : 0;
+        if (hb < cutoff) {
+          this.deleteRow('sessions', s.row);
+          if (s.user_id !== '' && s.user_id !== undefined && s.user_id !== null) {
+            affected[s.user_id] = true;
+          }
+          this.audit(s.email, 'SESSION_CLEANUP_STALE', '', '',
+            'last_heartbeat older than ' + days + ' days — session removed');
+          removed++;
         }
       }
-    }
-    return removed;
+
+      // Проход 2: сбросить login_status тем, у кого сессий не осталось
+      for (const uid in affected) {
+        if (!this.userHasActiveSession(uid)) {
+          const user = this.findUserById(uid);
+          if (user && user.login_status === 'вход выполнен') {
+            this.updateUserStatus(user.row, 'вход не выполнен', user.last_login);
+            this.audit(user.email, 'LOGIN_STATUS_AUTO_RESET', '', '',
+              'No sessions left after stale cleanup');
+          }
+        }
+      }
+      return removed;
+    }, 30000);
   }
 };
 
@@ -503,22 +572,31 @@ const Admin = {
 
   resetLogin: function(token, userId) {
     const admin = this._requireAdmin(token);
-    const user = Utils.findUserById(userId);
-    if (!user) throw new Error('User not found');
 
-    Utils.updateUserStatus(user.row, 'вход не выполнен', user.last_login);
+    // Task 348: [найти юзера → сбросить статус → удалить его сессии →
+    // аудит] под замком. Параллельный logout/heartbeat пользователя
+    // (heartbeat каждые 5 мин) читает и удаляет строки между нашим
+    // чтением и удалением — номера строк съезжают, deleteRow попал бы
+    // в ЧУЖУЮ строку. Поиск юзера тоже внутри замка (снаружи — уже
+    // устаревший row).
+    return Utils.withLock(function() {
+      const user = Utils.findUserById(userId);
+      if (!user) throw new Error('User not found');
 
-    // Удалить все активные сессии этого пользователя
-    const sessions = Utils.getRows('sessions');
-    for (let i = sessions.length - 1; i >= 0; i--) {
-      if (Number(sessions[i].user_id) === Number(userId)) {
-        Utils.deleteRow('sessions', sessions[i].row);
+      Utils.updateUserStatus(user.row, 'вход не выполнен', user.last_login);
+
+      // Удалить все активные сессии этого пользователя
+      const sessions = Utils.getRows('sessions');
+      for (let i = sessions.length - 1; i >= 0; i--) {
+        if (Number(sessions[i].user_id) === Number(userId)) {
+          Utils.deleteRow('sessions', sessions[i].row);
+        }
       }
-    }
 
-    Utils.audit(admin.email, 'ADMIN_RESET_LOGIN', '', '',
-      'Reset login for ' + user.email);
-    return { ok: true };
+      Utils.audit(admin.email, 'ADMIN_RESET_LOGIN', '', '',
+        'Reset login for ' + user.email);
+      return { ok: true };
+    });
   },
 
   /**
@@ -544,29 +622,38 @@ const Admin = {
       throw new Error('Недопустимая роль: ' + newRole);
     }
 
-    // Проверка уникальности email.
-    const existing = Utils.findUserByEmail(email);
-    if (existing) {
-      throw new Error('Пользователь с email ' + email + ' уже существует');
-    }
+    // Task 348: [проверка уникальности email → maxId → запись] под
+    // замком. Иначе два одновременных createUser (двойной клик по
+    // «Создать» / два админа) оба считают maxId+1 и создадут ДВУХ
+    // пользователей с одним ID. Стрелочная функция — this не нужен,
+    // всё через Utils.* и captured-переменные.
+    return Utils.withLock(function() {
+      // Проверка уникальности email (внутри замка — двойной submit
+      // не пройдёт дважды).
+      const existing = Utils.findUserByEmail(email);
+      if (existing) {
+        throw new Error('Пользователь с email ' + email + ' уже существует');
+      }
 
-    // Сгенерировать новый ID = max(existing IDs) + 1.
-    const rows = Utils.getRows('users');
-    let maxId = 0;
-    for (let i = 0; i < rows.length; i++) {
-      const id = Number(rows[i].ID);
-      if (!isNaN(id) && id > maxId) maxId = id;
-    }
-    const newId = maxId + 1;
+      // Сгенерировать новый ID = max(existing IDs) + 1.
+      // Чтение ВНУТРИ замка — прочитанное снаружи уже устарело.
+      const rows = Utils.getRows('users');
+      let maxId = 0;
+      for (let i = 0; i < rows.length; i++) {
+        const id = Number(rows[i].ID);
+        if (!isNaN(id) && id > maxId) maxId = id;
+      }
+      const newId = maxId + 1;
 
-    // Добавить строку: ID | email | role | login_status | last_login
-    // Структура листа users: A=ID, B=email, C=role, D=login_status, E=last_login.
-    Utils.appendRow('users', [newId, email, newRole, 'вход не выполнен', '']);
+      // Добавить строку: ID | email | role | login_status | last_login
+      // Структура листа users: A=ID, B=email, C=role, D=login_status, E=last_login.
+      Utils.appendRow('users', [newId, email, newRole, 'вход не выполнен', '']);
 
-    Utils.audit(admin.email, 'ADMIN_CREATE_USER', '', '',
-      'Created user: ' + email + ' (role: ' + newRole + ', id: ' + newId + ')');
+      Utils.audit(admin.email, 'ADMIN_CREATE_USER', '', '',
+        'Created user: ' + email + ' (role: ' + newRole + ', id: ' + newId + ')');
 
-    return { ok: true, id: newId, email: email, role: newRole };
+      return { ok: true, id: newId, email: email, role: newRole };
+    });
   },
 
   listSessions: function(token) {
