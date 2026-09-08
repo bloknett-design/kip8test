@@ -5024,3 +5024,51 @@ isolateLocalStorage здесь — НОРМА, прод должен быть б
 **SW kip8test:** без изменений (kipia-test-v581).
 
 Следующий номер задачи: 345.
+
+---
+
+## Task 345 — аудит изоляции десктопов kip8-desktop ↔ kip8test-desktop (2026-09-08)
+
+**Заявка:** «нужно проверить, чтобы не было общей регистрации между
+десктопными приложениями kip8-desktop и kip8test-desktop» (продолжение
+инцидента Task 344 — общий вход мобильных PWA на одном origin).
+
+**Диагноз: на десктопах общего входа НЕТ и НЕ БЫЛО.** Причина — механика
+Electron отличается от браузера: localStorage/cookies/Service Worker хранятся
+физически в папке userData СВОЕГО приложения (%APPDATA%\<app.name>,
+app.name = productName из package.json), а не в общем браузерном профиле.
+У прод-десктопа productName = «KIPiA» (userData %APPDATA%\KIPiA), у
+тест-десктопа — «KIPiA Test» (%APPDATA%\KIPiA Test): папки различаются →
+хранилища раздельны, даже при одинаковых origin (app://localhost у обоих в
+offline-fallback; bloknett-design.github.io у обоих в online-режиме). Даже в
+период испорченного прод-index.html (Tasks 341–343, обёртка kip8test:)
+десктопы не делили вход: kip8-desktop писал ключ в СВОЮ папку userData,
+которую kip8test-desktop физически не читает.
+
+**Аудит (scripts/task345-desktop-isolation-check.py, 34/34 PASS):**
+- kip8-desktop: name kipia-desktop, productName KIPiA, appId
+  com.bloknett.kipia, publish kip8-desktop, REMOTE_APP_URL …/kip8/;
+  БЕЗ app.setName / app.setPath('userData') / partition:; index.html
+  без артефактов kip8test (синк Task 344 доставлен), sw.js kipia-v429
+- kip8test-desktop: name kipia-desktop-test, productName KIPiA Test,
+  appId com.bloknett.kipia.test, publish kip8test-desktop, REMOTE_APP_URL
+  …/kip8test/ (НЕ прод); обёртка isolateLocalStorage на месте (норма
+  тест-сборки)
+- git-история productName не пересекалась НИКОГДА: kip8-desktop — всегда
+  «KIPiA»; kip8test-desktop — «КИПиА (Test)» (Task 92) → «KIPiA Test»
+  (Task 94, ASCII для AppImage). Установки тоже раздельны: %LOCALAPPDATA%\Programs\KIPiA
+  и …\KIPiA Test, релизы/автообновление из своих репо.
+
+**Guard на будущее:** в kip8test-desktop/tests/test-task345.js (+11,
+прогон 218/0) — защита от «тест-десктоп станет продом копипастой»
+(сценарий-аналог инцидента Task 341): ловит подмену name/productName/
+appId/publish.repo/REMOTE_APP_URL и появление app.setName /
+app.setPath('userData') / partition:. Негативный тест: подмена
+productName → 'KIPiA' роняет прогон (217/1), восстановление → 218/0.
+run-all.js kip8test-desktop синками не перезаписывается (sync
+kip8test→kip8test-desktop копирует только index.html/charts/devices)
+— guard постоянный, гоняется CI kip8test-desktop при каждом пуше.
+
+**SW kip8test:** без изменений (kipia-test-v581).
+
+Следующий номер задачи: 346.
