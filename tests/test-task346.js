@@ -352,6 +352,47 @@ describe('Task 346 — серверный справочник SessionsDevicePol
             'DEPLOY-Task346-sessions-device-policy.md');
     });
 
+    test('ФАЙЛ: патченный Auth.gs существует (справочник живого сервера)', () => {
+        assertTrue(fs.existsSync(path.join(ROOT, 'scripts', 'Auth.gs')),
+            'scripts/Auth.gs — патч Task 346 для живого Auth.gs');
+    });
+
+    test('AUTH: блокировки «уже выполнен вход» удалены (заявка: без запретов)', () => {
+        const auth = fs.readFileSync(path.join(ROOT, 'scripts', 'Auth.gs'), 'utf8');
+        assertTrue(auth.indexOf('LOGIN_BLOCKED_DUPLICATE') === -1,
+            'audit-событие блокировки убрано из Auth.gs');
+        assertTrue(auth.indexOf("throw new Error('С этого аккаунта") === -1,
+            'throw «С этого аккаунта уже выполнен вход…» убран (в комментариях упоминание допустимо)');
+    });
+
+    test('AUTH: verifyOTP принимает payload; политика с guard; evicted в ответе', () => {
+        const auth = fs.readFileSync(path.join(ROOT, 'scripts', 'Auth.gs'), 'utf8');
+        assertTrue(auth.indexOf('verifyOTP: function(rawEmail, code, payload)') !== -1,
+            'сигнатура с 3-м аргументом payload');
+        assertTrue(auth.indexOf("typeof sdpApplyDevicePolicy === 'function'") !== -1,
+            'guard: без SessionsDevicePolicy.gs вход не падает');
+        assertTrue(auth.indexOf('sdpApplyDevicePolicy(email, t346device, session.token)') !== -1,
+            'вызов политики после создания сессии');
+        assertTrue(auth.indexOf('evicted: t346evicted') !== -1,
+            'evicted в ответе для тоста');
+    });
+
+    test('AUTH: самосинхронизация login_status сохранена (без throw)', () => {
+        const auth = fs.readFileSync(path.join(ROOT, 'scripts', 'Auth.gs'), 'utf8');
+        assertTrue(auth.indexOf('LOGIN_STATUS_AUTO_RESET') !== -1,
+            'авто-сброс устаревшего login_status остался');
+        assertTrue(auth.indexOf('&& !Utils.userHasActiveSession') !== -1,
+            'сброс только при отсутствии активных сессий');
+    });
+
+    test('DEPLOY: правка роутера Code.gs (payload 3-м аргументом)', () => {
+        const md = fs.readFileSync(path.join(ROOT, 'scripts', 'DEPLOY-Task346-sessions-device-policy.md'), 'utf8');
+        assertTrue(md.indexOf('Auth.verifyOTP(payload.email, payload.code, payload)') !== -1,
+            'инструкция учитывает передачу payload в роутере');
+        assertTrue(md.indexOf('LOGIN_BLOCKED_DUPLICATE') !== -1,
+            'инструкция описывает удаление блокировки «уже вошел»');
+    });
+
     test('ФАЙЛ: политика — fail-open, вытеснение того же device, инвариант', () => {
         const gs = fs.readFileSync(path.join(ROOT, 'scripts', 'SessionsDevicePolicy.gs'), 'utf8');
         assertTrue(gs.indexOf('function sdpApplyDevicePolicy') !== -1,
