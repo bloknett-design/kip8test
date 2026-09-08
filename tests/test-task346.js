@@ -26,6 +26,15 @@
 //
 // SW: kipia-test-v582.
 //
+// Фикс logout (2026-09-08, по живому Sessions.gs, прислан пользователем):
+// logout безусловно сбрасывал login_status ПОЛЬЗОВАТЕЛЯ → heartbeat
+// параллельного устройства (моб+десктоп, каждые 5 мин) видел «вход не
+// выполнен» → session_expired → выход из моба выкидывал десктоп. Патч:
+// сброс ТОЛЬКО при отсутствии других сессий (_userHasOtherSession,
+// сопоставление по user_id ИЛИ email, fail-safe) + getCurrentUser
+// userId: user.ID (Task 37: раньше user.id → undefined). Справочник:
+// scripts/Sessions.gs + DEPLOY-Task346-sessions-logout-fix.md.
+//
 // Запуск: через tests/run-all.js (require './test-task346.js').
 
 const fs = require('fs');
@@ -413,6 +422,170 @@ describe('Task 346 — серверный справочник SessionsDevicePol
         assertTrue(gs.indexOf('deleteRow') !== -1, 'удаление вытесненных строк');
         assertTrue(gs.indexOf('unsupported_device') !== -1,
             'payload без device → политика пропущена (легаси)');
+    });
+});
+
+// ============================================================
+// 4b. Фикс logout (Sessions.gs) — Task 346, продолжение заявки
+// ============================================================
+const SESSIONS_GS = path.join(ROOT, 'scripts', 'Sessions.gs');
+const SESSIONS_GS_SRC = fs.readFileSync(SESSIONS_GS, 'utf8');
+
+// Мок окружения Apps Script для VM: Utils + лист sessions
+// (структура живого листа: r1–r3 описание, r4 заголовки, r5+ данные).
+function sessionsSandbox(rows, user) {
+    const calls = { deleted: [], statusUpdates: [], audits: [] };
+    const sheet = {
+        getDataRange: function () {
+            return { getValues: function () { return rows; } };
+        }
+    };
+    const Utils = {
+        findSessionByToken: function (tok) {
+            for (let r = 0; r < rows.length; r++) {
+                if (String((rows[r] || [])[0] || '') === String(tok)) {
+                    return { token: tok, row: r + 1, user_id: rows[r][1],
+                             email: rows[r][2], role: rows[r][3] };
+                }
+            }
+            return null;
+        },
+        deleteRow: function (name, row) {
+            calls.deleted.push(row);
+            rows.splice(row - 1, 1);
+        },
+        findUserById: function () {
+            return user ? { ID: user.ID, email: user.email, role: user.role,
+                login_status: user.login_status, row: user.row,
+                last_login: user.last_login } : null;
+        },
+        updateUserStatus: function (row, status, lastLogin) {
+            calls.statusUpdates.push(status);
+        },
+        audit: function (email, action, ip, ua, details) {
+            calls.audits.push({ email: email, action: action, details: String(details) });
+        },
+        getSheet: function (name) { return sheet; }
+    };
+    const sb = {
+        Utils: Utils,
+        console: { log: function () {}, warn: function () {}, error: function () {} }
+    };
+    sb.__calls = calls;
+    return sb;
+}
+
+function sessionsSheet(withDesktop, withLegacy) {
+    const d = new Date(2026, 8, 8, 12, 0, 0);
+    const rows = [
+        ['Лист активных сессий (справочно)', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', ''],
+        ['session_token', 'user_id', 'email', 'role', 'created_at', 'last_heartbeat', 'device'],
+        ['mob-token', 7, 'u@x.ru', 'КИП ИОС', d, d, 'mobile']
+    ];
+    if (withDesktop) {
+        rows.push(['desk-token', 7, 'u@x.ru', 'КИП ИОС', d, d, 'desktop']);
+    }
+    if (withLegacy) {
+        rows.push(['legacy-token', '', 'u@x.ru', 'КИП ИОС', d, d, '']);
+    }
+    return rows;
+}
+
+const T346_USER = { ID: 7, email: 'u@x.ru', role: 'КИП ИОС',
+    login_status: 'вход выполнен', row: 2, last_login: new Date(2026, 8, 8) };
+
+describe('Task 346 — фикс logout в Sessions.gs (параллельные сессии)', () => {
+
+    test('ФАЙЛ: справочник scripts/Sessions.gs существует (живой код + патч)', () => {
+        assertTrue(fs.existsSync(SESSIONS_GS), 'справочник в репо');
+    });
+
+    test('SRC: logout сбрасывает login_status ТОЛЬКО без других сессий', () => {
+        assertTrue(SESSIONS_GS_SRC.indexOf('_userHasOtherSession: function') !== -1,
+            'приватный helper в объекте Sessions');
+        assertTrue(SESSIONS_GS_SRC.indexOf('if (!Sessions._userHasOtherSession(session.user_id, session.email))') !== -1,
+            'сброс login_status под условием «других сессий нет»');
+        assertTrue(SESSIONS_GS_SRC.indexOf("Utils.updateUserStatus(user.row, 'вход не выполнен', user.last_login);\n        } else {") !== -1,
+            'ветка else: при живой параллельной сессии статус не трогаем');
+    });
+
+    test('SRC: getCurrentUser возвращает user.ID (Task 37), не user.id', () => {
+        assertTrue(SESSIONS_GS_SRC.indexOf('userId: user.ID') !== -1,
+            'заглавные ID (заголовок листа users — «ID»)');
+        assertTrue(SESSIONS_GS_SRC.indexOf('userId: user.id') === -1,
+            'строчные user.id (баг → undefined) убраны');
+    });
+
+    test('SRC: helper — fail-safe и сопоставление по user_id ИЛИ email', () => {
+        assertTrue(SESSIONS_GS_SRC.indexOf('targetEmail') !== -1,
+            'совпадение по email (страховка от пустых user_id, баг Task 37)');
+        assertTrue(SESSIONS_GS_SRC.indexOf('return false; // других сессий нет — можно сбрасывать login_status') !== -1,
+            'false = других сессий нет (сброс разрешён)');
+        assertTrue(SESSIONS_GS_SRC.indexOf('ошибка — статус НЕ сбрасываем (fail-safe)') !== -1,
+            'catch: ошибка чтения листа → true → статус не сбрасывается');
+    });
+
+    test('DEPLOY: инструкция по фиксу logout существует', () => {
+        const md = fs.readFileSync(path.join(ROOT, 'scripts', 'DEPLOY-Task346-sessions-logout-fix.md'), 'utf8');
+        assertTrue(md.indexOf('Новая версия') !== -1,
+            'публикация через «Новая версия» (Task 284)');
+        assertTrue(md.indexOf('_userHasOtherSession') !== -1,
+            'описана точечная правка logout');
+        assertTrue(md.indexOf('user.ID') !== -1,
+            'описан бонус-фикс getCurrentUser');
+    });
+
+    test('VM: logout из моба при живом десктопе — login_status НЕ сбрасывается', () => {
+        const sb = sessionsSandbox(sessionsSheet(true), T346_USER);
+        const Sessions = vm.runInNewContext(SESSIONS_GS_SRC + '\nSessions;', sb);
+        const res = Sessions.logout('mob-token');
+        assertEqual(res.ok, true, 'logout успешен');
+        assertEqual(sb.__calls.deleted.length, 1, 'удалена ровно 1 строка (моб)');
+        assertEqual(sb.__calls.statusUpdates.length, 0,
+            'login_status НЕ сбрасывался — параллельная десктоп-сессия жива');
+        assertEqual(sb.__calls.audits.length, 1, 'audit LOGOUT записан');
+        assertTrue(sb.__calls.audits[0].details.indexOf('another session stays active') !== -1,
+            'audit помечает параллельный режим');
+    });
+
+    test('VM: logout последней сессии — login_status сбрасывается (прежнее поведение)', () => {
+        const sb = sessionsSandbox(sessionsSheet(false), T346_USER);
+        const Sessions = vm.runInNewContext(SESSIONS_GS_SRC + '\nSessions;', sb);
+        Sessions.logout('mob-token');
+        assertEqual(sb.__calls.deleted.length, 1, 'строка сессии удалена');
+        assertEqual(sb.__calls.statusUpdates.length, 1, 'login_status сброшен');
+        assertEqual(sb.__calls.statusUpdates[0], 'вход не выполнен', 'значение статуса');
+        assertEqual(sb.__calls.audits[0].details, 'User logged out',
+            'обычный audit LOGOUT (без пометки parallel)');
+    });
+
+    test('VM: getCurrentUser возвращает userId = user.ID (не undefined)', () => {
+        const sb = sessionsSandbox(sessionsSheet(true), T346_USER);
+        const Sessions = vm.runInNewContext(SESSIONS_GS_SRC + '\nSessions;', sb);
+        const res = Sessions.getCurrentUser('mob-token');
+        assertEqual(res.userId, 7, 'userId = ID пользователя (заглавные)');
+        assertEqual(res.email, 'u@x.ru', 'email');
+        assertEqual(res.role, 'КИП ИОС', 'role');
+    });
+
+    test('VM: fail-safe — ошибка чтения листа → статус НЕ сбрасывается', () => {
+        const sb = sessionsSandbox(sessionsSheet(false), T346_USER);
+        sb.Utils.getSheet = function () { throw new Error('sheet read failed'); };
+        const Sessions = vm.runInNewContext(SESSIONS_GS_SRC + '\nSessions;', sb);
+        const res = Sessions.logout('mob-token');
+        assertEqual(res.ok, true, 'logout не упал');
+        assertEqual(sb.__calls.statusUpdates.length, 0,
+            'fail-safe: при ошибке статус не сбрасывается (рассинхрон починит Auth.sendOTP)');
+    });
+
+    test('VM: легаси-строка с пустым user_id совпадает по email — статус не сбрасывается', () => {
+        const sb = sessionsSandbox(sessionsSheet(false, true), T346_USER);
+        const Sessions = vm.runInNewContext(SESSIONS_GS_SRC + '\nSessions;', sb);
+        Sessions.logout('mob-token');
+        assertEqual(sb.__calls.statusUpdates.length, 0,
+            'легаси-сессия той же почты (user_id пуст) удерживает login_status');
     });
 });
 
