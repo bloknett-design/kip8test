@@ -393,6 +393,14 @@ describe('Task 346 — серверный справочник SessionsDevicePol
             'инструкция описывает удаление блокировки «уже вошел»');
     });
 
+    test('CODE.GS: справочник роутера содержит правку Task 346 (payload)', () => {
+        const code = fs.readFileSync(path.join(ROOT, 'scripts', 'Code.gs'), 'utf8');
+        assertTrue(code.indexOf('Auth.verifyOTP(payload.email, payload.code, payload)') !== -1,
+            'справочник Code.gs передаёт payload в Auth.verifyOTP (иначе политика неактивна)');
+        assertTrue(code.indexOf('Auth.verifyOTP(payload.email, payload.code);') === -1,
+            'старая строка без payload не осталась');
+    });
+
     test('ФАЙЛ: политика — fail-open, вытеснение того же device, инвариант', () => {
         const gs = fs.readFileSync(path.join(ROOT, 'scripts', 'SessionsDevicePolicy.gs'), 'utf8');
         assertTrue(gs.indexOf('function sdpApplyDevicePolicy') !== -1,

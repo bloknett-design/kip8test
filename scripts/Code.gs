@@ -18,7 +18,7 @@
  *
  * Сигнатуры методов:
  *   Auth.sendOTP(email)                    → результат
- *   Auth.verifyOTP(email, code)            → результат
+ *   Auth.verifyOTP(email, code, payload)   → результат (Task 346: payload.device)
  *   Sessions.getCurrentUser(token)         → результат
  *   Sessions.heartbeat(token)              → результат
  *   Sessions.logout(token)                 → результат
@@ -123,7 +123,9 @@ function doPost(e) {
         break;
 
       case 'verifyOTP':
-        result = Auth.verifyOTP(payload.email, payload.code);
+        // Task 346: payload 3-м аргументом — поле device для политики
+        // сессий «1 моб + 1 десктоп» (SessionsDevicePolicy.gs).
+        result = Auth.verifyOTP(payload.email, payload.code, payload);
         break;
 
       // === Эндпоинты для авторизованных сессий ===
