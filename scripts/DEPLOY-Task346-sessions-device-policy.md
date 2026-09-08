@@ -50,6 +50,17 @@
    var _t346policy = sdpApplyDevicePolicy(email, _t346device, token);
    ```
 
+   ⚠️ **Проверьте, что `payload` (с полем `device`) вообще доходит до
+   `Auth.verifyOTP`.** Роутер в `Code.gs` (справочник репо) вызывает
+   `Auth.verifyOTP(payload.email, payload.code)` — только два поля, сам
+   объект `payload` в функцию НЕ передаётся. Если в живом Apps Script так
+   же, сниппет выше всегда увидит `payload === undefined` → политика
+   будет молча пропускаться (входы останутся без лимита, device в лист
+   не запишется). Лечение (2 места): в `Code.gs` роутер —
+   `Auth.verifyOTP(payload.email, payload.code, payload)`; в файле Auth —
+   `function verifyOTP(email, code, payload)` (или передать одним
+   аргументом `payload.device`).
+
 3. В `data` успешного ответа добавить поле (для тоста в приложении):
 
    ```js
