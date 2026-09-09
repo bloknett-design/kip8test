@@ -190,13 +190,13 @@ if (HAS_MAIN && HAS_LEGACY_YML && HAS_LEGACY_WF) {
                 'конфиг легаси + без публикации');
         });
 
-        test('PE-верификация в CI: machine + OS 5.01 (Win7-совместимость)', function () {
+        test('PE-верификация в CI: machine + OS 5.01/5.02 (Win7-совместимость)', function () {
             assertTrue(LEGACY_WF.indexOf('verify-pe') !== -1,
                 'джоба верификации');
             assertTrue(LEGACY_WF.indexOf('0x014c') !== -1 && LEGACY_WF.indexOf('0x8664') !== -1,
                 'проверка обеих разрядностей');
-            assertTrue(LEGACY_WF.indexOf('PE OS 5.01') !== -1 || LEGACY_WF.indexOf('(5, 1)') !== -1,
-                'проверка OS-версии в PE-заголовке');
+            assertTrue(LEGACY_WF.indexOf('(5, 1)') !== -1 && LEGACY_WF.indexOf('(5, 2)') !== -1,
+                'ia32 → PE OS 5.01, x64 → 5.02 (минимум для x64; Win7 x64 = 6.1 ≥ 5.02)');
             assertTrue(LEGACY_WF.indexOf('p7zip-full') !== -1,
                 '7z для распаковки установщика');
         });
