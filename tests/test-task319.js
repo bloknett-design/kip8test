@@ -43,7 +43,7 @@
 //     → под кнопкой, без бара → прежнее поведение);
 //     _openEventsOnlyPopup (рендер окна, кловер, позиция, без
 //     окна кодов).
-//   SW: kipia-test-v583.
+//   SW: kipia-test-v584.
 //
 // Запуск: через tests/run-all.js (require './test-task319.js').
 
@@ -333,8 +333,10 @@ describe('Task 319 — тёмная тема: шахматка дней как �
     });
 
     test('CSS: тёмная тема — выходные/пустые/бейджи как в светлой', () => {
-        assertTrue(cssRule(/\[data-theme="dark"\] \.ws-grid tbody td\.ws-cell\.ws-weekend\.ws-status-empty \{[^}]*background:\s*#f7d9e3;[^}]*\}/s),
-            'пустые выходные — #f7d9e3 (светлая тема), не #6e4250');
+        // Task 355: розовый выходных — пастельнее (#f7d9e3 → #f8e2e9,
+        // тот же цвет, что в светлой теме)
+        assertTrue(cssRule(/\[data-theme="dark"\] \.ws-grid tbody td\.ws-cell\.ws-weekend\.ws-status-empty \{[^}]*background:\s*#f8e2e9;[^}]*\}/s),
+            'пустые выходные — #f8e2e9 (светлая тема, Task 355), не #6e4250');
         assertTrue(cssRule(/\[data-theme="dark"\] \.ws-grid tbody td\.ws-cell\.ws-status-empty \{[^}]*color:\s*rgba\(20, 20, 19, 0\.65\)[^}]*\}/s),
             '«·»/пустые — вторичный тёмный (как в светлой)');
         assertTrue(cssRule(/\[data-theme="dark"\] \.ws-grid tbody td\.ws-cell \.ws-ev-badge\.ws-ev-pending \{[^}]*color:\s*#141413;[^}]*\}/s),
@@ -510,10 +512,10 @@ describe('Task 319 — окно кодов и «Мероприятия в это
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 319 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v583', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v583') !== -1,
-            'CACHE_VERSION = kipia-test-v583 (Task 319)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v584') !== -1,
+    test('SW: версия кэша kipia-test-v584', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v584') !== -1,
+            'CACHE_VERSION = kipia-test-v584 (Task 319)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v585') !== -1,
             'нет лишнего инкремента');
     });
 });
