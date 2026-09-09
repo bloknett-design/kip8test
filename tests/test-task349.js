@@ -194,12 +194,15 @@ describe('Task 349 — SRC: updateRole — замок, снапшот, выго�
     });
 
     test('SRC: users!C записывается (col 3, как раньше)', () => {
-        assertTrue(UPDATE_ROLE_FN.indexOf('getRange(user.row, 3).setValue(newRole)') !== -1,
+        // Task 351: прямая запись переведена на Utils.setCell (сброс кэша
+        // чтений) — ассерт проверяет тот же лист/строку/столбец.
+        assertTrue(UPDATE_ROLE_FN.indexOf("Utils.setCell('users', user.row, 3, newRole)") !== -1,
             'запись новой роли в лист users (столбец C)');
     });
 
     test('SRC: обычная роль — role-снапшот sessions!D обновляется (col 4)', () => {
-        assertTrue(UPDATE_ROLE_FN.indexOf('getRange(sessions[i].row, 4).setValue(newRole)') !== -1,
+        // Task 351: через Utils.setCell (сброс кэша чтений)
+        assertTrue(UPDATE_ROLE_FN.indexOf("Utils.setCell('sessions', sessions[i].row, 4, newRole)") !== -1,
             'синхрон снапшота в живых сессиях юзера');
     });
 
@@ -293,6 +296,11 @@ describe('Task 349 — VM: updateRole на мок-листе', () => {
                             return { setValue: function (v) { calls.setCells.push({ sheet: name, row: row, col: col, v: v }); } };
                         }
                     };
+                },
+                // Task 351: updateRole пишет через Utils.setCell (сброс кэша
+                // чтений) — мок пишет в тот же calls.setCells
+                setCell: function (sheet, row, col, v) {
+                    calls.setCells.push({ sheet: sheet, row: row, col: col, v: v });
                 },
                 getRows: function (name) {
                     return env.sessions.map(function (s) { return Object.assign({}, s); });

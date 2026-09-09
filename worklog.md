@@ -5245,3 +5245,13 @@ Utils.gs + Auth.gs (байт-в-байт из kip8), DEPLOY-дока, test-task3
 (там только Code.gs, роутер не менялся).
 
 Следующий номер задачи: 351.
+
+## Task 351 (09.09.2026) — синхрон с kip8: deleteUser + кэш + listLogs-хвост + config
+
+Utils.gs + Sessions.gs (байт-в-байт из kip8), Code.gs — те же 5
+правок в тест-варианте (beginExecution ×2 + роут adminDeleteUser),
+DEPLOY-дока, test-task351 +46, test-task349/350 актуализированы
+→ **2467/0** (было 2421). Код — см. worklog kip8 (Task 351).
+kip8test-desktop задет: Code.gs (вариант kip8test) синхронизирован.
+
+Следующий номер задачи: 352.

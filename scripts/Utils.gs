@@ -33,6 +33,20 @@
  * возвращает НОВОЕ значение счётчика (вызов под замком в verifyOTP
  * читает+пишет атомарно) — см. DEPLOY-Task350-locks-cleanup-batch.md.
  *
+ * Task 351 (2026-09-09): 1) Admin.deleteUser — удаление пользователя
+ * со всеми его сессиями и OTP (замок; гарды «нельзя себя» и «нельзя
+ * последнего админа»; аудит ADMIN_DELETE_USER; см. DEPLOY-Task351);
+ * 2) КЭШ ЧТЕНИЙ на одно выполнение — _rowsCache + beginExecution()
+ * (сброс в doPost/hourlyCleanup — Code.gs) + инвалидация при любой
+ * записи; повторные getRows одного листа (sendOTP: users ×2, config
+ * ×5-6, audit_log ×2; гейт+модуль: сессия+юзер ×2) = ОДНО чтение
+ * API вместо 2-6; 3) Admin.listLogs читает только ХВОСТ audit_log
+ * (Utils.getLastRows — заголовки r4 + последние N строк) вместо всего
+ * листа (90 дней логов) + сортировка хвоста; 4) getConfig с ЧИСЛОВЫМ
+ * дефолтом парсит значение устойчиво: '', 'abc', '-5', '0', NaN →
+ * дефолт + console.warn ('' * N = 0 → cutoff «сейчас» → чистка
+ * сносила бы ВСЕ сессии — реальная дыра).
+ *
  * Task 347 (2026-09-08): добавлена Utils.cleanupStaleSessions() —
  * чистка «заброшенных» строк листа sessions (last_heartbeat старше
  * N дней; config STALE_SESSION_DAYS, по умолчанию 30). Вызывается
@@ -50,6 +64,16 @@ const Utils = {
   /** Кэш листов (один getActiveSheet за вызов). */
   _sheetCache: {},
 
+  /**
+   * Task 351: кэш ДАННЫХ листов (getRows) — строго на ОДНО выполнение.
+   * GAS МОЖЕТ переиспользовать глобальное состояние между выполнениями
+   * на одном инстансе — поэтому сброс (beginExecution) вызывается в
+   * НАЧАЛЕ каждого входа: Code.gs doPost (все запросы) и hourlyCleanup
+   * (крон). Без этого второй запрос получил бы снапшот первого.
+   * Внутри выполнения записи листов инвалидируют кэш (см. _invalidate).
+   */
+  _rowsCache: {},
+
   /** Получить лист по имени (с кэшем). */
   getSheet: function(name) {
     if (!this._sheetCache[name]) {
@@ -58,8 +82,46 @@ const Utils = {
     return this._sheetCache[name];
   },
 
-  /** Получить все строки листа как массив объектов (ключи — из строки 4 заголовков). */
+  /**
+   * Task 351: сброс кэша чтений — вызывать в начале КАЖДОГО выполнения
+   * (Code.gs: doPost и hourlyCleanup; там же — единственные входы
+   * продакшена). Ручные запуски из редактора (sdpDebug, init-скрипты)
+   * листы почти не читают через getRows; если добавить чтения —
+   * вызывать beginExecution и там.
+   */
+  beginExecution: function() {
+    this._rowsCache = {};
+  },
+
+  /**
+   * Task 351: сбросить кэш КОНКРЕТНОГО листа — вызывается ВСЕМИ
+   * мутациями этого листа (appendRow/deleteRow/deleteRows/setCell/
+   * updateUserStatus/markOtpUsed/incrementOtpAttempts — ниже).
+   * Соглашение по спискам аутентификации: мутации users/sessions/
+   * otp_codes/audit_log идут ТОЛЬКО через эти хелперы (Sessions.gs
+   * и Auth.gs также используют их; прямые setValue там переведены
+   * на Utils.setCell в Task 351). ЕДИНСТВЕННОЕ исключение —
+   * SessionsDevicePolicy.gs (свой openById): его записи device и
+   * вытеснения выполняются в verifyOTP ВСЕГДА сразу после
+   * Sessions.createSession, чей appendRow уже сбросил кэш sessions, —
+   * устаревшего снапшота быть не может; см. DEPLOY-Task351
+   * («осознанные НЕ-правки»).
+   */
+  invalidateCache: function(name) {
+    delete this._rowsCache[name];
+  },
+
+  /**
+   * Получить все строки листа как массив объектов (ключи — из строки 4 заголовков).
+   * Task 351: кэш на выполнение — повторные чтения того же листа не
+   * ходят в API. Возвращается КОПИЯ массива (slice): вызывающие могут
+   * сортировать его (listLogs) без порчи кэша. ОБЪЕКТЫ строк общие —
+   * поля объектов НЕ мутировать (только читать).
+   */
   getRows: function(name) {
+    if (this._rowsCache[name]) {
+      return this._rowsCache[name].slice();
+    }
     const sheet = this.getSheet(name);
     if (!sheet || sheet.getLastRow() < 4) return [];
     const range = sheet.getRange(4, 1, sheet.getLastRow() - 3, sheet.getLastColumn());
@@ -73,38 +135,115 @@ const Utils = {
       }
       rows.push(obj);
     }
+    this._rowsCache[name] = rows;
+    return rows.slice();
+  },
+
+  /**
+   * Task 351: последние count строк данных листа (ХВОСТ) + заголовки
+   * строки 4 — два маленьких чтения вместо всего листа. Для
+   * append-only листов (audit_log, otp_codes): свежие события внизу,
+   * список «последние N» = физический хвост. Используется
+   * Admin.listLogs (раньше читала ВЕСЬ audit_log — 90 дней, десятки
+   * тысяч строк — ради первых 100 после сортировки). Возвращает массив
+   * объектов как getRows (row — реальный номер строки; поля не
+   * мутировать). Кэшем не пользуется намеренно: вызывается один раз
+   * за выполнение, а смешение «хвост+кэш полного листа» только
+   * усложнило бы инварианты.
+   */
+  getLastRows: function(name, count) {
+    if (!count || count < 1) return [];
+    const sheet = this.getSheet(name);
+    if (!sheet) return [];
+    const lastRow = sheet.getLastRow();
+    if (lastRow < 5) return []; // данных нет (r4 — заголовки)
+    const lastCol = sheet.getLastColumn();
+    const headers = sheet.getRange(4, 1, 1, lastCol).getValues()[0];
+    const take = Math.min(count, lastRow - 4); // строк данных всего
+    const startRow = lastRow - take + 1;       // первая строка чтения
+    const values = sheet.getRange(startRow, 1, take, lastCol).getValues();
+    const rows = [];
+    for (let i = 0; i < values.length; i++) {
+      const obj = { row: startRow + i };
+      for (let j = 0; j < headers.length; j++) {
+        obj[headers[j]] = values[i][j];
+      }
+      rows.push(obj);
+    }
     return rows;
   },
 
-  /** Добавить строку в лист. */
+  /** Добавить строку в лист (Task 351: + сброс кэша листа). */
   appendRow: function(name, values) {
     const sheet = this.getSheet(name);
     sheet.appendRow(values);
+    this.invalidateCache(name);
   },
 
-  /** Удалить строку по номеру. */
+  /** Удалить строку по номеру (Task 351: + сброс кэша листа). */
   deleteRow: function(name, rowNum) {
     const sheet = this.getSheet(name);
     sheet.deleteRow(rowNum);
+    this.invalidateCache(name);
   },
 
-  /** Обновить ячейку. */
+  /**
+   * Task 351: удалить СПЛОШНОЙ блок строк (батч) одним вызовом —
+   * обёртка над sheet.deleteRows(row, count) со сбросом кэша.
+   * Используют крон-чистки (Task 350 срезают верхний блок
+   * просроченных). Замена прямых getSheet(...).deleteRows(...)
+   * (которые обходили кэш) — семантика та же.
+   */
+  deleteRows: function(name, rowNum, count) {
+    const sheet = this.getSheet(name);
+    sheet.deleteRows(rowNum, count);
+    this.invalidateCache(name);
+  },
+
+  /** Обновить ячейку (Task 351: + сброс кэша листа). */
   setCell: function(name, rowNum, colNum, value) {
     const sheet = this.getSheet(name);
     sheet.getRange(rowNum, colNum).setValue(value);
+    this.invalidateCache(name);
   },
 
   // ========================================================================
   // CONFIG
   // ========================================================================
 
-  /** Получить значение настройки из листа config. */
+  /**
+   * Получить значение настройки из листа config.
+   * Task 351: УСТОЙЧИВЫЙ ЧИСЛОВОЙ ПАРСИНГ — если defaultValue число,
+   * значение парсится и проверяется, мусор НЕ протекает в арифметику:
+   *   • "" (пусто) → раньше возвращался как есть → '' * N = 0 →
+   *     cutoff «сейчас» → cleanupStaleSessions сносила ВСЕ сессии;
+   *   • "abc" / "30 дней"-не-число / NaN → тихий отказ чисток;
+   *   • "-5" / "0" → бессмысленные/опасные пороги (0 дней = снос всего).
+   * Теперь: парсим мягко (trim, parseInt — "30 дней" → 30), при NaN
+   * или < 1 возвращаем defaultValue + console.warn. Все 9 числовых
+   * ключей (OTP-лимиты, STALE_SESSION_DAYS, AUDIT_LOG_RETENTION_DAYS…)
+   * имеют смысл только ≥ 1 — поэтому минимум 1 зашит здесь; если
+   * появится ключ с легитимным 0 — заводить отдельный геттер.
+   * Строковые ключи (SUPPORT_REPLY_TO): defaultValue не число →
+   * прежнее поведение (значение как есть).
+   */
   getConfig: function(key, defaultValue) {
     const rows = this.getRows('config');
     for (let i = 0; i < rows.length; i++) {
       if (rows[i].key === key) {
         const v = rows[i].value;
-        // Если значение числовое — вернуть число
+        // Если дефолт числовой — вернуть ЧИСЛО или дефолт, но не мусор
+        if (typeof defaultValue === 'number') {
+          const n = (typeof v === 'number') ? v
+            : parseInt(String(v === undefined || v === null ? '' : v).trim(), 10);
+          if (isNaN(n) || n < 1) {
+            console.warn('[Utils.getConfig] config «' + key + '»: значение «' + v + '" не число или < 1 — использую дефолт ' + defaultValue);
+            return defaultValue;
+          }
+          return n;
+        }
+        // Строковый ключ: прежнее поведение (числоподобные строки —
+        // как записано; читатель сам решает, что с этим делать)
         if (typeof v === 'number') return v;
         if (typeof v === 'string' && /^\d+$/.test(v)) return parseInt(v, 10);
         return v;
@@ -139,13 +278,17 @@ const Utils = {
     return null;
   },
 
-  /** Обновить login_status и last_login в строке users. */
+  /**
+   * Обновить login_status и last_login в строке users.
+   * Task 351: сброс кэша users (мутация мимо getRows недопустима).
+   */
   updateUserStatus: function(rowNum, status, lastLogin) {
     const sheet = this.getSheet('users');
     sheet.getRange(rowNum, 4).setValue(status);   // login_status = D
     if (lastLogin !== undefined) {
       sheet.getRange(rowNum, 5).setValue(lastLogin); // last_login = E
     }
+    this.invalidateCache('users');
   },
 
   // ========================================================================
@@ -215,10 +358,14 @@ const Utils = {
     return latest;
   },
 
-  /** Пометить OTP как использованный. */
+  /**
+   * Пометить OTP как использованный.
+   * Task 351: сброс кэша otp_codes.
+   */
   markOtpUsed: function(rowNum) {
     const sheet = this.getSheet('otp_codes');
     sheet.getRange(rowNum, 5).setValue('TRUE'); // used = E
+    this.invalidateCache('otp_codes');
   },
 
   /**
@@ -235,6 +382,7 @@ const Utils = {
     const cur = parseInt(cell.getValue() || '0', 10);
     const next = cur + 1;
     cell.setValue(next);
+    this.invalidateCache('otp_codes'); // Task 351: мутация сбрасывает кэш
     return next;
   },
 
@@ -502,7 +650,9 @@ const Utils = {
       }
       let removed = 0;
       if (prefix > 0) {
-        this.getSheet('otp_codes').deleteRows(5, prefix);
+        // Task 351: батч через Utils.deleteRows — сброс кэша листа
+        // (прямой getSheet().deleteRows() обходил кэш чтений).
+        this.deleteRows('otp_codes', 5, prefix);
         removed += prefix;
       }
 
@@ -544,7 +694,8 @@ const Utils = {
       }
       let removed = 0;
       if (prefix > 0) {
-        this.getSheet('audit_log').deleteRows(5, prefix);
+        // Task 351: батч через Utils.deleteRows (сброс кэша листа)
+        this.deleteRows('audit_log', 5, prefix);
         removed += prefix;
       }
 
@@ -669,8 +820,9 @@ const Admin = {
       const allowed = Utils.getAllowedRoles();
       if (allowed.indexOf(newRole) === -1) throw new Error('Invalid role: ' + newRole);
 
-      const usersSheet = Utils.getSheet('users');
-      usersSheet.getRange(user.row, 3).setValue(newRole); // role = C
+      // role = C. Task 351: через Utils.setCell — сброс кэша users
+      // (прямая запись мимо хелпера оставила бы кэш устаревшим).
+      Utils.setCell('users', user.row, 3, newRole);
 
       // ============================================================
       // Task 349: sessions!D — role-снапшот на момент входа. Раньше
@@ -700,7 +852,8 @@ const Admin = {
         for (let i = 0; i < sessions.length; i++) {
           if (Number(sessions[i].user_id) === Number(userId) &&
               sessions[i].role !== newRole) {
-            Utils.getSheet('sessions').getRange(sessions[i].row, 4).setValue(newRole);
+            // Task 351: через Utils.setCell — сброс кэша sessions
+            Utils.setCell('sessions', sessions[i].row, 4, newRole);
           }
         }
       }
@@ -744,6 +897,102 @@ const Admin = {
       Utils.audit(admin.email, 'ADMIN_RESET_LOGIN', '', '',
         'Reset login for ' + user.email);
       return { ok: true };
+    });
+  },
+
+  /**
+   * Task 351: УДАЛИТЬ пользователя — со всеми его сессиями и OTP-кодами.
+   * Аудит п.3 (🟡): функции удаления не было — удалённый руками из
+   * users юзер оставлял хвосты в sessions (их вычищал только крон
+   * cleanupExpiredSessions как «сирот») и активный OTP, который
+   * оставался годен ДО истечения TTL — если сразу пересоздать юзера
+   * с той же почтой, старый код дал бы вход «новому» юзеру.
+   *
+   * ГАРДЫ (fail-safe — контролируемая ошибка, не падение):
+   *   • юзер не найден → 'User not found' (двойной клик / уже удалён);
+   *   • нельзя удалить СЕБЯ (admin.ID === user.ID) — иначе админ
+   *     сносит свою строку посреди запроса и теряет доступ;
+   *   • нельзя удалить ПОСЛЕДНЕГО админа — иначе систему нечем
+   *     администрировать (сами себя админы тоже не удалят, см. выше).
+   *
+   * Порядок (всё под ОДНИМ замком, паттерн resetLogin Task 348):
+   *   1. найти юзера (ВНУТРИ замка — снаружи row уже устарел);
+   *   2. сессии: с конца, совпадение по user_id ИЛИ email — надёжно
+   *      и для легаси-строк Task 37 с пустым user_id;
+   *   3. OTP-строки по email (с конца — номера строк не съезжают);
+   *   4. строка users ПОСЛЕДНЕЙ — удаления в других листах не трогают
+   *      нумерацию users, а наш user.row собран под замком;
+   *   5. аудит ADMIN_DELETE_USER с деталями (сколько снесено).
+   * Возвращает { ok, deleted, sessionsRemoved, otpsRemoved }.
+   */
+  deleteUser: function(token, userId) {
+    const admin = this._requireAdmin(token);
+
+    return Utils.withLock(function() {
+      const user = Utils.findUserById(userId);
+      if (!user) throw new Error('User not found');
+
+      // Гард: нельзя удалить собственный аккаунт
+      if (Number(user.ID) === Number(admin.ID)) {
+        throw new Error('Нельзя удалить собственный аккаунт');
+      }
+
+      // Гард: нельзя удалить последнего админа
+      if (user.role === 'Админ') {
+        const allUsers = Utils.getRows('users');
+        let otherAdmins = 0;
+        for (let i = 0; i < allUsers.length; i++) {
+          if (allUsers[i].role === 'Админ'
+              && Number(allUsers[i].ID) !== Number(user.ID)) {
+            otherAdmins++;
+          }
+        }
+        if (otherAdmins === 0) {
+          throw new Error('Нельзя удалить последнего администратора');
+        }
+      }
+
+      // 1) Сессии юзера: с конца (deleteRow сдвигает номера ниже),
+      //    по user_id ИЛИ email (легаси Task 37 — пустой user_id)
+      let sessionsRemoved = 0;
+      const targetEmail = String(user.email || '').toLowerCase();
+      const sessions = Utils.getRows('sessions');
+      for (let i = sessions.length - 1; i >= 0; i--) {
+        const s = sessions[i];
+        const byId = Number(s.user_id) === Number(userId);
+        const byEmail = targetEmail !== ''
+            && String(s.email || '').toLowerCase() === targetEmail;
+        if (byId || byEmail) {
+          Utils.deleteRow('sessions', s.row);
+          sessionsRemoved++;
+        }
+      }
+
+      // 2) OTP-коды по email: активный код умирает вместе с юзером
+      //    (закрыта дыра «удалил → пересоздал → вошёл по старому коду»)
+      let otpsRemoved = 0;
+      const otps = Utils.getRows('otp_codes');
+      for (let i = otps.length - 1; i >= 0; i--) {
+        if (String(otps[i].email || '').toLowerCase() === targetEmail) {
+          Utils.deleteRow('otp_codes', otps[i].row);
+          otpsRemoved++;
+        }
+      }
+
+      // 3) Строка users — последней (см. доккоммент выше)
+      Utils.deleteRow('users', user.row);
+
+      // 4) Аудит
+      Utils.audit(admin.email, 'ADMIN_DELETE_USER', '', '',
+        'Deleted user ' + user.email + ' (id ' + user.ID + '): removed '
+        + sessionsRemoved + ' session(s), ' + otpsRemoved + ' otp row(s)');
+
+      return {
+        ok: true,
+        deleted: user.email,
+        sessionsRemoved: sessionsRemoved,
+        otpsRemoved: otpsRemoved
+      };
     });
   },
 
@@ -816,17 +1065,28 @@ const Admin = {
     }));
   },
 
+  /**
+   * Task 351: журнал аудита — только ХВОСТ. Раньше читался ВЕСЬ
+   * audit_log (90 дней, десятки тысяч строк) ради limit (100)
+   * строк после сортировки. Лист append-only → последние события —
+   * физический низ листа → Utils.getLastRows читает заголовки r4 +
+   * последние limit строк. Хвост ещё раз сортируем по убыванию
+   * timestamp — страховка от редких нехронологических вставок
+   * (ручная правка середины листа): их «самые свежие» записи могут
+   * не попасть в физический хвост — осознанный обмен (см.
+   * DEPLOY-Task351). Формат полей ответа прежний.
+   */
   listLogs: function(token, limit) {
     this._requireAdmin(token);
     limit = Math.min(limit || 100, 500);
-    const rows = Utils.getRows('audit_log');
-    // Сортировка по убыванию timestamp
+    const rows = Utils.getLastRows('audit_log', limit);
+    // Сортировка по убыванию timestamp (страховка, хвост почти отсортирован)
     rows.sort((a, b) => {
       const ta = a.timestamp instanceof Date ? a.timestamp.getTime() : 0;
       const tb = b.timestamp instanceof Date ? b.timestamp.getTime() : 0;
       return tb - ta;
     });
-    return rows.slice(0, limit).map(r => ({
+    return rows.map(r => ({
       timestamp: r.timestamp,
       email: r.email,
       action: r.action,

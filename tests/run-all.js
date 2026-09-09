@@ -90,6 +90,10 @@ require('./test-task349.js');
 // Task 350 — замки на последние мутации (крон-чистки, verifyOTP с пере-чтением
 // OTP, sendOTP кулдаун+appendRow под замком) + батч-удаления deleteRows(5, N)
 require('./test-task350.js');
+// Task 351 — Admin.deleteUser (гарды себя/последнего админа, сессии+OTP),
+// кэш чтений на выполнение (beginExecution/инвалидация), listLogs-хвост
+// (getLastRows), устойчивый getConfig с числовым дефолтом
+require('./test-task351.js');
 require('./test-deploy-url.js');
 
 // Запускаем

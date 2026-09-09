@@ -140,14 +140,17 @@ describe('Task 350 — SRC: крон-чистки под Utils.withLock', () => 
 describe('Task 350 — SRC: батч-удаления чисток', () => {
 
     test('SRC: cleanupExpiredOtpCodes — один deleteRows(5, N) + страховка с конца', () => {
-        assertTrue(CLEANUP_OTP_FN.indexOf('.deleteRows(5, prefix)') !== -1,
+        // Task 351: батч через Utils.deleteRows (сброс кэша чтений) —
+        // тот же вызов deleteRows(5, prefix), но хелпером
+        assertTrue(CLEANUP_OTP_FN.indexOf("this.deleteRows('otp_codes', 5, prefix)") !== -1,
             'сплошной верхний блок срезается одним вызовом');
         assertTrue(CLEANUP_OTP_FN.indexOf('rows[i].row - prefix') !== -1,
             'страховочный проход учитывает сдвиг номеров после батча');
     });
 
     test('SRC: cleanupOldAuditLogs — один deleteRows(5, N) + страховка с конца', () => {
-        assertTrue(CLEANUP_LOGS_FN.indexOf('.deleteRows(5, prefix)') !== -1,
+        // Task 351: батч через Utils.deleteRows (сброс кэша чтений)
+        assertTrue(CLEANUP_LOGS_FN.indexOf("this.deleteRows('audit_log', 5, prefix)") !== -1,
             'батч-срез просроченного блока логов');
         assertTrue(CLEANUP_LOGS_FN.indexOf('rows[i].row - prefix') !== -1,
             'страховка для выбившихся из хронологии строк');
@@ -249,6 +252,13 @@ describe('Task 350 — VM: батч-чистка audit_log', () => {
                         env.sheets[name].splice(row - 5, n);
                     }
                 };
+            },
+            // Task 351: чистки режут батчем через Utils.deleteRows
+            // (обёртка со сбросом кэша чтений) — мок дублирует логику
+            // getSheet().deleteRows в тот же calls.batchDeletes
+            deleteRows: function (name, row, n) {
+                calls.batchDeletes.push({ sheet: name, row: row, n: n });
+                env.sheets[name].splice(row - 5, n);
             },
             deleteRow: function (name, row) {
                 calls.rowDeletes.push({ sheet: name, row: row });

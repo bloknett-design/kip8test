@@ -34,6 +34,11 @@
  * SESSION_CLEANUP_*. Старые записи в audit_log НЕ переписываются
  * (история остаётся со старым именем). Config STALE_SESSION_DAYS НЕ
  * переименовывался (юзер завёл руками, зашит в доку/тесты Task 347).
+ *
+ * Task 351 (2026-09-09): прямые записи в лист sessions
+ * (heartbeat: last_heartbeat F; getCurrentUser: role-снапшот D)
+ * переведены на Utils.setCell — сработает сброс кэша чтений
+ * (Utils._rowsCache, Task 351). Семантика записей НЕ менялась.
  */
 
 const Sessions = {
@@ -113,9 +118,10 @@ const Sessions = {
         throw new Error('session_expired');
       }
 
-      // Обновить last_heartbeat (только для мониторинга, не влияет на валидность)
-      const sheet = Utils.getSheet('sessions');
-      sheet.getRange(session.row, 6).setValue(new Date()); // last_heartbeat = столбец F
+      // Обновить last_heartbeat (только для мониторинга, не влияет на валидность).
+      // Task 351: через Utils.setCell — сброс кэша чтений (было: прямой
+      // sheet.getRange().setValue() в обход хелпера).
+      Utils.setCell('sessions', session.row, 6, new Date()); // last_heartbeat = F
 
       return { ok: true };
     });
@@ -274,9 +280,9 @@ const Sessions = {
       }
 
       // Если роль сменилась — обновить в sessions
+      // Task 351: через Utils.setCell — сброс кэша чтений.
       if (user.role !== session.role) {
-        const sheet = Utils.getSheet('sessions');
-        sheet.getRange(session.row, 4).setValue(user.role);
+        Utils.setCell('sessions', session.row, 4, user.role);
       }
 
       // Если роль «Запрет» — принудительный logout
