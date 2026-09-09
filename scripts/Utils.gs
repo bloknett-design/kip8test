@@ -20,6 +20,19 @@
  * МГНОВЕННАЯ выгонка при «Запрет» (удаление всех сессий юзера и
  * сброс login_status, как resetLogin) — см. DEPLOY-Task349.
  *
+ * Task 350 (2026-09-09): закрыты ПОСЛЕДНИЕ мутации без замка и
+ * добавлены БАТЧ-удаления: 1) cleanupExpiredSessions /
+ * cleanupExpiredOtpCodes / cleanupOldAuditLogs (крон hourlyCleanup
+ * работает параллельно с запросами юзеров) — под Utils.withLock
+ * (таймаут 30 сек); cleanupExpiredSessions вдобавок читает users
+ * ОДИН раз (было findUserById на каждую строку = O(n²) чтений);
+ * 2) чистки otp_codes и audit_log удаляют сплошной верхний блок
+ * одним deleteRows(5, N) вместо deleteRow на каждую строку (листы
+ * append-only → просроченное сверху; страховочный проход с конца —
+ * для строк, выбившихся из хронологии); 3) incrementOtpAttempts
+ * возвращает НОВОЕ значение счётчика (вызов под замком в verifyOTP
+ * читает+пишет атомарно) — см. DEPLOY-Task350-locks-cleanup-batch.md.
+ *
  * Task 347 (2026-09-08): добавлена Utils.cleanupStaleSessions() —
  * чистка «заброшенных» строк листа sessions (last_heartbeat старше
  * N дней; config STALE_SESSION_DAYS, по умолчанию 30). Вызывается
@@ -208,12 +221,21 @@ const Utils = {
     sheet.getRange(rowNum, 5).setValue('TRUE'); // used = E
   },
 
-  /** Увеличить счётчик попыток для OTP. */
+  /**
+   * Увеличить счётчик попыток для OTP.
+   * Task 350: возвращает НОВОЕ значение счётчика — вызывается ПОД
+   * замком в Auth.verifyOTP, где «прочитал attempts → записал
+   * attempts+1» должен быть атомарным (раньше verifyOTP считал
+   * «otp.attempts + 1» из УСТАРЕВШЕГО внешнего чтения — параллельные
+   * неудачные попытки терялись, лимит считался неверно).
+   */
   incrementOtpAttempts: function(rowNum) {
     const sheet = this.getSheet('otp_codes');
     const cell = sheet.getRange(rowNum, 6); // attempts = F
     const cur = parseInt(cell.getValue() || '0', 10);
-    cell.setValue(cur + 1);
+    const next = cur + 1;
+    cell.setValue(next);
+    return next;
   },
 
   /** Подсчитать неудачные попытки OTP для email за последние N минут. */
@@ -410,45 +432,132 @@ const Utils = {
    * «осиротевшие» сессии — те, у которых пользователь удалён из users.
    * Логика getCurrentUser уже делает это лениво, но cron нужен для
    * сессий, к которым никто не обращается.
+   *
+   * Task 350: 1) [чтение users → чтение sessions → deleteRow с конца]
+   * под Utils.withLock — крон бежит ПАРАЛЛЕЛЬНО запросам юзеров:
+   * чужой logout/heartbeat/deleteRow между нашим чтением и удалением
+   * сдвигает номера строк — чистка без замка могла удалить ЧУЖУЮ
+   * строку (класс бага Task 348, эти три чистки тогда остались без
+   * замка); 2) список живых ID читается ОДНИМ getRows('users') и
+   * складывается в индекс — было findUserById на КАЖДУЮ строку
+   * sessions, каждый вызов = полный перечит листа users (O(n²)
+   * API-чтений). Семантика прежняя: Number-совпадение, строка без
+   * user_id (Number('')=0, юзера с ID 0 нет) = сирота и удаляется.
+   * Возвращает число удалённых строк (для логирования).
    * ============================================================
    */
   cleanupExpiredSessions: function() {
-    const rows = this.getRows('sessions');
-    // Идём с конца, чтобы не сбивать нумерацию строк при удалении
-    for (let i = rows.length - 1; i >= 0; i--) {
-      const s = rows[i];
-      const user = this.findUserById(s.user_id);
-      if (!user) {
-        this.deleteRow('sessions', s.row);
-        this.audit(s.email, 'SESSION_CLEANUP_ORPHAN', '', '',
-          'User deleted from users table, session removed');
+    return Utils.withLock(() => {
+      const rows = this.getRows('sessions');
+      if (rows.length === 0) return 0;
+
+      // Живые ID — один проход по users (вместо findUserById в цикле).
+      // isNaN-строки в users!A в индекс не попадают — их сессии,
+      // как и раньше, считаются осиротевшими.
+      const userRows = this.getRows('users');
+      const existingIds = {};
+      for (let i = 0; i < userRows.length; i++) {
+        const id = Number(userRows[i].ID);
+        if (!isNaN(id)) existingIds[id] = true;
       }
-    }
+
+      // Идём с конца, чтобы не сбивать нумерацию строк при удалении
+      let removed = 0;
+      for (let i = rows.length - 1; i >= 0; i--) {
+        const s = rows[i];
+        if (!existingIds[Number(s.user_id)]) {
+          this.deleteRow('sessions', s.row);
+          this.audit(s.email, 'SESSION_CLEANUP_ORPHAN', '', '',
+            'User deleted from users table, session removed');
+          removed++;
+        }
+      }
+      return removed;
+    }, 30000);
   },
 
-  /** Удалить истёкшие OTP-коды (старше 1 часа). */
+  /**
+   * Удалить истёкшие OTP-коды (старше 1 часа).
+   * Task 350: под замком + БАТЧ-удаление. Лист append-only (строки
+   * дописываются только в конец) → хронология по времени создания →
+   * просроченные строки = сплошной блок СВЕРХУ (данные с r5). Один
+   * sheet.deleteRows(5, N) вместо deleteRow на каждую строку: сотни
+   * API-вызовов заменены одним — быстрее и не упирается в 6-минутный
+   * лимит триггера. Страховочный проход с конца удаляет просроченные
+   * строки, ВЫБИВШИЕСЯ из хронологии (ручная вставка в середину):
+   * их номера после батча сдвинуты на N вверх → row - prefix.
+   * Возвращает число удалённых строк.
+   */
   cleanupExpiredOtpCodes: function() {
-    const cutoff = new Date(Date.now() - 60 * 60 * 1000);
-    const rows = this.getRows('otp_codes');
-    for (let i = rows.length - 1; i >= 0; i--) {
-      const o = rows[i];
-      if (o.expires_at instanceof Date && o.expires_at.getTime() < cutoff.getTime()) {
-        this.deleteRow('otp_codes', o.row);
+    return Utils.withLock(() => {
+      const cutoff = new Date(Date.now() - 60 * 60 * 1000);
+      const rows = this.getRows('otp_codes');
+
+      // Сплошной блок просроченных сверху (как правило — все разом)
+      let prefix = 0;
+      while (prefix < rows.length
+          && rows[prefix].expires_at instanceof Date
+          && rows[prefix].expires_at.getTime() < cutoff.getTime()) {
+        prefix++;
       }
-    }
+      let removed = 0;
+      if (prefix > 0) {
+        this.getSheet('otp_codes').deleteRows(5, prefix);
+        removed += prefix;
+      }
+
+      // Страховка: просроченные НИЖЕ чужой/свежей строки (не хронология)
+      for (let i = rows.length - 1; i >= prefix; i--) {
+        if (rows[i].expires_at instanceof Date
+            && rows[i].expires_at.getTime() < cutoff.getTime()) {
+          this.deleteRow('otp_codes', rows[i].row - prefix);
+          removed++;
+        }
+      }
+      return removed;
+    }, 30000);
   },
 
-  /** Удалить старые записи audit_log (старше N дней). */
+  /**
+   * Удалить старые записи audit_log (старше N дней).
+   * Task 350: под замком + БАТЧ-удаление — как cleanupExpiredOtpCodes
+   * (лист append-only, audit пишет только appendRow → хронология;
+   * просроченный блок сверху срезается одним deleteRows(5, N),
+   * выбившиеся из хронологии строки — страховочным проходом с конца).
+   * Раньше: deleteRow на КАЖДУЮ строку — при 90 днях логов сотни
+   * последовательных API-вызовов, риск упереться в лимит триггера,
+   * и всё это без замка (гонка номеров строк с запросами юзеров).
+   * Возвращает число удалённых строк.
+   */
   cleanupOldAuditLogs: function() {
-    const days = this.getConfig('AUDIT_LOG_RETENTION_DAYS', 90);
-    const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-    const rows = this.getRows('audit_log');
-    for (let i = rows.length - 1; i >= 0; i--) {
-      const r = rows[i];
-      if (r.timestamp instanceof Date && r.timestamp.getTime() < cutoff.getTime()) {
-        this.deleteRow('audit_log', r.row);
+    return Utils.withLock(() => {
+      const days = this.getConfig('AUDIT_LOG_RETENTION_DAYS', 90);
+      const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+      const rows = this.getRows('audit_log');
+
+      // Сплошной блок просроченных сверху
+      let prefix = 0;
+      while (prefix < rows.length
+          && rows[prefix].timestamp instanceof Date
+          && rows[prefix].timestamp.getTime() < cutoff.getTime()) {
+        prefix++;
       }
-    }
+      let removed = 0;
+      if (prefix > 0) {
+        this.getSheet('audit_log').deleteRows(5, prefix);
+        removed += prefix;
+      }
+
+      // Страховка: просроченные ниже нехронологичной вставки
+      for (let i = rows.length - 1; i >= prefix; i--) {
+        if (rows[i].timestamp instanceof Date
+            && rows[i].timestamp.getTime() < cutoff.getTime()) {
+          this.deleteRow('audit_log', rows[i].row - prefix);
+          removed++;
+        }
+      }
+      return removed;
+    }, 30000);
   },
 
   /**

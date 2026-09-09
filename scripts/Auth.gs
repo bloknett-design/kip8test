@@ -32,6 +32,20 @@
  * + MAX_OTP_ATTEMPTS/OTP_BLOCK_MINUTES + cooldown. Сигнатура
  * Utils.audit(email, action, ip, ua, details) НЕ менялась — 40+
  * вызовов по всем файлам; 3-й и 4-й аргументы теперь всегда ''.
+ *
+ * Task 350 (2026-09-09): закрыты последние гонки и дыра двойного
+ * submit: 1) verifyOTP — ВСЕ проверки и мутации (включая ПОИСК OTP,
+ * истечение, неверный код/инкремент попыток) под ОДНИМ замком, с
+ * пере-чтением состояния ВНУТРИ. Замок Task 348 читал otp ДО замка:
+ * два параллельных submit одного кода оба видели «unused», второй
+ * входил после первого и создавал ВТОРУЮ сессию с одного кода.
+ * 2) sendOTP — [самосинхронизация → блокировка → кулдаун → запись
+ * OTP] одним замком (раньше кулдаун+appendRow были без замка: два
+ * одновременных запроса обходили 60-сек кулдаун — 2 письма, 2 строки);
+ * письмо по-прежнему ПОСЛЕ замка (MailApp вне критической секции).
+ * Аудит успешного входа перенесён внутрь замка (appendRow дописывает
+ * в конец — чужие строки не сдвигает). Роутер Code.gs НЕ менялся —
+ * DEPLOY-Task350-locks-cleanup-batch.md.
  */
 
 const Auth = {
@@ -59,7 +73,10 @@ const Auth = {
       throw new Error('Некорректный email');
     }
 
-    // Rate limit: глобально 100 OTP/час
+    // Rate limit: глобально 100 OTP/час. Осознанно ДО замка: грубый
+    // глобальный счётчик, дрейф на ±1 при параллельных запросах
+    // допустим (а полное чтение audit_log в критической секции —
+    // лишнее время под замком).
     const globalCount = Utils.countRecentAuditLogs('OTP_REQUESTED', 60);
     if (globalCount >= Utils.getConfig('RATE_LIMIT_OTP_PER_HOUR', 100)) {
       Utils.audit(email, 'RATE_LIMIT_HIT', '', '', 'Global OTP rate limit');
@@ -70,67 +87,104 @@ const Auth = {
     // (getClientIp всегда возвращал '', счётчик всегда 0). Брутфорс
     // конкретного ящика останавливает MAX_OTP_ATTEMPTS + блок 30 мин.
 
-    // Найти пользователя
-    let user = Utils.findUserByEmail(email);
-
-    // Защита от перебора: для несуществующего email возвращаем успех,
-    // но не отправляем письмо. Логируем как OTP_REQUESTED_NOT_FOUND.
+    // Найти пользователя (fail-fast, БЕЗ замка). Для несуществующего
+    // email возвращаем «код отправлен», но не отправляем — защита от
+    // перебора email. Логируем как OTP_REQUESTED_NOT_FOUND.
+    const user = Utils.findUserByEmail(email);
     if (!user) {
       Utils.audit(email, 'OTP_REQUESTED_NOT_FOUND', '', '', 'Email not in users sheet');
       return { sent: true, message: 'Код отправлен на ' + email };
     }
 
-    // Task 346: БЛОКИРОВКА «уже выполнен вход» УДАЛЕНА (заявка: с одной
-    // почты — параллельная работа в мобильном И десктопном приложении;
-    // запрета с формулировкой «пользователь уже вошел» быть не должно).
-    // Лимит входов (не больше двух, по одному на тип приложения) применяет
-    // SessionsDevicePolicy.gs в verifyOTP при создании сессии.
-    //
-    // Оставлена только САМОСИНХРОНИЗАЦИЯ login_status: статус может
-    // рассинхронизироваться с реальным состоянием sessions:
-    //   1. Hourly cleanup удалил сессию, но не сбросил login_status.
-    //   2. Сессия истекла по TTL и удалена через getCurrentUser, но сброс
-    //      login_status не сработал.
-    //   3. Токен в браузере не находится в sessions (удалён админом или
-    //      ручная правка таблицы).
-    //   4. Cleanup ещё не запускался (он раз в час), а сессия уже не активна.
-    // Если активных (не истёкших по TTL) сессий нет — сбросить login_status
-    // и продолжить вход. Если есть — НЕ блокируем: это параллельный вход в
-    // другое приложение, политику применит verifyOTP.
-    if (user.login_status === 'вход выполнен'
-        && !Utils.userHasActiveSession(user.ID)) {
-      Utils.updateUserStatus(user.row, 'вход не выполнен', user.last_login);
-      Utils.audit(email, 'LOGIN_STATUS_AUTO_RESET', '', '',
-        'login_status was "вход выполнен" but no active session found — auto-reset');
-      // Перечитать пользователя, чтобы дальше работать со свежим состоянием.
-      user = Utils.findUserByEmail(email);
-    }
-
-    // Проверить блокировку OTP (после MAX_OTP_ATTEMPTS неудач)
-    const recentFails = Utils.countRecentOtpFails(email, Utils.getConfig('OTP_BLOCK_MINUTES', 30));
+    // Конфиг-значения (чистые чтения стабильного листа config — вне
+    // гонок, читать под замком незачем).
+    const codeLength = Utils.getConfig('OTP_CODE_LENGTH', 6);
+    const ttlMin = Utils.getConfig('OTP_TTL_MINUTES', 10);
+    const cooldown = Utils.getConfig('OTP_RESEND_COOLDOWN_SECONDS', 60);
     const maxAttempts = Utils.getConfig('MAX_OTP_ATTEMPTS', 5);
-    if (recentFails >= maxAttempts) {
-      Utils.audit(email, 'OTP_BLOCKED', '', '', 'Too many failed attempts: ' + recentFails);
+
+    // ============================================================
+    // Task 350: [самосинхронизация → блокировка OTP → кулдаун →
+    // генерация и запись кода] — ОДНИМ замком. Раньше кулдаун-чек и
+    // appendRow('otp_codes') были без замки: два ОДНОВРЕМЕННЫХ запроса
+    // кода оба проходили кулдаун по ещё не записанной строке (TOCTOU)
+    // → 2 письма и 2 строки OTP за 60 сек. Самосинхронизация тоже
+    // была мутацией без замка, и юзер читался снаружи — параллельный
+    // resetLogin мог сменить login_status между чтением и записью;
+    // теперь юзер ПЕРЕЧИТЫВАЕТСЯ внутри замка (заодно гард удаления).
+    // Письмо (MailApp) — ПОСЛЕ замка: медленная отправка не должна
+    // ставить все входы в очередь за почтой (правило Task 348 №1).
+    // ============================================================
+    const otpPrepared = Utils.withLock(function() {
+      // Юзер мог быть удалён между пред-проверкой и замком.
+      let user2 = Utils.findUserByEmail(email);
+      if (!user2) {
+        return { notFound: true };
+      }
+
+      // Task 346: БЛОКИРОВКА «уже выполнен вход» УДАЛЕНА (заявка: с одной
+      // почты — параллельная работа в мобильном И десктопном приложении;
+      // запрета с формулировкой «пользователь уже вошел» быть не должно).
+      // Лимит входов (не больше двух, по одному на тип приложения)
+      // применяет SessionsDevicePolicy.gs в verifyOTP при создании сессии.
+      //
+      // Оставлена только САМОСИНХРОНИЗАЦИЯ login_status: статус может
+      // рассинхронизироваться с реальным состоянием sessions:
+      //   1. Hourly cleanup удалил сессию, но не сбросил login_status.
+      //   2. Сессия истекла по TTL и удалена через getCurrentUser, но сброс
+      //      login_status не сработал.
+      //   3. Токен в браузере не находится в sessions (удалён админом или
+      //      ручная правка таблицы).
+      //   4. Cleanup ещё не запускался (он раз в час), а сессия уже не активна.
+      // Если активных (не истёкших по TTL) сессий нет — сбросить login_status
+      // и продолжить вход. Если есть — НЕ блокируем: это параллельный вход в
+      // другое приложение, политику применит verifyOTP.
+      if (user2.login_status === 'вход выполнен'
+          && !Utils.userHasActiveSession(user2.ID)) {
+        Utils.updateUserStatus(user2.row, 'вход не выполнен', user2.last_login);
+        Utils.audit(email, 'LOGIN_STATUS_AUTO_RESET', '', '',
+          'login_status was "вход выполнен" but no active session found — auto-reset');
+        // Перечитать пользователя, чтобы дальше работать со свежим состоянием.
+        user2 = Utils.findUserByEmail(email);
+      }
+
+      // Проверить блокировку OTP (после MAX_OTP_ATTEMPTS неудач)
+      const recentFails = Utils.countRecentOtpFails(email, Utils.getConfig('OTP_BLOCK_MINUTES', 30));
+      if (recentFails >= maxAttempts) {
+        return { blocked: true, fails: recentFails };
+      }
+
+      // Cooldown: не чаще 60 сек (чтение и запись в ОДНОЙ критической
+      // секции — параллельный запрос увидит уже записанную строку)
+      const lastOtp = Utils.getLastOtpForEmail(email);
+      if (lastOtp && (Date.now() - lastOtp.created_at.getTime()) / 1000 < cooldown) {
+        const waitSec = Math.ceil(cooldown - (Date.now() - lastOtp.created_at.getTime()) / 1000);
+        return { cooldown: waitSec };
+      }
+
+      // Сгенерировать код и записать в otp_codes — атомарно с кулдауном
+      const code = Utils.generateNumericCode(codeLength);
+      const now = new Date();
+      const expires = new Date(now.getTime() + ttlMin * 60 * 1000);
+      Utils.appendRow('otp_codes', [email, code, now, expires, 'FALSE', 0]);
+      return { code: code, now: now };
+    });
+
+    // Обработка результатов замка (бросаем ЗА пределами замка —
+    // критическая секция уже завершена)
+    if (otpPrepared.notFound) {
+      Utils.audit(email, 'OTP_REQUESTED_NOT_FOUND', '', '', 'User deleted during OTP request');
+      return { sent: true, message: 'Код отправлен на ' + email };
+    }
+    if (otpPrepared.blocked) {
+      Utils.audit(email, 'OTP_BLOCKED', '', '', 'Too many failed attempts: ' + otpPrepared.fails);
       throw new Error('Слишком много неудачных попыток. Попробуйте через ' + Utils.getConfig('OTP_BLOCK_MINUTES', 30) + ' минут');
     }
-
-    // Cooldown: не чаще 60 сек
-    const cooldown = Utils.getConfig('OTP_RESEND_COOLDOWN_SECONDS', 60);
-    const lastOtp = Utils.getLastOtpForEmail(email);
-    if (lastOtp && (Date.now() - lastOtp.created_at.getTime()) / 1000 < cooldown) {
-      const waitSec = Math.ceil(cooldown - (Date.now() - lastOtp.created_at.getTime()) / 1000);
-      throw new Error('Подождите ' + waitSec + ' сек перед повторным запросом кода');
+    if (otpPrepared.cooldown) {
+      throw new Error('Подождите ' + otpPrepared.cooldown + ' сек перед повторным запросом кода');
     }
-
-    // Сгенерировать код
-    const codeLength = Utils.getConfig('OTP_CODE_LENGTH', 6);
-    const code = Utils.generateNumericCode(codeLength);
-    const now = new Date();
-    const ttlMin = Utils.getConfig('OTP_TTL_MINUTES', 10);
-    const expires = new Date(now.getTime() + ttlMin * 60 * 1000);
-
-    // Записать в otp_codes
-    Utils.appendRow('otp_codes', [email, code, now, expires, 'FALSE', 0]);
+    const code = otpPrepared.code;
+    const now = otpPrepared.now;
 
     // Отправить письмо.
     // ВАЖНО: Mail.ru (bk.ru, mail.ru, inbox.ru, list.ru) и Яндекс.Почта
@@ -241,62 +295,80 @@ const Auth = {
       throw new Error('Некорректный код');
     }
 
+    // Пред-проверка юзера (fail-fast, БЕЗ замка: чтение + аудит-append,
+    // мутаций со сдвигом строк нет). Для несуществующего — то же
+    // сообщение, что и для неверного кода (не раскрываем перебор).
     const user = Utils.findUserByEmail(email);
-
     if (!user) {
       Utils.audit(email, 'OTP_FAILED', '', '', 'User not found');
       throw new Error('Неверный код');
     }
 
-    // Найти активный OTP для этого email
-    const otp = Utils.getActiveOtpForEmail(email);
-    if (!otp) {
-      Utils.audit(email, 'OTP_FAILED', '', '', 'No active OTP');
-      throw new Error('Код не найден или истёк. Запросите новый.');
-    }
-
-    // Проверить истечение
-    if (otp.expires_at.getTime() < Date.now()) {
-      Utils.markOtpUsed(otp.row);
-      Utils.audit(email, 'OTP_FAILED', '', '', 'Code expired');
-      throw new Error('Код истёк. Запросите новый.');
-    }
-
-    // Проверить код
-    if (String(otp.code) !== String(code)) {
-      Utils.incrementOtpAttempts(otp.row);
-      const attempts = otp.attempts + 1;
-      const max = Utils.getConfig('MAX_OTP_ATTEMPTS', 5);
-      Utils.audit(email, 'OTP_FAILED', '', '', 'Wrong code, attempt ' + attempts + '/' + max);
-      if (attempts >= max) {
-        throw new Error('Неверный код. Превышен лимит попыток. Попробуйте через ' + Utils.getConfig('OTP_BLOCK_MINUTES', 30) + ' минут');
-      }
-      throw new Error('Неверный код. Осталось попыток: ' + (max - attempts));
-    }
-
-    // Task 348: ВСЕ мутации верификации — одним куском под замком:
-    //   1) markOtpUsed первым действием — двойной submit одного кода
-    //      не сможет верифицироваться дважды;
-    //   2) самосинхронизация login_status атомарна с созданием сессии;
-    //   3) createSession + sdpApplyDevicePolicy + login_status='вход
-    //      выполнен' вместе — параллельный вход того же юзера с тем же
-    //      типом устройства не оставит дубль девайс-строки.
-    // Замок НЕ реентерабельный: Sessions.createSession и
-    // sdpApplyDevicePolicy своих замков НЕ берут (см. Sessions.gs).
-    // Аудит-записи — после замка (критическая секция короткая).
+    // Task 346: тип устройства из payload для политики сессий.
     const t346device = (payload && payload.device) ? String(payload.device).toLowerCase() : '';
     let t346evicted = 0;
-    let session = null;
-    let freshUser = null;
-    Utils.withLock(function() {
-      // Код верный — пометить как использованный
+
+    // ============================================================
+    // Task 350: ВСЕ проверки и мутации верификации — ОДНИМ замком, с
+    // ПЕРЕ-ЧТЕНИЕМ состояния ВНУТРИ. Замок Task 348 оберегал мутации,
+    // но OTP читался ДО замка — две дыры:
+    //   1) два параллельных submit ОДНОГО кода оба видели «unused»
+    //      (внешнее чтение), второй входил в замок после первого и
+    //      создавал ВТОРУЮ сессию с одного кода — двойной вход НЕ
+    //      блокировался, вопреки замыслу Task 348;
+    //   2) otp.row из внешнего чтения мог устареть: часовая чистка
+    //      otp_codes удаляет строки → номера съезжают → markOtpUsed/
+    //      инкремент попыток писали бы в ЧУЖУЮ строку.
+    // Теперь getActiveOtpForEmail вызывается ТОЛЬКО внутри замка.
+    // Замок НЕ реентерабелен: Sessions.createSession и
+    // sdpApplyDevicePolicy своих замков НЕ берут (см. Sessions.gs).
+    // ============================================================
+    return Utils.withLock(function() {
+      // Найти активный OTP для этого email — ВНУТРИ замка (см. выше)
+      const otp = Utils.getActiveOtpForEmail(email);
+      if (!otp) {
+        Utils.audit(email, 'OTP_FAILED', '', '', 'No active OTP');
+        throw new Error('Код не найден или истёк. Запросите новый.');
+      }
+
+      // Проверить истечение
+      if (otp.expires_at.getTime() < Date.now()) {
+        Utils.markOtpUsed(otp.row);
+        Utils.audit(email, 'OTP_FAILED', '', '', 'Code expired');
+        throw new Error('Код истёк. Запросите новый.');
+      }
+
+      // Проверить код. Task 350: incrementOtpAttempts вызывается ПОД
+      // замком и возвращает НОВОЕ значение счётчика — «прочитал →
+      // записал attempts+1» атомарно (раньше значение считалось из
+      // внешнего чтения: параллельные неудачи терялись).
+      if (String(otp.code) !== String(code)) {
+        const attempts = Utils.incrementOtpAttempts(otp.row);
+        const max = Utils.getConfig('MAX_OTP_ATTEMPTS', 5);
+        Utils.audit(email, 'OTP_FAILED', '', '', 'Wrong code, attempt ' + attempts + '/' + max);
+        if (attempts >= max) {
+          throw new Error('Неверный код. Превышен лимит попыток. Попробуйте через ' + Utils.getConfig('OTP_BLOCK_MINUTES', 30) + ' минут');
+        }
+        throw new Error('Неверный код. Осталось попыток: ' + (max - attempts));
+      }
+
+      // Код верный — пометить как использованный ПЕРВЫМ действием:
+      // повторный submit того же кода при пере-чтении выше увидит
+      // «used» и не создаст вторую сессию (Task 350).
       Utils.markOtpUsed(otp.row);
 
-      // Ещё раз перечитать пользователя (между запросом и верификацией мог
-      // войти другой). Task 346: блокировка «уже выполнен вход» УДАЛЕНА —
-      // параллельный вход (моб + десктоп) разрешён; осталась только
-      // самосинхронизация login_status при отсутствии активных сессий.
-      freshUser = Utils.findUserByEmail(email);
+      // Перечитать пользователя: между пред-проверкой и замком могли
+      // войти другие / смениться роль / статус / юзер удалён.
+      // Task 346: блокировка «уже выполнен вход» УДАЛЕНА — осталась
+      // только самосинхронизация login_status при отсутствии активных
+      // сессий.
+      let freshUser = Utils.findUserByEmail(email);
+      if (!freshUser) {
+        // Юзер удалён из users между пред-проверкой и замком (раньше
+        // здесь был бы TypeError на null)
+        Utils.audit(email, 'OTP_FAILED', '', '', 'User deleted during verification');
+        throw new Error('Неверный код');
+      }
       if (freshUser.login_status === 'вход выполнен'
           && !Utils.userHasActiveSession(freshUser.ID)) {
         Utils.updateUserStatus(freshUser.row, 'вход не выполнен', freshUser.last_login);
@@ -312,7 +384,7 @@ const Auth = {
       }
 
       // Создать сессию
-      session = Sessions.createSession(freshUser);
+      const session = Sessions.createSession(freshUser);
 
       // Task 346: политика «1 моб + 1 десктоп» (SessionsDevicePolicy.gs):
       // записать device в строку новой сессии и вытеснить (удалить) все
@@ -333,25 +405,28 @@ const Auth = {
 
       // Обновить users: login_status + last_login
       Utils.updateUserStatus(freshUser.row, 'вход выполнен', new Date());
+
+      // Аудит — внутри замка (Task 350): appendRow дописывает в КОНЕЦ
+      // листа и НЕ сдвигает чужие строки (гонки нет), а выносить его
+      // наружу при throw-путях сложнее, чем оставить здесь.
+      Utils.audit(email, 'OTP_VERIFIED', '', '', 'Role: ' + freshUser.role);
+      Utils.audit(email, 'LOGIN_SUCCESS', '', '',
+          'Session created' + (t346device ? ', device: ' + t346device : '')
+          + (t346evicted ? ', evicted: ' + t346evicted : ''));
+
+      // ВАЖНО (Task 37): используем freshUser.ID (ЗАГЛАВНЫЕ), а НЕ freshUser.id.
+      // Заголовок в листе users — "ID", поэтому Utils.getRows() возвращает obj.ID.
+      // Если написать freshUser.id — будет undefined, клиент сохранит userId=''
+      // в localStorage, а сессия в БД уже корректна (см. Sessions.createSession).
+      return {
+        token: session.token,
+        role: freshUser.role,
+        userId: freshUser.ID,
+        email: email,
+        // Task 346: >0 — прежний вход ТОГО ЖЕ типа устройства вытеснен
+        // (клиент показывает тост; старым клиентам поле безвредно).
+        evicted: t346evicted
+      };
     });
-
-    Utils.audit(email, 'OTP_VERIFIED', '', '', 'Role: ' + freshUser.role);
-    Utils.audit(email, 'LOGIN_SUCCESS', '', '',
-        'Session created' + (t346device ? ', device: ' + t346device : '')
-        + (t346evicted ? ', evicted: ' + t346evicted : ''));
-
-    // ВАЖНО (Task 37): используем freshUser.ID (ЗАГЛАВНЫЕ), а НЕ freshUser.id.
-    // Заголовок в листе users — "ID", поэтому Utils.getRows() возвращает obj.ID.
-    // Если написать freshUser.id — будет undefined, клиент сохранит userId=''
-    // в localStorage, а сессия в БД уже корректна (см. Sessions.createSession).
-    return {
-      token: session.token,
-      role: freshUser.role,
-      userId: freshUser.ID,
-      email: email,
-      // Task 346: >0 — прежний вход ТОГО ЖЕ типа устройства вытеснен
-      // (клиент показывает тост; старым клиентам поле безвредно).
-      evicted: t346evicted
-    };
   }
 };

@@ -87,6 +87,9 @@ require('./test-task348.js');
 // SESSION_ORPHAN_REMOVED → SESSION_CLEANUP_ORPHAN, updateRole: замок +
 // синхрон sessions!D + мгновенная выгонка при «Запрет»
 require('./test-task349.js');
+// Task 350 — замки на последние мутации (крон-чистки, verifyOTP с пере-чтением
+// OTP, sendOTP кулдаун+appendRow под замком) + батч-удаления deleteRows(5, N)
+require('./test-task350.js');
 require('./test-deploy-url.js');
 
 // Запускаем

@@ -70,6 +70,17 @@ const GET_CURRENT_FN = extractFn(SESSIONS_SRC, 'getCurrentUser: function');
 const VERIFY_OTP_FN = extractFn(AUTH_SRC, 'verifyOTP: function');
 const SEND_OTP_FN = extractFn(AUTH_SRC, 'sendOTP: function');
 
+// Task 350: строки-комментарии (JSDoc «* …», «// …») убираются —
+// ассерты ниже смотрят на ПОЗИЦИИ паттернов в живом коде, а
+// комментарии Task 350 упоминают те же имена до замка (некрологи).
+function stripCommentLines(src) {
+    return src.split('\n').filter(function (l) {
+        return !/^\s*(\*|\/\/)/.test(l);
+    }).join('\n');
+}
+const VERIFY_OTP_CODE = stripCommentLines(VERIFY_OTP_FN);
+const SEND_OTP_CODE = stripCommentLines(SEND_OTP_FN);
+
 // ============================================================
 // 1. SRC-гарды: getUuid
 // ============================================================
@@ -163,18 +174,30 @@ describe('Task 348 — SRC: withLock и точки обёртки', () => {
     test('SRC: Auth.verifyOTP обёрнут в Utils.withLock', () => {
         assertTrue(VERIFY_OTP_FN.indexOf('Utils.withLock') !== -1,
             'мутации верификации атомарны (анти-повтор OTP, анти-дубль девайс-сессии)');
-        const lockIdx = VERIFY_OTP_FN.indexOf('Utils.withLock(function()');
-        // markOtpUsed встречается и ДО замка — в ветке «код истёк»
-        // (там сессии не создаются, вне гонок). Проверяем метку УСПЕХА
-        // ВНУТРИ замка: после начала withLock markOtpUsed есть.
+        const lockIdx = VERIFY_OTP_CODE.indexOf('Utils.withLock(function()');
+        // Task 350: ВСЕ markOtpUsed и getActiveOtpForEmail — ВНУТРИ замка
+        // (пере-чтение OTP под замком закрывает двойной submit, который
+        // замок Task 348 не перекрывал: otp читался до замка).
         assertTrue(lockIdx !== -1 &&
-            VERIFY_OTP_FN.slice(lockIdx).indexOf('markOtpUsed') !== -1,
-            'успешный markOtpUsed ВНУТРИ замка (двойной submit не использует код дважды)');
+            VERIFY_OTP_CODE.slice(lockIdx).indexOf('markOtpUsed') !== -1,
+            'markOtpUsed ВНУТРИ замка (двойной submit не использует код дважды)');
+        const otpSearchIdx = VERIFY_OTP_CODE.indexOf('getActiveOtpForEmail');
+        assertTrue(otpSearchIdx === -1 || otpSearchIdx > lockIdx,
+            'поиск OTP только ПОСЛЕ входа в замок (пере-чтение внутри, Task 350)');
     });
 
-    test('SRC: Auth.sendOTP БЕЗ замка — MailApp (письмо) вне критической секции', () => {
-        assertTrue(SEND_OTP_FN.indexOf('withLock') === -1,
-            'sendOTP не берёт замок: отправка почты медленная, замок бы поставил все входы в очередь');
+    test('SRC: Auth.sendOTP: секция мутаций под Utils.withLock (Task 350), письмо — снаружи', () => {
+        // Task 350: [самосинхронизация → блокировки → кулдаун → appendRow]
+        // — одним замком (параллельные запросы кода больше не обходят
+        // 60-сек кулдаун). MailApp.sendEmail — ПОСЛЕ замка: отправка
+        // медленная и не должна ставить входы в очередь за почтой.
+        // Поведенческую проверку «письмо вне замка» см. test-task350.js.
+        const lockStart = SEND_OTP_CODE.indexOf('Utils.withLock');
+        const appendIdx = SEND_OTP_CODE.indexOf("appendRow('otp_codes'");
+        const mailIdx = SEND_OTP_CODE.indexOf('MailApp.sendEmail');
+        assertTrue(lockStart !== -1, 'sendOTP берёт замок на секцию мутаций');
+        assertTrue(appendIdx > lockStart, 'запись OTP ВНУТРИ замка (кулдаун+appendRow атомарны)');
+        assertTrue(mailIdx > appendIdx, 'письмо отправляется после записи OTP (вне замка)');
     });
 });
 
