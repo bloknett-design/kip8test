@@ -97,6 +97,10 @@ require('./test-task351.js');
 // Task 352 — анти-DoS: email-блок sendOTP удалён (countRecentOtpFails мёртв),
 // верный код работает после лимита неудач, дешёвый отказ без инкремента/аудита
 require('./test-task352.js');
+// Task 353 — UI удаления пользователя в админ-панели: кнопка «Удалить»
+// (свой аккаунт disabled), модалка подтверждения, ошибка — в модалке,
+// текстовая XSS-безопасность email (textContent), фильтр журнала
+require('./test-task353.js');
 require('./test-deploy-url.js');
 
 // Запускаем

@@ -5255,3 +5255,23 @@ DEPLOY-дока, test-task351 +46, test-task349/350 актуализирован
 kip8test-desktop задет: Code.gs (вариант kip8test) синхронизирован.
 
 Следующий номер задачи: 352.
+
+## Task 352 (2026-09-09): мягкий DoS по email — аудит п.5
+Зеркало kip8 (Task 352): Auth.gs/Utils.gs + test-task352.js +16
+→ **2483/0**. Пуш ee21bc2. GAS-деплой выполнен пользователем
+(09.09.2026). Код — см. worklog kip8.
+
+## Task 353 (2026-09-09): UI удаления пользователя в админ-панели
+Разработка в kip8test/index.html: кнопка «Удалить» в карточках
+(своя — disabled), модалка подтверждения (email — textContent,
+XSS-безопасно), ошибка сервера — в модалке, тост с сессиями,
+фильтр журнала ADMIN_DELETE_USER. SW kipia-test-v582→v583.
+Тесты test-task353.js +28 → **2511/0**; браузер 26/26
+(task353-browser-check.py: happy/error/cancel/фильтр/мобайл).
+prepare-kip8-transfer.py ДОПОЛНЕН 5 комментариями-изолятами
+(Task 243×2, Task 193, WEB_APP_URL, Task 242) — раньше падал на
+assert isolateLocalStorage; дифф после переноса = эталон 82.
+Перенос в kip8 — см. worklog kip8 (Task 353). Код — байт-в-байт
+кроме изолятов. DEPLOY-Task353 — в scripts/.
+
+Следующий номер задачи: 354.

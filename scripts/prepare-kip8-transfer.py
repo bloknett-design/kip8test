@@ -61,10 +61,49 @@ for old, new, expected in replacements:
     html = html.replace(old, new)
     print(f'[ok] "{old}" -> "{new}" ({cnt} зам.)')
 
+# --- 8-12. Комментарии-изоляты (Task 353: текст kip8test → текст kip8).
+# Первое реальное применение скрипта после Task 344 (346 шёл патчем):
+# Assert «isolateLocalStorage не остался» падал на комментарии Task 193,
+# а 4 комментария-изолята не заменялись вовсе. Ниже — полный набор
+# известных изолятов (проверено диффом kip8test↔kip8 до переноса 353).
+comment_replacements = [
+    # Task 243: sidebar (длинный комментарий)
+    ("/* Task 243 (бекпорт из kip8): !important бьёт десктопное правило #sidebar{transform:translateX(-100%)!important} (specificity #sidebar.active (1,1,0) > #sidebar (1,0,0)). В kip8test wsTrSheet уже правильно закрыт, но !important оставлен для надёжности и паритета с kip8 — чтобы при следующем переносе kip8test → kip8 не потерять фикс. */",
+     "/* Task 243: !important бьёт десктопное правило #sidebar{transform:translateX(-100%)!important} (specificity #sidebar.active (1,1,0) > #sidebar (1,0,0)) — фикс бага «hamburger не открывает sidebar на 377px viewport». Task 244: корневая причина — wsTrSheet не был закрыт, sidebar оказывался вложенным в него (position:fixed относительно wsTrSheet, имевшего transform). В kip8test wsTrSheet уже правильно закрыт, но !important оставлен для надёжности. */",
+     1),
+    # Task 243: overlay
+    ("/* Task 243 (бекпорт): то же самое для overlay */",
+     "/* Task 243: то же самое для overlay */", 1),
+    # Task 193: ключи сапёра (2 строки → 2 строки)
+    ("    // (в тестовом репо ключ автоматически получает префикс kip8test:\n    // через isolateLocalStorage). При первом запуске победы из старого",
+     "    // (kip8 — основной репозиторий, ключи без префикса). При первом\n    // запуске победы из старого",
+     1),
+    # WEB_APP_URL: шапка-комментарий (6 строк → 5 строк)
+    ("        // URL Apps Script Web App.\n        // Task 284: URL развёртывания пользователя (AKfycbyt…) — пробы\n        // 2026-09-01 подтвердили: проект полный (Auth/Sessions/Admin/\n        // CableJournal/Flowmeter/ValidationRules/WorkSchedule) и код\n        // свежий (роутинг отпусков есть). Прежний URL (AKfycbzg…,\n        // Task 202) остался на старом снимке кода — до Task 274.",
+     "        // URL Apps Script Web App (развёртывание AKfycbyt…, в kip8 с\n        // Task 245). Пробы 2026-09-01 (Task 284 в kip8test) подтвердили:\n        // проект полный (Auth/Sessions/Admin/CableJournal/Flowmeter/\n        // ValidationRules/WorkSchedule) и код свежий — роутинг отпусков\n        // (Task 274+) есть. kip8test синхронизирован с этим же URL.",
+     1),
+    # Task 242: усиление обновления SW (перенос строк как в kip8)
+    ("        // Task 242 (бекпорт из kip8): усиление обновления SW — вместе с\n        // skipWaiting() в sw.js и reg.update() сразу при загрузке.",
+     "        // Task 242: усиление обновления SW — вместе с skipWaiting() в sw.js\n        // и reg.update() сразу при загрузке.",
+     1),
+]
+for old, new, expected in comment_replacements:
+    cnt = html.count(old)
+    if cnt != expected:
+        print('ОШИБКА: комментарий-изолят найден %d раз (ожидается %d):' % (cnt, expected))
+        print('   ' + old[:120].replace('\n', '\\n'))
+        sys.exit(1)
+    html = html.replace(old, new)
+    print('[ok] комментарий-изолят #%d заменён (%d зам.)' %
+          (comment_replacements.index((old, new, expected)) + 8, cnt))
+
 # --- Контрольные проверки ---
+# Оставшиеся упоминания kip8test НЕ обязаны быть нулевыми: часть из
+# них ЛЕГИТИМНО живёт в самом kip8 (комментарии «…в kip8test…»,
+# «kip8test синхронизирован с этим же URL» — это текст файла kip8).
 leftover = [l for l in html.split('\n') if 'kip8test' in l and 'github.com' not in l]
 if leftover:
-    print('ОСТАВШИЕСЯ упоминания kip8test (не URL):')
+    print('ОСТАВШИЕСЯ упоминания kip8test (сверить с kip8 — могут быть легитимными):')
     for l in leftover:
         print('   ', l.strip()[:120])
 else:
