@@ -176,10 +176,15 @@ describe('Task 350 — SRC: verifyOTP — всё под одним замком'
         // вторая дыра Task 348: otp читался ДО замка → двойной submit
     });
 
-    test('SRC: инкремент попыток — внутри замка, БЕЗ устаревшего чтения otp.attempts', () => {
+    test('SRC: инкремент попыток — внутри замка, otp.attempts читается ТОЛЬКО под замком', () => {
+        // Task 350: счётчик больше НЕ читается из внешнего (до-замкового)
+        // чтения — гонка теряла инкременты. Task 352 добавил чтение
+        // otp.attempts в guard дешёвого отказа — оно идёт ПОД замком из
+        // свеже-прочитанной строки, что паттерну 350 не противоречит.
         const lockIdx = VERIFY_OTP_CODE.indexOf('Utils.withLock(function()');
-        assertTrue(VERIFY_OTP_CODE.indexOf('otp.attempts') === -1,
-            'счётчик больше НЕ читается из внешнего чтения (гонка теряла инкременты)');
+        const attemptsReadIdx = VERIFY_OTP_CODE.indexOf('otp.attempts');
+        assertTrue(attemptsReadIdx > lockIdx,
+            'чтение счётчика только ПОД замком (внешнего чтения нет)');
         assertTrue(VERIFY_OTP_CODE.indexOf('Utils.incrementOtpAttempts') > lockIdx,
             'инкремент внутри замка');
     });
@@ -203,11 +208,11 @@ describe('Task 350 — SRC: verifyOTP — всё под одним замком'
 // ============================================================
 describe('Task 350 — SRC: sendOTP — секция мутаций под замком', () => {
 
-    test('SRC: блокировка OTP и кулдаун проверяются ВНУТРИ замка', () => {
+    test('SRC: кулдаун и запись OTP — ВНУТРИ замка (Task 352: email-блок удалён)', () => {
         const lockIdx = SEND_OTP_CODE.indexOf('Utils.withLock(function()');
         assertTrue(lockIdx !== -1, 'замок есть');
-        assertTrue(SEND_OTP_CODE.indexOf('countRecentOtpFails') > lockIdx,
-            'блокировка OTP проверяется внутри замка');
+        assertTrue(SEND_OTP_CODE.indexOf('countRecentOtpFails') === -1,
+            'Task 352: email-блок sendOTP удалён (мягкий DoS закрыт)');
         assertTrue(SEND_OTP_CODE.indexOf('getLastOtpForEmail') > lockIdx,
             'кулдаун проверяется внутри замка');
         assertTrue(SEND_OTP_CODE.indexOf("appendRow('otp_codes'") > lockIdx,
@@ -676,16 +681,18 @@ describe('Task 350 — VM: sendOTP', () => {
         assertEqual(1, env.calls.withLock, 'замок взят (кулдаун внутри него)');
     });
 
-    test('VM: блокировка после MAX_OTP_ATTEMPTS — без письма и строки', () => {
+    test('VM: Task 352 — блок по неудачам УДАЛЁН: sendOTP работает при 5+ OTP_FAILED', () => {
+        // ДО фикса: 5 мусорных verifyOTP от атакующего → счётчик по email
+        // → «Слишком много неудачных попыток» → жертва НЕ могла получить
+        // код 30 мин (продлеваемо). ПОСЛЕ: sendOTP не смотрит на неудачи —
+        // защиту делают кулдаун + MAX_OTP_ATTEMPTS на код (не по email).
         const env = makeSendEnv();
-        env.failsCount = 5;
-        let msg = '';
-        try { runSend(env); } catch (e) { msg = String(e.message || e); }
-        assertTrue(msg.indexOf('Слишком много неудачных попыток') !== -1, 'блок: ' + msg);
-        assertEqual(0, env.calls.appended.length, 'строки нет');
-        assertEqual(0, env.calls.mails.length, 'письма нет');
-        assertEqual(1, env.calls.failCounts.length, 'проверка блокировки выполнена');
-        assertEqual(1, env.calls.failCounts[0].lockHeld, 'проверка ВНУТРИ замка');
+        env.failsCount = 5; // раньше блокировало
+        const res = runSend(env);
+        assertEqual(true, res.sent, 'код отправлен — блок по email удалён (анти-DoS)');
+        assertEqual(1, env.calls.mails.length, 'письмо ушло');
+        assertEqual(1, env.calls.appended.length, 'строка OTP записана');
+        assertEqual(0, env.calls.failCounts.length, 'countRecentOtpFails больше НЕ вызывается');
     });
 
     test('VM: несуществующий email — «код отправлен» без письма (защита от перебора)', () => {

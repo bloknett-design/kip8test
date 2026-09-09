@@ -47,6 +47,14 @@
  * дефолт + console.warn ('' * N = 0 → cutoff «сейчас» → чистка
  * сносила бы ВСЕ сессии — реальная дыра).
  *
+ * Task 352 (2026-09-09): закрыт мягкий DoS по email (аудит п.5) —
+ * удалён countRecentOtpFails (единственный вызов — email-блок в
+ * sendOTP: счётчик OTP_FAILED по email писался ЛЮБЫМ, знающим адрес
+ * жертвы, и блокировал ей выдачу кода на 30 мин, продлеваемо до
+ * бесконечности). Ключ config OTP_BLOCK_MINUTES больше НЕ читается.
+ * Логика лимита попыток — в verifyOTP (Auth.gs): неверные попытки не
+ * сжигают код, после MAX_OTP_ATTEMPTS — дешёвый отказ без аудита.
+ *
  * Task 347 (2026-09-08): добавлена Utils.cleanupStaleSessions() —
  * чистка «заброшенных» строк листа sessions (last_heartbeat старше
  * N дней; config STALE_SESSION_DAYS, по умолчанию 30). Вызывается
@@ -386,21 +394,11 @@ const Utils = {
     return next;
   },
 
-  /** Подсчитать неудачные попытки OTP для email за последние N минут. */
-  countRecentOtpFails: function(email, minutes) {
-    const since = new Date(Date.now() - minutes * 60 * 1000);
-    const rows = this.getRows('audit_log');
-    let count = 0;
-    for (let i = 0; i < rows.length; i++) {
-      if (rows[i].email === email &&
-          rows[i].action === 'OTP_FAILED' &&
-          rows[i].timestamp instanceof Date &&
-          rows[i].timestamp.getTime() > since.getTime()) {
-        count++;
-      }
-    }
-    return count;
-  },
+  // Task 352: countRecentOtpFails (счётчик OTP_FAILED по email за N
+  // минут) УДАЛЁН — единственный вызов (email-блок sendOTP) удалён
+  // в Task 352 как мягкий DoS: счётчик по email писался ЛЮБЫМ, знающим
+  // адрес жертвы, и блокировал ей выдачу кода. Brute-force-защита —
+  // MAX_OTP_ATTEMPTS на код (в verifyOTP), см. шапку Auth.gs.
 
   // ========================================================================
   // AUDIT LOG

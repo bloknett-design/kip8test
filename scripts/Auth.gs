@@ -46,6 +46,26 @@
  * Аудит успешного входа перенесён внутрь замка (appendRow дописывает
  * в конец — чужие строки не сдвигает). Роутер Code.gs НЕ менялся —
  * DEPLOY-Task350-locks-cleanup-batch.md.
+ *
+ * Task 352 (2026-09-09): закрыт мягкий DoS по email (аудит п.5).
+ * АТАКА: знающий email жертвы шлёт 5 мусорных verifyOTP → 5 строк
+ * OTP_FAILED в audit_log → countRecentOtpFails блокировал sendOTP
+ * жертвы «через 30 минут» — и продлевал блок до бесконечности,
+ * каждый раз сбрасывая счётчик новыми мусорными запросами (счётчик
+ * писался по EMAIL, т.е. контролировался атакующим). ЛЕЧЕНИЕ:
+ *   1) sendOTP: email-блок УДАЛЁН (вместе с countRecentOtpFails из
+ *      Utils.gs — единственный вызов). Брутфорс останавливает то,
+ *      что атакующий НЕ контролирует: MAX_OTP_ATTEMPTS на код
+ *      (5/10^6), кулдаун 60 сек, TTL 10 мин, глобальный лимит
+ *      100 OTP/час — все остаются;
+ *   2) verifyOTP: неверные попытки по-прежнему НЕ сжигают код
+ *      (верный код принимается всегда, пока не истёк/не used —
+ *      жертва спама входит своим кодом), но после исчерпания
+ *      MAX_OTP_ATTEMPTS дальнейшие неверные сабмиты отклоняются
+ *      ДЁШЕВО: без инкремента attempts и без строки аудита — спам
+ *      по чужому email не раздувает otp_codes/audit_log;
+ *   3) ключ OTP_BLOCK_MINUTES больше НЕ читается кодом (строку в
+ *      config можно удалить или оставить — безвредно).
  */
 
 const Auth = {
@@ -85,7 +105,9 @@ const Auth = {
 
     // Task 349: per-IP лимит «20 неудач/час» УДАЛЁН — был мёртвым кодом
     // (getClientIp всегда возвращал '', счётчик всегда 0). Брутфорс
-    // конкретного ящика останавливает MAX_OTP_ATTEMPTS + блок 30 мин.
+    // конкретного ящика останавливает MAX_OTP_ATTEMPTS — лимит
+    // неверных попыток НА КОД (email-блок sendOTP удалён в Task 352
+    // как мягкий DoS: счётчик по email писался атакующим).
 
     // Найти пользователя (fail-fast, БЕЗ замка). Для несуществующего
     // email возвращаем «код отправлен», но не отправляем — защита от
@@ -97,15 +119,16 @@ const Auth = {
     }
 
     // Конфиг-значения (чистые чтения стабильного листа config — вне
-    // гонок, читать под замком незачем).
+    // гонок, читать под замком незачем). Task 352: MAX_OTP_ATTEMPTS
+    // здесь больше НЕ читается — лимит неверных попыток проверяет
+    // verifyOTP на конкретном коде (email-блок удалён, см. шапку).
     const codeLength = Utils.getConfig('OTP_CODE_LENGTH', 6);
     const ttlMin = Utils.getConfig('OTP_TTL_MINUTES', 10);
     const cooldown = Utils.getConfig('OTP_RESEND_COOLDOWN_SECONDS', 60);
-    const maxAttempts = Utils.getConfig('MAX_OTP_ATTEMPTS', 5);
 
     // ============================================================
-    // Task 350: [самосинхронизация → блокировка OTP → кулдаун →
-    // генерация и запись кода] — ОДНИМ замком. Раньше кулдаун-чек и
+    // Task 350: [самосинхронизация → кулдаун → генерация и запись
+    // кода] — ОДНИМ замком. Раньше кулдаун-чек и
     // appendRow('otp_codes') были без замки: два ОДНОВРЕМЕННЫХ запроса
     // кода оба проходили кулдаун по ещё не записанной строке (TOCTOU)
     // → 2 письма и 2 строки OTP за 60 сек. Самосинхронизация тоже
@@ -148,11 +171,12 @@ const Auth = {
         user2 = Utils.findUserByEmail(email);
       }
 
-      // Проверить блокировку OTP (после MAX_OTP_ATTEMPTS неудач)
-      const recentFails = Utils.countRecentOtpFails(email, Utils.getConfig('OTP_BLOCK_MINUTES', 30));
-      if (recentFails >= maxAttempts) {
-        return { blocked: true, fails: recentFails };
-      }
+      // Task 352: email-блокировка «после MAX_OTP_ATTEMPTS неудач»
+      // УДАЛЁНА — была мягким DoS: счётчик OTP_FAILED по email писался
+      // ЛЮБЫМ, знающим адрес жертвы, и блокировал ей sendOTP на 30 мин
+      // (продлеваемо до бесконечности). Брутфорс кода останавливает
+      // лимит попыток в verifyOTP — на самОм коде, который атакующий
+      // не контролирует. Здесь остаётся только кулдаун (ниже).
 
       // Cooldown: не чаще 60 сек (чтение и запись в ОДНОЙ критической
       // секции — параллельный запрос увидит уже записанную строку)
@@ -175,10 +199,6 @@ const Auth = {
     if (otpPrepared.notFound) {
       Utils.audit(email, 'OTP_REQUESTED_NOT_FOUND', '', '', 'User deleted during OTP request');
       return { sent: true, message: 'Код отправлен на ' + email };
-    }
-    if (otpPrepared.blocked) {
-      Utils.audit(email, 'OTP_BLOCKED', '', '', 'Too many failed attempts: ' + otpPrepared.fails);
-      throw new Error('Слишком много неудачных попыток. Попробуйте через ' + Utils.getConfig('OTP_BLOCK_MINUTES', 30) + ' минут');
     }
     if (otpPrepared.cooldown) {
       throw new Error('Подождите ' + otpPrepared.cooldown + ' сек перед повторным запросом кода');
@@ -342,12 +362,25 @@ const Auth = {
       // замком и возвращает НОВОЕ значение счётчика — «прочитал →
       // записал attempts+1» атомарно (раньше значение считалось из
       // внешнего чтения: параллельные неудачи терялись).
+      //
+      // Task 352 (анти-DoS): неверные попытки НЕ сжигают код — верный
+      // код принимается ВСЕГДА, пока не истёк и не использован (жертва
+      // спама входит своим кодом). После исчерпания MAX_OTP_ATTEMPTS
+      // дальнейшие неверные сабмиты отклоняются ДЁШЕВО — без
+      // инкремента и без строки аудита (спам не раздувает листы).
       if (String(otp.code) !== String(code)) {
-        const attempts = Utils.incrementOtpAttempts(otp.row);
         const max = Utils.getConfig('MAX_OTP_ATTEMPTS', 5);
+        if (Number(otp.attempts || 0) >= max) {
+          // Лимит для ЭТОГО кода уже исчерпан — дешёвый отказ (без
+          // мутаций). Сообщение то же, что при исчерпании: единый UX,
+          // атакующий не отличим от неуклюжего юзера и ничего не
+          // узнаёт о состоянии кода.
+          throw new Error('Неверный код. Превышен лимит попыток для этого кода. Запросите новый.');
+        }
+        const attempts = Utils.incrementOtpAttempts(otp.row);
         Utils.audit(email, 'OTP_FAILED', '', '', 'Wrong code, attempt ' + attempts + '/' + max);
         if (attempts >= max) {
-          throw new Error('Неверный код. Превышен лимит попыток. Попробуйте через ' + Utils.getConfig('OTP_BLOCK_MINUTES', 30) + ' минут');
+          throw new Error('Неверный код. Превышен лимит попыток для этого кода. Запросите новый.');
         }
         throw new Error('Неверный код. Осталось попыток: ' + (max - attempts));
       }

@@ -94,6 +94,9 @@ require('./test-task350.js');
 // кэш чтений на выполнение (beginExecution/инвалидация), listLogs-хвост
 // (getLastRows), устойчивый getConfig с числовым дефолтом
 require('./test-task351.js');
+// Task 352 — анти-DoS: email-блок sendOTP удалён (countRecentOtpFails мёртв),
+// верный код работает после лимита неудач, дешёвый отказ без инкремента/аудита
+require('./test-task352.js');
 require('./test-deploy-url.js');
 
 // Запускаем
