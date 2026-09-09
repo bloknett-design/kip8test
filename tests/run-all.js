@@ -83,6 +83,10 @@ require('./test-task347.js');
 // Task 348 — Utilities.getUuid() вместо Math.random (токены + OTP) и
 // Utils.withLock (LockService) от гонок; гард node --check всех .gs
 require('./test-task348.js');
+// Task 349 — удалён мёртвый IP-код (per-IP лимит + getClientIp/UA),
+// SESSION_ORPHAN_REMOVED → SESSION_CLEANUP_ORPHAN, updateRole: замок +
+// синхрон sessions!D + мгновенная выгонка при «Запрет»
+require('./test-task349.js');
 require('./test-deploy-url.js');
 
 // Запускаем

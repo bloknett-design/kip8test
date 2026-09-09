@@ -22,6 +22,16 @@
  * замка НЕ берёт: письмо отправляется ВНЕ замка (MailApp медленный,
  * иначе все входы встанут в очередь за почтой). Роутер и структура
  * листов НЕ менялись — DEPLOY-Task348-uuid-lockservice.md.
+ *
+ * Task 349 (2026-09-09): удалён МЁРТВЫЙ per-IP rate limit. Apps Script
+ * в doPost не видит IP и User-Agent клиента, поэтому getClientIp()/
+ * getClientUserAgent() всегда возвращали '' — ветка «20 неудач/час с
+ * одного IP» не срабатывала ни при каких условиях, а колонки ip/
+ * user_agent в audit_log всегда пустые. Хелперы удалены из Utils.gs.
+ * ЖИВАЯ защита: глобальный лимит 100 OTP/час (RATE_LIMIT_OTP_PER_HOUR)
+ * + MAX_OTP_ATTEMPTS/OTP_BLOCK_MINUTES + cooldown. Сигнатура
+ * Utils.audit(email, action, ip, ua, details) НЕ менялась — 40+
+ * вызовов по всем файлам; 3-й и 4-й аргументы теперь всегда ''.
  */
 
 const Auth = {
@@ -33,7 +43,8 @@ const Auth = {
    *   2. Найти пользователя в users
    *   3. Самосинхронизация login_status (Task 346: отказа «уже вошли» НЕТ)
    *   4. Проверить cooldown (не чаще 60 сек)
-   *   5. Проверить rate limit (глобально и per-IP)
+   *   5. Проверить rate limit (глобальный 100/час; per-IP удалён в
+   *      Task 349 — IP недоступен в GAS)
    *   6. Сгенерировать 6-значный код
    *   7. Записать в otp_codes
    *   8. Отправить письмо через MailApp
@@ -48,22 +59,16 @@ const Auth = {
       throw new Error('Некорректный email');
     }
 
-    const ip = Utils.getClientIp();
-    const ua = Utils.getClientUserAgent();
-
     // Rate limit: глобально 100 OTP/час
     const globalCount = Utils.countRecentAuditLogs('OTP_REQUESTED', 60);
     if (globalCount >= Utils.getConfig('RATE_LIMIT_OTP_PER_HOUR', 100)) {
-      Utils.audit(email, 'RATE_LIMIT_HIT', ip, ua, 'Global OTP rate limit');
+      Utils.audit(email, 'RATE_LIMIT_HIT', '', '', 'Global OTP rate limit');
       throw new Error('Слишком много запросов, попробуйте позже');
     }
 
-    // Rate limit: per-IP 20 неудач/час
-    const ipFails = Utils.countRecentAuditLogsByIp('OTP_FAILED', ip, 60);
-    if (ipFails >= Utils.getConfig('RATE_LIMIT_FAILED_PER_IP', 20)) {
-      Utils.audit(email, 'RATE_LIMIT_HIT', ip, ua, 'Per-IP rate limit: ' + ip);
-      throw new Error('Слишком много попыток с вашего IP');
-    }
+    // Task 349: per-IP лимит «20 неудач/час» УДАЛЁН — был мёртвым кодом
+    // (getClientIp всегда возвращал '', счётчик всегда 0). Брутфорс
+    // конкретного ящика останавливает MAX_OTP_ATTEMPTS + блок 30 мин.
 
     // Найти пользователя
     let user = Utils.findUserByEmail(email);
@@ -71,7 +76,7 @@ const Auth = {
     // Защита от перебора: для несуществующего email возвращаем успех,
     // но не отправляем письмо. Логируем как OTP_REQUESTED_NOT_FOUND.
     if (!user) {
-      Utils.audit(email, 'OTP_REQUESTED_NOT_FOUND', ip, ua, 'Email not in users sheet');
+      Utils.audit(email, 'OTP_REQUESTED_NOT_FOUND', '', '', 'Email not in users sheet');
       return { sent: true, message: 'Код отправлен на ' + email };
     }
 
@@ -95,7 +100,7 @@ const Auth = {
     if (user.login_status === 'вход выполнен'
         && !Utils.userHasActiveSession(user.ID)) {
       Utils.updateUserStatus(user.row, 'вход не выполнен', user.last_login);
-      Utils.audit(email, 'LOGIN_STATUS_AUTO_RESET', ip, ua,
+      Utils.audit(email, 'LOGIN_STATUS_AUTO_RESET', '', '',
         'login_status was "вход выполнен" but no active session found — auto-reset');
       // Перечитать пользователя, чтобы дальше работать со свежим состоянием.
       user = Utils.findUserByEmail(email);
@@ -105,7 +110,7 @@ const Auth = {
     const recentFails = Utils.countRecentOtpFails(email, Utils.getConfig('OTP_BLOCK_MINUTES', 30));
     const maxAttempts = Utils.getConfig('MAX_OTP_ATTEMPTS', 5);
     if (recentFails >= maxAttempts) {
-      Utils.audit(email, 'OTP_BLOCKED', ip, ua, 'Too many failed attempts: ' + recentFails);
+      Utils.audit(email, 'OTP_BLOCKED', '', '', 'Too many failed attempts: ' + recentFails);
       throw new Error('Слишком много неудачных попыток. Попробуйте через ' + Utils.getConfig('OTP_BLOCK_MINUTES', 30) + ' минут');
     }
 
@@ -208,11 +213,11 @@ const Auth = {
       MailApp.sendEmail(email, subject, textBody, mailOptions);
     } catch (e) {
       console.error('MailApp.sendEmail failed:', e);
-      Utils.audit(email, 'OTP_SEND_FAILED', ip, ua, e.message);
+      Utils.audit(email, 'OTP_SEND_FAILED', '', '', e.message);
       throw new Error('Не удалось отправить письмо. Попробуйте позже.');
     }
 
-    Utils.audit(email, 'OTP_REQUESTED', ip, ua, 'OTP code sent');
+    Utils.audit(email, 'OTP_REQUESTED', '', '', 'OTP code sent');
 
     return { sent: true, message: 'Код отправлен на ' + email };
   },
@@ -236,26 +241,24 @@ const Auth = {
       throw new Error('Некорректный код');
     }
 
-    const ip = Utils.getClientIp();
-    const ua = Utils.getClientUserAgent();
     const user = Utils.findUserByEmail(email);
 
     if (!user) {
-      Utils.audit(email, 'OTP_FAILED', ip, ua, 'User not found');
+      Utils.audit(email, 'OTP_FAILED', '', '', 'User not found');
       throw new Error('Неверный код');
     }
 
     // Найти активный OTP для этого email
     const otp = Utils.getActiveOtpForEmail(email);
     if (!otp) {
-      Utils.audit(email, 'OTP_FAILED', ip, ua, 'No active OTP');
+      Utils.audit(email, 'OTP_FAILED', '', '', 'No active OTP');
       throw new Error('Код не найден или истёк. Запросите новый.');
     }
 
     // Проверить истечение
     if (otp.expires_at.getTime() < Date.now()) {
       Utils.markOtpUsed(otp.row);
-      Utils.audit(email, 'OTP_FAILED', ip, ua, 'Code expired');
+      Utils.audit(email, 'OTP_FAILED', '', '', 'Code expired');
       throw new Error('Код истёк. Запросите новый.');
     }
 
@@ -264,7 +267,7 @@ const Auth = {
       Utils.incrementOtpAttempts(otp.row);
       const attempts = otp.attempts + 1;
       const max = Utils.getConfig('MAX_OTP_ATTEMPTS', 5);
-      Utils.audit(email, 'OTP_FAILED', ip, ua, 'Wrong code, attempt ' + attempts + '/' + max);
+      Utils.audit(email, 'OTP_FAILED', '', '', 'Wrong code, attempt ' + attempts + '/' + max);
       if (attempts >= max) {
         throw new Error('Неверный код. Превышен лимит попыток. Попробуйте через ' + Utils.getConfig('OTP_BLOCK_MINUTES', 30) + ' минут');
       }
@@ -297,14 +300,14 @@ const Auth = {
       if (freshUser.login_status === 'вход выполнен'
           && !Utils.userHasActiveSession(freshUser.ID)) {
         Utils.updateUserStatus(freshUser.row, 'вход не выполнен', freshUser.last_login);
-        Utils.audit(email, 'LOGIN_STATUS_AUTO_RESET', ip, ua,
+        Utils.audit(email, 'LOGIN_STATUS_AUTO_RESET', '', '',
           'login_status was "вход выполнен" but no active session — auto-reset (during verify)');
         freshUser = Utils.findUserByEmail(email);
       }
 
       // Проверить, что роль не «Запрет»
       if (freshUser.role === 'Запрет') {
-        Utils.audit(email, 'LOGIN_BLOCKED_ROLE', ip, ua, 'Role: Запрет');
+        Utils.audit(email, 'LOGIN_BLOCKED_ROLE', '', '', 'Role: Запрет');
         throw new Error('Доступ запрещён. Обратитесь к администратору.');
       }
 
@@ -332,8 +335,8 @@ const Auth = {
       Utils.updateUserStatus(freshUser.row, 'вход выполнен', new Date());
     });
 
-    Utils.audit(email, 'OTP_VERIFIED', ip, ua, 'Role: ' + freshUser.role);
-    Utils.audit(email, 'LOGIN_SUCCESS', ip, ua,
+    Utils.audit(email, 'OTP_VERIFIED', '', '', 'Role: ' + freshUser.role);
+    Utils.audit(email, 'LOGIN_SUCCESS', '', '',
         'Session created' + (t346device ? ', device: ' + t346device : '')
         + (t346evicted ? ', evicted: ' + t346evicted : ''));
 

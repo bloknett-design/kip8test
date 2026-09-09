@@ -25,6 +25,15 @@
  * номера строк, и мы попали бы в ЧУЖУЮ строку. createSession собственного
  * замка НЕ берёт — вызывается под замком Auth.verifyOTP (замок не
  * реентерабелен). Роутер Code.gs и структура листов НЕ менялись.
+ *
+ * Task 349 (2026-09-09): унификация имён — событие удаления
+ * осиротевшей сессии в heartbeat переименовано
+ * SESSION_ORPHAN_REMOVED → SESSION_CLEANUP_ORPHAN. Теперь ленивый путь
+ * (heartbeat) и крон-путь (Utils.cleanupExpiredSessions) пишут ОДНО И
+ * ТО ЖЕ имя — все сессионные события под единым префиксом
+ * SESSION_CLEANUP_*. Старые записи в audit_log НЕ переписываются
+ * (история остаётся со старым именем). Config STALE_SESSION_DAYS НЕ
+ * переименовывался (юзер завёл руками, зашит в доку/тесты Task 347).
  */
 
 const Sessions = {
@@ -88,9 +97,11 @@ const Sessions = {
       // Проверить, что пользователь существует и login_status всё ещё 'вход выполнен'
       const user = Utils.findUserById(session.user_id);
       if (!user) {
-        // Пользователь удалён из таблицы — удалить сессию
+        // Пользователь удалён из таблицы — удалить сессию.
+        // Task 349: имя унифицировано с крон-путём
+        // (Utils.cleanupExpiredSessions) — было SESSION_ORPHAN_REMOVED.
         Utils.deleteRow('sessions', session.row);
-        Utils.audit(session.email, 'SESSION_ORPHAN_REMOVED', '', '',
+        Utils.audit(session.email, 'SESSION_CLEANUP_ORPHAN', '', '',
           'User deleted, session removed during heartbeat');
         throw new Error('session_expired');
       }

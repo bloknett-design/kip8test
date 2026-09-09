@@ -5220,3 +5220,18 @@ DEPLOY-Task347-utils-stale-sessions-cleanup.md}`.
 - Тесты: **2360/0** (было 2332).
 
 Следующий номер задачи: 349.
+
+## Task 349 — синхрон с kip8: IP-чистка + SESSION_* + updateRole (2026-09-09)
+
+- `scripts/Utils.gs`, `scripts/Sessions.gs`, `scripts/Auth.gs` —
+  идентичны kip8: удалены мёртвые getClientIp/getClientUserAgent/
+  countRecentAuditLogsByIp + пер-IP ветка sendOTP (сигнатура
+  Utils.audit не менялась, ip/ua → ''); SESSION_ORPHAN_REMOVED →
+  SESSION_CLEANUP_ORPHAN в heartbeat; Admin.updateRole —
+  Utils.withLock + синхрон снапшотов sessions!D + мгновенная
+  выгонка при «Запрет» (сброс login_status + FORCE_LOGOUT_ROLE);
+- DEPLOY-Task349-updaterole-evict-naming-ip-cleanup.md (синхрон);
+- test-task349.js +28 (синхрон); run-all.js +require 349;
+- Тесты: **2388/0** (было 2360).
+
+Следующий номер задачи: 350.

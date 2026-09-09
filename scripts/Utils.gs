@@ -11,6 +11,15 @@
  * Admin.resetLogin и cleanupStaleSessions (остальные обёртки — в
  * Sessions.gs и Auth.gs, см. DEPLOY-Task348-uuid-lockservice.md).
  *
+ * Task 349 (2026-09-09): 1) удалены МЁРТВЫЕ хелперы getClientIp() /
+ * getClientUserAgent() (всегда возвращали '') и
+ * countRecentAuditLogsByIp() (вызывался только из мёртвой per-IP
+ * ветки sendOTP, всегда 0) — Apps Script в doPost не видит IP и
+ * User-Agent клиента, код-обманка удалён; 2) Admin.updateRole —
+ * замок + синхрон role-снапшота sessions!D при смене роли +
+ * МГНОВЕННАЯ выгонка при «Запрет» (удаление всех сессий юзера и
+ * сброс login_status, как resetLogin) — см. DEPLOY-Task349.
+ *
  * Task 347 (2026-09-08): добавлена Utils.cleanupStaleSessions() —
  * чистка «заброшенных» строк листа sessions (last_heartbeat старше
  * N дней; config STALE_SESSION_DAYS, по умолчанию 30). Вызывается
@@ -254,22 +263,9 @@ const Utils = {
     return count;
   },
 
-  /** Подсчитать события action с конкретного IP за последние N минут. */
-  countRecentAuditLogsByIp: function(action, ip, minutes) {
-    if (!ip) return 0;
-    const since = new Date(Date.now() - minutes * 60 * 1000);
-    const rows = this.getRows('audit_log');
-    let count = 0;
-    for (let i = 0; i < rows.length; i++) {
-      if (rows[i].action === action &&
-          rows[i].ip === ip &&
-          rows[i].timestamp instanceof Date &&
-          rows[i].timestamp.getTime() > since.getTime()) {
-        count++;
-      }
-    }
-    return count;
-  },
+  // Task 349: countRecentAuditLogsByIp УДАЛЁН — мёртвый код (IP в GAS
+  // недоступен; вызывался только из удалённой per-IP ветки sendOTP и
+  // всегда возвращал 0 из-за guard «if (!ip) return 0»).
 
   // ========================================================================
   // VALIDATION & GENERATORS
@@ -354,18 +350,11 @@ const Utils = {
     return digits.substring(0, length);
   },
 
-  /** Получить IP клиента (из заголовков Apps Script). */
-  getClientIp: function() {
-    // Apps Script не предоставляет прямого доступа к IP,
-    // но в некоторых сценариях его можно вытащить из заголовков.
-    // Для простоты — пустая строка (при необходимости можно расширить).
-    return '';
-  },
+  // Task 349: getClientIp() / getClientUserAgent() УДАЛЁНЫ — всегда
+  // возвращали '' (Apps Script в doPost не видит IP/UA клиента);
+  // вызовы Utils.audit(...) теперь передают '' напрямую. Колонки ip /
+  // user_agent в audit_log остаются (история), но всегда пустые.
 
-  /** Получить User-Agent клиента. */
-  getClientUserAgent: function() {
-    return '';
-  },
 
   // ========================================================================
   // ROLES (источник истины — Карта ролей, см. kip8-desktop/tests/test-role-access.js)
@@ -556,18 +545,68 @@ const Admin = {
 
   updateRole: function(token, userId, newRole) {
     const admin = this._requireAdmin(token);
-    const user = Utils.findUserById(userId);
-    if (!user) throw new Error('User not found');
-    // Список ролей по карте ролей (Task 38, "Карта ролей.xlsx").
-    // Источник истины — Utils.getAllowedRoles() — чтобы список был в одном месте.
-    const allowed = Utils.getAllowedRoles();
-    if (allowed.indexOf(newRole) === -1) throw new Error('Invalid role: ' + newRole);
 
-    const sheet = Utils.getSheet('users');
-    sheet.getRange(user.row, 3).setValue(newRole); // role = C
-    Utils.audit(admin.email, 'ADMIN_UPDATE_ROLE', '', '',
-      'User ' + user.email + ' role: ' + user.role + ' → ' + newRole);
-    return { ok: true };
+    // Task 349: [найти юзера → валидация роли → запись users!C →
+    // синхрон role-снапшота в sessions!D | «Запрет»: мгновенная
+    // выгонка] под замком — паттерн resetLogin (Task 348): параллельный
+    // heartbeat/logout/resetLogin удаляет строки сессий между нашим
+    // чтением и записью, номера строк съезжают. updateRole была
+    // последней мутацией без замка.
+    return Utils.withLock(function() {
+      const user = Utils.findUserById(userId);
+      if (!user) throw new Error('User not found');
+      // Список ролей по карте ролей (Task 38, "Карта ролей.xlsx").
+      // Источник истины — Utils.getAllowedRoles() — чтобы список был в одном месте.
+      const allowed = Utils.getAllowedRoles();
+      if (allowed.indexOf(newRole) === -1) throw new Error('Invalid role: ' + newRole);
+
+      const usersSheet = Utils.getSheet('users');
+      usersSheet.getRange(user.row, 3).setValue(newRole); // role = C
+
+      // ============================================================
+      // Task 349: sessions!D — role-снапшот на момент входа. Раньше
+      // updateRole его НЕ трогала: строка висела со старой ролью до
+      // ближайшего getCurrentUser юзера (он мог быть офлайн — и тогда
+      // бессрочно). Теперь:
+      //   • обычная роль — снапшот обновляется во всех живых сессиях
+      //     юзера сразу (getCurrentUser делал это лениво, при запросе);
+      //   • «Запрет» — МГНОВЕННАЯ выгонка: удалить ВСЕ его сессии и
+      //     сбросить login_status (как resetLogin), не дожидаясь
+      //     запроса жертвы. Роль-снапшот трогать незачем — строк нет.
+      // ============================================================
+      let evicted = 0;
+      const sessions = Utils.getRows('sessions');
+      if (newRole === 'Запрет') {
+        // С конца: deleteRow сдвигает номера строк ниже (как в resetLogin)
+        for (let i = sessions.length - 1; i >= 0; i--) {
+          if (Number(sessions[i].user_id) === Number(userId)) {
+            Utils.deleteRow('sessions', sessions[i].row);
+            evicted++;
+          }
+        }
+        if (evicted > 0) {
+          Utils.updateUserStatus(user.row, 'вход не выполнен', user.last_login);
+        }
+      } else {
+        for (let i = 0; i < sessions.length; i++) {
+          if (Number(sessions[i].user_id) === Number(userId) &&
+              sessions[i].role !== newRole) {
+            Utils.getSheet('sessions').getRange(sessions[i].row, 4).setValue(newRole);
+          }
+        }
+      }
+
+      Utils.audit(admin.email, 'ADMIN_UPDATE_ROLE', '', '',
+        'User ' + user.email + ' role: ' + user.role + ' → ' + newRole +
+        (evicted > 0 ? ' (instant evict: ' + evicted + ' session(s))' : ''));
+      if (evicted > 0) {
+        // Существующее событие (ленивый путь getCurrentUser пишет то же
+        // имя) — Task 349 новых типов аудита НЕ вводит.
+        Utils.audit(user.email, 'FORCE_LOGOUT_ROLE', '', '',
+          'Role changed to Запрет — instant evict by updateRole');
+      }
+      return { ok: true, evicted: evicted };
+    });
   },
 
   resetLogin: function(token, userId) {
