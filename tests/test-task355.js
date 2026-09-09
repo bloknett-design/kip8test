@@ -10,7 +10,8 @@
 // ЧТО ПРОВЕРЯЕТСЯ:
 //   SRC (index.html):
 //     — _renderCell: в НЕРАБОЧИХ днях (dayOff) точка «·» НЕ выводится
-//       (тернарник dayOff ? '' : '·'); рабочие дни/планы «ОТ» — прежние;
+//       (Task 356 углубил: «·» убрана и на рабочих днях — тернарник
+//       свёлся к (vacPlan ? 'ОТ' : '')); планы «ОТ» — прежние;
 //     — розовый выходных #f7d9e3 → #f8e2e9 в ОБОИХ темах (тёмная —
 //       Task 319 берёт цвет светлой), старого цвета в файле НЕТ;
 //     — линии тела: светлая тема 8% → 30% чёрного; тёмная —
@@ -19,14 +20,15 @@
 //       (border-top: 0 — высота шапки не меняется, Task 331 не тронут),
 //       темы красят border-color ярче; правая граница «Сотрудник +»
 //       остаётся ПРОЗРАЧНОЙ в обеих темах (Task 336, полоса ::after);
-//     — sw.js: CACHE_VERSION = kipia-test-v584 (+ guard v585).
+//     — sw.js: CACHE_VERSION = kipia-test-v585 (+ guard v586).
 //   VM (_renderCell, моки как в test-task314.js):
 //     — dayOff=true: пустая ячейка БЕЗ «·» (классы ws-weekend /
 //       ws-status-empty на месте), «.»-код — тоже без «·» (ws-dot-code
 //       остаётся), статус-мероприятие «И» — без «·», бейдж есть;
 //     — dayOff=true: план отпуска «ОТ» показывается, смена «Д» —
 //       код + inline-фон (правка не задевает заполненные ячейки);
-//     — dayOff=false: «.» и пустая — прежний «·» (регресс Task 314).
+//     — dayOff=false: «.» и пустая — БЕЗ «·» (Task 356: пустой центр
+//       у ячеек без кодов — как у нерабочих после Task 355).
 //
 // Запуск: через tests/run-all.js (require './test-task355.js').
 
@@ -61,10 +63,15 @@ function loadMethod(name, localStorage, document) {
 // SRC: точка «·» в нерабочих днях
 // ------------------------------------------------------------
 describe('Task 355 — SRC: «·» убрана из нерабочих ячеек', () => {
-    test('_renderCell: тернарник dayOff — в нерабочих днях ПУСТО, в рабочих «·»', () => {
+    test('_renderCell: центр ячейки — код/«ОТ»/ПУСТО (тернарник Task 356)', () => {
         const cell = methodText(INDEX_SRC, '_renderCell');
-        assertTrue(cell.indexOf("(showMainCode ? status : (vacPlan ? 'ОТ' : (dayOff ? '' : '·')))") !== -1,
-            'контент ячейки: dayOff ? \'\' : \'·\'');
+        // Task 356: «·» убрана и в пустых ячейках рабочих дней —
+        // прежний тернарник (vacPlan ? 'ОТ' : (dayOff ? '' : '·'))
+        // свёлся к (vacPlan ? 'ОТ' : '')
+        assertTrue(cell.indexOf("(showMainCode ? status : (vacPlan ? 'ОТ' : ''))") !== -1,
+            'контент ячейки: код статуса | «ОТ» плана | пусто');
+        assertTrue(cell.indexOf("(dayOff ? '' : '·')") === -1,
+            'старый тернарник dayOff-точки удалён (Task 356)');
     });
 
     test('_renderCell: комментарий-маркер Task 355 у контента', () => {
@@ -234,17 +241,19 @@ describe('Task 355 — VM: _renderCell (нерабочие дни без «·»)
         assertTrue(/style="background:#FFE082;"/.test(html), 'inline-фон смены');
     });
 
-    test('РАБОЧИЙ день, «.» — прежний «·» (регресс Task 314 не допущен)', () => {
+    test('РАБОЧИЙ день, «.» — БЕЗ точки (Task 356: чистый центр)', () => {
         const ctx = mkRenderCtx(false, {}, null);
         const html = cellHtml(ctx, { 'статус': '.', 'источник': 'авто', 'переработка': 0 });
-        assertEqual(mainText(html), '·', '«·» в рабочем дне остался');
-        assertEqual(mainText(html).charCodeAt(0), 0xB7, 'код U+00B7');
+        assertEqual(mainText(html), '', '«·» в рабочем дне больше НЕ выводится (Task 356)');
+        assertTrue(html.indexOf('·') === -1, 'символа «·» в ячейке нет вообще');
+        assertTrue(html.indexOf('ws-dot-code') !== -1, 'маркер ws-dot-code жив');
     });
 
-    test('РАБОЧИЙ день, пустая — прежний «·»', () => {
+    test('РАБОЧИЙ день, пустая — БЕЗ точки (Task 356)', () => {
         const ctx = mkRenderCtx(false, {}, null);
         const html = cellHtml(ctx, null);
-        assertEqual(mainText(html), '·', '«·» в пустой рабочей ячейке остался');
+        assertEqual(mainText(html), '', '«·» в пустой рабочей ячейке больше нет (Task 356)');
+        assertTrue(html.indexOf('·') === -1, 'символа «·» в ячейке нет вообще');
         assertTrue(html.indexOf('ws-weekend') === -1, 'класса ws-weekend нет');
     });
 });
@@ -253,13 +262,13 @@ describe('Task 355 — VM: _renderCell (нерабочие дни без «·»)
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 355 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v584', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v584'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v584');
+    test('SW: версия кэша kipia-test-v585', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v585'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v585');
     });
 
     test('SW: двойной бамп не случился (v585 не существует)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v585') === -1,
-            'в sw.js нет kipia-test-v585');
+        assertTrue(SW_SRC.indexOf('kipia-test-v586') === -1,
+            'в sw.js нет kipia-test-v586');
     });
 });
