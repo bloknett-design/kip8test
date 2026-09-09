@@ -101,6 +101,11 @@ require('./test-task352.js');
 // (свой аккаунт disabled), модалка подтверждения, ошибка — в модалке,
 // текстовая XSS-безопасность email (textContent), фильтр журнала
 require('./test-task353.js');
+// Task 354 — легаси-сборка для Windows 7/8.1: Electron 22.3.27, флаг
+// kipiaWin7Legacy, двойной путь protocol.handle/registerBufferProtocol,
+// isRemoteAvailable через net, PE-верификация в CI (полные ассерты —
+// только в kip8-desktop, в прочих репо — синк-заглушка)
+require('./test-task354.js');
 require('./test-deploy-url.js');
 
 // Запускаем

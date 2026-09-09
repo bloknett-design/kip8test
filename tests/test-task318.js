@@ -299,7 +299,12 @@ describe('Task 318 — JS: методы увольнения', () => {
 describe('Task 318 — VM: формы на моках', () => {
 
     function mkSel() {
-        return { innerHTML: '', _value: '',
+        // Task 354 (flake-fix по прецеденту Task 325): focus() нужен —
+        // извлечённые из index.html методы ставят setTimeout(() => f.focus());
+        // в полностью синхронном прогоне таймер не успевал сработать, но
+        // async-тесты (Task 354) дают циклу событий ход — и блуждающий
+        // таймер падал на моке без focus, убивая весь прогон.
+        return { innerHTML: '', _value: '', focus: function () {},
                  get value() { return this._value; },
                  set value(v) {
                      const ok = this.innerHTML.indexOf('value="' + v + '"') !== -1 || v === '';
@@ -309,8 +314,8 @@ describe('Task 318 — VM: формы на моках', () => {
 
     function mkDoc() {
         const sel = mkSel();
-        const empDiv = { textContent: '' };
-        const dateInput = { value: '' };
+        const empDiv = { textContent: '', focus: function () {} };
+        const dateInput = { value: '', focus: function () {} };
         const overlay = { classList: { _s: new Set(),
             add(c) { this._s.add(c); }, remove(c) { this._s.delete(c); },
             contains(c) { return this._s.has(c); } } };
