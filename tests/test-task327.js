@@ -31,7 +31,7 @@
 //     _renderTotalsYearTable — НЕТ tfoot; _fitGrid — бюджет без
 //     резерва итоговой строки; toggleTotals/setTotalsTab зовут новые
 //     методы.
-//   SW: kipia-test-v590.
+//   SW: kipia-test-v591.
 //
 // Запуск: через tests/run-all.js (require './test-task327.js').
 
@@ -461,10 +461,10 @@ describe('Task 327 — VM: таблица месяца', () => {
 // 5. Service Worker
 // ============================================================
 describe('Task 327 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v590', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v590'") !== -1,
-            'CACHE_VERSION = kipia-test-v590 (Task 327 — только фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v591') !== -1,
+    test('SW: версия кэша kipia-test-v591', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v591'") !== -1,
+            'CACHE_VERSION = kipia-test-v591 (Task 327 — только фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v592') !== -1,
             'лишний инкремент не делался');
     });
 });
