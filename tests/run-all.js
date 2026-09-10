@@ -115,6 +115,7 @@ require('./test-task355.js');
 // (пустая/«.»/статус-мероприятие — чистый центр, как выходные после
 // Task 355; бейджи, коды и планы «ОТ» — прежние)
 require('./test-task356.js');
+require('./test-task357.js');
 require('./test-deploy-url.js');
 
 // Запускаем
