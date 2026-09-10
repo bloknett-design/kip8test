@@ -246,7 +246,8 @@ describe('Task 286 — клиент: submitInput ветка «за период�
     });
 
     test('Защита от старого сервера: «Unknown action» → подсказка DEPLOY', () => {
-        const m = INDEX_SRC.match(/msg\.indexOf\('Unknown action'\) !== -1[\s\S]{0,400}?обновите Apps Script \(DEPLOY-Task286\)/);
+        // Task 358: между условием и тостом теперь outbox-фиксация — окно расширено
+        const m = INDEX_SRC.match(/msg\.indexOf\('Unknown action'\) !== -1[\s\S]{0,600}?обновите Apps Script \(DEPLOY-Task286\)/);
         assertTrue(m !== null, 'ветка Unknown action с подсказкой обновить сервер');
     });
 
@@ -261,7 +262,8 @@ describe('Task 286 — клиент: submitInput ветка «за период�
     });
 
     test('После успеха — load() (перезагрузка архива), без optimistic-обновления meters', () => {
-        const m = INDEX_SRC.match(/_submitPeriodEntry[\s\S]{0,2500}?self\.load\(\)/);
+        // Task 358: в теле появился outbox-блок — окно расширено
+        const m = INDEX_SRC.match(/_submitPeriodEntry[\s\S]{0,3500}?self\.load\(\)/);
         assertTrue(m !== null, 'load() после сохранения периода');
         // Оптимистичное обновление meter.curr осталось только в суточной ветке:
         const submitBody = INDEX_SRC.slice(
@@ -382,8 +384,8 @@ describe('Task 286 — клиент: CSS и SW', () => {
     });
 
     test('SW-кэш поднят до v544 (Task 298 — фронтенд менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v586'") !== -1,
-            'CACHE_VERSION = kipia-test-v586');
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v587'") !== -1,
+            'CACHE_VERSION = kipia-test-v587');
         assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v534'") !== -1,
             'старой версии v534 нет');
     });
@@ -703,8 +705,8 @@ describe('Task 292 — заголовок графика: «Показания (
     });
 
     test('SW-кэш: v538 → v539 (Task 296 — только фронтенд, сервер не менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v586'") !== -1,
-            'CACHE_VERSION = kipia-test-v586');
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v587'") !== -1,
+            'CACHE_VERSION = kipia-test-v587');
         assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v537'") !== -1,
             'старой версии v537 нет');
     });

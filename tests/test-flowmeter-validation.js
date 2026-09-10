@@ -620,9 +620,12 @@ describe('Task 222: flowBuildAnomalyModalHtml — дружелюбные опи�
         assertTrue(snippet.indexOf('displayText') !== -1);
     });
     test('loadArchive сохраняет anomalyHelp из ответа сервера', () => {
-        var idx = idxSrc.indexOf("'flowmeter.archive',");
+        // Task 358: _flushOutbox тоже вызывает 'flowmeter.archive' и стоит
+        // РАНЬШЕ loadArchive — якоримся на сам метод, а не первый вызов
+        var idx = idxSrc.indexOf('loadArchive: function');
         assertTrue(idx !== -1);
-        var snippet = idxSrc.substring(idx, idx + 800);
+        var snippet = idxSrc.substring(idx, idx + 1600);
+        assertTrue(snippet.indexOf("'flowmeter.archive',") !== -1, 'вызов archive внутри loadArchive');
         assertTrue(snippet.indexOf('data.anomalyHelp') !== -1);
         assertTrue(snippet.indexOf('self._anomalyHelp') !== -1);
     });

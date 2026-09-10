@@ -5308,3 +5308,15 @@ Task: Расходомеры хозрасчётные (ПЕРЕНОМЕРОВК�
 Реализация: _applyEntryTypeFields prefill + submitInput fallback «вчера»; FlowmeterData._isOverdue + хелперы _parseMdy/_dayKey/_mondayOf; renderList класс flow-summary-val-due (#e74c3c/#c0392b, зелёный #5ab870 не тронут); минутный таймер _startOverdueTimer (сигнатура _calcOverdueSig, перерисовка только при открытом разделе). SW kipia-test-v585→v586; сдвиг версионных ссылок во всех тестах (v586→v587 гарды, v585→v586 позитивы); tests/test-task357.js +51 → 2603/0; браузер 37/37 (3 контекста, Clock API 04:30→07:00 — цвет меняется таймером на переходе 6:00, 0 JS-ошибок). DEPLOY-Task357-flowmeters-prevday-default-red-due.md в scripts/.
 
 Следующий номер задачи: 358.
+
+---
+Task ID: 358
+Task: Гарантированная доставка показаний расходомеров (заявка: «ввёл данные, нажал сохранить, быстро перешёл к следующему расходомеру или закрыл приложение — значения не сохраняются на сервере»).
+
+Причины: (1) доставка отложена на 2 round-trip'а (getRecentAllMeters валидация → updateReading), оптимистичный UI обманывал; (2) закрытие приложения/вкладки убивало fetch — Electron закрывался без перехвата; (3) soft-confirm payload затирался следующим вводом (_pendingApiPayload — одна переменная); (4) ретрай только 1×1с.
+
+Реализация (клиент, сервер не тронут): OUTBOX — write-ahead журнал localStorage kip8_flow_outbox_v1; запись ДО любых сетевых запросов (сутки + месяц); удаление только по ответу сервера/отмене; авто-флаш init/online/visibility + ретрай 15с→30с→60с; ДЕДУП перед повтором (flowmeter.list для суток, flowmeter.archive для периода — сервер appendRow без дедупа); pagehide → KipAuth.sendBeacon (text/plain, без preflight; запись остаётся — сверка на следующем запуске); beforeunload-предупреждение (Task 251-паттерн); модалка аномалий пере-показывается (спец-кейс быстрой навигации); баннер «⟳ ждут отправки: N» + тосты «сохранены на устройстве — отправим автоматически»; _sendUpdateReading теперь возвращает промис; классификация ошибок (сеть/сессия/Unknown action — держим; edit_window/not_your — убираем). Electron main.js (десктоп-репо, отдельный коммит): перехват close → executeJavaScript(_outboxFlushBeacons) → destroy (≤1.2с), before-quit флаг — авто-обновление не ломается.
+
+Тесты: test-task358.js +44 (SRC 18 + Electron-гарды + VM: журнал/квота/битый JSON/классификация/доставка/beacon/дедуп/порядок/гость) → 2647/0; актуализация test-flowmeter-validation (якорь loadArchive) и test-flow-period-input (окна regex). Браузер task358-browser-check.py 25/25 (офлайн-ввод→флаш; beacon+дедуп перезапуска; пере-показ аномалии; 0 JS-ошибок; 4 пруфа). SW kipia-test-v586→v587. DEPLOY-Task358-flowmeter-outbox.md.
+
+Следующий номер задачи: 359.
