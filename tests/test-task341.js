@@ -18,7 +18,7 @@
 // display:none. Печатается ТЕКУЩИЙ вид табеля (у уровня min
 // «Мастер КИПиА» скрыт — _viewEmployees, Task 340).
 //
-// SW: kipia-test-v588.
+// SW: kipia-test-v589.
 //
 // Запуск: через tests/run-all.js (require './test-task341.js').
 
@@ -431,13 +431,26 @@ describe('Task 341 — _buildPrintHtml (VM)', () => {
             'заголовки колонок итогов');
     });
 
-    test('VM: итоговой строки НЕТ (Task 343), легенда и пояснения живы', () => {
-        var html = sheetHost()._buildPrintHtml(EMPS, AGG);
+    test('VM: итоговой строки НЕТ (Task 343), легенда и пояснения живы (Task 360: коды месяца)', () => {
+        // Task 360: перечень кодов — только коды, ПРИСУТСТВУЮЩИЕ в
+        // месяце (эффективные записи печатаемых строк), поэтому в
+        // фиксуре появляются записи со статусами Д/Н/. — легенда
+        // печатает их расшифровки, НЕИСПОЛЬЗОВАННЫЙ код справочника
+        // в печать НЕ попадает (см. tests/test-task360.js)
+        var entries = {
+            '2026-09-02|017': { 'статус': 'Д' },
+            '2026-09-03|031': { 'статус': 'Н' },
+            '2026-09-04|017': { 'статус': '.' }
+        };
+        var html = sheetHost({ entries: entries })._buildPrintHtml(EMPS, AGG);
         assertTrue(html.indexOf('wsp-sum') === -1, 'строки «Итого» нет (Task 343)');
         assertTrue(html.indexOf('>40</td>') === -1, 'итога дней нет (grand 40)');
         assertTrue(html.indexOf('>288</td>') === -1, 'итога часов нет (grand 288)');
         assertTrue(html.indexOf('wsp-legend') !== -1, 'легенда кодов');
-        assertTrue(html.indexOf('Д — День (12-час)') !== -1, 'расшифровка кода из справочника');
+        assertTrue(html.indexOf('Д — День (12-час)') !== -1,
+            'код месяца Д с расшифровкой из справочника');
+        assertTrue(html.indexOf('Н — Ночь (12-час)') !== -1,
+            'код месяца Н с расшифровкой');
         assertTrue(html.indexOf('wsp-foot') !== -1, 'пояснения внизу');
     });
 
@@ -482,10 +495,10 @@ describe('Task 341 — _buildPrintHtml (VM)', () => {
 // ============================================================
 describe('Task 341 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v588', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v588'") !== -1,
-            'CACHE_VERSION = kipia-test-v588 (Task 341 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v589') !== -1,
+    test('SW: кэш поднят до kipia-test-v589', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v589'") !== -1,
+            'CACHE_VERSION = kipia-test-v589 (Task 341 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v590') !== -1,
             'лишний инкремент (v580) не сделан');
     });
 
