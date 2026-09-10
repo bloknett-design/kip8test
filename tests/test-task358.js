@@ -441,6 +441,21 @@ describe('Task 358 — VM: pagehide beacon «последнего шанса»',
         assertTrue(M._outboxLoad()[0].beacon > 0, 'beacon-время зафиксировано');
     });
 
+    test('повторный pagehide в течение 60 с НЕ дублирует beacon', () => {
+        // Сценарий: закрыл приложение (beacon ушёл) → быстро переоткрыл
+        // → снова закрыл (перезагрузка/перемещение). Сервер пишет архив
+        // appendRow без дедупа — второй beacon создал бы дубль строки.
+        const M = beaconMixin();
+        M._outboxAdd({ cid: 'q1', kind: 'day', payload: { id: 2, curr: 95 }, state: 'pending' });
+        const n1 = M._outboxFlushBeacons();
+        assertEqual(n1, 1, 'первое закрытие — beacon отправлен');
+        const n2 = M._outboxFlushBeacons();
+        assertEqual(n2, 0, 'быстрое повторное закрытие — beacon подавлен');
+        const entries = M._outboxLoad();
+        // запись не удаляется: доставки никто не подтверждал
+        assertEqual(entries.length, 1, 'запись под защитой outbox');
+    });
+
     test('нет токена → 0 отправок (гость)', () => {
         const names = ['_outboxFlushBeacons', '_outboxLoad'];
         const parts = names.map(n => extractMethod(INDEX_SRC, n)).join(',');
