@@ -43,7 +43,7 @@
 //     → под кнопкой, без бара → прежнее поведение);
 //     _openEventsOnlyPopup (рендер окна, кловер, позиция, без
 //     окна кодов).
-//   SW: kipia-test-v591.
+//   SW: kipia-test-v592.
 //
 // Запуск: через tests/run-all.js (require './test-task319.js').
 
@@ -332,11 +332,11 @@ describe('Task 319 — тёмная тема: шахматка дней как �
             'вся площадь — поверхностный фильтр brightness(0.88)');
     });
 
-    test('CSS: тёмная тема — выходные/пустые/бейджи как в светлой', () => {
-        // Task 355: розовый выходных — пастельнее (#f7d9e3 → #f8e2e9,
-        // тот же цвет, что в светлой теме)
-        assertTrue(cssRule(/\[data-theme="dark"\] \.ws-grid tbody td\.ws-cell\.ws-weekend\.ws-status-empty \{[^}]*background:\s*#f8e2e9;[^}]*\}/s),
-            'пустые выходные — #f8e2e9 (светлая тема, Task 355), не #6e4250');
+    test('CSS: тёмная тема — праздники/пустые/бейджи как в светлой', () => {
+        // Task 363: розовый — только праздники (#f8e2e9, бывший цвет
+        // выходных Tasks 254/355); тёмная несёт его под фильтром 319
+        assertTrue(cssRule(/\.ws-grid tbody td\.ws-cell\.ws-feast\.ws-status-empty \{[^}]*background:\s*#f8e2e9;[^}]*\}/s),
+            'праздники — #f8e2e9 в базе (тёмная под фильтром Task 363)');
         assertTrue(cssRule(/\[data-theme="dark"\] \.ws-grid tbody td\.ws-cell\.ws-status-empty \{[^}]*color:\s*rgba\(20, 20, 19, 0\.65\)[^}]*\}/s),
             '«·»/пустые — вторичный тёмный (как в светлой)');
         assertTrue(cssRule(/\[data-theme="dark"\] \.ws-grid tbody td\.ws-cell \.ws-ev-badge\.ws-ev-pending \{[^}]*color:\s*#141413;[^}]*\}/s),
@@ -357,8 +357,8 @@ describe('Task 319 — тёмная тема: шахматка дней как �
         // тёмная перекрывается только [data-theme="dark"]-правилами Task 319
         assertTrue(cssRule(/\.ws-grid tbody td\.ws-cell \{[^}]*background:\s*var\(--bg-primary[^}]*\}/s),
             'база .ws-cell — var(--bg-primary) (правка НЕ в базе)');
-        assertTrue(cssRule(/\.ws-grid tbody td\.ws-cell\.ws-weekend\.ws-status-empty \{[^}]*#6e4250[^}]*\}/s),
-            'база выходных #6e4250 — на месте (перекрыта dark-правилом)');
+        assertTrue(cssRule(/\[data-theme="light"\] \.ws-grid tbody td\.ws-cell\.ws-feast\.ws-status-empty \{[^}]*#f8e2e9[^}]*\}/s),
+            'светлое правило праздников #f8e2e9 — на месте (Task 363)');
         assertTrue(cssRule(/\[data-theme="light"\] \.ws-grid tbody td\.ws-cell \{[^}]*background:\s*#eef0f2;[^}]*\}/s),
             'светлая тема не менялась');
     });
@@ -512,10 +512,10 @@ describe('Task 319 — окно кодов и «Мероприятия в это
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 319 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v591', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v591') !== -1,
-            'CACHE_VERSION = kipia-test-v591 (Task 319)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v592') !== -1,
+    test('SW: версия кэша kipia-test-v592', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v592') !== -1,
+            'CACHE_VERSION = kipia-test-v592 (Task 319)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v593') !== -1,
             'нет лишнего инкремента');
     });
 });

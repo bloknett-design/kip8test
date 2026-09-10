@@ -20,7 +20,7 @@
 //       (border-top: 0 — высота шапки не меняется, Task 331 не тронут),
 //       темы красят border-color ярче; правая граница «Сотрудник +»
 //       остаётся ПРОЗРАЧНОЙ в обеих темах (Task 336, полоса ::after);
-//     — sw.js: CACHE_VERSION = kipia-test-v591 (+ guard v586).
+//     — sw.js: CACHE_VERSION = kipia-test-v592 (+ guard v586).
 //   VM (_renderCell, моки как в test-task314.js):
 //     — dayOff=true: пустая ячейка БЕЗ «·» (классы ws-weekend /
 //       ws-status-empty на месте), «.»-код — тоже без «·» (ws-dot-code
@@ -84,15 +84,15 @@ describe('Task 355 — SRC: «·» убрана из нерабочих ячее
 // ------------------------------------------------------------
 // SRC: розовый выходных — пастельнее
 // ------------------------------------------------------------
-describe('Task 355 — SRC: пастельный розовый выходных', () => {
-    test('тёмная тема: ws-weekend.ws-status-empty → #f8e2e9', () => {
-        assertTrue(INDEX_SRC.indexOf('[data-theme="dark"] .ws-grid tbody td.ws-cell.ws-weekend.ws-status-empty {\n        background: #f8e2e9;') !== -1,
-            'правило тёмной темы с #f8e2e9');
+describe('Task 355 — SRC: пастельный розовый (теперь — праздники, Task 363)', () => {
+    test('розовый #f8e2e9 жив: база ws-feast.ws-status-empty', () => {
+        assertTrue(INDEX_SRC.indexOf('.ws-grid tbody td.ws-cell.ws-feast.ws-status-empty {\n        background: #f8e2e9;') !== -1,
+            'базовое правило ws-feast.ws-status-empty с #f8e2e9 (Task 363: розовый — только праздники)');
     });
 
-    test('светлая тема: ws-weekend.ws-status-empty → #f8e2e9', () => {
-        assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .ws-grid tbody td.ws-cell.ws-weekend.ws-status-empty {\n        background: #f8e2e9;') !== -1,
-            'правило светлой темы с #f8e2e9');
+    test('розовый #f8e2e9 жив: светлая тема ws-feast.ws-status-empty', () => {
+        assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .ws-grid tbody td.ws-cell.ws-feast.ws-status-empty {\n        background: #f8e2e9;') !== -1,
+            'правило светлой темы с #f8e2e9 (перекрывает «.»-правило)');
     });
 
     test('прежнего яркого #f7d9e3 в ПРАВИЛАХ больше НЕТ (только в комментариях замены)', () => {
@@ -123,11 +123,11 @@ describe('Task 355 — SRC: линии ячеек и шапки ярче (тон
             'общий td: rgba(105,130,160,0.55)');
     });
 
-    test('тёмные границы стоят ДО красных стыков Task 255 (красные живы)', () => {
+    test('тёмные границы стоят ДО красной рамки-группы (красная жива)', () => {
         const iDark = INDEX_SRC.indexOf('[data-theme="dark"] .ws-grid tbody td.ws-cell {\n        border-color: rgba(0, 0, 0, 0.30);');
-        const iRed = INDEX_SRC.indexOf('.ws-grid tbody td.ws-cell.ws-boundary-left,');
+        const iRed = INDEX_SRC.indexOf('.ws-grid tbody td.ws-cell.ws-wgrp-first {');
         assertTrue(iDark !== -1 && iRed !== -1 && iDark < iRed,
-            'правило Task 355 раньше .ws-boundary-* (равная специфичность)');
+            'правило Task 355 раньше .ws-wgrp-* (равная специфичность, Task 363)');
     });
 
     test('шапка: полный 1px-бордюр БЕЗ верхней рамки (вертикали между днями)', () => {
@@ -262,13 +262,13 @@ describe('Task 355 — VM: _renderCell (нерабочие дни без «·»)
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 355 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v591', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v591'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v591');
+    test('SW: версия кэша kipia-test-v592', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v592'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v592');
     });
 
     test('SW: двойной бамп не случился (v585 не существует)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v592') === -1,
-            'в sw.js нет kipia-test-v591');
+        assertTrue(SW_SRC.indexOf('kipia-test-v593') === -1,
+            'в sw.js нет kipia-test-v592');
     });
 });

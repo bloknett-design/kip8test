@@ -928,23 +928,34 @@ describe('График работы — WorkSchedule', () => {
     //      («Слесарь КИПиА дневной» / «Слесарь КИПиА смена №1»);
     //   4) тулбар с кнопками — непрозрачный фон, кнопки без скруглений.
     // ============================================================
-    describe('Task 254: розовый фон пустых ячеек выходных дней', () => {
+    describe('Task 254→363: розовый фон — только праздники', () => {
         const fs = require('fs');
         const path = require('path');
         const indexPath = path.resolve(__dirname, '..', 'index.html');
         const html = fs.readFileSync(indexPath, 'utf8');
 
-        test('CSS: .ws-weekend.ws-status-empty — розовый фон (тёмная тема)', () => {
-            const re = /\.ws-grid tbody td\.ws-cell\.ws-weekend\.ws-status-empty \{[^}]*background:\s*#6e4250;[^}]*\}/;
+        test('CSS: .ws-feast.ws-status-empty — розовый фон (база, обе темы)', () => {
+            // Task 363 (заявка: «нерабочие праздничные дни оставь светлым
+            // розовым фоном»): розовый переехал с выходных на праздники;
+            // цвет — прежний пастельный Task 355 #f8e2e9
+            const re = /\.ws-grid tbody td\.ws-cell\.ws-feast\.ws-status-empty \{[^}]*background:\s*#f8e2e9;[^}]*\}/;
             assertTrue(re.test(html),
-                'Пустые ячейки выходных — сплошной пыльно-розовый фон (#6e4250)');
+                'Пустые ячейки праздников — сплошной пастельный #f8e2e9');
         });
 
         test('CSS: светлая тема — слабый пастельный розовый (#f8e2e9)', () => {
-            // Task 355 (заявка: «пастельнее и бледнее»): #f7d9e3 → #f8e2e9
-            const re = /\[data-theme="light"\] \.ws-grid tbody td\.ws-cell\.ws-weekend\.ws-status-empty \{[^}]*background:\s*#f8e2e9;/;
+            // Task 355 (заявка: «пастельнее и бледнее»): #f7d9e3 → #f8e2e9;
+            // Task 363: правило праздников (перекрывает светлое «.»-правило)
+            const re = /\[data-theme="light"\] \.ws-grid tbody td\.ws-cell\.ws-feast\.ws-status-empty \{[^}]*background:\s*#f8e2e9;/;
             assertTrue(re.test(html),
-                'Светлая тема: пастельно-розовый фон пустых ячеек выходных (Task 355)');
+                'Светлая тема: пастельно-розовый фон пустых ячеек праздников');
+        });
+
+        test('CSS: розовых ВЫХОДНЫХ больше нет — фон как у пустых', () => {
+            // Task 363 (заявка: «фон выходных дней сделай таким же как в
+            // пустых ячейках») — селектор .ws-weekend.ws-status-empty удалён
+            assertEqual(html.indexOf('.ws-weekend.ws-status-empty'), -1,
+                'розовое правило выходных удалено (розовый — только ws-feast)');
         });
 
         test('JS: _renderCell помечает нерабочие дни классом ws-weekend', () => {
@@ -954,79 +965,94 @@ describe('График работы — WorkSchedule', () => {
                 'Нерабочие дни (Сб/Вс + праздники + переносы) — класс ws-weekend');
         });
 
-        test('CSS: розовый ТОЛЬКО у пустых ячеек (комбинация с ws-status-empty)', () => {
-            // Селектор требует ОБА класса: у статусных ячеек выходного
-            // (Д/Н/Б…) цвета справочника остаются
-            assertTrue(html.indexOf('.ws-grid tbody td.ws-cell.ws-weekend.ws-status-empty {') !== -1,
-                'Селектор розового фона — строго .ws-weekend.ws-status-empty');
-            // Task 314: showMainCode — «.»-ячейка на выходном тоже розовая
+        test('CSS: розовый ТОЛЬКО у пустых ячеек ПРАЗДНИКОВ (комбинация с ws-status-empty)', () => {
+            // Селектор требует ОБА класса: у статусных ячеек праздника
+            // (Д/Н/Б…) цвета справочника остаются. Task 363: розовый —
+            // только праздники (ws-feast), обычные выходные — как пустые
+            assertTrue(html.indexOf('.ws-grid tbody td.ws-cell.ws-feast.ws-status-empty {') !== -1,
+                'Селектор розового фона — строго .ws-feast.ws-status-empty (Task 363)');
+            // Task 314: showMainCode — «.»-ячейка на празднике тоже розовая
             assertTrue(html.indexOf("if (showMainCode) style += 'background:' + color + ';';") !== -1,
                 'Inline-фон статусных ячеек сохранён (Task 250/252/314)');
         });
     });
 
-    describe('Task 254 + Task 255: линии-границы выходных и рабочих дней', () => {
+    describe('Task 254→363: рамка-группа выходных (заявка «толстые красные линии вокруг группы»)', () => {
         const fs = require('fs');
         const path = require('path');
         const indexPath = path.resolve(__dirname, '..', 'index.html');
         const html = fs.readFileSync(indexPath, 'utf8');
 
-        test('CSS: границы 1px приглушённые (#cc6e73) — только в tbody', () => {
-            // Task 255: тоньше (1px вместо 2px), приглушённее (#cc6e73
-            // вместо яркого #e53935), из шапки (thead) убраны.
-            const reL = /\.ws-grid tbody td\.ws-cell\.ws-boundary-left,\s*\n\s*\.ws-grid tbody td\.ws-cell\.ws-boundary-before \{ border-left: 1px solid #cc6e73; \}/;
-            const reR = /\.ws-grid tbody td\.ws-cell\.ws-boundary-right,\s*\n\s*\.ws-grid tbody td\.ws-cell\.ws-boundary-after \{ border-right: 1px solid #cc6e73; \}/;
-            assertTrue(reL.test(html) && reR.test(html),
-                'Линии — 1px #cc6e73, парные классы left/before + right/after (tbody)');
-            const oldBright = /\.ws-grid[^{]*\{[^}]*#e53935/;
-            assertTrue(!oldBright.test(html),
-                'Яркий #e53935 больше не используется для линий-границ');
+        test('CSS: рамка-группа — толстые 3px #e53935 (верх/бока/низ)', () => {
+            // Task 363 (заявка): «на ячейках выходных дней сделай толстые
+            // красные разделительные линии вокруг по краям ГРУППЫ этих
+            // ячеек (не каждую ячейку), включая ячейки с датами».
+            // Заменила тонкие 1px-линии стыков Task 255
+            const reTh = /\.ws-grid thead th\.ws-day-col\.ws-wgrp \{\s*\n\s*box-shadow: inset 0 3px 0 0 #e53935;\s*\n\s*\}/;
+            const reThL = /\.ws-grid thead th\.ws-day-col\.ws-wgrp-first \{ border-left: 3px solid #e53935; \}/;
+            const reThR = /\.ws-grid thead th\.ws-day-col\.ws-wgrp-last \{ border-right: 3px solid #e53935; \}/;
+            const reL = /\.ws-grid tbody td\.ws-cell\.ws-wgrp-first \{ border-left: 3px solid #e53935; \}/;
+            const reR = /\.ws-grid tbody td\.ws-cell\.ws-wgrp-last \{ border-right: 3px solid #e53935; \}/;
+            const reB = /\.ws-grid tbody tr:last-child td\.ws-cell\.ws-wgrp \{\s*\n\s*border-bottom: 3px solid #e53935;\s*\n\s*\}/;
+            assertTrue(reTh.test(html) && reThL.test(html) && reThR.test(html) &&
+                       reL.test(html) && reR.test(html) && reB.test(html),
+                'верх (тень шапки) + бока + низ — 3px #e53935 вокруг группы');
+            // тонкие линии Task 255 убраны полностью
+            assertTrue(html.indexOf('ws-boundary-left,') === -1 &&
+                       html.indexOf('ws-boundary') === -1,
+                'прежние 1px-стыки ws-boundary-* удалены');
         });
 
-        test('CSS: специфичность границ выше светлой темы (не перекрасится)', () => {
+        test('CSS: специфичность рамки выше светлой темы (не перекрасится)', () => {
             // Светлая тема задаёт [data-theme="light"] .ws-grid tbody td
             // { border-color } со специфичностью (0,2,2) НИЖЕ по файлу.
-            // Граничные селекторы обязаны быть сильнее: + .ws-cell → (0,3,2).
-            const re = /\.ws-grid tbody td\.ws-cell\.ws-boundary-after \{ border-right: 1px solid #cc6e73; \}/;
+            // Рамочные селекторы обязаны быть сильнее: + .ws-cell → (0,3,2).
+            const re = /\.ws-grid tbody td\.ws-cell\.ws-wgrp-first \{ border-left: 3px solid #e53935; \}/;
             assertTrue(re.test(html),
-                'Селектор td.ws-cell.ws-boundary-after — красная граница переживает светлую тему');
-            const weak = /\.ws-grid tbody td\.ws-boundary-\w+ \{/;
+                'Селектор td.ws-cell.ws-wgrp-first — красная рамка переживает светлую тему');
+            const weak = /\.ws-grid tbody td\.ws-wgrp-\w+ \{/;
             assertTrue(!weak.test(html),
-                'Слабый селектор (без .ws-cell) удалён — иначе светлая тема перекрасит границу');
+                'Слабый селектор (без .ws-cell) удалён — иначе светлая тема перекрасит рамку');
         });
 
-        test('CSS: в шапке (thead) граничных селекторов больше нет', () => {
-            // Task 255: линии убраны из шапки графика — только тело таблицы.
-            const thBoundary = /\.ws-grid thead th[^{]*ws-boundary/;
-            assertTrue(!thBoundary.test(html),
-                'Граничные селекторы не должны затрагивать thead (шапка без линий)');
+        test('CSS: шапка ВХОДИТ в рамку группы — включая ячейки с датами (заявка 363)', () => {
+            // Task 255 убирал линии из шапки; заявка 363 вернула шапку
+            // в рамку: верх группы — тень на th (border-top шапке запрещён
+            // Task 355 — высота 37px), бока — на th первого/последнего дня
+            const thFrame = /\.ws-grid thead th\.ws-day-col\.ws-wgrp-first \{ border-left: 3px solid #e53935; \}/;
+            assertTrue(thFrame.test(html),
+                'бока рамки — и на th (ячейки с датами)');
+            const base = /\.ws-grid thead th \{[^}]*border-top: 0;/;
+            assertTrue(base.test(html),
+                'border-top базовой шапки — по-прежнему 0 (высота не меняется)');
         });
 
-        test('JS: обе стороны стыка — по производственному календарю', () => {
-            // Task 260 (развитие Tasks 254/255): стык определяется между
-            // соседними рабочим и нерабочим днём ПО КАЛЕНДАРЮ, а не по
-            // дню недели (праздники в будни тоже дают красную границу).
-            // При 1px в border-collapse цвет общей грани равных границ
-            // браузер может взять у соседа — красной делается ОБЕ стороны.
+        test('JS: группа выходных и праздники — по производственному календарю', () => {
+            // Task 260: нерабочесть — по календарю; Task 363: праздник
+            // отличается от выходного (розовый, вне рамки-группы),
+            // группа выходных — подряд идущие обычные выходные
             assertTrue(html.indexOf("var dayOff = this._calDayOff(day);") !== -1,
                 '_renderCell определяет нерабочий день через _calDayOff');
-            assertTrue(html.indexOf("if (dayOff && day > 1 && !this._calDayOff(day - 1)) classes.push('ws-boundary-left');") !== -1,
-                'Первый нерабочий день блока — ws-boundary-left');
-            assertTrue(html.indexOf("if (dayOff && day < lastDay && !this._calDayOff(day + 1)) classes.push('ws-boundary-right');") !== -1,
-                'Последний нерабочий день блока — ws-boundary-right');
-            assertTrue(html.indexOf("if (!dayOff && day < lastDay && this._calDayOff(day + 1)) classes.push('ws-boundary-after');") !== -1,
-                'Последний рабочий день перед блоком — ws-boundary-after');
-            assertTrue(html.indexOf("if (!dayOff && day > 1 && this._calDayOff(day - 1)) classes.push('ws-boundary-before');") !== -1,
-                'Первый рабочий день после блока — ws-boundary-before');
-            const reLast = /var lastDay = new Date\(this\._year, this\._month, 0\)\.getDate\(\);/;
-            assertTrue(reLast.test(html),
-                'lastDay вычисляется один раз для обеих проверок');
+            assertTrue(html.indexOf('_calDayFeast: function') !== -1,
+                'метод _calDayFeast (праздник ст. 112) определён');
+            assertTrue(html.indexOf('_calWend: function') !== -1,
+                'метод _calWend (обычный выходной) определён');
+            assertTrue(html.indexOf("if (dayFeast) classes.push('ws-feast');") !== -1,
+                'праздник в теле — ws-feast (розовый фон)');
+            assertTrue(html.indexOf("if (dayOff && !dayFeast) {") !== -1 &&
+                       html.indexOf("classes.push('ws-wgrp');") !== -1,
+                'обычный выходной — столбец группы ws-wgrp');
+            assertTrue(html.indexOf("classes.push('ws-wgrp-first');") !== -1 &&
+                       html.indexOf("classes.push('ws-wgrp-last');") !== -1,
+                'первый/последний столбец группы — ws-wgrp-first/-last');
+            const reOld = /ws-boundary-(left|right|before|after)/;
+            assertTrue(!reOld.test(html),
+                'классы/правила Task 255 ws-boundary-* удалены из файла');
         });
 
-        test('JS: шапка таблицы — граничные классы НЕ ставятся', () => {
-            // Task 255: из шапки линии убраны — thCls больше не получает
-            // ws-boundary-*, остаются ws-day-col + ws-holiday (+ ws-feast
-            // Task 260 — праздник по производственному календарю).
+        test('JS: шапка таблицы — граничные классы Task 255 НЕ ставятся', () => {
+            // Task 363: в шапке — СВОИ классы рамки-группы (ws-wgrp*,
+            // см. тесты выше), прежние ws-boundary-* удалены вовсе
             assertTrue(html.indexOf("thCls += ' ws-boundary-left'") === -1 &&
                        html.indexOf("thCls += ' ws-boundary-right'") === -1,
                 'Шапка: граничные классы удалены из рендера th');
@@ -1232,8 +1258,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v514 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v591") !== -1,
-                'Актуальная версия — kipia-test-v591 (Task 291)');
+            assertTrue(sw.indexOf("kipia-test-v592") !== -1,
+                'Актуальная версия — kipia-test-v592 (Task 291)');
         });
         test('Старая версия v514 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v514") === -1,
@@ -1305,8 +1331,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v516 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v591") !== -1,
-                'Актуальная версия — kipia-test-v591 (Task 291)');
+            assertTrue(sw.indexOf("kipia-test-v592") !== -1,
+                'Актуальная версия — kipia-test-v592 (Task 291)');
         });
     });
 
@@ -1317,8 +1343,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v515 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v591") !== -1,
-                'Актуальная версия — kipia-test-v591 (Task 291)');
+            assertTrue(sw.indexOf("kipia-test-v592") !== -1,
+                'Актуальная версия — kipia-test-v592 (Task 291)');
         });
     });
 
@@ -1328,8 +1354,8 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
         test('v513 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v591") !== -1,
-                'Актуальная версия — kipia-test-v591');
+            assertTrue(sw.indexOf("kipia-test-v592") !== -1,
+                'Актуальная версия — kipia-test-v592');
         });
     });
 
@@ -1528,8 +1554,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v517 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v591") !== -1,
-                'Актуальная версия — kipia-test-v591 (Task 291)');
+            assertTrue(sw.indexOf("kipia-test-v592") !== -1,
+                'Актуальная версия — kipia-test-v592 (Task 291)');
         });
         test('Старая версия v517 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v517") === -1,
@@ -1543,9 +1569,9 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v591', () => {
-            assertTrue(sw.indexOf("kipia-test-v591") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v591 (Task 290)');
+        test('CACHE_VERSION = kipia-test-v592', () => {
+            assertTrue(sw.indexOf("kipia-test-v592") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v592 (Task 290)');
         });
         test('Старая версия v517 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v517") === -1,
@@ -1929,9 +1955,9 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v591', () => {
-            assertTrue(sw.indexOf("kipia-test-v591") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v591 (Task 290)');
+        test('CACHE_VERSION = kipia-test-v592', () => {
+            assertTrue(sw.indexOf("kipia-test-v592") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v592 (Task 290)');
         });
         test('Старая версия v523 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v523") === -1,
@@ -2320,9 +2346,9 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v591', () => {
-            assertTrue(sw.indexOf("kipia-test-v591") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v591 (Task 290)');
+        test('CACHE_VERSION = kipia-test-v592', () => {
+            assertTrue(sw.indexOf("kipia-test-v592") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v592 (Task 290)');
         });
         test('Старая версия v525 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v525") === -1,
@@ -2716,8 +2742,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v527 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v591") !== -1,
-                'Актуальная версия — kipia-test-v591');
+            assertTrue(sw.indexOf("kipia-test-v592") !== -1,
+                'Актуальная версия — kipia-test-v592');
         });
         test('Старая версия v527 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v527") === -1,
@@ -2997,10 +3023,10 @@ describe('Task 298 — коды статусов Т-12/Т-13: клиентски
             'счётчик 16 в заголовке эндпоинтов');
     });
 
-    test('SW: кэш поднят до kipia-test-v591 (Task 298)', () => {
+    test('SW: кэш поднят до kipia-test-v592 (Task 298)', () => {
         const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
-        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v591'") !== -1,
-            'CACHE_VERSION = kipia-test-v591');
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v592'") !== -1,
+            'CACHE_VERSION = kipia-test-v592');
         assertFalse(sw.indexOf("CACHE_VERSION = 'kipia-test-v539'") !== -1,
             'старой версии v539 нет');
     });
@@ -3153,9 +3179,9 @@ describe('Task 307 — вкладка «Сотрудники» удалена, �
             '.ws-add-bar/.ws-add-btn удалены (Task 308: страницы больше нет)');
     });
 
-    test('SW: кэш поднят до kipia-test-v591 (Task 309; история: v547 — Task 308)', () => {
-        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v591'") !== -1,
-            'CACHE_VERSION = kipia-test-v591');
+    test('SW: кэш поднят до kipia-test-v592 (Task 309; история: v547 — Task 308)', () => {
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v592'") !== -1,
+            'CACHE_VERSION = kipia-test-v592');
     });
 });
 
@@ -3385,9 +3411,9 @@ describe('Task 308 — вкладки «Инструктажи»/«Отпуск�
             'светлая тема строки дней жива');
     });
 
-    test('SW: кэш поднят до kipia-test-v591 (Task 308)', () => {
-        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v591'") !== -1,
-            'CACHE_VERSION = kipia-test-v591');
+    test('SW: кэш поднят до kipia-test-v592 (Task 308)', () => {
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v592'") !== -1,
+            'CACHE_VERSION = kipia-test-v592');
         assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v546'") === -1,
             'старой версии v546 нет');
     });
