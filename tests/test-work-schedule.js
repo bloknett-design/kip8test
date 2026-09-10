@@ -983,20 +983,21 @@ describe('График работы — WorkSchedule', () => {
         const indexPath = path.resolve(__dirname, '..', 'index.html');
         const html = fs.readFileSync(indexPath, 'utf8');
 
-        test('CSS: рамка-группа — толстые 3px #e53935 (верх/бока/низ)', () => {
+        test('CSS: рамка-группа — 2px #e57373 (верх/бока/низ; Task 364)', () => {
             // Task 363 (заявка): «на ячейках выходных дней сделай толстые
             // красные разделительные линии вокруг по краям ГРУППЫ этих
             // ячеек (не каждую ячейку), включая ячейки с датами».
-            // Заменила тонкие 1px-линии стыков Task 255
-            const reTh = /\.ws-grid thead th\.ws-day-col\.ws-wgrp \{\s*\n\s*box-shadow: inset 0 3px 0 0 #e53935;\s*\n\s*\}/;
-            const reThL = /\.ws-grid thead th\.ws-day-col\.ws-wgrp-first \{ border-left: 3px solid #e53935; \}/;
-            const reThR = /\.ws-grid thead th\.ws-day-col\.ws-wgrp-last \{ border-right: 3px solid #e53935; \}/;
-            const reL = /\.ws-grid tbody td\.ws-cell\.ws-wgrp-first \{ border-left: 3px solid #e53935; \}/;
-            const reR = /\.ws-grid tbody td\.ws-cell\.ws-wgrp-last \{ border-right: 3px solid #e53935; \}/;
-            const reB = /\.ws-grid tbody tr:last-child td\.ws-cell\.ws-wgrp \{\s*\n\s*border-bottom: 3px solid #e53935;\s*\n\s*\}/;
+            // Заменила тонкие 1px-линии стыков Task 255;
+            // Task 364: 3px #e53935 → 2px #e57373 (спокойнее)
+            const reTh = /\.ws-grid thead th\.ws-day-col\.ws-wgrp \{\s*\n\s*box-shadow: inset 0 2px 0 0 #e57373;\s*\n\s*\}/;
+            const reThL = /\.ws-grid thead th\.ws-day-col\.ws-wgrp-first \{ border-left: 2px solid #e57373; \}/;
+            const reThR = /\.ws-grid thead th\.ws-day-col\.ws-wgrp-last \{ border-right: 2px solid #e57373; \}/;
+            const reL = /\.ws-grid tbody td\.ws-cell\.ws-wgrp-first \{ border-left: 2px solid #e57373; \}/;
+            const reR = /\.ws-grid tbody td\.ws-cell\.ws-wgrp-last \{ border-right: 2px solid #e57373; \}/;
+            const reB = /\.ws-grid tbody tr:last-child td\.ws-cell\.ws-wgrp \{\s*\n\s*border-bottom: 2px solid #e57373;\s*\n\s*\}/;
             assertTrue(reTh.test(html) && reThL.test(html) && reThR.test(html) &&
                        reL.test(html) && reR.test(html) && reB.test(html),
-                'верх (тень шапки) + бока + низ — 3px #e53935 вокруг группы');
+                'верх (тень шапки) + бока + низ — 2px #e57373 вокруг группы (Task 364: тоньше и бледнее)');
             // тонкие линии Task 255 убраны полностью
             assertTrue(html.indexOf('ws-boundary-left,') === -1 &&
                        html.indexOf('ws-boundary') === -1,
@@ -1007,7 +1008,7 @@ describe('График работы — WorkSchedule', () => {
             // Светлая тема задаёт [data-theme="light"] .ws-grid tbody td
             // { border-color } со специфичностью (0,2,2) НИЖЕ по файлу.
             // Рамочные селекторы обязаны быть сильнее: + .ws-cell → (0,3,2).
-            const re = /\.ws-grid tbody td\.ws-cell\.ws-wgrp-first \{ border-left: 3px solid #e53935; \}/;
+            const re = /\.ws-grid tbody td\.ws-cell\.ws-wgrp-first \{ border-left: 2px solid #e57373; \}/;
             assertTrue(re.test(html),
                 'Селектор td.ws-cell.ws-wgrp-first — красная рамка переживает светлую тему');
             const weak = /\.ws-grid tbody td\.ws-wgrp-\w+ \{/;
@@ -1019,7 +1020,7 @@ describe('График работы — WorkSchedule', () => {
             // Task 255 убирал линии из шапки; заявка 363 вернула шапку
             // в рамку: верх группы — тень на th (border-top шапке запрещён
             // Task 355 — высота 37px), бока — на th первого/последнего дня
-            const thFrame = /\.ws-grid thead th\.ws-day-col\.ws-wgrp-first \{ border-left: 3px solid #e53935; \}/;
+            const thFrame = /\.ws-grid thead th\.ws-day-col\.ws-wgrp-first \{ border-left: 2px solid #e57373; \}/;
             assertTrue(thFrame.test(html),
                 'бока рамки — и на th (ячейки с датами)');
             const base = /\.ws-grid thead th \{[^}]*border-top: 0;/;
@@ -1258,8 +1259,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v514 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v592") !== -1,
-                'Актуальная версия — kipia-test-v592 (Task 291)');
+            assertTrue(sw.indexOf("kipia-test-v593") !== -1,
+                'Актуальная версия — kipia-test-v593 (Task 291)');
         });
         test('Старая версия v514 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v514") === -1,
@@ -1331,8 +1332,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v516 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v592") !== -1,
-                'Актуальная версия — kipia-test-v592 (Task 291)');
+            assertTrue(sw.indexOf("kipia-test-v593") !== -1,
+                'Актуальная версия — kipia-test-v593 (Task 291)');
         });
     });
 
@@ -1343,8 +1344,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v515 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v592") !== -1,
-                'Актуальная версия — kipia-test-v592 (Task 291)');
+            assertTrue(sw.indexOf("kipia-test-v593") !== -1,
+                'Актуальная версия — kipia-test-v593 (Task 291)');
         });
     });
 
@@ -1354,8 +1355,8 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
         test('v513 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v592") !== -1,
-                'Актуальная версия — kipia-test-v592');
+            assertTrue(sw.indexOf("kipia-test-v593") !== -1,
+                'Актуальная версия — kipia-test-v593');
         });
     });
 
@@ -1554,8 +1555,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v517 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v592") !== -1,
-                'Актуальная версия — kipia-test-v592 (Task 291)');
+            assertTrue(sw.indexOf("kipia-test-v593") !== -1,
+                'Актуальная версия — kipia-test-v593 (Task 291)');
         });
         test('Старая версия v517 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v517") === -1,
@@ -1569,9 +1570,9 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v592', () => {
-            assertTrue(sw.indexOf("kipia-test-v592") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v592 (Task 290)');
+        test('CACHE_VERSION = kipia-test-v593', () => {
+            assertTrue(sw.indexOf("kipia-test-v593") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v593 (Task 290)');
         });
         test('Старая версия v517 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v517") === -1,
@@ -1955,9 +1956,9 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v592', () => {
-            assertTrue(sw.indexOf("kipia-test-v592") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v592 (Task 290)');
+        test('CACHE_VERSION = kipia-test-v593', () => {
+            assertTrue(sw.indexOf("kipia-test-v593") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v593 (Task 290)');
         });
         test('Старая версия v523 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v523") === -1,
@@ -2346,9 +2347,9 @@ describe('График работы — WorkSchedule', () => {
         const swPath = path.resolve(__dirname, '..', 'sw.js');
         const sw = fs.readFileSync(swPath, 'utf8');
 
-        test('CACHE_VERSION = kipia-test-v592', () => {
-            assertTrue(sw.indexOf("kipia-test-v592") !== -1,
-                'CACHE_VERSION должен быть kipia-test-v592 (Task 290)');
+        test('CACHE_VERSION = kipia-test-v593', () => {
+            assertTrue(sw.indexOf("kipia-test-v593") !== -1,
+                'CACHE_VERSION должен быть kipia-test-v593 (Task 290)');
         });
         test('Старая версия v525 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v525") === -1,
@@ -2742,8 +2743,8 @@ describe('График работы — WorkSchedule', () => {
         const sw = fs.readFileSync(swPath, 'utf8');
 
         test('v527 заменена актуальной версией', () => {
-            assertTrue(sw.indexOf("kipia-test-v592") !== -1,
-                'Актуальная версия — kipia-test-v592');
+            assertTrue(sw.indexOf("kipia-test-v593") !== -1,
+                'Актуальная версия — kipia-test-v593');
         });
         test('Старая версия v527 убрана', () => {
             assertTrue(sw.indexOf("kipia-test-v527") === -1,
@@ -3023,10 +3024,10 @@ describe('Task 298 — коды статусов Т-12/Т-13: клиентски
             'счётчик 16 в заголовке эндпоинтов');
     });
 
-    test('SW: кэш поднят до kipia-test-v592 (Task 298)', () => {
+    test('SW: кэш поднят до kipia-test-v593 (Task 298)', () => {
         const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
-        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v592'") !== -1,
-            'CACHE_VERSION = kipia-test-v592');
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v593'") !== -1,
+            'CACHE_VERSION = kipia-test-v593');
         assertFalse(sw.indexOf("CACHE_VERSION = 'kipia-test-v539'") !== -1,
             'старой версии v539 нет');
     });
@@ -3179,9 +3180,9 @@ describe('Task 307 — вкладка «Сотрудники» удалена, �
             '.ws-add-bar/.ws-add-btn удалены (Task 308: страницы больше нет)');
     });
 
-    test('SW: кэш поднят до kipia-test-v592 (Task 309; история: v547 — Task 308)', () => {
-        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v592'") !== -1,
-            'CACHE_VERSION = kipia-test-v592');
+    test('SW: кэш поднят до kipia-test-v593 (Task 309; история: v547 — Task 308)', () => {
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v593'") !== -1,
+            'CACHE_VERSION = kipia-test-v593');
     });
 });
 
@@ -3411,9 +3412,9 @@ describe('Task 308 — вкладки «Инструктажи»/«Отпуск�
             'светлая тема строки дней жива');
     });
 
-    test('SW: кэш поднят до kipia-test-v592 (Task 308)', () => {
-        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v592'") !== -1,
-            'CACHE_VERSION = kipia-test-v592');
+    test('SW: кэш поднят до kipia-test-v593 (Task 308)', () => {
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v593'") !== -1,
+            'CACHE_VERSION = kipia-test-v593');
         assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v546'") === -1,
             'старой версии v546 нет');
     });

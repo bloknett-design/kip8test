@@ -9,7 +9,7 @@
 //   • фон обычных ВЫХОДНЫХ (Сб/Вс + переносы, НЕ праздники) — как у
 //     ПУСТЫХ ячеек (#eef0f2 / var(--bg-primary) по темам): прежние
 //     розовые правила .ws-weekend.ws-status-empty удалены;
-//   • красная 3px-рамка #e53935 вокруг ГРУППЫ столбцов выходных (не
+//   • красная 2px-рамка #e57373 вокруг ГРУППЫ столбцов выходных (не
 //     каждую ячейку): верх — внутренняя тень th шапки (border-top
 //     шапке запрещён Task 355), бока — border-left/right первого/
 //     последнего столбца группы, низ — border-bottom последней
@@ -21,7 +21,7 @@
 //     праздники НЕ входят.
 // Хелперы: _calDayFeast (праздник), _calWend (обычный выходной).
 //
-// SW: kipia-test-v592.
+// SW: kipia-test-v593.
 //
 // Запуск: через tests/run-all.js (require './test-task363.js').
 
@@ -97,15 +97,15 @@ describe('Task 363 — SRC: фоны (выходные = пустые, праз�
 });
 
 // ============================================================
-// 2. SRC — CSS: рамка-группа выходных 3px #e53935
+// 2. SRC — CSS: рамка-группа выходных 2px #e57373 (Task 364)
 // ============================================================
 describe('Task 363 — SRC: красная рамка-группа выходных', () => {
 
     test('SRC: верх группы — внутренняя тень th (border-top шапки нет)', () => {
         assertTrue(INDEX_SRC.indexOf(
             '.ws-grid thead th.ws-day-col.ws-wgrp {\n' +
-            '        box-shadow: inset 0 3px 0 0 #e53935;') !== -1,
-            'тень 3px #e53935 на th столбцов группы');
+            '        box-shadow: inset 0 2px 0 0 #e57373;') !== -1,
+            'тень 2px #e57373 на th столбцов группы (Task 364)');
         // высота шапки не меняется (Task 355: border-top: 0 жив)
         const re = /\.ws-grid thead th \{[^}]*border-top: 0;/;
         assertTrue(re.test(INDEX_SRC), 'border-top базовой шапки — по-прежнему 0');
@@ -113,24 +113,24 @@ describe('Task 363 — SRC: красная рамка-группа выходн�
 
     test('SRC: бока рамки — th и td первого/последнего столбца группы', () => {
         assertTrue(INDEX_SRC.indexOf(
-            '.ws-grid thead th.ws-day-col.ws-wgrp-first { border-left: 3px solid #e53935; }') !== -1,
-            'th первого столбца — border-left 3px');
+            '.ws-grid thead th.ws-day-col.ws-wgrp-first { border-left: 2px solid #e57373; }') !== -1,
+            'th первого столбца — border-left 2px');
         assertTrue(INDEX_SRC.indexOf(
-            '.ws-grid thead th.ws-day-col.ws-wgrp-last { border-right: 3px solid #e53935; }') !== -1,
-            'th последнего столбца — border-right 3px');
+            '.ws-grid thead th.ws-day-col.ws-wgrp-last { border-right: 2px solid #e57373; }') !== -1,
+            'th последнего столбца — border-right 2px');
         assertTrue(INDEX_SRC.indexOf(
-            '.ws-grid tbody td.ws-cell.ws-wgrp-first { border-left: 3px solid #e53935; }') !== -1,
-            'td первого столбца — border-left 3px');
+            '.ws-grid tbody td.ws-cell.ws-wgrp-first { border-left: 2px solid #e57373; }') !== -1,
+            'td первого столбца — border-left 2px');
         assertTrue(INDEX_SRC.indexOf(
-            '.ws-grid tbody td.ws-cell.ws-wgrp-last { border-right: 3px solid #e53935; }') !== -1,
-            'td последнего столбца — border-right 3px');
+            '.ws-grid tbody td.ws-cell.ws-wgrp-last { border-right: 2px solid #e57373; }') !== -1,
+            'td последнего столбца — border-right 2px');
     });
 
     test('SRC: низ рамки — border-bottom последней строки', () => {
         assertTrue(INDEX_SRC.indexOf(
             '.ws-grid tbody tr:last-child td.ws-cell.ws-wgrp {\n' +
-            '        border-bottom: 3px solid #e53935;') !== -1,
-            'низ группы — 3px на tr:last-child');
+            '        border-bottom: 2px solid #e57373;') !== -1,
+            'низ группы — 2px на tr:last-child (Task 364)');
     });
 
     test('SRC: тонкие 1px-линии Task 255 полностью удалены', () => {
@@ -329,7 +329,7 @@ describe('Task 363 — VM: календарь/группы/_renderCell', () => {
         assertFalse(html.indexOf('ws-weekend') !== -1, 'нерабочего нет');
     });
 
-    test('VM: рабочий день рядом с группой — БЕЗ красной границы (3px бьёт 1px)', () => {
+    test('VM: рабочий день рядом с группой — БЕЗ красной границы (2px бьёт 1px)', () => {
         // раньше Task 255 красил ОБЕ стороны стыка; теперь достаточно
         // стороны выходного — в border-collapse победит широкая
         var html = cell(mkHost(mkCal()), 4);
@@ -393,11 +393,11 @@ describe('Task 363 — VM: регресс соседних фич', () => {
 // ============================================================
 describe('Task 363 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v592', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v592'") !== -1,
-            'CACHE_VERSION = kipia-test-v592 (Task 363 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v593') !== -1,
-            'v593 ещё не существует (лишний инкремент)');
+    test('SW: кэш поднят до kipia-test-v593', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v593'") !== -1,
+            'CACHE_VERSION = kipia-test-v593 (Task 363 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v594') !== -1,
+            'v594 ещё не существует (лишний инкремент)');
     });
 
     test('SW: в index.html нет захардкоженной версии кэша', () => {

@@ -28,7 +28,7 @@
 //   • CSS @media print: .wsp-mev-item/.wsp-lg — display: block
 //     (один столбик) + page-break-inside: avoid.
 //
-// SW: kipia-test-v592.
+// SW: kipia-test-v593.
 //
 // Запуск: через tests/run-all.js (require './test-task360.js').
 
@@ -118,7 +118,7 @@ describe('Task 360 — SRC: секция мероприятий в печати'
             'префикс wsp-ev не используется в секции мероприятий (бейджи ячеек Task 361 — в _printCell)');
     });
 
-    test('SRC: порядок секций — таблица → мероприятия → коды → сноска', () => {
+    test('SRC: порядок секций — таблица → обёртка(мероприятия→коды) → сноска', () => {
         const b = stripComments(methodText(WS_CLIENT, '_buildPrintHtml'));
         const iTable = b.indexOf("'</tbody></table>'");
         const iMev = b.indexOf('<div class="wsp-mev">');
@@ -127,7 +127,8 @@ describe('Task 360 — SRC: секция мероприятий в печати'
         assertTrue(iTable !== -1 && iMev !== -1 && iLegend !== -1 && iFoot !== -1,
             'все секции на месте');
         assertTrue(iTable < iMev, 'мероприятия ПОД графиком');
-        assertTrue(iMev < iLegend, 'перечень кодов ПОД списком мероприятий');
+        assertTrue(iMev < iLegend, 'перечень кодов после списка мероприятий'
+            + ' (Task 364: правая колонка wsp-bottom, не секция под ним)');
         assertTrue(iLegend < iFoot, 'сноска после перечня кодов');
     });
 });
@@ -571,10 +572,10 @@ describe('Task 360 — регресс прежних фич печати', () =>
 // ============================================================
 describe('Task 360 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v592', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v592'") !== -1,
-            'CACHE_VERSION = kipia-test-v592 (Task 360 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v593') !== -1,
-            'v593 ещё не существует (лишний инкремент)');
+    test('SW: кэш поднят до kipia-test-v593', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v593'") !== -1,
+            'CACHE_VERSION = kipia-test-v593 (Task 360 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v594') !== -1,
+            'v594 ещё не существует (лишний инкремент)');
     });
 });
