@@ -17,7 +17,7 @@
 // Счётчики переработки УЖЕ были в agg (Task 322) — новая только
 // печатная колонка; сетка/«Итоги учёта» на экране не менялись.
 //
-// SW: kipia-test-v589.
+// SW: kipia-test-v590.
 //
 // Запуск: через tests/run-all.js (require './test-task342.js').
 
@@ -56,12 +56,12 @@ function mockEsc(s) {
 // ============================================================
 describe('Task 342 — CSS колонки «Перераб.»', () => {
 
-    test('SRC: правило .wsp-tot-over (ширина 12mm)', () => {
+    test('SRC: правило .wsp-tot-over (ширина 14mm, Task 361)', () => {
         const i = INDEX_SRC.indexOf('#wsPrintSheet .wsp-tot.wsp-tot-over');
         assertTrue(i !== -1, 'правило ширины wsp-tot-over есть');
         const block = INDEX_SRC.slice(i, i + 200);
-        assertTrue(block.indexOf('width: 12mm') !== -1,
-            'ширина 12mm (чуть шире «Дни»/«Часы» — 9mm)');
+        assertTrue(block.indexOf('width: 14mm') !== -1,
+            'ширина 14mm (Task 361: шире «Дни»/«Часы» — 10mm, шрифт 11px)');
     });
 
     test('SRC: подпись заголовка «дни/ч» — мелкий блок, как дни недели', () => {
@@ -69,14 +69,14 @@ describe('Task 342 — CSS колонки «Перераб.»', () => {
         assertTrue(i !== -1, 'стиль подписи есть');
         const block = INDEX_SRC.slice(i, i + 200);
         assertTrue(block.indexOf('display: block') !== -1 &&
-                   block.indexOf('font-size: 6.5px') !== -1,
-            'блочная подпись 6.5px (как wsp-day span)');
+                   block.indexOf('font-size: 7.5px') !== -1,
+            'блочная подпись 7.5px (Task 361; как wsp-day span)');
     });
 
-    test('SRC: базовые колонки «Дни»/«Часы» не тронуты (9mm)', () => {
+    test('SRC: базовые колонки «Дни»/«Часы» не тронуты (10mm, Task 361)', () => {
         assertTrue(INDEX_SRC.indexOf(
-            '#wsPrintSheet .wsp-tot { width: 9mm; font-weight: 700; }') !== -1,
-            'wsp-tot 9mm на месте');
+            '#wsPrintSheet .wsp-tot { width: 10mm; font-weight: 700; }') !== -1,
+            'wsp-tot 10mm на месте (Task 361: 9→10mm под шрифт 11px)');
     });
 });
 
@@ -208,15 +208,15 @@ describe('Task 342 — _buildPrintHtml (VM): значения «Перераб.�
 // ============================================================
 describe('Task 342 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v589', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v589'") !== -1,
-            'CACHE_VERSION = kipia-test-v589 (Task 342 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v590') !== -1,
+    test('SW: кэш поднят до kipia-test-v590', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v590'") !== -1,
+            'CACHE_VERSION = kipia-test-v590 (Task 342 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v591') !== -1,
             'лишний инкремент (v581) не сделан');
     });
 
     test('SW: в index.html нет захардкоженной версии кэша', () => {
-        assertFalse(INDEX_SRC.indexOf('kipia-test-v590') !== -1,
+        assertFalse(INDEX_SRC.indexOf('kipia-test-v591') !== -1,
             'клиент не знает номер кэша (версией управляет sw.js)');
     });
 });

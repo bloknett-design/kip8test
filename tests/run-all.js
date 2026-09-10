@@ -123,6 +123,7 @@ require('./test-task359.js');
 // перечень кодов ТОЛЬКО этого месяца с наименованиями (один столбик);
 // классы печати wsp-mev-*, легенда фильтруется по usedCodes
 require('./test-task360.js');
+require('./test-task361.js');
 require('./test-deploy-url.js');
 
 // Запускаем

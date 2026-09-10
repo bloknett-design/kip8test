@@ -6,19 +6,21 @@
 //     agg.grand больше не используется в _buildPrintHtml; grand-
 //     итоги остаются в приложении (вкладка «Месяц» «Итогов
 //     учёта»); построчные колонки «Дни»/«Часы»/«Перераб.» живы;
-//   • БЕЙДЖИ МЕРОПРИЯТИЙ в ячейках (wsp-ev/wsp-ev-plan —
-//     «миниатюры иконок»: инструктажи/обучение/проверки) УБРАНЫ:
-//     _printCell не вызывает _eventsAt и не строит виртуальный
-//     бейдж статус-мероприятия; день с мероприятием печатается
-//     ПУСТОЙ ячейкой (как в экранной сетке — без большого кода);
-//   • CSS: правила .wsp-sum/.wsp-ev-* удалены из @media print;
-//     сноска wsp-foot больше не упоминает бейдж мероприятий;
+//   • Task 361 (заявка: «сделай отображение на печати значков
+//     мероприятий в ячейках шахматки»): бейджи мероприятий
+//     (wsp-ev/wsp-ev-plan — «миниатюры иконок»), убранные в
+//     Task 343, ВЕРНУТЫ в печать — _printCell вызывает _eventsAt
+//     и строит виртуальный бейдж статус-мероприятия; тесты
+//     Task 343 адаптированы под возврат (см. test-task361.js);
+//   • CSS: правила .wsp-ev-* снова в @media print; итоговая
+//     строка (wsp-sum) НЕ вернулась; сноска wsp-foot упоминает
+//     значок мероприятия в углу ячейки;
 //   • НЕ тронуты: красная точка переработки, пунктирный план
 //     отпуска, серая заливка пустых нерабочих, легенда кодов,
 //     экранная сетка (бейджи мероприятий на экране остаются —
 //     классы ws-ev-badge/ws-ev-wrap, Task 314).
 //
-// SW: kipia-test-v589.
+// SW: kipia-test-v590.
 //
 // Запуск: через tests/run-all.js (require './test-task343.js').
 
@@ -94,33 +96,33 @@ describe('Task 343 — итоговая строка убрана из печа�
 });
 
 // ============================================================
-// 2. SRC — бейджи мероприятий убраны из печати
+// 2. SRC — бейджи мероприятий ВЕРНУТЫ в печать (Task 361)
 // ============================================================
-describe('Task 343 — бейджи мероприятий убраны из печати', () => {
+describe('Task 343/361 — бейджи мероприятий в печати', () => {
 
-    test('SRC: _printCell не строит wsp-ev и не вызывает _eventsAt', () => {
+    test('SRC: _printCell строит wsp-ev и вызывает _eventsAt (Task 361)', () => {
         const c = stripComments(methodText(WS_CLIENT, '_printCell'));
         assertTrue(c.length > 0, 'метод найден');
-        assertTrue(c.indexOf('wsp-ev') === -1, 'бейджей wsp-ev нет');
-        assertTrue(c.indexOf('_eventsAt') === -1, '_eventsAt не вызывается');
-        assertTrue(c.indexOf('evHtml') === -1, 'переменной evHtml нет');
+        assertTrue(c.indexOf('wsp-ev') !== -1, 'бейджи wsp-ev строятся');
+        assertTrue(c.indexOf('_eventsAt') !== -1, '_eventsAt вызывается');
+        assertTrue(c.indexOf('wsp-ev-plan') !== -1, 'пунктирные бейджи-план');
     });
 
-    test('SRC: CSS-правила бейджей .wsp-ev* удалены из @media print', () => {
+    test('SRC: CSS-правила бейджей .wsp-ev* в @media print (Task 361)', () => {
         const i = INDEX_SRC.indexOf('@media print');
-        const block = stripComments(INDEX_SRC.slice(i, i + 6000));
-        assertTrue(block.indexOf('#wsPrintSheet .wsp-ev') === -1,
-            'правило .wsp-ev удалено');
-        assertTrue(block.indexOf('wsp-ev-wrap') === -1,
-            'правило .wsp-ev-wrap удалено');
-        assertTrue(block.indexOf('wsp-ev-plan') === -1,
-            'правило .wsp-ev-plan удалено');
+        const block = stripComments(INDEX_SRC.slice(i, i + 9000));
+        assertTrue(block.indexOf('#wsPrintSheet .wsp-ev') !== -1,
+            'правило .wsp-ev есть');
+        assertTrue(block.indexOf('wsp-ev-wrap') !== -1,
+            'правило .wsp-ev-wrap есть');
+        assertTrue(block.indexOf('wsp-ev-plan') !== -1,
+            'правило .wsp-ev-plan есть');
     });
 
-    test('SRC: сноска wsp-foot не упоминает бейдж мероприятий', () => {
+    test('SRC: сноска wsp-foot упоминает значок мероприятия (Task 361)', () => {
         const b = stripComments(methodText(WS_CLIENT, '_buildPrintHtml'));
-        assertTrue(b.indexOf('бейдж в углу ячейки') === -1,
-            'упоминание бейджа мероприятия удалено');
+        assertTrue(b.indexOf('значок в углу ячейки') !== -1,
+            'упоминание значка мероприятия есть');
         assertTrue(b.indexOf('пунктирная рамка ячейки — плановый отпуск') !== -1,
             'пояснение плана отпуска живо (регресс 341)');
         assertTrue(b.indexOf('красная точка — переработка') !== -1,
@@ -143,9 +145,9 @@ describe('Task 343 — бейджи мероприятий убраны из п�
 });
 
 // ============================================================
-// 3. VM — _printCell: пустые ячейки мероприятий
+// 3. VM — _printCell: бейджи мероприятий в ячейках (Task 361)
 // ============================================================
-describe('Task 343 — _printCell (VM)', () => {
+describe('Task 343/361 — _printCell (VM)', () => {
 
     function cellHost(over) {
         over = over || {};
@@ -162,25 +164,26 @@ describe('Task 343 — _printCell (VM)', () => {
 
     var EMP = { 'таб_номер': '017' };
 
-    test('VM: статус-мероприятие «И» — ПУСТАЯ ячейка (кода и бейджа нет)', () => {
+    test('VM: статус-мероприятие «И» — ПУСТАЯ ячейка + сплошной бейдж (Task 361)', () => {
         var td = cellHost({ meta: { code: 'И', color: '#B3E5FC' },
                             events: [{ code: 'И', training: 7 }] })
             ._printCell(10, '2026-09-10', EMP, { 'статус': 'И' });
-        assertTrue(td.indexOf('>И<') === -1, 'ни кода, ни текста бейджа');
-        assertTrue(td.indexOf('wsp-ev') === -1, 'бейджа нет');
-        assertTrue(td.indexOf('background:') === -1, 'фона нет (ячейка пустая)');
+        assertTrue(td.indexOf('>И</td>') === -1, 'большого кода нет');
+        assertTrue(td.indexOf('wsp-ev') !== -1, 'бейдж есть');
+        assertTrue(td.indexOf('background:#B3E5FC') !== -1,
+            'бейдж с цветом кода (день сформирован — сплошной)');
     });
 
-    test('VM: события дня в ПУСТОЙ ячейке — НЕ печатаются', () => {
+    test('VM: события дня в ПУСТОЙ ячейке — пунктирные бейджи-план (Task 361)', () => {
         var td = cellHost({ events: [{ code: 'ОБ', training: 8 },
                                       { code: 'ПР', training: 9 }] })
             ._printCell(11, '2026-09-11', EMP, null);
-        assertTrue(td.indexOf('wsp-ev') === -1, 'бейджей нет');
-        assertTrue(td.indexOf('ОБ') === -1 && td.indexOf('ПР') === -1,
-            'коды мероприятий не выводятся');
-        assertTrue(/<td class="wsp-cell"><\/td>/.test(td) ||
-                   /<td class="wsp-cell"[^>]*><\/td>/.test(td),
-            'пустая ячейка');
+        assertTrue(td.indexOf('wsp-ev') !== -1, 'бейджи есть');
+        assertTrue(td.indexOf('wsp-ev-plan') !== -1, 'пунктирные (день не сформирован)');
+        assertTrue(td.indexOf('>ОБ<') !== -1 && td.indexOf('>ПР<') !== -1,
+            'коды мероприятий в бейджах');
+        assertTrue(td.indexOf('background:') === -1,
+            'без заливки (появится при «Сформировать»)');
     });
 
     test('VM: регресс — код с фоном, точка переработки, план отпуска живы', () => {
@@ -196,20 +199,22 @@ describe('Task 343 — _printCell (VM)', () => {
         assertTrue(vac.indexOf('wsp-vac') !== -1, 'пунктирный план отпуска');
     });
 
-    test('VM: _eventsAt в моке НЕ вызывается из _printCell', () => {
-        var calls = 0;
+    test('VM: _eventsAt в моке вызывается из _printCell (Task 361)', () => {
+        // счётчик — на global: тело new Function видит только
+        // глобальную область видимости
+        global.__t343evCalls = 0;
         var host = new Function('return ({' +
             methodText(WS_CLIENT, '_printCell') + '\n' +
             '_EVENT_CODES: ["И","ОБ","ПЗ","ПР","*"],' +
             '_statusMeta: function() { return {}; },' +
             '_calDayOff: function() { return false; },' +
             '_vacationAt: function() { return null; },' +
-            '_eventsAt: function() { calls++; return []; },' +
+            '_eventsAt: function() { global.__t343evCalls++; return []; },' +
             '_esc: ' + mockEsc.toString() + ',' +
             '});')();
         host._printCell(5, '2026-09-05', EMP, { 'статус': 'И' });
         host._printCell(6, '2026-09-06', EMP, null);
-        assertEqual(calls, 0, '_eventsAt не вызывается ни разу');
+        assertEqual(global.__t343evCalls, 2, '_eventsAt вызывается для каждой ячейки');
     });
 });
 
@@ -279,10 +284,11 @@ describe('Task 343 — _buildPrintHtml (VM)', () => {
                    html.indexOf('wsp-sum') === -1, 'служебных строк нет');
     });
 
-    test('VM: сноска — пояснения живы, упоминания мероприятий НЕТ', () => {
+    test('VM: сноска — пояснения живы + значок мероприятия упомянут (Task 361)', () => {
         var html = sheetHost()._buildPrintHtml(EMPS, { byTab: {}, grand: null });
         var foot = html.slice(html.indexOf('wsp-foot'));
-        assertTrue(foot.indexOf('мероприятие') === -1, 'мероприятия не упоминаются');
+        assertTrue(foot.indexOf('мероприятие') !== -1,
+            'значок мероприятия в углу ячейки пояснён (Task 361)');
         assertTrue(foot.indexOf('«Перераб.» — дни/часы переработки') !== -1,
             'пояснение колонки (регресс 342)');
         assertTrue(foot.indexOf('пунктирная рамка') !== -1, 'план отпуска пояснён');
@@ -294,10 +300,10 @@ describe('Task 343 — _buildPrintHtml (VM)', () => {
 // ============================================================
 describe('Task 343 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v589', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v589'") !== -1,
-            'CACHE_VERSION = kipia-test-v589 (Task 343 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v590') !== -1,
+    test('SW: кэш поднят до kipia-test-v590', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v590'") !== -1,
+            'CACHE_VERSION = kipia-test-v590 (Task 343 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v591') !== -1,
             'лишний инкремент (v582) не сделан');
     });
 

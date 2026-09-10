@@ -21,12 +21,14 @@
 //     __delete исключается); порядок — справочник
 //     _STATUS_CODES; легаси-код вне справочника — в конце без
 //     цвета и имени;
-//   • классы печати wsp-mev-* (НЕ wsp-ev* — guard Task 343
-//     «бейджи мероприятий в ячейках удалены» остаётся силён);
+//   • классы печати wsp-mev-* — отдельные от бейджей ячеек
+//     wsp-ev* (Task 361 вернул бейджи в _printCell; список
+//     мероприятий живёт в собственных классах wsp-mev-*,
+//     пересечения нет);
 //   • CSS @media print: .wsp-mev-item/.wsp-lg — display: block
 //     (один столбик) + page-break-inside: avoid.
 //
-// SW: kipia-test-v589.
+// SW: kipia-test-v590.
 //
 // Запуск: через tests/run-all.js (require './test-task360.js').
 
@@ -110,10 +112,10 @@ describe('Task 360 — SRC: секция мероприятий в печати'
             'фолбэк ФИО — таб. номер');
     });
 
-    test('SRC: классы печати НЕ wsp-ev* (guard Task 343 силён)', () => {
+    test('SRC: классы списка НЕ wsp-ev* (бейджи 361 — в _printCell)', () => {
         const b = stripComments(methodText(WS_CLIENT, '_buildPrintHtml'));
         assertTrue(b.indexOf('wsp-ev') === -1,
-            'префикс wsp-ev не используется (бейджи Task 343 не возвращаются)');
+            'префикс wsp-ev не используется в секции мероприятий (бейджи ячеек Task 361 — в _printCell)');
     });
 
     test('SRC: порядок секций — таблица → мероприятия → коды → сноска', () => {
@@ -171,9 +173,10 @@ describe('Task 360 — печатный CSS (один столбик)', () => {
 
     // правила Task 360 находятся ДАЛЬШЕ 6000-символьного окна
     // прежних тестов — берём увеличенный срез @media print
+    // (Task 361 удлинил блок комментариями/правилами бейджей)
     function printCss() {
         const i = INDEX_SRC.indexOf('@media print');
-        return stripComments(INDEX_SRC.slice(i, i + 9000));
+        return stripComments(INDEX_SRC.slice(i, i + 13000));
     }
 
     test('SRC: секция .wsp-mev — стили в @media print', () => {
@@ -558,8 +561,8 @@ describe('Task 360 — регресс прежних фич печати', () =>
         var foot = html.slice(iFoot);
         assertTrue(foot.indexOf('«Перераб.» — дни/часы переработки') !== -1,
             'сноска поясняет колонку (Task 342/343)');
-        assertTrue(foot.indexOf('мероприятие') === -1,
-            'сноска не упоминает мероприятия (Task 343)');
+        assertTrue(foot.indexOf('мероприятие') !== -1,
+            'сноска упоминает значок мероприятия в углу ячейки (Task 361)');
     });
 });
 
@@ -568,10 +571,10 @@ describe('Task 360 — регресс прежних фич печати', () =>
 // ============================================================
 describe('Task 360 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v589', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v589'") !== -1,
-            'CACHE_VERSION = kipia-test-v589 (Task 360 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v590') !== -1,
+    test('SW: кэш поднят до kipia-test-v590', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v590'") !== -1,
+            'CACHE_VERSION = kipia-test-v590 (Task 360 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v591') !== -1,
             'v590 ещё не существует (лишний инкремент)');
     });
 });
