@@ -252,6 +252,14 @@ var Flowmeter = {
   //       вводится заново; история сохраняется в архиве).
   // Возвращает: { ok: true, data: { id: N } }
   //
+  // Task 359: правка в окне 1 часа (isEdit=true, проверки M/N прошли)
+  // теперь обновляет и АРХИВНУЮ запись НА МЕСТЕ (FlowmeterArchive.
+  // updateLatestReading) — вместо создания новой строки архива.
+  // «Правка = та же логическая запись»: история не обрастает дублями,
+  // комментарий meters.O не сбрасывается (принадлежит этой же записи).
+  // Fallback: свежей суточной записи в архиве нет (запись при вводе
+  // не удалась) — создаётся новая строка (как при обычном вводе).
+  //
   // Записывает в строку (id + 1):
   //   D → datePrev (Date), E → dateCurr (Date),
   //   F → prev, G → curr, I → temp, J → gcal (Task 100)
@@ -458,15 +466,26 @@ var Flowmeter = {
     // этого патча и не записал в archive.P) — дублируем старый meters.O
     // в archive.P самой свежей записи ПЕРЕД сбросом O. Idempotent: если
     // setComment уже записал то же значение, перезапись не меняет данных.
+    // Task 359: при ПРАВКЕ (isEdit) этот блок миграции пропускается —
+    // комментарий в meters.O принадлежит ТОЙ ЖЕ логической записи
+    // (введена < 1 ч назад тем же пользователем), сбрасывать его
+    // нельзя. Миграция «старый комментарий → архив прежней записи»
+    // нужна только НОВОМУ вводу (запись = новая, комментарий ждёт
+    // нового setComment). Значение oldCommentForArchive при isEdit
+    // передаётся в updateLatestReading → archive.P правимой строки
+    // (нормально уже там; восстанавливается, если запись архива при
+    // вводе потеряла P).
     var oldCommentForArchive = String(sheet.getRange(rowNum, 15).getValue() || '').trim();  // O=15
 
     sheet.getRange(rowNum, 12).setValue(user.role || '');
     sheet.getRange(rowNum, 13).setValue(user.email || '');
 
-    if (oldCommentForArchive !== '') {
+    if (!payload.isEdit && oldCommentForArchive !== '') {
       // Task 237: миграция — продублировать старый meters.O в archive.P
       // самой свежей записи этого счётчика (если ещё не там). Для новых
       // комментариев (setComment уже записал) — no-op (то же значение).
+      // Task 359: только для НОВОГО ввода (при isEdit комментарий —
+      // атрибут текущей записи, см. комментарий выше).
       try {
         FlowmeterArchive.updateLatestComment(id, oldCommentForArchive);
       } catch (e) {
@@ -483,32 +502,61 @@ var Flowmeter = {
     sheet.getRange(rowNum, 14).setValue(new Date());
 
     // Аудит (по паттерну CableJournal → Utils.audit)
+    // Task 359: пометка «(правка)» — в аудите видно, что запись
+    // изменила существующие показания, а не создала новые
     try {
       Utils.audit(user.email, 'FLOWMETER_UPDATE_READING', '', '',
-        'Расходомер id=' + id + ': показания ' + payload.prev + ' → ' + payload.curr);
+        'Расходомер id=' + id + ': показания ' + payload.prev + ' → ' + payload.curr +
+        (payload.isEdit ? ' (правка в окне 1 ч)' : ''));
     } catch (e) { /* audit log — не критично */ }
 
-    // Архив: добавить запись в лист hozraschet_archive
-    // (не блокирует основной ответ — ошибка архива тихо логируется)
-    // Task 237: новая архивная запись ВСЕГДА создаётся с пустым comment
-    // (P=''), т.к. комментарий к только что введённым показаниям ещё не
-    // внесён — его добавит setComment (который одновременно пишет в
-    // meters.O И в archive.P этой новой записи). Прежний комментарий
-    // остаётся в archive.P своей (предыдущей) строки — не трогаем.
+    // Архив: Task 359 — при ПРАВКЕ (isEdit, окно 1 ч) обновляем
+    // последнюю суточную запись ЭТОГО расходомера НА МЕСТЕ
+    // (FlowmeterArchive.updateLatestReading): правка = та же логическая
+    // запись, новая строка истории НЕ создаётся (раньше создавалась —
+    // «Хронология показаний» обрастала дублями за одну дату).
+    // Новому вводу — как прежде, appendToArchive (новая строка).
+    // Fallback правки: свежей суточной записи в архиве нет (запись
+    // при исходном вводе не удалась — archive write non-critical) —
+    // создаём строку appendToArchive'ом, комментарий записи (если
+    // был в meters.O) переносится в P новой строки.
+    // Ошибка архива не блокирует основной ответ (тихо логируется).
     try {
       var hozName = String(sheet.getRange(rowNum, 2).getValue() || '');
       var unitVal = String(sheet.getRange(rowNum, 8).getValue() || '');
       var periodVal = String(sheet.getRange(rowNum, 11).getValue() || '');
-      FlowmeterArchive.appendToArchive(
-        id, hozName,
-        prevVal, currVal,
-        payload.datePrev, payload.dateCurr,
-        payload.temp, payload.gcal, unitVal, periodVal,
-        user.role || '', user.name || user.email || '',  // Task 109: имя (если есть) или email
-        '',  // Task 237: новая запись — без комментария (ожидание setComment)
-        anomalyDetail,  // Task 199: строка с кодами аномалий для archive.Q
-        'сутки'  // Task 286: тип записи (R=18); legacy-строки без R = 'сутки'
-      );
+      var archived = false;
+      if (payload.isEdit) {
+        try {
+          archived = FlowmeterArchive.updateLatestReading(
+            id,
+            prevVal, currVal,
+            payload.datePrev, payload.dateCurr,
+            payload.temp, payload.gcal, unitVal, periodVal,
+            user.role || '', user.name || user.email || '',  // Task 109: имя (если есть) или email
+            oldCommentForArchive,  // Task 359: комментарий текущей записи — не теряется
+            anomalyDetail
+          );
+        } catch (editUpdErr) {
+          Logger.log('Archive edit-in-place failed (non-critical): ' + editUpdErr.message);
+        }
+      }
+      if (!archived) {
+        // Task 237: новая запись — с пустым comment (ожидание setComment).
+        // Task 359: ИСКЛЮЧЕНИЕ — фолбэк правки: строка создаётся взамен
+        // несостоявшейся записи исходного ввода, комментарий meters.O
+        // принадлежит ей и переносится в P.
+        FlowmeterArchive.appendToArchive(
+          id, hozName,
+          prevVal, currVal,
+          payload.datePrev, payload.dateCurr,
+          payload.temp, payload.gcal, unitVal, periodVal,
+          user.role || '', user.name || user.email || '',  // Task 109: имя (если есть) или email
+          payload.isEdit ? oldCommentForArchive : '',  // Task 237/359
+          anomalyDetail,  // Task 199: строка с кодами аномалий для archive.Q
+          'сутки'  // Task 286: тип записи (R=18); legacy-строки без R = 'сутки'
+        );
+      }
     } catch (archiveErr) {
       Logger.log('Archive write failed (non-critical): ' + archiveErr.message);
     }

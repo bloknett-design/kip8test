@@ -1545,15 +1545,17 @@ describe('Task 237: комментарий в meters.O + archive.P (одновр
             'Должен быть catch блок для не критичных ошибок архива');
     });
 
-    test('updateReading: meters.O сбрасывается ВСЕГДА (не только при смене автора)', () => {
+    test('updateReading: meters.O сбрасывается при НОВОМ вводе (не только при смене автора)', () => {
         var idx = flowmeterSrc.indexOf('updateReading: function');
         // updateReading ~11к символов — берём полный body до закрывающей },
         var endIdx = flowmeterSrc.indexOf('  },', idx + 100);
         var snippet = flowmeterSrc.substring(idx, endIdx);
-        // По старой логике был authorChanged && oldCommentForArchive — теперь
-        // должно быть только oldCommentForArchive (без authorChanged)
-        assertTrue(snippet.indexOf("if (oldCommentForArchive !== '') {") !== -1,
-            'Сброс meters.O должен зависеть только от наличия старого комментария');
+        // По старой логике был authorChanged && oldCommentForArchive — Task 237
+        // убрал authorChanged; Task 359 добавил !payload.isEdit: при ПРАВКЕ
+        // (окно 1 ч, тот же автор) комментарий принадлежит той же логической
+        // записи и НЕ сбрасывается; при НОВОМ вводе — сброс всегда.
+        assertTrue(snippet.indexOf("if (!payload.isEdit && oldCommentForArchive !== '') {") !== -1,
+            'Сброс meters.O — только для нового ввода (Task 359 guard)');
         assertTrue(snippet.indexOf('authorChanged && oldCommentForArchive') === -1,
             'Не должно быть условия authorChanged для сброса meters.O (Task 237)');
     });

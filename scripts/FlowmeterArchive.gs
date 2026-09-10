@@ -190,6 +190,107 @@ var FlowmeterArchive = {
   },
 
   // ============================================================
+  // updateLatestReading — Task 359: правка суточных показаний в окне
+  // 1 часа — ОБНОВИТЬ последнюю суточную запись этого расходомера
+  // НА МЕСТЕ, не создавая новую строку архива.
+  // ============================================================
+  // Заявка: «после записи показаний на сервер пользователь в течение
+  // часа правит значение — создаётся НОВАЯ запись вместо изменения
+  // уже введённой». Правка = та же логическая запись (история не
+  // должна обрастать дублями), новый ввод = новая строка.
+  //
+  // Вызывается из Flowmeter.updateReading при payload.isEdit=true
+  // (сервер уже проверил: тот же пользователь, с ввода прошло <1 ч —
+  // по meters-строке M/N). Здесь дополнительно сверяемся с самой
+  // архивной строкой:
+  //   • ищем с конца ПЕРВУЮ запись meterId с entryType 'сутки'
+  //     (пусто/legacy = сутки; записи «за неделю/месяц» — другие
+  //     логические записи, их пропускаем);
+  //   • найденная строка должна быть СВЕЖЕЙ (timestamp O < 1 ч от
+  //     сейчас) — окно зеркалит meters-проверку updateReading. Если
+  //     строка старая (или её нет) — исходный ввод не доархивировался
+  //     (archive write при вводе был non-critical и мог не удаться):
+  //     возвращаем false, вызывающий сделает fallback-вызов appendToArchive.
+  //
+  // Обновляемые колонки (те же, что пишет appendToArchive):
+  //   C prev, D curr, E consumption, F datePrev, G dateCurr,
+  //   H daysBetween, I unit, J temp, K Gcal, L period, M modRole,
+  //   N modName, O timestamp (время правки), Q anomaly.
+  // НЕ трогаем: A meterId, B hoz (идентичность записи), R entryType.
+  // P comment — сохраняем: перезаписываем ТОЛЬКО если передан
+  // непустой комментарий (Task 237: активный комментарий ввода живёт
+  // в meters.O и принадлежит этой же записи; правка его не стирает).
+  //
+  // @return {boolean} true — строка найдена и обновлена; false —
+  //   свежей суточной записи нет (вызывающий делает appendToArchive).
+  // Не требует авторизации — вызывается только сервером из
+  // Flowmeter.updateReading.
+  // ============================================================
+  updateLatestReading: function(meterId, prev, curr, datePrev, dateCurr, temp, gcal, unit, period, role, name, comment, anomaly) {
+    var sheet = this._getSheet();
+    if (!sheet) return false;
+
+    var lastRow = sheet.getLastRow();
+    if (lastRow < this.DATA_START_ROW) return false;
+
+    // A (meterId) + O (timestamp) + R (entryType): читаем 18 колонок,
+    // поиск с конца (appendRow пишет в конец → последняя по позиции
+    // с совпавшим meterId и 'сутки' = самая свежая суточная).
+    var range = sheet.getRange(this.DATA_START_ROW, 1,
+                               lastRow - this.DATA_START_ROW + 1, 18);
+    var values = range.getValues();
+
+    for (var i = values.length - 1; i >= 0; i--) {
+      var etRaw = String(values[i][17] || '').trim().toLowerCase();
+      if (etRaw === 'неделя' || etRaw === 'месяц') continue;   // агрегаты — не та запись
+      if (parseInt(values[i][0], 10) !== meterId) continue;
+
+      // Свежесть найденной строки (окно 1 ч, как в updateReading)
+      var ts = values[i][14];  // O
+      if (!(ts instanceof Date)) return false;   // нет метки — не правим
+      var elapsedMin = (new Date() - ts) / 1000 / 60;
+      if (elapsedMin > 60) return false;         // чужая старая запись — не трогаем
+
+      // Пересчёт производных полей (как в appendToArchive)
+      var rowToUpdate = this.DATA_START_ROW + i;
+      var consumption = (curr || 0) - (prev || 0);
+      var daysBetween = 0;
+      var datePrevObj = Flowmeter._clientToDateObj(datePrev);
+      var dateCurrObj = Flowmeter._clientToDateObj(dateCurr);
+      if (datePrevObj && dateCurrObj) {
+        daysBetween = Math.round((dateCurrObj - datePrevObj) / 86400000);
+        if (daysBetween < 0) daysBetween = 0;
+      }
+
+      sheet.getRange(rowToUpdate, 3).setValue(prev || 0);                   // C: prev
+      sheet.getRange(rowToUpdate, 4).setValue(curr || 0);                   // D: curr
+      sheet.getRange(rowToUpdate, 5).setValue(consumption);                 // E: consumption
+      sheet.getRange(rowToUpdate, 6).setValue(datePrevObj || '');           // F: datePrev
+      sheet.getRange(rowToUpdate, 7).setValue(dateCurrObj || '');           // G: dateCurr
+      sheet.getRange(rowToUpdate, 8).setValue(daysBetween);                 // H: daysBetween
+      sheet.getRange(rowToUpdate, 9).setValue(unit || '');                  // I: unit
+      sheet.getRange(rowToUpdate, 10).setValue(                             // J: temp
+        (temp !== null && temp !== undefined && temp !== '') ? parseFloat(temp) : '');
+      sheet.getRange(rowToUpdate, 11).setValue(                             // K: Gcal
+        (gcal !== null && gcal !== undefined && gcal !== '') ? parseFloat(gcal) : '');
+      sheet.getRange(rowToUpdate, 12).setValue(period || '');               // L: period
+      sheet.getRange(rowToUpdate, 13).setValue(role || '');                 // M: modRole
+      sheet.getRange(rowToUpdate, 14).setValue(name || '');                 // N: modName
+      sheet.getRange(rowToUpdate, 15).setValue(new Date());                 // O: время правки
+      if (String(comment || '') !== '') {
+        sheet.getRange(rowToUpdate, 16).setValue(String(comment));          // P: comment (не стирать)
+      }
+      sheet.getRange(rowToUpdate, 17).setValue(String(anomaly || ''));      // Q: anomaly
+
+      Logger.log('Archive (правка, Task 359): meterId=' + meterId +
+                 ', строка ' + rowToUpdate + ' обновлена на месте' +
+                 ', prev=' + prev + ', curr=' + curr + ', consumption=' + consumption);
+      return true;
+    }
+    return false;  // суточных записей для meterId нет
+  },
+
+  // ============================================================
   // updateLatestComment — Task 237: обновить P (comment) в самой свежей
   // архивной записи для meterId.
   // ============================================================
