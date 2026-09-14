@@ -143,6 +143,7 @@ require('./test-task364.js');
 // НЕ часовое окно 6:00–7:00)
 require('./test-task365.js');
 require('./test-task366.js');
+require('./test-task367.js');
 require('./test-deploy-url.js');
 
 // Запускаем

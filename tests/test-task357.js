@@ -362,8 +362,10 @@ describe('Task 357 — форма ввода: дефолт даты = преды
 describe('Task 357 — клиент: красный класс в renderList + CSS', () => {
 
     test('renderList добавляет flow-summary-val-due по _isOverdue', () => {
+        // Task 367: тернарник заменён цепочкой valCls — недоставленные
+        // (pending) приоритетнее красного, класс due остался в else-if
         assertTrue(INDEX_SRC.indexOf(
-            "html += '<span class=\"flow-summary-val' + (this._isOverdue(m, null) ? ' flow-summary-val-due' : '') + '\">'"
+            "else if (this._isOverdue(m, null)) valCls += ' flow-summary-val-due';"
             ) !== -1, 'классDue добавляется к значению показаний');
     });
 
@@ -448,13 +450,13 @@ describe('Task 357 — клиент: submitInput fallback «предыдущие
 
 describe('Task 357 — SW кэш', () => {
 
-    test('SW: CACHE_VERSION = kipia-test-v595', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v595'") !== -1,
+    test('SW: CACHE_VERSION = kipia-test-v596', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v596'") !== -1,
             'версия кэша поднята до v583');
     });
 
     test('SW: нет v582 (старая) и нет v584 (двойной бамп)', () => {
         assertTrue(SW_SRC.indexOf('kipia-test-v585') === -1, 'старая версия не осталась');
-        assertTrue(SW_SRC.indexOf('kipia-test-v596') === -1, 'двойного бампа не было');
+        assertTrue(SW_SRC.indexOf('kipia-test-v597') === -1, 'двойного бампа не было');
     });
 });

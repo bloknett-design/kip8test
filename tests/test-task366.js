@@ -3,7 +3,10 @@
 //   1) баннер недоставленных показаний: «замени на более информативное
 //      и просто читаемое сообщение и без иконки» — текст с НОМЕРАМИ
 //      расходомеров (№2, №4; у одного несколько записей — «№2 ×2»),
-//      грамматика ед./мн., иконка ⟳ убрана;
+//      грамматика ед./мн., иконка ⟳ убрана.
+//      Task 367 (заявка «упростим ещё»): баннер убран ВООБЩЕ — вместо
+//      него жёлто-оранжевый цвет ЗНАЧЕНИЙ карточек
+//      (.flow-summary-val-pending в renderList, приоритет над красным);
 //   2) «при однократном вводе значения расхода… строка в таблице
 //      hozraschet_archive иногда дублируется (иногда один раз,
 //      иногда несколько раз подряд)» — сервер (FlowmeterArchive.gs):
@@ -16,13 +19,13 @@
 //      запись outbox не удаляется.
 //
 // ЧТО ПРОВЕРЯЕТСЯ:
-//   A. SRC: баннер — иконки/старого текста нет, хелпер + _esc,
-//      server_busy повторяем; сервер — withLock вокруг дедупа+
+//   A. SRC: баннер удалён полностью (Task 367) — нет класса/CSS/
+//      хелпера; server_busy повторяем; сервер — withLock вокруг дедупа+
 //      appendRow, хелпер без вложенного замка, ключи A/C/D/G/R,
 //      окно 50 строк, fallback «сбой проверки = не дубль»;
 //      Flowmeter.gs вызывающие не менялись.
-//   B. VM: _outboxBannerText (номера, ед./мн., ×N, fallback, null)
-//      и _outboxIsPermanentError (server_busy повторяем).
+//   B. VM: _outboxIsPermanentError (server_busy повторяем, прежняя
+//      классификация не сломана).
 //   C. VM сервер: дедуп на мок-листе — повтор payload не дописывает
 //      строку; расхождения ключа (curr/date/entryType/prev/метро)
 //      дописывают; дедуп сквозь чужие строки; пустой лист; сбой
@@ -62,7 +65,7 @@ function extractMethod(src, name) {
 // ============================================================
 // A. SRC — клиент
 // ============================================================
-describe('Task 366 — SRC: баннер без иконки, текст хелпером', () => {
+describe('Task 366/367 — SRC: баннер удалён (заявка «упростим ещё»)', () => {
 
     test('Иконка убрана: нет .flow-outbox-ico и символа ⟳ в рендере', () => {
         assertTrue(INDEX_SRC.indexOf('.flow-outbox-ico') === -1,
@@ -79,34 +82,29 @@ describe('Task 366 — SRC: баннер без иконки, текст хел�
             'рендер не содержит старый текст');
     });
 
-    test('renderList: баннер по хелперу _outboxBannerText + _esc', () => {
+    test('Task 367: баннера нет — ни класса, ни CSS, ни хелпера', () => {
+        assertTrue(INDEX_SRC.indexOf('flow-outbox-banner') === -1,
+            'класс/блок баннера удалён из рендера');
+        assertTrue(INDEX_SRC.indexOf('.flow-outbox-banner {') === -1,
+            'CSS-правило баннера удалено');
+        assertTrue(INDEX_SRC.indexOf('_outboxBannerText: function') === -1,
+            'хелпер _outboxBannerText удалён');
+        assertTrue(INDEX_SRC.indexOf('this._outboxBannerText(') === -1,
+            'вызовов хелпера не осталось');
+        assertTrue(INDEX_SRC.indexOf('не отправлены — отправятся на сервер') === -1,
+            'текст баннера не рендерится');
+    });
+
+    test('Task 367: вместо баннера — жёлто-оранжевые значения', () => {
         const rl = extractMethod(INDEX_SRC, 'renderList');
-        assertTrue(rl.indexOf('this._outboxBannerText(outboxEntries)') !== -1,
-            'текст баннера — хелпером');
+        assertTrue(rl.indexOf('pendingIds') !== -1,
+            'renderList собирает номера недоставленных расходомеров');
         assertTrue(rl.indexOf('this._outboxLoad()') !== -1,
-            'записи outbox читаются целиком (нужны номера)');
-        assertTrue(rl.indexOf("'<span>' + this._esc(outboxBanner) + '</span>'") !== -1,
-            'текст экранируется');
-        assertTrue(rl.indexOf('<div class="flow-outbox-banner">') !== -1,
-            'класс баннера сохранён (стили Task 358)');
-    });
-
-    test('Хелпер определён в FlowmeterData (рядом с outbox)', () => {
-        const h = extractMethod(INDEX_SRC, '_outboxBannerText');
-        assertTrue(h !== null, '_outboxBannerText есть');
-        assertTrue(h.indexOf('№') !== -1, 'номера расходомеров в тексте');
-        assertTrue(h.indexOf('×') !== -1, 'суффикс ×N для нескольких записей');
-        assertTrue(h.indexOf('автоматически при восстановлении связи') !== -1,
-            'обещание автодоставки сохранено (суть Task 358)');
-    });
-
-    test('CSS баннера жив (амбер), комментарий про Task 366', () => {
-        const i = INDEX_SRC.indexOf('.flow-outbox-banner {');
-        assertTrue(i !== -1, 'CSS-блок баннера на месте');
-        const css = INDEX_SRC.slice(i, INDEX_SRC.indexOf('}', i) + 1);
-        assertTrue(css.indexOf('rgba(230,150,20,0.10)') !== -1, 'фон прежний (Task 358)');
-        const c = INDEX_SRC.indexOf('Task 366: без иконки');
-        assertTrue(c !== -1 && c < i, 'комментарий о заявке перед CSS');
+            'записи outbox читаются');
+        assertTrue(rl.indexOf('flow-summary-val-pending') !== -1,
+            'класс pending присваивается значению');
+        assertTrue(INDEX_SRC.indexOf('.flow-summary-val.flow-summary-val-pending {') !== -1,
+            'CSS-правило pending есть');
     });
 
     test('server_busy — повторяемая ошибка outbox (замок архива)', () => {
@@ -199,90 +197,40 @@ describe('Task 366 — SRC: сервер, дедуп архива под зам�
 });
 
 // ============================================================
-// B. VM — клиент: _outboxBannerText / _outboxIsPermanentError
+// B. VM — клиент: _outboxIsPermanentError
 // ============================================================
-let BM = null, PM = null;
+let PM = null;
 try {
     const ctx = {};
     vm.createContext(ctx);
-    const parts = ['_outboxBannerText', '_outboxIsPermanentError']
+    const parts = ['_outboxIsPermanentError']
         .map(n => extractMethod(INDEX_SRC, n)).filter(Boolean);
-    if (parts.length === 2) {
+    if (parts.length === 1) {
         vm.runInContext('var M = { ' + parts.join(',') + ' };', ctx);
-        BM = ctx.M;
+        PM = ctx.M;
     }
 } catch (e) { /* ниже упадут с причиной */ }
 
-describe('Task 366 — VM: текст баннера', () => {
+describe('Task 366 — VM: server_busy повторяем (запись не теряется)', () => {
 
-    test('Методы извлечены', () => {
-        assertTrue(BM !== null && typeof BM._outboxBannerText === 'function',
-            '_outboxBannerText из index.html');
-        assertTrue(typeof BM._outboxIsPermanentError === 'function',
+    test('Метод извлечён', () => {
+        assertTrue(PM !== null && typeof PM._outboxIsPermanentError === 'function',
             '_outboxIsPermanentError из index.html');
     });
 
-    test('Одна запись: единственное число + номер', () => {
-        assertEqual(BM._outboxBannerText([{ payload: { id: 2 } }]),
-            'Показание №2 не отправлено — отправится на сервер автоматически при восстановлении связи',
-            'ед. ч.');
-    });
-
-    test('Две записи, разные расходомеры: мн. число, номера через запятую', () => {
-        assertEqual(BM._outboxBannerText([{ payload: { id: 2 } }, { payload: { id: 4 } }]),
-            'Показания №2, №4 не отправлены — отправятся на сервер автоматически при восстановлении связи',
-            'мн. ч. со списком');
-    });
-
-    test('Две записи одного расходомера: «№2 ×2»', () => {
-        assertEqual(BM._outboxBannerText([{ payload: { id: 2 } }, { payload: { id: 2 } }]),
-            'Показания №2 ×2 не отправлены — отправятся на сервер автоматически при восстановлении связи',
-            'мн. ч. с кратностью');
-    });
-
-    test('Три записи: 2 разных расходомера, у первого две', () => {
-        assertEqual(BM._outboxBannerText([{ payload: { id: 12 } }, { payload: { id: 4 } }, { payload: { id: 12 } }]),
-            'Показания №12 ×2, №4 не отправлены — отправятся на сервер автоматически при восстановлении связи',
-            'порядок первого появления, кратность у первого вхождения');
-    });
-
-    test('id числом и строкой — один расходомер', () => {
-        assertEqual(BM._outboxBannerText([{ payload: { id: 2 } }, { payload: { id: '2' } }]),
-            'Показания №2 ×2 не отправлены — отправятся на сервер автоматически при восстановлении связи',
-            'String-нормализация id');
-    });
-
-    test('Записи без id: fallback по счётчику (суть Task 358 — пользователь ЗНАЕТ)', () => {
-        assertEqual(BM._outboxBannerText([{ payload: {} }, { payload: {} }]),
-            'Показания (2) не отправлены — отправятся на сервер автоматически при восстановлении связи',
-            'мн. ч. по количеству');
-        assertEqual(BM._outboxBannerText([{ payload: null }]),
-            'Показание не отправлено — отправится на сервер автоматически при восстановлении связи',
-            'ед. ч. без номера');
-    });
-
-    test('Пусто/не-массив: null (баннер скрыт)', () => {
-        assertEqual(BM._outboxBannerText([]), null, 'пустой массив');
-        assertEqual(BM._outboxBannerText(null), null, 'null');
-        assertEqual(BM._outboxBannerText('x'), null, 'строка');
-    });
-});
-
-describe('Task 366 — VM: server_busy повторяем (запись не теряется)', () => {
-
     test('server_busy (замок архива занят) — НЕ окончательная ошибка', () => {
-        assertFalse(BM._outboxIsPermanentError({ _kind: 'SERVER', message: 'server_busy: попробуйте ещё раз через несколько секунд' }),
+        assertFalse(PM._outboxIsPermanentError({ _kind: 'SERVER', message: 'server_busy: попробуйте ещё раз через несколько секунд' }),
             'ретрай позже');
     });
 
     test('Прежняя классификация не сломана', () => {
-        assertTrue(BM._outboxIsPermanentError({ _kind: 'SERVER', message: 'edit_window_expired' }),
+        assertTrue(PM._outboxIsPermanentError({ _kind: 'SERVER', message: 'edit_window_expired' }),
             'окно правки — окончательно');
-        assertFalse(BM._outboxIsPermanentError({ _kind: 'NETWORK', message: 'fetch failed' }),
+        assertFalse(PM._outboxIsPermanentError({ _kind: 'NETWORK', message: 'fetch failed' }),
             'сеть — повторяемо');
-        assertFalse(BM._outboxIsPermanentError({ _kind: 'SERVER', message: 'session_expired' }),
+        assertFalse(PM._outboxIsPermanentError({ _kind: 'SERVER', message: 'session_expired' }),
             'сессия — лечится входом');
-        assertFalse(BM._outboxIsPermanentError({ _kind: 'SERVER', message: 'Unknown action: foo' }),
+        assertFalse(PM._outboxIsPermanentError({ _kind: 'SERVER', message: 'Unknown action: foo' }),
             'старый сервер — лечится апгрейдом');
     });
 });
@@ -513,13 +461,13 @@ describe('Task 366 — VM сервер: устойчивость', () => {
 // ============================================================
 describe('Task 366 — SW кэш', () => {
 
-    test('SW: CACHE_VERSION = kipia-test-v595', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v595'") !== -1,
+    test('SW: CACHE_VERSION = kipia-test-v596', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v596'") !== -1,
             'версия кэша поднята до v595');
     });
 
     test('SW: нет v594 (старая) и нет v596 (двойной бамп)', () => {
         assertTrue(SW_SRC.indexOf('kipia-test-v594') === -1, 'старая версия не осталась');
-        assertTrue(SW_SRC.indexOf('kipia-test-v596') === -1, 'двойного бампа не было');
+        assertTrue(SW_SRC.indexOf('kipia-test-v597') === -1, 'двойного бампа не было');
     });
 });
