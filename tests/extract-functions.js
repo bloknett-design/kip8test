@@ -79,6 +79,9 @@ const PURE_FUNCTIONS = [
     // убрана в Task 289) + счётчик «За неделю» из суточных данных
     // последней ПОЛНОЙ недели (Task 290: период + Гкал)
     'flowPrevMonthRange',
+    // Task 368: показания за период — границы прошедшей календарной
+    // недели (пн–вс) для недельных расходомеров (№3, №11)
+    'flowPrevWeekRange',
     'flowWeekCounterStats',
     'flowWeekRangeLabel',
     'flowDateToInputVal',

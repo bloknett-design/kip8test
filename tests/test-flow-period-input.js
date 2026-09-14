@@ -204,8 +204,10 @@ describe('Task 286 — клиент: UI шита ввода (chips + поля д
             'возврат подписи для суточного режима');
         assertTrue(INDEX_SRC.indexOf('flowPrevMonthRange(now)') !== -1,
             'даты месяца по умолчанию — flowPrevMonthRange');
-        assertFalse(INDEX_SRC.indexOf('flowPrevWeekRange') !== -1,
-            'Task 289: flowPrevWeekRange удалена (неделя не вводится)');
+        // Task 368: хелпер возвращён — границы прошедшей недели для
+        // ПОКАЗАНИЙ №3/№11 (chip «За неделю» у №1 по-прежнему нет — тест выше)
+        assertTrue(INDEX_SRC.indexOf('function flowPrevWeekRange(now)') !== -1,
+            'Task 368: flowPrevWeekRange есть (период показаний недельных)');
         assertTrue(INDEX_SRC.indexOf("field.placeholder = 'Расход за прошедший месяц, ' + m.unit;") !== -1,
             'placeholder только месяца (Task 289)');
     });
@@ -317,8 +319,8 @@ describe('Task 288 — счётчик «Передано показаний (к�
             'flowCountStats не извлекается');
         assertFalse(EXTRACT_SRC.indexOf("'flowPluralRecords'") !== -1,
             'flowPluralRecords не извлекается');
-        assertFalse(EXTRACT_SRC.indexOf("'flowPrevWeekRange'") !== -1,
-            'Task 289: flowPrevWeekRange не извлекается (неделя не вводится)');
+        assertTrue(EXTRACT_SRC.indexOf("'flowPrevWeekRange'") !== -1,
+            'Task 368: flowPrevWeekRange извлекается (период показаний)');
         assertTrue(EXTRACT_SRC.indexOf("'flowWeekCounterStats'") !== -1,
             'Task 289: flowWeekCounterStats извлекается (счётчик недели)');
         assertTrue(EXTRACT_SRC.indexOf("'flowWeekRangeLabel'") !== -1,
@@ -384,8 +386,8 @@ describe('Task 286 — клиент: CSS и SW', () => {
     });
 
     test('SW-кэш поднят до v544 (Task 298 — фронтенд менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v596'") !== -1,
-            'CACHE_VERSION = kipia-test-v596');
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v597'") !== -1,
+            'CACHE_VERSION = kipia-test-v597');
         assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v534'") !== -1,
             'старой версии v534 нет');
     });
@@ -705,8 +707,8 @@ describe('Task 292 — заголовок графика: «Показания (
     });
 
     test('SW-кэш: v538 → v539 (Task 296 — только фронтенд, сервер не менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v596'") !== -1,
-            'CACHE_VERSION = kipia-test-v596');
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v597'") !== -1,
+            'CACHE_VERSION = kipia-test-v597');
         assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v537'") !== -1,
             'старой версии v537 нет');
     });

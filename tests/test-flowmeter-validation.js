@@ -1875,16 +1875,18 @@ describe('Task 247: дата «за ДД.ММ.ГГГГ г.» — неразры�
     });
 
     test('HTML: блок даты начинается с «за» БЕЗ ведущего пробела внутри span', () => {
-        assertTrue(html.indexOf('<span class="flow-detail-date-inline">за ') !== -1,
-            'span даты должен начинаться сразу с «за» (без пробела внутри)');
+        // Task 368: дата вычисляется в переменной lastDateInline (для
+        // периодных — «за ДД.ММ–ДД.ММ.ГГГГ») и начинается с «за »
+        assertTrue(html.indexOf("var lastDateInline = 'за ' + this._fmtDate(m.dateCurr)") !== -1,
+            'блок даты начинается сразу с «за» (без пробела внутри)');
         assertTrue(html.indexOf('<span class="flow-detail-date-inline"> за ') === -1,
             'Старый паттерн с пробелом внутри span не должен остаться (пробел внутри nowrap-блока запретил бы перенос между названием и датой)');
     });
 
     test('HTML: пробел-разделитель ВНЕ span (перенос между названием и датой)', () => {
-        // В _buildDetailHtml: lastReadingLabel + ' <span class="flow-detail-date-inline">за '
+        // Task 368: lastReadingLabel + ' <span class="flow-detail-date-inline">' + lastDateInline
         // (пробел — внутри строкового литерала, но ЗА пределами HTML-тега span)
-        const re = /lastReadingLabel \+\s*' <span class="flow-detail-date-inline">за '/;
+        const re = /lastReadingLabel \+\s*' <span class="flow-detail-date-inline">' \+ lastDateInline/;
         assertTrue(re.test(html),
             'Пробел между «Последние показания» и span даты должен быть снаружи — единственная точка переноса строки');
     });
@@ -1903,15 +1905,18 @@ describe('Task 247: то же для карточек списка расход�
     });
 
     test('HTML: блок даты начинается с «за» БЕЗ ведущего пробела внутри span', () => {
-        assertTrue(html.indexOf('<span class="flow-summary-date-inline">за ') !== -1,
-            'span даты в карточке списка должен начинаться сразу с «за»');
+        // Task 368: дата вычисляется в переменной lastDateInline368 (для
+        // периодных — «за ДД.ММ–ДД.ММ.ГГГГ») и начинается с «за »
+        assertTrue(html.indexOf("var lastDateInline368 = 'за ' + this._fmtDate(m.dateCurr)") !== -1,
+            'span даты в карточке списка начинается сразу с «за»');
         assertTrue(html.indexOf('<span class="flow-summary-date-inline"> за ') === -1,
             'Старый паттерн с пробелом внутри span не должен остаться в карточках списка');
     });
 
     test('HTML: пробел-разделитель ВНЕ span в renderList', () => {
-        // В renderList: «Последние показания <span class="flow-summary-date-inline">за »
-        assertTrue(html.indexOf('Последние показания <span class="flow-summary-date-inline">за ') !== -1,
+        // Task 368: «Последние показания <span class="flow-summary-date-inline">' + lastDateInline368
+        const re = /Последние показания <span class="flow-summary-date-inline">' \+ lastDateInline368/;
+        assertTrue(re.test(html),
             'Между «Последние показания» и span даты должен стоять пробел снаружи span');
     });
 });
