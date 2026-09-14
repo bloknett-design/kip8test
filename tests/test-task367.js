@@ -19,6 +19,8 @@
 //      сокращения («Еженед.», «Ежемес.») в своей ветке;
 //      суточная логика (6:00, Task 365) не сломана.
 //   C. SW v596 (guard v597).
+// Task 370 (адаптация): цвет недоставленных ярче и ближе к жёлтому —
+//   #ffc400 (тёмная) / #cc9900 (светлая), было #f5a623 / #c96e00.
 
 const fs = require('fs');
 const path = require('path');
@@ -62,16 +64,16 @@ describe('Task 367 — SRC: баннер убран, значения жёлто
             'текст баннера не рендерится');
     });
 
-    test('CSS: .flow-summary-val-pending — жёлто-оранжевый, обе темы', () => {
+    test('CSS: .flow-summary-val-pending — жёлто-оранжевый, обе темы (Task 370: ярче/желтее)', () => {
         const i = INDEX_SRC.indexOf('.flow-summary-val.flow-summary-val-pending {');
         assertTrue(i !== -1, 'CSS-правило pending есть');
         const css = INDEX_SRC.slice(i, INDEX_SRC.indexOf('}', i) + 1);
-        assertEqual(css.trim(), '.flow-summary-val.flow-summary-val-pending {\n        color: #f5a623;\n    }',
-            'тёмная тема — жёлто-оранжевый #f5a623, только цвет');
+        assertEqual(css.trim(), '.flow-summary-val.flow-summary-val-pending {\n        color: #ffc400;\n    }',
+            'тёмная тема — яркий жёлто-оранжевый #ffc400 (Task 370), только цвет');
         const l = INDEX_SRC.indexOf('[data-theme="light"] .flow-summary-val.flow-summary-val-pending');
         assertTrue(l !== -1, 'светлая тема есть');
-        assertTrue(INDEX_SRC.slice(l, INDEX_SRC.indexOf('}', l) + 1).indexOf('#c96e00') !== -1,
-            'светлая тема — тёмно-янтарный #c96e00');
+        assertTrue(INDEX_SRC.slice(l, INDEX_SRC.indexOf('}', l) + 1).indexOf('#cc9900') !== -1,
+            'светлая тема — золотистый #cc9900 (Task 370)');
     });
 
     test('CSS: pending НЕ меняет размер/вес шрифта (только цвет)', () => {
@@ -269,13 +271,13 @@ describe('Task 367 — VM: суточная логика (Task 365) не сло�
 // ============================================================
 describe('Task 367 — SW кэш', () => {
 
-    test('SW: CACHE_VERSION = kipia-test-v598', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v598'") !== -1,
+    test('SW: CACHE_VERSION = kipia-test-v599', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v599'") !== -1,
             'версия кэша поднята до v596');
     });
 
     test('SW: нет v595 (старая) и нет v597 (двойной бамп)', () => {
         assertTrue(SW_SRC.indexOf('kipia-test-v595') === -1, 'старая версия не осталась');
-        assertTrue(SW_SRC.indexOf('kipia-test-v599') === -1, 'двойного бампа не было');
+        assertTrue(SW_SRC.indexOf('kipia-test-v600') === -1, 'двойного бампа не было');
     });
 });
