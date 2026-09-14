@@ -142,6 +142,7 @@ require('./test-task364.js');
 // с 6:00 новых суток ДО ввода новых данных (поправка заявки:
 // НЕ часовое окно 6:00–7:00)
 require('./test-task365.js');
+require('./test-task366.js');
 require('./test-deploy-url.js');
 
 // Запускаем

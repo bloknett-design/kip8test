@@ -19,7 +19,8 @@
 //      preflight, без ответа; запись остаётся в outbox — следующий
 //      запуск сверит с сервером). Electron (десктопы): перехват close
 //      → executeJavaScript(_outboxFlushBeacons) → destroy (≤1.2 c).
-//   D. Честный UX: баннер «N показаний ждут отправки», тост «нет
+//   D. Честный UX: баннер недоставленных показаний (Task 366 —
+//      с номерами расходомеров, без иконки), тост «нет
 //      связи — отправим автоматически», beforeunload-предупреждение.
 //   E. Спец-кейс «быстрая навигация»: soft-confirm payload раньше
 //      затирался следующим вводом (_pendingApiPayload — одна
@@ -171,10 +172,12 @@ describe('Task 358 — SRC: outbox-методы и точки встраиван
             'запись удаляется из outbox');
     });
 
-    test('renderList: баннер «ждут отправки» (класс + CSS)', () => {
+    test('renderList: баннер недоставленных (класс + CSS; Task 366 — хелпером)', () => {
         assertTrue(INDEX_SRC.indexOf('flow-outbox-banner') !== -1, 'класс баннера в рендере');
         assertTrue(INDEX_SRC.indexOf('.flow-outbox-banner {') !== -1, 'CSS баннера');
-        const rl = INDEX_SRC.indexOf('var outboxN = 0;');
+        // Task 366: текст баннера строит _outboxBannerText (номера
+        // расходомеров, без иконки) — якорь после объявления html
+        const rl = INDEX_SRC.indexOf('this._outboxBannerText(outboxEntries)');
         const htmlDecl = INDEX_SRC.indexOf("var html = '';", INDEX_SRC.indexOf('renderList: function'));
         assertTrue(rl !== -1 && htmlDecl !== -1 && rl > htmlDecl,
             'баннер после объявления html (не ReferenceError)');
@@ -628,12 +631,12 @@ describe('Task 358 — VM: _flushOutbox (дедуп + доставка)', () => 
 // SW-версия
 // ============================================================
 describe('Task 358 — SW: бамп кэша', () => {
-    test('CACHE_VERSION = kipia-test-v594', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v594'") !== -1,
+    test('CACHE_VERSION = kipia-test-v595', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v595'") !== -1,
             'версия кэша поднята до v587');
     });
     test('нет v586 (старая) и нет v588 (двойной бамп)', () => {
         assertTrue(SW_SRC.indexOf('kipia-test-v586') === -1, 'старая версия не осталась');
-        assertTrue(SW_SRC.indexOf('kipia-test-v595') === -1, 'двойного бампа не было');
+        assertTrue(SW_SRC.indexOf('kipia-test-v596') === -1, 'двойного бампа не было');
     });
 });
