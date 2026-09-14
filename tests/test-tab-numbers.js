@@ -445,9 +445,9 @@ describe('Task 304 — статические инварианты', () => {
         assertTrue(INDEX_SRC.indexOf('нет в справочнике') !== -1, 'текст маркера');
     });
 
-    test('SW: версия кэша kipia-test-v597 (Task 304 — клиент менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v597'") !== -1,
-            'CACHE_VERSION = kipia-test-v597');
+    test('SW: версия кэша kipia-test-v598 (Task 304 — клиент менялся)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v598'") !== -1,
+            'CACHE_VERSION = kipia-test-v598');
     });
 
     test('TabNumbersFix.gs: функции починки/диагностики на месте', () => {

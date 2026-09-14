@@ -43,7 +43,7 @@
 //   актуализирует вид шапки (_updateTtHead, Task 325);
 //   _updateTtHead — сжимает пустую шапку до 16px-филлера (⚠ и
 //   «Обновить» скрыты — выравнивание строк сохраняется).
-//   SW: kipia-test-v597.
+//   SW: kipia-test-v598.
 //
 // Запуск: через tests/run-all.js (require './test-task324.js').
 
@@ -594,10 +594,10 @@ describe('Task 324 — интеграция и SW', () => {
         assertTrue(fg.indexOf('syncTT();') !== -1, 'строки итогов синхронизируются');
     });
 
-    test('SW: версия кэша kipia-test-v597 (Task 324)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v597'") !== -1,
-            'CACHE_VERSION = kipia-test-v597');
-        assertFalse(SW_SRC.indexOf('kipia-test-v598') !== -1,
+    test('SW: версия кэша kipia-test-v598 (Task 324)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v598'") !== -1,
+            'CACHE_VERSION = kipia-test-v598');
+        assertFalse(SW_SRC.indexOf('kipia-test-v599') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });
