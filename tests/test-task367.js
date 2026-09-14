@@ -271,13 +271,13 @@ describe('Task 367 — VM: суточная логика (Task 365) не сло�
 // ============================================================
 describe('Task 367 — SW кэш', () => {
 
-    test('SW: CACHE_VERSION = kipia-test-v599', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v599'") !== -1,
+    test('SW: CACHE_VERSION = kipia-test-v600', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v600'") !== -1,
             'версия кэша поднята до v596');
     });
 
     test('SW: нет v595 (старая) и нет v597 (двойной бамп)', () => {
         assertTrue(SW_SRC.indexOf('kipia-test-v595') === -1, 'старая версия не осталась');
-        assertTrue(SW_SRC.indexOf('kipia-test-v600') === -1, 'двойного бампа не было');
+        assertTrue(SW_SRC.indexOf('kipia-test-v601') === -1, 'двойного бампа не было');
     });
 });
