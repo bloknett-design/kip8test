@@ -36,7 +36,7 @@
 //   clientHeight (ползунок), syncTT в конце; рендеры: tfoot
 //   «Итого», БЕЗ .ws-tt-scroll, ws-tt-year (год), год: активные
 //   по порядку сетки + архив ниже; инфо в title.
-//   SW: kipia-test-v601.
+//   SW: kipia-test-v602.
 //
 // Запуск: через tests/run-all.js (require './test-task323.js').
 
@@ -798,10 +798,10 @@ describe('Task 323 — интеграция', () => {
 // 10. SW: версия кэша
 // ============================================================
 describe('Task 323 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v601 (Task 323)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v601'") !== -1,
-            'CACHE_VERSION = kipia-test-v601');
-        assertFalse(SW_SRC.indexOf('kipia-test-v602') !== -1,
+    test('SW: кэш поднят до kipia-test-v602 (Task 323)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v602'") !== -1,
+            'CACHE_VERSION = kipia-test-v602');
+        assertFalse(SW_SRC.indexOf('kipia-test-v603') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });

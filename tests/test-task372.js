@@ -24,7 +24,13 @@
 //      термометрах (нет «Термопреобразователь», ГОСТ 6651-2009, IEC 60751).
 //   D. VM — расчёт по выбранному датчику (состояние, а не selects):
 //      calcTempSensor таблица ТС/ТП, живой пересчёт Task 371 через состояние.
-//   E. SW v601 (guard v602).
+//   E. SW v602 (guard v603).
+//
+// Task 373 (адаптация): бейджи ТС/ТП убраны из карточек и чипа;
+// каталог вырос до 17 позиций (добавлена ТХК (L) после ТХКн (E));
+// renderTempSensorCards перерисовывается при каждом вызове (табы
+// «Все / Избранные» + звёзды TempFav); панель «Расчёт произвольных
+// значений» стала статичной над формой — из результатов удалена.
 
 const fs = require('fs');
 const path = require('path');
@@ -119,12 +125,12 @@ describe('Task 372 — SRC: страница карточек и страниц�
         }
     });
 
-    test('Каталог: порядок как в бывших списках (8 ТС, затем 8 ТП)', () => {
+    test('Каталог: порядок как в бывших списках (8 ТС, затем 9 ТП)', () => {
         const fn = grabFn('getTempSensorCatalog');
         assertTrue(fn !== null, 'функция объявлена');
         const orderChunk = "['cu50_1428','cu100_1428','cu50_1426','cu100_1426','pt50_1391','pt100_1391','pt100_1385','pt1000_1385']";
         assertTrue(fn.indexOf(orderChunk) !== -1, 'порядок ТС');
-        assertTrue(fn.indexOf("['K','J','T','N','E','R','S','B']") !== -1, 'порядок ТП');
+        assertTrue(fn.indexOf("['K','J','T','N','E','L','R','S','B']") !== -1, 'порядок ТП (Task 373: L после E)');
         assertTrue(fn.indexOf("key:'tc_'+k") !== -1, 'ключи ТП вида tc_K');
     });
 
@@ -158,20 +164,23 @@ describe('Task 372 — SRC: страница карточек и страниц�
         assertTrue(fn.indexOf('Датчик не найден') !== -1, 'тост на неизвестный ключ');
     });
 
-    test('renderTempSensorCards: идемпотентный рендер в две сетки', () => {
+    test('renderTempSensorCards: рендер с избранным и табами (Task 373)', () => {
         const fn = grabFn('renderTempSensorCards');
         assertTrue(fn !== null, 'функция объявлена');
         assertTrue(fn.indexOf("getElementById('tsRtdCards')") !== -1, 'сетка ТС');
         assertTrue(fn.indexOf("getElementById('tsTcCards')") !== -1, 'сетка ТП');
-        assertTrue(fn.indexOf('children.length&&tcBox.children.length') !== -1, 'guard повторного рендера');
+        assertTrue(fn.indexOf('children.length&&tcBox.children.length') === -1, 'guard повторного рендера удалён (Task 373)');
+        assertTrue(fn.indexOf('TempFav.has(s.key)') !== -1, 'фильтр избранного');
         assertTrue(fn.indexOf('role="button"') !== -1, 'доступность: role button');
     });
 
     test('CSS карточек и чипа на месте', () => {
-        for (const cls of ['.ts-cards-grid', '.ts-card {', '.ts-card-name', '.ts-card-badge-rtd',
-                           '.ts-card-badge-tc', '.ts-view-chip', '[data-theme="light"] .ts-card-badge-tc']) {
+        for (const cls of ['.ts-cards-grid', '.ts-card {', '.ts-card-name', '.ts-card-fav-btn',
+                           '.ts-tabs', '#tempSensorFavBtn', '.ts-view-chip', '.ts-calc-panel']) {
             assertTrue(INDEX_SRC.indexOf(cls) !== -1, 'есть правило ' + cls);
         }
+        // Task 373: бейджи карточек удалены
+        assertTrue(INDEX_SRC.indexOf('.ts-card-badge') === -1, 'CSS бейджей карточек нет');
     });
 
     test('Саблейблы обновлены (карточки вместо расчёта на месте)', () => {
@@ -194,16 +203,27 @@ const fns = extractFunctions();
 
 function makeVm() {
     const els = {};
+    const mkEl = () => ({
+        value: '', style: {}, innerHTML: '', textContent: '',
+        scrollIntoView: () => {}, children: [],
+        _attrs: {},
+        setAttribute(k, v) { this._attrs[k] = String(v); },
+        getAttribute(k) { return (k in this._attrs) ? this._attrs[k] : null; },
+    });
     const document = {
-        getElementById: id => (els[id] || (els[id] = {
-            value: '', style: {}, innerHTML: '', textContent: '',
-            scrollIntoView: () => {}, children: []
-        }))
+        getElementById: id => (els[id] || (els[id] = mkEl())),
+        querySelectorAll: () => []
     };
     const toasts = [];
     const nav = [];
+    const store = {};
     const ctx = {
         document,
+        localStorage: {
+            getItem: k => (k in store ? store[k] : null),
+            setItem: (k, v) => { store[k] = String(v); },
+            removeItem: k => { delete store[k]; }
+        },
         showToast: m => toasts.push(String(m)),
         parseLocaleNumber: fns.parseLocaleNumber,
         formatNumber: fns.formatNumber,
@@ -215,15 +235,27 @@ function makeVm() {
         navigateTo: p => nav.push(p)
     };
     vm.createContext(ctx);
+    // Task 373: tempCustomCalcHtml удалена (панель статичная); добавлены
+    // TempFav, tempSensorsTab и переключатели избранного
     const code = ['getRtdSensorMap', 'getTcSensorMap', 'getTempSensorCatalog',
-                  'tempSensorFindByKey', 'renderTempSensorCards', 'openTempSensor',
-                  'tempSensorInfoHtml', 'tempCustomCalcHtml', 'getTempSensorRange',
+                  'tempSensorFindByKey', 'renderTempSensorCards', 'setTempSensorsTab',
+                  'toggleTempSensorFav', 'toggleTempSensorFavFromView',
+                  'updateTempSensorFavBtn', 'openTempSensor',
+                  'tempSensorInfoHtml', 'getTempSensorRange',
                   'tempCalcForwardValue', 'tempCalcInvertValue',
                   'tempQueryFromTemp', 'tempQueryFromValue', 'calcTempSensor']
         .map(grabFn).join('\n');
-    vm.runInContext('var tempSensorKey=null;\n' + code + '\n;globalThis.__api = {' +
+    const tempFavStart = INDEX_SRC.indexOf('var TempFav={');
+    const tempFavBrace = INDEX_SRC.indexOf('{', tempFavStart);
+    let tfDepth = 0, tfEnd = -1;
+    for (let i = tempFavBrace; i < INDEX_SRC.length; i++) {
+        if (INDEX_SRC[i] === '{') tfDepth++;
+        else if (INDEX_SRC[i] === '}') { tfDepth--; if (tfDepth === 0) { tfEnd = i + 2; break; } }
+    }
+    const tempFavSrc = INDEX_SRC.slice(tempFavStart, tfEnd);
+    vm.runInContext('var tempSensorKey=null; var tempSensorsTab=\'all\';\n' + tempFavSrc + '\n' + code + '\n;globalThis.__api = {' +
         'getRtdSensorMap, getTcSensorMap, getTempSensorCatalog, tempSensorFindByKey, ' +
-        'renderTempSensorCards, openTempSensor, tempSensorInfoHtml, tempCustomCalcHtml, ' +
+        'renderTempSensorCards, openTempSensor, tempSensorInfoHtml, TempFav, ' +
         'getTempSensorRange, tempCalcForwardValue, tempCalcInvertValue, ' +
         'tempQueryFromTemp, tempQueryFromValue, calcTempSensor, ' +
         'setSensor: function(k){ tempSensorKey = k; }};', ctx);
@@ -232,16 +264,17 @@ function makeVm() {
 
 describe('Task 372 — VM: каталог всех датчиков', () => {
 
-    test('16 позиций: 8 ТС + 8 ТП, порядок и ключи', () => {
+    test('17 позиций: 8 ТС + 9 ТП, порядок и ключи', () => {
         const vmw = makeVm();
         const cat = vmw.api.getTempSensorCatalog();
-        assertEqual(cat.length, 16, 'всего 16 датчиков');
+        assertEqual(cat.length, 17, 'всего 17 датчиков (Task 373: + ТХК L)');
         assertEqual(cat.filter(s => s.kind === 'rtd').length, 8, '8 ТС');
-        assertEqual(cat.filter(s => s.kind === 'tc').length, 8, '8 ТП');
+        assertEqual(cat.filter(s => s.kind === 'tc').length, 9, '9 ТП');
         assertEqual(cat[0].key, 'cu50_1428', 'первый — 50М (Cu50), как в списке');
         assertEqual(cat[7].key, 'pt1000_1385', 'последний ТС — Pt1000 (IEC)');
         assertEqual(cat[8].key, 'tc_K', 'первый ТП — ТХА (K)');
-        assertEqual(cat[15].key, 'tc_B', 'последний ТП — ТПР (B)');
+        assertEqual(cat[13].key, 'tc_L', 'Task 373: ТХК (L) после ТХКн (E)');
+        assertEqual(cat[16].key, 'tc_B', 'последний ТП — ТПР (B)');
     });
 
     test('Диапазоны НСХ по датчикам', () => {
@@ -282,34 +315,41 @@ describe('Task 372 — VM: каталог всех датчиков', () => {
 
 describe('Task 372 — VM: renderTempSensorCards', () => {
 
-    test('8 карточек ТС + 8 карточек ТП с onclick-ключами', () => {
+    test('8 карточек ТС + 9 карточек ТП с onclick-ключами (Task 373: без бейджей, со звёздами)', () => {
         const vmw = makeVm();
         vmw.api.renderTempSensorCards();
         const rtd = vmw.els['tsRtdCards'].innerHTML;
         const tc = vmw.els['tsTcCards'].innerHTML;
         assertEqual((rtd.match(/class="ts-card"/g) || []).length, 8, '8 ТС-карточек');
-        assertEqual((tc.match(/class="ts-card ts-card-tc"/g) || []).length, 8, '8 ТП-карточек');
+        assertEqual((tc.match(/class="ts-card ts-card-tc"/g) || []).length, 9, '9 ТП-карточек (Task 373: + ТХК L)');
         assertTrue(rtd.indexOf("openTempSensor('cu50_1428')") !== -1, 'onclick Cu50');
         assertTrue(rtd.indexOf("openTempSensor('pt1000_1385')") !== -1, 'onclick Pt1000');
         assertTrue(tc.indexOf("openTempSensor('tc_K')") !== -1, 'onclick K');
+        assertTrue(tc.indexOf("openTempSensor('tc_L')") !== -1, 'Task 373: onclick ТХК (L)');
         assertTrue(tc.indexOf("openTempSensor('tc_B')") !== -1, 'onclick B');
-        assertTrue(rtd.indexOf('>ТС</span>') !== -1, 'бейдж ТС');
-        assertTrue(tc.indexOf('>ТП</span>') !== -1, 'бейдж ТП');
+        // Task 373: бейджи ТС/ТП убраны из карточек
+        assertTrue(rtd.indexOf('>ТС</span>') === -1, 'бейджа ТС нет');
+        assertTrue(tc.indexOf('>ТП</span>') === -1, 'бейджа ТП нет');
+        // Task 373: звезда избранного на каждой карточке
+        assertEqual((rtd.match(/ts-card-fav-btn/g) || []).length, 8, 'звёзды на ТС');
+        assertEqual((tc.match(/ts-card-fav-btn/g) || []).length, 9, 'звёзды на ТП');
         assertTrue(rtd.indexOf('50М (Cu50)') !== -1, 'имя на карточке ТС');
         assertTrue(tc.indexOf('ТХА (K)') !== -1, 'имя на карточке ТП');
+        assertTrue(tc.indexOf('ТХК (L)') !== -1, 'Task 373: карточка ТХК (L)');
         assertTrue(rtd.indexOf('НСХ: −50…200 °C') !== -1, 'диапазон на карточке Cu (минус U+2212)');
         assertTrue(tc.indexOf('НСХ: −270…1372 °C') !== -1, 'диапазон на карточке K');
+        assertTrue(tc.indexOf('НСХ: −200…800 °C') !== -1, 'Task 373: диапазон L');
+        assertEqual(vmw.els['tsAllCount'].textContent, '17', 'счётчик «Все»');
+        assertEqual(vmw.els['tsFavCount'].textContent, '0', 'счётчик «Избранные»');
     });
 
-    test('Идемпотентность: повторный вызов не перерисовывает', () => {
+    test('Task 373: повторный вызов перерисовывает (состояние звёзд)', () => {
         const vmw = makeVm();
         vmw.api.renderTempSensorCards();
-        // после первого рендера «дети» есть (эмуляция DOM)
-        vmw.els['tsRtdCards'].children = [1, 2, 3];
-        vmw.els['tsTcCards'].children = [1, 2];
-        const before = vmw.els['tsRtdCards'].innerHTML;
+        vmw.api.TempFav.add('cu50_1428');
         vmw.api.renderTempSensorCards();
-        assertEqual(vmw.els['tsRtdCards'].innerHTML, before, 'HTML не изменился');
+        assertTrue(vmw.els['tsRtdCards'].innerHTML.indexOf('★') !== -1, 'звезда отразилась');
+        assertEqual(vmw.els['tsFavCount'].textContent, '1', 'счётчик обновился');
     });
 });
 
@@ -323,6 +363,8 @@ describe('Task 372 — VM: openTempSensor — переход на страниц
             'заголовок страницы');
         assertTrue(vmw.els['tempSensorViewChip'].innerHTML.indexOf('50М (Cu50)') !== -1, 'чип: имя');
         assertTrue(vmw.els['tempSensorViewChip'].innerHTML.indexOf('R₀ = 50 Ом') !== -1, 'чип: meta');
+        assertTrue(vmw.els['tempSensorViewChip'].innerHTML.indexOf('ts-card-badge') === -1, 'Task 373: чип без бейджа');
+        assertEqual(vmw.els['tempQueryValLabel'].textContent, 'Сопротивление R(t), Ом', 'Task 373: подпись панели для ТС');
         assertEqual(vmw.els['temp_sensor_min'].value, '0', 'min = 0');
         assertEqual(vmw.els['temp_sensor_max'].value, '100', 'max = 100');
         assertEqual(vmw.els['temp_sensor_step'].value, '10', 'шаг = 10');
@@ -425,7 +467,7 @@ describe('Task 372 — VM: расчёт по выбранному датчику
             'тост про выбор датчика');
     });
 
-    test('ТС Cu50: таблица значений + панель произвольных значений', () => {
+    test('ТС Cu50: таблица значений (Task 373: панель — статичная, НЕ в результатах)', () => {
         const vmw = makeVm();
         vmw.api.openTempSensor('cu50_1428');
         vmw.els['temp_sensor_min'].value = '0';
@@ -436,13 +478,12 @@ describe('Task 372 — VM: расчёт по выбранному датчику
         assertTrue(html.indexOf('50М (Cu50)') !== -1, 'имя датчика в результатах');
         assertTrue(html.indexOf('60,7') !== -1, 'R(50) = 60,7 в таблице');
         assertTrue(html.indexOf('71,4') !== -1, 'R(100) = 71,4 в таблице');
-        const iTbl = html.indexOf('id="tempTableContainer"');
-        const iPanel = html.indexOf('id="tempCustomCalcPanel"');
-        assertTrue(iTbl !== -1 && iPanel !== -1 && iTbl < iPanel, 'панель под таблицей (Task 371 жив)');
-        assertTrue(html.indexOf('Сопротивление R(t), Ом') !== -1, 'подпись ТС');
+        assertTrue(html.indexOf('id="tempTableContainer"') !== -1, 'таблица есть');
+        assertTrue(html.indexOf('id="tempCustomCalcPanel"') === -1, 'Task 373: панели в результатах НЕТ (перенесена над форму)');
+        assertTrue(html.indexOf('Расчёт произвольных значений') === -1, 'заголовка панели в результатах нет');
     });
 
-    test('ТП K: таблица E(t) + подпись Термо-ЭДС', () => {
+    test('ТП K: таблица E(t) (Task 373: подписи панели — на странице, не в результатах)', () => {
         const vmw = makeVm();
         vmw.api.openTempSensor('tc_K');
         vmw.els['temp_sensor_min'].value = '0';
@@ -452,8 +493,9 @@ describe('Task 372 — VM: расчёт по выбранному датчику
         const html = vmw.els['tempSensorResults'].innerHTML;
         assertTrue(html.indexOf('ТХА (K)') !== -1, 'имя термопары');
         assertTrue(html.indexOf('4,096') !== -1, 'E(100) ≈ 4,096 мВ');
-        assertTrue(html.indexOf('Термо-ЭДС E(t), мВ') !== -1, 'подпись ТП в панели');
-        assertTrue(html.indexOf('Сопротивление R(t), Ом') === -1, 'без подписи ТС');
+        assertTrue(html.indexOf('id="tempCustomCalcPanel"') === -1, 'панели в результатах нет');
+        // подпись панели на странице датчика переключена под тип ТП
+        assertEqual(vmw.els['tempQueryValLabel'].textContent, 'Термо-ЭДС E(t), мВ', 'подпись ТП на статичной панели');
     });
 
     test('Живой пересчёт Task 371 — через состояние (tc_B)', () => {
@@ -504,15 +546,15 @@ describe('Task 372 — VM: расчёт по выбранному датчику
 // ============================================================
 // E. SW v601 (guard v602)
 // ============================================================
-describe('Task 372 — SW: версия кэша kipia-test-v601', () => {
+describe('Task 372 — SW: версия кэша kipia-test-v602', () => {
 
-    test('CACHE_VERSION = kipia-test-v601', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v601'") !== -1,
+    test('CACHE_VERSION = kipia-test-v602', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v602'") !== -1,
             'SW бампнут до v601');
     });
 
-    test('Guard: v602 ещё не существует', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v602') === -1,
+    test('Guard: v603 ещё не существует', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v603') === -1,
             'v602 не должен существовать (следующий бамп)');
     });
 });

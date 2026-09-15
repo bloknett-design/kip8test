@@ -7,20 +7,25 @@
 //   датчика — датчик теперь выбирается состоянием tempSensorKey
 //   (setSensor), а не выпадающими списками; диапазоны НСХ живут в
 //   каталоге getTempSensorCatalog(). Проверки Task 371 сохранены.
+// Task 373 (адаптация): панель «Расчёт произвольных значений» стала
+//   СТАТИЧНОЙ разметкой страницы датчика — НАД формой выбора предела
+//   измерения и шага таблицы (отображается всегда); генератор
+//   tempCustomCalcHtml удалён, из результатов calcTempSensor панель
+//   убрана. Живой расчёт (функции Task 371) — без изменений.
 //
 // ЧТО ПРОВЕРЯЕТСЯ:
-//   A. SRC — панель «Расчёт произвольных значений» в ОБЕИХ ветках
-//      calcTempSensor() (ТС: «Сопротивление R(t), Ом»; ТП: «Термо-ЭДС
-//      E(t), мВ»), ПОСЛЕ таблицы значений; разметка повторяет
-//      scaleCustomCalcPanel («Шкала-сигнал»); рефакторинг: карта типов
-//      ТС в одном месте (getRtdSensorMap); функции живого расчёта;
-//      диапазоны НСХ; обращение бисекцией; маркеры Task 371.
+//   A. SRC — панель «Расчёт произвольных значений» — статичная разметка
+//      страницы датчика НАД формой выбора (id tempQueryTemp/tempQueryVal,
+//      живые oninput-обработчики); calcTempSolver больше НЕ генерирует
+//      панель; рефакторинг: карта типов ТС в одном месте; функции живого
+//      расчёта; диапазоны НСХ; обращение бисекцией; маркеры Task 371.
 //   B. VM — живой двусторонний расчёт: Cu50/Pt100/Pt1000/ТП K, B
 //      (прямое значение и обратная задача, включая t<0°C с членом C),
 //      границы НСХ, тосты «вне диапазона НСХ» с очисткой поля.
-//   C. VM (calcTempSensor) — полный рендер: таблица + панель под ней,
-//      подписи полей по веткам, повторный «Рассчитать» перерисовывает.
-//   D. SW v600 (guard v601).
+//   C. VM (calcTempSensor) — таблица значений в результатах; панель —
+//      статичная (в результатах её нет), повторный «Рассчитать»
+//      перерисовывает.
+//   D. SW v602 (guard v603).
 
 const fs = require('fs');
 const path = require('path');
@@ -58,46 +63,48 @@ function parseRu(s) {
 // ============================================================
 describe('Task 371 — SRC: блок «Расчёт произвольных значений»', () => {
 
-    test('Панель в ветке ТС: «Сопротивление R(t), Ом», после таблицы', () => {
-        const call = "html+=tempCustomCalcHtml('Сопротивление R(t), Ом','Например: 61,8');";
-        assertTrue(INDEX_SRC.indexOf(call) !== -1, 'вызов в ветке ТС есть');
-        const ci = INDEX_SRC.indexOf(call);
-        const rtdBranch = INDEX_SRC.indexOf("if(type==='rtd'){");
-        const tcBranch = INDEX_SRC.indexOf('} else {', rtdBranch);
-        assertTrue(ci > rtdBranch && ci < tcBranch, 'вызов внутри ветки ТС');
-        // после закрытия таблицы и до записи innerHTML
-        const tbl = INDEX_SRC.lastIndexOf('html+=`</tbody></table></div>`;', ci);
-        const inner = INDEX_SRC.indexOf('resDiv.innerHTML=html;', ci);
-        assertTrue(tbl !== -1 && tbl < ci, 'панель после </tbody></table></div>');
-        assertTrue(inner !== -1 && ci < inner, 'панель до resDiv.innerHTML=html');
-    });
-
-    test('Панель в ветке ТП: «Термо-ЭДС E(t), мВ», после таблицы', () => {
-        const call = "html+=tempCustomCalcHtml('Термо-ЭДС E(t), мВ','Например: 2,2');";
-        assertTrue(INDEX_SRC.indexOf(call) !== -1, 'вызов в ветке ТП есть');
-        const ci = INDEX_SRC.indexOf(call);
-        const tbl = INDEX_SRC.lastIndexOf('html+=`</tbody></table></div>`;', ci);
-        const inner = INDEX_SRC.indexOf('resDiv.innerHTML=html;', ci);
-        assertTrue(tbl !== -1 && tbl < ci, 'панель после </tbody></table></div>');
-        assertTrue(inner !== -1 && ci < inner, 'панель до resDiv.innerHTML=html');
-    });
-
-    test('tempCustomCalcHtml: разметка повторяет «Шкала-сигнал»', () => {
-        const fn = grabFn('tempCustomCalcHtml');
-        assertTrue(fn !== null, 'функция объявлена');
-        for (const chunk of [
-            'id="tempCustomCalcPanel"',
+    test('Task 373: панель — статичная разметка НАД формой выбора, всегда видима', () => {
+        const i = INDEX_SRC.indexOf('id="tempSensorResults"');
+        const chunk = INDEX_SRC.slice(i, i + 200);
+        assertTrue(chunk.indexOf('tempCustomCalcPanel') === -1,
+            'в результатах панели нет — только в статичной разметке');
+        const iPanel = INDEX_SRC.indexOf('id="tempCustomCalcPanel"');
+        assertTrue(iPanel !== -1, 'панель есть в статичной разметке страницы');
+        const iRange = INDEX_SRC.indexOf('id="temp_sensor_min"');
+        const iStep = INDEX_SRC.indexOf('id="temp_sensor_step"');
+        assertTrue(iRange !== -1 && iStep !== -1, 'форма выбора на месте');
+        assertTrue(iPanel < iRange && iPanel < iStep, 'панель НАД формой (заявка Task 373)');
+        const panelChunk = INDEX_SRC.slice(iPanel, iRange);
+        for (const chunk2 of [
             'Расчёт произвольных значений',
             'Введите значение в любое поле — другое рассчитается автоматически',
             'id="tempQueryTemp"',
             'id="tempQueryVal"',
+            'id="tempQueryValLabel"',
             'oninput="tempQueryFromTemp()"',
             'oninput="tempQueryFromValue()"',
-            'class="scale-form"',
             'Температура (°C)'
         ]) {
-            assertTrue(fn.indexOf(chunk) !== -1, 'содержит: ' + chunk);
+            assertTrue(panelChunk.indexOf(chunk2) !== -1, 'панель содержит: ' + chunk2);
         }
+    });
+
+    test('Task 373: calcTempSensor НЕ генерирует панель (генератор удалён)', () => {
+        assertTrue(INDEX_SRC.indexOf('function tempCustomCalcHtml') === -1,
+            'генератор tempCustomCalcHtml удалён');
+        const fn = grabFn('calcTempSensor');
+        assertTrue(fn.indexOf('tempCustomCalcHtml') === -1,
+            'в calcTempSensor вызовов генератора нет');
+        // подпись/плейсхолдер под тип датчика задаёт openTempSensor
+        const op = grabFn('openTempSensor');
+        assertTrue(op.indexOf("vLab.textContent='Сопротивление R(t), Ом'") !== -1,
+            'openTempSensor: подпись ТС');
+        assertTrue(op.indexOf("vLab.textContent='Термо-ЭДС E(t), мВ'") !== -1,
+            'openTempSensor: подпись ТП');
+        assertTrue(op.indexOf("vInp.placeholder='Например: 61,8'") !== -1,
+            'openTempSensor: пример ТС');
+        assertTrue(op.indexOf("vInp.placeholder='Например: 2,2'") !== -1,
+            'openTempSensor: пример ТП');
     });
 
     test('Рефакторинг: карта типов ТС ровно в одном месте', () => {
@@ -111,7 +118,7 @@ describe('Task 371 — SRC: блок «Расчёт произвольных з�
     });
 
     test('Функции живого расчёта и диапазоны НСХ объявлены', () => {
-        for (const name of ['getRtdSensorMap', 'tempCustomCalcHtml', 'getTempSensorRange',
+        for (const name of ['getRtdSensorMap', 'getTempSensorRange',
                             'tempCalcForwardValue', 'tempCalcInvertValue',
                             'tempQueryFromTemp', 'tempQueryFromValue']) {
             assertTrue(grabFn(name) !== null, 'function ' + name + ' объявлена');
@@ -187,15 +194,15 @@ function makeTempVm() {
     };
     vm.createContext(ctx);
     // Task 372: датчик — из состояния tempSensorKey (карточка),
-    // не из выпадающих списков
+    // не из выпадающих списков; Task 373: tempCustomCalcHtml удалена
     const code = ['getRtdSensorMap', 'getTcSensorMap', 'getTempSensorCatalog',
-                  'tempSensorFindByKey', 'tempCustomCalcHtml', 'getTempSensorRange',
+                  'tempSensorFindByKey', 'getTempSensorRange',
                   'tempCalcForwardValue', 'tempCalcInvertValue',
                   'tempQueryFromTemp', 'tempQueryFromValue', 'calcTempSensor']
         .map(grabFn).join('\n');
     vm.runInContext('var tempSensorKey=null;\n' + code + '\n;globalThis.__api = {' +
         'getRtdSensorMap, getTcSensorMap, getTempSensorCatalog, tempSensorFindByKey, ' +
-        'tempCustomCalcHtml, getTempSensorRange, ' +
+        'getTempSensorRange, ' +
         'tempCalcForwardValue, tempCalcInvertValue, ' +
         'tempQueryFromTemp, tempQueryFromValue, calcTempSensor, ' +
         'setSensor: function(k){ tempSensorKey = k; }};', ctx);
@@ -400,21 +407,25 @@ describe('Task 371 — VM: живой расчёт ТП (температура 
         assertEqual(JSON.stringify(vmw.api.getTempSensorRange()), '{"min":-50,"max":1768}', 'R');
     });
 
-    test('tempCustomCalcHtml: подписи и примеры подставляются', () => {
-        const vmw = makeTempVm();
-        const rtd = vmw.api.tempCustomCalcHtml('Сопротивление R(t), Ом', 'Например: 61,8');
-        assertTrue(rtd.indexOf('Сопротивление R(t), Ом') !== -1, 'подпись ТС');
-        assertTrue(rtd.indexOf('Например: 61,8') !== -1, 'пример ТС');
-        const tc = vmw.api.tempCustomCalcHtml('Термо-ЭДС E(t), мВ', 'Например: 2,2');
-        assertTrue(tc.indexOf('Термо-ЭДС E(t), мВ') !== -1, 'подпись ТП');
-        assertTrue(tc.indexOf('Например: 2,2') !== -1, 'пример ТП');
-        assertTrue(tc.indexOf('Например: 55') !== -1, 'пример температуры общий');
+    test('Task 373: подписи панели подставляются под тип датчика (SRC)', () => {
+        // генератор удалён — подпись второго поля меняет openTempSensor
+        // (проверено в SRC выше); здесь — статичная разметка содержит
+        // оба варианта подстановки и общий пример температуры
+        const iPanel = INDEX_SRC.indexOf('id="tempCustomCalcPanel"');
+        const iRange = INDEX_SRC.indexOf('id="temp_sensor_min"');
+        const panel = INDEX_SRC.slice(iPanel, iRange);
+        assertTrue(panel.indexOf('placeholder="Например: 55"') !== -1, 'пример температуры общий');
+        assertTrue(panel.indexOf('placeholder="Например: 61,8"') !== -1, 'пример ТС (дефолт)');
+        assertTrue(panel.indexOf('Сопротивление R(t), Ом') !== -1, 'подпись ТС (дефолт)');
+        const op = grabFn('openTempSensor');
+        assertTrue(op.indexOf("Термо-ЭДС E(t), мВ") !== -1, 'подпись ТП подставляется');
+        assertTrue(op.indexOf("Например: 2,2") !== -1, 'пример ТП подставляется');
     });
 });
 
-describe('Task 371 — VM: calcTempSensor рендерит панель под таблицей', () => {
+describe('Task 371 — VM: calcTempSensor — таблица в результатах, панель — статичная', () => {
 
-    test('Ветка ТС: таблица → панель «Расчёт произвольных значений»', () => {
+    test('Ветка ТС: таблица есть, панели в результатах НЕТ (Task 373)', () => {
         const vmw = makeTempVm();
         setForm(vmw, 'rtd', 'cu50_1428', 'K');
         vmw.els['temp_sensor_min'] = { value: '0', style: {} };
@@ -423,19 +434,12 @@ describe('Task 371 — VM: calcTempSensor рендерит панель под �
         vmw.api.calcTempSensor();
         const html = vmw.els['tempSensorResults'].innerHTML;
         assertTrue(html.indexOf('tempTableContainer') !== -1, 'таблица есть');
-        const iTbl = html.indexOf('id="tempTableContainer"');
-        const iPanel = html.indexOf('id="tempCustomCalcPanel"');
-        assertTrue(iPanel !== -1, 'панель есть');
-        assertTrue(iTbl < iPanel, 'панель ПОД таблицей');
-        assertTrue(html.indexOf('Расчёт произвольных значений') !== -1, 'заголовок блока');
-        assertTrue(html.indexOf('Сопротивление R(t), Ом') !== -1, 'подпись поля ТС');
-        assertTrue(html.indexOf('id="tempQueryTemp"') !== -1 &&
-            html.indexOf('id="tempQueryVal"') !== -1, 'поля ввода');
-        assertTrue(html.indexOf('R(t), Ом') !== -1 && html.indexOf('E(t), мВ') === -1,
-            'ветка ТС — без подписи ТП');
+        assertTrue(html.indexOf('id="tempCustomCalcPanel"') === -1, 'панели в результатах нет (Task 373)');
+        assertTrue(html.indexOf('Расчёт произвольных значений') === -1, 'заголовка блока в результатах нет');
+        assertTrue(html.indexOf('id="tempQueryTemp"') === -1, 'полей панели в результатах нет');
     });
 
-    test('Ветка ТП: подпись «Термо-ЭДС E(t), мВ»', () => {
+    test('Ветка ТП: подписи панели в результатах нет', () => {
         const vmw = makeTempVm();
         setForm(vmw, 'tc', 'cu50_1428', 'K');
         vmw.els['temp_sensor_min'] = { value: '0', style: {} };
@@ -443,35 +447,47 @@ describe('Task 371 — VM: calcTempSensor рендерит панель под �
         vmw.els['temp_sensor_step'] = { value: '10', style: {} };
         vmw.api.calcTempSensor();
         const html = vmw.els['tempSensorResults'].innerHTML;
-        assertTrue(html.indexOf('Термо-ЭДС E(t), мВ') !== -1, 'подпись поля ТП');
-        assertTrue(html.indexOf('Сопротивление R(t), Ом') === -1, 'без подписи ТС');
-        const iTbl = html.indexOf('id="tempTableContainer"');
-        const iPanel = html.indexOf('id="tempCustomCalcPanel"');
-        assertTrue(iTbl !== -1 && iPanel !== -1 && iTbl < iPanel, 'панель под таблицей');
+        assertTrue(html.indexOf('Термо-ЭДС E(t), мВ') === -1, 'подписи ТП в результатах нет');
+        assertTrue(html.indexOf('Сопротивление R(t), Ом') === -1, 'подписи ТС в результатах нет');
+        assertTrue(html.indexOf('tempTableContainer') !== -1, 'таблица ТП есть');
     });
 
-    test('Панель появляется только после «Рассчитать» (до — пусто)', () => {
-        // #tempSensorResults стартует пустым (display:none в разметке),
-        // панель генерируется вместе с результатами — как в «Шкала-сигнал»
-        const i = INDEX_SRC.indexOf('id="tempSensorResults"');
-        const chunk = INDEX_SRC.slice(i, i + 200);
-        assertTrue(chunk.indexOf('tempCustomCalcPanel') === -1,
-            'в статичной разметке панели нет — только в генерируемой');
+    test('Task 373: панель — в статичной разметке страницы (видна всегда)', () => {
+        // Панель живёт в разметке #page-temp-sensor-view над формой выбора
+        // — не зависит от нажатия «Рассчитать» (заявка Task 373)
+        const b = (function () {
+            const i = INDEX_SRC.indexOf('<div id="page-temp-sensor-view"');
+            let pos = i, depth = 0, started = false;
+            while (pos < INDEX_SRC.length) {
+                const m = /<\/?div\b/.exec(INDEX_SRC.slice(pos));
+                if (!m) break;
+                pos = pos + m.index;
+                if (INDEX_SRC[pos + 1] === '/') { depth--; } else { depth++; started = true; }
+                pos += 4;
+                if (started && depth === 0) return INDEX_SRC.slice(i, pos);
+            }
+            return null;
+        })();
+        assertTrue(b !== null, 'страница датчика есть');
+        assertTrue(b.indexOf('id="tempCustomCalcPanel"') !== -1, 'панель в разметке страницы');
+        assertTrue(b.indexOf('id="temp_sensor_min"') !== -1, 'форма выбора в разметке');
+        assertTrue(b.indexOf('id="tempCustomCalcPanel"') < b.indexOf('id="temp_sensor_min"'),
+            'панель НАД формой — отображается всегда');
     });
 });
 
 // ============================================================
 // D. SW v600 (guard v601)
 // ============================================================
-describe('Task 371 — SW: версия кэша kipia-test-v601', () => {
+describe('Task 371 — SW: версия кэша kipia-test-v602', () => {
 
-    test('CACHE_VERSION = kipia-test-v601', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v601'") !== -1,
+    test('CACHE_VERSION = kipia-test-v602', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v602'") !== -1,
             'SW бампнут до v600');
     });
 
-    test('Guard: v602 ещё не существует', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v602') === -1,
+    test('Guard: v603 ещё не существует', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v603') === -1,
             'v601 не должен существовать (следующий бамп)');
     });
 });
