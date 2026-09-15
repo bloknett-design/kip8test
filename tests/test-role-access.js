@@ -1900,8 +1900,10 @@ describe('Конвертеры: три равные колонки (Task 177/178
 // КАЛЬКУЛЯТОРЫ разделов «КИП и А» и «Электротехника»:
 // scale-signal, circuit-breaker, orifice-quick/dp/flow/diameter,
 // error-pressure/temp-rtd/temp-tc/flow/level/generic-*/scale/kit,
-// buoy-calc, temp-sensors. Колонки: ввод+кнопка | результаты |
-// справочная информация. Мобильный вид не меняется.
+// buoy-calc, temp-sensor-view (Task 372: расчётная страница датчика
+// температуры — сама temp-sensors стала страницей карточек).
+// Колонки: ввод+кнопка | результаты | справочная информация.
+// Мобильный вид не меняется.
 // ------------------------------------------------------------
 describe('Инженерные калькуляторы: три равные колонки (Task 179)', function () {
     const html = fs.readFileSync(path.resolve(__dirname, '..', 'index.html'), 'utf-8');
@@ -1926,7 +1928,7 @@ describe('Инженерные калькуляторы: три равные к�
         ['error-scale',           'converter-convert-btn',  'ws_results',           3],
         ['error-kit',             'converter-convert-btn',  'errorKitResults',     1],
         ['buoy-calc',             'converter-convert-btn',  'buoyResults',          1],
-        ['temp-sensors',          'converter-convert-btn',  'tempSensorResults',    1],
+        ['temp-sensor-view',      'converter-convert-btn',  'tempSensorResults',    1],   // Task 372
         // — Электротехника —
         ['circuit-breaker',       'converter-convert-btn',  'cbResults',            1],
     ];
@@ -2034,8 +2036,9 @@ describe('Инженерные калькуляторы: три равные к�
     });
 
     test('Селекторные страницы НЕ получили класс conv-3col-page', function () {
-        // orifice-select, error-select, buoy-select — это меню выбора, не калькуляторы
-        ['orifice-select', 'error-select', 'buoy-select', 'error-generic'].forEach(id => {
+        // orifice-select, error-select, buoy-select — это меню выбора, не калькуляторы.
+        // Task 372: temp-sensors стала страницей карточек (расчёт — на temp-sensor-view)
+        ['orifice-select', 'error-select', 'buoy-select', 'error-generic', 'temp-sensors'].forEach(id => {
             assertTrue(html.indexOf('<div id="page-' + id + '" class="page-content conv-3col-page">') === -1,
                 'страница-меню «' + id + '» не должна быть трёхколоночной');
         });

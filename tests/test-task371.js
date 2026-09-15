@@ -3,6 +3,10 @@
 //   калькуляторы / КИП и А / Датчики температуры, под блоком Таблица
 //   значений добавь блок Расчёт произвольных значений, по примеру
 //   как в разделе Шкала-сигнал.»
+// Task 372 (адаптация): раздел переделан на страницу карточек + страницу
+//   датчика — датчик теперь выбирается состоянием tempSensorKey
+//   (setSensor), а не выпадающими списками; диапазоны НСХ живут в
+//   каталоге getTempSensorCatalog(). Проверки Task 371 сохранены.
 //
 // ЧТО ПРОВЕРЯЕТСЯ:
 //   A. SRC — панель «Расчёт произвольных значений» в ОБЕИХ ветках
@@ -115,13 +119,17 @@ describe('Task 371 — SRC: блок «Расчёт произвольных з�
     });
 
     test('Диапазоны НСХ: Cu −50…200, Pt −200…850, ТП по типам', () => {
-        const fn = grabFn('getTempSensorRange');
+        // Task 372: единый источник диапазонов — каталог карточек
+        const fn = grabFn('getTempSensorCatalog');
         assertTrue(fn.indexOf('{min:-50,max:200}') !== -1, 'Cu: −50…200');
         assertTrue(fn.indexOf('{min:-200,max:850}') !== -1, 'Pt: −200…850');
-        assertTrue(fn.indexOf('K:[-270,1372]') !== -1, 'K: −270…1372');
-        assertTrue(fn.indexOf('B:[0,1820]') !== -1, 'B: 0…1820');
-        assertTrue(fn.indexOf('T:[-270,400]') !== -1, 'T: −270…400');
-        assertTrue(fn.indexOf('R:[-50,1768]') !== -1, 'R: −50…1768');
+        assertTrue(fn.indexOf('[-270,1372]') !== -1, 'K: −270…1372');
+        assertTrue(fn.indexOf('[0,1820]') !== -1, 'B: 0…1820');
+        assertTrue(fn.indexOf('[-270,400]') !== -1, 'T: −270…400');
+        assertTrue(fn.indexOf('[-50,1768]') !== -1, 'R: −50…1768');
+        const gr = grabFn('getTempSensorRange');
+        assertTrue(gr.indexOf('sel.range.min') !== -1, 'getTempSensorRange читает каталог');
+        assertTrue(gr.indexOf('{min:-50,max:200}') !== -1, 'фолбэк getTempSensorRange');
     });
 
     test('Инверсия — бисекция по монотонной НСХ', () => {
@@ -163,7 +171,7 @@ function makeTempVm() {
     const document = {
         getElementById: id => (els[id] || (els[id] = {
             value: '', style: {}, innerHTML: '', textContent: '',
-            scrollIntoView: () => {}
+            scrollIntoView: () => {}, children: []
         }))
     };
     const toasts = [];
@@ -178,21 +186,25 @@ function makeTempVm() {
         setTimeout: () => 0
     };
     vm.createContext(ctx);
-    const code = ['getRtdSensorMap', 'tempCustomCalcHtml', 'getTempSensorRange',
+    // Task 372: датчик — из состояния tempSensorKey (карточка),
+    // не из выпадающих списков
+    const code = ['getRtdSensorMap', 'getTcSensorMap', 'getTempSensorCatalog',
+                  'tempSensorFindByKey', 'tempCustomCalcHtml', 'getTempSensorRange',
                   'tempCalcForwardValue', 'tempCalcInvertValue',
                   'tempQueryFromTemp', 'tempQueryFromValue', 'calcTempSensor']
         .map(grabFn).join('\n');
-    vm.runInContext(code + '\n;globalThis.__api = {' +
-        'getRtdSensorMap, tempCustomCalcHtml, getTempSensorRange, ' +
+    vm.runInContext('var tempSensorKey=null;\n' + code + '\n;globalThis.__api = {' +
+        'getRtdSensorMap, getTcSensorMap, getTempSensorCatalog, tempSensorFindByKey, ' +
+        'tempCustomCalcHtml, getTempSensorRange, ' +
         'tempCalcForwardValue, tempCalcInvertValue, ' +
-        'tempQueryFromTemp, tempQueryFromValue, calcTempSensor};', ctx);
+        'tempQueryFromTemp, tempQueryFromValue, calcTempSensor, ' +
+        'setSensor: function(k){ tempSensorKey = k; }};', ctx);
     return { els, toasts, api: ctx.__api };
 }
 
+// Task 372: выбор датчика — ключ каталога (ТС — ключ карты ТС, ТП — 'tc_'+тип)
 function setForm(vm, type, rtd, tc) {
-    vm.els['temp_sensor_type'] = { value: type, style: {} };
-    vm.els['temp_rtd_type'] = { value: rtd, style: {} };
-    vm.els['temp_tc_type'] = { value: tc, style: {} };
+    vm.api.setSensor(type === 'rtd' ? rtd : ('tc_' + tc));
     vm.els['tempQueryTemp'] = { value: '', style: {} };
     vm.els['tempQueryVal'] = { value: '', style: {} };
 }
@@ -451,15 +463,15 @@ describe('Task 371 — VM: calcTempSensor рендерит панель под �
 // ============================================================
 // D. SW v600 (guard v601)
 // ============================================================
-describe('Task 371 — SW: версия кэша kipia-test-v600', () => {
+describe('Task 371 — SW: версия кэша kipia-test-v601', () => {
 
-    test('CACHE_VERSION = kipia-test-v600', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v600'") !== -1,
+    test('CACHE_VERSION = kipia-test-v601', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v601'") !== -1,
             'SW бампнут до v600');
     });
 
-    test('Guard: v601 ещё не существует', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v601') === -1,
+    test('Guard: v602 ещё не существует', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v602') === -1,
             'v601 не должен существовать (следующий бамп)');
     });
 });
