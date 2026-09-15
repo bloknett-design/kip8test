@@ -479,15 +479,15 @@ describe('Task 371 — VM: calcTempSensor — таблица в результа
 // ============================================================
 // D. SW v600 (guard v601)
 // ============================================================
-describe('Task 371 — SW: версия кэша kipia-test-v602', () => {
+describe('Task 371 — SW: версия кэша kipia-test-v603', () => {
 
-    test('CACHE_VERSION = kipia-test-v602', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v602'") !== -1,
+    test('CACHE_VERSION = kipia-test-v603', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v603'") !== -1,
             'SW бампнут до v600');
     });
 
-    test('Guard: v603 ещё не существует', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v603') === -1,
+    test('Guard: v604 ещё не существует', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v604') === -1,
             'v601 не должен существовать (следующий бамп)');
     });
 });
