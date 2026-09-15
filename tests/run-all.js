@@ -175,6 +175,7 @@ require('./test-task373.js');
 // Task 374 — «Датчики температуры»: кнопка «Копировать» над таблицами
 // значений убрана (соседние разделы не тронуты)
 require('./test-task374.js');
+require('./test-task375.js');
 require('./test-deploy-url.js');
 
 // Запускаем

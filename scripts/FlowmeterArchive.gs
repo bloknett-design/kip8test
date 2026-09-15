@@ -100,6 +100,17 @@ var FlowmeterArchive = {
   // Разные показания расходятся хотя бы одним полем ключа (новое
   // значение → curr; новая дата → dateCurr; правка в окне 1 ч идёт
   // через updateLatestReading — на месте, без appendToArchive).
+  //
+  // Task 375 («окно 1 часа»): ДВА правила дубля —
+  //   1) точный ключ A+C+D+G+R (повтор доставки одного payload);
+  //   2) «свежий повтор значения»: тот же meterId + curr + dateCurr +
+  //      entryType записан НЕ БОЛЕЕ ЧАСА НАЗАД (O-таймштамп строки),
+  //      независимо от prev. Ловит «двойной сдвиг» prev при повторном
+  //      срабатывании «Сохранить» (второй payload = prev сдвинут,
+  //      точный ключ не совпадает) и прочие задвоения в окне правки —
+  //      ровно тот период, когда повторная запись той же даты/значения
+  //      всегда избыточна. Позже часа правило не действует (не мешает
+  //      редким осознанным повторным вводам).
   // Сканируем хвост архива (последние 50 строк) — дубль всегда среди
   // свежих строк. Вызывается ТОЛЬКО из appendToArchive внутри
   // Utils.withLock (атомарность «прочитал хвост → дописал»; замок
@@ -128,12 +139,20 @@ var FlowmeterArchive = {
       for (var i = values.length - 1; i >= 0; i--) {
         var row = values[i] || [];
         if (String(parseInt(row[0], 10)) !== idNeedle) continue;      // A: meterId
-        if (String(parseFloat(row[2])) !== prevNeedle) continue;      // C: prev
         if (String(parseFloat(row[3])) !== currNeedle) continue;      // D: curr
         if (this._normEntryType(row[17]) !== etNeedle) continue;       // R: entryType
         var g = row[6];                                                // G: dateCurr (Date)
-        if (g instanceof Date &&
-            g.getFullYear() * 10000 + (g.getMonth() + 1) * 100 + g.getDate() === needleDay) {
+        if (!(g instanceof Date) ||
+            g.getFullYear() * 10000 + (g.getMonth() + 1) * 100 + g.getDate() !== needleDay) {
+          continue;
+        }
+        // Правило 1 (Task 366): точный ключ — совпадает и prev
+        if (String(parseFloat(row[2])) === prevNeedle) return true;   // C: prev
+        // Правило 2 (Task 375): «свежий повтор значения» — та же запись
+        // того же значения за ту же дату моложе 1 часа (O: timestamp),
+        // независимо от prev («двойной сдвиг» при повторном «Сохранить»)
+        var o = row[14];                                               // O: timestamp
+        if (o instanceof Date && (new Date() - o) <= 60 * 60 * 1000) {
           return true;
         }
       }

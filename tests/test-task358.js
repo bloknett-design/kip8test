@@ -484,7 +484,8 @@ function flushMixin(apiRoutes, storage) {
     const names = ['_outboxLoad', '_outboxSave', '_outboxAdd', '_outboxRemove',
                    '_outboxUpdate', '_outboxCount', '_outboxIsPermanentError',
                    '_sendOutboxEntry', '_flushOutbox', '_reshowAnomalyModal',
-                   '_outboxFlushBeacons'];
+                   '_outboxFlushBeacons',
+                   '_outboxCollapseDuplicates'];   // Task 375: свёртка дублей в флаше
     const parts = names.map(n => extractMethod(INDEX_SRC, n)).filter(Boolean);
     if (parts.length !== names.length) return null;
     const toasts = [];
@@ -637,12 +638,12 @@ describe('Task 358 — VM: _flushOutbox (дедуп + доставка)', () => 
 // SW-версия
 // ============================================================
 describe('Task 358 — SW: бамп кэша', () => {
-    test('CACHE_VERSION = kipia-test-v603', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v603'") !== -1,
+    test('CACHE_VERSION = kipia-test-v604', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v604'") !== -1,
             'версия кэша поднята до v587');
     });
     test('нет v586 (старая) и нет v588 (двойной бамп)', () => {
         assertTrue(SW_SRC.indexOf('kipia-test-v586') === -1, 'старая версия не осталась');
-        assertTrue(SW_SRC.indexOf('kipia-test-v604') === -1, 'двойного бампа не было');
+        assertTrue(SW_SRC.indexOf('kipia-test-v605') === -1, 'двойного бампа не было');
     });
 });

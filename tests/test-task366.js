@@ -363,10 +363,15 @@ describe('Task 366 — VM сервер: разные показания НЕ с�
     });
 
     test('Другое prev — новая строка', () => {
+        // Task 375: правило «окно 1 часа» считает свежий повтор значения
+        // (другой prev, тот же curr+дата) дублем; исходный смысл теста —
+        // «расхождение prev дописывает строку» — сохранён для записи
+        // СТАРШЕ часа (вне окна правки). Свежий случай — в test-task375.
         const rows = [archRow(2, 383291, 383400, D(2026, 9, 9), 'сутки')];
+        rows[0][14] = new Date(Date.now() - 2 * 60 * 60 * 1000);   // O: 2 ч назад
         const a = archiveVM(rows);
         a.obj.appendToArchive(2, 'Х', 383400, 383400, '9/8/2026', '9/9/2026', null, null, 'м³', 'Ежедневно', 'Админ', 'И', '', '', 'сутки');
-        assertEqual(rows.length, 2, 'расхождение ключа C');
+        assertEqual(rows.length, 2, 'расхождение ключа C (запись старше 1 ч)');
     });
 
     test('Другая дата — новая строка', () => {
@@ -461,13 +466,13 @@ describe('Task 366 — VM сервер: устойчивость', () => {
 // ============================================================
 describe('Task 366 — SW кэш', () => {
 
-    test('SW: CACHE_VERSION = kipia-test-v603', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v603'") !== -1,
+    test('SW: CACHE_VERSION = kipia-test-v604', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v604'") !== -1,
             'версия кэша поднята до v595');
     });
 
     test('SW: нет v594 (старая) и нет v596 (двойной бамп)', () => {
         assertTrue(SW_SRC.indexOf('kipia-test-v594') === -1, 'старая версия не осталась');
-        assertTrue(SW_SRC.indexOf('kipia-test-v604') === -1, 'двойного бампа не было');
+        assertTrue(SW_SRC.indexOf('kipia-test-v605') === -1, 'двойного бампа не было');
     });
 });

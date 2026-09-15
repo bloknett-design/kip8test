@@ -13,7 +13,7 @@
 //     обёртки на всю ширину; каждая запись/код — отдельной
 //     строкой своего столбика (как в Task 360).
 //
-// SW: kipia-test-v603.
+// SW: kipia-test-v604.
 //
 // Запуск: через tests/run-all.js (require './test-task364.js').
 
@@ -103,7 +103,7 @@ describe('Task 364 — SRC: wsp-bottom на печати', () => {
             'колонки в один ряд (мероприятия слева, коды справа)');
         assertTrue(r.indexOf('align-items: flex-start') !== -1,
             'колонки от общего верха');
-        assertTrue(r.indexOf('gap: 5mm') !== -1, 'зазор между столбиками 5mm');
+        assertTrue(r.indexOf('gap: 10px') !== -1, 'зазор между столбиками 10px (Task 375: «на расстоянии 10px»)');
         assertTrue(r.indexOf('margin-top: 2.5mm') !== -1,
             'отступ от таблицы перенесён на обёртку');
     });
@@ -259,8 +259,8 @@ describe('Task 364 — VM: ряд мероприятий|кодов в печа�
 // 4. SW — версия кеша
 // ============================================================
 describe('Task 364 — SW: версия кеша', () => {
-    test('SW: CACHE_VERSION = kipia-test-v603', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v603'") !== -1,
+    test('SW: CACHE_VERSION = kipia-test-v604', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v604'") !== -1,
             'SW поднят до v593 (рамка 2px + коды справа от мероприятий)');
     });
 });
