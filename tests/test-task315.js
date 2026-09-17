@@ -41,7 +41,7 @@
 //     форматы дат; пустой месяц; счётчик; скрытие hidden),
 //     _updateSaveBtn (n=0 скрыта / n=2 показана), cancelAll
 //     (сброс правок, тост).
-//   SW: kipia-test-v606.
+//   SW: kipia-test-v607.
 //
 // Запуск: через tests/run-all.js (require './test-task315.js').
 
@@ -315,7 +315,8 @@ describe('Task 315 — VM: окно мероприятий месяца', () => 
             '_EMPLOYEES: ' + JSON.stringify(employees) + ',' +
             '_STATUS_CODES: [],' +
             '_esc: function(s){ return String(s == null ? "" : s); },' +
-            '_escAttr: function(s){ return String(s == null ? "" : s); },',
+            '_escAttr: function(s){ return String(s == null ? "" : s); },' +
+            '_barExpSync: function() {},',
             { document: document }
         );
         ctx._renderMonthEventsPanel();
@@ -352,6 +353,7 @@ describe('Task 315 — VM: окно мероприятий месяца', () => 
             '_STATUS_CODES: ' + JSON.stringify(CODES) + ',' +
             '_esc: function(s){ return String(s == null ? "" : s); },' +
             '_escAttr: function(s){ return String(s == null ? "" : s); },' +
+            '_barExpSync: function() {},' +
             '});');
         const ctx = make(null, document, null, null, null);
         ctx._renderMonthEventsPanel();
@@ -485,10 +487,10 @@ describe('Task 315 — VM: кнопки «Сохранить»/«Отменит�
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 315 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v606', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v606') !== -1,
+    test('SW: версия кэша kipia-test-v607', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v607') !== -1,
             'SW поднят до v556 (Task 317 — тултип «данные от», три ряда кнопок)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v607') !== -1,
+        assertFalse(SW_SRC.indexOf('kipia-test-v608') !== -1,
             'лишний инкремент не делался');
     });
 });

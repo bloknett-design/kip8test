@@ -374,11 +374,12 @@ describe('Task 321 — CSS: итоги в тёмной и светлой тем�
             'прилипающий tfoot итоговой строки удалён');
         assertTrue(/\.ws-tt-table td\.ws-tt-hours\s*\{[^}]*#4ac771/.test(INDEX_SRC),
             'часы выделены зелёным');
-        // Task 322: зебра строк
-        assertTrue(/\.ws-tt-table tbody tr:nth-child\(even\)\s*\{[^}]*background/.test(INDEX_SRC),
-            'зебра: чётные строки с подложкой');
-        assertTrue(/\[data-theme="light"\] \.ws-tt-table tbody tr:nth-child\(even\)\s*\{[^}]*rgba\(0,\s*0,\s*0/.test(INDEX_SRC),
-            'зебра в светлой теме');
+        // Task 378 (заявка: «фон пустых ячеек #FFFFFF … как в шахматке»):
+        // зебра строк итогов УДАЛЕНА — ячейки значений непрозрачные
+        assertFalse(/\.ws-tt-table tbody tr:nth-child\(even\)\s*\{[^}]*background/.test(INDEX_SRC),
+            'зебра строк итогов удалена (Task 378: непрозрачные ячейки)');
+        assertTrue(/\[data-theme="light"\] \.ws-tt-table tbody td\.ws-tt-num\s*\{[^}]*#FFFFFF/.test(INDEX_SRC),
+            'ячейки значений — #FFFFFF (Task 378)');
     });
 
     test('CSS: мобильная шторка — fixed-оверлей (Task 323 → 325: ✕ удалён)', () => {
@@ -1090,10 +1091,10 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
 // 11. SW: версия кэша
 // ============================================================
 describe('Task 321 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v606 (Task 323)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v606'") !== -1,
-            'CACHE_VERSION = kipia-test-v606');
-        assertFalse(SW_SRC.indexOf('kipia-test-v607') !== -1,
+    test('SW: кэш поднят до kipia-test-v607 (Task 323)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v607'") !== -1,
+            'CACHE_VERSION = kipia-test-v607');
+        assertFalse(SW_SRC.indexOf('kipia-test-v608') !== -1,
             'v561 не существует (один инкремент на Task 321)');
     });
 });

@@ -35,7 +35,7 @@
 //   Сервер: listEntries читает 11 колонок (часы: число/null/
 //   нормализация «7,2»); setManualEntry валидирует 0,5..24, пишет
 //   колонку K (обновление и вставка), часы=null без поля, аудит.
-//   SW: kipia-test-v606.
+//   SW: kipia-test-v607.
 //
 // Запуск: через tests/run-all.js (require './test-task322.js').
 
@@ -98,20 +98,22 @@ describe('Task 322 — HTML: шит правки ячейки', () => {
 // 2. CSS: зебра, колонка переработки, полная высота, форма часов
 // ============================================================
 describe('Task 322 — CSS: оформление итогов и формы часов', () => {
-    test('CSS: ЗЕБРА строк таблицы итогов (тёмная и светлая)', () => {
-        const m = INDEX_SRC.match(/\.ws-tt-table tbody tr:nth-child\(even\)\s*\{[^}]*\}/);
-        assertTrue(!!m, 'правило зебры есть');
-        assertTrue(m[0].indexOf('background') !== -1, 'подложка чётных строк');
-        assertTrue(/rgba\(255,\s*255,\s*255,\s*0\.0\d+\)/.test(m[0]),
-            'деликатный светлый тинт в тёмной теме');
-        const l = INDEX_SRC.match(/\[data-theme="light"\] \.ws-tt-table tbody tr:nth-child\(even\)\s*\{[^}]*\}/);
-        assertTrue(!!l, 'зебра в светлой теме');
-        assertTrue(/rgba\(0,\s*0,\s*0,\s*0\.0\d+\)/.test(l[0]),
-            'тёмный тинт в светлой теме');
+    test('CSS: Task 378 — зебра УДАЛЕНА, ячейки непрозрачные (#FFFFFF)', () => {
+        // Заявка: «фон пустых ячеек #FFFFFF … полосы — как в шахматке»:
+        // зебра строк не просвечивает сквозь непрозрачные ячейки —
+        // правила удалены
+        assertFalse(/\.ws-tt-table tbody tr:nth-child\(even\)\s*\{[^}]*background/.test(INDEX_SRC),
+            'правила зебры строк итогов нет (Task 378)');
+        assertFalse(/\[data-theme="light"\] \.ws-tt-table tbody tr:nth-child\(even\)\s*\{[^}]*background/.test(INDEX_SRC),
+            'светлой зебры нет');
+        assertTrue(/\[data-theme="light"\] \.ws-tt-table tbody td\.ws-tt-num\s*\{[^}]*background:\s*#FFFFFF/.test(INDEX_SRC),
+            'ячейки значений светлой темы — #FFFFFF');
+        assertTrue(/\[data-theme="dark"\] \.ws-tt-table tbody td\.ws-tt-num\s*\{[^}]*#eef0f2/.test(INDEX_SRC),
+            'тёмная тема — светлые цвета шахматки (#eef0f2 + brightness)');
     });
 
     test('CSS: колонка «Переработка» — янтарная, жирная (обе темы)', () => {
-        const m = INDEX_SRC.match(/\.ws-tt-table td\.ws-tt-over\s*\{[^}]*\}/);
+        const m = INDEX_SRC.match(/\n    \.ws-tt-table td\.ws-tt-over\s*\{[^}]*\}/);
         assertTrue(!!m, 'правило ws-tt-over есть');
         assertTrue(m[0].indexOf('font-weight: 700') !== -1, 'жирная');
         assertTrue(m[0].indexOf('#e0a23c') !== -1, 'янтарный цвет (тёмная)');
@@ -946,10 +948,10 @@ describe('Task 322 — итоги: слова в шапке и колонка П
 // 11. SW: версия кэша
 // ============================================================
 describe('Task 322 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v606 (Task 322)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v606'") !== -1,
-            'CACHE_VERSION = kipia-test-v606');
-        assertFalse(SW_SRC.indexOf('kipia-test-v607') !== -1,
+    test('SW: кэш поднят до kipia-test-v607 (Task 322)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v607'") !== -1,
+            'CACHE_VERSION = kipia-test-v607');
+        assertFalse(SW_SRC.indexOf('kipia-test-v608') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });

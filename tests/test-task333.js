@@ -43,7 +43,7 @@
 //   HTML: #wsViewBtn — ПОДПИСЬ «Вид» (span.ws-view-label после
 //     иконок); CSS .ws-view-btn — width: auto + паддинги (не
 //     квадрат-иконка), .ws-view-label — 13px/600.
-//   SW: kipia-test-v606.
+//   SW: kipia-test-v607.
 //
 // Запуск: через tests/run-all.js (require './test-task333.js').
 
@@ -165,12 +165,12 @@ describe('Task 333 — подсветка строк шторки', () => {
     test('CSS: .ws-tt-table tr.ws-hover-row td — inset-заливка', () => {
         const block = ruleBlock('.ws-tt-table tbody tr.ws-hover-row td {');
         assertTrue(block.length > 0, 'правило найдено');
-        assertTrue(/box-shadow:\s*inset 0 0 0 999px rgba\(74, 143, 199, 0\.10\)/.test(block),
-            'тёмная — тот же тинт, что у строки сетки (0.10)');
+        assertTrue(/box-shadow:\s*inset 0 0 0 999px rgba\(74, 143, 199, 0\.30\)/.test(block),
+            'тёмная — тот же тинт, что у строки сетки (Task 378: 0.30 = «сегодня»)');
         const light = ruleBlock('[data-theme="light"] .ws-tt-table tbody tr.ws-hover-row td {');
         assertTrue(light.length > 0, 'светлое правило найдено');
-        assertTrue(/rgba\(42, 93, 143, 0\.06\)/.test(light),
-            'светлая — тот же тинт, что у строки сетки (0.06)');
+        assertTrue(/rgba\(42, 93, 143, 0\.22\)/.test(light),
+            'светлая — тот же тинт, что у строки сетки (Task 378: 0.22 = «сегодня»)');
     });
 
     test('JS: _rowClass — класс ставится и в сетке, и в шторке', () => {
@@ -472,10 +472,10 @@ describe('Task 333 — кнопка вида: подпись «Вид»', () => 
 // ============================================================
 describe('Task 333 — SW: версия кэша', () => {
 
-    test('SW: кэш поднят до kipia-test-v606 (Task 333)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v606') !== -1,
-            'в sw.js — kipia-test-v606');
-        assertFalse(SW_SRC.indexOf('kipia-test-v607') !== -1,
+    test('SW: кэш поднят до kipia-test-v607 (Task 333)', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v607') !== -1,
+            'в sw.js — kipia-test-v607');
+        assertFalse(SW_SRC.indexOf('kipia-test-v608') !== -1,
             'лишний инкремент (v577) не сделан');
     });
 });

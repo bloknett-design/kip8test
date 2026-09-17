@@ -43,7 +43,7 @@
 //     → под кнопкой, без бара → прежнее поведение);
 //     _openEventsOnlyPopup (рендер окна, кловер, позиция, без
 //     окна кодов).
-//   SW: kipia-test-v606.
+//   SW: kipia-test-v607.
 //
 // Запуск: через tests/run-all.js (require './test-task319.js').
 
@@ -171,37 +171,37 @@ describe('Task 319 — перекрестье: строка и столбец', 
         const iOut = init.indexOf("addEventListener('mouseout'");
         assertTrue(iOver !== -1 && iOut !== -1 && iOver < iOut,
             'оба слушателя (mouseover, затем mouseout)');
-        assertTrue(init.indexOf("e.target.closest('td.ws-cell')") !== -1,
-            'ячейка дня находится closest(td.ws-cell)');
+        assertTrue(init.indexOf("e.target.closest('td.ws-cell, td.ws-emp-col')") !== -1,
+            'ячейка дня ИЛИ ФИО находится closest (Task 378: ФИО тоже подсвечивает строку)');
         assertTrue(init.indexOf('tr.sectionRowIndex') !== -1,
             'строка — sectionRowIndex (порядок tbody)');
-        assertTrue(init.indexOf("to.closest('td.ws-cell')") !== -1,
-            'mouseout: переход на другую ячейку — подсветку НЕ трогаем');
+        assertTrue(init.indexOf("to.closest('td.ws-cell, td.ws-emp-col')") !== -1,
+            'mouseout: переход на другую ячейку/ФИО — подсветку НЕ трогаем');
     });
 
     test('CSS: перекрестье — тёмная тема', () => {
-        assertTrue(cssRule(/\.ws-grid tbody tr\.ws-hover-row td\.ws-cell \{[^}]*rgba\(74, 143, 199, 0\.10\)[^}]*\}/s),
-            'строка — inset 0.10 (мягче столбца 0.16)');
-        assertTrue(cssRule(/tr\.ws-hover-row td\.ws-cell\.ws-hover \{[^}]*rgba\(74, 143, 199, 0\.24\)[^}]*\}/s),
-            'ПЕРЕСЕЧЕНИЕ строки и столбца — 0.24 (насыщеннее)');
-        assertTrue(cssRule(/tr\.ws-hover-row td\.ws-cell\.ws-sel \{[^}]*rgba\(74, 143, 199, 0\.24\)[^}]*\}/s),
+        assertTrue(cssRule(/\.ws-grid tbody tr\.ws-hover-row td\.ws-cell \{[^}]*rgba\(74, 143, 199, 0\.30\)[^}]*\}/s),
+            'строка — inset 0.30 (Task 378: яркость «сегодня»)');
+        assertTrue(cssRule(/tr\.ws-hover-row td\.ws-cell\.ws-hover \{[^}]*rgba\(74, 143, 199, 0\.34\)[^}]*\}/s),
+            'ПЕРЕСЕЧЕНИЕ строки и столбца — 0.34 (насыщеннее, Task 378)');
+        assertTrue(cssRule(/tr\.ws-hover-row td\.ws-cell\.ws-sel \{[^}]*rgba\(74, 143, 199, 0\.34\)[^}]*\}/s),
             'выбранный кликом день в строке — выбор не затирается');
-        assertTrue(cssRule(/tr\.ws-hover-row td\.ws-cell\.ws-today \{[^}]*rgba\(74, 143, 199, 0\.32\)[^}]*\}/s),
-            '«сегодня» в наведённой строке (Task 377: усилено 0.20 → 0.32)');
-        assertTrue(cssRule(/tr\.ws-hover-row td\.ws-cell\.ws-source-manual \{[^}]*0\.10\),[^}]*1\.5px rgba\(255,255,255,0\.5\)[^}]*\}/s),
+        assertTrue(cssRule(/tr\.ws-hover-row td\.ws-cell\.ws-today \{[^}]*rgba\(74, 143, 199, 0\.34\)[^}]*\}/s),
+            '«сегодня» в наведённой строке (Task 377 → 378: 0.32 → 0.34)');
+        assertTrue(cssRule(/tr\.ws-hover-row td\.ws-cell\.ws-source-manual \{[^}]*0\.30\),[^}]*1\.5px rgba\(255,255,255,0\.5\)[^}]*\}/s),
             'рамка ручной записи не затирается заливкой строки');
-        assertTrue(cssRule(/tr\.ws-hover-row td\.ws-emp-col \{[^}]*rgba\(74, 143, 199, 0\.10\)[^}]*\}/s),
+        assertTrue(cssRule(/tr\.ws-hover-row td\.ws-emp-col \{[^}]*rgba\(74, 143, 199, 0\.30\)[^}]*\}/s),
             'ФИО-ячейка строки — «начало» перекрестья');
     });
 
     test('CSS: перекрестье — светлая тема (тон мягче)', () => {
-        assertTrue(cssRule(/\[data-theme="light"\] \.ws-grid tbody tr\.ws-hover-row td\.ws-cell \{[^}]*rgba\(42, 93, 143, 0\.06\)[^}]*\}/s),
-            'строка — 0.06');
-        assertTrue(cssRule(/\[data-theme="light"\][^{]*tr\.ws-hover-row td\.ws-cell\.ws-hover \{[^}]*rgba\(42, 93, 143, 0\.16\)[^}]*\}/s),
-            'пересечение — 0.16 (насыщеннее столбца 0.10)');
-        assertTrue(cssRule(/\[data-theme="light"\][^{]*tr\.ws-hover-row td\.ws-cell\.ws-sel \{[^}]*rgba\(42, 93, 143, 0\.15\)[^}]*\}/s),
-            'выбранный день сильнее строки');
-        assertTrue(cssRule(/\[data-theme="light"\][^{]*tr\.ws-hover-row td\.ws-emp-col \{[^}]*rgba\(42, 93, 143, 0\.06\)[^}]*\}/s),
+        assertTrue(cssRule(/\[data-theme="light"\] \.ws-grid tbody tr\.ws-hover-row td\.ws-cell \{[^}]*rgba\(42, 93, 143, 0\.22\)[^}]*\}/s),
+            'строка — 0.22 (Task 378: яркость «сегодня»)');
+        assertTrue(cssRule(/\[data-theme="light"\][^{]*tr\.ws-hover-row td\.ws-cell\.ws-hover \{[^}]*rgba\(42, 93, 143, 0\.26\)[^}]*\}/s),
+            'пересечение — 0.26 (насыщеннее, Task 378)');
+        assertTrue(cssRule(/\[data-theme="light"\][^{]*tr\.ws-hover-row td\.ws-cell\.ws-sel \{[^}]*rgba\(42, 93, 143, 0\.26\)[^}]*\}/s),
+            'выбранный день в строке — не затирается');
+        assertTrue(cssRule(/\[data-theme="light"\][^{]*tr\.ws-hover-row td\.ws-emp-col \{[^}]*rgba\(42, 93, 143, 0\.22\)[^}]*\}/s),
             'ФИО-ячейка (светлая)');
     });
 
@@ -512,10 +512,10 @@ describe('Task 319 — окно кодов и «Мероприятия в это
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 319 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v606', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v606') !== -1,
-            'CACHE_VERSION = kipia-test-v606 (Task 319)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v607') !== -1,
+    test('SW: версия кэша kipia-test-v607', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v607') !== -1,
+            'CACHE_VERSION = kipia-test-v607 (Task 319)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v608') !== -1,
             'нет лишнего инкремента');
     });
 });

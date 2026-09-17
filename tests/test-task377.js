@@ -40,7 +40,7 @@
 //       (0,3,2) — красная рамка побеждает порядком, как в тёмной);
 //     — тёмная тема НЕ тронута: rgba(0,0,0,0.30)/rgba(105,130,160,0.55)
 //       /rgba(140,158,188,0.55) живы.
-//   SW: kipia-test-v606 (+ guard v607).
+//   SW: kipia-test-v607 (+ guard v607).
 //
 // Запуск: через tests/run-all.js (require './test-task377.js').
 
@@ -74,13 +74,13 @@ describe('Task 377 — усиление подсветки «сегодня» (�
             'заливка 0.30 + рамка ручной записи');
     });
 
-    test('строка наведения + «сегодня»: 0.32 (было 0.20)', () => {
+    test('строка наведения + «сегодня»: 0.34 (Task 378: строка 0.30)', () => {
         const b = ruleBlock('.ws-grid tbody tr.ws-hover-row td.ws-cell.ws-today {');
-        assertTrue(b !== null && /rgba\(74, 143, 199, 0\.32\)/.test(b),
-            'row+today: 0.32');
+        assertTrue(b !== null && /rgba\(74, 143, 199, 0\.34\)/.test(b),
+            'row+today: 0.34');
         const bm = ruleBlock('.ws-grid tbody tr.ws-hover-row td.ws-cell.ws-today.ws-source-manual {');
-        assertTrue(bm !== null && /rgba\(74, 143, 199, 0\.32\),/.test(bm),
-            'row+today+manual: 0.32 + рамка');
+        assertTrue(bm !== null && /rgba\(74, 143, 199, 0\.34\),/.test(bm),
+            'row+today+manual: 0.34 + рамка');
     });
 
     test('шапка: градиент 0.40 (было 0.20) + жирное число', () => {
@@ -112,14 +112,14 @@ describe('Task 377 — усиление подсветки «сегодня» (�
 
     test('тело: составные «сегодня + hover/sel» — не гаснут', () => {
         const b1 = ruleBlock('.ws-grid tbody td.ws-cell.ws-today.ws-hover {');
-        assertTrue(b1 !== null && /rgba\(74, 143, 199, 0\.30\)/.test(b1),
-            'today+hover: 0.30 (уровень «сегодня», не 0.16)');
+        assertTrue(b1 !== null && /rgba\(74, 143, 199, 0\.34\)/.test(b1),
+            'today+hover: 0.34 (Task 378: пересечение насыщеннее «сегодня» 0.30)');
         const b2 = ruleBlock('.ws-grid tbody td.ws-cell.ws-today.ws-sel {');
         assertTrue(b2 !== null && /rgba\(74, 143, 199, 0\.34\)/.test(b2),
             'today+sel: 0.34');
         const b3 = ruleBlock('.ws-grid tbody tr.ws-hover-row td.ws-cell.ws-today.ws-hover {');
-        assertTrue(b3 !== null && /rgba\(74, 143, 199, 0\.34\)/.test(b3),
-            'row+today+hover: 0.34');
+        assertTrue(b3 !== null && /rgba\(74, 143, 199, 0\.36\)/.test(b3),
+            'row+today+hover: 0.36');
         const b4 = ruleBlock('.ws-grid tbody tr.ws-hover-row td.ws-cell.ws-today.ws-sel {');
         assertTrue(b4 !== null && /rgba\(74, 143, 199, 0\.36\)/.test(b4),
             'row+today+sel: 0.36');
@@ -151,16 +151,16 @@ describe('Task 377 — усиление подсветки «сегодня» (�
             'ws-wgrp: красный верх жив (Task 363)');
     });
 
-    test('регресс: базовые hover/sel тёмной темы не изменились', () => {
+    test('Task 378: базовые hover/sel/строка = яркость «сегодня»', () => {
         const h = ruleBlock('.ws-grid tbody td.ws-cell.ws-hover {');
-        assertTrue(h !== null && /rgba\(74, 143, 199, 0\.16\)/.test(h),
-            'ws-hover: 0.16 (как было)');
+        assertTrue(h !== null && /rgba\(74, 143, 199, 0\.30\)/.test(h),
+            'ws-hover: 0.30 (Task 378: = «сегодня», было 0.16)');
         const s = ruleBlock('.ws-grid tbody td.ws-cell.ws-sel {');
-        assertTrue(s !== null && /rgba\(74, 143, 199, 0\.24\)/.test(s),
-            'ws-sel: 0.24 (как было)');
+        assertTrue(s !== null && /rgba\(74, 143, 199, 0\.30\)/.test(s),
+            'ws-sel: 0.30 (Task 378: паритет, было 0.24)');
         const r = ruleBlock('.ws-grid tbody tr.ws-hover-row td.ws-cell {');
-        assertTrue(r !== null && /rgba\(74, 143, 199, 0\.10\)/.test(r),
-            'row: 0.10 (как было)');
+        assertTrue(r !== null && /rgba\(74, 143, 199, 0\.30\)/.test(r),
+            'row: 0.30 (Task 378: = «сегодня», было 0.10)');
     });
 });
 
@@ -175,10 +175,10 @@ describe('Task 377 — усиление подсветки «сегодня» (�
             'сегодня+manual: 0.22 + рамка');
     });
 
-    test('строка наведения + «сегодня»: 0.24 (было 0.14)', () => {
+    test('строка наведения + «сегодня»: 0.26 (Task 378: строка 0.22)', () => {
         const b = ruleBlock('[data-theme="light"] .ws-grid tbody tr.ws-hover-row td.ws-cell.ws-today {');
-        assertTrue(b !== null && /rgba\(42, 93, 143, 0\.24\)/.test(b),
-            'row+today (светлая): 0.24');
+        assertTrue(b !== null && /rgba\(42, 93, 143, 0\.26\)/.test(b),
+            'row+today (светлая): 0.26');
     });
 
     test('шапка: 0.26 (было 0.13) + жирное число', () => {
@@ -191,11 +191,11 @@ describe('Task 377 — усиление подсветки «сегодня» (�
 
     test('составные правила + полоса ::after (светлая)', () => {
         const b1 = ruleBlock('[data-theme="light"] .ws-grid tbody td.ws-cell.ws-today.ws-hover {');
-        assertTrue(b1 !== null && /rgba\(42, 93, 143, 0\.22\)/.test(b1), 'today+hover: 0.22');
+        assertTrue(b1 !== null && /rgba\(42, 93, 143, 0\.26\)/.test(b1), 'today+hover: 0.26 (Task 378)');
         const b2 = ruleBlock('[data-theme="light"] .ws-grid tbody td.ws-cell.ws-today.ws-sel {');
         assertTrue(b2 !== null && /rgba\(42, 93, 143, 0\.26\)/.test(b2), 'today+sel: 0.26');
         const b3 = ruleBlock('[data-theme="light"] .ws-grid tbody tr.ws-hover-row td.ws-cell.ws-today.ws-hover {');
-        assertTrue(b3 !== null && /rgba\(42, 93, 143, 0\.26\)/.test(b3), 'row+today+hover: 0.26');
+        assertTrue(b3 !== null && /rgba\(42, 93, 143, 0\.28\)/.test(b3), 'row+today+hover: 0.28 (Task 378)');
         const b4 = ruleBlock('[data-theme="light"] .ws-grid tbody tr.ws-hover-row td.ws-cell.ws-today.ws-sel {');
         assertTrue(b4 !== null && /rgba\(42, 93, 143, 0\.28\)/.test(b4), 'row+today+sel: 0.28');
         const bh = ruleBlock('[data-theme="light"] .ws-grid thead th.ws-day-col.ws-today-col.ws-hover-col {');
@@ -258,13 +258,13 @@ describe('Task 377 — полосы ячеек светлой темы = цве�
 });
 
 describe('Task 377 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v606', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v606'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v606');
+    test('SW: версия кэша kipia-test-v607', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v607'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v607');
     });
 
     test('SW: двойной бамп не случился (v607 не существует)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v607') === -1,
-            'в sw.js нет kipia-test-v607');
+        assertTrue(SW_SRC.indexOf('kipia-test-v608') === -1,
+            'в sw.js нет kipia-test-v608');
     });
 });
