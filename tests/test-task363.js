@@ -21,7 +21,7 @@
 //     праздники НЕ входят.
 // Хелперы: _calDayFeast (праздник), _calWend (обычный выходной).
 //
-// SW: kipia-test-v605.
+// SW: kipia-test-v606.
 //
 // Запуск: через tests/run-all.js (require './test-task363.js').
 
@@ -143,8 +143,9 @@ describe('Task 363 — SRC: красная рамка-группа выходн�
     test('SRC: специфичность рамки выше светлой темы (не перекрасится)', () => {
         // [data-theme="light"] .ws-grid tbody td { border-color } —
         // (0,2,2); рамочные селекторы с .ws-cell — (0,3,2) и позже
+        // (Task 377: цвет правила — rgb(64,80,102), селектор прежний)
         const iLight = INDEX_SRC.indexOf(
-            '[data-theme="light"] .ws-grid tbody td {\n        border-color: rgba(0, 0, 0, 0.30);');
+            '[data-theme="light"] .ws-grid tbody td {\n        border-color: rgb(64, 80, 102);');
         const iRed = INDEX_SRC.indexOf('.ws-grid tbody td.ws-cell.ws-wgrp-first {');
         assertTrue(iLight !== -1 && iRed !== -1,
             'оба правила в файле');
@@ -393,10 +394,10 @@ describe('Task 363 — VM: регресс соседних фич', () => {
 // ============================================================
 describe('Task 363 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v605', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v605'") !== -1,
-            'CACHE_VERSION = kipia-test-v605 (Task 363 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v606') !== -1,
+    test('SW: кэш поднят до kipia-test-v606', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v606'") !== -1,
+            'CACHE_VERSION = kipia-test-v606 (Task 363 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v607') !== -1,
             'v605 ещё не существует (лишний инкремент)');
     });
 

@@ -20,7 +20,7 @@
 //       (border-top: 0 — высота шапки не меняется, Task 331 не тронут),
 //       темы красят border-color ярче; правая граница «Сотрудник +»
 //       остаётся ПРОЗРАЧНОЙ в обеих темах (Task 336, полоса ::after);
-//     — sw.js: CACHE_VERSION = kipia-test-v605 (+ guard v586).
+//     — sw.js: CACHE_VERSION = kipia-test-v606 (+ guard v586).
 //   VM (_renderCell, моки как в test-task314.js):
 //     — dayOff=true: пустая ячейка БЕЗ «·» (классы ws-weekend /
 //       ws-status-empty на месте), «.»-код — тоже без «·» (ws-dot-code
@@ -105,9 +105,9 @@ describe('Task 355 — SRC: пастельный розовый (теперь �
 // SRC: разделительные линии — тонкие, но ярче
 // ------------------------------------------------------------
 describe('Task 355 — SRC: линии ячеек и шапки ярче (тонкие 1px)', () => {
-    test('светлая тема: тело — border-color 30% чёрного (было 8%)', () => {
-        assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .ws-grid tbody td {\n        border-color: rgba(0, 0, 0, 0.30);\n    }') !== -1,
-            'правило светлой темы: rgba(0,0,0,0.30)');
+    test('светлая тема: тело — border-color стале-синий (Task 377: как в тёмной)', () => {
+        assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .ws-grid tbody td {\n        border-color: rgb(64, 80, 102);\n    }') !== -1,
+            'правило светлой темы: rgb(64,80,102) (Task 377: цвет тёмной темы, было rgba(0,0,0,0.30))');
         // прежнее блеклое правило удалено (в контексте ws-grid)
         const faint = '[data-theme="light"] .ws-grid tbody td {\n        border-color: rgba(0, 0, 0, 0.08);';
         assertEqual(INDEX_SRC.indexOf(faint), -1, 'блеклое 8%-правило отсутствует');
@@ -141,9 +141,9 @@ describe('Task 355 — SRC: линии ячеек и шапки ярче (тон
             'базовый полный бордюр thead th + border-top: 0');
     });
 
-    test('шапка: светлая тема — border-color 30% чёрного', () => {
-        assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .ws-grid thead th {\n        background: #bfcad5;\n        color: #333;\n        border-color: rgba(0, 0, 0, 0.30);\n    }') !== -1,
-            'светлая шапка: rgba(0,0,0,0.30)');
+    test('шапка: светлая тема — border-color стале-голубой (Task 377)', () => {
+        assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .ws-grid thead th {\n        background: #bfcad5;\n        color: #333;\n        border-color: rgb(83, 96, 117);\n    }') !== -1,
+            'светлая шапка: rgb(83,96,117) — цвет тёмной темы (было rgba(0,0,0,0.30))');
     });
 
     test('шапка: тёмная тема — border-color стале-голубой 55%', () => {
@@ -262,13 +262,13 @@ describe('Task 355 — VM: _renderCell (нерабочие дни без «·»)
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 355 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v605', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v605'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v605');
+    test('SW: версия кэша kipia-test-v606', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v606'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v606');
     });
 
     test('SW: двойной бамп не случился (v585 не существует)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v606') === -1,
-            'в sw.js нет kipia-test-v605');
+        assertTrue(SW_SRC.indexOf('kipia-test-v607') === -1,
+            'в sw.js нет kipia-test-v606');
     });
 });

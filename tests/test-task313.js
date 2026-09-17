@@ -35,7 +35,7 @@
 //       позиционируется СТРОГО НАД ним (eTop = top - eh - 8, сдвиг
 //       окна кодов вниз при нехватке места, левые края выровнены);
 //     — closeCellPopup: закрывает ОБА окна.
-//   SW: kipia-test-v605.
+//   SW: kipia-test-v606.
 //
 // Запуск: через tests/run-all.js (require './test-task313.js').
 
@@ -94,8 +94,9 @@ describe('Task 313 — подсветка сегодняшней даты в ш�
     });
 
     test('CSS: ячейки — inset-«заливка» поверх inline-цветов статусов', () => {
-        const m = /\.ws-grid tbody td\.ws-cell\.ws-today \{[^}]*box-shadow:\s*inset 0 0 0 999px rgba\(74,\s*143,\s*199,\s*0\.16\);/.test(INDEX_SRC);
-        assertTrue(m, 'td.ws-today: inset 0 0 0 999px rgba(74,143,199,0.16)');
+        // Task 377: 0.16 → 0.30 — усиленная подсветка «сегодня»
+        const m = /\.ws-grid tbody td\.ws-cell\.ws-today \{[^}]*box-shadow:\s*inset 0 0 0 999px rgba\(74,\s*143,\s*199,\s*0\.30\);/.test(INDEX_SRC);
+        assertTrue(m, 'td.ws-today: inset 0 0 0 999px rgba(74,143,199,0.30)');
         // статусные ячейки красятся inline — только inset-тень видна
         // и на них; ::before/::after свободны (рамка д/н, точка)
         assertTrue(/ws-manual-dn::before/.test(INDEX_SRC) &&
@@ -104,16 +105,17 @@ describe('Task 313 — подсветка сегодняшней даты в ш�
     });
 
     test('CSS: «сегодня + ручная запись» — составные тени', () => {
-        const m = /\.ws-grid tbody td\.ws-cell\.ws-today\.ws-source-manual \{[^}]*inset 0 0 0 999px rgba\(74,\s*143,\s*199,\s*0\.16\),[^}]*inset 0 0 0 1\.5px rgba\(255,\s*255,\s*255,\s*0\.5\);/.test(INDEX_SRC);
+        const m = /\.ws-grid tbody td\.ws-cell\.ws-today\.ws-source-manual \{[^}]*inset 0 0 0 999px rgba\(74,\s*143,\s*199,\s*0\.30\),[^}]*inset 0 0 0 1\.5px rgba\(255,\s*255,\s*255,\s*0\.5\);/.test(INDEX_SRC);
         assertTrue(m,
             'заливка дня + рамка ручной записи в одном box-shadow');
     });
 
     test('CSS: светлая тема — подсветка «сегодня» мягче', () => {
-        assertTrue(/\[data-theme="light"\] \.ws-grid thead th\.ws-day-col\.ws-today-col \{[^}]*rgba\(42,\s*93,\s*143,\s*0\.13\)/.test(INDEX_SRC),
-            'светлая шапка: rgba(42,93,143,0.13)');
-        assertTrue(/\[data-theme="light"\] \.ws-grid tbody td\.ws-cell\.ws-today \{[^}]*inset 0 0 0 999px rgba\(42,\s*93,\s*143,\s*0\.10\);/.test(INDEX_SRC),
-            'светлые ячейки: rgba(42,93,143,0.10)');
+        // Task 377: 0.13 → 0.26 (шапка), 0.10 → 0.22 (ячейки)
+        assertTrue(/\[data-theme="light"\] \.ws-grid thead th\.ws-day-col\.ws-today-col \{[^}]*rgba\(42,\s*93,\s*143,\s*0\.26\)/.test(INDEX_SRC),
+            'светлая шапка: rgba(42,93,143,0.26)');
+        assertTrue(/\[data-theme="light"\] \.ws-grid tbody td\.ws-cell\.ws-today \{[^}]*inset 0 0 0 999px rgba\(42,\s*93,\s*143,\s*0\.22\);/.test(INDEX_SRC),
+            'светлые ячейки: rgba(42,93,143,0.22)');
     });
 });
 
@@ -241,9 +243,9 @@ describe('Task 313 — окно «Мероприятия в этот день» 
 
 describe('Task 313 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v605', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v605'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v605');
+    test('SW: версия кэша kipia-test-v606', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v606'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v606');
         assertFalse(SW_SRC.indexOf('kipia-test-v551') !== -1,
             'старой версии v551 нет');
     });
