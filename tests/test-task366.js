@@ -273,6 +273,7 @@ function archiveVM(rows, opts) {
         Date: Date, Math: Math,
         parseInt: parseInt, parseFloat: parseFloat, String: String,
         Logger: { log: function (m) { (ctx.__logs = ctx.__logs || []).push(String(m)); } },
+        Utilities: { sleep: function () { /* Task 376: пауза между ретраями */ } },
         Flowmeter: {
             _clientToDateObj: function (val) {
                 if (!val) return null;
@@ -451,6 +452,10 @@ describe('Task 366 — VM сервер: устойчивость', () => {
         assertTrue(msg.indexOf('server_busy') !== -1,
             'клиентская сторона классифицирует как повторяемую (тест выше)');
         assertEqual(rows.length, 0, 'при таймауте замка строка не потеряна молча');
+        // Task 376: ретраи — замок берётся 3 раза (10 c + 4 c + 4 c),
+        // только после последней неудачи исключение уходит вызывающему
+        assertEqual(a.mock.calls.withLock, 3,
+            'три попытки перед перебросом (транзиент очереди поглощается)');
     });
 
     test('Неразборчивая дата — не дубль (запись идёт)', () => {
@@ -466,13 +471,13 @@ describe('Task 366 — VM сервер: устойчивость', () => {
 // ============================================================
 describe('Task 366 — SW кэш', () => {
 
-    test('SW: CACHE_VERSION = kipia-test-v604', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v604'") !== -1,
+    test('SW: CACHE_VERSION = kipia-test-v605', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v605'") !== -1,
             'версия кэша поднята до v595');
     });
 
     test('SW: нет v594 (старая) и нет v596 (двойной бамп)', () => {
         assertTrue(SW_SRC.indexOf('kipia-test-v594') === -1, 'старая версия не осталась');
-        assertTrue(SW_SRC.indexOf('kipia-test-v605') === -1, 'двойного бампа не было');
+        assertTrue(SW_SRC.indexOf('kipia-test-v606') === -1, 'двойного бампа не было');
     });
 });

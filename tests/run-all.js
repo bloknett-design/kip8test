@@ -176,6 +176,10 @@ require('./test-task373.js');
 // значений убрана (соседние разделы не тронуты)
 require('./test-task374.js');
 require('./test-task375.js');
+// Task 376: потерянная строка архива (meters записан, архив нет) —
+// ретраи appendToArchive, честный archive_write_failed, day-дедуп
+// флаша подтверждается по архиву
+require('./test-task376.js');
 require('./test-deploy-url.js');
 
 // Запускаем

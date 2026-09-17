@@ -240,43 +240,80 @@ var FlowmeterArchive = {
     // операции листа (никаких withLock-функций). Дубль по ключу
     // meterId+prev+curr+dateCurr+entryType — НЕ дописываем: meters-
     // строка уже актуальна, история не обрастает копиями.
+    //
+    // Task 376: РЕТРАИ записи — замок скрипта ОДИН на все выполнения
+    // (соседние appendToArchive, сессии, крон). При вводе всех 12
+    // расходомеров подряд или параллельных beacon-доставках при
+    // закрытии приложения очередь на замок длинная, и ПОСЛЕДНИЙ в
+    // очереди (№12) упирался в tryLock-таймаут → server_busy →
+    // ошибка глоталась вызывающим как «non-critical» → строка архива
+    // ТЕРЯЛАСЬ при записанном meters. Теперь: 3 попытки (10 c + 4 c +
+    // 4 c, пауза 1 c) — транзиент очереди/квоты рассасывается за
+    // секунды; после последней неудачи ПЕРЕБРАСЫВАЕМ исключение
+    // вызывающему (updateReading/_writePeriodEntry вернут клиенту
+    // archive_write_failed, запись останется в outbox и уйдёт позже;
+    // повторная запись meters идемпотентна, дедуп Task 366/375 не
+    // даст дубль строки). «Дубль» (false) ошибкой НЕ считается:
+    // строка уже в архиве — миссия выполнена.
     var self = this;
-    var appended = Utils.withLock(function() {
-      if (self._isDuplicateArchiveRow(sheet, meterId, prev, curr, dateCurr, entryType)) {
-        Logger.log('Archive (Task 366): дубль пропущен — meterId=' + meterId +
-                   ', prev=' + prev + ', curr=' + curr + ', dateCurr=' + dateCurr +
-                   (entryType ? (', entryType=' + entryType) : ''));
-        return false;
+    var attempts = [10000, 4000, 4000];
+    var appended = null;
+    var lastErr = null;
+    for (var ai = 0; ai < attempts.length; ai++) {
+      try {
+        appended = Utils.withLock(function() {
+          if (self._isDuplicateArchiveRow(sheet, meterId, prev, curr, dateCurr, entryType)) {
+            Logger.log('Archive (Task 366): дубль пропущен — meterId=' + meterId +
+                       ', prev=' + prev + ', curr=' + curr + ', dateCurr=' + dateCurr +
+                       (entryType ? (', entryType=' + entryType) : ''));
+            return false;
+          }
+          // Добавляем строку в конец листа.
+          // Структура (18 столбцов A–R, Task 100 добавил K=Gcal, Task 197 — P=comment,
+          // Task 199 — Q=anomaly, Task 286 — R=entryType):
+          //   A meterId, B hoz, C prev, D curr, E consumption,
+          //   F datePrev, G dateCurr, H daysBetween, I unit, J temp,
+          //   K Gcal (Task 100), L period, M modRole, N modName, O timestamp,
+          //   P comment (Task 197), Q anomaly (Task 199), R entryType (Task 286)
+          sheet.appendRow([
+            meterId,                                                                    // A: meterId
+            hoz || '',                                                                  // B: hoz
+            prev || 0,                                                                  // C: prev
+            curr || 0,                                                                  // D: curr
+            consumption,                                                                // E: consumption
+            datePrevObj || '',                                                          // F: datePrev (Date object)
+            dateCurrObj || '',                                                          // G: dateCurr (Date object)
+            daysBetween,                                                                // H: daysBetween
+            unit || '',                                                                 // I: unit (раньше было в J, но в архиве порядок другой — см. заголовки)
+            (temp !== null && temp !== undefined && temp !== '') ? parseFloat(temp) : '',  // J: temp
+            (gcal !== null && gcal !== undefined && gcal !== '') ? parseFloat(gcal) : '',  // K: Gcal (Task 100)
+            period || '',                                                               // L: period
+            role || '',                                                                 // M: modRole
+            name || '',                                                                 // N: modName
+            new Date(),                                                                  // O: timestamp
+            String(comment || ''),                                                       // P: comment (Task 197)
+            String(anomaly || ''),                                                       // Q: anomaly (Task 199)
+            String(entryType || '')                                                      // R: entryType (Task 286)
+          ]);
+          return true;
+        }, attempts[ai]);
+        lastErr = null;
+        break;
+      } catch (writeErr) {
+        lastErr = writeErr;
+        Logger.log('Archive write attempt ' + (ai + 1) + '/' + attempts.length +
+                   ' failed: ' + writeErr.message);
+        if (ai < attempts.length - 1) {
+          Utilities.sleep(1000);
+        }
       }
-      // Добавляем строку в конец листа.
-      // Структура (18 столбцов A–R, Task 100 добавил K=Gcal, Task 197 — P=comment,
-      // Task 199 — Q=anomaly, Task 286 — R=entryType):
-      //   A meterId, B hoz, C prev, D curr, E consumption,
-      //   F datePrev, G dateCurr, H daysBetween, I unit, J temp,
-      //   K Gcal (Task 100), L period, M modRole, N modName, O timestamp,
-      //   P comment (Task 197), Q anomaly (Task 199), R entryType (Task 286)
-      sheet.appendRow([
-        meterId,                                                                    // A: meterId
-        hoz || '',                                                                  // B: hoz
-        prev || 0,                                                                  // C: prev
-        curr || 0,                                                                  // D: curr
-        consumption,                                                                // E: consumption
-        datePrevObj || '',                                                          // F: datePrev (Date object)
-        dateCurrObj || '',                                                          // G: dateCurr (Date object)
-        daysBetween,                                                                // H: daysBetween
-        unit || '',                                                                 // I: unit (раньше было в J, но в архиве порядок другой — см. заголовки)
-        (temp !== null && temp !== undefined && temp !== '') ? parseFloat(temp) : '',  // J: temp
-        (gcal !== null && gcal !== undefined && gcal !== '') ? parseFloat(gcal) : '',  // K: Gcal (Task 100)
-        period || '',                                                               // L: period
-        role || '',                                                                 // M: modRole
-        name || '',                                                                 // N: modName
-        new Date(),                                                                  // O: timestamp
-        String(comment || ''),                                                       // P: comment (Task 197)
-        String(anomaly || ''),                                                       // Q: anomaly (Task 199)
-        String(entryType || '')                                                      // R: entryType (Task 286)
-      ]);
-      return true;
-    });
+    }
+    if (lastErr) {
+      // Task 376: все попытки не удались — НЕ глотаем (так строка архива
+      // терялась навсегда при записанном meters): вызывающий честно
+      // вернёт archive_write_failed, клиент доставит запись повторно.
+      throw lastErr;
+    }
 
     if (appended) {
       Logger.log('Archive: meterId=' + meterId + ', prev=' + prev + ', curr=' + curr + ', consumption=' + consumption + ', gcal=' + (gcal || '—') +

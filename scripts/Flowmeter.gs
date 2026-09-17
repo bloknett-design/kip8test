@@ -520,7 +520,16 @@ var Flowmeter = {
     // при исходном вводе не удалась — archive write non-critical) —
     // создаём строку appendToArchive'ом, комментарий записи (если
     // был в meters.O) переносится в P новой строки.
-    // Ошибка архива не блокирует основной ответ (тихо логируется).
+    // Task 376: ошибка архива больше НЕ «тихо логируется». Так терялась
+    // строка архива при записанном meters: клиент получал ok:true, удалял
+    // запись из outbox — повторной доставки не было (дедуп флаша к тому
+    // же сверялся только с meters). Теперь при неудаче всех ретраев
+    // appendToArchive — честный ответ archive_write_failed: meters уже
+    // записан, запись ОСТАЁТСЯ в outbox клиента и будет доставлена
+    // автоматически (повторная запись meters идемпотентна, серверный
+    // дедуп Task 366/375 не даст дубль строки архива). «Дубль»
+    // (appendToArchive вернул false — строка уже есть) ошибкой НЕ
+    // считается.
     try {
       var hozName = String(sheet.getRange(rowNum, 2).getValue() || '');
       var unitVal = String(sheet.getRange(rowNum, 8).getValue() || '');
@@ -558,7 +567,12 @@ var Flowmeter = {
         );
       }
     } catch (archiveErr) {
-      Logger.log('Archive write failed (non-critical): ' + archiveErr.message);
+      Logger.log('Archive write failed: ' + archiveErr.message);
+      // Task 376: meters записан, архив — нет: честный отказ, клиент
+      // оставит запись в outbox и доставит её повторно автоматически.
+      return { ok: false, error: 'archive_write_failed',
+               message: 'Показания сохранены, но запись в архив временно ' +
+                        'не удалась — она будет отправлена повторно автоматически' };
     }
 
     return { ok: true, data: { id: id } };
@@ -656,7 +670,12 @@ var Flowmeter = {
       );
     } catch (archiveErr) {
       Logger.log('Archive write failed (period entry): ' + archiveErr.message);
-      return { ok: false, error: 'Ошибка записи в архив: ' + archiveErr.message };
+      // Task 376: стабильный код ошибки (раньше текст в error не позволял
+      // клиенту отличить «окончательный отказ» от «доставим позже»):
+      // запись остаётся в outbox и уйдёт повторно.
+      return { ok: false, error: 'archive_write_failed',
+               message: 'Запись в архив не удалась — она будет отправлена ' +
+                        'повторно автоматически (' + archiveErr.message + ')' };
     }
 
     return { ok: true, data: { id: id, entryType: entryType } };

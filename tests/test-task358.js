@@ -519,10 +519,15 @@ function flushMixin(apiRoutes, storage) {
 describe('Task 358 — VM: _flushOutbox (дедуп + доставка)', () => {
 
     test('дедуб day: beacon дошёл в прошлый раз → повтор НЕ отправляется', async () => {
-        // сервер уже содержит показание (curr=95, dateCurr 9/9/2026)
+        // сервер уже содержит показание (curr=95, dateCurr 9/9/2026);
+        // Task 376: подтверждение доставки — meters И строка архива
+        // (meters-совпадения мало: meters пишется раньше архива)
         const M = flushMixin({
             'flowmeter.list': () => Promise.resolve({
                 meters: [{ id: 2, dateCurr: '9/9/2026', curr: 95 }]
+            }),
+            'flowmeter.archive': () => Promise.resolve({
+                records: [{ entryType: 'сутки', dateCurr: '9/9/2026', curr: 95 }]
             })
         });
         M._outboxAdd({
@@ -638,12 +643,12 @@ describe('Task 358 — VM: _flushOutbox (дедуп + доставка)', () => 
 // SW-версия
 // ============================================================
 describe('Task 358 — SW: бамп кэша', () => {
-    test('CACHE_VERSION = kipia-test-v604', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v604'") !== -1,
+    test('CACHE_VERSION = kipia-test-v605', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v605'") !== -1,
             'версия кэша поднята до v587');
     });
     test('нет v586 (старая) и нет v588 (двойной бамп)', () => {
         assertTrue(SW_SRC.indexOf('kipia-test-v586') === -1, 'старая версия не осталась');
-        assertTrue(SW_SRC.indexOf('kipia-test-v605') === -1, 'двойного бампа не было');
+        assertTrue(SW_SRC.indexOf('kipia-test-v606') === -1, 'двойного бампа не было');
     });
 });

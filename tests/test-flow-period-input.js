@@ -386,8 +386,8 @@ describe('Task 286 — клиент: CSS и SW', () => {
     });
 
     test('SW-кэш поднят до v544 (Task 298 — фронтенд менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v604'") !== -1,
-            'CACHE_VERSION = kipia-test-v604');
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v605'") !== -1,
+            'CACHE_VERSION = kipia-test-v605');
         assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v534'") !== -1,
             'старой версии v534 нет');
     });
@@ -707,8 +707,8 @@ describe('Task 292 — заголовок графика: «Показания (
     });
 
     test('SW-кэш: v538 → v539 (Task 296 — только фронтенд, сервер не менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v604'") !== -1,
-            'CACHE_VERSION = kipia-test-v604');
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v605'") !== -1,
+            'CACHE_VERSION = kipia-test-v605');
         assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v537'") !== -1,
             'старой версии v537 нет');
     });
@@ -778,8 +778,13 @@ describe('Task 286 — сервер: Flowmeter.gs (ветка entryType)', () =>
         const start = FLOWMETER_GS.indexOf('_writePeriodEntry: function');
         const end = FLOWMETER_GS.indexOf('setComment: function');
         const body = FLOWMETER_GS.slice(start, end);
-        assertTrue(body.indexOf("return { ok: false, error: 'Ошибка записи в архив: '") !== -1,
+        // Task 376: стабильный код archive_write_failed (клиент отличает
+        // «доставим позже» от «окончательный отказ»), человекочитаемый
+        // текст — в message
+        assertTrue(body.indexOf("return { ok: false, error: 'archive_write_failed'") !== -1,
             'ok:false при сбое архива');
+        assertTrue(body.indexOf('повторно автоматически') !== -1,
+            'message объясняет автоматический повтор');
     });
 
     test('Суточный путь помечает запись «сутки» (R=18)', () => {
