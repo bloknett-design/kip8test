@@ -10,8 +10,9 @@
 //      будущие — базовый фон ТЕМНЕЕ окна. Полупрозрачные тинты в обеих
 //      темах: тёмная — прошедшие rgba(255,255,255,0.12) / текущие
 //      rgba(0,0,0,0.45); светлая — прошедшие rgba(255,255,255,0.55) /
-//      текущие rgba(0,0,0,0.12). padding 2px 6px + margin 0 -6px —
-//      «плашка» строки во всю ширину окна.
+//      текущие rgba(0,0,0,0.12). Task 381: padding 3px 10px + margin
+//      0 -10px — строка до КРАЁВ окна, соседние строки СКЛЕИВАЮТСЯ
+//      (gap: 0) — ОБЩИЙ фон окна вместо плашек по строкам.
 //   2) «В мобильной версии, при нажатии с задержкой на ячейки шахматки
 //      и с фамилиями и ячейки итогов учёта, не должен выделяться текст
 //      в ячейках для копирования, поделиться, поиска в гугл и
@@ -23,8 +24,9 @@
 // ЧТО ПРОВЕРЯЕТСЯ:
 //   CSS мероприятия: 4 правила фонов (база/прошедшее/светлая база/
 //     светлая прошедшее) + ПОРЯДОК (каскад специфичностей: светлые
-//     после базовых, .ws-ep-past светлой — последним); плашка
-//     padding/margin; старое правило .ws-ep-item (перенос текста,
+//     после базовых, .ws-ep-past светлой — последним); отступы
+//     строки (Task 381: 3px 10px / 0 -10px + склейка); старое
+//     правило .ws-ep-item (перенос текста,
 //     Task 315) и старый светлый color:#000 (Task 330) живы.
 //   SRC: _renderMonthEventsPanel — todayIso через _isoDate(new Date())
 //     ровно 1 раз; eIso = дата_окончания || дата_начала; класс
@@ -37,7 +39,7 @@
 //   CSS мобайл: user-select:none на .ws-grid,.ws-tt-table внутри
 //     @media (max-width: 1023px); базовые правила таблиц БЕЗ
 //     user-select (десктоп жив); правило одно.
-//   SW: kipia-test-v609 (guard v610).
+//   SW: kipia-test-v610 (guard v610).
 //   Регресс: окна бара на десктопе выделяются как прежде
 //     (.ws-events-panel без user-select).
 //
@@ -70,12 +72,12 @@ const WS_SRC = INDEX_SRC.slice(INDEX_SRC.indexOf('var WorkSchedule = {'));
 // ============================================================
 describe('Task 380 — CSS: фон строк мероприятий по сроку', () => {
 
-    test('база .ws-ep-item: ТЁМНЫЙ фон + плашка (padding/margin)', () => {
+    test('база .ws-ep-item: ТЁМНЫЙ фон + строка до краёв (Task 381)', () => {
         // [^{}]* не пересекает границы правил → находит именно НОВОЕ
         // правило (старое Task 315 без padding не матчится)
-        const re = /\.ws-ep-item \{[^{}]*padding:\s*2px 6px;[^{}]*margin:\s*0 -6px;[^{}]*background:\s*rgba\(0, 0, 0, 0\.45\);[^{}]*\}/;
+        const re = /\.ws-ep-item \{[^{}]*padding:\s*3px 10px;[^{}]*margin:\s*0 -10px;[^{}]*background:\s*rgba\(0, 0, 0, 0\.45\);[^{}]*\}/;
         assertTrue(re.test(INDEX_SRC),
-            'текущие/будущие: rgba(0,0,0,0.45) — ТЕМНЕЕ окна + плашка строки');
+            'текущие/будущие: rgba(0,0,0,0.45) — ТЕМНЕЕ окна; строка до краёв (Task 381)');
     });
 
     test('.ws-ep-past: СВЕТЛЫЙ фон (тёмная тема)', () => {
@@ -100,7 +102,7 @@ describe('Task 380 — CSS: фон строк мероприятий по сро
         // каскад специфичностей (0,1,0 → 0,2,0 → 0,2,0 → 0,3,0):
         // светлые правила ПОСЛЕ базовых, .ws-ep-past светлой — последним
         // (иначе светлая база (0,2,0) перебила бы тёмный .ws-ep-past)
-        const iBase = INDEX_SRC.indexOf('.ws-ep-item {\n        padding: 2px 6px;');
+        const iBase = INDEX_SRC.indexOf('.ws-ep-item {\n        padding: 3px 10px;');
         const iPast = INDEX_SRC.indexOf('.ws-ep-item.ws-ep-past {');
         const iLight = INDEX_SRC.indexOf('[data-theme="light"] .ws-ep-item {\n');
         const iLightPast = INDEX_SRC.indexOf('[data-theme="light"] .ws-ep-item.ws-ep-past {');
@@ -305,10 +307,10 @@ describe('Task 380 — CSS: мобайл без выделения текста'
 // ============================================================
 describe('Task 380 — SW и адаптации тестов', () => {
 
-    test('SW: kipia-test-v609', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v609'") !== -1,
-            'версия кэша kipia-test-v609');
-        assertFalse(SW_SRC.indexOf('kipia-test-v610') !== -1,
+    test('SW: kipia-test-v610', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v610'") !== -1,
+            'версия кэша kipia-test-v610');
+        assertFalse(SW_SRC.indexOf('kipia-test-v611') !== -1,
             'двойного бампа нет');
     });
 

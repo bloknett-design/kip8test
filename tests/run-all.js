@@ -188,6 +188,9 @@ require('./test-task377.js');
 require('./test-task378.js');
 require('./test-task379.js');
 require('./test-task380.js');
+// Task 381: итоги — фон как до белого + зебра; значки раскрытия
+// приколоты при прокрутке; мероприятия — общий фон окна
+require('./test-task381.js');
 require('./test-deploy-url.js');
 
 // Запускаем

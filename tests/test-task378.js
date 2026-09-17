@@ -14,14 +14,14 @@
 //    нижней части в низ по количеству текста в окне, значок должен
 //    менять контрастность если он не активен.»
 //
-// ЧТО ПРОВЕРЯЕТСЯ:
-//   CSS итоги: ячейки значений #FFFFFF (светлая) / #eef0f2+
-//     brightness(0.88)+#141413 (тёмная — светлые цвета шахматки
-//     Task 319); линии = шахматка: значения rgba(0,0,0,0.30) /
+// ЧТО ПРОВЕРЯЕТСЯ (после Task 381 — «фон итогов верни как был до
+//     белого»): ячейки значений итогов — ПРОЗРАЧНЫЕ (правила
+//     #FFFFFF/#eef0f2+#141413 Task 378 УДАЛЕНЫ), зебра строк
+//     ВОССТАНОВЛЕНА (Task 322), тёмные цветные колонки — базовая
+//     палитра; линии = шахматка: значения rgba(0,0,0,0.30) /
 //     rgb(10,15,23), шапка сталь rgba(140,158,188,0.55)/
 //     rgb(83,96,117), «Сотрудник» rgba(105,130,160,0.55)/
-//     rgb(64,80,102); зебра строк УДАЛЕНА; цветные колонки тёмной
-//     темы — палитра светлой (#1d7a37/#a06a13).
+//     rgb(64,80,102) — остаются от Task 378.
 //   JS итоги: нули месячной таблицы — ПУСТЫЕ ячейки (VM).
 //   CSS перекрестье: строка/столбец 0.30/0.22 = «сегодня» (0.30/0.22),
 //     пересечение 0.34/0.26, ФИО-ячейка 0.30/0.22, шапка hover-col
@@ -41,7 +41,7 @@
 //     свёртывание при исчезновении переполнения), _barExpToggle
 //     (раскрытие = scrollHeight, свёртывание = 95px), вызовы после
 //     рендеров (мероприятия/нормы), toggleMobPanel/ресайз/fonts.ready.
-//   SW: kipia-test-v609.
+//   SW: kipia-test-v610.
 //
 // Запуск: через tests/run-all.js (require './test-task378.js').
 
@@ -106,6 +106,8 @@ function mkPanel(scrollH) {
     const el = {
         scrollHeight: scrollH,
         clientHeight: 95,
+        scrollTop: 0,
+        listeners: {},
         style: {},
         classList: {
             contains: function(c) { return cls.indexOf(c) !== -1; },
@@ -124,7 +126,10 @@ function mkPanel(scrollH) {
         querySelector: function(sel) {
             return (sel === '.ws-bar-exp' && btn) ? btn : null;
         },
-        appendChild: function(node) { btn = node; }
+        appendChild: function(node) { btn = node; },
+        addEventListener: function(type, fn) {
+            (this.listeners[type] = this.listeners[type] || []).push(fn);
+        }
     };
     el._btn = function() { return btn; };
     el._cls = cls;
@@ -136,20 +141,16 @@ function mkPanel(scrollH) {
 // ============================================================
 describe('Task 378 — итоги: ячейки #FFFFFF, линии шахматки', () => {
 
-    test('светлая: ячейки значений — #FFFFFF', () => {
-        const b = ruleBlock('[data-theme="light"] .ws-tt-table tbody td.ws-tt-num {');
-        assertTrue(b !== null && /background:\s*#FFFFFF/.test(b),
-            'фон пустых ячеек светлой темы — #FFFFFF (заявка)');
-    });
-
-    test('тёмная: ячейки значений — светлые цвета шахматки', () => {
-        const b = ruleBlock('[data-theme="dark"] .ws-tt-table tbody td.ws-tt-num {');
-        assertTrue(b !== null && /background:\s*#eef0f2/.test(b),
-            'фон — #eef0f2 (Task 319: светлые цвета дней)');
-        assertTrue(b !== null && /filter:\s*brightness\(0\.88\)/.test(b),
-            'фильтр brightness(0.88) — как у дней сетки');
-        assertTrue(b !== null && /color:\s*#141413/.test(b),
-            'текст тёмный #141413 (как у дней сетки)');
+    test('Task 381: ячейки значений — БЕЗ фона (как до белого)', () => {
+        // «Фон итогов верни как был до белого»: правила Task 378
+        // (#FFFFFF светлая / #eef0f2+brightness+#141413 тёмная)
+        // удалены — ячейки прозрачные, сквозь них фон панели + зебра
+        const bl = ruleBlock('[data-theme="light"] .ws-tt-table tbody td.ws-tt-num {');
+        assertTrue(bl === null,
+            'светлая: правила фона ячеек итогов больше нет (прозрачные)');
+        const bd = ruleBlock('[data-theme="dark"] .ws-tt-table tbody td.ws-tt-num {');
+        assertTrue(bd === null,
+            'тёмная: правила фона/цвета/фильтра ячеек итогов нет');
     });
 
     test('линии: базовые th/td — цвет дней шахматки', () => {
@@ -180,18 +181,28 @@ describe('Task 378 — итоги: ячейки #FFFFFF, линии шахмат
             'светлая: rgb(64,80,102)');
     });
 
-    test('зебра строк итогов УДАЛЕНА (непрозрачные ячейки)', () => {
-        assertFalse(/\.ws-tt-table tbody tr:nth-child\(even\)\s*\{[^}]*background/.test(INDEX_SRC),
-            'правила зебры строк итогов нет');
+    test('Task 381: зебра строк итогов ВОССТАНОВЛЕНА (как до белого)', () => {
+        const z = ruleBlock('.ws-tt-table tbody tr:nth-child(even) {');
+        assertTrue(z !== null && /rgba\(255, 255, 255, 0\.09\)/.test(z),
+            'тёмная: чётные строки заметно светлее (Task 322)');
+        const zl = ruleBlock('[data-theme="light"] .ws-tt-table tbody tr:nth-child(even) {');
+        assertTrue(zl !== null && /rgba\(0, 0, 0, 0\.07\)/.test(zl),
+            'светлая: чётные строки чуть темнее (Task 322)');
     });
 
-    test('тёмная: цветные колонки — палитра светлой темы', () => {
-        const h = INDEX_SRC.match(/\[data-theme="dark"\] \.ws-tt-table td\.ws-tt-hours\s*\{[^}]*\}/);
-        assertTrue(!!h && h[0].indexOf('#1d7a37') !== -1,
-            'Часы: зелёный светлой темы (#1d7a37)');
-        const o = INDEX_SRC.match(/\[data-theme="dark"\] \.ws-tt-table td\.ws-tt-over\s*\{[^}]*\}/);
-        assertTrue(!!o && o[0].indexOf('#a06a13') !== -1,
-            'Переработка: янтарный светлой темы (#a06a13)');
+    test('Task 381: тёмные цветные колонки — базовая палитра (как до белого)', () => {
+        // переопределения Task 378 ([data-theme="dark"] Часы/Переработка
+        // палитрой светлой) удалены — работают базовые правила
+        assertFalse(/\[data-theme="dark"\] \.ws-tt-table td\.ws-tt-hours\s*\{/.test(INDEX_SRC),
+            'тёмного переопределения «Часов» больше нет');
+        assertFalse(/\[data-theme="dark"\] \.ws-tt-table td\.ws-tt-over\s*\{/.test(INDEX_SRC),
+            'тёмного переопределения «Переработки» больше нет');
+        const h = INDEX_SRC.match(/\n    \.ws-tt-table td\.ws-tt-hours\s*\{[^}]*\}/);
+        assertTrue(!!h && h[0].indexOf('#4ac771') !== -1,
+            'Часы: базовый зелёный тёмной темы (#4ac771)');
+        const o = INDEX_SRC.match(/\n    \.ws-tt-table td\.ws-tt-over\s*\{[^}]*\}/);
+        assertTrue(!!o && o[0].indexOf('#e0a23c') !== -1,
+            'Переработка: базовый янтарный тёмной темы (#e0a23c)');
     });
 
     test('строка шторки итогов — яркость «сегодня»', () => {
@@ -518,10 +529,10 @@ describe('Task 378 — вызовы значка после рендеров/с�
 // ============================================================
 describe('Task 378 — SW и регресс', () => {
 
-    test('SW: kipia-test-v609', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v609'") !== -1,
-            'версия кэша kipia-test-v609');
-        assertFalse(SW_SRC.indexOf('kipia-test-v610') !== -1,
+    test('SW: kipia-test-v610', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v610'") !== -1,
+            'версия кэша kipia-test-v610');
+        assertFalse(SW_SRC.indexOf('kipia-test-v611') !== -1,
             'двойного бампа нет');
     });
 

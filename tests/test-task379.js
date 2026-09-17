@@ -34,7 +34,7 @@
 //     повторный — обе сброшены; НОВЫЙ текст в раскрытом — 310px +
 //     -215px; исчезновение переполнения — авто-сворачивание, маржа
 //     сброшена; значок .on при раскрытии.
-//   SW: kipia-test-v609 (guard v609).
+//   SW: kipia-test-v610 (guard v609).
 //   Регресс: итоги Task 378 (#FFFFFF светлой) живы; тёмные тоталы
 //     #eef0f2 живы; зебра ФИО сетки жива.
 //
@@ -93,6 +93,8 @@ function mkPanel(scrollH) {
     const el = {
         scrollHeight: scrollH,
         clientHeight: 95,
+        scrollTop: 0,
+        listeners: {},
         style: {},
         classList: {
             contains: function(c) { return cls.indexOf(c) !== -1; },
@@ -111,7 +113,10 @@ function mkPanel(scrollH) {
         querySelector: function(sel) {
             return (sel === '.ws-bar-exp' && btn) ? btn : null;
         },
-        appendChild: function(node) { btn = node; }
+        appendChild: function(node) { btn = node; },
+        addEventListener: function(type, fn) {
+            (this.listeners[type] = this.listeners[type] || []).push(fn);
+        }
     };
     el._btn = function() { return btn; };
     el._cls = cls;
@@ -279,20 +284,24 @@ describe('Task 379 — VM: габарит бара всегда 95px', () => {
 // ============================================================
 describe('Task 379 — SW и регресс', () => {
 
-    test('SW: kipia-test-v609', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v609'") !== -1,
-            'версия кэша kipia-test-v609');
-        assertFalse(SW_SRC.indexOf('kipia-test-v610') !== -1,
+    test('SW: kipia-test-v610', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v610'") !== -1,
+            'версия кэша kipia-test-v610');
+        assertFalse(SW_SRC.indexOf('kipia-test-v611') !== -1,
             'двойного бампа нет');
     });
 
-    test('регресс: итоги Task 378 живы (#FFFFFF светлой)', () => {
-        const re = /\[data-theme="light"\] \.ws-tt-table tbody td\.ws-tt-num \{[^}]*background:\s*#FFFFFF;[^}]*\}/;
+    test('регресс: итоги Task 381 — БЕЗ фона (вернули как до белого)', () => {
+        // Заявка Task 381: «фон итогов верни как был до белого» —
+        // правила #FFFFFF/#eef0f2 Task 378 удалены; ячейки прозрачные
+        assertFalse(/\[data-theme="light"\] \.ws-tt-table tbody td\.ws-tt-num \{[^}]*background:\s*#FFFFFF;[^}]*\}/.test(INDEX_SRC),
+            'правила #FFFFFF ячеек итогов больше нет (Task 381)');
+        assertFalse(/\[data-theme="dark"\] \.ws-tt-table tbody td\.ws-tt-num \{[^}]*background:\s*#eef0f2;[^}]*\}/.test(INDEX_SRC),
+            'правила #eef0f2 тёмных итогов больше нет (Task 381)');
+        // шахматка Task 379 (#FFFFFF) жива — её не трогали
+        const re = /\[data-theme="light"\] \.ws-grid tbody td\.ws-cell \{[^}]*background:\s*#FFFFFF;[^}]*\}/;
         assertTrue(re.test(INDEX_SRC),
-            'ячейки значений итогов светлой темы — по-прежнему #FFFFFF');
-        const dark = /\[data-theme="dark"\] \.ws-tt-table tbody td\.ws-tt-num \{[^}]*background:\s*#eef0f2;[^}]*\}/;
-        assertTrue(dark.test(INDEX_SRC),
-            'тёмные итоги — #eef0f2 (Task 378, не тронуты)');
+            'пустые ячейки ШАХМАТКИ светлой темы — по-прежнему #FFFFFF');
     });
 
     test('регресс: зебра КОЛОНКИ ФИО сетки жива', () => {
