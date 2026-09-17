@@ -42,7 +42,7 @@
 //       (белый, как фон пустых ячеек с точкой — светлая тема
 //       --bg-primary #FAF9F5); ОСНОВНОЕ значение пользователь
 //       меняет в листе «Коды_статусов» сам (код #FAF9F5).
-//   SW: kipia-test-v607 (Task 313: v551 → v552 — окно мероприятий
+//   SW: kipia-test-v608 (Task 313: v551 → v552 — окно мероприятий
 //       над окном кодов + подсветка сегодняшней даты).
 //
 // Запуск: через tests/run-all.js (require './test-task312.js').
@@ -290,8 +290,8 @@ describe('Task 312/314 — «.» (плановый выходной): симво
     test('CSS: ws-dot-code — фон пустой ячейки, обе темы', () => {
         const dark = /\.ws-grid tbody td\.ws-cell\.ws-dot-code \{[^}]*background:\s*var\(--bg-primary,\s*#1a2233\);/.test(INDEX_SRC);
         assertTrue(dark, '«.»-ячейка — var(--bg-primary, #1a2233)');
-        const light = /\[data-theme="light"\] \.ws-grid tbody td\.ws-cell\.ws-dot-code \{[^}]*background:\s*#eef0f2;/.test(INDEX_SRC);
-        assertTrue(light, 'светлая тема: «.»-ячейка = #eef0f2 (как пустые)');
+        const light = /\[data-theme="light"\] \.ws-grid tbody td\.ws-cell\.ws-dot-code \{[^}]*background:\s*#FFFFFF;/.test(INDEX_SRC);
+        assertTrue(light, 'светлая тема: «.»-ячейка = #FFFFFF (как пустые, Task 379)');
         const sw = /\.ws-popup-swatch\.ws-swatch-dot \{[^}]*background:\s*var\(--bg-primary,\s*#1a2233\);/.test(INDEX_SRC);
         assertTrue(sw, 'свотч «.» в попапе — фон пустой ячейки');
     });
@@ -299,8 +299,8 @@ describe('Task 312/314 — «.» (плановый выходной): симво
     test('CSS: фон пустых ячеек — --bg-primary (эталон цвета)', () => {
         // Пустые ячейки с точкой: background: var(--bg-primary, #1a2233);
         // светлая тема задаёт --bg-primary: #FAF9F5 — фон СТРАНИЦЫ; фон
-        // ЯЧЕЕК сетки светлой темы — #eef0f2 (Task 250) — его и берёт
-        // «.»-ячейка (совпадение с пустой в любой теме)
+        // ЯЧЕЕК сетки светлой темы — #FFFFFF (Task 250→379) — его и
+        // берёт «.»-ячейка (совпадение с пустой в любой теме)
         const m = /\.ws-grid tbody td\.ws-cell \{[^}]*background:\s*var\(--bg-primary,\s*#1a2233\);/.test(INDEX_SRC);
         assertTrue(m, 'пустая ячейка — var(--bg-primary, #1a2233)');
         const light = INDEX_SRC.indexOf('--bg-primary: #FAF9F5;') !== -1;
@@ -310,9 +310,9 @@ describe('Task 312/314 — «.» (плановый выходной): симво
 
 describe('Task 312 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v607', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v607'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v607');
+    test('SW: версия кэша kipia-test-v608', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v608'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v608');
         assertFalse(SW_SRC.indexOf('kipia-test-v550') !== -1,
             'старой версии v550 нет');
     });

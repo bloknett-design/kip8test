@@ -186,6 +186,7 @@ require('./test-task377.js');
 // Task 378: итоги учёта #FFFFFF/нули/линии шахматки; перекрестье =
 // «сегодня» + ФИО/итоги; окна бара без полосы + значок раскрытия
 require('./test-task378.js');
+require('./test-task379.js');
 require('./test-deploy-url.js');
 
 // Запускаем
