@@ -187,6 +187,7 @@ require('./test-task377.js');
 // «сегодня» + ФИО/итоги; окна бара без полосы + значок раскрытия
 require('./test-task378.js');
 require('./test-task379.js');
+require('./test-task380.js');
 require('./test-deploy-url.js');
 
 // Запускаем
