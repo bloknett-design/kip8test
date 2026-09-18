@@ -43,7 +43,7 @@
 //   HTML: #wsViewBtn — ПОДПИСЬ «Вид» (span.ws-view-label после
 //     иконок); CSS .ws-view-btn — width: auto + паддинги (не
 //     квадрат-иконка), .ws-view-label — 13px/600.
-//   SW: kipia-test-v610.
+//   SW: kipia-test-v611.
 //
 // Запуск: через tests/run-all.js (require './test-task333.js').
 
@@ -472,10 +472,10 @@ describe('Task 333 — кнопка вида: подпись «Вид»', () => 
 // ============================================================
 describe('Task 333 — SW: версия кэша', () => {
 
-    test('SW: кэш поднят до kipia-test-v610 (Task 333)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v610') !== -1,
-            'в sw.js — kipia-test-v610');
-        assertFalse(SW_SRC.indexOf('kipia-test-v611') !== -1,
+    test('SW: кэш поднят до kipia-test-v611 (Task 333)', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v611') !== -1,
+            'в sw.js — kipia-test-v611');
+        assertFalse(SW_SRC.indexOf('kipia-test-v612') !== -1,
             'лишний инкремент (v577) не сделан');
     });
 });

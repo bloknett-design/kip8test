@@ -31,7 +31,7 @@
 //     _renderTotalsYearTable — НЕТ tfoot; _fitGrid — бюджет без
 //     резерва итоговой строки; toggleTotals/setTotalsTab зовут новые
 //     методы.
-//   SW: kipia-test-v610.
+//   SW: kipia-test-v611.
 //
 // Запуск: через tests/run-all.js (require './test-task327.js').
 
@@ -181,10 +181,13 @@ describe('Task 327 — CSS: бордюрчик, «Ещё», равные сто�
         const y = INDEX_SRC.match(/\.ws-tt-table\.ws-tt-year\s*\{[^}]*\}/);
         assertFalse(!!y && y[0].indexOf('table-layout') !== -1,
             'год: авто-раскладка сохранена');
-        // месяц: колонка ФИО — доля, данные — равные остатки
+        // месяц: колонка ФИО — ширина, данные — равные остатки.
+        // Task 382-адаптация: доля 42% → var(--ws-tt-emp-w, 42%)
+        // (изначальная ширина — ПО ТЕКСТУ, как в «Году»);
+        // 42% — фолбэк переменной
         const mm = INDEX_SRC.match(/\.ws-tt-table:not\(\.ws-tt-year\) th\.ws-tt-emp,\n\s*\.ws-tt-table:not\(\.ws-tt-year\) td\.ws-tt-emp\s*\{[^}]*\}/);
-        assertTrue(!!mm && mm[0].indexOf('width: 42%') !== -1,
-            'месяц: ФИО 42% (мобайл), данные — равные доли остатка');
+        assertTrue(!!mm && mm[0].indexOf('width: var(--ws-tt-emp-w, 42%)') !== -1,
+            'месяц: ФИО по тексту var(--ws-tt-emp-w, 42%) (Task 382), данные — равные доли остатка');
     });
 
     test('CSS: заголовки — в ДВЕ строки при необходимости (заявка)', () => {
@@ -461,10 +464,10 @@ describe('Task 327 — VM: таблица месяца', () => {
 // 5. Service Worker
 // ============================================================
 describe('Task 327 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v610', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v610'") !== -1,
-            'CACHE_VERSION = kipia-test-v610 (Task 327 — только фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v611') !== -1,
+    test('SW: версия кэша kipia-test-v611', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v611'") !== -1,
+            'CACHE_VERSION = kipia-test-v611 (Task 327 — только фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v612') !== -1,
             'лишний инкремент не делался');
     });
 });

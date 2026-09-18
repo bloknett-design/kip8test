@@ -30,7 +30,7 @@
 //   _attachTotalsSync — на МОБАЙЛЕ клик/тап МИМО шторки закрывает
 //   её (✕ удалён): слушатель document click, только <1024px,
 //   клики по #wsTotalsDrawer/#wsTotalsRow не закрывают.
-//   SW: kipia-test-v610.
+//   SW: kipia-test-v611.
 //
 // Запуск: через tests/run-all.js (require './test-task325.js').
 
@@ -182,12 +182,15 @@ describe('Task 325 — CSS: ширина колонки и линии ячеек
             'кап 220px удалён (год — по самому широкому ФИО)');
         assertFalse(/@media \(max-width: 1023px\)\s*\{[^@]*\.ws-tt-emp[^}]*max-width:\s*150px/.test(INDEX_SRC),
             'мобильный кап 150px удалён');
-        // Task 327: месяц — fixed-раскладка, колонке задана ДОЛЯ 42%
+        // Task 327: месяц — fixed-раскладка, колонке задана ширина
         // (мобайл: ФИО + равные столбцы данных), эллипсис — только
-        // в месячной таблице (год — полные ФИО)
+        // в месячной таблице (год — полные ФИО).
+        // Task 382-адаптация: доля 42% → var(--ws-tt-emp-w, 42%) —
+        // ИЗНАЧАЛЬНАЯ ширина по тексту (как в «Году»), меряет
+        // _measureTtEmpFullW; 42% — фолбэк переменной
         const mm = INDEX_SRC.match(/\.ws-tt-table:not\(\.ws-tt-year\) th\.ws-tt-emp,\n\s*\.ws-tt-table:not\(\.ws-tt-year\) td\.ws-tt-emp\s*\{[^}]*\}/);
-        assertTrue(!!mm && mm[0].indexOf('width: 42%') !== -1,
-            'месяц: доля 42% колонки ФИО (fixed-раскладка, Task 327)');
+        assertTrue(!!mm && mm[0].indexOf('width: var(--ws-tt-emp-w, 42%)') !== -1,
+            'месяц: ширина по тексту var(--ws-tt-emp-w, 42%) (Task 382; фолбэк — доля 42%)');
         assertTrue(!!mm && mm[0].indexOf('text-overflow: ellipsis') !== -1,
             'месяц: эллипсис ФИО (fixed — не по содержимому)');
         const fix = INDEX_SRC.match(/\.ws-tt-table:not\(\.ws-tt-year\)\s*\{[^}]*table-layout:\s*fixed/);
@@ -452,10 +455,10 @@ describe('Task 325 — VM: мобильное закрытие тапом мим
 // ============================================================
 describe('Task 325 — SW', () => {
 
-    test('SW: версия кэша kipia-test-v610 (Task 325)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v610'") !== -1,
-            'CACHE_VERSION = kipia-test-v610');
-        assertFalse(SW_SRC.indexOf('kipia-test-v611') !== -1,
+    test('SW: версия кэша kipia-test-v611 (Task 325)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v611'") !== -1,
+            'CACHE_VERSION = kipia-test-v611');
+        assertFalse(SW_SRC.indexOf('kipia-test-v612') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });

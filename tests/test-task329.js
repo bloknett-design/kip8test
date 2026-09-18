@@ -32,7 +32,7 @@
 //     ширин ws-tt-c-*, ПЕРЕРАБОТКА В ДНЯХ (overDays), часы — в
 //     тултипе; _renderTotalsYearTable — сумма дней; min-width только
 //     на мобайле; пересечение брейкпоинта — сброс/перезамер.
-//   SW: kipia-test-v610.
+//   SW: kipia-test-v611.
 //
 // Запуск: через tests/run-all.js (require './test-task329.js').
 
@@ -207,9 +207,11 @@ describe('Task 329 — CSS: левый край, ширина по столбц�
         // заголовки — в 2 строки (правила Task 327 сохранены)
         assertTrue(/\.ws-tt-table th\s*\{[^}]*white-space:\s*normal/.test(INDEX_SRC),
             'перенос заголовков сохранён');
-        // мобильная таблица — прежняя (100%, ФИО 42%)
-        assertTrue(/\.ws-tt-table:not\(\.ws-tt-year\) th\.ws-tt-emp[\s\S]*?width:\s*42%/.test(INDEX_SRC),
-            'мобайл: ФИО 42% (правило сохранено)');
+        // мобильная таблица — прежняя раскладка (100%, fixed);
+        // Task 382-адаптация: ФИО — var(--ws-tt-emp-w, 42%)
+        // (изначальная ширина по тексту, как в «Году»)
+        assertTrue(/\.ws-tt-table:not\(\.ws-tt-year\) th\.ws-tt-emp[\s\S]*?width:\s*var\(--ws-tt-emp-w,\s*42%\)/.test(INDEX_SRC),
+            'мобайл: ФИО var(--ws-tt-emp-w, 42%) (правило сохранено, Task 382)');
     });
 
     test('CSS: ЗЕБРА колонки сотрудников — как в шторке итогов', () => {
@@ -472,10 +474,10 @@ describe('Task 329 — VM: закрытие и рендер', () => {
 // ============================================================
 describe('Task 329 — SW: версия кэша', () => {
 
-    test('SW: кэш поднят до kipia-test-v610 (Task 329)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v610') !== -1,
-            'CACHE_VERSION = kipia-test-v610');
-        assertFalse(SW_SRC.indexOf('kipia-test-v611-OLD') !== -1,
+    test('SW: кэш поднят до kipia-test-v611 (Task 329)', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v611') !== -1,
+            'CACHE_VERSION = kipia-test-v611');
+        assertFalse(SW_SRC.indexOf('kipia-test-v612-OLD') !== -1,
             'старой версии v567 нет');
     });
 });
