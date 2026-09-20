@@ -308,6 +308,16 @@ function doPost(e) {
       case 'workSchedule.deleteVacation':
         return _json(WorkSchedule.deleteVacation(payload));
 
+      // Task 384: правка данных сотрудника (B..G, J..K; таб_№ — PK,
+      // не меняется) — шторка «Правка сотрудника» из карточки
+      case 'workSchedule.updateEmployee':
+        return _json(WorkSchedule.updateEmployee(payload));
+
+      // Task 384: правка периода отпуска (B..F по id; проверки
+      // пересечения/дубля части не считают саму строку)
+      case 'workSchedule.updateVacation':
+        return _json(WorkSchedule.updateVacation(payload));
+
       default:
         return _json({ ok: false, error: 'Unknown action: ' + action });
     }

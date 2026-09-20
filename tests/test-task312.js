@@ -42,7 +42,7 @@
 //       (белый, как фон пустых ячеек с точкой — светлая тема
 //       --bg-primary #FAF9F5); ОСНОВНОЕ значение пользователь
 //       меняет в листе «Коды_статусов» сам (код #FAF9F5).
-//   SW: kipia-test-v611 (Task 313: v551 → v552 — окно мероприятий
+//   SW: kipia-test-v612 (Task 313: v551 → v552 — окно мероприятий
 //       над окном кодов + подсветка сегодняшней даты).
 //
 // Запуск: через tests/run-all.js (require './test-task312.js').
@@ -140,8 +140,9 @@ describe('Task 312 — кнопка «+ Отпуск»: тулбар → кар�
 
     test('JS: openVacationForm(tabNo) — префилл сотрудника', () => {
         const fn = fnBody(INDEX_SRC, 'openVacationForm: function');
-        assertTrue(INDEX_SRC.indexOf('openVacationForm: function(tabNo)') !== -1,
-            'сигнатура принимает необязательный таб. №');
+        // Task 384: 2-й аргумент editVacation — режим правки периода
+        assertTrue(INDEX_SRC.indexOf('openVacationForm: function(tabNo, editVacation)') !== -1,
+            'сигнатура принимает необязательный таб. № (и запись правки — Task 384)');
         assertTrue(fn.indexOf('empSel.value = String(tabNo);') !== -1,
             'выбранный сотрудник устанавливается в списке');
         // префилл ДО onVacEmployeeChange: часть и лимит года — сразу его
@@ -310,9 +311,9 @@ describe('Task 312/314 — «.» (плановый выходной): симво
 
 describe('Task 312 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v611', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v611'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v611');
+    test('SW: версия кэша kipia-test-v612', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v612'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v612');
         assertFalse(SW_SRC.indexOf('kipia-test-v550') !== -1,
             'старой версии v550 нет');
     });

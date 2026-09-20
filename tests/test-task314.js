@@ -45,7 +45,7 @@
 //       записи, лимит 12 видов, формат даты тултипа, битый JSON;
 //     — VM-СИМУЛЯЦИЯ _renderCell: «.»/статус-мероприятие/отсутствие/
 //       пустая+событие/смена+событие/план+событие.
-//   SW: kipia-test-v611.
+//   SW: kipia-test-v612.
 //
 // Запуск: через tests/run-all.js (require './test-task314.js').
 
@@ -216,8 +216,10 @@ describe('Task 314 — JS: локальная копия (скелет)', () => 
         // saveAll, генерация ×3, сотрудник, мероприятие ×5, отпуск ×2,
         // увольнение (Task 318) — правки обязаны перечитывать сервер,
         // кэш не подменяет свежее
+        // Task 384: +2 — правка данных сотрудника (updateEmployee) и
+        // правка периода отпуска (updateVacation) из карточки
         const n = (INDEX_SRC.match(/self\.loadGrid\(true\);/g) || []).length;
-        assertEqual(n, 13, '12 мутаций + 1 в refreshData = 13 вызовов loadGrid(true)');
+        assertEqual(n, 15, '14 мутаций + 1 в refreshData = 15 вызовов loadGrid(true)');
     });
 
     test('JS: refreshData — кнопка обновления (коды + вид + тост)', () => {
@@ -581,9 +583,9 @@ describe('Task 314 — VM: _renderCell (бейджи мероприятий; Tas
 // ------------------------------------------------------------
 describe('Task 314 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v611', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v611'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v611');
+    test('SW: версия кэша kipia-test-v612', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v612'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v612');
         assertFalse(SW_SRC.indexOf('kipia-test-v552') !== -1,
             'старой версии v552 нет');
     });

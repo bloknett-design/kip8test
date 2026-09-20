@@ -14,11 +14,16 @@
 //   workSchedule.setManualEntry   — upsert ручной правки (Б/ОТ/П/замещение)
 //   workSchedule.deleteEntry     — удалить ручную запись
 //   workSchedule.addEmployee      — добавить нового сотрудника
+//   workSchedule.updateEmployee   — правка данных сотрудника (Task 384:
+//                                   B..G, J..K; таб_№ — PK, не меняется)
 //   workSchedule.dismissEmployee   — уволить: дата_увольнения (H) + в_архиве=1 (I)
 //   workSchedule.addTraining      — добавить плановое мероприятие
 //   workSchedule.deleteTraining   — удалить мероприятие
 //   workSchedule.listVacations    — план отпусков (Task 274, лист «Отпуска»)
 //   workSchedule.addVacation      — добавить период отпуска (часть 1..3)
+//   workSchedule.updateVacation   — правка периода отпуска (Task 384:
+//                                   B..F по id; проверки не считают
+//                                   саму строку)
 //   workSchedule.deleteVacation   — удалить период отпуска
 //
 // Авторизация — по тому же паттерну, что Flowmeter.gs:
@@ -1610,6 +1615,66 @@ var WorkSchedule = {
              message: 'Сотрудник с таб. № ' + tabNo + ' не найден' };
   },
 
+  // workSchedule.updateEmployee (Task 384)
+  // payload: { token, таб_номер, ФИО, тип, смена, шаблон_ротации,
+  //            старт_цикла(ISO), дата_приёма(ISO), должность, комментарий }
+  // Правка данных сотрудника из карточки (шторка «Правка сотрудника»).
+  // Обновляет B..G (ФИО/тип/смена/шаблон/старт_цикла/дата_приёма) и
+  // J..K (должность/комментарий); A (таб_номер) — НЕИЗМЕНЕН: PK, на
+  // него ссылаются «Записи_графика»/«Инструктажи»/«Отпуска»; H/I
+  // (дата_увольнения/в_архиве) не трогаются — увольнение отдельным
+  // dismissEmployee.
+  updateEmployee: function(payload) {
+    var auth = this._requireWrite(payload.token);
+    if (auth.error) return auth.error;
+    var user = auth.user;
+
+    var tabNo = String(payload.таб_номер || '').trim();
+    if (!tabNo) return { ok: false, error: 'invalid_таб_номер' };
+    var fio = String(payload.ФИО || '').trim();
+    if (!fio) return { ok: false, error: 'invalid_ФИО' };
+    var tip = String(payload.тип || '').trim();
+    if (tip !== 'сменный' && tip !== 'дневной') {
+      return { ok: false, error: 'invalid_тип' };
+    }
+
+    var sheet = this._getSheet(this.EMPLOYEES_SHEET);
+    if (!sheet) return { ok: false, error: 'sheet_not_found: ' + this.EMPLOYEES_SHEET };
+
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) {
+      return { ok: false, error: 'not_found_таб_номер',
+               message: 'Сотрудник с таб. № ' + tabNo + ' не найден' };
+    }
+
+    var smena     = payload.смена ? parseInt(payload.смена, 10) : '';
+    var patId     = payload.шаблон_ротации ? parseInt(payload.шаблон_ротации, 10) : '';
+    var startCycle = this._parseIsoDate(payload.старт_цикла);
+    var hireDate  = this._parseIsoDate(payload.дата_приёма);
+    var position  = String(payload.должность || '').trim();
+    var comment   = String(payload.комментарий || '').slice(0, 500);
+
+    // Поиск строки по таб. № (A — текст, Task 304: ведущие нули)
+    var tabs = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    for (var i = 0; i < tabs.length; i++) {
+      if (String(tabs[i][0]).trim() !== tabNo) continue;
+      var row = i + 2;
+      // B..G: ФИО, тип, смена, шаблон_ротации, старт_цикла, дата_приёма
+      sheet.getRange(row, 2, 1, 6).setValues([[
+        fio, tip, smena || null, patId || null, startCycle, hireDate
+      ]]);
+      // J..K: должность, комментарий (A/H/I не трогаются)
+      sheet.getRange(row, 10, 1, 2).setValues([[ position, comment ]]);
+      try {
+        Utils.audit(user.email, 'WORKSCHEDULE_UPDATE_EMPLOYEE', '', '',
+          'Обновлены данные сотрудника таб_номер=' + tabNo + ' ФИО=' + fio);
+      } catch (e) { /* ignore */ }
+      return { ok: true, data: { таб_номер: tabNo } };
+    }
+    return { ok: false, error: 'not_found_таб_номер',
+             message: 'Сотрудник с таб. № ' + tabNo + ' не найден' };
+  },
+
   // ============================================================
   // CRUD инструктажей
   // ============================================================
@@ -1795,6 +1860,98 @@ var WorkSchedule = {
     } catch (e) { /* ignore */ }
 
     return { ok: true, data: { id: newId, дней: days } };
+  },
+
+  // workSchedule.updateVacation (Task 384)
+  // payload: { token, id, таб_номер, часть(1..3), дата_начала(ISO),
+  //            дата_окончания(ISO), комментарий }
+  // Правка периода отпуска из карточки сотрудника (шторка «Правка
+  // отпуска»). Обновляет B..F строки листа «Отпуска» по id (A — не
+  // меняется); валидация — как addVacation, но пересечение/дубль
+  // части НЕ считают саму редактируемую строку (иначе правка своих
+  // дат/части блокировалась бы собой). Task 304: B (таб_номер) —
+  // текстовый формат, ведущие нули не теряются.
+  updateVacation: function(payload) {
+    var auth = this._requireWrite(payload.token);
+    if (auth.error) return auth.error;
+    var user = auth.user;
+
+    var id = parseInt(payload.id, 10);
+    if (isNaN(id)) return { ok: false, error: 'invalid_id' };
+    var tabNo = String(payload.таб_номер || '').trim();
+    if (!tabNo) return { ok: false, error: 'invalid_таб_номер' };
+    var part = parseInt(payload.часть, 10);
+    if (isNaN(part) || part < 1 || part > 3) {
+      return { ok: false, error: 'invalid_часть',
+               message: 'Часть отпуска — 1, 2 или 3' };
+    }
+    var startDate = this._parseIsoDate(payload.дата_начала);
+    if (!startDate) return { ok: false, error: 'invalid_дата_начала' };
+    var endDate = payload.дата_окончания ? this._parseIsoDate(payload.дата_окончания) : startDate;
+    if (!endDate) endDate = startDate;
+    if (endDate.getTime() < startDate.getTime()) {
+      return { ok: false, error: 'end_before_start',
+               message: 'Дата окончания раньше даты начала' };
+    }
+    var days = Math.round((endDate.getTime() - startDate.getTime()) /
+                          (24 * 60 * 60 * 1000)) + 1;
+    var comment = String(payload.комментарий || '').slice(0, 500);
+
+    var sheet = this._getSheet(this.VACATIONS_SHEET);
+    if (!sheet) return { ok: false, error: 'sheet_not_found: ' + this.VACATIONS_SHEET };
+
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return { ok: false, error: 'not_found' };
+
+    // Строка по id (A)
+    var ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    var rowIndex = -1;
+    for (var fi = 0; fi < ids.length; fi++) {
+      if (parseInt(ids[fi][0], 10) === id) { rowIndex = fi + 2; break; }
+    }
+    if (rowIndex === -1) return { ok: false, error: 'not_found' };
+
+    // Проверки по существующим периодам сотрудника — КРОМЕ самой
+    // строки (Task 384: правка не пересекается сама с собой и не
+    // занимает «свою» часть)
+    var values = sheet.getRange(2, 1, lastRow - 1, 6).getValues();
+    for (var vi = 0; vi < values.length; vi++) {
+      if ((vi + 2) === rowIndex) continue;
+      var r = values[vi];
+      if ((r[0] === '' || r[0] === null) && !String(r[1] || '').trim() &&
+          !this._parseSheetDate(r[3])) continue;
+      if (String(r[1] || '').trim() !== tabNo) continue;
+      var exStart = this._parseSheetDate(r[3]);
+      var exEnd   = this._parseSheetDate(r[4]) || exStart;
+      if (!exStart) continue;
+      if (endDate.getTime() >= exStart.getTime() &&
+          startDate.getTime() <= exEnd.getTime()) {
+        return { ok: false, error: 'overlap',
+                 message: 'Период пересекается с уже заданным отпуском ' +
+                          'этого сотрудника (' + this._toIsoDate(exStart) + ' — ' +
+                          this._toIsoDate(exEnd) + ')' };
+      }
+      var exPart = parseInt(r[2], 10);
+      if (exPart === part && exStart.getFullYear() === startDate.getFullYear()) {
+        return { ok: false, error: 'duplicate_часть',
+                 message: 'Часть ' + part + ' у этого сотрудника уже задана на ' +
+                          startDate.getFullYear() + ' год' };
+      }
+    }
+
+    // Запись B..F (id в A не меняется); Task 304: B — текст
+    sheet.getRange(rowIndex, 2).setNumberFormat('@');
+    sheet.getRange(rowIndex, 2, 1, 5).setValues(
+      [[tabNo, part, startDate, endDate, comment]]);
+
+    try {
+      Utils.audit(user.email, 'WORKSCHEDULE_UPDATE_VACATION', '', '',
+        'Обновлён отпуск id=' + id + ' часть=' + part +
+        ' таб_номер=' + tabNo + ' ' + this._toIsoDate(startDate) + '…' +
+        this._toIsoDate(endDate) + ' (' + days + ' дн.)');
+    } catch (e) { /* ignore */ }
+
+    return { ok: true, data: { id: id, дней: days } };
   },
 
   // workSchedule.deleteVacation

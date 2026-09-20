@@ -194,6 +194,7 @@ require('./test-task381.js');
 // Task 382: мобильная страница итогов, месяц — изначальная ширина
 // колонки фамилий ПО ТЕКСТУ (как в «Годе»), --ws-tt-emp-w
 require('./test-task382.js');
+require('./test-task384.js');
 require('./test-deploy-url.js');
 
 // Запускаем
