@@ -170,10 +170,10 @@ describe('Task 385 — HTML: легенда/страница/переимено�
             'подсказка «Вид»');
     });
 
-    test('SW: кэш поднят до kipia-test-v614', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v614'") !== -1,
-            'CACHE_VERSION = kipia-test-v614 (Task 385 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v615') !== -1,
+    test('SW: кэш поднят до kipia-test-v615', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v615'") !== -1,
+            'CACHE_VERSION = kipia-test-v615 (Task 385 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v616') !== -1,
             'v614 ещё не существует (guard)');
     });
 });
@@ -334,10 +334,17 @@ describe('Task 385 — SRC: шторка «Легенда»', () => {
         assertTrue(fn.indexOf('ws-lg-swatch') !== -1, 'свотчи цветов ячеек');
         assertTrue(fn.indexOf('Справочник кодов ещё не загружен') !== -1,
             'пустое состояние до загрузки справочника');
-        assertTrue(fn.indexOf('плановой смены (Д/Н)') !== -1,
+        // Task 387: пояснение «Код мероприятия… ПОВЕРХ плановой смены
+        // (Д/Н)» УДАЛЕНО; бейдж плановой смены — живое пояснение
+        assertTrue(fn.indexOf('плановая смена по циклу') !== -1,
             'пояснение про бейдж плановой смены');
+        assertFalse(fn.indexOf('ПОВЕРХ плановой смены') !== -1,
+            'пояснение «код мероприятия поверх смены» удалено (Task 387)');
         assertTrue(fn.indexOf('сегодняшняя дата') !== -1, 'пояснение «сегодня»');
-        assertTrue(fn.indexOf('ст. 120 ТК РФ') !== -1, 'пояснение праздников в отпусках');
+        // Task 387: пояснение праздников в отпусках УДАЛЕНО; живо
+        // переозвученное «Красная рамка… (пример - 24*)»
+        assertTrue(fn.indexOf('(пример - 24*)') !== -1, 'сокращённый предпраздничный');
+        assertFalse(fn.indexOf('ст. 120 ТК РФ') !== -1, 'пояснение праздников удалено (Task 387)');
     });
 
     test('Esc закрывает легенду', () => {

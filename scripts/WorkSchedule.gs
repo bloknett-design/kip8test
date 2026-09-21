@@ -523,7 +523,13 @@ var WorkSchedule = {
     var codes = [];
     for (var i = 0; i < values.length; i++) {
       var row = values[i];
-      if (!row[0]) continue;
+      // Task 387: строка «Выходной» с ПУСТЫМ кодом колонки A
+      // (пользователь убрал «.» из листа — выходной = пустая
+      // ячейка белого цвета) ЛЕГИТИМНА: код "" возвращается кли-
+      // енту (канон _STATUS_CODES_CANON). Пропускаем только пол-
+      // ностью пустые строки (стилевой холст getLastRow, урок
+      // Task 294)
+      if (!row[0] && !row[1]) continue;
       codes.push({
         code:  String(row[0]).trim(),
         name:  String(row[1] || '').trim(),

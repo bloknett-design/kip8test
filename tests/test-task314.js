@@ -45,7 +45,7 @@
 //       записи, лимит 12 видов, формат даты тултипа, битый JSON;
 //     — VM-СИМУЛЯЦИЯ _renderCell: «.»/статус-мероприятие/отсутствие/
 //       пустая+событие/смена+событие/план+событие.
-//   SW: kipia-test-v614.
+//   SW: kipia-test-v615.
 //
 // Запуск: через tests/run-all.js (require './test-task314.js').
 
@@ -281,6 +281,23 @@ describe('Task 314 — VM: локальная копия (поведение)', 
         return { getElementById: id => (id === 'wsRefreshTipDate' ? el : null), _el: el };
     }
 
+    // Task 387: канон справочника — вырезается из index.html
+    // (_STATUS_CODES_CANON: [ … ]) скобочным балансом
+    function canonCodes() {
+        const i = INDEX_SRC.indexOf('_STATUS_CODES_CANON: [');
+        if (i === -1) return [];
+        const open = INDEX_SRC.indexOf('[', i);
+        let depth = 0;
+        for (let k = open; k < INDEX_SRC.length; k++) {
+            if (INDEX_SRC[k] === '[') depth++;
+            else if (INDEX_SRC[k] === ']') {
+                depth--;
+                if (!depth) return eval(INDEX_SRC.slice(open, k + 1));
+            }
+        }
+        return [];
+    }
+
     function mkCtx(store, doc) {
         const ctx = {
             _year: 2026, _month: 9,
@@ -289,10 +306,12 @@ describe('Task 314 — VM: локальная копия (поведение)', 
             _STATUS_CODES: [], _PATTERNS: [], _EMPLOYEES: [],
             _ENTRIES: [], _TRAININGS: [],
             _VACATIONS: [], _VAC_PAGE: [], _vacYear: null,
+            _STATUS_CODES_CANON: canonCodes(),
             _fillStatusSelectCount: 0,
             _fillStatusSelect: function () { this._fillStatusSelectCount++; }
         };
-        ['_ymKey', '_cacheRead', '_restoreCachedView', '_cacheWrite', '_updateCacheStamp']
+        ['_ymKey', '_cacheRead', '_restoreCachedView', '_cacheWrite', '_updateCacheStamp',
+         '_normalizeStatusCodes']
             .forEach(m => { ctx[m] = loadMethod(m, store, doc); });
         return ctx;
     }
@@ -332,7 +351,13 @@ describe('Task 314 — VM: локальная копия (поведение)', 
         store.setItem('kip8_ws_cache_v1', JSON.stringify(FULL_CACHE));
         const ctx = mkCtx(store, doc);
         assertTrue(ctx._restoreCachedView(), 'вид 2026-09 восстановлен');
+        // Task 387: кэш нормализован — «.» → слот «Выходного» (пустой
+        // код, каноническое имя), Д — канонический порядок/имя
         assertEqual(ctx._STATUS_CODES.length, 2, 'коды');
+        assertEqual(ctx._STATUS_CODES[0].code, 'Д', 'первый — Д (канонический порядок)');
+        assertEqual(ctx._STATUS_CODES[1].code, '', 'второй — «Выходной» (пустой код)');
+        assertTrue(ctx._STATUS_CODES[1].name.indexOf('Выходной') !== -1,
+            'имя «Выходного» каноническое');
         assertEqual(ctx._EMPLOYEES.length, 1, 'сотрудники');
         assertEqual(ctx._ENTRIES.length, 1, 'записи');
         assertEqual(ctx._TRAININGS.length, 1, 'мероприятия');
@@ -583,9 +608,9 @@ describe('Task 314 — VM: _renderCell (бейджи мероприятий; Tas
 // ------------------------------------------------------------
 describe('Task 314 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v614', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v614'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v614');
+    test('SW: версия кэша kipia-test-v615', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v615'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v615');
         assertFalse(SW_SRC.indexOf('kipia-test-v552') !== -1,
             'старой версии v552 нет');
     });

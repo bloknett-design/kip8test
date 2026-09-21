@@ -120,13 +120,13 @@ describe('Task 386 — HTML: «Обозначения» (кнопка/два в�
             'плавное расширение (transition width)');
     });
 
-    test('CSS: широкий вид — min(400px, 45vw) классом ws-lg-wide', () => {
+    test('CSS: широкий вид — min(500px, 45vw) классом ws-lg-wide (Task 387)', () => {
         const iCss = INDEX_SRC.indexOf(
             '.ws-legend-drawer.ws-lg-wide .ws-legend-inner {');
         assertTrue(iCss !== -1, 'правило широкого вида есть');
-        const chunk = INDEX_SRC.slice(iCss, iCss + 200);
-        assertTrue(chunk.indexOf('width: min(400px, 45vw)') !== -1,
-            'широкая панель — min(400px, 45vw)');
+        const chunk = INDEX_SRC.slice(iCss, iCss + 300);
+        assertTrue(chunk.indexOf('width: min(500px, 45vw)') !== -1,
+            'широкая панель — до 500px (Task 387, было 400px)');
     });
 
     test('CSS: наименования/пояснения — только развёрнутый вид', () => {
@@ -341,8 +341,8 @@ describe('Task 386 — SRC: механика', () => {
     test('_legendWidthPx — явные ширины (узкий 190 / широкий кап)', () => {
         const fn = methodText(INDEX_SRC, '_legendWidthPx');
         assertTrue(fn.indexOf('190') !== -1, 'узкий вид — 190px');
-        assertTrue(fn.indexOf('Math.min(400') !== -1 && fn.indexOf('0.45') !== -1,
-            'широкий — min(400px, 45vw) (согласовано с CSS)');
+        assertTrue(fn.indexOf('Math.min(500') !== -1 && fn.indexOf('0.45') !== -1,
+            'широкий — min(500px, 45vw) (согласовано с CSS; Task 387: 500px)');
         assertTrue(fn.indexOf('Math.max(190') !== -1,
             'широкий не уже 190px');
     });
@@ -388,10 +388,10 @@ describe('Task 386 — SRC: механика', () => {
             'Esc → _setLegend(false)');
     });
 
-    test('SW: кэш поднят до kipia-test-v614', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v614'") !== -1,
-            'CACHE_VERSION = kipia-test-v614 (Task 386 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v615') !== -1,
+    test('SW: кэш поднят до kipia-test-v615', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v615'") !== -1,
+            'CACHE_VERSION = kipia-test-v615 (Task 386 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v616') !== -1,
             'v615 ещё не существует (guard)');
     });
 });
@@ -501,8 +501,8 @@ describe('Task 386 — VM: шторка/страница', () => {
         // разворот шире
         h.WSM.toggleLegendWide();
         assertEqual(h.WSM._legendWide, true, 'вид — широкий');
-        assertEqual(h.els().wsLegendDrawer.style.width, '400px',
-            'слот — 400px (min(400, 45vw от 1280))');
+        assertEqual(h.els().wsLegendDrawer.style.width, '500px',
+            'слот — 500px (min(500, 45vw от 1280); Task 387)');
         assertTrue(chvCalls.some(c => c[0] === 'aria-pressed' && c[1] === 'true'),
             'aria-pressed=true у шеврона');
         assertTrue(chvCalls.some(c => c[0] === 'aria-label' &&
@@ -538,12 +538,12 @@ describe('Task 386 — VM: шторка/страница', () => {
             'снятие при открытии узким, add в широком, снятие при сворачивании');
     });
 
-    test('VM: _legendWidthPx — капы (190 / 400 / 45vw)', () => {
+    test('VM: _legendWidthPx — капы (190 / 500 / 45vw)', () => {
         const h = makeHost(true);            // vw не задан → 1280 fallback
         assertEqual(h.WSM._legendWidthPx(), 190, 'узкий — 190px');
         h.WSM._legendWide = true;
-        assertEqual(h.WSM._legendWidthPx(), 400, 'широкий @1280 — 400px');
-        // узкий экран: 45vw < 400
+        assertEqual(h.WSM._legendWidthPx(), 500, 'широкий @1280 — 500px (Task 387)');
+        // узкий экран: 45vw < 500
         const h2 = makeHost(true, 700);
         h2.WSM._legendWide = true;
         assertEqual(h2.WSM._legendWidthPx(), 315, 'широкий @700 — 45vw = 315px');
@@ -556,8 +556,8 @@ describe('Task 386 — VM: шторка/страница', () => {
         h.WSM._setLegend(false);             // закрыли
         assertEqual(h.WSM._legendWide, true, 'вид сохранён (в памяти сессии)');
         h.WSM._setLegend(true);              // открыли снова
-        assertEqual(h.els().wsLegendDrawer.style.width, '400px',
-            'открылась сразу ШИРОКОЙ (пережитый вид)');
+        assertEqual(h.els().wsLegendDrawer.style.width, '500px',
+            'открылась сразу ШИРОКОЙ (пережитый вид; Task 387: 500px)');
     });
 
     test('VM: _legendHtml/_renderLegendSheet — контент шторки', () => {
@@ -581,7 +581,10 @@ describe('Task 386 — VM: шторка/страница', () => {
         assertTrue(body.indexOf('Коды дней (Т-12/Т-13)') !== -1, 'секция дней');
         assertTrue(body.indexOf('Ночь (12-час)') !== -1, 'наименования на странице');
         assertTrue(body.indexOf('Обозначения в шахматке') !== -1, 'пояснения');
-        assertTrue(body.indexOf('ст. 120 ТК РФ') !== -1, 'праздники отпусков');
+        // Task 387: пояснение праздников в отпусках УДАЛЕНО; живы
+        // бейдж смены/«сегодня»/«красная рамка… (пример - 24*)»
+        assertTrue(body.indexOf('(пример - 24*)') !== -1, 'сокращённый предпраздничный');
+        assertFalse(body.indexOf('ст. 120 ТК РФ') !== -1, 'пояснение праздников удалено (Task 387)');
         // шторку страница не трогает (элемент даже не запрашивался)
         assertEqual(h.els().wsLegendDrawer, undefined,
             'десктоп-шторка не трогается со страницы');
