@@ -31,7 +31,7 @@
 //     _renderTotalsYearTable — НЕТ tfoot; _fitGrid — бюджет без
 //     резерва итоговой строки; toggleTotals/setTotalsTab зовут новые
 //     методы.
-//   SW: kipia-test-v612.
+//   SW: kipia-test-v613.
 //
 // Запуск: через tests/run-all.js (require './test-task327.js').
 
@@ -386,8 +386,8 @@ describe('Task 327 — VM: таблица месяца', () => {
         const ths = h.match(/<th[^>]*>[\s\S]*?<\/th>/g) || [];
         const names = ths.map(function(x) { return x.replace(/<[^>]*>/g, ''); });
         assertEqual(JSON.stringify(names),
-            JSON.stringify(['Сотрудник', 'Явки (дни)', 'Часы', 'Переработка (дни)']),
-            'заголовки: Сотрудник + основные в порядке заявки (Task 331: подписи в днях)');
+            JSON.stringify(['Работник', 'Явки (дни)', 'Часы', 'Переработка (дни)']),
+            'заголовки: Работник (Task 385) + основные в порядке заявки (Task 331: подписи в днях)');
         assertFalse(h.indexOf('<th>Всего</th>') !== -1, 'столбца «Всего» нет');
         assertFalse(h.indexOf('<tfoot>') !== -1, 'tfoot (общее количество) нет');
     });
@@ -413,10 +413,10 @@ describe('Task 327 — VM: таблица месяца', () => {
         const ths = h.match(/<th[^>]*>[\s\S]*?<\/th>/g) || [];
         const names = ths.map(function(x) { return x.replace(/<[^>]*>/g, ''); });
         assertEqual(JSON.stringify(names), JSON.stringify([
-            'Сотрудник', 'Явки (дни)', 'Часы', 'Переработка (дни)',
+            'Работник', 'Явки (дни)', 'Часы', 'Переработка (дни)',
             'Отгул (ОВ)', 'Больничный (Б)', 'Отпуск (ОТ)', 'Уч. отпуск (У)',
             'Прогул (ПР)', 'День (Д)', 'Ночь (Н)', 'Прочие'
-        ]), 'порядок заявки: основные (Task 331 — подписи в днях) + Отгул, Больничный, Отпуск, Уч. отпуск, Прогул, День, Ночь, Прочие');
+        ]), 'порядок заявки: Работник (Task 385) + основные (Task 331) + Отгул, Больничный, Отпуск, Уч. отпуск, Прогул, День, Ночь, Прочие');
         assertFalse(h.indexOf('<th>Всего</th>') !== -1, 'столбца «Всего» нет даже при «Ещё»');
     });
 
@@ -464,10 +464,10 @@ describe('Task 327 — VM: таблица месяца', () => {
 // 5. Service Worker
 // ============================================================
 describe('Task 327 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v612', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v612'") !== -1,
-            'CACHE_VERSION = kipia-test-v612 (Task 327 — только фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v613') !== -1,
+    test('SW: версия кэша kipia-test-v613', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v613'") !== -1,
+            'CACHE_VERSION = kipia-test-v613 (Task 327 — только фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v614') !== -1,
             'лишний инкремент не делался');
     });
 });

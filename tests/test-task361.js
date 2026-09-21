@@ -31,7 +31,7 @@
 //     статус-мероприятия без строки в «Инструктажах»; CSS
 //     .wsp-ev-wrap/.wsp-ev/.wsp-ev-plan; сноска поясняет значок.
 //
-// SW: kipia-test-v612.
+// SW: kipia-test-v613.
 //
 // Запуск: через tests/run-all.js (require './test-task361.js').
 
@@ -90,8 +90,8 @@ describe('Task 361 — SRC: колонка «Сотрудник» по текс�
             'точное измерение через canvas measureText');
         assertTrue(b.indexOf('measureTxt') !== -1,
             'локальная функция измерения');
-        assertTrue(b.indexOf("empWmm + 'mm\">Сотрудник</th>'") !== -1,
-            'inline ширина на th .wsp-emp');
+        assertTrue(b.indexOf("empWmm + 'mm\">Работник</th>'") !== -1,
+            'inline ширина на th .wsp-emp (Task 385: работник)');
         assertTrue(b.indexOf('empWmm < 24') !== -1 && b.indexOf('empWmm > 48') !== -1,
             'кламп 24–48mm');
     });
@@ -361,7 +361,7 @@ describe('Task 361 — VM: ширина «Сотрудник» по тексту
     }
 
     function empWidth(html) {
-        var m = html.match(/<th class="wsp-emp" style="width:(\d+(?:\.\d+)?)mm">Сотрудник<\/th>/);
+        var m = html.match(/<th class="wsp-emp" style="width:(\d+(?:\.\d+)?)mm">Работник<\/th>/);
         return m ? parseFloat(m[1]) : null;
     }
 
@@ -479,10 +479,10 @@ describe('Task 361 — VM: регресс печатного листа', () => 
 // ============================================================
 describe('Task 361 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v612', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v612'") !== -1,
-            'CACHE_VERSION = kipia-test-v612 (Task 361 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v613') !== -1,
+    test('SW: кэш поднят до kipia-test-v613', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v613'") !== -1,
+            'CACHE_VERSION = kipia-test-v613 (Task 361 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v614') !== -1,
             'v605 ещё не существует (лишний инкремент)');
     });
 

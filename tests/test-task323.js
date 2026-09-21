@@ -36,7 +36,7 @@
 //   clientHeight (ползунок), syncTT в конце; рендеры: tfoot
 //   «Итого», БЕЗ .ws-tt-scroll, ws-tt-year (год), год: активные
 //   по порядку сетки + архив ниже; инфо в title.
-//   SW: kipia-test-v612.
+//   SW: kipia-test-v613.
 //
 // Запуск: через tests/run-all.js (require './test-task323.js').
 
@@ -674,8 +674,8 @@ describe('Task 323 — VM: структура таблиц итогов', () => 
         // Task 335: текст шапки — в span.ws-tt-emp-head (обмен
         // «Сотрудник»→«Сотр» при сужении)
         assertTrue(h.indexOf('<th class="ws-tt-emp"><span class="ws-tt-emp-head"') !== -1 &&
-            h.indexOf('data-full="Сотрудник"') !== -1,
-            'заголовок колонки в разметке (мобайл/год)');
+            h.indexOf('data-full="Работник"') !== -1,
+            'заголовок колонки в разметке (мобайл/год; Task 385: работник)');
         assertTrue(h.indexOf('Иванов И.И.') !== -1, 'ФИО в строке (мобайл)');
     });
 
@@ -798,10 +798,10 @@ describe('Task 323 — интеграция', () => {
 // 10. SW: версия кэша
 // ============================================================
 describe('Task 323 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v612 (Task 323)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v612'") !== -1,
-            'CACHE_VERSION = kipia-test-v612');
-        assertFalse(SW_SRC.indexOf('kipia-test-v613') !== -1,
+    test('SW: кэш поднят до kipia-test-v613 (Task 323)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v613'") !== -1,
+            'CACHE_VERSION = kipia-test-v613');
+        assertFalse(SW_SRC.indexOf('kipia-test-v614') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });

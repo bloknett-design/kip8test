@@ -16,7 +16,7 @@
 //   сервер (справочные копии): WorkSchedule.gs _requireRead пускает
 //   чтение по view/view.min/edit; RoleMatrixTask340Init.gs —
 //   одноразовое добавление столбца в матрицу.
-//   SW: kipia-test-v612.
+//   SW: kipia-test-v613.
 //
 // Запуск: через tests/run-all.js (require './test-task340.js').
 
@@ -369,15 +369,21 @@ describe('Task 340 — карточки сотрудников по уровню
         assertTrue(threw === null, 'min: попап не открывается (DOM не тронут)');
     });
 
-    test('SRC: карточка read-only — элементы правки гейтятся _canEdit', () => {
-        const fn = methodText(WS_CLIENT, '_renderEmpPopup');
-        // «Уволить…», «+ Отпуск…», ✎/✕ — только редакторам: у «view»
-        // карточка открывается БЕЗ правки
-        const cnt = fn.split('if (this._canEdit').length - 1;
-        assertTrue(cnt >= 3, 'все элементы правки гейтятся _canEdit (найдено ' + cnt + ')');
+    test('SRC: карточка read-only — элементы правки гейтятся withEdit', () => {
+        // Task 385: карточка шахматки — ТОЛЬКО ЧТЕНИЕ для ВСЕХ уровней
+        // (обёртка _renderEmpPopup → _renderWorkerCard(tabNo, false));
+        // элементы правки живут в _renderWorkerCard с гейтом withEdit
+        // и рендерятся на странице «Работники» (_renderWorkersPage,
+        // только редакторам — двойная защита openWorkersPage)
+        const wrap = methodText(WS_CLIENT, '_renderEmpPopup');
+        assertTrue(wrap.indexOf('_renderWorkerCard(tabNo, false)') !== -1,
+            'обёртка зовёт _renderWorkerCard с withEdit=false (Task 385)');
+        const fn = methodText(WS_CLIENT, '_renderWorkerCard');
+        const cnt = fn.split('if (withEdit').length - 1;
+        assertTrue(cnt >= 4, 'все элементы правки гейтятся withEdit (найдено ' + cnt + ')');
         assertTrue(fn.indexOf('ws-emp-dismiss') !== -1 &&
                    fn.indexOf('ws-emp-addvac') !== -1,
-            '«Уволить…»/«+ Отпуск…» рендерятся по праву записи');
+            '«Уволить…»/«+ Отпуск…» рендерятся по withEdit (страница «Работники»)');
     });
 });
 
@@ -646,10 +652,10 @@ describe('Task 340 — сервер: _requireRead пускает все три �
 // ============================================================
 describe('Task 340 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v612', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v612'") !== -1,
-            'CACHE_VERSION = kipia-test-v612 (Task 340 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v613') !== -1,
+    test('SW: кэш поднят до kipia-test-v613', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v613'") !== -1,
+            'CACHE_VERSION = kipia-test-v613 (Task 340 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v614') !== -1,
             'лишний инкремент (v579) не сделан');
     });
 

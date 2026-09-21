@@ -33,7 +33,7 @@
 //     таб_№ (текст, Task 304), пишет H (дата) + I (в_архиве=1),
 //     строка НЕ удаляется; ошибки invalid/not_found; аудит;
 //     маршрут в Code.gs.
-//   SW: kipia-test-v612.
+//   SW: kipia-test-v613.
 //
 // Запуск: через tests/run-all.js (require './test-task318.js').
 
@@ -146,12 +146,12 @@ describe('Task 318 — HTML: форма и шторка', () => {
         ['wsDismissEmp', 'wsDismissDate'].forEach(id => {
             assertTrue(sheet.indexOf('id="' + id + '"') !== -1, 'id="' + id + '"');
         });
-        assertTrue(sheet.indexOf('Увольнение сотрудника') !== -1, 'заголовок');
+        assertTrue(sheet.indexOf('Увольнение работника') !== -1, 'заголовок (Task 385: работник)');
         assertTrue(sheet.indexOf('onclick="WorkSchedule.submitDismissForm()"') !== -1,
             'кнопка «Уволить» → submitDismissForm');
         assertTrue(sheet.indexOf('onclick="WorkSchedule.closeDismissForm()"') !== -1,
             'кнопка «Отмена» → closeDismissForm');
-        assertTrue(sheet.indexOf('архиве справочника «Сотрудники»') !== -1,
+        assertTrue(sheet.indexOf('архиве справочника') !== -1,
             'пояснение: строка остаётся в архиве');
     });
 
@@ -214,19 +214,19 @@ describe('Task 318 — JS: список должностей из таблицы
 describe('Task 318 — JS: карточка — «Режим работы» + «Уволить…»', () => {
 
     test('JS: _renderEmpPopup — подпись «Режим работы» (было «Тип»)', () => {
-        const rp = methodText(INDEX_SRC, '_renderEmpPopup');
+        const rp = methodText(INDEX_SRC, '_renderWorkerCard');
         assertTrue(rp.indexOf("['Режим работы', tipVal]") !== -1,
             'поле называется «Режим работы»');
         assertFalse(rp.indexOf("['Тип',") !== -1, 'подпись «Тип» убрана');
     });
 
     test('JS: _renderEmpPopup — строка «Уволить…» (только редакторам)', () => {
-        const rp = methodText(INDEX_SRC, '_renderEmpPopup');
+        const rp = methodText(INDEX_SRC, '_renderWorkerCard');
         const i = rp.indexOf('ws-emp-dismiss');
-        assertTrue(i !== -1, 'строка «Уволить…» в карточке');
+        assertTrue(i !== -1, 'строка «Уволить…» в карточке (Task 385: страница «Работники»)');
         const seg = rp.slice(Math.max(0, i - 400), i + 400);
-        assertTrue(seg.indexOf('this._canEdit') !== -1,
-            'только ролям с правом записи');
+        assertTrue(seg.indexOf('withEdit') !== -1,
+            'только с withEdit (Task 385: страница «Работники», редакторам)');
         assertTrue(seg.indexOf('WorkSchedule.openDismissForm(') !== -1,
             'клик → openDismissForm(таб_№)');
         assertTrue(seg.indexOf('Уволить…') !== -1, 'текст строки');
@@ -246,7 +246,7 @@ describe('Task 318 — JS: методы увольнения', () => {
             'запоминает таб. №');
         assertTrue(m.indexOf("this._isoDate(new Date())") !== -1,
             'дата увольнения — сегодня по умолчанию');
-        assertTrue(m.indexOf("'Сотрудник не найден'") !== -1, 'не найден — тост');
+        assertTrue(m.indexOf("'Работник не найден'") !== -1, 'не найден — тост (Task 385: работник)');
         assertTrue(m.indexOf("getElementById('wsDismissOverlay')") !== -1,
             'оверлей активируется');
         assertTrue(m.indexOf('this.closeEmpPopup()') !== -1,
@@ -641,10 +641,10 @@ describe('Task 318 — Сервер: dismissEmployee (WorkSchedule.gs)', () => {
 // Service Worker
 // ============================================================
 describe('Task 318 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v612', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v612') !== -1,
-            'CACHE_VERSION = kipia-test-v612 (Task 318)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v613') !== -1,
+    test('SW: версия кэша kipia-test-v613', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v613') !== -1,
+            'CACHE_VERSION = kipia-test-v613 (Task 318)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v614') !== -1,
             'лишний инкремент не делался');
     });
 });

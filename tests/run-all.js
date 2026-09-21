@@ -195,6 +195,9 @@ require('./test-task381.js');
 // колонки фамилий ПО ТЕКСТУ (как в «Годе»), --ws-tt-emp-w
 require('./test-task382.js');
 require('./test-task384.js');
+// Task 385: легенда сокращений (шторка «Легенда»), «сотрудник»→
+// «работник», страница «Работники» (карточка шахматки read-only)
+require('./test-task385.js');
 require('./test-deploy-url.js');
 
 // Запускаем

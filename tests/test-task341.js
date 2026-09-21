@@ -20,7 +20,7 @@
 // display:none. Печатается ТЕКУЩИЙ вид табеля (у уровня min
 // «Мастер КИПиА» скрыт — _viewEmployees, Task 340).
 //
-// SW: kipia-test-v612.
+// SW: kipia-test-v613.
 //
 // Запуск: через tests/run-all.js (require './test-task341.js').
 
@@ -417,8 +417,8 @@ describe('Task 341 — _buildPrintHtml (VM)', () => {
             'день недели под числом');
         assertTrue(html.indexOf('<th class="wsp-emp" style="width:') !== -1,
             'колонка сотрудника с inline-шириной по тексту (Task 361)');
-        assertTrue(html.indexOf('">Сотрудник</th>') !== -1,
-            'заголовок колонки сотрудника');
+        assertTrue(html.indexOf('">Работник</th>') !== -1,
+            'заголовок колонки работника (Task 385)');
     });
 
     test('VM: выходные в шапке помечены, дни недели — по календарю', () => {
@@ -508,10 +508,10 @@ describe('Task 341 — _buildPrintHtml (VM)', () => {
 // ============================================================
 describe('Task 341 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v612', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v612'") !== -1,
-            'CACHE_VERSION = kipia-test-v612 (Task 341 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v613') !== -1,
+    test('SW: кэш поднят до kipia-test-v613', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v613'") !== -1,
+            'CACHE_VERSION = kipia-test-v613 (Task 341 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v614') !== -1,
             'лишний инкремент (v580) не сделан');
     });
 

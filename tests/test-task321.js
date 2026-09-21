@@ -859,8 +859,8 @@ describe('Task 321 — _renderTotalsMonth: таблица месяца', () => {
     test('нет сотрудников — понятное пустое сообщение', () => {
         const t = makeMonthHost({ _EMPLOYEES: [] });
         t.host._renderTotalsMonth();
-        assertTrue(t.els.wsTtBody.innerHTML.indexOf('Нет активных сотрудников') !== -1,
-            'пустое состояние');
+        assertTrue(t.els.wsTtBody.innerHTML.indexOf('Нет активных работников') !== -1,
+            'пустое состояние (Task 385: работники)');
     });
 
     test('_fmtTotalsNum: запятая вместо точки', () => {
@@ -1018,8 +1018,8 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
         // (Сидоров, своя колонка «Сотрудник» на любом экране)
         // Task 335: текст шапки — в span.ws-tt-emp-head («Сотр» при сужении)
         assertTrue(h.indexOf('<th class="ws-tt-emp"><span class="ws-tt-emp-head"') !== -1 &&
-            h.indexOf('data-full="Сотрудник"') !== -1,
-            'главная таблица: шапка с «Сотрудником» (Task 333, мобайл)');
+            h.indexOf('data-full="Работник"') !== -1,
+            'главная таблица: шапка с «Работником» (Task 333, мобайл; Task 385: работник)');
         assertTrue(h.indexOf('Иванов И.И.') !== -1,
             'активный Иванов — строка главной таблицы (Task 333)');
         assertTrue(h.indexOf('ws-tt-arch-cap') !== -1 && h.indexOf('>Архив</div>') !== -1,
@@ -1091,10 +1091,10 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
 // 11. SW: версия кэша
 // ============================================================
 describe('Task 321 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v612 (Task 323)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v612'") !== -1,
-            'CACHE_VERSION = kipia-test-v612');
-        assertFalse(SW_SRC.indexOf('kipia-test-v613') !== -1,
+    test('SW: кэш поднят до kipia-test-v613 (Task 323)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v613'") !== -1,
+            'CACHE_VERSION = kipia-test-v613');
+        assertFalse(SW_SRC.indexOf('kipia-test-v614') !== -1,
             'v561 не существует (один инкремент на Task 321)');
     });
 });

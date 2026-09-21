@@ -27,7 +27,7 @@
 //   диспетчеризация, node --check обоих .gs.
 //   VM-функционально (клиент и сервер): happy-path правок, валидации,
 //   самопересечение/дубль части, лимит 42, не найдено.
-//   SW: kipia-test-v612 (guard v613).
+//   SW: kipia-test-v613 (guard v613).
 //
 // Запуск: через tests/run-all.js (require './test-task384.js').
 
@@ -70,9 +70,9 @@ function methodText(src, name) {
 // ============================================================
 describe('Task 384 — HTML: шторки с режимами правки', () => {
 
-    test('id заголовка и кнопки шторки сотрудника', () => {
-        assertTrue(INDEX_SRC.indexOf('id="wsEmpSheetTitle">Новый сотрудник<') !== -1,
-            'заголовок #wsEmpSheetTitle');
+    test('id заголовка и кнопки шторки работника', () => {
+        assertTrue(INDEX_SRC.indexOf('id="wsEmpSheetTitle">Новый работник<') !== -1,
+            'заголовок #wsEmpSheetTitle (Task 385: работник)');
         assertTrue(INDEX_SRC.indexOf('id="wsEmpSubmitBtn" onclick="WorkSchedule.submitEmployeeForm()"') !== -1,
             'кнопка #wsEmpSubmitBtn');
     });
@@ -84,16 +84,17 @@ describe('Task 384 — HTML: шторки с режимами правки', () 
             'кнопка #wsVacSubmitBtn');
     });
 
-    test('комментарий карточки: центр правки Task 384', () => {
+    test('комментарий карточки: read-only по Task 385', () => {
         // HTML-комментарий попапа (CSS-комментарий Task 309 выше по
-        // файлу — не тот маркер)
-        const i = INDEX_SRC.indexOf('<!-- Task 309: карточка сотрудника — попап у колонки ФИО');
+        // файлу — не тот маркер). Task 385: карточка — только чтение,
+        // правки переехали на страницу «Работники»
+        const i = INDEX_SRC.indexOf('<!-- Task 309: карточка работника — попап у колонки ФИО');
         assertTrue(i !== -1, 'HTML-комментарий карточки найден');
-        const chunk = INDEX_SRC.slice(i, i + 1400);
-        assertTrue(chunk.indexOf('Task 384: карточка — ЦЕНТР ПРАВКИ') !== -1,
-            'комментарий описывает Task 384');
-        assertTrue(chunk.indexOf('updateVacation/deleteVacation') !== -1,
-            'упомянуты серверные вызовы правки');
+        const chunk = INDEX_SRC.slice(i, i + 1600);
+        assertTrue(chunk.indexOf('Task 385: карточка — ТОЛЬКО ЧТЕНИЕ') !== -1,
+            'комментарий описывает Task 385 (read-only)');
+        assertTrue(chunk.indexOf('страницу «Работники»') !== -1,
+            'правки переехали на страницу «Работники»');
     });
 });
 
@@ -103,7 +104,9 @@ describe('Task 384 — HTML: шторки с режимами правки', () 
 describe('Task 384 — карточка: правка по отдельности', () => {
 
     test('профиль: строка «Правка данных…» (редакторам)', () => {
-        const fn = methodText(INDEX_SRC, '_renderEmpPopup');
+        // Task 385: тело карточки — _renderWorkerCard (страница
+        // «Работники», withEdit=true; попап шахматки — false)
+        const fn = methodText(INDEX_SRC, '_renderWorkerCard');
         assertTrue(fn.indexOf('ws-emp-editdata') !== -1, 'класс-маркер ws-emp-editdata');
         assertTrue(fn.indexOf('Правка данных…</div>') !== -1, 'текст строки');
         assertTrue(fn.indexOf("WorkSchedule.openEmpEditForm(\\'") !== -1,
@@ -116,17 +119,17 @@ describe('Task 384 — карточка: правка по отдельност�
     });
 
     test('отпуска: ✎/✕ у периодов (редакторам, только с id)', () => {
-        const fn = methodText(INDEX_SRC, '_renderEmpPopup');
+        const fn = methodText(INDEX_SRC, '_renderWorkerCard');
         assertTrue(fn.indexOf('WorkSchedule.editVacation(') !== -1, '✎ → editVacation(id)');
         assertTrue(fn.indexOf('WorkSchedule.deleteVacation(') !== -1, '✕ → deleteVacation(id)');
-        assertTrue(fn.indexOf('if (this._canEdit && vId)') !== -1,
-            'кнопки только редакторам и записям с id');
+        assertTrue(fn.indexOf('if (withEdit && vId)') !== -1,
+            'кнопки только с withEdit (страница «Работники») и записям с id');
         assertTrue(fn.indexOf("title=\"Редактировать период\"") !== -1, 'тултип правки');
         assertTrue(fn.indexOf("title=\"Удалить период\"") !== -1, 'тултип удаления');
     });
 
     test('мероприятия: строка «+ Мероприятие…» (редакторам)', () => {
-        const fn = methodText(INDEX_SRC, '_renderEmpPopup');
+        const fn = methodText(INDEX_SRC, '_renderWorkerCard');
         assertTrue(fn.indexOf('ws-emp-addtr') !== -1, 'класс-маркер ws-emp-addtr');
         assertTrue(fn.indexOf('+ Мероприятие…</div>') !== -1, 'текст строки');
         assertTrue(fn.indexOf("WorkSchedule.onEmpAddTraining(\\'") !== -1,
@@ -153,7 +156,7 @@ describe('Task 384 — состояние и режимы шторок', () => {
         assertTrue(fn.indexOf(".readOnly = true;") !== -1, 'таб. № — readonly');
         assertTrue(fn.indexOf('this.closeEmpPopup();') !== -1, 'карточка закрывается до шторки');
         assertTrue(fn.indexOf('this._fillPositionSelect();') !== -1, 'должность — список Task 318');
-        assertTrue(fn.indexOf("'Правка сотрудника'") !== -1, 'заголовок режима правки');
+        assertTrue(fn.indexOf("'Правка работника'") !== -1, 'заголовок режима правки (Task 385: работник)');
         assertTrue(fn.indexOf("'Сохранить'") !== -1, 'кнопка «Сохранить»');
         assertTrue(fn.indexOf('this._empEditTab = String(emp[\'таб_номер\']);') !== -1,
             'запоминает таб. № редактируемого');
@@ -163,7 +166,7 @@ describe('Task 384 — состояние и режимы шторок', () => {
         const fn = methodText(INDEX_SRC, 'openEmployeeForm');
         assertTrue(fn.indexOf('this._empEditTab = null;') !== -1, 'сброс _empEditTab');
         assertTrue(fn.indexOf(".readOnly = false;") !== -1, 'таб. № снова вводится');
-        assertTrue(fn.indexOf("'Новый сотрудник'") !== -1, 'заголовок создания');
+        assertTrue(fn.indexOf("'Новый работник'") !== -1, 'заголовок создания (Task 385: работник)');
         assertTrue(fn.indexOf("'Добавить'") !== -1, 'кнопка «Добавить»');
     });
 
@@ -179,7 +182,7 @@ describe('Task 384 — состояние и режимы шторок', () => {
         assertTrue(fn.indexOf("if (this._empEditTab) {") !== -1, 'ветка режима правки');
         assertTrue(fn.indexOf("'workSchedule.updateEmployee'") !== -1, 'эндпоинт updateEmployee');
         assertTrue(fn.indexOf("'таб_номер': editTab,") !== -1, 'таб. № из _empEditTab (PK)');
-        assertTrue(fn.indexOf("'Данные сотрудника обновлены'") !== -1, 'тост успеха');
+        assertTrue(fn.indexOf("'Данные работника обновлены'") !== -1, 'тост успеха (Task 385: работник)');
         // шторка закрывается ТОЛЬКО при успехе (catch без closeEmployeeForm)
         const iOk = fn.indexOf("self.closeEmployeeForm();");
         const iCatch = fn.indexOf("}).catch(function(err) {");
@@ -495,7 +498,7 @@ describe('Task 384 — VM клиент: шторка сотрудника', () =
         assertEqual(els.wsEmpHire.value, '2024-05-01', 'дата приёма');
         assertEqual(els.wsEmpPosition.value, 'Слесарь КИПиА', 'должность (врем. опция)');
         assertEqual(els.wsEmpComment.value, 'основной', 'комментарий');
-        assertEqual(els.wsEmpSheetTitle.textContent, 'Правка сотрудника', 'заголовок');
+        assertEqual(els.wsEmpSheetTitle.textContent, 'Правка работника', 'заголовок (Task 385)');
         assertEqual(els.wsEmpSubmitBtn.textContent, 'Сохранить', 'кнопка');
         assertEqual(api.WSM._empEditTab, '0871', 'состояние режима');
         assertEqual(api.closed().emp, 1, 'карточка закрыта до шторки');
@@ -508,7 +511,7 @@ describe('Task 384 — VM клиент: шторка сотрудника', () =
         const els = api.els();
         assertEqual(api.WSM._empEditTab, null, '_empEditTab сброшен');
         assertEqual(els.wsEmpTabNo.readOnly, false, 'таб. № снова вводится');
-        assertEqual(els.wsEmpSheetTitle.textContent, 'Новый сотрудник', 'заголовок');
+        assertEqual(els.wsEmpSheetTitle.textContent, 'Новый работник', 'заголовок (Task 385)');
         assertEqual(els.wsEmpSubmitBtn.textContent, 'Добавить', 'кнопка');
     });
 
@@ -536,8 +539,8 @@ describe('Task 384 — VM клиент: шторка сотрудника', () =
         assertEqual(upd[0].payload['тип'], 'сменный', 'тип');
         assertEqual(upd[0].payload['должность'], 'Слесарь КИПиА', 'должность');
         assertEqual(api.loadGrid().length, 1, 'loadGrid перезагрузил сетку');
-        assertTrue(api.toasts().indexOf('Данные сотрудника обновлены') !== -1,
-            'тост успеха');
+        assertTrue(api.toasts().indexOf('Данные работника обновлены') !== -1,
+            'тост успеха (Task 385: работник)');
         assertEqual(api.WSM._empEditTab, null, 'режим сброшен после успеха');
         // addEmployee НЕ вызывался
         assertEqual(api.calls().filter(c => c.action === 'workSchedule.addEmployee').length, 0,
@@ -913,10 +916,10 @@ describe('Task 384 — VM сервер: updateVacation', () => {
 // 8. SW
 // ============================================================
 describe('Task 384 — Service Worker', () => {
-    test('SW: кэш поднят до kipia-test-v612', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v612'") !== -1,
-            'CACHE_VERSION = kipia-test-v612 (Task 384 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v613') !== -1,
+    test('SW: кэш поднят до kipia-test-v613', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v613'") !== -1,
+            'CACHE_VERSION = kipia-test-v613 (Task 384 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v614') !== -1,
             'лишний инкремент (v613) не сделан');
     });
 });

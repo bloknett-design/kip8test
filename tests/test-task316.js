@@ -25,7 +25,7 @@
 //     накрывающих записей, заголовок «05.09», «нет мероприятий в
 //     этот день», охрана дня вне месяца → полный месяц);
 //     _dayColClass мягкий к мок-DOM.
-//   SW: kipia-test-v612.
+//   SW: kipia-test-v613.
 //
 // Запуск: через tests/run-all.js (require './test-task316.js').
 
@@ -97,8 +97,10 @@ describe('Task 316 — HTML/JS: столбец дня по наведению/к
     test('JS: init — Esc снимает выбор дня', () => {
         const WS_SRC = INDEX_SRC.slice(INDEX_SRC.indexOf('var WorkSchedule = {'));
         const init = methodText(WS_SRC, 'init');
-        assertTrue(/ev\.key === 'Escape'[\s\S]{0,300}selfOnce\._daySelect\(null\);/.test(init),
-            'Escape → _daySelect(null) рядом с закрытием попапов');
+        // Task 385: между closeEmpPopup и _daySelect добавлено
+        // закрытие шторки «Легенда» — окно расширено 300 → 700
+        assertTrue(/ev\.key === 'Escape'[\s\S]{0,700}selfOnce\._daySelect\(null\);/.test(init),
+            'Escape → _daySelect(null) рядом с закрытием попапов (+легенда Task 385)');
     });
 
     test('JS: onMonthChange — смена месяца сбрасывает выбор', () => {
@@ -376,9 +378,9 @@ describe('Task 316 — VM: окно мероприятий по выбранно
 // SW: версия кэша
 // ------------------------------------------------------------
 describe('Task 316 — SW: версия кэша', () => {
-    test('SW: kipia-test-v612', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v612') !== -1,
-            'CACHE_VERSION = kipia-test-v612');
+    test('SW: kipia-test-v613', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v613') !== -1,
+            'CACHE_VERSION = kipia-test-v613');
         assertFalse(SW_SRC.indexOf('kipia-test-v554') !== -1,
             'прежней версии нет');
     });

@@ -28,7 +28,7 @@
 //      ws-view-filtered на #page-work-schedule (_applyView),
 //      CSS align-self/flex по контенту, _fitGrid капсулирует высоту
 //      строк природной, остаток раздачи ≤ n-1.
-//   SW: kipia-test-v612.
+//   SW: kipia-test-v613.
 //
 // Запуск: через tests/run-all.js (require './test-task335.js').
 
@@ -193,22 +193,22 @@ describe('Task 335 — плавное сужение колонки фамили
             'десктоп: полное ФИО (гориз. прокрутка шторки не портит)');
     });
 
-    test('РЕНДЕР: шапка сетки — span «Сотрудник» ⇄ «Сотр»', () => {
+    test('РЕНДЕР: шапка сетки — span «Работник» ⇄ «Рабо»', () => {
         const i = INDEX_SRC.indexOf('class="ws-emp-head-txt"');
         assertTrue(i !== -1, 'span.ws-emp-head-txt в разметке шапки сетки');
         const chunk = INDEX_SRC.slice(i - 80, i + 160);
-        assertTrue(chunk.indexOf('data-full="Сотрудник"') !== -1, 'data-full');
-        assertTrue(chunk.indexOf('data-s4="Сотр"') !== -1, 'data-s4 «Сотр»');
+        assertTrue(chunk.indexOf('data-full="Работник"') !== -1, 'data-full (Task 385: работник)');
+        assertTrue(chunk.indexOf('data-s4="Рабо"') !== -1, 'data-s4 «Рабо»');
     });
 
-    test('РЕНДЕР: шапки итогов (месяц + год + архив) — span «Сотрудник» ⇄ «Сотр»', () => {
+    test('РЕНДЕР: шапки итогов (месяц + год + архив) — span «Работник» ⇄ «Рабо»', () => {
         const n = (INDEX_SRC.match(/class="ws-tt-emp-head"/g) || []).length;
         assertEqual(n, 3, 'три таблицы: месяц, годовая, архивная');
         const chunk = INDEX_SRC.slice(
             INDEX_SRC.indexOf('class="ws-tt-emp-head"') - 40,
             INDEX_SRC.indexOf('class="ws-tt-emp-head"') + 120);
-        assertTrue(chunk.indexOf('data-full="Сотрудник"') !== -1, 'data-full');
-        assertTrue(chunk.indexOf('data-s4="Сотр"') !== -1, 'data-s4 «Сотр»');
+        assertTrue(chunk.indexOf('data-full="Работник"') !== -1, 'data-full (Task 385: работник)');
+        assertTrue(chunk.indexOf('data-s4="Рабо"') !== -1, 'data-s4 «Рабо»');
     });
 });
 
@@ -376,10 +376,10 @@ describe('Task 335 — десктоп: виды сменные/дневные б
 // SW-версия
 // ============================================================
 describe('Task 335 — версия кэша SW', () => {
-    test('SW: кэш поднят до kipia-test-v612', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v612'") !== -1,
-            'CACHE_VERSION = kipia-test-v612 (Task 335 — только фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v613') !== -1,
+    test('SW: кэш поднят до kipia-test-v613', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v613'") !== -1,
+            'CACHE_VERSION = kipia-test-v613 (Task 335 — только фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v614') !== -1,
             'лишний инкремент (v577) не сделан');
     });
 });

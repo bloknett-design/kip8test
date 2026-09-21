@@ -43,7 +43,7 @@
 //   HTML: #wsViewBtn — ПОДПИСЬ «Вид» (span.ws-view-label после
 //     иконок); CSS .ws-view-btn — width: auto + паддинги (не
 //     квадрат-иконка), .ws-view-label — 13px/600.
-//   SW: kipia-test-v612.
+//   SW: kipia-test-v613.
 //
 // Запуск: через tests/run-all.js (require './test-task333.js').
 
@@ -401,8 +401,8 @@ describe('Task 333 — год: архив блоком, обновление т�
         const t2 = makeYearHost({ year: 2026, ts: Date.now(), failed: 0,
             months: {}, employees: [] }, []);
         t2.host._renderTotalsYearTable();
-        assertTrue(t2.els.wsTtBody.innerHTML.indexOf('Нет сотрудников') !== -1,
-            'нет ни активных, ни архива — пустое состояние');
+        assertTrue(t2.els.wsTtBody.innerHTML.indexOf('Нет работников') !== -1,
+            'нет ни активных, ни архива — пустое состояние (Task 385: работники)');
     });
 
     test('CSS: десктоп прячет «Сотрудника» ТОЛЬКО у главной таблицы года', () => {
@@ -472,10 +472,10 @@ describe('Task 333 — кнопка вида: подпись «Вид»', () => 
 // ============================================================
 describe('Task 333 — SW: версия кэша', () => {
 
-    test('SW: кэш поднят до kipia-test-v612 (Task 333)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v612') !== -1,
-            'в sw.js — kipia-test-v612');
-        assertFalse(SW_SRC.indexOf('kipia-test-v613') !== -1,
+    test('SW: кэш поднят до kipia-test-v613 (Task 333)', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v613') !== -1,
+            'в sw.js — kipia-test-v613');
+        assertFalse(SW_SRC.indexOf('kipia-test-v614') !== -1,
             'лишний инкремент (v577) не сделан');
     });
 });

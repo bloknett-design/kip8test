@@ -42,7 +42,7 @@
 //   "Ошибка: self.loadTrainings is not a function"»):
 //     — вызовы удалённых страниц loadTrainings()/loadVacations()
 //       больше не встречаются; вместо них loadGrid().
-//   SW: kipia-test-v612.
+//   SW: kipia-test-v613.
 //
 // Запуск: через tests/run-all.js (require './test-task309.js').
 
@@ -137,7 +137,9 @@ describe('Task 309 — карточка сотрудника у колонки �
     });
 
     test('JS: _renderEmpPopup — блоки данных из убранных вкладок', () => {
-        const rp = fnBody(INDEX_SRC, '_renderEmpPopup: function');
+        // Task 385: тело карточки — в _renderWorkerCard (обёртка
+        // _renderEmpPopup = чтение; withEdit=false/true)
+        const rp = fnBody(INDEX_SRC, '_renderWorkerCard: function');
         // Task 311: строка-заголовок «Сотрудник» убрана — профиль
         // идёт сразу после шапки ФИО (без секции «Сотрудник»)
         assertFalse(rp.indexOf('<div class="ws-popup-sec">Сотрудник</div>') !== -1,
@@ -162,7 +164,7 @@ describe('Task 309 — карточка сотрудника у колонки �
     });
 
     test('JS: отпуска в карточке — фильтр по году, чистые дни, БЕЗ итога года', () => {
-        const rp = fnBody(INDEX_SRC, '_renderEmpPopup: function');
+        const rp = fnBody(INDEX_SRC, '_renderWorkerCard: function');
         assertTrue(rp.indexOf('this._vacDaysInYear(v, this._year)') !== -1,
             'периоды фильтруются по году шахматки');
         assertTrue(rp.indexOf('this._vacNetDaysInYear(vv, this._year)') !== -1,
@@ -181,13 +183,13 @@ describe('Task 309 — карточка сотрудника у колонки �
     });
 
     test('JS: мероприятия в карточке — сортировка по дате, кнопки только редакторам', () => {
-        const rp = fnBody(INDEX_SRC, '_renderEmpPopup: function');
+        const rp = fnBody(INDEX_SRC, '_renderWorkerCard: function');
         assertTrue(rp.indexOf('WorkSchedule.editTraining(') !== -1,
-            'кнопка правки ✎ в карточке');
+            'кнопка правки ✎ в карточке (Task 385: страница «Работники»)');
         assertTrue(rp.indexOf('WorkSchedule.deleteTraining(') !== -1,
-            'кнопка удаления ✕ в карточке');
-        assertTrue(rp.indexOf('if (this._canEdit && trId)') !== -1,
-            'кнопки — только ролям с правом записи');
+            'кнопка удаления ✕ в карточке (Task 385: страница «Работники»)');
+        assertTrue(rp.indexOf('if (withEdit && trId)') !== -1,
+            'кнопки — только с withEdit (Task 385: страница «Работники», редакторам)');
         assertTrue(rp.indexOf('нет мероприятий в месяце') !== -1,
             'пустое состояние секции мероприятий');
         assertTrue(rp.indexOf('a.дата_начала).localeCompare') !== -1,
@@ -381,9 +383,9 @@ describe('Task 309 — регресс-фиксы Task 308 (loadTrainings/loadVac
 
 describe('Task 309 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v612', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v612'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v612');
+    test('SW: версия кэша kipia-test-v613', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v613'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v613');
         assertFalse(SW_SRC.indexOf('kipia-test-v547') !== -1,
             'старой версии v547 нет');
     });
