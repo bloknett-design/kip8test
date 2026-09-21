@@ -23,7 +23,7 @@
 //      _openEmpPopup (программные вызовы тоже). Режим зрителя —
 //      класс ws-readonly на #page-work-schedule: CSS выключает
 //      подсветку наведения ФИО (зебра чётных строк живёт).
-//   SW: kipia-test-v615.
+//   SW: kipia-test-v616.
 //
 // Запуск: через tests/run-all.js (require './test-task338.js').
 
@@ -89,29 +89,46 @@ describe('Task 338 — вид зрителя: сменный (итоги/дне�
 
     test('SRC: _applyView — кнопка «Итоги учёта» скрыта вне полного вида', () => {
         const fn = methodText(WS_CLIENT, '_applyView');
-        assertTrue(fn.indexOf("totalsBtn.hidden = !full || minNoTotals;") !== -1,
-            '«Итоги учёта» скрыты вне полного вида И у уровня min (Task 340)');
+        // Task 388 (заявка): итоги доступны во ВСЕХ видах — скрыты
+        // только уровню «min» (Task 340)
+        assertTrue(fn.indexOf("totalsBtn.hidden = minNoTotals;") !== -1,
+            '«Итоги учёта» скрыты только уровню min (Task 388)');
+        assertFalse(fn.indexOf('!full || minNoTotals') !== -1,
+            'гейта вида больше нет (Task 388)');
         assertTrue(fn.indexOf("viewPage.classList.toggle('ws-view-filtered', !full);") !== -1,
             'класс ws-view-filtered (Task 335) — сетка по высоте контента');
     });
 
     test('SRC: toggleTotals — гейт вида (шторка/кнопка недоступны)', () => {
         const fn = methodText(WS_CLIENT, 'toggleTotals');
-        assertTrue(fn.indexOf("(vGate !== 'full' || this._viewLevel === 'min')") !== -1,
-            'десктоп: открытие шторки гейчится видом и уровнем (Task 340)');
-        assertTrue(fn.indexOf("if (vGate !== 'full' || this._viewLevel === 'min') return;") !== -1,
-            'мобильная страница итогов — гейт вида и уровня');
+        // Task 388 (заявка): итоги в любом виде; гейт — только min
+        assertTrue(fn.indexOf("if (this._viewLevel === 'min' &&") !== -1,
+            'десктоп: гейт только уровнем min (Task 388/340)');
+        assertTrue(fn.indexOf("if (this._viewLevel === 'min') return;") !== -1,
+            'мобильная страница итогов — гейт уровня');
+        assertFalse(fn.indexOf("vGate !== 'full'") !== -1,
+            'гейта вида больше нет (Task 388)');
     });
 
-    test('VM: onTotalsPageOpen — зритель (вид shift) уходит на табель', () => {
+    test('VM: onTotalsPageOpen — вид shift ОТКРЫВАЕТ страницу (Task 388)', () => {
+        // Task 388 (заявка: итоги в видах сменный/дневной): гейт вида
+        // снят — страница итогов открывается и в сменном виде
+        const els = {
+            wsTtPageTabMonth: { classList: { toggle: function() {} } },
+            wsTtPageTabYear: { classList: { toggle: function() {} } }
+        };
         let navPage = null;
-        const host = new Function('navigateTo', 'return ({' +
+        const host = new Function('document', 'navigateTo', 'return ({' +
             methodText(WS_CLIENT, 'onTotalsPageOpen') + '\n' +
             "_view: 'shift', _viewLevel: 'view'," +
-            '});')(function(page) { navPage = page; });
+            "_totalsTab: 'month'," +
+            '_renderTotals: function() { this.rendered = true; },' +
+            '_reapplyEmpNarrow: function() {}' +
+            '});')(mockDoc(els), function(page) { navPage = page; });
         host.onTotalsPageOpen();
-        assertEqual(navPage, 'work-schedule', 'редирект на страницу табеля');
-        assertFalse(host._ttPage === true, 'флаг страницы итогов не ставится');
+        assertEqual(navPage, null, 'редиректа нет — итоги доступны в сменном виде');
+        assertEqual(host._ttPage, true, 'флаг страницы итогов ставится');
+        assertEqual(host.rendered, true, 'таблицы отрисованы');
     });
 
     test('VM: onTotalsPageOpen — редактор (полный вид) открывает страницу', () => {
@@ -268,10 +285,10 @@ describe('Task 338 — регрессы прав Task 337', () => {
 // ============================================================
 describe('Task 338 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v615', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v615'") !== -1,
-            'CACHE_VERSION = kipia-test-v615 (Task 338 — только фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v616') !== -1,
+    test('SW: кэш поднят до kipia-test-v616', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v616'") !== -1,
+            'CACHE_VERSION = kipia-test-v616 (Task 338 — только фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v617') !== -1,
             'лишний инкремент (v578) не сделан');
     });
 

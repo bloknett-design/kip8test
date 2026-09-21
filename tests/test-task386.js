@@ -108,14 +108,14 @@ describe('Task 386 — HTML: «Обозначения» (кнопка/два в�
             'старый заголовок убран');
     });
 
-    test('CSS: inner — flex:none + 190px (латентный баг Task 385 закрыт)', () => {
+    test('CSS: inner — flex:none + 230px (Task 388: краткие обозначения)', () => {
         const iCss = INDEX_SRC.indexOf('.ws-legend-inner {');
         assertTrue(iCss !== -1, 'правило .ws-legend-inner есть');
         const chunk = INDEX_SRC.slice(iCss, iCss + 400);
         assertTrue(chunk.indexOf('flex: none') !== -1,
             'flex: none — inner НЕ сжимается flex-сжатием');
-        assertTrue(chunk.indexOf('width: 190px') !== -1,
-            'узкий вид — 190px (сокращённые обозначения)');
+        assertTrue(chunk.indexOf('width: 230px') !== -1,
+            'краткий вид — 230px (Task 388: коды + краткие обозначения)');
         assertTrue(chunk.indexOf('transition: width 0.28s ease') !== -1,
             'плавное расширение (transition width)');
     });
@@ -340,11 +340,11 @@ describe('Task 386 — SRC: механика', () => {
 
     test('_legendWidthPx — явные ширины (узкий 190 / широкий кап)', () => {
         const fn = methodText(INDEX_SRC, '_legendWidthPx');
-        assertTrue(fn.indexOf('190') !== -1, 'узкий вид — 190px');
+        assertTrue(fn.indexOf('230') !== -1, 'краткий вид — 230px (Task 388)');
         assertTrue(fn.indexOf('Math.min(500') !== -1 && fn.indexOf('0.45') !== -1,
             'широкий — min(500px, 45vw) (согласовано с CSS; Task 387: 500px)');
-        assertTrue(fn.indexOf('Math.max(190') !== -1,
-            'широкий не уже 190px');
+        assertTrue(fn.indexOf('Math.max(230') !== -1,
+            'широкий не уже 230px (Task 388)');
     });
 
     test('_setLegend — шеврон/вид/явная ширина', () => {
@@ -388,10 +388,10 @@ describe('Task 386 — SRC: механика', () => {
             'Esc → _setLegend(false)');
     });
 
-    test('SW: кэш поднят до kipia-test-v615', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v615'") !== -1,
-            'CACHE_VERSION = kipia-test-v615 (Task 386 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v616') !== -1,
+    test('SW: кэш поднят до kipia-test-v616', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v616'") !== -1,
+            'CACHE_VERSION = kipia-test-v616 (Task 386 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v617') !== -1,
             'v615 ещё не существует (guard)');
     });
 });
@@ -473,15 +473,15 @@ describe('Task 386 — VM: шторка/страница', () => {
         assertEqual(h.WSM._legendOpen, true, 'шторка открылась');
     });
 
-    test('VM: _setLegend — открытие узким видом (190px)', () => {
+    test('VM: _setLegend — открытие кратким видом (230px, Task 388)', () => {
         const h = makeHost(true);
         h.WSM._setLegend(true);
         const drawer = h.els().wsLegendDrawer;
-        assertEqual(drawer.style.width, '190px', 'слот — узкий вид');
+        assertEqual(drawer.style.width, '230px', 'слот — краткий вид');
         assertEqual(drawer.style.marginRight, '0px', 'выехала (маржа 0)');
         assertEqual(h.els().wsLgChv.hidden, false, 'шеврон показан');
         h.WSM._setLegend(false);
-        assertEqual(drawer.style.marginRight, '-190px',
+        assertEqual(drawer.style.marginRight, '-230px',
             'закрытие — за край на ширину вида');
         assertEqual(h.els().wsLgChv.hidden, true, 'шеврон скрыт');
     });
@@ -511,7 +511,7 @@ describe('Task 386 — VM: шторка/страница', () => {
         // обратно к кодам
         h.WSM.toggleLegendWide();
         assertEqual(h.WSM._legendWide, false, 'вид — снова узкий');
-        assertEqual(h.els().wsLegendDrawer.style.width, '190px', 'слот — 190px');
+        assertEqual(h.els().wsLegendDrawer.style.width, '230px', 'слот — 230px (Task 388)');
         assertTrue(chvCalls.some(c => c[0] === 'aria-label' &&
                    String(c[1]).indexOf('Показать подробные') !== -1),
             'aria-label «Показать подробные наименования»');
@@ -538,9 +538,9 @@ describe('Task 386 — VM: шторка/страница', () => {
             'снятие при открытии узким, add в широком, снятие при сворачивании');
     });
 
-    test('VM: _legendWidthPx — капы (190 / 500 / 45vw)', () => {
+    test('VM: _legendWidthPx — капы (230 / 500 / 45vw; Task 388)', () => {
         const h = makeHost(true);            // vw не задан → 1280 fallback
-        assertEqual(h.WSM._legendWidthPx(), 190, 'узкий — 190px');
+        assertEqual(h.WSM._legendWidthPx(), 230, 'краткий — 230px (Task 388)');
         h.WSM._legendWide = true;
         assertEqual(h.WSM._legendWidthPx(), 500, 'широкий @1280 — 500px (Task 387)');
         // узкий экран: 45vw < 500

@@ -20,7 +20,7 @@
 // display:none. Печатается ТЕКУЩИЙ вид табеля (у уровня min
 // «Мастер КИПиА» скрыт — _viewEmployees, Task 340).
 //
-// SW: kipia-test-v615.
+// SW: kipia-test-v616.
 //
 // Запуск: через tests/run-all.js (require './test-task341.js').
 
@@ -312,10 +312,10 @@ describe('Task 341 — _printCell (VM)', () => {
     test('VM: событие в ПУСТОЙ ячейке — пунктирный бейдж-план (Task 361)', () => {
         var td = cellHost({ events: [{ code: 'И', training: 7 }] })
             ._printCell(6, '2026-09-06', EMP, null);
-        assertTrue(td.indexOf('wsp-ev-plan') !== -1,
-            'пунктирный бейдж у несформированного дня');
-        assertTrue(td.indexOf('background:') === -1,
-            'у плана нет заливки (появится при «Сформировать»)');
+        assertFalse(td.indexOf('wsp-ev-plan') !== -1,
+            'пунктирного бейджа нет (Task 388)');
+        assertTrue(td.indexOf('background:') !== -1,
+            'заливка цветом кода — и у несформированного дня (Task 388)');
     });
 
     test('VM: статус-мероприятие БЕЗ строки в «Инструктажах» — ВИРТУАЛЬНЫЙ бейдж (Task 361)', () => {
@@ -508,10 +508,10 @@ describe('Task 341 — _buildPrintHtml (VM)', () => {
 // ============================================================
 describe('Task 341 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v615', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v615'") !== -1,
-            'CACHE_VERSION = kipia-test-v615 (Task 341 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v616') !== -1,
+    test('SW: кэш поднят до kipia-test-v616', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v616'") !== -1,
+            'CACHE_VERSION = kipia-test-v616 (Task 341 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v617') !== -1,
             'лишний инкремент (v580) не сделан');
     });
 

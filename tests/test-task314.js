@@ -45,7 +45,7 @@
 //       записи, лимит 12 видов, формат даты тултипа, битый JSON;
 //     — VM-СИМУЛЯЦИЯ _renderCell: «.»/статус-мероприятие/отсутствие/
 //       пустая+событие/смена+событие/план+событие.
-//   SW: kipia-test-v615.
+//   SW: kipia-test-v616.
 //
 // Запуск: через tests/run-all.js (require './test-task314.js').
 
@@ -559,20 +559,24 @@ describe('Task 314 — VM: _renderCell (бейджи мероприятий; Tas
         assertFalse(html.indexOf('ws-ev-pending') !== -1, 'сплошной (не пунктир)');
     });
 
-    test('пустая ячейка + мероприятие — пунктирный бейдж-подсказка', () => {
+    test('пустая ячейка + мероприятие — СПЛОШНОЙ бейдж с цветом кода (Task 388)', () => {
         const ctx = mkRenderCtx({ '2026-09-01': [{ code: 'И', training: { id: 4 } }] }, null);
         const html = cellHtml(ctx, null);
-        assertTrue(html.indexOf('ws-ev-pending') !== -1, 'пунктирный бейдж');
-        assertFalse(/style="background:/.test(html.match(/<span class="ws-ev-badge[^>]*>/)[0]),
-            'пунктирный бейдж без заливки');
+        assertFalse(html.indexOf('ws-ev-pending') !== -1,
+            'пунктирного бейджа нет (Task 388: фон всегда цвет кода)');
+        assertTrue(/style="background:/.test(html.match(/<span class="ws-ev-badge[^>]*>/)[0]),
+            'заливка цветом кода — и на пустой ячейке');
     });
 
-    test('план отпуска + мероприятие — пунктирный бейдж рядом с «ОТ»', () => {
+    test('план отпуска + мероприятие — СПЛОШНОЙ бейдж рядом с «ОТ» (Task 388)', () => {
         const ctx = mkRenderCtx({ '2026-09-01': [{ code: 'И', training: { id: 5 } }] },
                                 { '2026-09-01': { 'таб_номер': '017' } });
         const html = cellHtml(ctx, null);
         assertTrue(html.indexOf('>ОТ') !== -1, 'код плана «ОТ»');
-        assertTrue(html.indexOf('ws-ev-pending') !== -1, 'пунктирный бейдж события');
+        assertFalse(html.indexOf('ws-ev-pending') !== -1,
+            'пунктирного бейджа нет (Task 388)');
+        assertTrue(/style="background:/.test(html.match(/<span class="ws-ev-badge[^>]*>/)[0]),
+            'заливка цветом кода — и на плане отпуска');
     });
 
     test('смена «Д» + мероприятие — код смены + сплошной бейдж (Task 303 жив)', () => {
@@ -608,9 +612,9 @@ describe('Task 314 — VM: _renderCell (бейджи мероприятий; Tas
 // ------------------------------------------------------------
 describe('Task 314 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v615', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v615'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v615');
+    test('SW: версия кэша kipia-test-v616', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v616'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v616');
         assertFalse(SW_SRC.indexOf('kipia-test-v552') !== -1,
             'старой версии v552 нет');
     });

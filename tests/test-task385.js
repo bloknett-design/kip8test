@@ -166,14 +166,14 @@ describe('Task 385 — HTML: легенда/страница/переимено�
     test('HTML: подсказки вида/обновления — «работники»', () => {
         assertTrue(INDEX_SRC.indexOf('Обновить данные графика с сервера: работники, записи') !== -1,
             'подсказка «Обновить»');
-        assertTrue(INDEX_SRC.indexOf('полный — все работники, доступна шторка «Итоги учёта»') !== -1,
-            'подсказка «Вид»');
+        assertTrue(INDEX_SRC.indexOf('Итоги учёта доступны в любом виде') !== -1,
+            'подсказка «Вид» (Task 388: итоги в любом виде)');
     });
 
-    test('SW: кэш поднят до kipia-test-v615', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v615'") !== -1,
-            'CACHE_VERSION = kipia-test-v615 (Task 385 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v616') !== -1,
+    test('SW: кэш поднят до kipia-test-v616', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v616'") !== -1,
+            'CACHE_VERSION = kipia-test-v616 (Task 385 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v617') !== -1,
             'v614 ещё не существует (guard)');
     });
 });
@@ -216,18 +216,25 @@ describe('Task 385 — SRC: страница «Работники»', () => {
             'рендер карточек при переходе');
     });
 
-    test('_renderWorkersPage — сортировка сетки + счётчик + карточки', () => {
+    test('_renderWorkersPage — вкладки: Общая + по фамильно (Task 388)', () => {
         const fn = methodText(INDEX_SRC, '_renderWorkersPage');
-        assertTrue(fn.indexOf('this._sortEmployees(this._EMPLOYEES)') !== -1,
-            'порядок карточек — как строки шахматки (Task 259)');
-        assertTrue(fn.indexOf('ws-workers-count') !== -1, 'счётчик работников');
+        assertTrue(fn.indexOf('localeCompare') !== -1 &&
+                   fn.indexOf("'ru'") !== -1,
+            'сортировка по ФИО (фамильно по алфавиту; Task 388)');
+        assertTrue(fn.indexOf('ws-workers-layout') !== -1, 'раскладка вкладки+тело');
+        assertTrue(fn.indexOf('ws-wtabs') !== -1, 'колонка ярлыков-вкладок');
+        assertTrue(fn.indexOf('ws-wtab-general') !== -1, 'ярлык «Общая» первый');
+        assertTrue(fn.indexOf('selectWorkersTab') !== -1, 'клики по ярлыкам');
         assertTrue(fn.indexOf('ws-wcard') !== -1, 'обёртка карточки .ws-wcard');
-        assertTrue(fn.indexOf('_renderWorkerCard(tabNo, withEdit)') !== -1,
-            'карточки — общий рендер с withEdit');
+        assertTrue(fn.indexOf('_renderWorkerCard(empTabNo, withEdit)') !== -1,
+            'карточка — общий рендер с withEdit');
+        assertTrue(fn.indexOf('_renderWorkersGeneral(list)') !== -1,
+            '«Общая» вкладка — сводная таблица');
         assertTrue(fn.indexOf('Нет активных работников.') !== -1,
             'пустое состояние страницы');
-        assertTrue(fn.indexOf("['работник', 'работника', 'работников']") !== -1,
-            'склонение счётчика');
+        const gen = methodText(INDEX_SRC, '_renderWorkersGeneral');
+        assertTrue(gen.indexOf("['работник', 'работника', 'работников']") !== -1,
+            'склонение счётчика (в «Общей»)');
     });
 
     test('_renderWorkersIfOpen — обновление вместе с сеткой', () => {
@@ -420,6 +427,7 @@ describe('Task 385 — VM: карточка/страница/легенда', ()
 
     const HOST_METHODS = [
         '_renderEmpPopup', '_renderWorkerCard', '_renderWorkersPage',
+        '_renderWorkersGeneral', 'selectWorkersTab', '_escAttr',
         '_renderWorkersIfOpen', 'openWorkersPage', 'onWorkersPageOpen',
         '_setLegend', 'toggleLegend', '_renderLegendSheet',
         // Task 386: два вида шторки + мобильная страница
@@ -543,31 +551,43 @@ describe('Task 385 — VM: карточка/страница/легенда', ()
         assertTrue(html.indexOf('ws-emp-editdata') === -1, 'кнопок правки НЕТ');
     });
 
-    test('VM: _renderWorkersPage — счётчик + карточки в порядке сетки', () => {
+    test('VM: _renderWorkersPage — вкладки: Общая + фамильный алфавит (Task 388)', () => {
         const h = makeHost();
         h.WSM._renderWorkersPage();
         const body = h.els().wsWorkersBody.innerHTML;
-        assertTrue(body.indexOf('ws-workers-count') !== -1, 'счётчик');
-        assertTrue(body.indexOf('2 ') === 0 || body.indexOf('>2 ') !== -1, 'двое работников');
-        assertEqual((body.match(/ws-wcard/g) || []).length, 2, 'две карточки');
-        // порядок _sortEmployees: сменный Иванов (смена 2) ПЕРВЫМ,
-        // дневной Петров — вторым
+        // вкладки-ярлыки: «Общая» + работники ПО ФАМИЛЬНО ПО АЛФАВИТУ
+        assertTrue(body.indexOf('ws-workers-layout') !== -1, 'раскладка вкладок');
+        assertEqual((body.match(/role="tab"/g) || []).length, 3,
+            'три ярлыка: «Общая» + двое работников');
+        assertTrue(body.indexOf('ws-wtab-general active') !== -1,
+            '«Общая» активна по умолчанию');
+        // ПО ФАМИЛЬНО ПО АЛФАВИТУ: Иванов выше Петрова (не по сменам!)
         assertTrue(body.indexOf('Иванов И. И.') < body.indexOf('Петров П. П.'),
-            'сменные выше дневных (Task 259)');
-        // карточка с кнопками правки (редактор)
-        assertTrue(body.indexOf('ws-emp-editdata') !== -1,
-            'кнопки правки в карточках (withEdit=true у редактора)');
+            'фамильный алфавит (Task 388)');
+        // «Общая» вкладка — сводная таблица + счётчик
+        assertTrue(body.indexOf('ws-wgen-table') !== -1, 'сводная таблица');
+        assertTrue(body.indexOf('ws-workers-count') !== -1, 'счётчик работников');
+        // клик по ярлыку — карточка с кнопками правки (редактор)
+        h.WSM.selectWorkersTab('0871');
+        const body2 = h.els().wsWorkersBody.innerHTML;
+        assertEqual((body2.match(/ws-wcard/g) || []).length, 1, 'карточка выбранного');
+        assertTrue(body2.indexOf('ws-emp-editdata') !== -1,
+            'кнопки правки в карточке (withEdit=true у редактора)');
+        // выбор живёт между перерисовками
+        h.WSM._renderWorkersPage();
+        assertTrue(h.els().wsWorkersBody.innerHTML.indexOf('ws-wcard') !== -1,
+            'вкладка сохраняется при перерисовке');
     });
 
-    test('VM: _renderWorkersPage — зритель без кнопок', () => {
+    test('VM: _renderWorkersPage — зритель без кнопок (Task 388)', () => {
         const h = makeHost();
         h.WSM._canEdit = false;
-        h.WSM._renderWorkersPage();
+        h.WSM.selectWorkersTab('0871');
         const body = h.els().wsWorkersBody.innerHTML;
-        assertTrue(body.indexOf('ws-wcard') !== -1, 'карточки есть');
+        assertTrue(body.indexOf('ws-wcard') !== -1, 'карточка есть');
         assertTrue(body.indexOf('ws-emp-editdata') === -1 &&
                    body.indexOf('ws-emp-addvac') === -1,
-            'без права записи — карточки без кнопок');
+            'без права записи — карточка без кнопок');
     });
 
     test('VM: openWorkersPage — гейт/переход/рендер', () => {
@@ -575,8 +595,10 @@ describe('Task 385 — VM: карточка/страница/легенда', ()
         h.WSM.openWorkersPage();
         assertEqual(JSON.stringify(h.nav()), JSON.stringify(['ws-workers']),
             'navigateTo(ws-workers)');
-        assertTrue(h.els().wsWorkersBody.innerHTML.indexOf('ws-wcard') !== -1,
-            'карточки отрендерены');
+        assertTrue(h.els().wsWorkersBody.innerHTML.indexOf('ws-workers-layout') !== -1,
+            'страница отрендерена (вкладки, Task 388)');
+        assertTrue(h.els().wsWorkersBody.innerHTML.indexOf('ws-wgen-table') !== -1,
+            '«Общая» вкладка — сводка по всем работникам');
         // зритель — мимо
         const h2 = makeHost();
         h2.WSM._canEdit = false;
@@ -641,10 +663,10 @@ describe('Task 385 — VM: карточка/страница/легенда', ()
         assertEqual(drawn.calls[0][0], 'aria-pressed', 'aria-pressed ставится');
         assertEqual(drawn.calls[0][1], 'true', 'aria-pressed=true');
         assertEqual(chv.hidden, false, 'шеврон показан вместе со шторкой');
-        assertEqual(drawer.style.width, '190px', 'слот — узкий вид (190px)');
+        assertEqual(drawer.style.width, '230px', 'слот — краткий вид (230px, Task 388)');
         assertEqual(drawer.style.marginRight, '0px', 'маржа 0 (панель выехала)');
         h.WSM._setLegend(false);
-        assertEqual(drawer.style.marginRight, '-190px', 'уехала за край (−ширина вида)');
+        assertEqual(drawer.style.marginRight, '-230px', 'уехала за край (−ширина вида)');
         assertEqual(chv.hidden, true, 'шеврон скрыт при закрытии');
     });
 

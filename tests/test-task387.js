@@ -536,7 +536,7 @@ describe('Task 387 — VM: легенда/попап/select/ширина', () =>
 
     test('_legendWidthPx: 190 / 500 / 315@700', () => {
         const h = makeHost(true);          // vw не задан → 1280
-        assertEqual(h.WSM._legendWidthPx(), 190, 'узкий — 190px');
+        assertEqual(h.WSM._legendWidthPx(), 230, 'краткий вид — 230px (Task 388)');
         h.WSM._legendWide = true;
         assertEqual(h.WSM._legendWidthPx(), 500, 'широкий @1280 — 500px');
         const h2 = makeHost(true, 700);
@@ -563,10 +563,10 @@ describe('Task 387 — VM: легенда/попап/select/ширина', () =>
 
 describe('Task 387 — SW', () => {
 
-    test('SW: кэш поднят до kipia-test-v615', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v615'") !== -1,
-            'CACHE_VERSION = kipia-test-v615 (Task 387 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v616') !== -1,
+    test('SW: кэш поднят до kipia-test-v616', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v616'") !== -1,
+            'CACHE_VERSION = kipia-test-v616 (Task 387 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v617') !== -1,
             'v616 ещё не существует (guard)');
     });
 });

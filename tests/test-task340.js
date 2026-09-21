@@ -16,7 +16,7 @@
 //   сервер (справочные копии): WorkSchedule.gs _requireRead пускает
 //   чтение по view/view.min/edit; RoleMatrixTask340Init.gs —
 //   одноразовое добавление столбца в матрицу.
-//   SW: kipia-test-v615.
+//   SW: kipia-test-v616.
 //
 // Запуск: через tests/run-all.js (require './test-task340.js').
 
@@ -396,17 +396,17 @@ describe('Task 340 — «Итоги учёта» недоступны уровн
         const fn = methodText(WS_CLIENT, '_applyView');
         assertTrue(fn.indexOf('var minNoTotals = (this._viewLevel === \'min\');') !== -1,
             'уровень min учитывается');
-        assertTrue(fn.indexOf('totalsBtn.hidden = !full || minNoTotals;') !== -1,
-            'кнопка «Итоги учёта» скрыта и в полном виде у min');
-        assertTrue(fn.indexOf('(!full || minNoTotals) && this._totalsOpen') !== -1,
+        assertTrue(fn.indexOf('totalsBtn.hidden = minNoTotals;') !== -1,
+            'кнопка «Итоги учёта» скрыта только у min (Task 388: вид — любой)');
+        assertTrue(fn.indexOf('minNoTotals && this._totalsOpen') !== -1,
             'открытая шторка закрывается при min (смена уровня)');
     });
 
     test('SRC: toggleTotals — гейт вида И уровня', () => {
         const fn = methodText(WS_CLIENT, 'toggleTotals');
         assertTrue(fn.indexOf(
-            "(vGate !== 'full' || this._viewLevel === 'min')") !== -1,
-            'десктоп: открытие шторки гейчится видом и уровнем');
+            "if (this._viewLevel === 'min' &&") !== -1,
+            'десктоп: гейт только уровнем min (Task 388: вид — любой)');
     });
 
     test('VM: toggleTotals — уровень min (вид full): шторка не открывается', () => {
@@ -461,14 +461,17 @@ describe('Task 340 — «Итоги учёта» недоступны уровн
         assertTrue(host.rendered === true, 'таблицы итогов отрисованы');
     });
 
-    test('VM: onTotalsPageOpen — уровень view, вид shift: гейт вида жив', () => {
+    test('VM: onTotalsPageOpen — уровень min, вид shift: гейт уровня жив (Task 388)', () => {
+        // Task 388: гейт ВИДА снят (итоги в любом виде); гейт УРОВНЯ
+        // min жив — редирект на табель
         let navPage = null;
         const host = new Function('navigateTo', 'return ({' +
             methodText(WS_CLIENT, 'onTotalsPageOpen') + '\n' +
-            "_view: 'shift', _viewLevel: 'view'," +
+            "_view: 'shift', _viewLevel: 'min'," +
             '});')(function(page) { navPage = page; });
         host.onTotalsPageOpen();
-        assertEqual(navPage, 'work-schedule', 'сменный вид — без итогов (гейт вида)');
+        assertEqual(navPage, 'work-schedule', 'уровень min — без итогов (гейт уровня)');
+        assertFalse(host._ttPage === true, 'флаг страницы не ставится');
     });
 });
 
@@ -652,10 +655,10 @@ describe('Task 340 — сервер: _requireRead пускает все три �
 // ============================================================
 describe('Task 340 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v615', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v615'") !== -1,
-            'CACHE_VERSION = kipia-test-v615 (Task 340 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v616') !== -1,
+    test('SW: кэш поднят до kipia-test-v616', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v616'") !== -1,
+            'CACHE_VERSION = kipia-test-v616 (Task 340 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v617') !== -1,
             'лишний инкремент (v579) не сделан');
     });
 

@@ -340,13 +340,15 @@ describe('Task 303 — клиент: бейдж мероприятия в яче
         // событие из статуса, если записи в «Инструктажи» нет
         assertTrue(INDEX_SRC.indexOf('events = events.concat([{ code: status, training: null }]);') !== -1,
             'виртуальный бейдж из статуса-мероприятия (событие удалено — день не «слепнет»)');
-        assertTrue(INDEX_SRC.indexOf('var solidBadges = !!status;') !== -1,
-            'сплошные бейджи при любом статусе (вкл. дни отсутствия — Task 314)');
+        // Task 388 (заявка: «цвет фона миниатюр всегда должен
+        // соответствовать установленному»): пунктирные удалены
+        assertTrue(INDEX_SRC.indexOf('ws-ev-pending') === -1,
+            'пунктирных бейджей больше нет (Task 388: фон всегда цвет кода)');
     });
 
-    test('JS: пунктирный бейдж на пустой ячейке (ws-ev-pending)', () => {
-        assertTrue(INDEX_SRC.indexOf('ws-ev-pending') !== -1,
-            'пунктирный бейдж-подсказка (аналог ws-vac-plan)');
+    test('JS: бейдж на пустой ячейке — СПЛОШНОЙ с цветом кода (Task 388)', () => {
+        assertFalse(INDEX_SRC.indexOf('ws-ev-pending') !== -1,
+            'пунктирного бейджа-подсказки больше нет (Task 388)');
         // Task 311: пояснительный тултип убран — подсказка
         // «заполнится при Сформировать» больше не в title
         assertFalse(INDEX_SRC.indexOf('заполнится кодом «') !== -1,
@@ -358,8 +360,9 @@ describe('Task 303 — клиент: бейдж мероприятия в яче
             'позиционирование контейнера бейджей');
         assertTrue(INDEX_SRC.indexOf('.ws-grid tbody td.ws-cell .ws-ev-badge') !== -1,
             'стиль чипа бейджа');
-        assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .ws-grid tbody td.ws-cell .ws-ev-badge.ws-ev-pending') !== -1,
-            'светлая тема пунктирного бейджа');
+        // Task 388: правила ws-ev-pending удалены (пунктирных бейджей нет)
+        assertFalse(INDEX_SRC.indexOf('.ws-ev-badge.ws-ev-pending') !== -1,
+            'правил пунктирного бейджа больше нет (Task 388)');
     });
 
     test('JS: Task 311 — тултип мероприятий убран; тема — в окне мероприятий', () => {

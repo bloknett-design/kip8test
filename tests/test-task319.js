@@ -43,7 +43,7 @@
 //     → под кнопкой, без бара → прежнее поведение);
 //     _openEventsOnlyPopup (рендер окна, кловер, позиция, без
 //     окна кодов).
-//   SW: kipia-test-v615.
+//   SW: kipia-test-v616.
 //
 // Запуск: через tests/run-all.js (require './test-task319.js').
 
@@ -339,8 +339,9 @@ describe('Task 319 — тёмная тема: шахматка дней как �
             'праздники — #f8e2e9 в базе (тёмная под фильтром Task 363)');
         assertTrue(cssRule(/\[data-theme="dark"\] \.ws-grid tbody td\.ws-cell\.ws-status-empty \{[^}]*color:\s*rgba\(20, 20, 19, 0\.65\)[^}]*\}/s),
             '«·»/пустые — вторичный тёмный (как в светлой)');
-        assertTrue(cssRule(/\[data-theme="dark"\] \.ws-grid tbody td\.ws-cell \.ws-ev-badge\.ws-ev-pending \{[^}]*color:\s*#141413;[^}]*\}/s),
-            'пунктирный бейдж — тёмный текст');
+        // Task 388: правило тёмной темы пунктирного бейджа удалено
+        assertFalse(INDEX_SRC.indexOf('[data-theme="dark"] .ws-grid tbody td.ws-cell .ws-ev-badge.ws-ev-pending') !== -1,
+            'пунктирных бейджей больше нет (Task 388)');
         assertTrue(cssRule(/\[data-theme="dark"\] \.ws-popup-swatch\.ws-swatch-dot \{[^}]*background:\s*#eef0f2;[^}]*\}/s),
             'свотч «.» в попапе — светлый (совпадает с ячейкой)');
     });
@@ -512,10 +513,10 @@ describe('Task 319 — окно кодов и «Мероприятия в это
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 319 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v615', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v615') !== -1,
-            'CACHE_VERSION = kipia-test-v615 (Task 319)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v616') !== -1,
+    test('SW: версия кэша kipia-test-v616', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v616') !== -1,
+            'CACHE_VERSION = kipia-test-v616 (Task 319)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v617') !== -1,
             'нет лишнего инкремента');
     });
 });

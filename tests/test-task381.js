@@ -40,7 +40,7 @@
 //     > * + * 3px; .ws-ep-item + .ws-ep-item margin-top: 0; строка
 //     3px 10px / 0 -10px; тинты 0.45/0.12/0.12/0.55 на месте; окно
 //     «Нормы» БЕЗ gap: 0 (не тронуто).
-//   SW: kipia-test-v615 (guard v611).
+//   SW: kipia-test-v616 (guard v611).
 //
 // Запуск: через tests/run-all.js (require './test-task381.js').
 
@@ -158,11 +158,11 @@ describe('Task 381 — SRC: прикол значка _barExpSync', () => {
             'компенсация прокрутки — translateY(scrollTop)');
     });
 
-    test('значок остаётся absolute (CSS не менялся)', () => {
+    test('значок остаётся absolute в правом ВЕРХНЕМ углу (Task 388)', () => {
         const b = ruleBlock('.ws-bar-exp {');
         assertTrue(b !== null && /position:\s*absolute/.test(b) &&
-                   /right:\s*5px/.test(b) && /bottom:\s*5px/.test(b),
-            'правый нижний угол, absolute — как в Task 378');
+                   /right:\s*5px/.test(b) && /top:\s*5px/.test(b),
+            'правый ВЕРХНИЙ угол, absolute (Task 388: верх при раскрытии не двигается)');
     });
 });
 
@@ -358,10 +358,10 @@ describe('Task 381 — CSS: общий фон окна мероприятий', 
 // ============================================================
 describe('Task 381 — SW', () => {
 
-    test('SW: kipia-test-v615', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v615'") !== -1,
-            'версия кэша kipia-test-v615');
-        assertFalse(SW_SRC.indexOf('kipia-test-v616') !== -1,
+    test('SW: kipia-test-v616', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v616'") !== -1,
+            'версия кэша kipia-test-v616');
+        assertFalse(SW_SRC.indexOf('kipia-test-v617') !== -1,
             'двойного бампа нет');
     });
 });

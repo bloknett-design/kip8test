@@ -14,7 +14,7 @@
 //       «Дополнительно…» (код «.» там по-прежнему подписан точкой);
 //     — классы-маркеры ws-dot-code / ws-status-empty ставятся,
 //       бейджи (evHtml + shiftWrap) конкатенируются к контенту;
-//     — sw.js: CACHE_VERSION = kipia-test-v615 (+ guard v586).
+//     — sw.js: CACHE_VERSION = kipia-test-v616 (+ guard v586).
 //   VM (_renderCell, моки как в test-task314.js / test-task355.js):
 //     — РАБОЧИЙ день: пустая, «.»-код, статус-мероприятие «И»
 //       (с записью и без — виртуальный бейдж), пустая + будущее
@@ -200,7 +200,8 @@ describe('Task 356 — VM: _renderCell (пустые ячейки без «·»)
         const html = cellHtml(ctx, null);
         assertEqual(mainText(html), '', 'центр пуст');
         assertFalse(html.indexOf('·') !== -1, 'символа «·» в ячейке нет вообще');
-        assertTrue(html.indexOf('ws-ev-pending') !== -1, 'пунктирный бейдж-подсказка жив');
+        assertFalse(html.indexOf('ws-ev-pending') !== -1,
+            'пунктирного бейджа нет (Task 388: сплошной с цветом кода)');
     });
 
     // --- РАБОЧИЙ день: заполненные ячейки не задеты ---
@@ -247,13 +248,13 @@ describe('Task 356 — VM: _renderCell (пустые ячейки без «·»)
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 356 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v615', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v615'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v615');
+    test('SW: версия кэша kipia-test-v616', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v616'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v616');
     });
 
     test('SW: двойной бамп не случился (v586 не существует)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v616') === -1,
-            'в sw.js нет kipia-test-v615');
+        assertTrue(SW_SRC.indexOf('kipia-test-v617') === -1,
+            'в sw.js нет kipia-test-v616');
     });
 });
