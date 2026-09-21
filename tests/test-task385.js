@@ -74,18 +74,18 @@ function mkEl() {
 // ============================================================
 describe('Task 385 — HTML: легенда/страница/переименование', () => {
 
-    test('HTML: кнопка «Легенда» в ряду 2 (после вкладки «Год»)', () => {
+    test('HTML: кнопка «Обозначения» в ряду 2 (после вкладки «Год»)', () => {
         const iYear = INDEX_SRC.indexOf('id="wsTtTabYear"');
         const iLeg = INDEX_SRC.indexOf('id="wsLegendBtn"');
         assertTrue(iYear !== -1 && iLeg !== -1 && iYear < iLeg,
-            'кнопка «Легенда» после вкладок итогов');
-        const chunk = INDEX_SRC.slice(iLeg - 200, iLeg + 300);
+            'кнопка «Обозначения» после вкладок итогов');
+        const chunk = INDEX_SRC.slice(iLeg - 200, iLeg + 400);
         assertTrue(chunk.indexOf('WorkSchedule.toggleLegend()') !== -1,
             'onclick → toggleLegend');
         assertTrue(chunk.indexOf('aria-pressed="false"') !== -1,
             'кнопка-переключатель (aria-pressed)');
-        assertTrue(chunk.indexOf('>Легенда</button>') !== -1,
-            'текст «Легенда»');
+        assertTrue(chunk.indexOf('>Обозначения</button>') !== -1,
+            'текст «Обозначения» (Task 386: «словом попроще»)');
     });
 
     test('HTML: кнопка «Работники» в ряду 1 (после «Печать», hidden)', () => {
@@ -102,27 +102,37 @@ describe('Task 385 — HTML: легенда/страница/переимено�
             'текст «Работники»');
     });
 
-    test('HTML: шторка «Легенда» — структура (в #wsWsBody после итогов)', () => {
+    test('HTML: шторка «Обозначения» — структура + шеврон (Task 386)', () => {
         const iDrawer = INDEX_SRC.indexOf('id="wsTotalsDrawer"');
         const iLegend = INDEX_SRC.indexOf('id="wsLegendDrawer"');
         assertTrue(iDrawer !== -1 && iLegend !== -1 && iDrawer < iLegend,
             'шторка легенды рядом с итогами (общая рабочая область)');
-        const chunk = INDEX_SRC.slice(iLegend - 100, iLegend + 700);
+        const chunk = INDEX_SRC.slice(iLegend - 100, iLegend + 1500);
         assertTrue(chunk.indexOf('ws-legend-drawer') !== -1, 'класс ws-legend-drawer');
         assertTrue(chunk.indexOf('ws-legend-inner') !== -1, 'внутренняя панель');
         assertTrue(chunk.indexOf('id="wsLegendBody"') !== -1, 'тело контента #wsLegendBody');
         assertTrue(chunk.indexOf('ws-lg-edge') !== -1, 'левый бортик');
-        assertTrue(chunk.indexOf('Сокращения в шахматке') !== -1, 'заголовок шторки');
+        assertTrue(chunk.indexOf('>Обозначения</div>') !== -1,
+            'заголовок шторки «Обозначения» (Task 386)');
+        assertTrue(chunk.indexOf('id="wsLgChv"') !== -1 &&
+                   chunk.indexOf('toggleLegendWide()') !== -1,
+            'значок-шеврон на левом крае — разворот шире (Task 386)');
+        assertTrue(chunk.indexOf('aria-label="Показать подробные наименования кодов"') !== -1,
+            'aria-подпись шеврона');
     });
 
-    test('HTML: CSS шторки легенды — десктоп margin + мобайл fixed', () => {
+    test('HTML: CSS шторки — десктоп margin+width; мобайл — страница', () => {
         const iCss = INDEX_SRC.indexOf('.ws-legend-drawer {');
         assertTrue(iCss !== -1, 'CSS-блок .ws-legend-drawer есть');
         const chunk = INDEX_SRC.slice(iCss, iCss + 700);
-        assertTrue(chunk.indexOf('transition: margin-right 0.28s ease') !== -1,
-            'десктоп: margin-анимация (как у итогов)');
-        const iMob = INDEX_SRC.indexOf('#page-work-schedule.ws-legend-open .ws-legend-drawer { transform: none; }');
-        assertTrue(iMob !== -1, 'мобайл: transform-оверлей, класс ws-legend-open');
+        assertTrue(chunk.indexOf('transition: margin-right 0.28s ease, width 0.28s ease') !== -1,
+            'десктоп: margin + width-анимация (Task 386: два вида)');
+        assertTrue(INDEX_SRC.indexOf('.ws-legend-drawer { display: none; }') !== -1,
+            'мобайл: шторка гасится (Task 386 — отдельная страница ws-legend)');
+        assertTrue(INDEX_SRC.indexOf('ws-legend-open') === -1,
+            'класс ws-legend-open удалён (мобильного оверлея нет)');
+        assertTrue(INDEX_SRC.indexOf('.ws-lg-page-body') !== -1,
+            'CSS тела мобильной страницы «Обозначения»');
     });
 
     test('HTML: страница «Работники» — шапка/кнопка «+»/тело', () => {
@@ -130,9 +140,11 @@ describe('Task 385 — HTML: легенда/страница/переимено�
         assertTrue(iPage !== -1, 'страница #page-ws-workers существует');
         const chunk = INDEX_SRC.slice(iPage, iPage + 900);
         assertTrue(chunk.indexOf('>Работники</div>') !== -1, 'заголовок «Работники»');
-        assertTrue(chunk.indexOf('id="wsWorkersAddBtn"') !== -1, 'кнопка «+» в шапке');
+        assertTrue(chunk.indexOf('id="wsWorkersAddBtn"') !== -1, 'кнопка добавления в шапке');
         assertTrue(chunk.indexOf('WorkSchedule.openEmployeeForm()') !== -1,
-            '«+» → шторка создания (openEmployeeForm)');
+            'кнопка → шторка создания (openEmployeeForm)');
+        assertTrue(chunk.indexOf('>Добавить работника</button>') !== -1,
+            'текст «Добавить работника» (Task 386: прежде значок «+»)');
         assertTrue(chunk.indexOf('id="wsWorkersBody"') !== -1, 'тело #wsWorkersBody');
         assertTrue(chunk.indexOf('aria-label="Добавить работника"') !== -1,
             'aria-подпись кнопки');
@@ -158,10 +170,10 @@ describe('Task 385 — HTML: легенда/страница/переимено�
             'подсказка «Вид»');
     });
 
-    test('SW: кэш поднят до kipia-test-v613', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v613'") !== -1,
-            'CACHE_VERSION = kipia-test-v613 (Task 385 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v614') !== -1,
+    test('SW: кэш поднят до kipia-test-v614', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v614'") !== -1,
+            'CACHE_VERSION = kipia-test-v614 (Task 385 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v615') !== -1,
             'v614 ещё не существует (guard)');
     });
 });
@@ -239,8 +251,9 @@ describe('Task 385 — SRC: страница «Работники»', () => {
     });
 
     test('страница в картах доступа/крошек', () => {
-        assertTrue(INDEX_SRC.indexOf("_WORK_SCHEDULE_PAGES: ['work-schedule', 'ws-totals', 'ws-workers']") !== -1,
-            '_WORK_SCHEDULE_PAGES + ws-workers (права наследует табель)');
+        assertTrue(INDEX_SRC.indexOf(
+            "_WORK_SCHEDULE_PAGES: ['work-schedule', 'ws-totals', 'ws-workers', 'ws-legend']") !== -1,
+            '_WORK_SCHEDULE_PAGES + ws-workers + ws-legend (права наследует табель)');
         assertTrue(INDEX_SRC.indexOf("'ws-workers':               'work-schedule'") !== -1,
             'PAGE_PARENTS: дочь табеля');
         assertTrue(INDEX_SRC.indexOf("'ws-workers':               'Работники'") !== -1,
@@ -255,13 +268,15 @@ describe('Task 385 — SRC: страница «Работники»', () => {
             'видимость кнопки — только редакторам (как «Сформировать»)');
     });
 
-    test('шапка сетки — «Работник +» ведёт на страницу', () => {
+    test('шапка сетки — «Работники»: ПРОСТО надпись (Task 386)', () => {
         const grid = INDEX_SRC.slice(INDEX_SRC.indexOf('_renderGrid: function'),
                                       INDEX_SRC.indexOf('_fitGrid: function'));
-        assertTrue(grid.indexOf('data-full="Работник" data-s4="Рабо">Работник</span>') !== -1,
-            'заголовок «Работник» (сужение — «Рабо»)');
-        assertTrue(grid.indexOf('onclick="WorkSchedule.openWorkersPage()"') !== -1,
-            'клик заголовка → openWorkersPage (не openEmployeeForm)');
+        assertTrue(grid.indexOf('data-full="Работники" data-s4="Рабо">Работники</span>') !== -1,
+            'заголовок «Работники» (сужение — «Рабо»)');
+        assertTrue(grid.indexOf("this._canEdit ? ' ws-emp-head-add' : ''") === -1 &&
+                   grid.indexOf('onclick="WorkSchedule.openWorkersPage()"') === -1 &&
+                   grid.indexOf('<i class="ws-emp-head-plus">') === -1,
+            'функции кнопки у заголовка НЕТ — переход только кнопкой в баре');
     });
 });
 
@@ -286,25 +301,32 @@ describe('Task 385 — SRC: шторка «Легенда»', () => {
             'БЕЗ вызова toggleLegend (иначе взаимная рекурсия)');
     });
 
-    test('_setLegend — aria/класс/маржа (десктоп и мобайл)', () => {
+    test('_setLegend — aria/маржа/явная ширина (десктоп и мобайл)', () => {
         const fn = methodText(INDEX_SRC, '_setLegend');
         assertTrue(fn.indexOf("aria-pressed") !== -1, 'aria-pressed кнопки');
-        assertTrue(fn.indexOf("ws-legend-open") !== -1, 'класс ws-legend-open на странице');
         assertTrue(fn.indexOf("matchMedia('(min-width: 1024px)')") !== -1,
             'десктоп/мобайл ветвление (как toggleTotals)');
         assertTrue(fn.indexOf('marginRight') !== -1, 'margin-механика выезда (как итоги)');
-        assertTrue(fn.indexOf('.ws-legend-inner') !== -1,
-            'замер фикс-ширины внутренностей');
+        assertTrue(fn.indexOf('_legendWidthPx()') !== -1,
+            'ширина слота — ЯВНАЯ (flex-сжатие inner больше не ловится)');
+        assertTrue(fn.indexOf('_applyLegendWide()') !== -1,
+            'вид (узкий/широкий) применяется при открытии');
+        assertTrue(fn.indexOf('ws-legend-open') === -1,
+            'класс ws-legend-open удалён (Task 386: мобайл — страница)');
         assertTrue(fn.indexOf('void drawer.offsetWidth') !== -1,
             'синхронный reflow перед анимацией (как итоги)');
         assertTrue(fn.indexOf('this._fitGrid()') !== -1, 'сетка перегоняется под шторку');
     });
 
-    test('_renderLegendSheet — секции и динамические коды', () => {
-        const fn = methodText(INDEX_SRC, '_renderLegendSheet');
+    test('_legendHtml — секции и динамические коды', () => {
+        // Task 386: контент вынесен в _legendHtml (шторка и мобильная
+        // страница рендерят одно и то же)
+        const fn = methodText(INDEX_SRC, '_legendHtml');
         assertTrue(fn.indexOf('Коды дней (Т-12/Т-13)') !== -1, 'секция кодов дней');
         assertTrue(fn.indexOf('Коды мероприятий') !== -1, 'секция кодов мероприятий');
         assertTrue(fn.indexOf('Обозначения в шахматке') !== -1, 'секция обозначений');
+        assertTrue(fn.indexOf('ws-lg-notesec') !== -1,
+            'пояснения — в свёртываемом блоке .ws-lg-notesec (Task 386)');
         assertTrue(fn.indexOf('this._STATUS_CODES') !== -1,
             'коды — из справочника «Коды_статусов» (живой состав)');
         assertTrue(fn.indexOf('this._EVENT_CODES') !== -1,
@@ -362,8 +384,10 @@ describe('Task 385 — SRC: переименование видимых стро
     });
 
     test('шапки итогов (×3) и пустые состояния', () => {
-        assertEqual((INDEX_SRC.match(/data-full="Работник" data-s4="Рабо"/g) || []).length, 4,
-            '4 шапки: сетка + итоги месяц/год/архив');
+        assertEqual((INDEX_SRC.match(/data-full="Работник" data-s4="Рабо"/g) || []).length, 3,
+            '3 шапки итогов: месяц/год/архив');
+        assertEqual((INDEX_SRC.match(/data-full="Работники" data-s4="Рабо"/g) || []).length, 1,
+            'шапка СЕТКИ — «Работники» (Task 386: «Работник +» → надпись)');
         assertTrue(INDEX_SRC.indexOf('Нет активных работников.') !== -1, 'пустое: месяц');
         assertTrue(INDEX_SRC.indexOf('Нет работников.') !== -1, 'пустое: год');
         assertTrue(INDEX_SRC.indexOf('Нет активных сотрудников.') === -1, 'старое убрано');
@@ -391,6 +415,9 @@ describe('Task 385 — VM: карточка/страница/легенда', ()
         '_renderEmpPopup', '_renderWorkerCard', '_renderWorkersPage',
         '_renderWorkersIfOpen', 'openWorkersPage', 'onWorkersPageOpen',
         '_setLegend', 'toggleLegend', '_renderLegendSheet',
+        // Task 386: два вида шторки + мобильная страница
+        '_legendHtml', 'onLegendPageOpen', '_legendWidthPx',
+        'toggleLegendWide', '_applyLegendWide',
         // хелперы карточки (праздники отпусков, метакоды, ISO)
         '_sortEmployees', '_esc', '_plural', '_fmtDateRu',
         '_trainingCodeOf', '_statusMeta',
@@ -579,7 +606,9 @@ describe('Task 385 — VM: карточка/страница/легенда', ()
     });
 
     test('VM: toggleLegend — взаимоисключение с итогами', () => {
-        const h = makeHost();
+        // Task 386: десктоп-хост — на «мобайле» toggleLegend уходит
+        // на страницу ws-legend (не тогглит шторку)
+        const h = makeHost(true);
         h.WSM._totalsOpen = true;
         h.WSM.toggleLegend();
         assertEqual(h.ttToggles(), 1, 'открытые итоги закрыты через toggleTotals');
@@ -590,30 +619,26 @@ describe('Task 385 — VM: карточка/страница/легенда', ()
         assertEqual(h.WSM._legendOpen, false, 'легенда закрылась');
     });
 
-    test('VM: _setLegend — класс/aria/маржа (десктоп)', () => {
+    test('VM: _setLegend — aria/маржа/ширина/шеврон (десктоп)', () => {
         const h = makeHost(true);   // десктоп
-        // предсоздаём моки (getElementById в методе создаст их же,
-        // но нам нужны расширенные поведение/свойства)
         const drawn = { calls: [] };
-        const page = { style: {}, classList: { _c: {}, add(c) { this._c[c] = 1; },
-                                               remove(c) { delete this._c[c]; },
-                                               contains(c) { return !!this._c[c]; } } };
         const btn = mkEl();
         btn.setAttribute = (k, v) => { drawn.calls.push([k, v]); };
         const drawer = mkEl();
-        drawer.querySelector = () => ({ getBoundingClientRect: () => ({ width: 400 }) });
-        h.els()['page-work-schedule'] = page;
+        const chv = mkEl();
         h.els().wsLegendBtn = btn;
         h.els().wsLegendDrawer = drawer;
+        h.els().wsLgChv = chv;
         h.WSM._setLegend(true);
         assertEqual(h.WSM._legendOpen, true, 'флаг');
-        assertTrue(page.classList.contains('ws-legend-open'), 'класс ws-legend-open');
         assertEqual(drawn.calls[0][0], 'aria-pressed', 'aria-pressed ставится');
         assertEqual(drawn.calls[0][1], 'true', 'aria-pressed=true');
+        assertEqual(chv.hidden, false, 'шеврон показан вместе со шторкой');
+        assertEqual(drawer.style.width, '190px', 'слот — узкий вид (190px)');
         assertEqual(drawer.style.marginRight, '0px', 'маржа 0 (панель выехала)');
         h.WSM._setLegend(false);
-        assertFalse(page.classList.contains('ws-legend-open'), 'класс снят');
-        assertEqual(drawer.style.marginRight, '-400px', 'уехала за край (−ширина inner)');
+        assertEqual(drawer.style.marginRight, '-190px', 'уехала за край (−ширина вида)');
+        assertEqual(chv.hidden, true, 'шеврон скрыт при закрытии');
     });
 
     test('VM: _setLegend — мобайл: transform, БЕЗ маржи', () => {

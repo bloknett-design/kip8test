@@ -33,7 +33,7 @@
 //     таб_№ (текст, Task 304), пишет H (дата) + I (в_архиве=1),
 //     строка НЕ удаляется; ошибки invalid/not_found; аудит;
 //     маршрут в Code.gs.
-//   SW: kipia-test-v613.
+//   SW: kipia-test-v614.
 //
 // Запуск: через tests/run-all.js (require './test-task318.js').
 
@@ -63,25 +63,17 @@ function methodText(src, name) {
 // ============================================================
 describe('Task 318 — CSS: hover заголовка «Сотрудник +»', () => {
 
-    test('CSS: hover — СПЛОШНОЙ #2a3a4c (Task 330: светлее сине-серой шапки)', () => {
+    test('CSS: hover-правило заголовка УДАЛЕНО (Task 386: надпись)', () => {
+        // Task 386: заголовок «Работники» — просто надпись; hover
+        // #2a3a4c (Task 330) жил в правиле ws-emp-head-add:hover —
+        // удалено вместе с кнопкой
         const m = INDEX_SRC.match(/th\.ws-emp-col\.ws-emp-head-add:hover \{\s*([^}]*)\}/);
-        assertTrue(!!m, 'правило hover живо');
-        // Task 330: шапка стала сине-серой #1e293b — hover #2a3a4c
-        // (прежде #15202f был светлее старого фона #0e1621 — логика
-        // «hover светлее фона» сохранена на новом цвете)
-        assertTrue(m[1].indexOf('background: #2a3a4c') !== -1,
-            'фон — сплошной #2a3a4c (светлее шапки #1e293b, Task 330)');
-        assertFalse(/rgba\(/.test(m[1]),
-            'полупрозрачного rgba в hover больше нет — фон НЕ прозрачный');
+        assertTrue(!m, 'правило hover удалено (заголовок больше не кнопка)');
     });
 
-    test('CSS: светлая тема hover — СПЛОШНОЙ #e2e8ef', () => {
-        const m = INDEX_SRC.match(/\[data-theme="light"\] th\.ws-emp-col\.ws-emp-head-add:hover \{\s*([^}]*)\}/) ||
-                  INDEX_SRC.match(/\[data-theme="light"\] \.ws-grid thead th\.ws-emp-col\.ws-emp-head-add:hover \{\s*([^}]*)\}/);
-        assertTrue(!!m, 'правило светлой темы живо');
-        assertTrue(m[1].indexOf('background: #e2e8ef') !== -1,
-            'светлая — сплошной #e2e8ef (как td.ws-emp-col:hover)');
-        assertFalse(/rgba\(/.test(m[1]), 'светлая: rgba убран');
+    test('CSS: светлая тема hover — правило УДАЛЕНО (Task 386)', () => {
+        const m = INDEX_SRC.match(/\[data-theme="light"\][^{}]*ws-emp-head-add:hover\s*\{[^}]*\}/);
+        assertTrue(!m, 'правило светлой темы удалено вместе с кнопкой');
     });
 
     test('CSS: в hover-правилах заголовка нет полупрозрачного rgba', () => {
@@ -641,10 +633,10 @@ describe('Task 318 — Сервер: dismissEmployee (WorkSchedule.gs)', () => {
 // Service Worker
 // ============================================================
 describe('Task 318 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v613', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v613') !== -1,
-            'CACHE_VERSION = kipia-test-v613 (Task 318)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v614') !== -1,
+    test('SW: версия кэша kipia-test-v614', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v614') !== -1,
+            'CACHE_VERSION = kipia-test-v614 (Task 318)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v615') !== -1,
             'лишний инкремент не делался');
     });
 });

@@ -28,7 +28,7 @@
 //      ws-view-filtered на #page-work-schedule (_applyView),
 //      CSS align-self/flex по контенту, _fitGrid капсулирует высоту
 //      строк природной, остаток раздачи ≤ n-1.
-//   SW: kipia-test-v613.
+//   SW: kipia-test-v614.
 //
 // Запуск: через tests/run-all.js (require './test-task335.js').
 
@@ -129,10 +129,11 @@ describe('Task 335 — плавное сужение колонки фамили
         assertTrue(i !== -1 && i > base, 'transition-правило после базового');
     });
 
-    test('CSS: плюсик шапки скрыт в суженном виде', () => {
+    test('CSS: правило плюсика в суженном виде удалено (Task 386)', () => {
+        // Task 386: заголовок — надпись, плюсика нет — правило
+        // (.ws-narrow .ws-emp-head-plus) удалено
         const b = ruleBlock('.ws-grid.ws-narrow thead th.ws-emp-col .ws-emp-head-plus {');
-        assertTrue(b.length > 0, 'правило найдено');
-        assertTrue(/display:\s*none/.test(b), 'display: none');
+        assertEqual(b.length, 0, 'правило удалено (плюсика больше нет)');
     });
 
     test('VM: порог сужения — 0 (в самом начале прокрутки)', () => {
@@ -193,11 +194,12 @@ describe('Task 335 — плавное сужение колонки фамили
             'десктоп: полное ФИО (гориз. прокрутка шторки не портит)');
     });
 
-    test('РЕНДЕР: шапка сетки — span «Работник» ⇄ «Рабо»', () => {
+    test('РЕНДЕР: шапка сетки — span «Работники» ⇄ «Рабо»', () => {
         const i = INDEX_SRC.indexOf('class="ws-emp-head-txt"');
         assertTrue(i !== -1, 'span.ws-emp-head-txt в разметке шапки сетки');
         const chunk = INDEX_SRC.slice(i - 80, i + 160);
-        assertTrue(chunk.indexOf('data-full="Работник"') !== -1, 'data-full (Task 385: работник)');
+        assertTrue(chunk.indexOf('data-full="Работники"') !== -1,
+            'data-full «Работники» (Task 386: надпись, не кнопка)');
         assertTrue(chunk.indexOf('data-s4="Рабо"') !== -1, 'data-s4 «Рабо»');
     });
 
@@ -376,10 +378,10 @@ describe('Task 335 — десктоп: виды сменные/дневные б
 // SW-версия
 // ============================================================
 describe('Task 335 — версия кэша SW', () => {
-    test('SW: кэш поднят до kipia-test-v613', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v613'") !== -1,
-            'CACHE_VERSION = kipia-test-v613 (Task 335 — только фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v614') !== -1,
+    test('SW: кэш поднят до kipia-test-v614', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v614'") !== -1,
+            'CACHE_VERSION = kipia-test-v614 (Task 335 — только фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v615') !== -1,
             'лишний инкремент (v577) не сделан');
     });
 });

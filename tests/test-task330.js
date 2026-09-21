@@ -25,7 +25,7 @@
 //     — позднее правило), чипы дней .ws-cp-day (правило ПОСЛЕ
 //     .ws-cp-day.k-* — побеждает по порядку исходника); цветные
 //     фоны плашек/чипов СОХРАНЕНЫ (смысловые подложки).
-//   SW: kipia-test-v613.
+//   SW: kipia-test-v614.
 //
 // Запуск: через tests/run-all.js (require './test-task330.js').
 
@@ -63,13 +63,11 @@ describe('Task 330 — шапка: тёмный сине-серый фон', () 
             'прежний почти чёрный фон var(--bg-tertiary) убран из шапки');
     });
 
-    test('тёмная тема: hover «Сотрудник +» — #2a3a4c (светлее шапки)', () => {
+    test('тёмная тема: hover-правило заголовка удалено (Task 386)', () => {
+        // Task 386: заголовок — надпись; hover #2a3a4c из Task 330
+        // удалён вместе с кнопкой
         const block = ruleBlock('.ws-grid thead th.ws-emp-col.ws-emp-head-add:hover {');
-        assertTrue(block.length > 0, 'правило hover найдено');
-        assertTrue(/background:\s*#2a3a4c/.test(block),
-            'hover — #2a3a4c, светлее новой шапки #1e293b');
-        assertFalse(/background:\s*#15202f/.test(block),
-            'прежний hover #15202f (темнее новой шапки) заменён');
+        assertEqual(block.length, 0, 'правило hover удалено (заголовок-надпись)');
     });
 
     test('светлая тема: ОТДЕЛЬНОЕ правило шапки — #bfcad5 (темнее)', () => {
@@ -223,10 +221,10 @@ describe('Task 330 — светлая тема: чёрный текст окон
 // ============================================================
 describe('Task 330 — SW: версия кэша', () => {
 
-    test('SW: кэш поднят до kipia-test-v613 (Task 330)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v613') !== -1,
-            'CACHE_VERSION = kipia-test-v613');
-        assertFalse(SW_SRC.indexOf('kipia-test-v614') !== -1,
+    test('SW: кэш поднят до kipia-test-v614 (Task 330)', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v614') !== -1,
+            'CACHE_VERSION = kipia-test-v614');
+        assertFalse(SW_SRC.indexOf('kipia-test-v615') !== -1,
             'лишнего инкремента v570 нет');
     });
 });
