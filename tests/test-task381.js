@@ -40,7 +40,7 @@
 //     > * + * 3px; .ws-ep-item + .ws-ep-item margin-top: 0; строка
 //     3px 10px / 0 -10px; тинты 0.45/0.12/0.12/0.55 на месте; окно
 //     «Нормы» БЕЗ gap: 0 (не тронуто).
-//   SW: kipia-test-v616 (guard v611).
+//   SW: kipia-test-v617 (guard v611).
 //
 // Запуск: через tests/run-all.js (require './test-task381.js').
 
@@ -334,13 +334,13 @@ describe('Task 381 — CSS: общий фон окна мероприятий', 
         assertTrue(!!b, 'строка расходится до краёв (паддинги окна 10px погашены)');
     });
 
-    test('регресс: тинты Task 380 не тронуты', () => {
-        assertTrue(/\.ws-ep-item\.ws-ep-past \{[^}]*rgba\(255, 255, 255, 0\.12\)/.test(INDEX_SRC),
-            'прошедшие тёмная — 0.12');
+    test('регресс: тинты Task 380 — текущие/будущие живы; прошедшие — Task 389 transparent', () => {
+        assertTrue(/\.ws-ep-item\.ws-ep-past \{[^}]*background:\s*transparent;/.test(INDEX_SRC),
+            'прошедшие тёмная — transparent (Task 389: общий фон окна)');
         assertTrue(/\[data-theme="light"\] \.ws-ep-item \{[^}]*rgba\(0, 0, 0, 0\.12\)/.test(INDEX_SRC),
             'текущие светлая — 0.12');
-        assertTrue(/\[data-theme="light"\] \.ws-ep-item\.ws-ep-past \{[^}]*rgba\(255, 255, 255, 0\.55\)/.test(INDEX_SRC),
-            'прошедшие светлая — 0.55');
+        assertTrue(/\[data-theme="light"\] \.ws-ep-item\.ws-ep-past \{[^}]*background:\s*transparent;/.test(INDEX_SRC),
+            'прошедшие светлая — transparent (Task 389)');
     });
 
     test('окно «Нормы» НЕ тронуто (свои gap-ы, без склейки)', () => {
@@ -358,10 +358,10 @@ describe('Task 381 — CSS: общий фон окна мероприятий', 
 // ============================================================
 describe('Task 381 — SW', () => {
 
-    test('SW: kipia-test-v616', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v616'") !== -1,
-            'версия кэша kipia-test-v616');
-        assertFalse(SW_SRC.indexOf('kipia-test-v617') !== -1,
+    test('SW: kipia-test-v617', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v617'") !== -1,
+            'версия кэша kipia-test-v617');
+        assertFalse(SW_SRC.indexOf('kipia-test-v618') !== -1,
             'двойного бампа нет');
     });
 });

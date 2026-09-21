@@ -260,10 +260,10 @@ describe('Task 388 — SRC: итоги учёта доступны в любом
             'тосты сменного/дневного вида обещают итоги');
     });
 
-    test('SW: кэш поднят до kipia-test-v616', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v616'") !== -1,
-            'CACHE_VERSION = kipia-test-v616 (Task 388 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v617') !== -1,
+    test('SW: кэш поднят до kipia-test-v617', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v617'") !== -1,
+            'CACHE_VERSION = kipia-test-v617 (Task 388 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v618') !== -1,
             'v617 ещё не существует (guard)');
     });
 });
@@ -349,10 +349,10 @@ describe('Task 388 — SRC: страница «Работники» — вкла
             'мобайл: ярлыки горизонтальной лентой со скроллом');
     });
 
-    test('HTML: кнопка «Добавить работника» в шапке жива (регресс 386)', () => {
+    test('HTML: кнопка «Добавить работника» жива (регресс 386; Task 389 — на «Общей» вкладке)', () => {
         assertTrue(INDEX_SRC.indexOf('id="wsWorkersAddBtn"') !== -1 &&
                    INDEX_SRC.indexOf('>Добавить работника</button>') !== -1,
-            'кнопка добавления на месте');
+            'кнопка добавления на месте (рендер _renderWorkersGeneral)');
     });
 });
 

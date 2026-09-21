@@ -140,13 +140,16 @@ describe('Task 385 — HTML: легенда/страница/переимено�
         assertTrue(iPage !== -1, 'страница #page-ws-workers существует');
         const chunk = INDEX_SRC.slice(iPage, iPage + 900);
         assertTrue(chunk.indexOf('>Работники</div>') !== -1, 'заголовок «Работники»');
-        assertTrue(chunk.indexOf('id="wsWorkersAddBtn"') !== -1, 'кнопка добавления в шапке');
-        assertTrue(chunk.indexOf('WorkSchedule.openEmployeeForm()') !== -1,
+        // Task 389: кнопка «Добавить работника» ПЕРЕНЕСЕНА из шапки
+        // страницы на «Общую» вкладку (рендерит _renderWorkersGeneral)
+        assertTrue(chunk.indexOf('id="wsWorkersAddBtn"') === -1,
+            'кнопки добавления в шапке страницы НЕТ (Task 389)');
+        assertTrue(INDEX_SRC.indexOf('WorkSchedule.openEmployeeForm()') !== -1,
             'кнопка → шторка создания (openEmployeeForm)');
-        assertTrue(chunk.indexOf('>Добавить работника</button>') !== -1,
+        assertTrue(INDEX_SRC.indexOf('>Добавить работника</button>') !== -1,
             'текст «Добавить работника» (Task 386: прежде значок «+»)');
         assertTrue(chunk.indexOf('id="wsWorkersBody"') !== -1, 'тело #wsWorkersBody');
-        assertTrue(chunk.indexOf('aria-label="Добавить работника"') !== -1,
+        assertTrue(INDEX_SRC.indexOf('aria-label="Добавить работника"') !== -1,
             'aria-подпись кнопки');
     });
 
@@ -170,10 +173,10 @@ describe('Task 385 — HTML: легенда/страница/переимено�
             'подсказка «Вид» (Task 388: итоги в любом виде)');
     });
 
-    test('SW: кэш поднят до kipia-test-v616', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v616'") !== -1,
-            'CACHE_VERSION = kipia-test-v616 (Task 385 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v617') !== -1,
+    test('SW: кэш поднят до kipia-test-v617', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v617'") !== -1,
+            'CACHE_VERSION = kipia-test-v617 (Task 385 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v618') !== -1,
             'v614 ещё не существует (guard)');
     });
 });
@@ -230,8 +233,10 @@ describe('Task 385 — SRC: страница «Работники»', () => {
             'карточка — общий рендер с withEdit');
         assertTrue(fn.indexOf('_renderWorkersGeneral(list)') !== -1,
             '«Общая» вкладка — сводная таблица');
-        assertTrue(fn.indexOf('Нет активных работников.') !== -1,
-            'пустое состояние страницы');
+        // Task 389: текст пустого состояния переехал в
+        // _renderWorkersGeneral (ранний выход из _renderWorkersPage удалён)
+        assertTrue(INDEX_SRC.indexOf('Нет активных работников') !== -1,
+            'пустое состояние живо (в «Общей» вкладке)');
         const gen = methodText(INDEX_SRC, '_renderWorkersGeneral');
         assertTrue(gen.indexOf("['работник', 'работника', 'работников']") !== -1,
             'склонение счётчика (в «Общей»)');

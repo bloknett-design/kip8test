@@ -39,7 +39,7 @@
 //   CSS мобайл: user-select:none на .ws-grid,.ws-tt-table внутри
 //     @media (max-width: 1023px); базовые правила таблиц БЕЗ
 //     user-select (десктоп жив); правило одно.
-//   SW: kipia-test-v616 (guard v610).
+//   SW: kipia-test-v617 (guard v610).
 //   Регресс: окна бара на десктопе выделяются как прежде
 //     (.ws-events-panel без user-select).
 //
@@ -80,10 +80,10 @@ describe('Task 380 — CSS: фон строк мероприятий по сро
             'текущие/будущие: rgba(0,0,0,0.45) — ТЕМНЕЕ окна; строка до краёв (Task 381)');
     });
 
-    test('.ws-ep-past: СВЕТЛЫЙ фон (тёмная тема)', () => {
-        const re = /\.ws-ep-item\.ws-ep-past \{[^}]*background:\s*rgba\(255, 255, 255, 0\.12\);[^}]*\}/;
+    test('.ws-ep-past: ПРОЗРАЧНЫЙ — общий фон окна (Task 389)', () => {
+        const re = /\.ws-ep-item\.ws-ep-past \{[^}]*background:\s*transparent;[^}]*\}/;
         assertTrue(re.test(INDEX_SRC),
-            'прошедшие: rgba(255,255,255,0.12) — СВЕТЛЕЕ окна #0e1621');
+            'прошедшие: transparent — виден ОБЩИЙ ФОН окна var(--bg-tertiary), как выше оглавления (Task 389)');
     });
 
     test('светлая тема: ТЁМНЫЙ фон текущих/будущих', () => {
@@ -92,10 +92,10 @@ describe('Task 380 — CSS: фон строк мероприятий по сро
             'светлая тема: rgba(0,0,0,0.12) — темнее окна #e9e7de');
     });
 
-    test('светлая тема: .ws-ep-past СВЕТЛЫЙ', () => {
-        const re = /\[data-theme="light"\] \.ws-ep-item\.ws-ep-past \{[^}]*background:\s*rgba\(255, 255, 255, 0\.55\);[^}]*\}/;
+    test('светлая тема: .ws-ep-past ПРОЗРАЧНЫЙ (Task 389)', () => {
+        const re = /\[data-theme="light"\] \.ws-ep-item\.ws-ep-past \{[^}]*background:\s*transparent;[^}]*\}/;
         assertTrue(re.test(INDEX_SRC),
-            'светлая тема: прошедшие rgba(255,255,255,0.55) — светлее окна');
+            'светлая тема: прошедшие transparent — общий фон окна (Task 389)');
     });
 
     test('ПОРЯДОК правил: база → past → светлая база → светлая past', () => {
@@ -307,10 +307,10 @@ describe('Task 380 — CSS: мобайл без выделения текста'
 // ============================================================
 describe('Task 380 — SW и адаптации тестов', () => {
 
-    test('SW: kipia-test-v616', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v616'") !== -1,
-            'версия кэша kipia-test-v616');
-        assertFalse(SW_SRC.indexOf('kipia-test-v617') !== -1,
+    test('SW: kipia-test-v617', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v617'") !== -1,
+            'версия кэша kipia-test-v617');
+        assertFalse(SW_SRC.indexOf('kipia-test-v618') !== -1,
             'двойного бампа нет');
     });
 

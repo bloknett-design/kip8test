@@ -287,9 +287,13 @@ describe('Task 386 — HTML: шапка «Работники» + «Добави�
     });
 
     test('SRC: пустое состояние — «Добавить работника»', () => {
+        // Task 389: подсказка переозвучена — кнопка на «Общей» вкладке
         assertTrue(INDEX_SRC.indexOf(
-            'Добавьте первого кнопкой «Добавить работника» в шапке страницы.') !== -1,
-            'подсказка озвучивает новую кнопку');
+            'Нет активных работников — добавьте первого кнопкой «Добавить работника».') !== -1,
+            'подсказка озвучивает кнопку «Общей» вкладки');
+        assertTrue(INDEX_SRC.indexOf(
+            'Добавьте первого кнопкой «Добавить работника» в шапке страницы.') === -1,
+            'старая подсказка про шапку страницы убрана (Task 389)');
         assertTrue(INDEX_SRC.indexOf('Добавьте их кнопкой «+» в шапке страницы.') === -1,
             'старая подсказка про «+» убрана');
     });
@@ -388,10 +392,10 @@ describe('Task 386 — SRC: механика', () => {
             'Esc → _setLegend(false)');
     });
 
-    test('SW: кэш поднят до kipia-test-v616', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v616'") !== -1,
-            'CACHE_VERSION = kipia-test-v616 (Task 386 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v617') !== -1,
+    test('SW: кэш поднят до kipia-test-v617', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v617'") !== -1,
+            'CACHE_VERSION = kipia-test-v617 (Task 386 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v618') !== -1,
             'v615 ещё не существует (guard)');
     });
 });
