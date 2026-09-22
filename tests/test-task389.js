@@ -104,6 +104,8 @@ function workersHost(canEdit, employees) {
         methodText(INDEX_SRC, '_renderWorkersPage') + ',\n' +
         methodText(INDEX_SRC, '_renderWorkersGeneral') + ',\n' +
         methodText(INDEX_SRC, 'selectWorkersTab') + ',\n' +
+        // Task 390: шапка «Общей» вкладки считает мастеров
+        methodText(INDEX_SRC, '_isMasterKipia') + ',\n' +
         '_workersTab: "general",' +
         '_canEdit: ' + JSON.stringify(!!canEdit) + ',' +
         '_year: 2026, _month: 6,' +
@@ -224,30 +226,35 @@ describe('Task 389 — SRC: кнопка «Добавить работника»
 // ============================================================
 describe('Task 389 — SRC: численность и штат в шапке сводки', () => {
 
-    test('«На текущий момент: N …» — АВТОМАТИЧЕСКИЙ ПОДСЧЁТ', () => {
+    test('«Работников на текущий момент: …» — АВТОПОДСЧЁТ ПО КАТЕГОРИЯМ (Task 390)', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_renderWorkersGeneral'));
-        assertTrue(fn.indexOf('На текущий момент: ') !== -1,
-            'формулировка «На текущий момент:»');
-        assertTrue(fn.indexOf('list.length') !== -1,
-            'число — list.length (живой список, автоподсчёт)');
-        assertTrue(fn.indexOf("['работник', 'работника', 'работников']") !== -1,
-            'склонение через _plural');
-        assertTrue(fn.indexOf('(автоматический подсчёт).') !== -1,
-            'пометка «(автоматический подсчёт)»');
+        assertTrue(fn.indexOf('Работников на текущий момент: ') !== -1,
+            'формулировка «Работников на текущий момент:» (Task 390)');
+        assertTrue(fn.indexOf('this._isMasterKipia(cEmp)') !== -1,
+            'мастера — по должности «Мастер КИПиА» (_isMasterKipia)');
+        assertTrue(fn.indexOf("['мастер', 'мастера', 'мастеров']") !== -1 &&
+                   fn.indexOf("['дневной', 'дневных', 'дневных']") !== -1 &&
+                   fn.indexOf("['сменный', 'сменных', 'сменных']") !== -1,
+            'склонения категорий через _plural');
+        assertTrue(fn.indexOf('На текущий момент:') === -1 &&
+                   fn.indexOf('(автоматический подсчёт)') === -1,
+            'старые формулировки удалены');
     });
 
-    test('«По штату: 14, из которых 2 мастера, 5 сменных и 7 дневных»', () => {
+    test('«Работников по штату 14: 2 мастера; 7 дневных; 5 сменных.» (Task 390)', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_renderWorkersGeneral'));
-        assertTrue(fn.indexOf('По штату: 14, из которых') !== -1,
-            'константа штата: 14');
-        assertTrue(fn.indexOf('2 мастера, 5 сменных и 7 дневных.') !== -1,
-            'структура: 2 мастера / 5 сменных / 7 дневных');
+        assertTrue(fn.indexOf('Работников по штату 14: ') !== -1,
+            'константа штата: 14 (Task 390)');
+        assertTrue(fn.indexOf('2 мастера; 7 дневных; 5 сменных.') !== -1,
+            'структура: 2 мастера / 7 дневных / 5 сменных');
         assertTrue(fn.indexOf('ws-wgen-staff') !== -1,
             'класс строки штата');
         assertTrue(fn.indexOf('ws-wgen-info') !== -1,
             'инфо-блок шапки сводки');
         assertTrue(fn.indexOf('ws-workers-count') !== -1,
             'счётчик — прежний класс (стили живы)');
+        assertTrue(fn.indexOf('По штату: 14, из которых') === -1,
+            'старая формулировка удалена');
     });
 });
 
@@ -267,16 +274,16 @@ describe('Task 389 — SRC: CSS — фоны НЕ прозрачные, левы
     test('.ws-wtab: СПЛОШНОЙ фон неактивного ярлыка', () => {
         const b = ruleBlock('.ws-wtab {');
         assertTrue(b !== null, 'правило живо');
-        assertTrue(b.indexOf('background: var(--bg-primary, #1a2233);') !== -1,
-            'тёмная: сплошной var(--bg-primary) — НЕ rgba-тинт');
+        assertTrue(b.indexOf('background: #4B4E46;') !== -1,
+            'тёмная (Task 390): тёплый #4B4E46 — светлее фона страницы, ближе к светлой теме');
         assertFalse(/background:\s*rgba\(/.test(b),
             'в правиле .ws-wtab нет полупрозрачных фонов');
     });
 
     test('.ws-wtab:hover: сплошной светлее', () => {
         const b = ruleBlock('.ws-wtab:hover {');
-        assertTrue(b !== null && b.indexOf('background: #243048;') !== -1,
-            'тёмная: сплошной #243048');
+        assertTrue(b !== null && b.indexOf('background: #575A50;') !== -1,
+            'тёмная (Task 390): тёплый #575A50');
     });
 
     test('светлая тема: ярлыки сплошные', () => {
@@ -319,8 +326,8 @@ describe('Task 389 — SRC: CSS — фоны НЕ прозрачные, левы
             'внешние отступы ушли контейнеру .ws-wgen-head');
     });
 
-    test('SW: kipia-test-v617', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v617'") !== -1,
+    test('SW: kipia-test-v618', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v618'") !== -1,
             'SWVersion bumped');
     });
 });
@@ -334,10 +341,10 @@ describe('Task 389 — VM: «Общая» вкладка', () => {
         const t = workersHost(true);
         t.host._renderWorkersPage();
         const body = t.els.wsWorkersBody.innerHTML;
-        assertTrue(body.indexOf('На текущий момент: 3 работника (автоматический подсчёт).') !== -1,
-            'автоподсчёт: «На текущий момент: 3 работника (автоматический подсчёт).»');
-        assertTrue(body.indexOf('По штату: 14, из которых 2 мастера, 5 сменных и 7 дневных.') !== -1,
-            'штат: 14 = 2 мастера + 5 сменных + 7 дневных');
+        assertTrue(body.indexOf('Работников на текущий момент: 0 мастеров; 1 дневной; 2 сменных.') !== -1,
+            'автоподсчёт (Task 390): 0 мастеров; 1 дневной; 2 сменных');
+        assertTrue(body.indexOf('Работников по штату 14: 2 мастера; 7 дневных; 5 сменных.') !== -1,
+            'штат: 14 = 2 мастера + 7 дневных + 5 сменных');
         assertTrue(body.indexOf('id="wsWorkersAddBtn"') !== -1,
             'кнопка «Добавить работника» — НА «Общей» вкладке');
         assertTrue(body.indexOf('WorkSchedule.openEmployeeForm()') !== -1,
@@ -353,8 +360,8 @@ describe('Task 389 — VM: «Общая» вкладка', () => {
         const body = t.els.wsWorkersBody.innerHTML;
         assertTrue(body.indexOf('ws-workers-add') === -1,
             'кнопки «Добавить работника» у зрителя НЕТ (_canEdit-гейт)');
-        assertTrue(body.indexOf('На текущий момент: 3 работника') !== -1 &&
-                   body.indexOf('По штату: 14') !== -1,
+        assertTrue(body.indexOf('Работников на текущий момент:') !== -1 &&
+                   body.indexOf('Работников по штату 14') !== -1,
             'информация доступна всем');
     });
 
@@ -366,8 +373,8 @@ describe('Task 389 — VM: «Общая» вкладка', () => {
             'раскладка вкладок рендерится (раннего выхода НЕТ)');
         assertEqual((body.match(/role="tab"/g) || []).length, 1,
             'один ярлык — «Общая»');
-        assertTrue(body.indexOf('На текущий момент: 0 работников (автоматический подсчёт).') !== -1,
-            'автоподсчёт нуля');
+        assertTrue(body.indexOf('Работников на текущий момент: 0 мастеров; 0 дневных; 0 сменных.') !== -1,
+            'автоподсчёт нуля (Task 390)');
         assertTrue(body.indexOf('Нет активных работников — добавьте первого кнопкой «Добавить работника».') !== -1,
             'подсказка пустого состояния');
         assertTrue(body.indexOf('id="wsWorkersAddBtn"') !== -1,
@@ -392,8 +399,8 @@ describe('Task 389 — VM: «Общая» вкладка', () => {
         const t = workersHost(true);
         const two = t.host._EMPLOYEES.slice(0, 2);
         const html = t.host._renderWorkersGeneral(two);
-        assertTrue(html.indexOf('На текущий момент: 2 работника (автоматический подсчёт).') !== -1,
-            'число = длине переданного списка (2 работника)');
+        assertTrue(html.indexOf('Работников на текущий момент: 0 мастеров; 1 дневной; 1 сменный.') !== -1,
+            'категории переданного списка: 0 мастеров; 1 дневной; 1 сменный (Task 390)');
         assertTrue(html.indexOf('ws-wgen-table') !== -1, 'таблица сводки жива');
         const t2 = workersHost(false);
         const html2 = t2.host._renderWorkersGeneral([]);

@@ -173,10 +173,10 @@ describe('Task 385 — HTML: легенда/страница/переимено�
             'подсказка «Вид» (Task 388: итоги в любом виде)');
     });
 
-    test('SW: кэш поднят до kipia-test-v617', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v617'") !== -1,
-            'CACHE_VERSION = kipia-test-v617 (Task 385 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v618') !== -1,
+    test('SW: кэш поднят до kipia-test-v618', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v618'") !== -1,
+            'CACHE_VERSION = kipia-test-v618 (Task 385 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v619') !== -1,
             'v614 ещё не существует (guard)');
     });
 });
@@ -238,8 +238,9 @@ describe('Task 385 — SRC: страница «Работники»', () => {
         assertTrue(INDEX_SRC.indexOf('Нет активных работников') !== -1,
             'пустое состояние живо (в «Общей» вкладке)');
         const gen = methodText(INDEX_SRC, '_renderWorkersGeneral');
-        assertTrue(gen.indexOf("['работник', 'работника', 'работников']") !== -1,
-            'склонение счётчика (в «Общей»)');
+        // Task 390: счётчик — категории с собственными склонениями
+        assertTrue(gen.indexOf("['мастер', 'мастера', 'мастеров']") !== -1,
+            'склонения счётчика категорий (в «Общей»; Task 390)');
     });
 
     test('_renderWorkersIfOpen — обновление вместе с сеткой', () => {
@@ -443,6 +444,8 @@ describe('Task 385 — VM: карточка/страница/легенда', ()
         '_trainingCodeOf', '_statusMeta',
         '_vacDaysInYear', '_vacNetDaysInYear', '_vacIsHoliday',
         '_vacSplitDays', '_parseIsoLocal',
+        // Task 390: подсчёт мастеров в шапке «Общей» вкладки
+        '_isMasterKipia',
     ];
 
     function makeHost(desktop) {

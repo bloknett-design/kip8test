@@ -260,10 +260,10 @@ describe('Task 388 — SRC: итоги учёта доступны в любом
             'тосты сменного/дневного вида обещают итоги');
     });
 
-    test('SW: кэш поднят до kipia-test-v617', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v617'") !== -1,
-            'CACHE_VERSION = kipia-test-v617 (Task 388 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v618') !== -1,
+    test('SW: кэш поднят до kipia-test-v618', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v618'") !== -1,
+            'CACHE_VERSION = kipia-test-v618 (Task 388 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v619') !== -1,
             'v617 ещё не существует (guard)');
     });
 });
@@ -630,6 +630,27 @@ describe('Task 388 — VM: итоги в сменном/дневном виде'
     });
 });
 
+// Русские склонения (Task 390: харнесс использует РЕАЛЬНОЕ
+// правило — строки шапки «Общей» вкладки со склонениями категорий)
+function pluralRu(n, forms) {
+    return forms[(n % 10 === 1 && n % 100 !== 11) ? 0 :
+        (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) ? 1 : 2];
+}
+
+// Русские склонения (Task 390: харнесс использует РЕАЛЬНОЕ
+// правило — строки шапки «Общей» вкладки со склонениями категорий)
+function pluralRu(n, forms) {
+    return forms[(n % 10 === 1 && n % 100 !== 11) ? 0 :
+        (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) ? 1 : 2];
+}
+
+// Русские склонения (Task 390: харнесс использует РЕАЛЬНОЕ
+// правило — строки шапки «Общей» вкладки со склонениями категорий)
+function pluralRu(n, forms) {
+    return forms[(n % 10 === 1 && n % 100 !== 11) ? 0 :
+        (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) ? 1 : 2];
+}
+
 describe('Task 388 — VM: страница «Работники» — вкладки', () => {
 
     function workersHost(canEdit) {
@@ -649,6 +670,12 @@ describe('Task 388 — VM: страница «Работники» — вкла�
             methodText(INDEX_SRC, '_renderWorkersPage') + ',\n' +
             methodText(INDEX_SRC, '_renderWorkersGeneral') + ',\n' +
             methodText(INDEX_SRC, 'selectWorkersTab') + ',\n' +
+            // Task 390: шапка «Общей» вкладки считает мастеров
+            methodText(INDEX_SRC, '_isMasterKipia') + ',\n' +
+            // Task 390: шапка «Общей» вкладки считает мастеров
+            methodText(INDEX_SRC, '_isMasterKipia') + ',\n' +
+            // Task 390: шапка «Общей» вкладки считает мастеров
+            methodText(INDEX_SRC, '_isMasterKipia') + ',\n' +
             '_workersTab: "general",' +
             '_canEdit: ' + JSON.stringify(!!canEdit) + ',' +
             '_year: 2026, _month: 6,' +
@@ -664,7 +691,7 @@ describe('Task 388 — VM: страница «Работники» — вкла�
             '_renderWorkerCard: function(tabNo, withEdit) {' +
             '  return "CARD:" + tabNo + ":" + (withEdit ? "edit" : "view"); },' +
             '_vacNetDaysInYear: function(v, y) { return 10; },' +
-            '_plural: function(n, forms) { return forms[0]; },' +
+            '_plural: ' + pluralRu + ',' +
             '_fmtDateRu: function(d) { return String(d); },' +
             '_esc: function(s) { return String(s); },' +
             '_escAttr: function(s) { return String(s); }' +
@@ -682,7 +709,9 @@ describe('Task 388 — VM: страница «Работники» — вкла�
         assertTrue(body.indexOf('ws-wgen-table') !== -1, 'сводная таблица');
         assertTrue(body.indexOf('CARD:') === -1, 'карточки НЕ рендерятся на «Общей»');
         // сводка: счётчик + ФИО всех
-        assertTrue(body.indexOf('3 ') !== -1, 'трое работников в счётчике');
+        // Task 390: счётчик — по категориям (мастера/дневные/сменные)
+        assertTrue(body.indexOf('0 мастеров; 1 дневной; 2 сменных') !== -1,
+            'шапка: 0 мастеров; 1 дневной; 2 сменных');
         ['Иванов И. И.', 'Петров П. П.', 'Аистов А. А.'].forEach(n =>
             assertTrue(body.indexOf(n) !== -1, 'в сводке есть «' + n + '»'));
     });
@@ -749,9 +778,8 @@ describe('Task 388 — VM: страница «Работники» — вкла�
         // Иванов: отпуск 10 (мок _vacNetDaysInYear), 1 мероприятие
         const ivanovRow = html.slice(html.indexOf('Иванов И. И.'),
                                      html.indexOf('</tr>', html.indexOf('Иванов И. И.')));
-        assertTrue(ivanovRow.indexOf('>10 день<') !== -1 ||
-                   ivanovRow.indexOf('10 день') !== -1,
-            'отпуск Иванова — 10 (дней)');
+        assertTrue(ivanovRow.indexOf('10 дней') !== -1,
+            'отпуск Иванова — 10 (дней, реальное склонение)');
         assertTrue(ivanovRow.indexOf('>1<') !== -1, 'мероприятие Иванова — 1');
         // Петров: без отпуска/мероприятий — прочерки
         const petrovRow = html.slice(html.indexOf('Петров П. П.'),
@@ -760,9 +788,10 @@ describe('Task 388 — VM: страница «Работники» — вкла�
         // смена Иванова — в режиме работы
         assertTrue(ivanovRow.indexOf('сменный, смена №2') !== -1,
             'режим работы со сменой');
-        // примечание со счётчиком типов
-        assertTrue(html.indexOf('сменных — 2') !== -1 &&
-                   html.indexOf('дневных — 1') !== -1,
-            'примечание: сменных 2, дневных 1');
+        // Task 390: счётчик категорий — в ШАПКЕ (сноска удалена)
+        assertTrue(html.indexOf('0 мастеров; 1 дневной; 2 сменных') !== -1,
+            'шапка: 0 мастеров; 1 дневной; 2 сменных');
+        assertTrue(html.indexOf('ws-wgen-note') === -1,
+            'сноска-примечание удалена (Task 390)');
     });
 });

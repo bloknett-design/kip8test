@@ -296,13 +296,13 @@ describe('Task 365 — data/flowmeters.json: №12 «Ежедневно»', () =
 
 describe('Task 365 — SW кэш', () => {
 
-    test('SW: CACHE_VERSION = kipia-test-v617', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v617'") !== -1,
+    test('SW: CACHE_VERSION = kipia-test-v618', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v618'") !== -1,
             'версия кэша поднята до v594');
     });
 
     test('SW: нет v593 (старая) и нет v595 (двойной бамп)', () => {
         assertTrue(SW_SRC.indexOf('kipia-test-v593') === -1, 'старая версия не осталась');
-        assertTrue(SW_SRC.indexOf('kipia-test-v618') === -1, 'двойного бампа не было');
+        assertTrue(SW_SRC.indexOf('kipia-test-v619') === -1, 'двойного бампа не было');
     });
 });
