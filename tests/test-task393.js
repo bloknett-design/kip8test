@@ -244,7 +244,7 @@ describe('Task 393 — VM: _renderWorkerCard строка и блоки', () => 
         assertEqual(typeof html, 'string', 'попап получает строку');
         const i1 = html.indexOf('Галкин Д. Н.');
         const i2 = html.indexOf('Отпуска · 2026');
-        const i3 = html.indexOf('Мероприятия · Сентябрь 2026');
+        const i3 = html.indexOf('Мероприятия · 2026');
         const i4 = html.indexOf('СИЗ · средства индивидуальной защиты');
         assertTrue(i1 !== -1 && i2 !== -1 && i3 !== -1 && i4 !== -1,
             'все 4 секции в строке');
@@ -286,11 +286,11 @@ describe('Task 393 — VM: _renderWorkerCard строка и блоки', () => 
             'изоляция блока');
     });
 
-    test('блок 3 — мероприятия месяца', () => {
+    test('блок 3 — мероприятия года (Task 394)', () => {
         const host = cardHost(true, PPE);
         const b = host._renderWorkerCard('2706', true, true)[2];
-        assertTrue(b.indexOf('Мероприятия · Сентябрь 2026') !== -1, 'заголовок блока (месяц/год)');
-        assertTrue(b.indexOf('нет мероприятий в месяце') !== -1, 'пустое состояние');
+        assertTrue(b.indexOf('Мероприятия · 2026') !== -1, 'заголовок блока (год, Task 394)');
+        assertTrue(b.indexOf('нет мероприятий за год') !== -1, 'пустое состояние (год)');
         assertTrue(b.indexOf('+ Мероприятие…') !== -1, '«+ Мероприятие…» в блоке 3');
     });
 
@@ -378,7 +378,7 @@ describe('Task 393 — VM: страница «Работники» — 4 окн�
             'ровно четыре окна-панели');
         const i1 = html.indexOf('Галкин Д. Н.');
         const i2 = html.indexOf('Отпуска · 2026');
-        const i3 = html.indexOf('Мероприятия · Сентябрь 2026');
+        const i3 = html.indexOf('Мероприятия · 2026');
         const i4 = html.indexOf('СИЗ · средства индивидуальной защиты');
         assertTrue(i1 !== -1 && i2 !== -1 && i3 !== -1 && i4 !== -1, 'блоки на месте');
         assertTrue(i1 < i2 && i2 < i3 && i3 < i4, 'порядок панелей — как в заявке');
@@ -425,10 +425,10 @@ describe('Task 393 — VM: страница «Работники» — 4 окн�
 // ============================================================
 describe('Task 393 — SW', () => {
 
-    test('SW: kipia-test-v621', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v621'") !== -1,
+    test('SW: kipia-test-v622', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v622'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v622') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v623') === -1,
             'двойного бампа не было');
     });
 });

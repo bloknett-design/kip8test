@@ -42,7 +42,7 @@
 //   "Ошибка: self.loadTrainings is not a function"»):
 //     — вызовы удалённых страниц loadTrainings()/loadVacations()
 //       больше не встречаются; вместо них loadGrid().
-//   SW: kipia-test-v621.
+//   SW: kipia-test-v622.
 //
 // Запуск: через tests/run-all.js (require './test-task309.js').
 
@@ -190,8 +190,8 @@ describe('Task 309 — карточка сотрудника у колонки �
             'кнопка удаления ✕ в карточке (Task 385: страница «Работники»)');
         assertTrue(rp.indexOf('if (withEdit && trId)') !== -1,
             'кнопки — только с withEdit (Task 385: страница «Работники», редакторам)');
-        assertTrue(rp.indexOf('нет мероприятий в месяце') !== -1,
-            'пустое состояние секции мероприятий');
+        assertTrue(rp.indexOf('нет мероприятий за год') !== -1,
+            'пустое состояние секции мероприятий (Task 394: год)');
         assertTrue(rp.indexOf('a.дата_начала).localeCompare') !== -1,
             'мероприятия отсортированы по дате начала');
     });
@@ -383,9 +383,9 @@ describe('Task 309 — регресс-фиксы Task 308 (loadTrainings/loadVac
 
 describe('Task 309 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v621', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v621'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v621');
+    test('SW: версия кэша kipia-test-v622', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v622'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v622');
         assertFalse(SW_SRC.indexOf('kipia-test-v547') !== -1,
             'старой версии v547 нет');
     });
