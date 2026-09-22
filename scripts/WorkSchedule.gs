@@ -25,6 +25,11 @@
 //                                   B..F по id; проверки не считают
 //                                   саму строку)
 //   workSchedule.deleteVacation   — удалить период отпуска
+//   workSchedule.listPpe          — СИЗ работников (Task 392, лист «СИЗ»)
+//   workSchedule.addPpe           — выдать СИЗ работнику (дата окончания
+//                                   считается автоматически: выдача + срок)
+//   workSchedule.updatePpe        — правка записи СИЗ (B..I по id)
+//   workSchedule.deletePpe        — удалить запись СИЗ
 //
 // Авторизация — по тому же паттерну, что Flowmeter.gs:
 //   Utils.findSessionByToken(token) → session
@@ -33,10 +38,10 @@
 // Google Таблица — ОТДЕЛЬНАЯ от hozraschet:
 //   SPREADSHEET_ID = '1MQtW-CWCmjlu-SAeVBllKDP6NRkiOkmW-7xgOjHskWY'
 //
-// Листы (9):
+// Листы (10):
 //   README, Сотрудники, Коды_статусов, Шаблоны_ротации,
 //   Дни_цикла, Инструктажи, Записи_графика, Сводка_по_месяцам,
-//   Отпуска (Task 274)
+//   Отпуска (Task 274), СИЗ (Task 392)
 //
 // Task 304: таб_№ во ВСЕХ листах хранится ТЕКСТОМ. appendRow/
 //   setValues пишут значения по USER_ENTERED-семантике Google
@@ -125,6 +130,23 @@
 //   сменных днях смена остаётся кодом ячейки, а мероприятие (И/ОБ/ПЗ)
 //   показывается бейджем на клиенте (данные — лист «Инструктажи»,
 //   связка — колонка I «инструкция»).
+//
+// Структура листа «СИЗ» (Task 392 — средства индивидуальной защиты;
+//   перечень — Приказ Минтруда России от 29.10.2021 N767н, образец —
+//   файл «Таблица СИЗ работникам КИП ИОС.xlsx»; создаёт PPEInit.gs):
+//   A: id (auto-increment)
+//   B: таб_номер (FK на Сотрудники; ТЕКСТ — Task 304)
+//   C: работник (ФИО — копия для читаемости листа; заполняется
+//      приложением из справочника «Сотрудники»)
+//   D: должность (копия для читаемости листа; автоматически)
+//   E: наименование_СИЗ
+//   F: дата_выдачи (Date; может быть пусто — не выдано)
+//   G: срок_годности («1 год» / «1,5 года» / «2 года» / «3 года» /
+//      «6 мес.» / «До износа» / пусто)
+//   H: дата_окончания (заполняется АВТОМАТИЧЕСКИ: дата выдачи +
+//      срок годности; «До износа» для соответствующего срока; без
+//      даты выдачи — пусто)
+//   I: примечание
 // ============================================================
 
 var WorkSchedule = {
@@ -143,6 +165,9 @@ var WorkSchedule = {
   // Task 274: лист «Отпуска» — план периодов (2–3 части на год).
   // Данные листа определяют автоматическое заполнение «О» в шахматке.
   VACATIONS_SHEET:    'Отпуска',
+  // Task 392: лист «СИЗ» — средства индивидуальной защиты работников
+  // (наименование/дата выдачи/срок/авто-дата окончания/примечание)
+  PPE_SHEET:          'СИЗ',
 
   // Строка, с которой начинаются данные
   DATA_START_ROW: 2,
@@ -1983,6 +2008,266 @@ var WorkSchedule = {
         try {
           Utils.audit(user.email, 'WORKSCHEDULE_DELETE_VACATION', '', '',
             'Удалён отпуск id=' + id);
+        } catch (e) { /* ignore */ }
+        return { ok: true, data: { id: id } };
+      }
+    }
+    return { ok: false, error: 'not_found' };
+  },
+
+  // ============================================================
+  // CRUD СИЗ (Task 392 — лист «СИЗ»)
+  // ============================================================
+
+  // workSchedule.listPpe
+  // payload: { token }
+  // returns: { ok:true, data: { ppe: [...] } }
+  // Все записи СИЗ (клиент фильтрует по таб_номеру для карточки
+  // работника). Строка без таб_номера И наименования — пустая
+  // (стилевой холст getLastRow, урок Task 294) — пропускается.
+  // Даты могут лежать текстом — парсим _parseSheetDate (урок
+  // Task 279); дата_окончания «До износа» остаётся СТРОКОЙ.
+  listPpe: function(payload) {
+    var auth = this._requireRead(payload.token);
+    if (auth.error) return auth.error;
+
+    var sheet = this._getSheet(this.PPE_SHEET);
+    if (!sheet) return { ok: false, error: 'sheet_not_found: ' + this.PPE_SHEET };
+
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return { ok: true, data: { ppe: [] } };
+
+    // Читаем id (A), таб_номер (B), работник (C), должность (D),
+    // наименование (E), дата_выдачи (F), срок (G), дата_окончания
+    // (H), примечание (I)
+    var values = sheet.getRange(2, 1, lastRow - 1, 9).getValues();
+    var ppe = [];
+    for (var i = 0; i < values.length; i++) {
+      var r = values[i];
+      var tabNo = String(r[1] || '').trim();
+      var name = String(r[4] || '').trim();
+      if (!tabNo && !name) continue;
+      var vId = parseInt(r[0], 10);
+      var issued = this._parseSheetDate(r[5]);
+      var expRaw = r[7];
+      var expiry = '';
+      if (expRaw instanceof Date) {
+        expiry = this._toIsoDate(expRaw);
+      } else if (String(expRaw || '').trim()) {
+        var expDate = this._parseSheetDate(expRaw);
+        expiry = expDate ? this._toIsoDate(expDate) : String(expRaw).trim();
+      }
+      ppe.push({
+        id:              isNaN(vId) ? null : vId,
+        'таб_номер':     tabNo,
+        работник:        String(r[2] || '').trim(),
+        должность:       String(r[3] || '').trim(),
+        наименование:    name,
+        дата_выдачи:     issued ? this._toIsoDate(issued) : '',
+        срок_годности:   String(r[6] || '').trim(),
+        дата_окончания:  expiry,
+        примечание:      String(r[8] || '').trim()
+      });
+    }
+    return { ok: true, data: { ppe: ppe } };
+  },
+
+  // Task 392: работник по таб. № в листе «Сотрудники» — для колонок-
+  // копий C/D листа «СИЗ» (работник/должность для читаемости листа).
+  // null — таб. № в справочнике не найден
+  _ppeLookupEmployee: function(empSheet, tabNo) {
+    var lastRow = empSheet.getLastRow();
+    if (lastRow < 2) return null;
+    var tabs = empSheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    for (var i = 0; i < tabs.length; i++) {
+      if (String(tabs[i][0]).trim() !== tabNo) continue;
+      var vals = empSheet.getRange(i + 2, 1, 1, 11).getValues();
+      return {
+        fio:      String(vals[0][1] || '').trim(),
+        position: String(vals[0][9] || '').trim()
+      };
+    }
+    return null;
+  },
+
+  // Task 392: срок годности текстом → месяцы («1 год» → 12,
+  // «1,5 года» → 18, «2 года» → 24, «3 года» → 36, «6 мес.» → 6);
+  // «До износа» → маркер -1; незнакомый/пустой → null
+  _ppeTermMonths: function(term) {
+    var s = String(term || '').trim().toLowerCase()
+      .replace(',', '.').replace(/\u00a0/g, ' ');
+    if (!s) return null;
+    if (s.indexOf('до износа') !== -1) return -1;
+    var m = s.match(/^(\d+(?:\.\d+)?)\s*(мес|год|л)/);
+    if (!m) return null;
+    var n = parseFloat(m[1]);
+    if (isNaN(n) || n <= 0) return null;
+    if (m[2] === 'мес') {
+      var mo = Math.round(n);
+      return (mo >= 1 && mo <= 120) ? mo : null;
+    }
+    var mm = Math.round(n * 12);
+    return (mm >= 1 && mm <= 600) ? mm : null;
+  },
+
+  // Task 392: дата окончания срока годности = дата выдачи + срок
+  // (кламп дня к длине целевого месяца: 31.08 + 6 мес → 28/29.02).
+  // «До износа» → строка «До износа»; без даты/срока → null
+  _ppeExpiry: function(issueDate, term) {
+    var months = this._ppeTermMonths(term);
+    if (months === -1) return 'До износа';
+    if (!months || !issueDate) return null;
+    var y = issueDate.getFullYear();
+    var mo = issueDate.getMonth() + months;
+    var day = issueDate.getDate();
+    var last = new Date(y, mo + 1, 0).getDate();
+    if (day > last) day = last;
+    return new Date(y, mo, day);
+  },
+
+  // workSchedule.addPpe
+  // payload: { token, таб_номер, наименование, дата_выдачи(ISO|''),
+  //            срок_годности, примечание }
+  // Добавляет запись СИЗ работнику. Работник/должность (C/D) — копия
+  // из справочника «Сотрудники» (для читаемости листа). Дата
+  // окончания (H) считается АВТОМАТИЧЕСКИ: дата выдачи + срок
+  // годности; «До износа» → текст «До износа»; без даты выдачи —
+  // пусто (образец файла «Таблица СИЗ работникам КИП ИОС»).
+  addPpe: function(payload) {
+    var auth = this._requireWrite(payload.token);
+    if (auth.error) return auth.error;
+    var user = auth.user;
+
+    var tabNo = String(payload.таб_номер || '').trim();
+    if (!tabNo) return { ok: false, error: 'invalid_таб_номер' };
+    var name = String(payload.наименование || '').trim().slice(0, 300);
+    if (!name) return { ok: false, error: 'invalid_наименование' };
+
+    var empSheet = this._getSheet(this.EMPLOYEES_SHEET);
+    if (!empSheet) return { ok: false, error: 'sheet_not_found: ' + this.EMPLOYEES_SHEET };
+    var emp = this._ppeLookupEmployee(empSheet, tabNo);
+    if (!emp) {
+      return { ok: false, error: 'not_found_таб_номер',
+               message: 'Работник с таб. № ' + tabNo + ' не найден' };
+    }
+
+    var sheet = this._getSheet(this.PPE_SHEET);
+    if (!sheet) return { ok: false, error: 'sheet_not_found: ' + this.PPE_SHEET };
+
+    var issued = payload.дата_выдачи ? this._parseIsoDate(payload.дата_выдачи) : null;
+    var term = String(payload.срок_годности || '').trim().slice(0, 50);
+    var comment = String(payload.примечание || '').slice(0, 200);
+    var expiry = this._ppeExpiry(issued, term);  // Date|'До износа'|null
+
+    // max id в столбце A
+    var lastRow = sheet.getLastRow();
+    var maxId = 0;
+    if (lastRow >= 2) {
+      var ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+      for (var i = 0; i < ids.length; i++) {
+        var v = parseInt(ids[i][0], 10);
+        if (!isNaN(v) && v > maxId) maxId = v;
+      }
+    }
+    var newId = maxId + 1;
+
+    // Task 304: B (таб_№) — текст, ведущие нули не теряются
+    this._appendRowKeepText(sheet,
+      [newId, tabNo, emp.fio, emp.position, name, issued, term, expiry, comment],
+      [2]);
+
+    try {
+      Utils.audit(user.email, 'WORKSCHEDULE_ADD_PPE', '', '',
+        'Добавлено СИЗ id=' + newId + ' таб_номер=' + tabNo +
+        ' «' + name + '»' +
+        (issued ? ' выдано ' + this._toIsoDate(issued) : ''));
+    } catch (e) { /* ignore */ }
+
+    return { ok: true, data: { id: newId } };
+  },
+
+  // workSchedule.updatePpe
+  // payload: { token, id, таб_номер, наименование, дата_выдачи(ISO|''),
+  //            срок_годности, примечание }
+  // Правка записи СИЗ из карточки работника (шторка «Правка СИЗ»).
+  // Обновляет B..I строки по id (A не меняется); работник/должность
+  // (C/D) освежаются из справочника «Сотрудники»; дата окончания
+  // (H) пересчитывается. Task 304: B (таб_номер) — текстовый формат.
+  updatePpe: function(payload) {
+    var auth = this._requireWrite(payload.token);
+    if (auth.error) return auth.error;
+    var user = auth.user;
+
+    var id = parseInt(payload.id, 10);
+    if (isNaN(id)) return { ok: false, error: 'invalid_id' };
+    var tabNo = String(payload.таб_номер || '').trim();
+    if (!tabNo) return { ok: false, error: 'invalid_таб_номер' };
+    var name = String(payload.наименование || '').trim().slice(0, 300);
+    if (!name) return { ok: false, error: 'invalid_наименование' };
+
+    var empSheet = this._getSheet(this.EMPLOYEES_SHEET);
+    if (!empSheet) return { ok: false, error: 'sheet_not_found: ' + this.EMPLOYEES_SHEET };
+    var emp = this._ppeLookupEmployee(empSheet, tabNo);
+    if (!emp) {
+      return { ok: false, error: 'not_found_таб_номер',
+               message: 'Работник с таб. № ' + tabNo + ' не найден' };
+    }
+
+    var sheet = this._getSheet(this.PPE_SHEET);
+    if (!sheet) return { ok: false, error: 'sheet_not_found: ' + this.PPE_SHEET };
+
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return { ok: false, error: 'not_found' };
+
+    // Строка по id (A)
+    var ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    var rowIndex = -1;
+    for (var fi = 0; fi < ids.length; fi++) {
+      if (parseInt(ids[fi][0], 10) === id) { rowIndex = fi + 2; break; }
+    }
+    if (rowIndex === -1) return { ok: false, error: 'not_found' };
+
+    var issued = payload.дата_выдачи ? this._parseIsoDate(payload.дата_выдачи) : null;
+    var term = String(payload.срок_годности || '').trim().slice(0, 50);
+    var comment = String(payload.примечание || '').slice(0, 200);
+    var expiry = this._ppeExpiry(issued, term);
+
+    // Запись B..I (id в A не меняется); Task 304: B — текст
+    sheet.getRange(rowIndex, 2).setNumberFormat('@');
+    sheet.getRange(rowIndex, 2, 1, 8).setValues(
+      [[tabNo, emp.fio, emp.position, name, issued, term, expiry, comment]]);
+
+    try {
+      Utils.audit(user.email, 'WORKSCHEDULE_UPDATE_PPE', '', '',
+        'Обновлено СИЗ id=' + id + ' таб_номер=' + tabNo + ' «' + name + '»');
+    } catch (e) { /* ignore */ }
+
+    return { ok: true, data: { id: id } };
+  },
+
+  // workSchedule.deletePpe
+  // payload: { token, id }
+  deletePpe: function(payload) {
+    var auth = this._requireWrite(payload.token);
+    if (auth.error) return auth.error;
+    var user = auth.user;
+
+    var id = parseInt(payload.id, 10);
+    if (isNaN(id)) return { ok: false, error: 'invalid_id' };
+
+    var sheet = this._getSheet(this.PPE_SHEET);
+    if (!sheet) return { ok: false, error: 'sheet_not_found: ' + this.PPE_SHEET };
+
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return { ok: false, error: 'not_found' };
+
+    var ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    for (var i = 0; i < ids.length; i++) {
+      if (parseInt(ids[i][0], 10) === id) {
+        sheet.deleteRow(i + 2);
+        try {
+          Utils.audit(user.email, 'WORKSCHEDULE_DELETE_PPE', '', '',
+            'Удалено СИЗ id=' + id);
         } catch (e) { /* ignore */ }
         return { ok: true, data: { id: id } };
       }

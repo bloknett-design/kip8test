@@ -153,8 +153,8 @@ describe('Task 391 — SRC: строки шапки — формат в скоб
             'текущий момент без двоеточия (заявка Task 391)');
         assertTrue(fn.indexOf('var totalN = masterN + dayN + shiftN;') !== -1,
             'ведущее (N) — СУММА категорий');
-        assertTrue(fn.indexOf("'(' + totalN + ') ('") !== -1,
-            'скобки подряд: (итог) (разбивка)');
+        assertTrue(fn.indexOf("totalN + ' ('") !== -1,
+            'Task 392: ведущее число БЕЗ скобок, разбивка — в скобках');
         assertTrue(fn.indexOf('masterN + \' \' + this._plural(masterN') !== -1 &&
                    fn.indexOf('dayN + \' \' + this._plural(dayN') !== -1 &&
                    fn.indexOf('shiftN + \' \' + this._plural(shiftN') !== -1,
@@ -251,10 +251,10 @@ describe('Task 391 — SRC: CSS — шрифт строк и кнопка в с�
             'кнопка следует теме через var(--accent-blue)');
     });
 
-    test('SW: kipia-test-v619', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v619'") !== -1,
+    test('SW: kipia-test-v620', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v620'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v620') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v621') === -1,
             'двойного бампа не было');
     });
 });
@@ -268,7 +268,7 @@ describe('Task 391 — VM: строки шапки — формат и авто�
         const t = workersHost(true);
         t.host._renderWorkersPage();
         const body = t.els.wsWorkersBody.innerHTML;
-        assertTrue(body.indexOf('Работников на текущий момент (6) (2 мастера, 2 дневных, 2 сменных).') !== -1,
+        assertTrue(body.indexOf('Работников на текущий момент 6 (2 мастера, 2 дневных, 2 сменных).') !== -1,
             'ведущее 6 = 2+2+2, разбивка в скобках через запятую');
     });
 
@@ -293,14 +293,14 @@ describe('Task 391 — VM: строки шапки — формат и авто�
         const html = t.host._renderWorkersGeneral(t.host._EMPLOYEES);
         // Вв — «Мастер КИПиА» по ДОЛЖНОСТИ при типе «дневной» →
         // считается мастером, из дневных исключён (Task 390 инвариант)
-        assertTrue(html.indexOf('Работников на текущий момент (4) (1 мастер, 1 дневной, 2 сменных).') !== -1,
+        assertTrue(html.indexOf('Работников на текущий момент 4 (1 мастер, 1 дневной, 2 сменных).') !== -1,
             '(4) = 1+1+2 — мастер по должности, дневные/сменные по типу');
     });
 
     test('VM: пустой список — нули в новом формате', () => {
         const t = workersHost(true, []);
         const html = t.host._renderWorkersGeneral([]);
-        assertTrue(html.indexOf('Работников на текущий момент (0) (0 мастеров, 0 дневных, 0 сменных).') !== -1,
+        assertTrue(html.indexOf('Работников на текущий момент 0 (0 мастеров, 0 дневных, 0 сменных).') !== -1,
             '«(0) (0 мастеров, 0 дневных, 0 сменных)»');
     });
 
@@ -320,7 +320,7 @@ describe('Task 391 — VM: строки шапки — формат и авто�
         assertTrue(body.indexOf('ws-workers-add') === -1,
             'кнопки у зрителя нет (_canEdit-гейт)');
         assertTrue(body.indexOf('Работников по штату 14 (2 мастера, 7 дневных, 5 сменных).') !== -1 &&
-                   body.indexOf('Работников на текущий момент (6)') !== -1,
+                   body.indexOf('Работников на текущий момент 6') !== -1,
             'обе строки доступны всем');
     });
 

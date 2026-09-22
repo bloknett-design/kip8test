@@ -167,8 +167,8 @@ describe('Task 390 — SRC: шапка «Общей» вкладки — стр�
             'формулировка без двоеточия (заявка Task 391)');
         assertTrue(fn.indexOf('var totalN = masterN + dayN + shiftN;') !== -1,
             'ведущее число в скобках — СУММА категорий (Task 391)');
-        assertTrue(fn.indexOf("'(' + totalN + ') ('") !== -1,
-            'формат «(итог) (разбивка)» — скобки подряд (Task 391)');
+        assertTrue(fn.indexOf("totalN + ' ('") !== -1,
+            'Task 392: ведущее число БЕЗ СКОБОК, разбивка — в скобках');
         assertTrue(fn.indexOf('Работников на текущий момент: ') === -1,
             'старое «момент:» с двоеточием удалено (Task 391)');
         assertTrue(fn.indexOf('masterN') !== -1 &&
@@ -289,10 +289,10 @@ describe('Task 390 — SRC: CSS — шапка/примыкание/цвета �
             'светлая: активный — как окно вкладки');
     });
 
-    test('SW: kipia-test-v619', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v619'") !== -1,
+    test('SW: kipia-test-v620', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v620'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v620') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v621') === -1,
             'двойного бампа не было');
     });
 });
@@ -306,7 +306,7 @@ describe('Task 390 — VM: «Общая» вкладка — категории'
         const t = workersHost(true);
         t.host._renderWorkersPage();
         const body = t.els.wsWorkersBody.innerHTML;
-        assertTrue(body.indexOf('Работников на текущий момент (6) (2 мастера, 2 дневных, 2 сменных).') !== -1,
+        assertTrue(body.indexOf('Работников на текущий момент 6 (2 мастера, 2 дневных, 2 сменных).') !== -1,
             '2 мастера + 2 дневных + 2 сменных, итог 6 в скобках (Task 391)');
     });
 
@@ -357,7 +357,7 @@ describe('Task 390 — VM: «Общая» вкладка — категории'
     test('VM: пустой список — нули с правильными склонениями', () => {
         const t = workersHost(true, []);
         const html = t.host._renderWorkersGeneral([]);
-        assertTrue(html.indexOf('Работников на текущий момент (0) (0 мастеров, 0 дневных, 0 сменных).') !== -1,
+        assertTrue(html.indexOf('Работников на текущий момент 0 (0 мастеров, 0 дневных, 0 сменных).') !== -1,
             '«(0) (0 мастеров, 0 дневных, 0 сменных)» (Task 391)');
     });
 
@@ -374,7 +374,7 @@ describe('Task 390 — VM: «Общая» вкладка — категории'
               'дата_приёма': '2024-03-01' },
         ]);
         const html = t.host._renderWorkersGeneral(t.host._EMPLOYEES);
-        assertTrue(html.indexOf('Работников на текущий момент (3) (1 мастер, 1 дневной, 1 сменный).') !== -1,
+        assertTrue(html.indexOf('Работников на текущий момент 3 (1 мастер, 1 дневной, 1 сменный).') !== -1,
             'единственное число всех категорий; итог 3 в скобках (Task 391)');
     });
 
@@ -388,7 +388,7 @@ describe('Task 390 — VM: «Общая» вкладка — категории'
               'должность': 'Слесарь КИПиА', 'комментарий': '', 'дата_приёма': '' },
         ]);
         const html = t.host._renderWorkersGeneral(t.host._EMPLOYEES);
-        assertTrue(html.indexOf('Работников на текущий момент (3) (2 мастера, 0 дневных, 1 сменный).') !== -1,
+        assertTrue(html.indexOf('Работников на текущий момент 3 (2 мастера, 0 дневных, 1 сменный).') !== -1,
             'нижний регистр/пробелы — мастера; «Слесарь КИПиА» — сменный; итог 3 (Task 391)');
     });
 

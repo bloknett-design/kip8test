@@ -260,10 +260,10 @@ describe('Task 388 — SRC: итоги учёта доступны в любом
             'тосты сменного/дневного вида обещают итоги');
     });
 
-    test('SW: кэш поднят до kipia-test-v619', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v619'") !== -1,
-            'CACHE_VERSION = kipia-test-v619 (Task 388 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v620') !== -1,
+    test('SW: кэш поднят до kipia-test-v620', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v620'") !== -1,
+            'CACHE_VERSION = kipia-test-v620 (Task 388 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v621') !== -1,
             'v617 ещё не существует (guard)');
     });
 });
@@ -710,8 +710,8 @@ describe('Task 388 — VM: страница «Работники» — вкла�
         assertTrue(body.indexOf('CARD:') === -1, 'карточки НЕ рендерятся на «Общей»');
         // сводка: счётчик + ФИО всех
         // Task 390: счётчик — по категориям (мастера/дневные/сменные)
-        assertTrue(body.indexOf('(3) (0 мастеров, 1 дневной, 2 сменных)') !== -1,
-            'шапка: (3) (0 мастеров, 1 дневной, 2 сменных) — Task 391');
+        assertTrue(body.indexOf('3 (0 мастеров, 1 дневной, 2 сменных)') !== -1,
+            'шапка: 3 (0 мастеров, 1 дневной, 2 сменных) — Task 392 (итог без скобок)');
         ['Иванов И. И.', 'Петров П. П.', 'Аистов А. А.'].forEach(n =>
             assertTrue(body.indexOf(n) !== -1, 'в сводке есть «' + n + '»'));
     });
@@ -789,8 +789,8 @@ describe('Task 388 — VM: страница «Работники» — вкла�
         assertTrue(ivanovRow.indexOf('сменный, смена №2') !== -1,
             'режим работы со сменой');
         // Task 390: счётчик категорий — в ШАПКЕ (сноска удалена)
-        assertTrue(html.indexOf('(3) (0 мастеров, 1 дневной, 2 сменных)') !== -1,
-            'шапка: (3) (0 мастеров, 1 дневной, 2 сменных) — Task 391');
+        assertTrue(html.indexOf('3 (0 мастеров, 1 дневной, 2 сменных)') !== -1,
+            'шапка: 3 (0 мастеров, 1 дневной, 2 сменных) — Task 392 (итог без скобок)');
         assertTrue(html.indexOf('ws-wgen-note') === -1,
             'сноска-примечание удалена (Task 390)');
     });

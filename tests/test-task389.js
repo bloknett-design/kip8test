@@ -326,8 +326,8 @@ describe('Task 389 — SRC: CSS — фоны НЕ прозрачные, левы
             'внешние отступы ушли контейнеру .ws-wgen-head');
     });
 
-    test('SW: kipia-test-v619', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v619'") !== -1,
+    test('SW: kipia-test-v620', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v620'") !== -1,
             'SWVersion bumped');
     });
 });
@@ -341,7 +341,7 @@ describe('Task 389 — VM: «Общая» вкладка', () => {
         const t = workersHost(true);
         t.host._renderWorkersPage();
         const body = t.els.wsWorkersBody.innerHTML;
-        assertTrue(body.indexOf('Работников на текущий момент (3) (0 мастеров, 1 дневной, 2 сменных).') !== -1,
+        assertTrue(body.indexOf('Работников на текущий момент 3 (0 мастеров, 1 дневной, 2 сменных).') !== -1,
             'автоподсчёт (Task 391): (3) (0 мастеров, 1 дневной, 2 сменных)');
         assertTrue(body.indexOf('Работников по штату 14 (2 мастера, 7 дневных, 5 сменных).') !== -1,
             'штат: 14 = 2 мастера + 7 дневных + 5 сменных (Task 391)');
@@ -373,7 +373,7 @@ describe('Task 389 — VM: «Общая» вкладка', () => {
             'раскладка вкладок рендерится (раннего выхода НЕТ)');
         assertEqual((body.match(/role="tab"/g) || []).length, 1,
             'один ярлык — «Общая»');
-        assertTrue(body.indexOf('Работников на текущий момент (0) (0 мастеров, 0 дневных, 0 сменных).') !== -1,
+        assertTrue(body.indexOf('Работников на текущий момент 0 (0 мастеров, 0 дневных, 0 сменных).') !== -1,
             'автоподсчёт нуля (Task 391)');
         assertTrue(body.indexOf('Нет активных работников — добавьте первого кнопкой «Добавить работника».') !== -1,
             'подсказка пустого состояния');
@@ -399,7 +399,7 @@ describe('Task 389 — VM: «Общая» вкладка', () => {
         const t = workersHost(true);
         const two = t.host._EMPLOYEES.slice(0, 2);
         const html = t.host._renderWorkersGeneral(two);
-        assertTrue(html.indexOf('Работников на текущий момент (2) (0 мастеров, 1 дневной, 1 сменный).') !== -1,
+        assertTrue(html.indexOf('Работников на текущий момент 2 (0 мастеров, 1 дневной, 1 сменный).') !== -1,
             'категории переданного списка: (2) (0 мастеров, 1 дневной, 1 сменный) (Task 391)');
         assertTrue(html.indexOf('ws-wgen-table') !== -1, 'таблица сводки жива');
         const t2 = workersHost(false);

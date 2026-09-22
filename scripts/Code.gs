@@ -318,6 +318,21 @@ function doPost(e) {
       case 'workSchedule.updateVacation':
         return _json(WorkSchedule.updateVacation(payload));
 
+      // Task 392: СИЗ — средства индивидуальной защиты работников
+      // (лист «СИЗ» таблицы табель_КИП_ИОС); карточка работника:
+      // секция СИЗ с правкой/добавлением/удалением записей
+      case 'workSchedule.listPpe':
+        return _json(WorkSchedule.listPpe(payload));
+
+      case 'workSchedule.addPpe':
+        return _json(WorkSchedule.addPpe(payload));
+
+      case 'workSchedule.updatePpe':
+        return _json(WorkSchedule.updatePpe(payload));
+
+      case 'workSchedule.deletePpe':
+        return _json(WorkSchedule.deletePpe(payload));
+
       default:
         return _json({ ok: false, error: 'Unknown action: ' + action });
     }
