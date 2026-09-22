@@ -278,8 +278,8 @@ describe('Task 386 — HTML: шапка «Работники» + «Добави�
         const chunk = INDEX_SRC.slice(iCss, iCss + 400);
         assertTrue(chunk.indexOf('height: 34px') !== -1,
             'высота — прежние 34px');
-        assertTrue(chunk.indexOf('padding: 0 12px') !== -1,
-            'авто-ширина с паддингами (не фиксированные 34px)');
+        assertTrue(chunk.indexOf('padding: 0 14px') !== -1,
+            'авто-ширина с паддингами (не фиксированные 34px; Task 391 — акцентная кнопка)');
         assertTrue(chunk.indexOf('white-space: nowrap') !== -1,
             'текст без переносов');
         assertTrue(chunk.indexOf('width: 34px') === -1,
@@ -392,10 +392,10 @@ describe('Task 386 — SRC: механика', () => {
             'Esc → _setLegend(false)');
     });
 
-    test('SW: кэш поднят до kipia-test-v618', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v618'") !== -1,
-            'CACHE_VERSION = kipia-test-v618 (Task 386 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v619') !== -1,
+    test('SW: кэш поднят до kipia-test-v619', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v619'") !== -1,
+            'CACHE_VERSION = kipia-test-v619 (Task 386 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v620') !== -1,
             'v615 ещё не существует (guard)');
     });
 });
