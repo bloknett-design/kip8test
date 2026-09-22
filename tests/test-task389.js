@@ -114,6 +114,9 @@ function workersHost(canEdit, employees) {
         '_TRAININGS: [],' +
         '_renderWorkerCard: function(tabNo, withEdit) {' +
         '  return "CARD:" + tabNo + ":" + (withEdit ? "edit" : "view"); },' +
+        // Task 393: страница «Работники» рендерит ПАНЕЛИ блоков карточки
+        '_renderWorkerCardPanels: function(tabNo, withEdit) {' +
+        '  return \'<div class="ws-wcard">CARD:\' + tabNo + \':\' + (withEdit ? "edit" : "view") + \'</div>\'; },' +
         '_vacNetDaysInYear: function(v, y) { return 0; },' +
         '_plural: ' + pluralRu + ',' +
         '_fmtDateRu: function(d) { return String(d); },' +
@@ -326,8 +329,8 @@ describe('Task 389 — SRC: CSS — фоны НЕ прозрачные, левы
             'внешние отступы ушли контейнеру .ws-wgen-head');
     });
 
-    test('SW: kipia-test-v620', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v620'") !== -1,
+    test('SW: kipia-test-v621', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v621'") !== -1,
             'SWVersion bumped');
     });
 });

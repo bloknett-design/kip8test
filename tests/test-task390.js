@@ -134,6 +134,9 @@ function workersHost(canEdit, employees) {
         '_TRAININGS: [],' +
         '_renderWorkerCard: function(tabNo, withEdit) {' +
         '  return "CARD:" + tabNo + ":" + (withEdit ? "edit" : "view"); },' +
+        // Task 393: страница «Работники» рендерит ПАНЕЛИ блоков карточки
+        '_renderWorkerCardPanels: function(tabNo, withEdit) {' +
+        '  return \'<div class="ws-wcard">CARD:\' + tabNo + \':\' + (withEdit ? "edit" : "view") + \'</div>\'; },' +
         '_vacNetDaysInYear: function(v, y) { return 0; },' +
         '_plural: ' + pluralRu + ',' +
         '_fmtDateRu: function(d) { return String(d); },' +
@@ -289,10 +292,10 @@ describe('Task 390 — SRC: CSS — шапка/примыкание/цвета �
             'светлая: активный — как окно вкладки');
     });
 
-    test('SW: kipia-test-v620', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v620'") !== -1,
+    test('SW: kipia-test-v621', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v621'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v621') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v622') === -1,
             'двойного бампа не было');
     });
 });

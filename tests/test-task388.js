@@ -260,10 +260,10 @@ describe('Task 388 — SRC: итоги учёта доступны в любом
             'тосты сменного/дневного вида обещают итоги');
     });
 
-    test('SW: кэш поднят до kipia-test-v620', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v620'") !== -1,
-            'CACHE_VERSION = kipia-test-v620 (Task 388 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v621') !== -1,
+    test('SW: кэш поднят до kipia-test-v621', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v621'") !== -1,
+            'CACHE_VERSION = kipia-test-v621 (Task 388 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v622') !== -1,
             'v617 ещё не существует (guard)');
     });
 });
@@ -308,8 +308,8 @@ describe('Task 388 — SRC: страница «Работники» — вкла
         assertTrue(fn.indexOf('selectWorkersTab') !== -1, 'клики по ярлыкам');
         assertTrue(fn.indexOf('_renderWorkersGeneral(list)') !== -1,
             'тело «Общей» вкладки — сводная таблица');
-        assertTrue(fn.indexOf('_renderWorkerCard(empTabNo, withEdit)') !== -1,
-            'тело вкладки работника — полная карточка');
+        assertTrue(fn.indexOf('_renderWorkerCardPanels(empTabNo, withEdit)') !== -1,
+            'тело вкладки работника — четыре блока-панели (Task 393)');
     });
 
     test('selectWorkersTab/_workersTab — состояние вкладки', () => {
@@ -690,6 +690,9 @@ describe('Task 388 — VM: страница «Работники» — вкла�
             '],' +
             '_renderWorkerCard: function(tabNo, withEdit) {' +
             '  return "CARD:" + tabNo + ":" + (withEdit ? "edit" : "view"); },' +
+            // Task 393: страница «Работники» рендерит ПАНЕЛИ блоков карточки
+            '_renderWorkerCardPanels: function(tabNo, withEdit) {' +
+            '  return \'<div class="ws-wcard">CARD:\' + tabNo + \':\' + (withEdit ? "edit" : "view") + \'</div>\'; },' +
             '_vacNetDaysInYear: function(v, y) { return 10; },' +
             '_plural: ' + pluralRu + ',' +
             '_fmtDateRu: function(d) { return String(d); },' +

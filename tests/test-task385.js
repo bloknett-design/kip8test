@@ -173,10 +173,10 @@ describe('Task 385 — HTML: легенда/страница/переимено�
             'подсказка «Вид» (Task 388: итоги в любом виде)');
     });
 
-    test('SW: кэш поднят до kipia-test-v620', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v620'") !== -1,
-            'CACHE_VERSION = kipia-test-v620 (Task 385 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v621') !== -1,
+    test('SW: кэш поднят до kipia-test-v621', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v621'") !== -1,
+            'CACHE_VERSION = kipia-test-v621 (Task 385 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v622') !== -1,
             'v614 ещё не существует (guard)');
     });
 });
@@ -228,9 +228,10 @@ describe('Task 385 — SRC: страница «Работники»', () => {
         assertTrue(fn.indexOf('ws-wtabs') !== -1, 'колонка ярлыков-вкладок');
         assertTrue(fn.indexOf('ws-wtab-general') !== -1, 'ярлык «Общая» первый');
         assertTrue(fn.indexOf('selectWorkersTab') !== -1, 'клики по ярлыкам');
-        assertTrue(fn.indexOf('ws-wcard') !== -1, 'обёртка карточки .ws-wcard');
-        assertTrue(fn.indexOf('_renderWorkerCard(empTabNo, withEdit)') !== -1,
-            'карточка — общий рендер с withEdit');
+        assertTrue(fn.indexOf('_renderWorkerCardPanels') !== -1,
+            'обёртка карточки — панели .ws-wcard (Task 393)');
+        assertTrue(fn.indexOf('_renderWorkerCardPanels(empTabNo, withEdit)') !== -1,
+            'карточка — панели блоков с withEdit (Task 393)');
         assertTrue(fn.indexOf('_renderWorkersGeneral(list)') !== -1,
             '«Общая» вкладка — сводная таблица');
         // Task 389: текст пустого состояния переехал в
@@ -432,7 +433,8 @@ describe('Task 385 — SRC: переименование видимых стро
 describe('Task 385 — VM: карточка/страница/легенда', () => {
 
     const HOST_METHODS = [
-        '_renderEmpPopup', '_renderWorkerCard', '_renderWorkersPage',
+        '_renderEmpPopup', '_renderWorkerCard', '_renderWorkerCardPanels',
+        '_renderWorkersPage',
         '_renderWorkersGeneral', 'selectWorkersTab', '_escAttr',
         '_renderWorkersIfOpen', 'openWorkersPage', 'onWorkersPageOpen',
         '_setLegend', 'toggleLegend', '_renderLegendSheet',
@@ -578,7 +580,8 @@ describe('Task 385 — VM: карточка/страница/легенда', ()
         // клик по ярлыку — карточка с кнопками правки (редактор)
         h.WSM.selectWorkersTab('0871');
         const body2 = h.els().wsWorkersBody.innerHTML;
-        assertEqual((body2.match(/ws-wcard/g) || []).length, 1, 'карточка выбранного');
+        assertEqual((body2.match(/ws-wcard/g) || []).length, 4,
+            'карточка выбранного — ЧЕТЫРЕ блока-окна (Task 393)');
         assertTrue(body2.indexOf('ws-emp-editdata') !== -1,
             'кнопки правки в карточке (withEdit=true у редактора)');
         // выбор живёт между перерисовками
