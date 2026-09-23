@@ -93,14 +93,16 @@ describe('Task 393 — SRC: четыре блока карточки', () => {
 
     test('блоки b1–b4: профиль / отпуска / мероприятия / СИЗ', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_renderWorkerCard'));
-        assertTrue(fn.indexOf("var b1 = '<div class=\"ws-popup-title\">'") !== -1,
-            'b1 — шапка ФИО · таб. №');
-        assertTrue(fn.indexOf("var b2 = '<div class=\"ws-popup-sec\">Отпуска · '") !== -1,
-            'b2 — отпуска года');
-        assertTrue(fn.indexOf("var b3 = '<div class=\"ws-popup-sec\">Мероприятия · '") !== -1,
-            'b3 — мероприятия месяца');
-        assertTrue(fn.indexOf("var b4 = '<div class=\"ws-popup-sec\">СИЗ · средства индивидуальной защиты</div>'") !== -1,
-            'b4 — СИЗ');
+        assertTrue(fn.indexOf("'<div class=\"ws-whead\"><div class=\"ws-whead-t ws-whead-name\">'") !== -1,
+            'b1 — шапка ФИО · таб. № (Task 396: полоса .ws-whead у блоков-окон)');
+        assertTrue(fn.indexOf("'<div class=\"ws-popup-title\">'") !== -1,
+            'b1 — легаси-ветка попапа: прежний .ws-popup-title');
+        assertTrue(fn.indexOf("'<div class=\"ws-popup-sec\">Отпуска · '") !== -1,
+            'b2 — отпуска года (легаси-ветка попапа)');
+        assertTrue(fn.indexOf("'<div class=\"ws-popup-sec\">Мероприятия · '") !== -1,
+            'b3 — мероприятия (легаси-ветка попапа)');
+        assertTrue(fn.indexOf("'<div class=\"ws-popup-sec\">СИЗ · средства индивидуальной защиты</div>'") !== -1,
+            'b4 — СИЗ (легаси-ветка попапа)');
         // «Правка данных…»/«Уволить…» — в b1 (панель профиля)
         const iEdit = fn.indexOf('ws-emp-editdata');
         const iDis = fn.indexOf('ws-emp-dismiss');
@@ -425,10 +427,10 @@ describe('Task 393 — VM: страница «Работники» — 4 окн�
 // ============================================================
 describe('Task 393 — SW', () => {
 
-    test('SW: kipia-test-v623', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v623'") !== -1,
+    test('SW: kipia-test-v624', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v624'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v624') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v625') === -1,
             'двойного бампа не было');
     });
 });

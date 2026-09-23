@@ -33,7 +33,7 @@
 //     таб_№ (текст, Task 304), пишет H (дата) + I (в_архиве=1),
 //     строка НЕ удаляется; ошибки invalid/not_found; аудит;
 //     маршрут в Code.gs.
-//   SW: kipia-test-v623.
+//   SW: kipia-test-v624.
 //
 // Запуск: через tests/run-all.js (require './test-task318.js').
 
@@ -217,8 +217,10 @@ describe('Task 318 — JS: карточка — «Режим работы» + «
         const i = rp.indexOf('ws-emp-dismiss');
         assertTrue(i !== -1, 'строка «Уволить…» в карточке (Task 385: страница «Работники»)');
         const seg = rp.slice(Math.max(0, i - 400), i + 400);
-        assertTrue(seg.indexOf('withEdit') !== -1,
-            'только с withEdit (Task 385: страница «Работники», редакторам)');
+        // Task 396: «Уволить…» — компактная кнопка шапки (b1Acts):
+        // гейт withEdit — РАНЬШЕ кнопки по тексту метода
+        assertTrue(rp.lastIndexOf('if (withEdit) {', i) !== -1,
+            'только с withEdit (кнопка внутри гейта сборки b1Acts)');
         assertTrue(seg.indexOf('WorkSchedule.openDismissForm(') !== -1,
             'клик → openDismissForm(таб_№)');
         assertTrue(seg.indexOf('Уволить…') !== -1, 'текст строки');
@@ -633,10 +635,10 @@ describe('Task 318 — Сервер: dismissEmployee (WorkSchedule.gs)', () => {
 // Service Worker
 // ============================================================
 describe('Task 318 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v623', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v623') !== -1,
-            'CACHE_VERSION = kipia-test-v623 (Task 318)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v624') !== -1,
+    test('SW: версия кэша kipia-test-v624', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v624') !== -1,
+            'CACHE_VERSION = kipia-test-v624 (Task 318)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v625') !== -1,
             'лишний инкремент не делался');
     });
 });
