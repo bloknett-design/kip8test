@@ -254,6 +254,7 @@ require('./test-task397.js');
 // правило [hidden]{display:none!important} восстанавливает семантику
 // атрибута — кнопка СКРЫТА уровням null/min, JS-гейты не тронуты
 require('./test-task398.js');
+require('./test-task399.js');
 require('./test-deploy-url.js');
 
 // Запускаем
