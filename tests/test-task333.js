@@ -43,7 +43,7 @@
 //   HTML: #wsViewBtn — ПОДПИСЬ «Вид» (span.ws-view-label после
 //     иконок); CSS .ws-view-btn — width: auto + паддинги (не
 //     квадрат-иконка), .ws-view-label — 13px/600.
-//   SW: kipia-test-v627.
+//   SW: kipia-test-v628.
 //
 // Запуск: через tests/run-all.js (require './test-task333.js').
 
@@ -362,8 +362,8 @@ describe('Task 333 — год: архив блоком, обновление т�
             'главная таблица — до блока архива');
         // Task 335: шапка «Сотрудник» — span.ws-tt-emp-head («Сотр» при сужении);
         // обе таблицы (главная + архив) содержат по одному такому span
-        assertTrue((h.match(/<th class="ws-tt-emp"><span class="ws-tt-emp-head"/g) || []).length === 2,
-            'шапки «Сотрудник» — у главной (мобайл) и у архива');
+        assertTrue((h.match(/<th class="ws-tt-emp" rowspan="2"><span class="ws-tt-emp-head"/g) || []).length === 2,
+            'шапки «Сотрудник» — у главной (мобайл) и у архива (Task 401: rowspan=2 — шапка двухстрочная)');
     });
 
     test('год: штамп ws-group-first и ws-hover-row в главной таблице', () => {
@@ -472,10 +472,10 @@ describe('Task 333 — кнопка вида: подпись «Вид»', () => 
 // ============================================================
 describe('Task 333 — SW: версия кэша', () => {
 
-    test('SW: кэш поднят до kipia-test-v627 (Task 333)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v627') !== -1,
-            'в sw.js — kipia-test-v627');
-        assertFalse(SW_SRC.indexOf('kipia-test-v628') !== -1,
+    test('SW: кэш поднят до kipia-test-v628 (Task 333)', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v628') !== -1,
+            'в sw.js — kipia-test-v628');
+        assertFalse(SW_SRC.indexOf('kipia-test-v629') !== -1,
             'лишний инкремент (v577) не сделан');
     });
 });

@@ -1017,9 +1017,9 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
         // таблицей: подпись .ws-tt-arch-cap + таблица .ws-tt-arch
         // (Сидоров, своя колонка «Сотрудник» на любом экране)
         // Task 335: текст шапки — в span.ws-tt-emp-head («Сотр» при сужении)
-        assertTrue(h.indexOf('<th class="ws-tt-emp"><span class="ws-tt-emp-head"') !== -1 &&
+        assertTrue(h.indexOf('<th class="ws-tt-emp" rowspan="2"><span class="ws-tt-emp-head"') !== -1 &&
             h.indexOf('data-full="Работник"') !== -1,
-            'главная таблица: шапка с «Работником» (Task 333, мобайл; Task 385: работник)');
+            'главная таблица: шапка с «Работником» (Task 333, мобайл; Task 385: работник; Task 401: rowspan=2)');
         assertTrue(h.indexOf('Иванов И.И.') !== -1,
             'активный Иванов — строка главной таблицы (Task 333)');
         assertTrue(h.indexOf('ws-tt-arch-cap') !== -1 && h.indexOf('>Архив</div>') !== -1,
@@ -1028,12 +1028,13 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
             'таблица архива — класс ws-tt-arch (Task 333)');
         assertTrue(h.indexOf('Сидоров С.С.') !== -1,
             'архивный Сидоров — в блоке архива (Task 333)');
-        assertEqual((h.match(/<tr>/g) || []).length, 4,
-            '4 <tr>: шапка+Иванов (главная) + шапка+Сидоров (архив)');
-        assertTrue(h.indexOf('<th>Дней</th>') !== -1 && h.indexOf('<th>Часов</th>') !== -1,
-            'годовые суммы: колонки Дней/Часов');
-        assertTrue(h.indexOf('<th title="дни переработки за год — коды д/н">Перераб. (дни)</th>') !== -1,
-            'Task 322 → 329 → 331: годовая колонка Перераб. (дни, тултип)');
+        assertEqual((h.match(/<tr>/g) || []).length, 6,
+            '6 <tr>: шапка+подстрока+Иванов (главная) + шапка+подстрока+Сидоров (архив) — Task 401');
+        assertTrue(h.indexOf('<th class="ws-tt-sum ws-tt-sum-edge" rowspan="2">Дней</th>') !== -1 &&
+            h.indexOf('<th class="ws-tt-sum" rowspan="2">Часов</th>') !== -1,
+            'годовые суммы: колонки Дней/Часов (Task 401: rowspan=2 + итоговый фон)');
+        assertTrue(h.indexOf('<th class="ws-tt-sum" rowspan="2" title="дни переработки за год — коды д/н">Перераб. (дни)</th>') !== -1,
+            'Task 322 → 329 → 331: годовая колонка Перераб. (дни, тултип; Task 401: класс+rowspan)');
         // Task 324: пояснительная инфо («N г. · явки/часы…») УДАЛЕНА
         assertEqual(t.els.wsTtWarn.textContent, '', '⚠ пуст — без сбоев');
         assertEqual(t.els.wsTtWarn.hidden, true, '⚠ скрыта');
@@ -1091,10 +1092,10 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
 // 11. SW: версия кэша
 // ============================================================
 describe('Task 321 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v627 (Task 323)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v627'") !== -1,
-            'CACHE_VERSION = kipia-test-v627');
-        assertFalse(SW_SRC.indexOf('kipia-test-v628') !== -1,
+    test('SW: кэш поднят до kipia-test-v628 (Task 323)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v628'") !== -1,
+            'CACHE_VERSION = kipia-test-v628');
+        assertFalse(SW_SRC.indexOf('kipia-test-v629') !== -1,
             'v561 не существует (один инкремент на Task 321)');
     });
 });
