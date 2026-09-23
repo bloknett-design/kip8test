@@ -173,10 +173,10 @@ describe('Task 385 — HTML: легенда/страница/переимено�
             'подсказка «Вид» (Task 388: итоги в любом виде)');
     });
 
-    test('SW: кэш поднят до kipia-test-v622', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v622'") !== -1,
-            'CACHE_VERSION = kipia-test-v622 (Task 385 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v623') !== -1,
+    test('SW: кэш поднят до kipia-test-v623', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v623'") !== -1,
+            'CACHE_VERSION = kipia-test-v623 (Task 385 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v624') !== -1,
             'v614 ещё не существует (guard)');
     });
 });
@@ -211,8 +211,8 @@ describe('Task 385 — SRC: страница «Работники»', () => {
 
     test('openWorkersPage — гейт + navigateTo + рендер', () => {
         const fn = methodText(INDEX_SRC, 'openWorkersPage');
-        assertTrue(fn.indexOf('if (!this._canEdit) return;') !== -1,
-            'двойная защита права записи');
+        assertTrue(fn.indexOf("if (lvl !== 'edit' && lvl !== 'view') return;") !== -1,
+            'Task 395: гейт edit/view (null/min — мимо; зритель — пускается)');
         assertTrue(fn.indexOf("navigateTo('ws-workers')") !== -1,
             'переход на страницу ws-workers');
         assertTrue(fn.indexOf('this._renderWorkersPage();') !== -1,
@@ -274,12 +274,12 @@ describe('Task 385 — SRC: страница «Работники»', () => {
             'PAGE_LABELS: «Работники»');
     });
 
-    test('_onRoleUpdate — кнопка «Работники» по _canEdit', () => {
+    test('_onRoleUpdate — кнопка «Работники»: скрыта для null/min (Task 395)', () => {
         const i = INDEX_SRC.indexOf("_onRoleUpdate: function");
         const chunk = INDEX_SRC.slice(i, i + 2000);
         assertTrue(chunk.indexOf("wsWorkersBtn") !== -1 &&
-                   chunk.indexOf('workersBtn.hidden = !newCanEdit') !== -1,
-            'видимость кнопки — только редакторам (как «Сформировать»)');
+                   chunk.indexOf("(newLevel === null || newLevel === 'min')") !== -1,
+            'Task 395: кнопка НЕ отображается без прав (null) и при ограниченном просмотре (min)');
     });
 
     test('шапка сетки — «Работники»: ПРОСТО надпись (Task 386)', () => {
@@ -610,12 +610,24 @@ describe('Task 385 — VM: карточка/страница/легенда', ()
             'страница отрендерена (вкладки, Task 388)');
         assertTrue(h.els().wsWorkersBody.innerHTML.indexOf('ws-wgen-table') !== -1,
             '«Общая» вкладка — сводка по всем работникам');
-        // зритель — мимо
+        // Task 395: ЗРИТЕЛЬ (view) — теперь пускается (кнопка видна
+        // уровням edit/view; страница — read-only, без кнопок правки)
         const h2 = makeHost();
         h2.WSM._canEdit = false;
         h2.WSM.openWorkersPage();
-        assertEqual(JSON.stringify(h2.nav()), JSON.stringify([]),
-            'без права записи перехода нет');
+        assertEqual(JSON.stringify(h2.nav()), JSON.stringify(['ws-workers']),
+            'Task 395: зритель (view) переходит на страницу');
+        // min (ограниченный просмотр) и null (нет доступа) — мимо
+        const h3 = makeHost();
+        h3.WSM._viewLevel = 'min';
+        h3.WSM.openWorkersPage();
+        assertEqual(JSON.stringify(h3.nav()), JSON.stringify([]),
+            'Task 395: min — перехода нет (кнопка скрыта)');
+        const h4 = makeHost();
+        h4.WSM._viewLevel = null;
+        h4.WSM.openWorkersPage();
+        assertEqual(JSON.stringify(h4.nav()), JSON.stringify([]),
+            'Task 395: null (нет доступа) — перехода нет');
     });
 
     test('VM: _renderWorkersIfOpen — только активная страница', () => {

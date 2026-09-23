@@ -135,10 +135,10 @@ describe('Task 394 — SRC: мероприятия на весь год', () => 
 // ============================================================
 describe('Task 394 — SRC: CSS сетки и окна мероприятий', () => {
 
-    test('десктоп ≥1024px — .ws-wgrid2: grid 2×2, gap 12, start', () => {
-        const re = /@media \(min-width: 1024px\) \{\s*\.ws-wgrid2 \{[^}]*?display: grid;[^}]*?grid-template-columns: 1fr 1fr;[^}]*?gap: 12px;[^}]*?align-items: start;\s*\}\s*\.ws-wgrid2 \.ws-wcard \{ margin-bottom: 0; \}/;
+    test('десктоп ≥1024px — .ws-wgrid2: ДВЕ колонки flex (Task 395)', () => {
+        const re = /@media \(min-width: 1024px\) \{\s*\.ws-wgrid2 \{[^}]*?display: flex;[^}]*?gap: 12px;[^}]*?align-items: flex-start;\s*\}\s*\.ws-wgrid2 \.ws-wcol \{[^}]*?flex: 1 1 0;[^}]*?min-width: 0;[^}]*?margin-bottom: 0;\s*\}/;
         assertTrue(re.test(INDEX_SRC),
-            'сетка 2×2 равными колонками, зазор 12px, окна не тянутся');
+            'Task 395: две равные flex-колонки; правая (СИЗ) сверху — не тянется');
     });
 
     test('мобильный стек жив: зазор margin-bottom у панелей', () => {
@@ -591,10 +591,10 @@ describe('Task 394 — VM: окно мероприятий — порядок с
 // ============================================================
 describe('Task 394 — SW', () => {
 
-    test('SW: kipia-test-v622', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v622'") !== -1,
+    test('SW: kipia-test-v623', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v623'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v623') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v624') === -1,
             'двойного бампа не было');
     });
 });

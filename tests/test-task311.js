@@ -212,10 +212,10 @@ describe('Task 311 — кнопка «+ Сотрудник» → заголов�
             'клика у заголовка нет — переход только кнопкой «Работники» в баре');
         assertTrue(gridPart.indexOf('<i class="ws-emp-head-plus">+</i>') === -1,
             'плюсик-индикатор удалён');
-        // двойная защита: openWorkersPage сам проверяет право записи
+        // двойная защита (Task 395): openWorkersPage пускает edit/view
         const owp = fnBody(INDEX_SRC, 'openWorkersPage: function');
-        assertTrue(owp.indexOf('if (!this._canEdit) return;') !== -1,
-            'openWorkersPage проверяет право записи (зритель — мимо)');
+        assertTrue(owp.indexOf("if (lvl !== 'edit' && lvl !== 'view') return;") !== -1,
+            'openWorkersPage пускает edit/view (Task 395: null/min — мимо)');
     });
 
     test('CSS: ws-emp-head-add — правила УДАЛЕНЫ (Task 386: надпись)', () => {
@@ -242,9 +242,9 @@ describe('Task 311 — кнопка «+ Сотрудник» → заголов�
 
 describe('Task 311 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v622', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v622'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v622');
+    test('SW: версия кэша kipia-test-v623', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v623'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v623');
         assertFalse(SW_SRC.indexOf('kipia-test-v549') !== -1,
             'старой версии v549 нет');
     });
