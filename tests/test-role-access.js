@@ -448,15 +448,16 @@ describe('Аудит ролей: мобильный нижний бар (dashboa
             'нет фильтрации кнопки «Документация» нижнего бара по доступу');
     });
 
-    test('Кнопка «Документация» видна ролям с доступом к docs/library/kip-ios', function () {
-        // Формула из _applyRoleToUI: isAll || docs || library || kip-ios
+    test('Кнопка «Документация» видна ролям с доступом к docs', function () {
+        // Task 397 (общее правило): формула из _applyRoleToUI —
+        // isAll || docs (композит docs|library|kip-ios упрощён:
+        // library влечёт docs — одна группа; kip-ios без library
+        // не открывает page-docs — кнопка вела на «Нет доступа»).
         ROLES.forEach(function (role) {
             const allowed = Kip.ROLE_ACCESS[role] || [];
             const isAll = allowed.indexOf('*') !== -1;
             const expectVisible = isAll
-                || allowed.indexOf('docs') !== -1
-                || allowed.indexOf('library') !== -1
-                || allowed.indexOf('kip-ios') !== -1;
+                || allowed.indexOf('docs') !== -1;
             // Кнопка ведёт на page-docs, где видимые кнопки зависят от роли:
             // Task 115 скрывает «Документацию», если ВСЕ кнопки на docs скрыты.
             // Полная симуляция Task 115 здесь не выполняется — проверяем формулу
@@ -470,12 +471,32 @@ describe('Аудит ролей: мобильный нижний бар (dashboa
             const allowed = Kip.ROLE_ACCESS[pair[0]] || [];
             const isAll = allowed.indexOf('*') !== -1;
             const actual = isAll
-                || allowed.indexOf('docs') !== -1
-                || allowed.indexOf('library') !== -1
-                || allowed.indexOf('kip-ios') !== -1;
+                || allowed.indexOf('docs') !== -1;
             assertEqual(actual, pair[1],
                 'роль «' + pair[0] + '»: кнопка «Документация» нижнего бара');
         });
+    });
+
+    // Task 397 (общее правило): «Инженерные калькуляторы» нижнего
+    // бара — прежде «видна всегда», теперь видна ⟺ доступ к разделу.
+    test('Кнопка «Инженерные калькуляторы» нижнего бара видна ролям с calculators', function () {
+        [['Запрет', false], ['Общий доступ', true], ['ИТР ТОКЕМ', true], ['КИП8', true],
+         ['КИП ИОС', true], ['Админ', true]].forEach(function (pair) {
+            const allowed = Kip.ROLE_ACCESS[pair[0]] || [];
+            const isAll = allowed.indexOf('*') !== -1;
+            const actual = isAll || allowed.indexOf('calculators') !== -1;
+            assertEqual(actual, pair[1],
+                'роль «' + pair[0] + '»: кнопка «Инженерные калькуляторы» нижнего бара');
+        });
+    });
+
+    test('Нижний бар скрыт целиком, если обе кнопки недоступны («Запрет»)', function () {
+        const allowed = Kip.ROLE_ACCESS['Запрет'] || [];
+        const isAll = allowed.indexOf('*') !== -1;
+        const calcVisible = isAll || allowed.indexOf('calculators') !== -1;
+        const docsVisible = isAll || allowed.indexOf('docs') !== -1;
+        assertEqual(calcVisible || docsVisible, false,
+            '«Запрет»: обе кнопки бара скрыты — бар скрыт целиком');
     });
 });
 
