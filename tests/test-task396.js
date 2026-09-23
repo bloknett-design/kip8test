@@ -241,9 +241,9 @@ describe('Task 396 — SRC: CSS шапок, кнопок и зебры', () => {
             'скругление полос-«пилюль»');
     });
 
-    test('SW поднят до kipia-test-v628', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v628'") !== -1,
-            'SW kipia-test-v628');
+    test('SW поднят до kipia-test-v629', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v629'") !== -1,
+            'SW kipia-test-v629');
         assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v623'") === -1,
             'прежней v623 нет');
     });
@@ -256,7 +256,7 @@ function cardHost(withEdit) {
     const EMP = [
         { 'таб_номер': '2706', 'ФИО': 'Галкин Д. Н.', 'тип': 'дневной',
           'смена': '', 'должность': 'Мастер КИПиА', 'комментарий': '',
-          'дата_приёма': '2024-03-15' },
+          'группа_допуска': 'IV', 'дата_приёма': '2024-03-15' },
         { 'таб_номер': '0377', 'ФИО': 'Первов С. А.', 'тип': 'сменный',
           'смена': 1, 'должность': 'Слесарь КИПиА', 'комментарий': '',
           'дата_приёма': '2025-01-20' },
@@ -367,14 +367,24 @@ describe('Task 396 — VM: блоки-окна (asBlocks) — шапки и кн
     test('зебра: вторые строки блоков — ws-row-alt', () => {
         const h = cardHost(true);
         const blocks = h._renderWorkerCard('2706', true, true);
-        // b1: 3 поля (Режим/Должность/Дата приёма; Комментарий пуст — скрыт)
-        assertEqual((blocks[0].match(/class="ws-emp-field/g) || []).length, 3,
-            'поля профиля: 3 строки');
-        assertEqual((blocks[0].match(/ws-emp-field ws-row-alt/g) || []).length, 1,
-            'вторая строка (Должность) — с чередующимся фоном');
+        // b1: 4 поля (Режим/Должность/Группа допуска/Дата приёма —
+        // Task 402 добавил «Группу допуска» после «Должности»;
+        // Комментарий пуст — скрыт)
+        assertEqual((blocks[0].match(/class="ws-emp-field/g) || []).length, 4,
+            'поля профиля: 4 строки (Task 402: + Группа допуска)');
+        assertEqual((blocks[0].match(/ws-emp-field ws-row-alt/g) || []).length, 2,
+            'чередование: Должность (2-я) и Дата приёма (4-я) — alt');
         assertTrue(blocks[0].indexOf('"ws-emp-k">Режим работы') !== -1 &&
                    blocks[0].indexOf('ws-emp-field ws-row-alt"><span class="ws-emp-k">Должность') !== -1,
             'именно ВТОРАЯ строка — Должность');
+        assertTrue(blocks[0].indexOf('"ws-emp-k">Группа допуска') !== -1 &&
+                   blocks[0].indexOf('ws-emp-v">IV') !== -1,
+            'Task 402: строка «Группа допуска» со значением IV');
+        assertTrue(blocks[0].indexOf('"ws-emp-k">Должность') <
+                   blocks[0].indexOf('"ws-emp-k">Группа допуска') &&
+                   blocks[0].indexOf('"ws-emp-k">Группа допуска') <
+                   blocks[0].indexOf('"ws-emp-k">Дата приёма'),
+            'Task 402: Группа допуска — ПОСЛЕ Должности (до Даты приёма)');
         // b2: 3 периода → 1 alt
         assertEqual((blocks[1].match(/ws-emp-field ws-row-alt/g) || []).length, 1,
             'отпуска: вторая строка — alt');
@@ -437,7 +447,7 @@ function pageHost() {
     const EMPLOYEES = [
         { 'таб_номер': '2706', 'ФИО': 'Галкин Д. Н.', 'тип': 'дневной',
           'смена': '', 'должность': 'Мастер КИПиА', 'комментарий': '',
-          'дата_приёма': '2024-03-15' },
+          'группа_допуска': 'IV', 'дата_приёма': '2024-03-15' },
     ];
     const host = new Function('document', 'navigateTo', 'return ({' +
         methodText(INDEX_SRC, '_renderWorkersPage') + ',\n' +
@@ -497,9 +507,9 @@ describe('Task 396 — VM: страница «Работники»', () => {
 describe('Task 396 — SW и отсутствие регрессов', () => {
 
     test('SW: v624 — ассерт присутствия, v625 — guard отсутствия', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v628') !== -1,
-            'SW kipia-test-v628');
-        assertTrue(SW_SRC.indexOf('kipia-test-v629') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v629') !== -1,
+            'SW kipia-test-v629');
+        assertTrue(SW_SRC.indexOf('kipia-test-v630') === -1,
             'v625 ещё не существует (guard)');
     });
 

@@ -27,7 +27,7 @@
 //   диспетчеризация, node --check обоих .gs.
 //   VM-функционально (клиент и сервер): happy-path правок, валидации,
 //   самопересечение/дубль части, лимит 42, не найдено.
-//   SW: kipia-test-v628 (guard v613).
+//   SW: kipia-test-v629 (guard v613).
 //
 // Запуск: через tests/run-all.js (require './test-task384.js').
 
@@ -402,6 +402,8 @@ function makeWSClient() {
         'openEmployeeForm', 'closeEmployeeForm', 'openEmpEditForm',
         'submitEmployeeForm', 'onEmpTypeChange',
         '_fillPositionSelect', '_fillPositionOptions',
+        '_fillGroupSelect', '_fillGroupOptions',
+        '_fillGroupSelect', '_fillGroupOptions',
         'openVacationForm', 'closeVacationForm', 'editVacation',
         'onVacEmployeeChange', 'onVacDatesChange', '_vacUpdateYearInfo',
         'submitVacationForm', 'deleteVacation', '_doDeleteVacation',
@@ -741,6 +743,7 @@ function makeWSServer() {
     };
     vm.createContext(ctx);
     const methods = ['_parseIsoDate', '_parseSheetDate', '_safeDate', '_toIsoDate',
+                     '_accessGroupColIndex',
                      'updateEmployee', 'updateVacation'];
     const src = methods.map(n => extractMethod(WS_GS_SRC, n)).filter(Boolean).join(',\n');
     vm.runInContext(`
@@ -916,10 +919,10 @@ describe('Task 384 — VM сервер: updateVacation', () => {
 // 8. SW
 // ============================================================
 describe('Task 384 — Service Worker', () => {
-    test('SW: кэш поднят до kipia-test-v628', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v628'") !== -1,
-            'CACHE_VERSION = kipia-test-v628 (Task 384 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v629') !== -1,
+    test('SW: кэш поднят до kipia-test-v629', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v629'") !== -1,
+            'CACHE_VERSION = kipia-test-v629 (Task 384 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v630') !== -1,
             'лишний инкремент (v613) не сделан');
     });
 });
