@@ -317,10 +317,10 @@ describe('Task 392 — SRC: загрузка, кэш, сервер, PPEInit.gs',
             'таб_№ — текстовый формат (Task 304)');
     });
 
-    test('SW: kipia-test-v629', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v629'") !== -1,
+    test('SW: kipia-test-v630', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v630'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v630') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v631') === -1,
             'двойного бампа не было');
     });
 });
@@ -453,7 +453,8 @@ describe('Task 392 — VM: секция СИЗ в карточке работн�
 
     test('записи работника с мета-строкой (выдано/срок/до)', () => {
         const host = cardHost(true, PPE);
-        const html = host._renderWorkerCard('2706', true);
+        // Task 403: СИЗ — только страница «Работники» (asBlocks)
+        const html = host._renderWorkerCard('2706', true, true)[3];
         assertTrue(html.indexOf('СИЗ · средства индивидуальной защиты') !== -1,
             'заголовок секции');
         assertTrue(html.indexOf('Костюм для защиты от растворов кислот и щелочей') !== -1,
@@ -467,7 +468,7 @@ describe('Task 392 — VM: секция СИЗ в карточке работн�
 
     test('не выдано / До износа / примечание', () => {
         const host = cardHost(true, PPE);
-        const html = host._renderWorkerCard('2706', true);
+        const html = host._renderWorkerCard('2706', true, true)[3];
         assertTrue(html.indexOf('не выдано') !== -1, 'без даты выдачи — «не выдано»');
         assertTrue(html.indexOf('срок 2 года') !== -1, 'срок без даты');
         assertTrue(html.indexOf('срок До износа') !== -1, 'срок «До износа»');
@@ -476,7 +477,7 @@ describe('Task 392 — VM: секция СИЗ в карточке работн�
 
     test('кнопки ✎/✕ у записей с id — только редакторам', () => {
         const host = cardHost(true, PPE);
-        const html = host._renderWorkerCard('2706', true);
+        const html = host._renderWorkerCard('2706', true, true)[3];
         assertTrue(html.indexOf('WorkSchedule.editPpe(1)') !== -1, '✎ запись 1');
         assertTrue(html.indexOf('WorkSchedule.deletePpe(3)') !== -1, '✕ запись 3');
         assertTrue(html.indexOf('ws-emp-addppe') !== -1, '«+ СИЗ…»');
@@ -486,7 +487,7 @@ describe('Task 392 — VM: секция СИЗ в карточке работн�
 
     test('зритель — без кнопок, записи видны', () => {
         const host = cardHost(true, PPE);
-        const html = host._renderWorkerCard('2706', false);
+        const html = host._renderWorkerCard('2706', false, true)[3];
         assertTrue(html.indexOf('СИЗ · средства индивидуальной защиты') !== -1,
             'секция видна зрителю');
         assertTrue(html.indexOf('editPpe') === -1 && html.indexOf('deletePpe') === -1 &&
@@ -496,7 +497,7 @@ describe('Task 392 — VM: секция СИЗ в карточке работн�
 
     test('пустой список СИЗ — «нет выданных СИЗ»', () => {
         const host = cardHost(true, []);
-        const html = host._renderWorkerCard('2706', true);
+        const html = host._renderWorkerCard('2706', true, true)[3];
         assertTrue(html.indexOf('нет выданных СИЗ') !== -1, 'пустое состояние');
         assertTrue(html.indexOf('ws-emp-addppe') !== -1, '«+ СИЗ…» жив у редактора');
     });
@@ -506,7 +507,7 @@ describe('Task 392 — VM: секция СИЗ в карточке работн�
             { id: null, 'таб_номер': '2706', наименование: 'Перчатки',
               дата_выдачи: '', срок_годности: '', дата_окончания: '', примечание: '' },
         ]);
-        const html = host._renderWorkerCard('2706', true);
+        const html = host._renderWorkerCard('2706', true, true)[3];
         assertTrue(html.indexOf('Перчатки') !== -1, 'запись видна');
         assertTrue(html.indexOf('editPpe(') === -1 && html.indexOf('deletePpe(') === -1,
             'без id — не правится (как отпуска Task 279)');

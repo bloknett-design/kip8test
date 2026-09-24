@@ -173,10 +173,10 @@ describe('Task 385 — HTML: легенда/страница/переимено�
             'подсказка «Вид» (Task 388: итоги в любом виде)');
     });
 
-    test('SW: кэш поднят до kipia-test-v629', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v629'") !== -1,
-            'CACHE_VERSION = kipia-test-v629 (Task 385 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v630') !== -1,
+    test('SW: кэш поднят до kipia-test-v630', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v630'") !== -1,
+            'CACHE_VERSION = kipia-test-v630 (Task 385 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v631') !== -1,
             'v614 ещё не существует (guard)');
     });
 });

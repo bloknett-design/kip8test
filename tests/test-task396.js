@@ -241,9 +241,9 @@ describe('Task 396 — SRC: CSS шапок, кнопок и зебры', () => {
             'скругление полос-«пилюль»');
     });
 
-    test('SW поднят до kipia-test-v629', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v629'") !== -1,
-            'SW kipia-test-v629');
+    test('SW поднят до kipia-test-v630', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v630'") !== -1,
+            'SW kipia-test-v630');
         assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v623'") === -1,
             'прежней v623 нет');
     });
@@ -411,12 +411,14 @@ describe('Task 396 — VM: блоки-окна (asBlocks) — шапки и кн
     test('легаси-вызов (без asBlocks): прежние строки внизу, БЕЗ whead/зебры', () => {
         const h = cardHost(true);
         const html = h._renderWorkerCard('2706', true);
+        // Task 403: «+ СИЗ…» из попапа убран — действий четыре
         assertTrue(html.indexOf('ws-popup-row ws-popup-more ws-emp-editdata') !== -1 &&
                    html.indexOf('ws-popup-row ws-popup-more ws-emp-dismiss') !== -1 &&
                    html.indexOf('ws-popup-row ws-popup-more ws-emp-addvac') !== -1 &&
-                   html.indexOf('ws-popup-row ws-popup-more ws-emp-addtr') !== -1 &&
-                   html.indexOf('ws-popup-row ws-popup-more ws-emp-addppe') !== -1,
-            'пять строк-действий — прежний вид (попап-совместимость)');
+                   html.indexOf('ws-popup-row ws-popup-more ws-emp-addtr') !== -1,
+            'четыре строки-действия — прежний вид (попап-совместимость)');
+        assertTrue(html.indexOf('ws-emp-addppe') === -1,
+            '«+ СИЗ…» в попапе НЕТ (Task 403 — СИЗ только на странице)');
         assertTrue(html.indexOf('ws-whead') === -1 &&
                    html.indexOf('ws-wbtn') === -1 &&
                    html.indexOf('ws-row-alt') === -1,
@@ -430,9 +432,11 @@ describe('Task 396 — VM: блоки-окна (asBlocks) — шапки и кн
         const html = h._renderWorkerCard('2706', false);
         assertTrue(html.indexOf('<div class="ws-popup-title">Галкин Д. Н.') !== -1,
             'шапка ФИО — прежний .ws-popup-title');
-        assertTrue(html.indexOf('<div class="ws-popup-sec">Отпуска · 2026') !== -1 &&
-                   html.indexOf('<div class="ws-popup-sec">СИЗ · средства индивидуальной защиты') !== -1,
-            'секции — прежние .ws-popup-sec');
+        assertTrue(html.indexOf('<div class="ws-popup-sec">Отпуска · 2026') !== -1,
+            'секции отпусков/мероприятий — прежние .ws-popup-sec');
+        // Task 403 (заявка): данные СИЗ из попапа УБРАНЫ
+        assertTrue(html.indexOf('СИЗ') === -1,
+            'секции СИЗ в попапе НЕТ (только на странице «Работники»)');
         assertTrue(html.indexOf('ws-whead') === -1 && html.indexOf('ws-row-alt') === -1,
             'попап — БЕЗ зебры и шапок-полос (компактная типографика)');
     });
@@ -507,9 +511,9 @@ describe('Task 396 — VM: страница «Работники»', () => {
 describe('Task 396 — SW и отсутствие регрессов', () => {
 
     test('SW: v624 — ассерт присутствия, v625 — guard отсутствия', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v629') !== -1,
-            'SW kipia-test-v629');
-        assertTrue(SW_SRC.indexOf('kipia-test-v630') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v630') !== -1,
+            'SW kipia-test-v630');
+        assertTrue(SW_SRC.indexOf('kipia-test-v631') === -1,
             'v625 ещё не существует (guard)');
     });
 

@@ -62,6 +62,7 @@ function stripComments(s) {
 function gridHost() {
     return new Function('return ({' +
         methodText(INDEX_SRC, '_empPosLine') + ',' +
+        methodText(INDEX_SRC, '_shortGrade') + ',' +
         methodText(INDEX_SRC, '_empTipLine') +
         '});')();
 }
@@ -131,7 +132,7 @@ describe('Task 402 — SRC: рендер ячейки (тип — третья �
     test('_renderGrid: строки должности и типа — раздельные вызовы', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_renderGrid'));
         assertTrue(fn.indexOf("var empPosLabel = this._empPosLine(emp);") !== -1,
-            'строка должности (с группой) — _empPosLine');
+            'строка должности — _empPosLine (Task 403: без группы, «разряд» → «р.»)');
         assertTrue(fn.indexOf("var empTipLabel = this._empTipLine(emp);") !== -1,
             'данные типа — _empTipLine');
         assertTrue(fn.indexOf("'<div class=\"ws-emp-tip\">' + this._esc(empTipLabel) + '</div>'") !== -1,
@@ -176,15 +177,17 @@ describe('Task 402 — SRC: рендер ячейки (тип — третья �
 // ============================================================
 describe('Task 402 — VM: _empPosLine / _empTipLine', () => {
 
-    test('_empPosLine: должность · группа (данные группы ПОСЛЕ должности)', () => {
+    test('_empPosLine: только должность; «разряд» → «р.» (Task 403)', () => {
         const h = gridHost();
         assertEqual(h._empPosLine({ 'должность': 'Слесарь КИПиА', 'группа_допуска': 'IV' }),
-            'Слесарь КИПиА · IV', 'должность + группа через «·»');
+            'Слесарь КИПиА', 'группа допуска из столбца ФИО убрана (Task 403)');
         assertEqual(h._empPosLine({ 'должность': 'Слесарь КИПиА' }), 'Слесарь КИПиА',
-            'без группы — только должность');
-        assertEqual(h._empPosLine({ 'группа_допуска': 'IV' }), 'IV',
-            'без должности — только группа');
+            'без группы — должность');
+        assertEqual(h._empPosLine({ 'группа_допуска': 'IV' }), '',
+            'без должности — пусто (группа не показывается)');
         assertEqual(h._empPosLine({}), '', 'пусто — строка не рендерится');
+        assertEqual(h._empPosLine({ 'должность': 'Слесарь КИПиА 5 разряд' }),
+            'Слесарь КИПиА 5 р.', '«разряд» сокращён до «р.» (Task 403)');
     });
 
     test('_empTipLine: тип работника — своя строка', () => {
@@ -346,8 +349,13 @@ describe('Task 402 — сервер: WorkSchedule.gs (SRC)', () => {
         const fn = stripComments(methodText(WS_GS_SRC, 'listEmployees'));
         assertTrue(fn.indexOf('var groupCol = this._accessGroupColIndex(sheet);') !== -1,
             'столбец ищется по заголовку');
-        assertTrue(fn.indexOf('groupCol + 1 > 11') !== -1,
-            'чтение расширено до найденного столбца (не уже A..K)');
+        // Task 403: должность/комментарий — тоже по заголовкам
+        assertTrue(fn.indexOf("this._headerColIndex(sheet, ['должность'])") !== -1 &&
+                   fn.indexOf("this._headerColIndex(sheet, ['комментарий'])") !== -1,
+            'должность/комментарий — по заголовкам строки 1 (баг комментария)');
+        assertTrue(fn.indexOf('var readWidth = 11;') !== -1 &&
+                   fn.indexOf('groupCol + 1 > readWidth') !== -1,
+            'чтение расширено до самого правого найденного столбца');
         assertTrue(fn.indexOf('группа_допуска:') !== -1 &&
                    fn.indexOf('(groupCol !== null)') !== -1,
             'поле в ответе; нет столбца — пустая строка');
@@ -364,8 +372,13 @@ describe('Task 402 — сервер: WorkSchedule.gs (SRC)', () => {
 
     test('addEmployee: группа в новой строке листа', () => {
         const fn = stripComments(methodText(WS_GS_SRC, 'addEmployee'));
-        assertTrue(fn.indexOf('while (rowVals.length <= groupCol) rowVals.push(\'\');') !== -1,
-            'строка дополнена пустыми до столбца группы');
+        // Task 403: строка — до самого правого столбца, реквизиты —
+        // каждый в свой (прежде фикс J..K затирал комментарий группой)
+        assertTrue(fn.indexOf('while (rowVals.length < rowWidth) rowVals.push(\'\');') !== -1,
+            'строка дополнена пустыми до самого правого столбца');
+        assertTrue(fn.indexOf('rowVals[posCol] = position;') !== -1 &&
+                   fn.indexOf('rowVals[comCol] = comment;') !== -1,
+            'должность и комментарий — каждый в свой столбец');
         assertTrue(fn.indexOf('rowVals[groupCol] = accessGroup;') !== -1,
             'группа записана в найденный столбец');
     });
@@ -383,12 +396,12 @@ describe('Task 402 — сервер: WorkSchedule.gs (SRC)', () => {
 // 7. SW — версия кэша
 // ============================================================
 describe('Task 402 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v629 (Task 402)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v629'") !== -1,
+    test('CACHE_VERSION = kipia-test-v630 (Task 402)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v630'") !== -1,
             'фронтенд менялся — кэш поднят до v629');
     });
     test('guard: v630 отсутствует (следующий бамп)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v630') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v631') === -1,
             'v630 ещё не существует (guard следующего бампа)');
     });
 });

@@ -27,7 +27,7 @@
 //   диспетчеризация, node --check обоих .gs.
 //   VM-функционально (клиент и сервер): happy-path правок, валидации,
 //   самопересечение/дубль части, лимит 42, не найдено.
-//   SW: kipia-test-v629 (guard v613).
+//   SW: kipia-test-v630 (guard v613).
 //
 // Запуск: через tests/run-all.js (require './test-task384.js').
 
@@ -295,8 +295,11 @@ describe('Task 384 — сервер: WorkSchedule.gs (SRC)', () => {
         const fn = methodText(WS_GS_SRC, 'updateEmployee');
         assertTrue(fn.indexOf('sheet.getRange(row, 2, 1, 6).setValues') !== -1,
             'B..G одним блоком (ФИО..дата_приёма)');
-        assertTrue(fn.indexOf('sheet.getRange(row, 10, 1, 2).setValues') !== -1,
-            'J..K (должность, комментарий)');
+        // Task 403 (баг комментария): должность/комментарий — по
+        // заголовкам, каждый в свой столбец (фолбэк J..K)
+        assertTrue(fn.indexOf('sheet.getRange(row, posCol + 1).setValue(position);') !== -1 &&
+                   fn.indexOf('sheet.getRange(row, comCol + 1).setValue(comment);') !== -1,
+            'должность/комментарий — отдельные setValue по заголовкам');
         // A (таб_№), H (увольнение), I (архив) — одиночных записей нет
         assertFalse(/getRange\(row, (1|8|9)[,)]/.test(fn),
             'A/H/I не перезаписываются (PK/увольнение/архив)');
@@ -743,7 +746,7 @@ function makeWSServer() {
     };
     vm.createContext(ctx);
     const methods = ['_parseIsoDate', '_parseSheetDate', '_safeDate', '_toIsoDate',
-                     '_accessGroupColIndex',
+                     '_accessGroupColIndex', '_headerColIndex',
                      'updateEmployee', 'updateVacation'];
     const src = methods.map(n => extractMethod(WS_GS_SRC, n)).filter(Boolean).join(',\n');
     vm.runInContext(`
@@ -796,9 +799,12 @@ describe('Task 384 — VM сервер: updateEmployee', () => {
         assertEqual(sheet._data[1][0], '0871', 'A: таб_№ НЕ изменён');
         assertEqual(sheet._data[1][7], '', 'H: увольнение не тронуто');
         assertEqual(sheet._data[1][8], 0, 'I: архив не тронут');
-        // одиночных записей в A/H/I не было
-        const solo = sheet._writes.filter(w => w.numRows === 1 && w.numCols === 1);
-        assertEqual(solo.length, 0, 'только блочные записи B..G и J..K');
+        // одиночных записей в A/H/I не было (Task 403: должность/
+        // комментарий теперь тоже одиночные setValue — но в СВОИ
+        // столбцы по заголовкам, не в A/H/I)
+        const solo = sheet._writes.filter(w => w.numRows === 1 && w.numCols === 1 &&
+                                               (w.col === 1 || w.col === 8 || w.col === 9));
+        assertEqual(solo.length, 0, 'A/H/I не перезаписываются');
         assertTrue(api.audits().indexOf('WORKSCHEDULE_UPDATE_EMPLOYEE') !== -1, 'аудит');
     });
 
@@ -919,10 +925,10 @@ describe('Task 384 — VM сервер: updateVacation', () => {
 // 8. SW
 // ============================================================
 describe('Task 384 — Service Worker', () => {
-    test('SW: кэш поднят до kipia-test-v629', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v629'") !== -1,
-            'CACHE_VERSION = kipia-test-v629 (Task 384 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v630') !== -1,
+    test('SW: кэш поднят до kipia-test-v630', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v630'") !== -1,
+            'CACHE_VERSION = kipia-test-v630 (Task 384 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v631') !== -1,
             'лишний инкремент (v613) не сделан');
     });
 });

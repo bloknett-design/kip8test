@@ -260,10 +260,10 @@ describe('Task 388 — SRC: итоги учёта доступны в любом
             'тосты сменного/дневного вида обещают итоги');
     });
 
-    test('SW: кэш поднят до kipia-test-v629', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v629'") !== -1,
-            'CACHE_VERSION = kipia-test-v629 (Task 388 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v630') !== -1,
+    test('SW: кэш поднят до kipia-test-v630', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v630'") !== -1,
+            'CACHE_VERSION = kipia-test-v630 (Task 388 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v631') !== -1,
             'v617 ещё не существует (guard)');
     });
 });
@@ -338,8 +338,8 @@ describe('Task 388 — SRC: страница «Работники» — вкла
         const i = INDEX_SRC.indexOf('.ws-wtabs {');
         const chunk = INDEX_SRC.slice(i, INDEX_SRC.indexOf('}', i) + 1);
         assertTrue(chunk.indexOf('flex-direction: column') !== -1 &&
-                   chunk.indexOf('width: 236px') !== -1,
-            'ярлыки — вертикальная колонка слева');
+                   chunk.indexOf('width: var(--ws-wtabs-w, 236px)') !== -1,
+            'ярлыки — вертикальная колонка слева (Task 403: ширина по самому длинному тексту, 236px — фолбэк)');
         assertTrue(INDEX_SRC.indexOf('.ws-wtab.active {') !== -1,
             'активный ярлык подсвечен');
         const m = INDEX_SRC.indexOf('@media (max-width: 1023px)', INDEX_SRC.indexOf('.ws-wtabs {'));
