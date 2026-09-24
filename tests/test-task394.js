@@ -210,6 +210,7 @@ function cardHost(trainings, vacs) {
     const host = new Function('document', 'return ({' +
         methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
         methodText(INDEX_SRC, '_renderWorkerCardPanels') + ',\n' +
+        methodText(INDEX_SRC, '_isInstrType') + ',\n' +
         '_canEdit: true,' +
         '_year: 2026, _month: 9,' +
         '_EMPLOYEES: ' + JSON.stringify(EMP) + ',' +
@@ -250,14 +251,18 @@ describe('Task 394 — VM: карточка — мероприятия за ве
           'дата_начала': '2025-12-30', 'дата_окончания': '2026-01-03' },
     ];
 
-    test('блок 3 — «Мероприятия · 2026»: записи ВСЕХ месяцев года', () => {
+    test('блок 3 — «Мероприятия · 2026»: только НЕ-инструктажи (Task 405)', () => {
         const host = cardHost(TRS);
         const b = host._renderWorkerCard('2706', true, true)[2];
         assertTrue(b.indexOf('Мероприятия · 2026') !== -1,
             'заголовок — год (не месяц)');
-        ['Февральский', 'Июньское', 'Сентябрьское', 'Через Новый год']
-            .forEach(t => assertTrue(b.indexOf(t) !== -1,
-                'мероприятие года показано: ' + t));
+        // Task 405: в блоке мероприятий — только обучение/примечание/
+        // прогул (новая таблица «Мероприятия»)
+        assertTrue(b.indexOf('Июньское') !== -1,
+            'обучение года показано в мероприятиях');
+        ['Февральский', 'Сентябрьское', 'Через Новый год']
+            .forEach(t => assertFalse(b.indexOf(t) !== -1,
+                'инструктаж НЕ в мероприятиях: ' + t));
         assertFalse(b.indexOf('Прошлый год') !== -1,
             'запись вне года не показывается');
         assertFalse(b.indexOf('Чужое') !== -1,
@@ -266,15 +271,32 @@ describe('Task 394 — VM: карточка — мероприятия за ве
             'пустого состояния нет');
     });
 
+    test('блок 5 — повторные инструктажи года (Task 405)', () => {
+        const host = cardHost(TRS);
+        const b = host._renderWorkerCard('2706', true, true)[4];
+        assertTrue(
+            b.indexOf('Повторные инструктажи и периодическая проверка знаний · 2026') !== -1,
+            'заголовок нового блока (таблица «Инструктажи»)');
+        ['Февральский', 'Сентябрьское', 'Через Новый год']
+            .forEach(t => assertTrue(b.indexOf(t) !== -1,
+                'инструктаж года показан: ' + t));
+        assertFalse(b.indexOf('Июньское') !== -1,
+            'обучение НЕ в инструктажах');
+        assertFalse(b.indexOf('Прошлый год') !== -1,
+            'вне года — не показывается');
+        assertFalse(b.indexOf('Чужое') !== -1,
+            'чужой работник — не показывается');
+    });
+
     test('порядок записей года — по дате начала', () => {
         const host = cardHost(TRS);
-        const b = host._renderWorkerCard('2706', true, true)[2];
+        // Task 405: три инструктажа года — в блоке 5
+        const b = host._renderWorkerCard('2706', true, true)[4];
         const i1 = b.indexOf('Через Новый год');
         const i2 = b.indexOf('Февральский');
-        const i3 = b.indexOf('Июньское');
-        const i4 = b.indexOf('Сентябрьское');
-        assertTrue(i1 < i2 && i2 < i3 && i3 < i4,
-            'хронология года: декабрь→февраль→июнь→сентябрь');
+        const i3 = b.indexOf('Сентябрьское');
+        assertTrue(i1 < i2 && i2 < i3,
+            'хронология инструктажей года: декабрь→февраль→сентябрь');
     });
 
     test('пустой год — «нет мероприятий за год»', () => {
@@ -290,9 +312,15 @@ describe('Task 394 — VM: карточка — мероприятия за ве
         assertEqual(typeof html, 'string', 'попап — строка');
         assertTrue(html.indexOf('Мероприятия · 2026') !== -1,
             'секция года и в попапе');
+        assertTrue(html.indexOf('Июньское') !== -1,
+            'записи месяцев года в попапе (обучение — в мероприятиях)');
+        // Task 405: инструктажи — своя секция в попапе
+        assertTrue(
+            html.indexOf('Повторные инструктажи и периодическая проверка знаний · 2026') !== -1,
+            'секция инструктажей и в попапе');
         assertTrue(html.indexOf('Февральский') !== -1 &&
                    html.indexOf('Сентябрьское') !== -1,
-            'записи разных месяцев года в попапе');
+            'инструктажи разных месяцев года в попапе');
     });
 });
 
@@ -316,6 +344,7 @@ function pageHost(trainings) {
         methodText(INDEX_SRC, '_isMasterKipia') + ',\n' +
         methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
         methodText(INDEX_SRC, '_renderWorkerCardPanels') + ',\n' +
+        methodText(INDEX_SRC, '_isInstrType') + ',\n' +
         '_workersTab: "general",' +
         '_canEdit: true,' +
         '_year: 2026, _month: 9,' +
@@ -346,16 +375,19 @@ describe('Task 394 — VM: страница «Работники» — сетк�
         const body = t.els.wsWorkersBody.innerHTML;
         assertTrue(body.indexOf('<div class="ws-wgrid2">') !== -1,
             'панели — в обёртке сетки 2×2');
-        assertEqual((body.match(/class="ws-wcard"/g) || []).length, 4,
-            'в обёртке — ровно четыре блока-окна');
+        assertEqual((body.match(/class="ws-wcard"/g) || []).length, 5,
+            'в обёртке — ровно пять блоков-окон (Task 405)');
         // порядок блоков в DOM: профиль → отпуска → СИЗ → мероприятия
-        // (Task 404: СИЗ — ВТОРАЯ колонка, слева от мероприятий)
+        // → повторные инструктажи (Task 404 + Task 405)
         const i1 = body.indexOf('Галкин Д. Н.');
         const i2 = body.indexOf('Отпуска · 2026');
         const i3 = body.indexOf('Мероприятия · 2026');
         const i4 = body.indexOf('СИЗ · средства индивидуальной защиты');
-        assertTrue(i1 < i2 && i2 < i4 && i4 < i3,
-            'DOM-порядок = раскладка: профиль|отпуска / СИЗ / мероприятия');
+        const i5 = body.indexOf(
+            'Повторные инструктажи и периодическая проверка знаний · 2026');
+        assertTrue(i1 < i2 && i2 < i4 && i4 < i3 && i3 < i5,
+            'DOM-порядок = раскладка: профиль|отпуска / СИЗ / '
+            + 'мероприятия+инструктажи');
     });
 
     test('«Общая» вкладка — БЕЗ обёртки сетки, колонка «Мероприятия · год»', () => {
@@ -376,9 +408,14 @@ describe('Task 394 — VM: страница «Работники» — сетк�
             '«Общая» — без сетки карточки');
         assertTrue(body.indexOf('<th>Мероприятия · 2026</th>') !== -1,
             'колонка сводки — «Мероприятия · 2026» (год)');
-        // счётчик в ячейке — годовой: у 2706 три записи года
-        const re = /<tr><td>2706<\/td>[\s\S]*?<td>3<\/td><\/tr>/;
-        assertTrue(re.test(body), 'ячейка Галкина — 3 мероприятия года');
+        // Task 405: инструктажи — СВОЯ колонка сводки
+        assertTrue(body.indexOf('<th>Инструктажи · 2026</th>') !== -1,
+            'колонка сводки — «Инструктажи · 2026» (Task 405)');
+        // счётчики в ячейках: у 2706 — 1 мероприятие (обучение Б)
+        // и 2 инструктажа (А, В); год, типы разделены
+        const re = /<tr><td>2706<\/td>[\s\S]*?<td>1<\/td><td>2<\/td><\/tr>/;
+        assertTrue(re.test(body),
+            'ячейка Галкина — 1 мероприятие и 2 инструктажа (Task 405)');
     });
 });
 
@@ -572,10 +609,10 @@ describe('Task 394 — VM: окно мероприятий — порядок с
 // ============================================================
 describe('Task 394 — SW', () => {
 
-    test('SW: kipia-test-v631', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v631'") !== -1,
+    test('SW: kipia-test-v632', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v632'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v632') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v633') === -1,
             'двойного бампа не было');
     });
 });

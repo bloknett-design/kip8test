@@ -173,10 +173,10 @@ describe('Task 385 — HTML: легенда/страница/переимено�
             'подсказка «Вид» (Task 388: итоги в любом виде)');
     });
 
-    test('SW: кэш поднят до kipia-test-v631', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v631'") !== -1,
-            'CACHE_VERSION = kipia-test-v631 (Task 385 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v632') !== -1,
+    test('SW: кэш поднят до kipia-test-v632', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v632'") !== -1,
+            'CACHE_VERSION = kipia-test-v632 (Task 385 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v633') !== -1,
             'v614 ещё не существует (guard)');
     });
 });
@@ -444,6 +444,8 @@ describe('Task 385 — VM: карточка/страница/легенда', ()
         // хелперы карточки (праздники отпусков, метакоды, ISO)
         '_sortEmployees', '_esc', '_plural', '_fmtDateRu',
         '_trainingCodeOf', '_statusMeta',
+        // Task 405: деление записей по типу (мероприятия/инструктажи)
+        '_isInstrType',
         '_vacDaysInYear', '_vacNetDaysInYear', '_vacIsHoliday',
         '_vacSplitDays', '_parseIsoLocal',
         // Task 390: подсчёт мастеров в шапке «Общей» вкладки
@@ -580,8 +582,8 @@ describe('Task 385 — VM: карточка/страница/легенда', ()
         // клик по ярлыку — карточка с кнопками правки (редактор)
         h.WSM.selectWorkersTab('0871');
         const body2 = h.els().wsWorkersBody.innerHTML;
-        assertEqual((body2.match(/ws-wcard/g) || []).length, 4,
-            'карточка выбранного — ЧЕТЫРЕ блока-окна (Task 393)');
+        assertEqual((body2.match(/ws-wcard/g) || []).length, 5,
+            'карточка выбранного — ПЯТЬ блоков-окон (Task 393 + Task 405)');
         assertTrue(body2.indexOf('ws-emp-editdata') !== -1,
             'кнопки правки в карточке (withEdit=true у редактора)');
         // выбор живёт между перерисовками

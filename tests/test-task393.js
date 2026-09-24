@@ -85,8 +85,10 @@ describe('Task 393 — SRC: четыре блока карточки', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_renderWorkerCard'));
         assertTrue(fn.indexOf('function(tabNo, withEdit, asBlocks)') !== -1,
             'третий параметр asBlocks');
-        assertTrue(fn.indexOf('return asBlocks ? [b1, b2, b3, b4] : (b1 + b2 + b3);') !== -1,
-            'массив 4 блоков / склеенная строка (Task 403: попап БЕЗ СИЗ)');
+        assertTrue(
+            fn.indexOf('return asBlocks ? [b1, b2, b3, b4, b5] : (b1 + b2 + b3 + b5);') !== -1,
+            'массив 5 блоков / склеенная строка (Task 403: попап БЕЗ СИЗ; '
+            + 'Task 405: +b5 «Повторные инструктажи»)');
         assertTrue(fn.indexOf('return asBlocks ? [miss] : miss;') !== -1,
             '«не найден» — тоже массив в режиме блоков');
     });
@@ -209,6 +211,7 @@ function cardHost(withEdit, ppe) {
     const host = new Function('document', 'return ({' +
         methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
         methodText(INDEX_SRC, '_renderWorkerCardPanels') + ',\n' +
+        methodText(INDEX_SRC, '_isInstrType') + ',\n' +
         '_canEdit: ' + JSON.stringify(!!withEdit) + ',' +
         '_year: 2026, _month: 9,' +
         '_EMPLOYEES: ' + JSON.stringify(EMP) + ',' +
@@ -259,7 +262,8 @@ describe('Task 393 — VM: _renderWorkerCard строка и блоки', () => 
         const host = cardHost(true, PPE);
         const blocks = host._renderWorkerCard('2706', true, true);
         assertTrue(Array.isArray(blocks), 'массив');
-        assertEqual(blocks.length, 4, 'ровно 4 блока');
+        assertEqual(blocks.length, 5,
+            'ровно 5 блоков (Task 405: + повторные инструктажи)');
     });
 
     test('блок 1 — профиль + действия (БЕЗ чужих секций)', () => {
@@ -309,16 +313,30 @@ describe('Task 393 — VM: _renderWorkerCard строка и блоки', () => 
         assertTrue(b.indexOf('+ СИЗ…') !== -1, '«+ СИЗ…» в блоке 4');
     });
 
+    test('блок 5 — повторные инструктажи года (Task 405)', () => {
+        const host = cardHost(true, PPE);
+        const b = host._renderWorkerCard('2706', true, true)[4];
+        assertTrue(
+            b.indexOf('Повторные инструктажи и периодическая проверка знаний · 2026') !== -1,
+            'заголовок нового блока');
+        assertTrue(b.indexOf('нет инструктажей и проверок знаний за год') !== -1,
+            'пустое состояние');
+        assertTrue(b.indexOf('+ Инструктаж…') !== -1, '«+ Инструктаж…» в блоке 5');
+        assertTrue(b.indexOf("WorkSchedule.onEmpAddInstruction('2706')") !== -1,
+            'контракт onclick кнопки');
+    });
+
     test('зритель — блоки без элементов правки', () => {
         const host = cardHost(false, PPE);
         const blocks = host._renderWorkerCard('2706', false, true);
-        assertEqual(blocks.length, 4, '4 блока и у зрителя');
+        assertEqual(blocks.length, 5, '5 блоков и у зрителя');
         const all = blocks.join('');
         assertTrue(all.indexOf('Правка данных…') === -1 &&
                    all.indexOf('Уволить…') === -1 &&
                    all.indexOf('+ Отпуск…') === -1 &&
                    all.indexOf('+ Мероприятие…') === -1 &&
-                   all.indexOf('+ СИЗ…') === -1,
+                   all.indexOf('+ СИЗ…') === -1 &&
+                   all.indexOf('+ Инструктаж…') === -1,
             'без права записи — блоки без действий');
     });
 
@@ -352,6 +370,7 @@ function pageHost(canEdit, ppe) {
         methodText(INDEX_SRC, '_isMasterKipia') + ',\n' +
         methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
         methodText(INDEX_SRC, '_renderWorkerCardPanels') + ',\n' +
+        methodText(INDEX_SRC, '_isInstrType') + ',\n' +
         '_workersTab: "general",' +
         '_canEdit: ' + JSON.stringify(!!canEdit) + ',' +
         '_year: 2026, _month: 9,' +
@@ -378,17 +397,21 @@ describe('Task 393 — VM: страница «Работники» — 4 окн�
     test('_renderWorkerCardPanels — 4 обёртки .ws-wcard по порядку', () => {
         const host = pageHost(true).host;
         const html = host._renderWorkerCardPanels('2706', true);
-        assertEqual((html.match(/class="ws-wcard"/g) || []).length, 4,
-            'ровно четыре окна-панели');
+        assertEqual((html.match(/class="ws-wcard"/g) || []).length, 5,
+            'ровно пять окон-панелей');
         const i1 = html.indexOf('Галкин Д. Н.');
         const i2 = html.indexOf('Отпуска · 2026');
         const i3 = html.indexOf('Мероприятия · 2026');
         const i4 = html.indexOf('СИЗ · средства индивидуальной защиты');
-        assertTrue(i1 !== -1 && i2 !== -1 && i3 !== -1 && i4 !== -1, 'блоки на месте');
-        // Task 404: СИЗ — ВТОРАЯ колонка (слева от мероприятий):
-        // DOM-порядок: профиль → отпуска → СИЗ → мероприятия
-        assertTrue(i1 < i2 && i2 < i4 && i4 < i3,
-            'порядок панелей: профиль → отпуска → СИЗ → мероприятия');
+        const i5 = html.indexOf(
+            'Повторные инструктажи и периодическая проверка знаний · 2026');
+        assertTrue(i1 !== -1 && i2 !== -1 && i3 !== -1 && i4 !== -1 &&
+                   i5 !== -1, 'блоки на месте');
+        // Task 404: СИЗ — ВТОРАЯ колонка (слева от мероприятий);
+        // Task 405: за мероприятиями — блок повторных инструктажей
+        // (обе правые колонки — общий стек colTr)
+        assertTrue(i1 < i2 && i2 < i4 && i4 < i3 && i3 < i5,
+            'порядок: профиль → отпуска → СИЗ → мероприятия → инструктажи');
     });
 
     test('вкладка работника — 4 окна, действия в своей панели', () => {
@@ -396,8 +419,8 @@ describe('Task 393 — VM: страница «Работники» — 4 окн�
         t.host._renderWorkersPage();
         t.host.selectWorkersTab('2706');
         const body = t.els.wsWorkersBody.innerHTML;
-        assertEqual((body.match(/class="ws-wcard"/g) || []).length, 4,
-            'тело вкладки — четыре блока-окна');
+        assertEqual((body.match(/class="ws-wcard"/g) || []).length, 5,
+            'тело вкладки — пять блоков-окон (Task 405)');
         assertTrue(body.indexOf('ws-emp-editdata') !== -1, '«Правка данных…» жив');
         assertTrue(body.indexOf('ws-emp-addppe') !== -1, '«+ СИЗ…» жив');
     });
@@ -407,8 +430,8 @@ describe('Task 393 — VM: страница «Работники» — 4 окн�
         t.host._renderWorkersPage();
         t.host.selectWorkersTab('2706');
         const body = t.els.wsWorkersBody.innerHTML;
-        assertEqual((body.match(/class="ws-wcard"/g) || []).length, 4,
-            'четыре окна и у зрителя');
+        assertEqual((body.match(/class="ws-wcard"/g) || []).length, 5,
+            'пять окон и у зрителя');
         assertTrue(body.indexOf('ws-emp-editdata') === -1 &&
                    body.indexOf('ws-emp-dismiss') === -1 &&
                    body.indexOf('ws-emp-addvac') === -1 &&
@@ -432,10 +455,10 @@ describe('Task 393 — VM: страница «Работники» — 4 окн�
 // ============================================================
 describe('Task 393 — SW', () => {
 
-    test('SW: kipia-test-v631', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v631'") !== -1,
+    test('SW: kipia-test-v632', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v632'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v632') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v633') === -1,
             'двойного бампа не было');
     });
 });

@@ -260,10 +260,10 @@ describe('Task 388 — SRC: итоги учёта доступны в любом
             'тосты сменного/дневного вида обещают итоги');
     });
 
-    test('SW: кэш поднят до kipia-test-v631', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v631'") !== -1,
-            'CACHE_VERSION = kipia-test-v631 (Task 388 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v632') !== -1,
+    test('SW: кэш поднят до kipia-test-v632', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v632'") !== -1,
+            'CACHE_VERSION = kipia-test-v632 (Task 388 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v633') !== -1,
             'v617 ещё не существует (guard)');
     });
 });
@@ -676,6 +676,8 @@ describe('Task 388 — VM: страница «Работники» — вкла�
             methodText(INDEX_SRC, '_isMasterKipia') + ',\n' +
             // Task 390: шапка «Общей» вкладки считает мастеров
             methodText(INDEX_SRC, '_isMasterKipia') + ',\n' +
+            // Task 405: сводка делит записи по типу
+            methodText(INDEX_SRC, '_isInstrType') + ',\n' +
             '_workersTab: "general",' +
             '_canEdit: ' + JSON.stringify(!!canEdit) + ',' +
             '_year: 2026, _month: 6,' +
@@ -686,7 +688,11 @@ describe('Task 388 — VM: страница «Работники» — вкла�
             '],' +
             '_TRAININGS: [' +
             "  { id: 31, 'таб_номер': '0871', 'тип': 'инструктаж'," +
-            "    'тема': 'ОТ', 'дата_начала': '2026-06-05', 'дата_окончания': '2026-06-05' }" +
+            "    'тема': 'ОТ', 'дата_начала': '2026-06-05', 'дата_окончания': '2026-06-05' }," +
+            "  { id: 32, 'таб_номер': '0871', 'тип': 'обучение'," +
+            "    'тема': 'КУ', 'дата_начала': '2026-07-01', 'дата_окончания': '2026-07-03' }," +
+            "  { id: 33, 'таб_номер': '0871', 'тип': 'обучение'," +
+            "    'тема': 'ПТ', 'дата_начала': '2026-08-11', 'дата_окончания': '2026-08-11' }" +
             '],' +
             '_renderWorkerCard: function(tabNo, withEdit) {' +
             '  return "CARD:" + tabNo + ":" + (withEdit ? "edit" : "view"); },' +
@@ -783,7 +789,10 @@ describe('Task 388 — VM: страница «Работники» — вкла�
                                      html.indexOf('</tr>', html.indexOf('Иванов И. И.')));
         assertTrue(ivanovRow.indexOf('10 дней') !== -1,
             'отпуск Иванова — 10 (дней, реальное склонение)');
-        assertTrue(ivanovRow.indexOf('>1<') !== -1, 'мероприятие Иванова — 1');
+        // Task 405: колонки разделены — мероприятия 2 (обучения),
+        // инструктажи 1; пара ячеек целиком (срез БЕЗ </tr>)
+        assertTrue(ivanovRow.indexOf('<td>2</td><td>1</td>') !== -1,
+            'Иванов: мероприятия 2, инструктажи 1 (Task 405)');
         // Петров: без отпуска/мероприятий — прочерки
         const petrovRow = html.slice(html.indexOf('Петров П. П.'),
                                      html.indexOf('</tr>', html.indexOf('Петров П. П.')));

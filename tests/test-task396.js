@@ -132,8 +132,9 @@ describe('Task 396 — SRC: шапки блоков с кнопками в уг�
 
     test('легаси-строки действий — гейт withEdit && !asBlocks (попап-путь)', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_renderWorkerCard'));
-        assertEqual(fn.split('if (withEdit && !asBlocks) {').length - 1, 5,
-            'пять легаси-строк (Правка/Уволить/+Отпуск/+Мероприятие/+СИЗ) — только БЕЗ asBlocks');
+        assertEqual(fn.split('if (withEdit && !asBlocks) {').length - 1, 6,
+            'шесть легаси-строк (Правка/Уволить/+Отпуск/+Мероприятие/'
+            + '+Инструктаж/+СИЗ) — только БЕЗ asBlocks (Task 405)');
         assertTrue(fn.indexOf('ws-popup-row ws-popup-more ws-emp-editdata') !== -1 &&
                    fn.indexOf('ws-popup-row ws-popup-more ws-emp-addvac') !== -1,
             'легаси-разметка строк сохранена (совместимость попапа)');
@@ -241,9 +242,9 @@ describe('Task 396 — SRC: CSS шапок, кнопок и зебры', () => {
             'скругление полос-«пилюль»');
     });
 
-    test('SW поднят до kipia-test-v631', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v631'") !== -1,
-            'SW kipia-test-v631');
+    test('SW поднят до kipia-test-v632', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v632'") !== -1,
+            'SW kipia-test-v632');
         assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v623'") === -1,
             'прежней v623 нет');
     });
@@ -292,6 +293,7 @@ function cardHost(withEdit) {
     ];
     const host = new Function('document', 'return ({' +
         methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
+        methodText(INDEX_SRC, '_isInstrType') + ',\n' +
         '_canEdit: ' + JSON.stringify(!!withEdit) + ',' +
         '_year: 2026, _month: 8,' +
         '_EMPLOYEES: ' + JSON.stringify(EMP) + ',' +
@@ -317,7 +319,7 @@ describe('Task 396 — VM: блоки-окна (asBlocks) — шапки и кн
     test('четыре блока — каждый с шапкой .ws-whead', () => {
         const h = cardHost(true);
         const blocks = h._renderWorkerCard('2706', true, true);
-        assertEqual(blocks.length, 4, 'массив 4 блоков (Task 393)');
+        assertEqual(blocks.length, 5, 'массив 5 блоков (Task 393 + 405)');
         blocks.forEach(function(b, i) {
             assertTrue(b.indexOf('<div class="ws-whead">') === 0,
                 'блок ' + (i + 1) + ' НАЧИНАЕТСЯ с шапки-полосы .ws-whead');
@@ -328,6 +330,11 @@ describe('Task 396 — VM: блоки-окна (asBlocks) — шапки и кн
         assertTrue(blocks[1].indexOf('Отпуска · 2026') !== -1, 'шапка отпусков');
         assertTrue(blocks[2].indexOf('Мероприятия · 2026') !== -1, 'шапка мероприятий');
         assertTrue(blocks[3].indexOf('СИЗ · средства индивидуальной защиты') !== -1, 'шапка СИЗ');
+        assertTrue(
+            blocks[4].indexOf('Повторные инструктажи и периодическая проверка знаний · 2026') !== -1,
+            'Task 405: шапка блока повторных инструктажей');
+        assertTrue(blocks[4].indexOf('ws-whead-wrap') !== -1,
+            'Task 405: длинный заголовок — с классом переноса');
     });
 
     test('кнопки — В ВЕРХНЕМ ПРАВОМ УГЛУ шапок (до контента блока)', () => {
@@ -360,8 +367,11 @@ describe('Task 396 — VM: блоки-окна (asBlocks) — шапки и кн
         assertTrue(blocks[3].indexOf('class="ws-wbtn ws-emp-addppe"') !== -1 &&
                    blocks[3].indexOf('WorkSchedule.onEmpAddPpe(\'2706\')') !== -1,
             '«+ СИЗ…» — в шапке блока СИЗ');
-        assertEqual((blocks.join('').match(/class="ws-wbtn/g) || []).length, 5,
-            'всего 5 компактных кнопок (2+1+1+1)');
+        assertTrue(blocks[4].indexOf('class="ws-wbtn ws-emp-addins"') !== -1 &&
+                   blocks[4].indexOf("WorkSchedule.onEmpAddInstruction('2706')") !== -1,
+            'Task 405: «+ Инструктаж…» — в шапке блока инструктажей');
+        assertEqual((blocks.join('').match(/class="ws-wbtn/g) || []).length, 6,
+            'всего 6 компактных кнопок (2+1+1+1+1)');
     });
 
     test('зебра: вторые строки блоков — ws-row-alt', () => {
@@ -388,9 +398,18 @@ describe('Task 396 — VM: блоки-окна (asBlocks) — шапки и кн
         // b2: 3 периода → 1 alt
         assertEqual((blocks[1].match(/ws-emp-field ws-row-alt/g) || []).length, 1,
             'отпуска: вторая строка — alt');
-        // b3: 4 мероприятия → 2 alt (2-я и 4-я)
-        assertEqual((blocks[2].match(/ws-popup-event ws-row-alt/g) || []).length, 2,
-            'мероприятия: вторая И четвёртая строки — alt');
+        // Task 405: b3 — только обучение (1 запись) → 0 alt
+        assertEqual((blocks[2].match(/ws-popup-event ws-row-alt/g) || []).length, 0,
+            'мероприятия: одна запись — без зебры');
+        assertTrue(blocks[2].indexOf('Пожарная безопасность') !== -1,
+            'b3: обучение — в мероприятиях (Task 405)');
+        // Task 405: b5 — 3 инструктажа → 1 alt (вторая строка)
+        assertEqual((blocks[4].match(/ws-popup-event ws-row-alt/g) || []).length, 1,
+            'инструктажи: вторая строка — alt');
+        assertTrue(blocks[4].indexOf('Охрана труда') !== -1 &&
+                   blocks[4].indexOf('Первая помощь') !== -1 &&
+                   blocks[4].indexOf('Экзамен') !== -1,
+            'b5: инструктажи и проверка знаний (с пробелом!) — в блоке 5');
         // b4: 3 СИЗ → 1 alt
         assertEqual((blocks[3].match(/ws-ppe-item ws-row-alt/g) || []).length, 1,
             'СИЗ: вторая запись — alt');
@@ -399,13 +418,13 @@ describe('Task 396 — VM: блоки-окна (asBlocks) — шапки и кн
     test('зритель (withEdit=false): шапки и зебра БЕЗ кнопок', () => {
         const h = cardHost(false);
         const blocks = h._renderWorkerCard('2706', false, true);
-        assertEqual(blocks.length, 4, 'блоки рендерятся');
+        assertEqual(blocks.length, 5, 'блоки рендерятся (Task 405: 5)');
         blocks.forEach(function(b) {
             assertTrue(b.indexOf('ws-wbtn') === -1, 'кнопок действий НЕТ у зрителя');
         });
         assertTrue(blocks[0].indexOf('ws-whead') !== -1 &&
-                   blocks[2].indexOf('ws-popup-event ws-row-alt') !== -1,
-            'шапки-оглавления и ЗЕБРА — видны всем (не правка)');
+                   blocks[4].indexOf('ws-popup-event ws-row-alt') !== -1,
+            'шапки-оглавления и ЗЕБРА — видны всем (зебра теперь в b5)');
     });
 
     test('легаси-вызов (без asBlocks): прежние строки внизу, БЕЗ whead/зебры', () => {
@@ -415,8 +434,9 @@ describe('Task 396 — VM: блоки-окна (asBlocks) — шапки и кн
         assertTrue(html.indexOf('ws-popup-row ws-popup-more ws-emp-editdata') !== -1 &&
                    html.indexOf('ws-popup-row ws-popup-more ws-emp-dismiss') !== -1 &&
                    html.indexOf('ws-popup-row ws-popup-more ws-emp-addvac') !== -1 &&
-                   html.indexOf('ws-popup-row ws-popup-more ws-emp-addtr') !== -1,
-            'четыре строки-действия — прежний вид (попап-совместимость)');
+                   html.indexOf('ws-popup-row ws-popup-more ws-emp-addtr') !== -1 &&
+                   html.indexOf('ws-popup-row ws-popup-more ws-emp-addins') !== -1,
+            'пять строк-действий — прежний вид (+ «+ Инструктаж…», Task 405)');
         assertTrue(html.indexOf('ws-emp-addppe') === -1,
             '«+ СИЗ…» в попапе НЕТ (Task 403 — СИЗ только на странице)');
         assertTrue(html.indexOf('ws-whead') === -1 &&
@@ -434,6 +454,9 @@ describe('Task 396 — VM: блоки-окна (asBlocks) — шапки и кн
             'шапка ФИО — прежний .ws-popup-title');
         assertTrue(html.indexOf('<div class="ws-popup-sec">Отпуска · 2026') !== -1,
             'секции отпусков/мероприятий — прежние .ws-popup-sec');
+        assertTrue(
+            html.indexOf('Повторные инструктажи и периодическая проверка знаний · 2026') !== -1,
+            'Task 405: секция инструктажей — в попапе (после мероприятий)');
         // Task 403 (заявка): данные СИЗ из попапа УБРАНЫ
         assertTrue(html.indexOf('СИЗ') === -1,
             'секции СИЗ в попапе НЕТ (только на странице «Работники»)');
@@ -459,6 +482,7 @@ function pageHost() {
         methodText(INDEX_SRC, 'selectWorkersTab') + ',\n' +
         methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
         methodText(INDEX_SRC, '_renderWorkerCardPanels') + ',\n' +
+        methodText(INDEX_SRC, '_isInstrType') + ',\n' +
         '_workersTab: "general",' +
         '_canEdit: true, _viewLevel: "edit",' +
         '_isMasterKipia: function(e) { return String(e["должность"] || "").indexOf("Мастер") !== -1; },' +
@@ -495,10 +519,10 @@ describe('Task 396 — VM: страница «Работники»', () => {
         t.host._renderWorkersPage();
         t.host.selectWorkersTab('2706');
         const body = t.els.wsWorkersBody.innerHTML;
-        assertEqual((body.match(/<div class="ws-whead">/g) || []).length, 4,
-            'четыре блока-окна — каждый с шапкой-полосой');
-        assertEqual((body.match(/class="ws-wbtn/g) || []).length, 5,
-            '5 компактных кнопок (2 в профиле + 3 «+ …»)');
+        assertEqual((body.match(/<div class="ws-whead">/g) || []).length, 5,
+            'пять блоков-окон — каждый с шапкой-полосой (Task 405)');
+        assertEqual((body.match(/class="ws-wbtn/g) || []).length, 6,
+            '6 компактных кнопок (2 в профиле + 4 «+ …»)');
         assertTrue(body.indexOf('ws-wbtn ws-emp-editdata') !== -1 &&
                    body.indexOf('ws-wbtn-danger') !== -1,
             'кнопки правки/увольнения — в шапке профиля');
@@ -511,9 +535,9 @@ describe('Task 396 — VM: страница «Работники»', () => {
 describe('Task 396 — SW и отсутствие регрессов', () => {
 
     test('SW: v624 — ассерт присутствия, v625 — guard отсутствия', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v631') !== -1,
-            'SW kipia-test-v631');
-        assertTrue(SW_SRC.indexOf('kipia-test-v632') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v632') !== -1,
+            'SW kipia-test-v632');
+        assertTrue(SW_SRC.indexOf('kipia-test-v633') === -1,
             'v625 ещё не существует (guard)');
     });
 

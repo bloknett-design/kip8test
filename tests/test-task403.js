@@ -113,8 +113,10 @@ describe('Task 403 — SRC: попап без СИЗ', () => {
 
     test('_renderWorkerCard: склеенный вид (попап) — БЕЗ b4', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_renderWorkerCard'));
-        assertTrue(fn.indexOf('return asBlocks ? [b1, b2, b3, b4] : (b1 + b2 + b3);') !== -1,
-            'попап (без asBlocks) — только профиль + отпуска + мероприятия');
+        assertTrue(
+            fn.indexOf('return asBlocks ? [b1, b2, b3, b4, b5] : (b1 + b2 + b3 + b5);') !== -1,
+            'попап (без asBlocks) — профиль + отпуска + мероприятия '
+            + 'инструктажи (Task 405), БЕЗ СИЗ');
         assertFalse(fn.indexOf('(b1 + b2 + b3 + b4)') !== -1,
             'СИЗ (b4) в попап больше не входит');
     });
@@ -125,8 +127,8 @@ describe('Task 403 — SRC: попап без СИЗ', () => {
         const iAsb = fn.indexOf('var b4 = asBlocks');
         assertTrue(iSec !== -1 && iAsb !== -1, 'секция СИЗ жива (страница)');
         // идемпотентность: b4 остаётся ЧЕТВЁРТЫМ элементом массива asBlocks
-        assertTrue(fn.indexOf('[b1, b2, b3, b4]') !== -1,
-            'asBlocks — по-прежнему 4 блока (страница «Работники»)');
+        assertTrue(fn.indexOf('[b1, b2, b3, b4, b5]') !== -1,
+            'asBlocks — 5 блоков (Task 405: + повторные инструктажи)');
     });
 
     test('_renderEmpPopup → _renderWorkerCard(tabNo, false)', () => {
@@ -228,6 +230,7 @@ describe('Task 403 — VM: попап шахматки без СИЗ', () => {
         ];
         return new Function('document', 'return ({' +
             methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
+            methodText(INDEX_SRC, '_isInstrType') + ',\n' +
             '_canEdit: ' + JSON.stringify(!!withEdit) + ',' +
             '_year: 2026, _month: 8,' +
             '_EMPLOYEES: ' + JSON.stringify(EMP) + ',' +
@@ -275,12 +278,15 @@ describe('Task 403 — VM: попап шахматки без СИЗ', () => {
               дата_окончания: '2027-09-17', примечание: '' },
         ]);
         const blocks = host._renderWorkerCard('2706', true, true);
-        assertEqual(blocks.length, 4, 'четыре блока');
+        assertEqual(blocks.length, 5, 'пять блоков (Task 405)');
         assertTrue(blocks[0].indexOf('Галкин Д. Н.') !== -1, 'блок 1 — профиль');
         assertTrue(blocks[1].indexOf('Отпуска · 2026') !== -1, 'блок 2 — отпуска');
         assertTrue(blocks[2].indexOf('Мероприятия · 2026') !== -1, 'блок 3 — мероприятия');
         assertTrue(blocks[3].indexOf('СИЗ · средства индивидуальной защиты') !== -1,
             'блок 4 — СИЗ (страница «Работники»)');
+        assertTrue(
+            blocks[4].indexOf('Повторные инструктажи и периодическая проверка знаний · 2026') !== -1,
+            'Task 405: блок 5 — повторные инструктажи (пустое состояние)');
         assertTrue(blocks[3].indexOf('Каска защитная') !== -1, 'запись СИЗ на странице');
     });
 });
@@ -305,6 +311,7 @@ describe('Task 403 → 404 — VM: панели — ТРИ колонки (СИ�
         const host = new Function('document', 'return ({' +
             methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
             methodText(INDEX_SRC, '_renderWorkerCardPanels') + ',\n' +
+            methodText(INDEX_SRC, '_isInstrType') + ',\n' +
             '_canEdit: true, _year: 2026, _month: 8,' +
             '_EMPLOYEES: ' + JSON.stringify(EMP) + ',' +
             '_VACATIONS: [],' +
@@ -331,8 +338,8 @@ describe('Task 403 → 404 — VM: панели — ТРИ колонки (СИ�
             'колонка 1 — 2 окна (профиль + отпуска)');
         assertEqual((ppePart.match(/class="ws-wcard"/g) || []).length, 1,
             'колонка 2 — 1 окно (СИЗ)');
-        assertEqual((trPart.match(/class="ws-wcard"/g) || []).length, 1,
-            'колонка 3 — 1 окно (мероприятия)');
+        assertEqual((trPart.match(/class="ws-wcard"/g) || []).length, 2,
+            'колонка 3 — 2 окна (мероприятия + инструктажи, Task 405)');
         const iProf = mainPart.indexOf('Галкин Д. Н.');
         const iVac = mainPart.indexOf('Отпуска · 2026');
         assertTrue(iProf !== -1 && iVac !== -1 && iProf < iVac,
@@ -340,6 +347,10 @@ describe('Task 403 → 404 — VM: панели — ТРИ колонки (СИ�
         const iPz = ppePart.indexOf('СИЗ · средства индивидуальной защиты');
         const iTr = trPart.indexOf('Мероприятия · 2026');
         assertTrue(iPz !== -1 && iTr !== -1, 'СИЗ и мероприятия на месте');
+        // Task 405: «Инструктаж» с заглавной — тоже b5 (толерантность)
+        assertTrue(trPart.indexOf('Повторные инструктажи') !== -1 &&
+                   trPart.indexOf('ОТ') !== -1,
+            'инструктаж — в колонке 3, в блоке повторных инструктажей');
         assertTrue(mainPart.indexOf('СИЗ · средства') === -1 &&
                    mainPart.indexOf('Мероприятия · 2026') === -1,
             'в колонке 1 — только профиль и отпуска');
@@ -678,12 +689,12 @@ describe('Task 403 — VM: сервер — addEmployee (сборка строк
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 403 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v631 (Task 403)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v631'") !== -1,
+    test('CACHE_VERSION = kipia-test-v632 (Task 403)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v632'") !== -1,
             'фронтенд менялся — кэш поднят до v630');
     });
     test('guard: v631 отсутствует (следующий бамп)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v632') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v633') === -1,
             'v631 ещё не существует (guard следующего бампа)');
     });
 });

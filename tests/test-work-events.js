@@ -394,8 +394,8 @@ describe('Task 303 — клиент: попап ячейки и быстрое �
     test('JS: openTrainingForm принимает префилл (сотрудник + дата)', () => {
         // Task 309: третий параметр editTraining — режим правки;
         // префилл сотрудника/даты остался (быстрое добавление Task 303)
-        assertTrue(INDEX_SRC.indexOf('openTrainingForm: function(prefillTab, prefillDate, editTraining)') !== -1,
-            'сигнатура с параметрами префилла + правки');
+        assertTrue(INDEX_SRC.indexOf('openTrainingForm: function(prefillTab, prefillDate, editTraining, prefillType)') !== -1,
+            'сигнатура с параметрами префилла + правки (Task 405: +prefillType — тип по умолчанию из кнопки входа)');
         assertTrue(INDEX_SRC.indexOf('if (prefillTab) empSel.value = String(prefillTab);') !== -1,
             'сотрудник вписывается в форму');
         assertTrue(INDEX_SRC.indexOf('var today = prefillDate || this._isoDate(new Date());') !== -1,

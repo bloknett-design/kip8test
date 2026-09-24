@@ -82,11 +82,17 @@ class MockSheet {
             setNumberFormat(fmt) {
                 self.fmtCalls.push({ row: row, col: col,
                                      numRows: numRows, numCols: numCols, fmt: fmt });
-            }
+            },
+            // Task 405: стилизация заголовка нового листа
+            // «Мероприятия» (_ensureEventsSheet) — ноу-опы
+            setFontWeight() { return this; },
+            setBackground() { return this; },
+            setFontColor() { return this; }
         };
     }
     deleteRow(r) { this.rows.splice(r - 1, 1); }
     appendRow(arr) { this.rows.push(arr.slice()); }
+    setFrozenRows() {}  // Task 405: _ensureEventsSheet
 }
 
 const MOCK_UTILS = {
@@ -96,7 +102,16 @@ const MOCK_UTILS = {
 };
 
 function loadWS(sheets) {
-    const ss = { getSheetByName: (n) => sheets[n] || null };
+    // Task 405: insertSheet — автосоздание листа «Мероприятия»
+    // при первой записи «мероприятийного» типа (addTraining)
+    const ss = {
+        getSheetByName: (n) => sheets[n] || null,
+        insertSheet: (name) => {
+            const s = new MockSheet([]);
+            sheets[name] = s;
+            return s;
+        }
+    };
     const SpreadsheetApp = { openById: () => ss };
     const factory = new Function('SpreadsheetApp', 'Utils', WS_SRC + '\nreturn WorkSchedule;');
     return factory(SpreadsheetApp, MOCK_UTILS);
@@ -254,12 +269,21 @@ describe('Task 306 — симуляция: ПР и * — коды меропри
                                     дата_окончания: '2026-08-20', длительность_дней: 1,
                                     комментарий: '' });
         assertTrue(r1.ok, 'addTraining: тип «прогул» принят');
-        const last = sheets['Инструктажи'].rows[sheets['Инструктажи'].rows.length - 1];
-        assertEqual(last[2], 'прогул', 'тип записан в лист «Инструктажи»');
+        // Task 405: прогул — «мероприятийный» тип → лист
+        // «Мероприятия» (создаётся автоматически), НЕ «Инструктажи»
+        const evSheet = sheets['Мероприятия'];
+        assertTrue(!!evSheet, 'лист «Мероприятия» создан автоматически');
+        const last = evSheet.rows[evSheet.rows.length - 1];
+        assertEqual(last[2], 'прогул', 'тип записан в лист «Мероприятия»');
+        assertEqual(sheets['Инструктажи'].rows.length, 1,
+            '«Инструктажи» не тронут (только строка заголовка)');
 
         const r2 = WS.addTraining({ token: 't', 'таб_номер': '017', тип: 'примечание',
                                     тема: 'Перенос по приказу', дата_начала: '2026-08-21' });
         assertTrue(r2.ok, 'addTraining: тип «примечание» принят');
+        const last2 = evSheet.rows[evSheet.rows.length - 1];
+        assertEqual(last2[2], 'примечание',
+            'примечание — тоже в листе «Мероприятия» (Task 405)');
 
         const r3 = WS.addTraining({ token: 't', 'таб_номер': '017', тип: 'стажировка',
                                     тема: '???', дата_начала: '2026-08-22' });
@@ -408,8 +432,8 @@ describe('Task 306 — клиент: одна кнопка «Сформиров�
             'окошко календаря (нормы) осталось');
     });
 
-    test('SW: версия кэша kipia-test-v631 (Task 306 — клиент менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v631'") !== -1,
-            'CACHE_VERSION = kipia-test-v631');
+    test('SW: версия кэша kipia-test-v632 (Task 306 — клиент менялся)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v632'") !== -1,
+            'CACHE_VERSION = kipia-test-v632');
     });
 });

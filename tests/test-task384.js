@@ -27,7 +27,7 @@
 //   диспетчеризация, node --check обоих .gs.
 //   VM-функционально (клиент и сервер): happy-path правок, валидации,
 //   самопересечение/дубль части, лимит 42, не найдено.
-//   SW: kipia-test-v631 (guard v613).
+//   SW: kipia-test-v632 (guard v613).
 //
 // Запуск: через tests/run-all.js (require './test-task384.js').
 
@@ -225,7 +225,10 @@ describe('Task 384 — состояние и режимы шторок', () => {
         const fn = methodText(INDEX_SRC, 'onEmpAddTraining');
         assertTrue(fn !== '', 'метод найден');
         assertTrue(fn.indexOf('this.closeEmpPopup();') !== -1, 'карточка закрывается');
-        assertTrue(fn.indexOf('this.openTrainingForm(tabNo);') !== -1, 'форма с сотрудником');
+        assertTrue(
+            fn.indexOf("this.openTrainingForm(tabNo, null, null, 'обучение');") !== -1,
+            'форма с сотрудником и типом «обучение» (Task 405: кнопка блока'
+            + ' «Мероприятия» — дефолт типа из новой таблицы)');
     });
 
     test('deleteVacation: попапы закрываются до подтверждения', () => {
@@ -925,10 +928,10 @@ describe('Task 384 — VM сервер: updateVacation', () => {
 // 8. SW
 // ============================================================
 describe('Task 384 — Service Worker', () => {
-    test('SW: кэш поднят до kipia-test-v631', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v631'") !== -1,
-            'CACHE_VERSION = kipia-test-v631 (Task 384 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v632') !== -1,
+    test('SW: кэш поднят до kipia-test-v632', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v632'") !== -1,
+            'CACHE_VERSION = kipia-test-v632 (Task 384 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v633') !== -1,
             'лишний инкремент (v613) не сделан');
     });
 });

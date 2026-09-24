@@ -182,6 +182,7 @@ describe('Task 404 — VM: панели и кнопки карточки', () =>
         return new Function('document', 'return ({' +
             methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
             methodText(INDEX_SRC, '_renderWorkerCardPanels') + ',\n' +
+            methodText(INDEX_SRC, '_isInstrType') + ',\n' +
             '_canEdit: true, _year: 2026, _month: 8,' +
             '_EMPLOYEES: ' + JSON.stringify(EMP) + ',' +
             '_VACATIONS: ' + JSON.stringify([{
@@ -190,7 +191,9 @@ describe('Task 404 — VM: панели и кнопки карточки', () =>
                 'комментарий': '' }]) + ',' +
             '_TRAININGS: ' + JSON.stringify([{
                 id: 5, 'таб_номер': '2706', 'тип': 'Инструктаж', 'тема': 'ОТ',
-                'дата_начала': '2026-02-10', 'дата_окончания': '2026-02-10' }]) + ',' +
+                'дата_начала': '2026-02-10', 'дата_окончания': '2026-02-10' },
+              { id: 6, 'таб_номер': '2706', 'тип': 'обучение', 'тема': 'КУ',
+                'дата_начала': '2026-03-02', 'дата_окончания': '2026-03-02' }]) + ',' +
             '_PPE: ' + JSON.stringify([{
                 id: 3, 'таб_номер': '2706', наименование: 'Каска защитная',
                 дата_выдачи: '2026-09-17', срок_годности: '1 год',
@@ -223,8 +226,8 @@ describe('Task 404 — VM: панели и кнопки карточки', () =>
             'колонка 1 — профиль + отпуска');
         assertEqual((ppePart.match(/class="ws-wcard"/g) || []).length, 1,
             'колонка 2 — СИЗ');
-        assertEqual((trPart.match(/class="ws-wcard"/g) || []).length, 1,
-            'колонка 3 — мероприятия');
+        assertEqual((trPart.match(/class="ws-wcard"/g) || []).length, 2,
+            'колонка 3 — мероприятия + инструктажи (Task 405)');
         // порядок DOM = «слева на право» из заявки
         const iProf = mainPart.indexOf('Галкин Д. Н.');
         const iVac = mainPart.indexOf('Отпуска · 2026');
@@ -235,22 +238,30 @@ describe('Task 404 — VM: панели и кнопки карточки', () =>
         assertTrue(iProf < iVac, 'под профилем — отпуска (внутри 1-й колонки)');
         assertTrue(iL + iProf < iP + iPz && iP + iPz < iT + iTr,
             'визуальный порядок: профиль → СИЗ → мероприятия');
+        // Task 405: за мероприятиями — блок повторных инструктажей
+        const iIns = trPart.indexOf('Повторные инструктажи');
+        assertTrue(iIns > iTr, 'инструктажи — ПОД мероприятиями (colTr)');
     });
 
     test('кнопки ✎ и ✕ — в каждом блоке с записями (отпуска/мероприятия/СИЗ)', () => {
         const host = cardHost();
         const blocks = host._renderWorkerCard('2706', true, true);
-        assertEqual(blocks.length, 4, 'четыре блока');
+        assertEqual(blocks.length, 5, 'пять блоков (Task 405)');
         // отпуска: ✎ перед ✕, оба в блоке
         const iEv = blocks[1].indexOf('WorkSchedule.editVacation(7)');
         const iDel = blocks[1].indexOf('WorkSchedule.deleteVacation(7)');
         assertTrue(iEv !== -1 && iDel !== -1 && iEv < iDel,
             'отпуск: ✎ (правка) и ✕ (удаление) — оба, ✎ первым');
-        // мероприятия
-        const iEt = blocks[2].indexOf('WorkSchedule.editTraining(5)');
-        const iDt = blocks[2].indexOf('WorkSchedule.deleteTraining(5)');
+        // мероприятия (Task 405: в b3 — обучение id 6)
+        const iEt = blocks[2].indexOf('WorkSchedule.editTraining(6)');
+        const iDt = blocks[2].indexOf('WorkSchedule.deleteTraining(6)');
         assertTrue(iEt !== -1 && iDt !== -1 && iEt < iDt,
-            'мероприятие: ✎ и ✕ — оба, ✎ первым');
+            'мероприятие (обучение): ✎ и ✕ — оба, ✎ первым');
+        // инструктаж (Task 405: в b5 — «Инструктаж» id 5)
+        const iEi = blocks[4].indexOf('WorkSchedule.editTraining(5)');
+        const iDi = blocks[4].indexOf('WorkSchedule.deleteTraining(5)');
+        assertTrue(iEi !== -1 && iDi !== -1 && iEi < iDi,
+            'инструктаж: ✎ и ✕ — в блоке 5, ✎ первым');
         // СИЗ — образец
         const iEp = blocks[3].indexOf('WorkSchedule.editPpe(3)');
         const iDp = blocks[3].indexOf('WorkSchedule.deletePpe(3)');
@@ -265,6 +276,7 @@ describe('Task 404 — VM: панели и кнопки карточки', () =>
         ];
         const host = new Function('document', 'return ({' +
             methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
+            methodText(INDEX_SRC, '_isInstrType') + ',\n' +
             '_canEdit: false, _year: 2026, _month: 8,' +
             '_EMPLOYEES: ' + JSON.stringify(EMP) + ',' +
             '_VACATIONS: ' + JSON.stringify([{
@@ -371,12 +383,12 @@ describe('Task 404 — VM: окно мероприятий — отпуска н
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 404 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v631 (Task 404)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v631'") !== -1,
+    test('CACHE_VERSION = kipia-test-v632 (Task 404)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v632'") !== -1,
             'фронтенд менялся — кэш поднят до v631');
     });
     test('guard: v632 отсутствует (следующий бамп)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v632') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v633') === -1,
             'v632 ещё не существует (guard следующего бампа)');
     });
 });

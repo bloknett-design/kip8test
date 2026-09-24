@@ -9,7 +9,9 @@
 //   workSchedule.getPatterns     — шаблоны ротации + дни цикла
 //   workSchedule.listEmployees   — справочник сотрудников
 //   workSchedule.listEntries     — записи графика за месяц
-//   workSchedule.listTrainings   — плановые инструктажи (с фильтром по месяцу)
+//   workSchedule.listTrainings   — мероприятия: ОБЪЕДИНЁННЫЙ список
+//                                   листов «Инструктажи» + «Мероприятия»
+//                                   (Task 405; фильтр по месяцу/году)
 //   workSchedule.generateMonth   — СФОРМИРОВАТЬ шахматку на месяц
 //   workSchedule.setManualEntry   — upsert ручной правки (Б/ОТ/П/замещение)
 //   workSchedule.deleteEntry     — удалить ручную запись
@@ -101,16 +103,27 @@
 //   B: день_цикла (1..N)
 //   C: статус (код; пусто = выходной)
 //
-// Структура листа «Инструктажи»:
-//   A: id (auto-increment)
+// Структура листа «Инструктажи» (Task 405 — таблица РАЗДЕЛЕНА):
+//   A: id (auto-increment; нумерация СКВОЗНАЯ с листом
+//      «Мероприятия» — связки Записи_графика.инструкция однозначны)
 //   B: таб_номер (FK на Сотрудники)
-//   C: тип (инструктаж/обучение/проверка_знаний/прогул/примечание —
-//      Task 306: два последних отображаются кодами ПР и *)
+//   C: тип — инструктаж/проверка_знаний (Task 306: прогул и
+//      примечание тоже допустимы легаси-строками; Task 405:
+//      обучение/прогул/примечание живут в листе «Мероприятия» —
+//      разделение по типу, перенос старых строк — trainingsSplitInit)
 //   D: тема
 //   E: дата_начала (Date)
 //   F: дата_окончания (Date)
 //   G: длительность_дней (int)
 //   H: комментарий
+//
+// Структура листа «Мероприятия» (Task 405 — вторая половина
+//   разделённой таблицы инструктажей: обучение/прогул/примечание):
+//   A: id, B: таб_номер, C: тип, D: тема, E: дата_начала,
+//   F: дата_окончания, G: длительность_дней, H: комментарий —
+//   формат столбцов как у «Инструктажей»; listTrainings читает ОБА
+//   листа одним списком, addTraining пишет в лист по типу,
+//   deleteTraining ищет id в обоих листах
 //
 // Структура листа «Записи_графика» (ГЛАВНАЯ БД):
 //   A: дата (Date)
@@ -141,7 +154,8 @@
 //   мероприятие (И/ОБ/ПЗ — только на день БЕЗ плановой смены).
 //   Task 303: мероприятие больше НЕ затирает плановую смену — на
 //   сменных днях смена остаётся кодом ячейки, а мероприятие (И/ОБ/ПЗ)
-//   показывается бейджем на клиенте (данные — лист «Инструктажи»,
+//   показывается бейджем на клиенте (данные — листы
+//   «Инструктажи»/«Мероприятия» после разделения Task 405,
 //   связка — колонка I «инструкция»).
 //
 // Структура листа «СИЗ» (Task 392 — средства индивидуальной защиты;
@@ -173,6 +187,11 @@ var WorkSchedule = {
   PATTERNS_SHEET:     'Шаблоны_ротации',
   PATTERN_DAYS_SHEET: 'Дни_цикла',
   TRAININGS_SHEET:    'Инструктажи',
+  // Task 405: лист «Мероприятия» — вторая половина разделённой
+  // таблицы инструктажей (обучение/прогул/примечание; формат
+  // столбцов A..H — как у «Инструктажей»). Чтение — вместе с
+  // «Инструктажами» (listTrainings), записи маршрутизуются по типу
+  EVENTS_SHEET:       'Мероприятия',
   ENTRIES_SHEET:      'Записи_графика',
   SUMMARY_SHEET:      'Сводка_по_месяцам',
   // Task 274: лист «Отпуска» — план периодов (2–3 части на год).
@@ -214,12 +233,24 @@ var WorkSchedule = {
     'примечание':       '*'
   },
 
+  // Task 405 (заявка: разделение таблицы инструктажей): типы,
+  // живущие в листе «Мероприятия» (всё, кроме инструктажа и
+  // проверки знаний). Маршрутизация addTraining по типу; перенос
+  // старых строк — trainingsSplitInit (разовый запуск в редакторе
+  // Apps Script)
+  TRAINING_EVENTSHEET_TYPES: {
+    'обучение':         1,
+    'прогул':           1,
+    'примечание':       1
+  },
+
   // Task 303: код слоя мероприятий (И/ОБ/ПЗ, Task 306: + ПР и *).
   // Такой код записывается в Записи_графика ТОЛЬКО на дни без
   // плановой смены (мероприятие в выходной по циклу). На сменных
   // днях мероприятие не затирает смену: смена — основной код
   // ячейки, мероприятие показывается на клиенте бейджем (данные —
-  // лист «Инструктажи», связка — колонка I). ПР и * — такие же
+  // листы «Инструктажи»/«Мероприятия» Task 405, связка — колонка I).
+  // ПР и * — такие же
   // авто-коды: шаг 4.6 снимает их строки при удалении/переносе
   // мероприятия; РУЧНЫЕ строки с ПР/* (прогул/примечание,
   // поставленные через попап ячейки) не трогаются — как и ручные И.
@@ -255,6 +286,62 @@ var WorkSchedule = {
     }
     sheet.getRange(newRow, 1, 1, rowValues.length).setValues([rowValues]);
     return newRow;
+  },
+
+  // Task 405: max id листа мероприятий (столбец A; null-лист — 0)
+  _maxTrainingsId: function(sheet) {
+    if (!sheet) return 0;
+    var lastRow = sheet.getLastRow();
+    var maxId = 0;
+    if (lastRow >= 2) {
+      var ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+      for (var i = 0; i < ids.length; i++) {
+        var v = parseInt(ids[i][0], 10);
+        if (!isNaN(v) && v > maxId) maxId = v;
+      }
+    }
+    return maxId;
+  },
+
+  // Task 405: лист таблицы мероприятий для типа («Инструктажи» —
+  // всё остальное: инструктаж/проверка_знаний и неизвестные типы
+  // остаются в прежнем листе — перенос только явных «мероприятий»)
+  _trainingsSheetForType: function(tip) {
+    return this.TRAINING_EVENTSHEET_TYPES[tip]
+      ? this.EVENTS_SHEET : this.TRAININGS_SHEET;
+  },
+
+  // Task 405: создать лист «Мероприятия» с заголовками (структура —
+  // как у «Инструктажей»: строка 1 листа-образца копируется; нет
+  // источника — канонические заголовки). Лист уже есть — вернуть
+  // его. Вызывается addTraining при первой записи «мероприятийного»
+  // типа и trainingsSplitInit — до ручного переноса данных
+  // приложение остаётся рабочим
+  _ensureEventsSheet: function() {
+    var ss = SpreadsheetApp.openById(this.SPREADSHEET_ID);
+    var sheet = ss.getSheetByName(this.EVENTS_SHEET);
+    if (sheet) return sheet;
+    sheet = ss.insertSheet(this.EVENTS_SHEET);
+    var headers = ['id', 'таб_номер', 'тип', 'тема', 'дата_начала',
+                   'дата_окончания', 'длительность_дней', 'комментарий'];
+    var src = this._getSheet(this.TRAININGS_SHEET);
+    if (src && src.getLastRow() >= 1) {
+      var srcHead = src.getRange(1, 1, 1, 8).getValues()[0];
+      var filled = false;
+      for (var h = 0; h < srcHead.length; h++) {
+        if (String(srcHead[h] || '').trim()) { filled = true; break; }
+      }
+      if (filled) headers = srcHead;
+    }
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.getRange(1, 1, 1, headers.length)
+      .setFontWeight('bold').setBackground('#1F4E5F').setFontColor('#FFFFFF');
+    sheet.setFrozenRows(1);
+    try {
+      Utils.audit('', 'WORKSCHEDULE_EVENTS_SHEET_CREATED', '', '',
+        'Создан лист «Мероприятия» (Task 405 — разделение таблицы инструктажей)');
+    } catch (e) { /* ignore */ }
+    return sheet;
   },
 
   _requireRead: function(token) {
@@ -796,8 +883,27 @@ var WorkSchedule = {
     var sheet = this._getSheet(this.TRAININGS_SHEET);
     if (!sheet) return { ok: false, error: 'sheet_not_found: ' + this.TRAININGS_SHEET };
 
+    // Task 405: мероприятие может лежать в ОДНОМ ИЗ ДВУХ листов —
+    // «Инструктажи» (инструктаж/проверка_знаний) или «Мероприятия»
+    // (обучение/прогул/примечание; формат A..H тот же). Ответ —
+    // ОБЪЕДИНЁННЫЙ список обоих листов (бейджи/окна/печать/генерация
+    // видят все мероприятия вместе, нумерация id сквозная). Листа
+    // «Мероприятия» может не быть (до разделения данных) — тогда
+    // отдаются только «Инструктажи»
+    var trainings = this._readTrainingsSheet(sheet, payload);
+    var evSheet = this._getSheet(this.EVENTS_SHEET);
+    if (evSheet) {
+      trainings = trainings.concat(this._readTrainingsSheet(evSheet, payload));
+    }
+    return { ok: true, data: { trainings: trainings } };
+  },
+
+  // Task 405: чтение ОДНОГО листа мероприятий (строки 2+, столбцы
+  // A..H). payload.year/month — фильтр пересечения периода (как в
+  // listTrainings до разделения); строки без id пропускаются
+  _readTrainingsSheet: function(sheet, payload) {
     var lastRow = sheet.getLastRow();
-    if (lastRow < 2) return { ok: true, data: { trainings: [] } };
+    if (lastRow < 2) return [];
 
     var values = sheet.getRange(2, 1, lastRow - 1, 8).getValues();
     var year  = payload.year  ? parseInt(payload.year, 10)  : null;
@@ -805,7 +911,7 @@ var WorkSchedule = {
     var rangeStart = (year && month) ? new Date(year, month - 1, 1) : (year ? new Date(year, 0, 1) : null);
     var rangeEnd   = (year && month) ? new Date(year, month, 1) : (year ? new Date(year + 1, 0, 1) : null);
 
-    var trainings = [];
+    var out = [];
     for (var i = 0; i < values.length; i++) {
       var r = values[i];
       if (!r[0] && r[0] !== 0) continue;
@@ -816,7 +922,7 @@ var WorkSchedule = {
         if (!(startDate instanceof Date) || !(endDate instanceof Date)) continue;
         if (endDate < rangeStart || startDate >= rangeEnd) continue;
       }
-      trainings.push({
+      out.push({
         id:                parseInt(r[0], 10),
         таб_номер:             String(r[1] || '').trim(),
         тип:               String(r[2] || '').trim(),
@@ -827,7 +933,7 @@ var WorkSchedule = {
         комментарий:       String(r[7] || '').trim()
       });
     }
-    return { ok: true, data: { trainings: trainings } };
+    return out;
   },
 
   // workSchedule.listVacations (Task 274)
@@ -1857,19 +1963,22 @@ var WorkSchedule = {
     var duration = parseInt(payload.длительность_дней, 10) || 1;
     var comment  = String(payload.комментарий || '').slice(0, 500);
 
-    var sheet = this._getSheet(this.TRAININGS_SHEET);
-    if (!sheet) return { ok: false, error: 'sheet_not_found: ' + this.TRAININGS_SHEET };
-
-    // Найти max id в столбце A
-    var lastRow = sheet.getLastRow();
-    var maxId = 0;
-    if (lastRow >= 2) {
-      var ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-      for (var i = 0; i < ids.length; i++) {
-        var v = parseInt(ids[i][0], 10);
-        if (!isNaN(v) && v > maxId) maxId = v;
-      }
+    // Task 405: лист записи — по ТИПУ мероприятия (инструктаж/
+    // проверка_знаний → «Инструктажи»; обучение/прогул/примечание →
+    // «Мероприятия», лист создаётся при первой записи, если нет)
+    var sheetName = this._trainingsSheetForType(tip);
+    var sheet = this._getSheet(sheetName);
+    if (!sheet && sheetName === this.EVENTS_SHEET) {
+      sheet = this._ensureEventsSheet();
     }
+    if (!sheet) return { ok: false, error: 'sheet_not_found: ' + sheetName };
+
+    // Task 405: id — ГЛОБАЛЬНЫЙ по обоим листам (сквозная
+    // нумерация): связки Записи_графика.инструкция и правка по id
+    // на клиенте однозначны и после разделения таблицы
+    var maxId = this._maxTrainingsId(this._getSheet(this.TRAININGS_SHEET));
+    var evMaxId = this._maxTrainingsId(this._getSheet(this.EVENTS_SHEET));
+    if (evMaxId > maxId) maxId = evMaxId;
     var newId = maxId + 1;
 
     // Task 304: B (таб_№) — текст, ведущие нули не теряются
@@ -1886,6 +1995,7 @@ var WorkSchedule = {
 
   // workSchedule.deleteTraining
   // payload: { token, id }
+  // Task 405: id ищется в обоих листах («Инструктажи»/«Мероприятия»)
   deleteTraining: function(payload) {
     var auth = this._requireWrite(payload.token);
     if (auth.error) return auth.error;
@@ -1894,24 +2004,72 @@ var WorkSchedule = {
     var id = parseInt(payload.id, 10);
     if (isNaN(id)) return { ok: false, error: 'invalid_id' };
 
-    var sheet = this._getSheet(this.TRAININGS_SHEET);
-    if (!sheet) return { ok: false, error: 'sheet_not_found: ' + this.TRAININGS_SHEET };
-
-    var lastRow = sheet.getLastRow();
-    if (lastRow < 2) return { ok: false, error: 'not_found' };
-
-    var ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-    for (var i = 0; i < ids.length; i++) {
-      if (parseInt(ids[i][0], 10) === id) {
-        sheet.deleteRow(i + 2);
-        try {
-          Utils.audit(user.email, 'WORKSCHEDULE_DELETE_TRAINING', '', '',
-            'Удалено мероприятие id=' + id);
-        } catch (e) { /* ignore */ }
-        return { ok: true, data: { id: id } };
+    // Task 405: id ищется в ОБОИХ листах — «Инструктажи» и
+    // «Мероприятия» (нумерация сквозная, лист неизвестен клиенту)
+    var sheetNames = [this.TRAININGS_SHEET, this.EVENTS_SHEET];
+    for (var sn = 0; sn < sheetNames.length; sn++) {
+      var sheet = this._getSheet(sheetNames[sn]);
+      if (!sheet) continue;
+      var lastRow = sheet.getLastRow();
+      if (lastRow < 2) continue;
+      var ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+      for (var i = 0; i < ids.length; i++) {
+        if (parseInt(ids[i][0], 10) === id) {
+          sheet.deleteRow(i + 2);
+          try {
+            Utils.audit(user.email, 'WORKSCHEDULE_DELETE_TRAINING', '', '',
+              'Удалено мероприятие id=' + id + ' (лист ' + sheetNames[sn] + ')');
+          } catch (e) { /* ignore */ }
+          return { ok: true, data: { id: id } };
+        }
       }
     }
     return { ok: false, error: 'not_found' };
+  },
+
+  // Task 405 (заявка: разделение таблицы инструктажей): перенос
+  // строк обучение/прогул/примечание из листа «Инструктажи» в лист
+  // «Мероприятия». Запускается ВРУЧНУЮ из редактора Apps Script
+  // (trainingsSplitInit) — через API приложения НЕ доступен.
+  // Идемпотентно: повторный запуск не находит строк к переносу.
+  // Тип сравнивается толерантно (регистр/пробелы); НЕИЗВЕСТНЫЕ
+  // типы остаются в «Инструктажах» — переносятся только явные
+  // «мероприятийные» (обучение/прогул/примечание)
+  splitTrainingsSheet: function() {
+    var src = this._getSheet(this.TRAININGS_SHEET);
+    if (!src) return { ok: false, error: 'sheet_not_found: ' + this.TRAININGS_SHEET };
+    var dst = this._ensureEventsSheet();
+    if (!dst) return { ok: false, error: 'sheet_not_found: ' + this.EVENTS_SHEET };
+
+    var lastRow = src.getLastRow();
+    if (lastRow < 2) return { ok: true, moved: 0, sheet: this.EVENTS_SHEET };
+
+    var values = src.getRange(2, 1, lastRow - 1, 8).getValues();
+    var move = [];
+    for (var i = 0; i < values.length; i++) {
+      var tip = String(values[i][2] || '').trim().toLowerCase()
+                  .replace(/\s+/g, '_');
+      if (this.TRAINING_EVENTSHEET_TYPES[tip]) {
+        move.push({ row: i + 2, vals: values[i] });
+      }
+    }
+    if (!move.length) return { ok: true, moved: 0, sheet: this.EVENTS_SHEET };
+
+    // строки переносятся ЦЕЛИКОМ (id/даты — как в источнике;
+    // Task 304: таб_номер — текстом, ведущие нули не теряются)
+    for (var m = 0; m < move.length; m++) {
+      this._appendRowKeepText(dst, move[m].vals, [2]);
+    }
+    // удаление перенесённых строк — снизу вверх (номера не съезжают)
+    for (var d = move.length - 1; d >= 0; d--) {
+      src.deleteRow(move[d].row);
+    }
+    try {
+      Utils.audit('', 'WORKSCHEDULE_SPLIT_TRAININGS', '', '',
+        'Разделение «Инструктажей»: перенесено строк — ' + move.length +
+        ' (лист «' + this.EVENTS_SHEET + '»)');
+    } catch (e) { /* ignore */ }
+    return { ok: true, moved: move.length, sheet: this.EVENTS_SHEET };
   },
 
   // ============================================================
@@ -2398,3 +2556,25 @@ var WorkSchedule = {
   }
 
 };
+
+// ============================================================
+// Task 405: РАЗОВЫЙ перенос данных — разделение таблицы
+// «Инструктажи» на «Инструктажи» + «Мероприятия»
+// ============================================================
+// ЗАПУСК (проект Apps Script табель_КИП_ИОС — тот же, где
+// WorkSchedule.gs): в выпадающем списке функций редактора выбрать
+// trainingsSplitInit → ▶ Run (первый запуск может попросить
+// авторизацию — разрешить). Результат — в журнале (Ctrl+Enter).
+// Что делает:
+//   1) создаёт лист «Мероприятия» (заголовки — копия строки 1
+//      листа «Инструктажи»; лист уже есть — не трогается);
+//   2) переносит строки с типами обучение/прогул/примечание из
+//      «Инструктажей» в «Мероприятия» — id и все значения строк
+//      СОХРАНЯЮТСЯ (связки Записи_графика.инструкция не ломаются);
+//   3) удаляет перенесённые строки из «Инструктажей».
+// Повторный запуск безопасен (переносить уже нечего — moved: 0).
+// После переноса функцию больше запускать не нужно.
+function trainingsSplitInit() {
+  var r = WorkSchedule.splitTrainingsSheet();
+  Logger.log('trainingsSplitInit: ' + JSON.stringify(r));
+}

@@ -231,6 +231,7 @@ function pageHost(opts) {
         methodText(INDEX_SRC, 'openWorkersPage') + ',\n' +
         methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
         methodText(INDEX_SRC, '_renderWorkerCardPanels') + ',\n' +
+        methodText(INDEX_SRC, '_isInstrType') + ',\n' +
         '_workersTab: "general",' +
         '_canEdit: ' + (opts.canEdit === undefined ? true : !!opts.canEdit) + ',' +
         (opts.viewLevel === undefined ? '' :
@@ -271,14 +272,17 @@ describe('Task 395 — VM: панели-колонки карточки', () => 
             'колонка 1 — 2 окна (профиль + отпуска)');
         assertEqual((ppePart.match(/class="ws-wcard"/g) || []).length, 1,
             'колонка 2 — 1 окно (СИЗ)');
-        assertEqual((trPart.match(/class="ws-wcard"/g) || []).length, 1,
-            'колонка 3 — 1 окно (мероприятия)');
+        assertEqual((trPart.match(/class="ws-wcard"/g) || []).length, 2,
+            'колонка 3 — 2 окна (мероприятия + повторные инструктажи, Task 405)');
         assertTrue(ppePart.indexOf('СИЗ · средства индивидуальной защиты') !== -1,
             'СИЗ — во 2-й колонке (СЛЕВА от мероприятий)');
         assertTrue(ppePart.indexOf('Каска защитная') !== -1,
             'запись СИЗ — во 2-й колонке');
         assertTrue(trPart.indexOf('Мероприятия · 2026') !== -1,
             'мероприятия — в 3-й колонке (СПРАВА от СИЗ)');
+        assertTrue(
+            trPart.indexOf('Повторные инструктажи и периодическая проверка знаний · 2026') !== -1,
+            'Task 405: повторные инструктажи — под мероприятиями (colTr)');
         const i1 = mainPart.indexOf('Галкин Д. Н.');
         const i2 = mainPart.indexOf('Отпуска · 2026');
         assertTrue(i1 !== -1 && i2 !== -1 && i1 < i2,
@@ -299,8 +303,8 @@ describe('Task 395 — VM: панели-колонки карточки', () => 
             'вторая колонка (СИЗ) — на странице');
         assertTrue(body.indexOf('<div class="ws-wcol ws-wcol-tr">') !== -1,
             'третья колонка (мероприятия) — на странице (Task 404)');
-        assertEqual((body.match(/class="ws-wcard"/g) || []).length, 4,
-            'всего четыре блока-окна');
+        assertEqual((body.match(/class="ws-wcard"/g) || []).length, 5,
+            'всего пять блоков-окон (Task 405)');
     });
 });
 
@@ -371,9 +375,9 @@ describe('Task 395 — VM: гейты страницы по матрице', () 
 // ============================================================
 describe('Task 395 — SW-кэш', () => {
     test('SW поднят до v623 (Task 395 — фронтенд менялся)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v631') !== -1,
-            'sw.js: CACHE_VERSION kipia-test-v631');
-        assertTrue(SW_SRC.indexOf('kipia-test-v632') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v632') !== -1,
+            'sw.js: CACHE_VERSION kipia-test-v632');
+        assertTrue(SW_SRC.indexOf('kipia-test-v633') === -1,
             'двойного бампа нет (v624 не существует)');
     });
 });
