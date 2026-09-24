@@ -125,6 +125,18 @@
 //   листа одним списком, addTraining пишет в лист по типу,
 //   deleteTraining ищет id в обоих листах
 //
+// Структура листа «Список_И_и_ПЗ» (Task 407 — шаблонный список
+//   инструктажей и проверок знаний): столбцы — ПО ЗАГОЛОВКАМ строки 1
+//   (позиция любая, приём Task 402/403 «группа_допуска»):
+//   название — ключ соответствия: текст = «тема» записи таблицы
+//     «Инструктажи» (сравнение нормализованное: регистр/лишние
+//     пробелы/«ё» не важны — считает клиент);
+//   вид — инструктаж/проверка_знаний (толерантно к написанию);
+//   периодичность — число месяцев (пусто/0 = разовый — «следующий
+//     срок» не считается);
+//   основание — приказ/правила (справочно).
+//   Создание — разовый запуск instrListInit в редакторе Apps Script.
+//
 // Структура листа «Записи_графика» (ГЛАВНАЯ БД):
 //   A: дата (Date)
 //   B: таб_номер (FK на Сотрудники — кто работал)
@@ -192,6 +204,13 @@ var WorkSchedule = {
   // столбцов A..H — как у «Инструктажей»). Чтение — вместе с
   // «Инструктажами» (listTrainings), записи маршрутизуются по типу
   EVENTS_SHEET:       'Мероприятия',
+  // Task 407: лист «Список_И_и_ПЗ» — шаблонный список инструктажей
+  // и проверок знаний (каркас блока «Повторные инструктажи и
+  // периодическая проверка знаний»; связка с записями «Инструктажей»
+  // по «название» = «тема» записи). Лист может отсутствовать (до
+  // разового запуска instrListInit) — приложение работает, блок
+  // показывает плоский список записей года
+  INSTR_LIST_SHEET:   'Список_И_и_ПЗ',
   ENTRIES_SHEET:      'Записи_графика',
   SUMMARY_SHEET:      'Сводка_по_месяцам',
   // Task 274: лист «Отпуска» — план периодов (2–3 части на год).
@@ -895,7 +914,17 @@ var WorkSchedule = {
     if (evSheet) {
       trainings = trainings.concat(this._readTrainingsSheet(evSheet, payload));
     }
-    return { ok: true, data: { trainings: trainings } };
+    // Task 407: каркас блока «Повторные инструктажи…» — шаблонный
+    // список «Список_И_и_ПЗ» (нет листа — пустой массив, блок живёт
+    // плоским списком записей года) и ВСЕ записи «Инструктажей» БЕЗ
+    // фильтра года (клиент ищет ПОСЛЕДНИЙ инструктаж по всем годам —
+    // контроль годовых/трёхлетних циклов; trainings остаётся годовым
+    // срезом — бейджи/окно месяца/печать/сводная не меняются)
+    return { ok: true, data: {
+      trainings: trainings,
+      instrList: this._readInstrListSheet(),
+      instrAll:  this._readTrainingsSheet(sheet, {})
+    } };
   },
 
   // Task 405: чтение ОДНОГО листа мероприятий (строки 2+, столбцы
@@ -931,6 +960,47 @@ var WorkSchedule = {
         дата_окончания:    endDate instanceof Date ? this._toIsoDate(endDate) : null,
         длительность_дней: parseInt(r[6], 10) || 1,
         комментарий:       String(r[7] || '').trim()
+      });
+    }
+    return out;
+  },
+
+  // Task 407: чтение листа «Список_И_и_ПЗ» — шаблонного списка
+  // инструктажей и проверок знаний. Столбцы — ПО ЗАГОЛОВКАМ строки 1
+  // (_headerColIndex, позиция любая): название (ключ соответствия с
+  // «темой» записей «Инструктажей»), вид (инструктаж/
+  // проверка_знаний), периодичность (число месяцев; пусто = разовый),
+  // основание. Нет листа или ключевого столбца «название» — пустой
+  // список (клиент показывает плоский список записей года)
+  _readInstrListSheet: function() {
+    var sheet = this._getSheet(this.INSTR_LIST_SHEET);
+    if (!sheet) return [];
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return [];
+    var lastCol = 1;
+    try { lastCol = sheet.getLastColumn() || 1; } catch (e) { lastCol = 8; }
+    var nameCol = this._headerColIndex(sheet, ['название']);
+    if (nameCol === null) return [];
+    var kindCol = this._headerColIndex(sheet, ['вид']);
+    var perCol  = this._headerColIndex(sheet, [
+      'периодичность', 'периодичность, мес.', 'периодичность, мес',
+      'периодичность мес.', 'периодичность мес']);
+    var baseCol = this._headerColIndex(sheet, ['основание']);
+    var values = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+    var out = [];
+    for (var i = 0; i < values.length; i++) {
+      var r = values[i];
+      var name = String(r[nameCol] || '').trim();
+      if (!name) continue;
+      var per = 0;
+      if (perCol !== null) {
+        per = parseFloat(String(r[perCol] || '').replace(',', '.')) || 0;
+      }
+      out.push({
+        название:      name,
+        вид:           kindCol !== null ? String(r[kindCol] || '').trim() : '',
+        периодичность: per,
+        основание:     baseCol !== null ? String(r[baseCol] || '').trim() : ''
       });
     }
     return out;
@@ -2553,6 +2623,45 @@ var WorkSchedule = {
       }
     }
     return { ok: false, error: 'not_found' };
+  },
+
+  // Task 407: разовая инициализация листа «Список_И_и_ПЗ» — создать
+  // лист с заголовками (название/вид/периодичность/основание) и
+  // типовым наполнением (пользователь редактирует под свою
+  // номенклатуру: «название» = «тема» записей «Инструктажей»,
+  // «периодичность» — число месяцев, пусто = разовый). Лист уже
+  // есть — только отчёт (идемпотентно). Через API приложения НЕ
+  // доступен — запуск в редакторе Apps Script (instrListInit, как
+  // trainingsSplitInit)
+  instrListInit: function() {
+    var ss = SpreadsheetApp.openById(this.SPREADSHEET_ID);
+    var sheet = ss.getSheetByName(this.INSTR_LIST_SHEET);
+    if (sheet) {
+      return { ok: true, exists: true,
+               rows: Math.max(0, sheet.getLastRow() - 1) };
+    }
+    sheet = ss.insertSheet(this.INSTR_LIST_SHEET);
+    var headers = ['название', 'вид', 'периодичность', 'основание'];
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.getRange(1, 1, 1, headers.length)
+      .setFontWeight('bold').setBackground('#1F4E5F').setFontColor('#FFFFFF');
+    sheet.setFrozenRows(1);
+    var sample = [
+      ['Охрана труда', 'инструктаж', 6,
+       'не реже 1 раза в 6 месяцев'],
+      ['Пожарная безопасность', 'инструктаж', 6,
+       'не реже 1 раза в 6 месяцев'],
+      ['Электробезопасность', 'проверка_знаний', 12,
+       'ежегодно'],
+      ['Проверка знаний по специальности', 'проверка_знаний', 12,
+       'не реже 1 раза в год']
+    ];
+    sheet.getRange(2, 1, sample.length, 4).setValues(sample);
+    try {
+      Utils.audit('', 'WORKSCHEDULE_INSTR_LIST_SHEET_CREATED', '', '',
+        'Создан лист «Список_И_и_ПЗ» (Task 407 — шаблонный список инструктажей и проверок знаний)');
+    } catch (e) { /* ignore */ }
+    return { ok: true, created: true, rows: sample.length };
   }
 
 };
@@ -2577,4 +2686,26 @@ var WorkSchedule = {
 function trainingsSplitInit() {
   var r = WorkSchedule.splitTrainingsSheet();
   Logger.log('trainingsSplitInit: ' + JSON.stringify(r));
+}
+
+// ============================================================
+// Task 407: РАЗОВАЯ инициализация листа «Список_И_и_ПЗ»
+// ============================================================
+// ЗАПУСК (проект Apps Script табель_КИП_ИОС — тот же, где
+// WorkSchedule.gs): в выпадающем списке функций редактора выбрать
+// instrListInit → ▶ Run. Что делает:
+//   1) создаёт лист «Список_И_и_ПЗ» с заголовками
+//      (название / вид / периодичность / основание);
+//   2) заполняет ТИПОВЫМ списком (охрана труда, пожарная
+//      безопасность, электробезопасность, проверка знаний) —
+//      ОТРЕДАКТИРУЙТЕ под свою номенклатуру: строки добавляются/
+//      удаляются прямо в листе; «название» должно совпадать с
+//      «темой» записей таблицы «Инструктажи» (регистр/пробелы/«ё»
+//      не важны); «вид» — инструктаж или проверка_знаний;
+//      «периодичность» — число месяцев (пусто = разовый);
+//   3) лист уже есть — ничего не делает (идемпотентно).
+// После создания функцию больше запускать не нужно.
+function instrListInit() {
+  var r = WorkSchedule.instrListInit();
+  Logger.log('instrListInit: ' + JSON.stringify(r));
 }
