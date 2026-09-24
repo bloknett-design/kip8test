@@ -165,18 +165,18 @@ describe('Task 395 — SRC: CSS панелей .ws-wcard', () => {
 // ============================================================
 describe('Task 395 — SRC: колонки карточки (десктоп)', () => {
 
-    test('_renderWorkerCardPanels — ТРИ колонки: main / СИЗ / мероприятия', () => {
+    test('_renderWorkerCardPanels — ТРИ колонки: main / инструктажи / СИЗ', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_renderWorkerCardPanels'));
-        // Task 404: СИЗ — ВТОРАЯ колонка (слева от мероприятий),
-        // мероприятия — ТРЕТЬЯ (.ws-wcol-tr)
-        assertTrue(fn.indexOf('if (bi < 2) colMain += panel;') !== -1,
-            'блоки 1–2 (профиль/отпуска) — в колонку main');
-        assertTrue(fn.indexOf('else if (bi === 3) colPpe += panel;') !== -1,
-            'блок 4 (СИЗ) — во ВТОРУЮ колонку .ws-wcol-ppe');
-        assertTrue(fn.indexOf('else colTr += panel;') !== -1,
-            'блок 3 (мероприятия) — в ТРЕТЬЮ колонку .ws-wcol-tr');
-        assertTrue(fn.indexOf("'<div class=\"ws-wcol ws-wcol-tr\">' + colTr + '</div>'") !== -1,
-            'третья колонка .ws-wcol-tr (мероприятия — СПРАВА от СИЗ)');
+        // Task 406: мероприятия — в ПЕРВУЮ колонку (под отпусками),
+        // инструктажи — ВТОРАЯ (.ws-wcol-instr), СИЗ — ТРЕТЬЯ (.ws-wcol-ppe)
+        assertTrue(fn.indexOf('if (bi < 3) colMain += panel;') !== -1,
+            'блоки 1–3 (профиль/отпуска/мероприятия) — в колонку main');
+        assertTrue(fn.indexOf('else if (bi === 4) colInstr += panel;') !== -1,
+            'блок 5 (инструктажи) — во ВТОРУЮ колонку .ws-wcol-instr');
+        assertTrue(fn.indexOf('else colPpe += panel;') !== -1,
+            'блок 4 (СИЗ) — в ТРЕТЬЮ колонку .ws-wcol-ppe');
+        assertTrue(fn.indexOf("'<div class=\"ws-wcol ws-wcol-ppe\">' + colPpe + '</div>'") !== -1,
+            'третья колонка .ws-wcol-ppe (СИЗ — СПРАВА от инструктажей)');
         assertFalse(fn.indexOf("'ws-wgrid2'") !== -1,
             'обёртку сетки задаёт _renderWorkersPage (не панели)');
     });
@@ -257,39 +257,39 @@ function pageHost(opts) {
 
 describe('Task 395 — VM: панели-колонки карточки', () => {
 
-    test('колонки: 1 — профиль+отпуска; 2 — СИЗ; 3 — мероприятия (Task 404)', () => {
+    test('колонки: 1 — профиль+отпуска+мероприятия; 2 — инструктажи; 3 — СИЗ (Task 406)', () => {
         const t = pageHost({ canEdit: true });
         const html = t.host._renderWorkerCardPanels('2706', true);
         const iL = html.indexOf('<div class="ws-wcol">');
+        const iI = html.indexOf('<div class="ws-wcol ws-wcol-instr">');
         const iP = html.indexOf('<div class="ws-wcol ws-wcol-ppe">');
-        const iT = html.indexOf('<div class="ws-wcol ws-wcol-tr">');
-        assertTrue(iL !== -1 && iP !== -1 && iT !== -1 && iL < iP && iP < iT,
-            'ТРИ колонки: main → СИЗ → мероприятия');
-        const mainPart = html.slice(iL, iP);
-        const ppePart = html.slice(iP, iT);
-        const trPart = html.slice(iT);
-        assertEqual((mainPart.match(/class="ws-wcard"/g) || []).length, 2,
-            'колонка 1 — 2 окна (профиль + отпуска)');
+        assertTrue(iL !== -1 && iI !== -1 && iP !== -1 && iL < iI && iI < iP,
+            'ТРИ колонки: main → инструктажи → СИЗ (Task 406)');
+        const mainPart = html.slice(iL, iI);
+        const insPart = html.slice(iI, iP);
+        const ppePart = html.slice(iP);
+        assertEqual((mainPart.match(/class="ws-wcard"/g) || []).length, 3,
+            'колонка 1 — 3 окна (профиль + отпуска + мероприятия, Task 406)');
+        assertEqual((insPart.match(/class="ws-wcard"/g) || []).length, 1,
+            'колонка 2 — 1 окно (повторные инструктажи)');
         assertEqual((ppePart.match(/class="ws-wcard"/g) || []).length, 1,
-            'колонка 2 — 1 окно (СИЗ)');
-        assertEqual((trPart.match(/class="ws-wcard"/g) || []).length, 2,
-            'колонка 3 — 2 окна (мероприятия + повторные инструктажи, Task 405)');
+            'колонка 3 — 1 окно (СИЗ)');
+        assertTrue(insPart.indexOf(
+            'Повторные инструктажи и периодическая проверка знаний · 2026') !== -1,
+            'Task 406: инструктажи — ВТОРАЯ колонка');
         assertTrue(ppePart.indexOf('СИЗ · средства индивидуальной защиты') !== -1,
-            'СИЗ — во 2-й колонке (СЛЕВА от мероприятий)');
+            'СИЗ — в 3-й колонке (СПРАВА от инструктажей)');
         assertTrue(ppePart.indexOf('Каска защитная') !== -1,
-            'запись СИЗ — во 2-й колонке');
-        assertTrue(trPart.indexOf('Мероприятия · 2026') !== -1,
-            'мероприятия — в 3-й колонке (СПРАВА от СИЗ)');
-        assertTrue(
-            trPart.indexOf('Повторные инструктажи и периодическая проверка знаний · 2026') !== -1,
-            'Task 405: повторные инструктажи — под мероприятиями (colTr)');
+            'запись СИЗ — в 3-й колонке');
         const i1 = mainPart.indexOf('Галкин Д. Н.');
         const i2 = mainPart.indexOf('Отпуска · 2026');
-        assertTrue(i1 !== -1 && i2 !== -1 && i1 < i2,
-            'порядок колонки 1: профиль → отпуска');
+        const i3 = mainPart.indexOf('Мероприятия · 2026');
+        assertTrue(i1 !== -1 && i2 !== -1 && i3 !== -1 &&
+                   i1 < i2 && i2 < i3,
+            'порядок колонки 1: профиль → отпуска → мероприятия');
         assertTrue(mainPart.indexOf('СИЗ · средства') === -1 &&
-                   mainPart.indexOf('Мероприятия · 2026') === -1,
-            'в колонке 1 — только профиль и отпуска');
+                   mainPart.indexOf('Повторные инструктажи') === -1,
+            'в колонке 1 — без СИЗ и инструктажей');
     });
 
     test('страница — панели в обёртке .ws-wgrid2 (вкладка работника)', () => {
@@ -299,10 +299,10 @@ describe('Task 395 — VM: панели-колонки карточки', () => 
         const body = t.els.wsWorkersBody.innerHTML;
         assertTrue(body.indexOf('<div class="ws-wgrid2">') !== -1,
             'обёртка .ws-wgrid2 жива (Task 394)');
+        assertTrue(body.indexOf('<div class="ws-wcol ws-wcol-instr">') !== -1,
+            'вторая колонка (инструктажи) — на странице (Task 406)');
         assertTrue(body.indexOf('<div class="ws-wcol ws-wcol-ppe">') !== -1,
-            'вторая колонка (СИЗ) — на странице');
-        assertTrue(body.indexOf('<div class="ws-wcol ws-wcol-tr">') !== -1,
-            'третья колонка (мероприятия) — на странице (Task 404)');
+            'третья колонка (СИЗ) — на странице (Task 406)');
         assertEqual((body.match(/class="ws-wcard"/g) || []).length, 5,
             'всего пять блоков-окон (Task 405)');
     });
@@ -375,9 +375,9 @@ describe('Task 395 — VM: гейты страницы по матрице', () 
 // ============================================================
 describe('Task 395 — SW-кэш', () => {
     test('SW поднят до v623 (Task 395 — фронтенд менялся)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v632') !== -1,
-            'sw.js: CACHE_VERSION kipia-test-v632');
-        assertTrue(SW_SRC.indexOf('kipia-test-v633') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v633') !== -1,
+            'sw.js: CACHE_VERSION kipia-test-v633');
+        assertTrue(SW_SRC.indexOf('kipia-test-v634') === -1,
             'двойного бампа нет (v624 не существует)');
     });
 });

@@ -175,13 +175,13 @@ describe('Task 405 — SRC: карточка — блоки мероприяти
             'попап — профиль+отпуска+мероприятия+инструктажи (без СИЗ)');
     });
 
-    test('панели: колонка мероприятий — мероприятий + инструктажи', () => {
+    test('панели: Task 406 — мероприятия в 1-ю колонку, инструктажи — 2-я, СИЗ — 3-я', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_renderWorkerCardPanels'));
-        // bi===3 → colPpe (СИЗ), bi 2 и 4 → colTr (мероприятия,
-        // инструктажи) — код раскладки НЕ меняется (else-ветка)
-        assertTrue(fn.indexOf('else if (bi === 3) colPpe += panel;') !== -1 &&
-                   fn.indexOf('else colTr += panel;') !== -1,
-            'раскладка 5 блоков: СИЗ — 2-я колонка, третья — мероприятия+инструктажи');
+        // bi<3 → colMain (профиль+отпуска+мероприятия), bi===4 →
+        // colInstr, else → colPpe (СИЗ) — Task 406
+        assertTrue(fn.indexOf('if (bi < 3) colMain += panel;') !== -1 &&
+                   fn.indexOf('else if (bi === 4) colInstr += panel;') !== -1,
+            'раскладка 5 блоков: мероприятия — под отпусками, инструктажи — 2-я, СИЗ — 3-я');
     });
 
     test('CSS: перенос длинного заголовка блока', () => {
@@ -567,10 +567,10 @@ describe('Task 405 — GAS-VM: сервер (моки листов)', () => {
 // 5. SW — версия кэша
 // ============================================================
 describe('Task 405 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v632', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v632'") !== -1,
+    test('CACHE_VERSION = kipia-test-v633', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v633'") !== -1,
             'SW v632 (Task 405)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v633') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v634') === -1,
             'двойной бамп отсутствует');
     });
 });

@@ -69,20 +69,20 @@ function ruleBlock(name) {
 // ============================================================
 describe('Task 404 — SRC: карточка — три блока в одну линию', () => {
 
-    test('_renderWorkerCardPanels: СИЗ — вторая колонка, мероприятия — третья', () => {
+    test('_renderWorkerCardPanels: мероприятия — под отпусками; инструктажи — вторая, СИЗ — третья (Task 406)', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_renderWorkerCardPanels'));
-        assertTrue(fn.indexOf('var colMain = \'\', colPpe = \'\', colTr = \'\';') !== -1,
-            'три сборщика колонок: colMain / colPpe / colTr');
-        assertTrue(fn.indexOf('if (bi < 2) colMain += panel;') !== -1,
-            'блоки 1–2 (профиль + отпуска) — в ПЕРВУЮ колонку');
-        assertTrue(fn.indexOf('else if (bi === 3) colPpe += panel;') !== -1,
-            'блок 4 (СИЗ) — во ВТОРУЮ колонку (СЛЕВА от мероприятий)');
-        assertTrue(fn.indexOf('else colTr += panel;') !== -1,
-            'блок 3 (мероприятия) — в ТРЕТЬЮ колонку');
+        assertTrue(fn.indexOf('var colMain = \'\', colInstr = \'\', colPpe = \'\';') !== -1,
+            'три сборщика колонок: colMain / colInstr / colPpe');
+        assertTrue(fn.indexOf('if (bi < 3) colMain += panel;') !== -1,
+            'блоки 1–3 (профиль + отпуска + мероприятия) — в ПЕРВУЮ колонку');
+        assertTrue(fn.indexOf('else if (bi === 4) colInstr += panel;') !== -1,
+            'блок 5 (инструктажи) — во ВТОРУЮ колонку (Task 406)');
+        assertTrue(fn.indexOf('else colPpe += panel;') !== -1,
+            'блок 4 (СИЗ) — в ТРЕТЬЮ колонку (Task 406)');
         assertTrue(fn.indexOf("'<div class=\"ws-wcol\">' + colMain + '</div>' +") !== -1 &&
-                   fn.indexOf("'<div class=\"ws-wcol ws-wcol-ppe\">' + colPpe + '</div>' +") !== -1 &&
-                   fn.indexOf("'<div class=\"ws-wcol ws-wcol-tr\">' + colTr + '</div>'") !== -1,
-            'возврат: main → СИЗ (.ws-wcol-ppe) → мероприятия (.ws-wcol-tr)');
+                   fn.indexOf("'<div class=\"ws-wcol ws-wcol-instr\">' + colInstr + '</div>' +") !== -1 &&
+                   fn.indexOf("'<div class=\"ws-wcol ws-wcol-ppe\">' + colPpe + '</div>'") !== -1,
+            'возврат: main → инструктажи (.ws-wcol-instr) → СИЗ (.ws-wcol-ppe)');
     });
 
     test('CSS: три РАВНЫЕ колонки — блоки помещаются в одной линии', () => {
@@ -211,36 +211,38 @@ describe('Task 404 — VM: панели и кнопки карточки', () =>
             '});')(mockDoc({}));
     }
 
-    test('три колонки: 2 окна | 1 (СИЗ) | 1 (мероприятия); порядок DOM', () => {
+    test('три колонки: 3 окна | 1 (инструктажи) | 1 (СИЗ); порядок DOM (Task 406)', () => {
         const host = cardHost();
         const html = host._renderWorkerCardPanels('2706', true);
         const iL = html.indexOf('<div class="ws-wcol">');
+        const iI = html.indexOf('<div class="ws-wcol ws-wcol-instr">');
         const iP = html.indexOf('<div class="ws-wcol ws-wcol-ppe">');
-        const iT = html.indexOf('<div class="ws-wcol ws-wcol-tr">');
-        assertTrue(iL !== -1 && iP !== -1 && iT !== -1 && iL < iP && iP < iT,
-            'ТРИ колонки: main → СИЗ → мероприятия');
-        const mainPart = html.slice(iL, iP);
-        const ppePart = html.slice(iP, iT);
-        const trPart = html.slice(iT);
-        assertEqual((mainPart.match(/class="ws-wcard"/g) || []).length, 2,
-            'колонка 1 — профиль + отпуска');
+        assertTrue(iL !== -1 && iI !== -1 && iP !== -1 && iL < iI && iI < iP,
+            'ТРИ колонки: main → инструктажи → СИЗ');
+        const mainPart = html.slice(iL, iI);
+        const insPart = html.slice(iI, iP);
+        const ppePart = html.slice(iP);
+        assertEqual((mainPart.match(/class="ws-wcard"/g) || []).length, 3,
+            'колонка 1 — профиль + отпуска + мероприятия (Task 406)');
+        assertEqual((insPart.match(/class="ws-wcard"/g) || []).length, 1,
+            'колонка 2 — инструктажи');
         assertEqual((ppePart.match(/class="ws-wcard"/g) || []).length, 1,
-            'колонка 2 — СИЗ');
-        assertEqual((trPart.match(/class="ws-wcard"/g) || []).length, 2,
-            'колонка 3 — мероприятия + инструктажи (Task 405)');
+            'колонка 3 — СИЗ');
         // порядок DOM = «слева на право» из заявки
         const iProf = mainPart.indexOf('Галкин Д. Н.');
         const iVac = mainPart.indexOf('Отпуска · 2026');
+        const iTr = mainPart.indexOf('Мероприятия · 2026');
+        const iIns = insPart.indexOf('Повторные инструктажи');
         const iPz = ppePart.indexOf('СИЗ · средства индивидуальной защиты');
-        const iTr = trPart.indexOf('Мероприятия · 2026');
-        assertTrue(iProf !== -1 && iVac !== -1 && iPz !== -1 && iTr !== -1,
+        assertTrue(iProf !== -1 && iVac !== -1 && iTr !== -1 &&
+                   iIns !== -1 && iPz !== -1,
             'все блоки на месте');
-        assertTrue(iProf < iVac, 'под профилем — отпуска (внутри 1-й колонки)');
-        assertTrue(iL + iProf < iP + iPz && iP + iPz < iT + iTr,
-            'визуальный порядок: профиль → СИЗ → мероприятия');
-        // Task 405: за мероприятиями — блок повторных инструктажей
-        const iIns = trPart.indexOf('Повторные инструктажи');
-        assertTrue(iIns > iTr, 'инструктажи — ПОД мероприятиями (colTr)');
+        assertTrue(iProf < iVac && iVac < iTr,
+            'под профилем — отпуска, под ним — мероприятия (1-я колонка)');
+        assertTrue(iL + iProf < iI + iIns && iI + iIns < iP + iPz,
+            'визуальный порядок: профиль → инструктажи → СИЗ (Task 406)');
+        assertTrue(ppePart.indexOf('Повторные инструктажи') === -1,
+            'инструктажи — НЕ в колонке СИЗ');
     });
 
     test('кнопки ✎ и ✕ — в каждом блоке с записями (отпуска/мероприятия/СИЗ)', () => {
@@ -383,12 +385,12 @@ describe('Task 404 — VM: окно мероприятий — отпуска н
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 404 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v632 (Task 404)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v632'") !== -1,
+    test('CACHE_VERSION = kipia-test-v633 (Task 404)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v633'") !== -1,
             'фронтенд менялся — кэш поднят до v631');
     });
     test('guard: v632 отсутствует (следующий бамп)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v633') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v634') === -1,
             'v632 ещё не существует (guard следующего бампа)');
     });
 });

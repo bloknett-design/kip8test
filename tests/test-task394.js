@@ -377,17 +377,18 @@ describe('Task 394 — VM: страница «Работники» — сетк�
             'панели — в обёртке сетки 2×2');
         assertEqual((body.match(/class="ws-wcard"/g) || []).length, 5,
             'в обёртке — ровно пять блоков-окон (Task 405)');
-        // порядок блоков в DOM: профиль → отпуска → СИЗ → мероприятия
-        // → повторные инструктажи (Task 404 + Task 405)
+        // порядок блоков в DOM: профиль → отпуска → мероприятия →
+        // инструктажи → СИЗ (Task 406)
         const i1 = body.indexOf('Галкин Д. Н.');
         const i2 = body.indexOf('Отпуска · 2026');
         const i3 = body.indexOf('Мероприятия · 2026');
         const i4 = body.indexOf('СИЗ · средства индивидуальной защиты');
         const i5 = body.indexOf(
             'Повторные инструктажи и периодическая проверка знаний · 2026');
-        assertTrue(i1 < i2 && i2 < i4 && i4 < i3 && i3 < i5,
-            'DOM-порядок = раскладка: профиль|отпуска / СИЗ / '
-            + 'мероприятия+инструктажи');
+        assertTrue(i1 !== -1 && i2 !== -1 && i3 !== -1 && i4 !== -1 &&
+                   i5 !== -1 && i1 < i2 && i2 < i3 && i3 < i5 && i5 < i4,
+            'DOM-порядок = раскладка (Task 406): профиль|отпуска|'
+            + 'мероприятия / инструктажи / СИЗ');
     });
 
     test('«Общая» вкладка — БЕЗ обёртки сетки, колонка «Мероприятия · год»', () => {
@@ -609,10 +610,10 @@ describe('Task 394 — VM: окно мероприятий — порядок с
 // ============================================================
 describe('Task 394 — SW', () => {
 
-    test('SW: kipia-test-v632', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v632'") !== -1,
+    test('SW: kipia-test-v633', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v633'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v633') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v634') === -1,
             'двойного бампа не было');
     });
 });
