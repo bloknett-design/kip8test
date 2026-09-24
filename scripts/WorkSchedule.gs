@@ -894,7 +894,8 @@ var WorkSchedule = {
 
   // workSchedule.listTrainings
   // payload: { token, year, month }  (если month не указан — все мероприятия года)
-  // returns: { ok:true, data: { trainings: [...] } }
+  // returns: { ok:true, data: { trainings: [...], instrList (Task 407),
+  //            instrAll (Task 407), eventsAll (Task 408) } }
   listTrainings: function(payload) {
     var auth = this._requireRead(payload.token);
     if (auth.error) return auth.error;
@@ -920,10 +921,15 @@ var WorkSchedule = {
     // фильтра года (клиент ищет ПОСЛЕДНИЙ инструктаж по всем годам —
     // контроль годовых/трёхлетних циклов; trainings остаётся годовым
     // срезом — бейджи/окно месяца/печать/сводная не меняются)
+    // Task 408 (заявка: годовые архивы мероприятий): eventsAll — ВСЕ
+    // записи листа «Мероприятия» БЕЗ фильтра года (листа нет/старый
+    // сервер — пустой массив; клиент мягко деградирует к годовому
+    // срезу _TRAININGS года шахматки)
     return { ok: true, data: {
       trainings: trainings,
       instrList: this._readInstrListSheet(),
-      instrAll:  this._readTrainingsSheet(sheet, {})
+      instrAll:  this._readTrainingsSheet(sheet, {}),
+      eventsAll: (evSheet ? this._readTrainingsSheet(evSheet, {}) : [])
     } };
   },
 

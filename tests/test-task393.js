@@ -210,6 +210,14 @@ function cardHost(withEdit, ppe) {
     ];
     const host = new Function('document', 'return ({' +
         methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
         methodText(INDEX_SRC, '_renderWorkerCardPanels') + ',\n' +
         methodText(INDEX_SRC, '_isInstrType') + ',\n' +
         '_canEdit: ' + JSON.stringify(!!withEdit) + ',' +
@@ -369,6 +377,10 @@ function pageHost(canEdit, ppe) {
         methodText(INDEX_SRC, 'selectWorkersTab') + ',\n' +
         methodText(INDEX_SRC, '_isMasterKipia') + ',\n' +
         methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
         methodText(INDEX_SRC, '_renderWorkerCardPanels') + ',\n' +
         methodText(INDEX_SRC, '_isInstrType') + ',\n' +
         '_workersTab: "general",' +
@@ -454,10 +466,10 @@ describe('Task 393 — VM: страница «Работники» — 4 окн�
 // ============================================================
 describe('Task 393 — SW', () => {
 
-    test('SW: kipia-test-v634', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v634'") !== -1,
+    test('SW: kipia-test-v635', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v635'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v635') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v636') === -1,
             'двойного бампа не было');
     });
 });

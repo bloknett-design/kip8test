@@ -95,17 +95,20 @@ describe('Task 394 — SRC: мероприятия на весь год', () => 
 
     test('карточка: блок 3 — «Мероприятия · ГОД», пустое — «за год»', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_renderWorkerCard'));
-        assertTrue(fn.indexOf("Мероприятия · ' +\n                     this._year + '</div>'") !== -1,
-            'заголовок блока — год');
+        assertTrue(fn.indexOf("Мероприятия · ' +") !== -1 &&
+                   fn.indexOf('wYear + this._wtabYearNav(tabNo, wYear)') !== -1,
+            'заголовок блока — год + навигатор (Task 408)');
         assertTrue(fn.indexOf('нет мероприятий за год') !== -1,
             'пустое состояние — «нет мероприятий за год»');
         assertFalse(fn.indexOf('monthNames') !== -1,
             'monthNames карточке больше не нужен');
         // защита от смешанных данных: сверка пересечения с годом
-        assertTrue(fn.indexOf("trYStart = this._year + '-01-01'") !== -1 &&
-                   fn.indexOf("trYEnd = this._year + '-12-31'") !== -1,
+        // (Task 408: фильтр переехал в _wtabYearRecords)
+        const wr = stripComments(methodText(INDEX_SRC, '_wtabYearRecords'));
+        assertTrue(wr.indexOf("yS = year + '-01-01'") !== -1 &&
+                   wr.indexOf("yE = year + '-12-31'") !== -1,
             'границы года для фильтра записей');
-        assertTrue(fn.indexOf('if (tE < trYStart || tS > trYEnd) continue;') !== -1,
+        assertTrue(wr.indexOf('if (e < yS || s > yE) continue;') !== -1,
             'записи вне года не показываются');
     });
 
@@ -209,6 +212,10 @@ function cardHost(trainings, vacs) {
     ];
     const host = new Function('document', 'return ({' +
         methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
         methodText(INDEX_SRC, '_renderWorkerCardPanels') + ',\n' +
         methodText(INDEX_SRC, '_isInstrType') + ',\n' +
         '_canEdit: true,' +
@@ -343,6 +350,10 @@ function pageHost(trainings) {
         methodText(INDEX_SRC, 'selectWorkersTab') + ',\n' +
         methodText(INDEX_SRC, '_isMasterKipia') + ',\n' +
         methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
         methodText(INDEX_SRC, '_renderWorkerCardPanels') + ',\n' +
         methodText(INDEX_SRC, '_isInstrType') + ',\n' +
         '_workersTab: "general",' +
@@ -610,10 +621,10 @@ describe('Task 394 — VM: окно мероприятий — порядок с
 // ============================================================
 describe('Task 394 — SW', () => {
 
-    test('SW: kipia-test-v634', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v634'") !== -1,
+    test('SW: kipia-test-v635', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v635'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v635') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v636') === -1,
             'двойного бампа не было');
     });
 });

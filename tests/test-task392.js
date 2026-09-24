@@ -317,10 +317,10 @@ describe('Task 392 — SRC: загрузка, кэш, сервер, PPEInit.gs',
             'таб_№ — текстовый формат (Task 304)');
     });
 
-    test('SW: kipia-test-v634', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v634'") !== -1,
+    test('SW: kipia-test-v635', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v635'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v635') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v636') === -1,
             'двойного бампа не было');
     });
 });
@@ -417,6 +417,10 @@ function cardHost(withEdit, ppe, employees) {
     ];
     const host = new Function('document', 'return ({' +
         methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
         '_canEdit: ' + JSON.stringify(!!withEdit) + ',' +
         '_year: 2026, _month: 8,' +
         '_EMPLOYEES: ' + JSON.stringify(EMP) + ',' +

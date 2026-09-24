@@ -230,6 +230,14 @@ describe('Task 403 — VM: попап шахматки без СИЗ', () => {
         ];
         return new Function('document', 'return ({' +
             methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
             methodText(INDEX_SRC, '_isInstrType') + ',\n' +
             '_canEdit: ' + JSON.stringify(!!withEdit) + ',' +
             '_year: 2026, _month: 8,' +
@@ -310,6 +318,10 @@ describe('Task 403 → 404 — VM: панели — ТРИ колонки (СИ�
         ];
         const host = new Function('document', 'return ({' +
             methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
             methodText(INDEX_SRC, '_renderWorkerCardPanels') + ',\n' +
             methodText(INDEX_SRC, '_isInstrType') + ',\n' +
             '_canEdit: true, _year: 2026, _month: 8,' +
@@ -690,12 +702,12 @@ describe('Task 403 — VM: сервер — addEmployee (сборка строк
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 403 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v634 (Task 403)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v634'") !== -1,
+    test('CACHE_VERSION = kipia-test-v635 (Task 403)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v635'") !== -1,
             'фронтенд менялся — кэш поднят до v630');
     });
     test('guard: v631 отсутствует (следующий бамп)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v635') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v636') === -1,
             'v631 ещё не существует (guard следующего бампа)');
     });
 });

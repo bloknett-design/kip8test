@@ -181,6 +181,14 @@ describe('Task 404 — VM: панели и кнопки карточки', () =>
         ];
         return new Function('document', 'return ({' +
             methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
             methodText(INDEX_SRC, '_renderWorkerCardPanels') + ',\n' +
             methodText(INDEX_SRC, '_isInstrType') + ',\n' +
             '_canEdit: true, _year: 2026, _month: 8,' +
@@ -278,6 +286,10 @@ describe('Task 404 — VM: панели и кнопки карточки', () =>
         ];
         const host = new Function('document', 'return ({' +
             methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
             methodText(INDEX_SRC, '_isInstrType') + ',\n' +
             '_canEdit: false, _year: 2026, _month: 8,' +
             '_EMPLOYEES: ' + JSON.stringify(EMP) + ',' +
@@ -385,12 +397,12 @@ describe('Task 404 — VM: окно мероприятий — отпуска н
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 404 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v634 (Task 404)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v634'") !== -1,
+    test('CACHE_VERSION = kipia-test-v635 (Task 404)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v635'") !== -1,
             'фронтенд менялся — кэш поднят до v631');
     });
     test('guard: v632 отсутствует (следующий бамп)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v635') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v636') === -1,
             'v632 ещё не существует (guard следующего бампа)');
     });
 });

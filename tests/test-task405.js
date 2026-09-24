@@ -147,10 +147,12 @@ describe('Task 405 — SRC: карточка — блоки мероприяти
 
     test('карточка: деление записей по типу (evs/ins)', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_renderWorkerCard'));
-        assertTrue(fn.indexOf('var evs = [], ins = [];') !== -1,
+        const wr = stripComments(methodText(INDEX_SRC, '_wtabYearRecords'));
+        assertTrue(wr.indexOf('if (this._isInstrType(r.тип)) ins.push(r);') !== -1 &&
+                   wr.indexOf('else evs.push(r);') !== -1,
             'два списка: evs (мероприятия) и ins (инструктажи)');
-        assertTrue(fn.indexOf('this._isInstrType(trs[si].тип)') !== -1,
-            'фильтр по типу');
+        assertTrue(fn.indexOf('var evs = wRecs.evs, ins = wRecs.ins;') !== -1,
+            'карточка берёт записи года из _wtabYearRecords (Task 408)');
         assertTrue(fn.indexOf('for (var tk = 0; tk < evs.length; tk++)') !== -1,
             'блок «Мероприятия» строится по evs');
     });
@@ -239,6 +241,10 @@ describe('Task 405 — VM: карточка и сводка', () => {
     function cardHost(withEdit) {
         return new Function('document', 'return ({' +
             methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
             methodText(INDEX_SRC, '_isInstrType') + ',\n' +
             '_canEdit: ' + (withEdit ? 'true' : 'false') + ', _year: 2026, _month: 8,' +
             '_EMPLOYEES: ' + JSON.stringify(EMP) + ',' +
@@ -567,10 +573,10 @@ describe('Task 405 — GAS-VM: сервер (моки листов)', () => {
 // 5. SW — версия кэша
 // ============================================================
 describe('Task 405 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v634', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v634'") !== -1,
+    test('CACHE_VERSION = kipia-test-v635', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v635'") !== -1,
             'SW v632 (Task 405)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v635') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v636') === -1,
             'двойной бамп отсутствует');
     });
 });

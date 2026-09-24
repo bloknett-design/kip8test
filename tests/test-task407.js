@@ -211,8 +211,8 @@ describe('Task 407 — SRC: клиент', () => {
                    fn.indexOf('⚠ просрочено с ') !== -1,
             'строка следующего срока (актуально/просрочено)');
         assertTrue(fn.indexOf('— не проводился') !== -1 &&
-                   fn.indexOf('— в этом году не проводился') !== -1,
-            'пустые состояния пункта (только asBlocks)');
+                   fn.indexOf('год не проводился') !== -1,
+            'пустые состояния пункта (только asBlocks; Task 408: «— за год»)');
         assertTrue(fn.indexOf('вне списка:') !== -1 && fn.indexOf('ws-il-off') !== -1,
             'секция «вне списка»');
         assertTrue(fn.indexOf('if (!asBlocks && !gRows.length && !last) continue;') !== -1,
@@ -236,8 +236,8 @@ describe('Task 407 — SRC: клиент', () => {
             'подсказки — по виду пункта (инструктаж/проверка знаний)');
         const of = stripComments(methodText(INDEX_SRC, 'openTrainingForm'));
         assertTrue(of.indexOf('typeSel.onchange') !== -1 &&
-                   of.indexOf('this._fillTrTitleOptions();') !== -1,
-            'пересбор подсказок при открытии и смене типа');
+                   of.indexOf('this._syncTrTitleField(') !== -1,
+            'пересбор поля при открытии и смене типа (Task 408: select)');
     });
 
     test('CSS: группы блока + светлые темы + размеры окна', () => {
@@ -255,9 +255,9 @@ describe('Task 407 — SRC: клиент', () => {
             'размеры окна карточки (.ws-wcard)');
     });
 
-    test('SW поднят (SW_VERSION = kipia-test-v634)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v634') !== -1,
-            'CACHE_VERSION в sw.js — kipia-test-v634');
+    test('SW поднят (SW_VERSION = kipia-test-v635)', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v635') !== -1,
+            'CACHE_VERSION в sw.js — kipia-test-v635');
     });
 });
 
@@ -361,7 +361,8 @@ describe('Task 407 — VM: блок по шаблону', () => {
         const seg = html.slice(iHead, end === -1 ? html.length : end);
         assertTrue(seg.indexOf('⚠ просрочено с ') !== -1,
             'запись годовой давности + 12 мес → «просрочено»');
-        assertTrue(seg.indexOf('— в этом году не проводился') !== -1,
+        assertTrue(seg.indexOf('— за ' + new Date().getFullYear() +
+                                ' год не проводился') !== -1,
             'в году записей нет (карточка показывает явно)');
         assertEqual(fmtRu(addMonthsIsoTest(addDaysIso(TODAY, -400), 12)),
             (seg.match(/⚠ просрочено с ([\d.]+)/) || [])[1],
@@ -403,7 +404,7 @@ describe('Task 407 — VM: блок по шаблону', () => {
         assertTrue(html.indexOf('Пожарная безопасность') === -1,
             'пункт без записей вообще — скрыт в попапе');
         assertTrue(html.indexOf('— не проводился') === -1 &&
-                   html.indexOf('— в этом году не проводился') === -1,
+                   html.indexOf('год не проводился') === -1,
             'пустые состояния в попапе не показываются');
         assertTrue(html.indexOf('Электробезопасность') !== -1,
             'пункт с записью прошлого года виден (контроль срока)');
@@ -495,6 +496,10 @@ describe('Task 407 — VM: карточка', () => {
     function cardHost(withTpl, withEdit, asBlocks) {
         return new Function('document', 'return ({' +
             methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
             methodText(INDEX_SRC, '_renderInstrSection') + ',\n' +
             methodText(INDEX_SRC, '_isInstrType') + ',\n' +
             methodText(INDEX_SRC, '_normInstrKey') + ',\n' +

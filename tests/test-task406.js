@@ -137,6 +137,10 @@ describe('Task 406 — VM: колонки карточки', () => {
     function cardHost(withEdit) {
         return new Function('document', 'return ({' +
             methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
+            methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
             methodText(INDEX_SRC, '_renderWorkerCardPanels') + ',\n' +
             methodText(INDEX_SRC, '_isInstrType') + ',\n' +
             '_canEdit: ' + (withEdit ? 'true' : 'false') + ',' +
@@ -265,10 +269,10 @@ describe('Task 406 — VM: колонки карточки', () => {
 // ============================================================
 describe('Task 406 — SW', () => {
 
-    test('CACHE_VERSION = kipia-test-v634', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v634'") !== -1,
+    test('CACHE_VERSION = kipia-test-v635', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v635'") !== -1,
             'SW v633 (Task 406)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v635') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v636') === -1,
             'нет забегания вперёд');
     });
 });

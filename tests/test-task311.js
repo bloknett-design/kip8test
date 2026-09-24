@@ -159,8 +159,13 @@ describe('Task 311 — пояснительные окна при наведен
             INDEX_SRC.indexOf('generateYear: function'));
         assertFalse(rc.indexOf('titleParts') !== -1,
             'сборка тултипа из частей удалена');
-        assertFalse(rc.indexOf('title="') !== -1,
-            'рендер не пишет title-атрибут в ячейку');
+        // Task 408 (заявка: вид И/ПЗ у кодов в шахматке): title
+        // остаётся ТОЛЬКО на бейдже мероприятия («код — тема
+        // записи»); сама ячейка — по-прежнему без title
+        const tCount = rc.split('title="').length - 1;
+        const bCount = rc.split("' title=\"' +").length - 1;
+        assertTrue(tCount === bCount && bCount === 1,
+            'единственный title — тултип бейджа (не ячейка)');
         // при этом содержимое ячейки живо: код статуса, бейджи, маркеры
         assertTrue(rc.indexOf("classes.push('ws-pending')") !== -1,
             'маркер несохранённой правки жив');
@@ -242,9 +247,9 @@ describe('Task 311 — кнопка «+ Сотрудник» → заголов�
 
 describe('Task 311 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v634', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v634'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v634');
+    test('SW: версия кэша kipia-test-v635', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v635'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v635');
         assertFalse(SW_SRC.indexOf('kipia-test-v549') !== -1,
             'старой версии v549 нет');
     });
