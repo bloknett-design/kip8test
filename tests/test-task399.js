@@ -61,12 +61,12 @@ describe('Task 399 — SRC: окно мероприятий — фильтр м�
             'индекс таб. номеров мастеров');
     });
 
-    test('фильтр во ВСЕХ трёх секциях — мероприятия/отпуска/СИЗ', () => {
+    test('фильтр в ОБОИХ секциях — мероприятия/СИЗ (отпуска убраны, Task 404)', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_renderMonthEventsPanel'));
         assertTrue(fn.indexOf("masterTabs[t['таб_номер']]") !== -1,
             'секция «Мероприятия» — записи мастеров пропускаются');
-        assertTrue(fn.indexOf("masterTabs[vRec['таб_номер']]") !== -1,
-            'секция «Отпуска» — отпуска мастеров пропускаются');
+        assertFalse(fn.indexOf("masterTabs[vRec['таб_номер']]") !== -1,
+            'секции «Отпуска» больше нет (Task 404) — фильтр удалён вместе с ней');
         assertTrue(fn.indexOf("masterTabs[pRec['таб_номер']]") !== -1,
             'секция «СИЗ» — СИЗ мастеров пропускаются');
     });
@@ -164,19 +164,19 @@ const PPES = [
 
 describe('Task 399 — VM: min — записей мастеров в окне НЕТ', () => {
 
-    test('все три секции: мастер скрыт, не-мастер показан', () => {
+    test('все секции: мастер скрыт, не-мастер показан (отпусков нет — Task 404)', () => {
         const el = panelHost({ viewLevel: 'min', employees: EMPS,
             trainings: TRS, vacations: VACS, ppe: PPES });
         const html = el.innerHTML;
         assertFalse(html.indexOf('Галкин') !== -1,
-            'ФИО мастера не показывается (мероприятия/отпуска/СИЗ)');
+            'ФИО мастера не показывается (мероприятия/СИЗ)');
         assertFalse(html.indexOf('Мастерское') !== -1,
             'мероприятие мастера скрыто');
         assertFalse(html.indexOf('Каска') !== -1, 'СИЗ мастера скрыто');
         assertTrue(html.indexOf('Слесарное') !== -1,
             'мероприятие не-мастера показано');
-        assertTrue(html.indexOf('Отпуск · Первов С. А.') !== -1,
-            'отпуск не-мастера показан');
+        assertFalse(html.indexOf('Отпуск · Первов С. А.') !== -1,
+            'отпусков в окне больше НЕТ (Task 404)');
         assertTrue(html.indexOf('Перчатки') !== -1, 'СИЗ не-мастера показано');
     });
 
@@ -186,8 +186,8 @@ describe('Task 399 — VM: min — записей мастеров в окне �
         const html = el.innerHTML;
         assertTrue(html.indexOf('Мероприятия · сентябрь 2026 · 1') !== -1,
             'мероприятий — 1 (мастерское не в счёте)');
-        assertTrue(html.indexOf('Отпуска · сентябрь 2026 · 1') !== -1,
-            'отпусков — 1');
+        assertFalse(html.indexOf('Отпуска · сентябрь 2026 · 1') !== -1,
+            'секции отпусков нет (Task 404)');
         assertTrue(html.indexOf('СИЗ · сентябрь 2026 · 1') !== -1,
             'СИЗ — 1');
     });
@@ -237,9 +237,10 @@ describe('Task 399 — VM: edit/view/легаси — окно ПОЛНОЕ', ()
         assertTrue(html.indexOf('Галкин') !== -1,
             'ФИО мастера показывается у view');
         assertTrue(html.indexOf('Мероприятия · сентябрь 2026 · 2') !== -1 &&
-                   html.indexOf('Отпуска · сентябрь 2026 · 2') !== -1 &&
                    html.indexOf('СИЗ · сентябрь 2026 · 2') !== -1,
             'счётчики полные (по 2)');
+        assertFalse(html.indexOf('Отпуска · сентябрь 2026 · 2') !== -1,
+            'секции отпусков нет (Task 404)');
     });
 
     test('уровень edit — мастера показываются', () => {
@@ -265,13 +266,13 @@ describe('Task 399 — VM: edit/view/легаси — окно ПОЛНОЕ', ()
 // ============================================================
 describe('Task 399 — SRC: сервис-воркер', () => {
 
-    test('sw.js: CACHE_VERSION kipia-test-v630', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v630'") !== -1,
+    test('sw.js: CACHE_VERSION kipia-test-v631', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v631'") !== -1,
             'бамп v626 -> v627 (клиентский фикс раздаётся из кэша SW)');
     });
 
     test('sw.js: v628 НЕ существует (guard от двойного бампа)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v631') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v632') === -1,
             'v628 отсутствует — следующая задача');
     });
 });

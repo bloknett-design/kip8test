@@ -141,10 +141,12 @@ describe('Task 403 — SRC: попап без СИЗ', () => {
 // ============================================================
 describe('Task 403 — SRC: страница «Работники»', () => {
 
-    test('_renderWorkerCardPanels: 1–2 слева, 3–4 справа', () => {
+    test('_renderWorkerCardPanels: ТРИ колонки — СИЗ СЛЕВА от мероприятий (Task 404)', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_renderWorkerCardPanels'));
-        assertTrue(fn.indexOf('if (bi < 2) left += panel; else right += panel;') !== -1,
-            'ЛЕВАЯ — профиль + отпуска; ПРАВАЯ — мероприятия + СИЗ (мероприятия ВВЕРХУ)');
+        assertTrue(fn.indexOf('else if (bi === 3) colPpe += panel;') !== -1,
+            'СИЗ (блок 4) — ВТОРАЯ колонка (слева от мероприятий)');
+        assertTrue(fn.indexOf("'<div class=\"ws-wcol ws-wcol-tr\">' + colTr + '</div>'") !== -1,
+            'ТРЕТЬЯ колонка .ws-wcol-tr — мероприятия (справа от СИЗ)');
     });
 
     test('CSS: ширина ярлыков — переменная по замеру (фолбэк 236px)', () => {
@@ -283,9 +285,9 @@ describe('Task 403 — VM: попап шахматки без СИЗ', () => {
     });
 });
 
-describe('Task 403 — VM: панели — мероприятия между профилем и СИЗ', () => {
+describe('Task 403 → 404 — VM: панели — ТРИ колонки (СИЗ слева от мероприятий)', () => {
 
-    test('левая — профиль/отпуска; правая — мероприятия/СИЗ (порядок)', () => {
+    test('колонки: 1 — профиль+отпуска; 2 — СИЗ; 3 — мероприятия', () => {
         const EMP = [
             { 'таб_номер': '2706', 'ФИО': 'Галкин Д. Н.', 'тип': 'дневной',
               'смена': '', 'должность': 'Слесарь КИПиА 5 разряд', 'комментарий': '',
@@ -318,30 +320,31 @@ describe('Task 403 — VM: панели — мероприятия между п
             '});')(mockDoc({}));
         const html = host._renderWorkerCardPanels('2706', true);
         const iL = html.indexOf('<div class="ws-wcol">');
-        const iR = html.indexOf('<div class="ws-wcol ws-wcol-ppe">');
-        assertTrue(iL !== -1 && iR !== -1 && iL < iR, 'две колонки');
-        const leftPart = html.slice(iL, iR);
-        const rightPart = html.slice(iR);
-        assertEqual((leftPart.match(/class="ws-wcard"/g) || []).length, 2,
-            'левая колонка — 2 окна (профиль + отпуска)');
-        assertEqual((rightPart.match(/class="ws-wcard"/g) || []).length, 2,
-            'правая колонка — 2 окна (мероприятия + СИЗ)');
-        const iProf = leftPart.indexOf('Галкин Д. Н.');
-        const iVac = leftPart.indexOf('Отпуска · 2026');
-        const iTr = rightPart.indexOf('Мероприятия · 2026');
-        const iPz = rightPart.indexOf('СИЗ · средства индивидуальной защиты');
-        assertTrue(iProf !== -1 && iTr !== -1 && iPz !== -1,
-            'все блоки на месте');
+        const iP = html.indexOf('<div class="ws-wcol ws-wcol-ppe">');
+        const iT = html.indexOf('<div class="ws-wcol ws-wcol-tr">');
+        assertTrue(iL !== -1 && iP !== -1 && iT !== -1 && iL < iP && iP < iT,
+            'ТРИ колонки: main → СИЗ → мероприятия');
+        const mainPart = html.slice(iL, iP);
+        const ppePart = html.slice(iP, iT);
+        const trPart = html.slice(iT);
+        assertEqual((mainPart.match(/class="ws-wcard"/g) || []).length, 2,
+            'колонка 1 — 2 окна (профиль + отпуска)');
+        assertEqual((ppePart.match(/class="ws-wcard"/g) || []).length, 1,
+            'колонка 2 — 1 окно (СИЗ)');
+        assertEqual((trPart.match(/class="ws-wcard"/g) || []).length, 1,
+            'колонка 3 — 1 окно (мероприятия)');
+        const iProf = mainPart.indexOf('Галкин Д. Н.');
+        const iVac = mainPart.indexOf('Отпуска · 2026');
         assertTrue(iProf !== -1 && iVac !== -1 && iProf < iVac,
-            'левая: профиль → отпуска');
-        assertTrue(iTr < iPz,
-            'правая: мероприятия — НАД СИЗ (в верху колонки)');
-        // профиль — в ЛЕВОЙ колонке, мероприятия — в ПРАВОЙ: по DOM
-        // (профиль → мероприятия → СИЗ) мероприятия между ними
-        assertTrue(iL + iProf < iR + iTr && iR + iTr < iR + iPz,
-            'порядок: профиль → МЕРОПРИЯТИЯ → СИЗ');
-        assertTrue(leftPart.indexOf('Мероприятия · 2026') === -1,
-            'мероприятия УШЛИ из левой колонки');
+            'колонка 1: профиль → отпуска');
+        const iPz = ppePart.indexOf('СИЗ · средства индивидуальной защиты');
+        const iTr = trPart.indexOf('Мероприятия · 2026');
+        assertTrue(iPz !== -1 && iTr !== -1, 'СИЗ и мероприятия на месте');
+        assertTrue(mainPart.indexOf('СИЗ · средства') === -1 &&
+                   mainPart.indexOf('Мероприятия · 2026') === -1,
+            'в колонке 1 — только профиль и отпуска');
+        assertTrue(ppePart.indexOf('Мероприятия · 2026') === -1,
+            'мероприятия НЕ во 2-й колонке (СИЗ — слева от них, Task 404)');
     });
 });
 
@@ -675,12 +678,12 @@ describe('Task 403 — VM: сервер — addEmployee (сборка строк
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 403 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v630 (Task 403)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v630'") !== -1,
+    test('CACHE_VERSION = kipia-test-v631 (Task 403)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v631'") !== -1,
             'фронтенд менялся — кэш поднят до v630');
     });
     test('guard: v631 отсутствует (следующий бамп)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v631') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v632') === -1,
             'v631 ещё не существует (guard следующего бампа)');
     });
 });

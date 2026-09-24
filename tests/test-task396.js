@@ -241,9 +241,9 @@ describe('Task 396 — SRC: CSS шапок, кнопок и зебры', () => {
             'скругление полос-«пилюль»');
     });
 
-    test('SW поднят до kipia-test-v630', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v630'") !== -1,
-            'SW kipia-test-v630');
+    test('SW поднят до kipia-test-v631', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v631'") !== -1,
+            'SW kipia-test-v631');
         assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v623'") === -1,
             'прежней v623 нет');
     });
@@ -511,9 +511,9 @@ describe('Task 396 — VM: страница «Работники»', () => {
 describe('Task 396 — SW и отсутствие регрессов', () => {
 
     test('SW: v624 — ассерт присутствия, v625 — guard отсутствия', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v630') !== -1,
-            'SW kipia-test-v630');
-        assertTrue(SW_SRC.indexOf('kipia-test-v631') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v631') !== -1,
+            'SW kipia-test-v631');
+        assertTrue(SW_SRC.indexOf('kipia-test-v632') === -1,
             'v625 ещё не существует (guard)');
     });
 

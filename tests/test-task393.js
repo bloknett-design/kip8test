@@ -385,7 +385,10 @@ describe('Task 393 — VM: страница «Работники» — 4 окн�
         const i3 = html.indexOf('Мероприятия · 2026');
         const i4 = html.indexOf('СИЗ · средства индивидуальной защиты');
         assertTrue(i1 !== -1 && i2 !== -1 && i3 !== -1 && i4 !== -1, 'блоки на месте');
-        assertTrue(i1 < i2 && i2 < i3 && i3 < i4, 'порядок панелей — как в заявке');
+        // Task 404: СИЗ — ВТОРАЯ колонка (слева от мероприятий):
+        // DOM-порядок: профиль → отпуска → СИЗ → мероприятия
+        assertTrue(i1 < i2 && i2 < i4 && i4 < i3,
+            'порядок панелей: профиль → отпуска → СИЗ → мероприятия');
     });
 
     test('вкладка работника — 4 окна, действия в своей панели', () => {
@@ -429,10 +432,10 @@ describe('Task 393 — VM: страница «Работники» — 4 окн�
 // ============================================================
 describe('Task 393 — SW', () => {
 
-    test('SW: kipia-test-v630', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v630'") !== -1,
+    test('SW: kipia-test-v631', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v631'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v631') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v632') === -1,
             'двойного бампа не было');
     });
 });

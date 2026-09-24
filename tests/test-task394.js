@@ -155,42 +155,43 @@ describe('Task 394 — SRC: CSS сетки и окна мероприятий', 
             'кап 1020px (Task 388) снят — блоки на весь экран');
     });
 
-    test('окно мероприятий: плашки секций «Отпуска»/«СИЗ» и точки', () => {
-        const vac = ruleBlock('.ws-ep-cap-vac {');
+    test('окно мероприятий: плашка секции «СИЗ» (отпуска убраны — Task 404)', () => {
         const ppe = ruleBlock('.ws-ep-cap-ppe {');
-        assertTrue(vac !== null && ppe !== null, 'плашки секций живы');
-        assertTrue(INDEX_SRC.indexOf('.ws-ep-dot-vac { background: #90a4ae; }') !== -1,
-            'точка отпуска — читаемый тон обеих тем');
+        assertTrue(ppe !== null, 'плашка секции СИЗ жива');
+        assertTrue(ruleBlock('.ws-ep-cap-vac {') === null,
+            'плашка секции «Отпуска» УДАЛЕНА (Task 404)');
+        assertFalse(INDEX_SRC.indexOf('.ws-ep-dot-vac') !== -1,
+            'точки отпуска больше нет');
         assertTrue(INDEX_SRC.indexOf('.ws-ep-dot-ppe { background: #f0a830; }') !== -1,
             'точка СИЗ — янтарная');
-        const re = /\[data-theme="light"\] \.ws-ep-cap-vac,\s*\n\s*\[data-theme="light"\] \.ws-ep-cap-ppe \{[^}]*?color: #000;[^}]*?\}/;
+        const re = /\[data-theme="light"\] \.ws-ep-cap-ppe \{[^}]*?color: #000;[^}]*?\}/;
         assertTrue(re.test(INDEX_SRC),
-            'светлая тема: текст плашек — чёрный (Task 330)');
+            'светлая тема: текст плашки — чёрный (Task 330)');
     });
 
-    test('_renderMonthEventsPanel — секции отпусков и СИЗ', () => {
+    test('_renderMonthEventsPanel — секция СИЗ (отпуска убраны — Task 404)', () => {
         const m = methodText(INDEX_SRC, '_renderMonthEventsPanel');
-        assertTrue(m.indexOf('this._VACATIONS || []') !== -1,
-            'защитный доступ к отпускам (харнессы без поля)');
+        assertFalse(m.indexOf('vacList') !== -1,
+            'сборки отпусков больше НЕТ (заявка Task 404)');
+        assertFalse(m.indexOf('Отпуска · ') !== -1,
+            'заголовка секции «Отпуска» нет');
+        assertFalse(m.indexOf('ws-ep-dot-vac') !== -1, 'точки отпусков нет');
         assertTrue(m.indexOf('this._PPE || []') !== -1,
             'защитный доступ к СИЗ');
-        assertTrue(m.indexOf('vE < mStart || vS > mEnd') !== -1,
-            'отпуск попадает при ПЕРЕСЕЧЕНИИ месяца (как мероприятия)');
         assertTrue(m.indexOf('pExpIso < mStart || pExpIso > mEnd') !== -1,
             'СИЗ — дата_окончания ВНУТРИ месяца');
         assertTrue(m.indexOf("pExpIso === 'До износа'") !== -1,
             '«До износа» — без даты, не показывается');
-        assertTrue(m.indexOf('Отпуска · ') !== -1 && m.indexOf('СИЗ · ') !== -1,
-            'заголовки секций');
-        assertTrue(m.indexOf('ws-ep-dot-vac') !== -1 && m.indexOf('ws-ep-dot-ppe') !== -1,
-            'точки секций');
-        assertTrue(m.indexOf("'Отпуск · ' + vFio") !== -1 &&
-                   m.indexOf("'СИЗ · ' + String(ppz['наименование']") !== -1,
-            'тексты строк секций');
+        assertTrue(m.indexOf('СИЗ · ') !== -1,
+            'заголовок секции СИЗ');
+        assertTrue(m.indexOf('ws-ep-dot-ppe') !== -1,
+            'точка секции СИЗ');
+        assertTrue(m.indexOf("'СИЗ · ' + String(ppz['наименование']") !== -1,
+            'текст строки секции');
         assertTrue(m.indexOf('pExpIso !== selIso') !== -1,
             'режим выбранного дня: СИЗ — истекающие ровно в день');
-        assertTrue(m.indexOf('vacList.length') !== -1 && m.indexOf('ppeList.length') !== -1,
-            'счётчики секций');
+        assertTrue(m.indexOf('ppeList.length') !== -1,
+            'счётчик секции');
     });
 });
 
@@ -347,13 +348,14 @@ describe('Task 394 — VM: страница «Работники» — сетк�
             'панели — в обёртке сетки 2×2');
         assertEqual((body.match(/class="ws-wcard"/g) || []).length, 4,
             'в обёртке — ровно четыре блока-окна');
-        // порядок блоков в DOM: профиль → отпуска → мероприятия → СИЗ
+        // порядок блоков в DOM: профиль → отпуска → СИЗ → мероприятия
+        // (Task 404: СИЗ — ВТОРАЯ колонка, слева от мероприятий)
         const i1 = body.indexOf('Галкин Д. Н.');
         const i2 = body.indexOf('Отпуска · 2026');
         const i3 = body.indexOf('Мероприятия · 2026');
         const i4 = body.indexOf('СИЗ · средства индивидуальной защиты');
-        assertTrue(i1 < i2 && i2 < i3 && i3 < i4,
-            'DOM-порядок = раскладка сетки: профиль|отпуска / мероприятия|СИЗ');
+        assertTrue(i1 < i2 && i2 < i4 && i4 < i3,
+            'DOM-порядок = раскладка: профиль|отпуска / СИЗ / мероприятия');
     });
 
     test('«Общая» вкладка — БЕЗ обёртки сетки, колонка «Мероприятия · год»', () => {
@@ -410,7 +412,7 @@ function panelHost(opts) {
     return el;
 }
 
-describe('Task 394 — VM: окно мероприятий — ОТПУСКА', () => {
+describe('Task 394 → 404 — VM: окно мероприятий — отпуска НЕ показываются', () => {
 
     // отпуск ЧАСТИЧНО на два месяца: 29.09–02.10
     const VAC2M = [
@@ -419,52 +421,30 @@ describe('Task 394 — VM: окно мероприятий — ОТПУСКА', 
           'комментарий': '' },
     ];
 
-    test('отпуск через границу — в окне СЕНТЯБРЯ', () => {
+    test('отпуск в месяце — секции «Отпуска» НЕТ (заявка Task 404)', () => {
         const el = panelHost({ month: 9, vacations: VAC2M });
-        assertTrue(el.innerHTML.indexOf('Отпуска · сентябрь 2026 · 1') !== -1,
-            'секция «Отпуска» с месяцем и счётчиком');
-        assertTrue(el.innerHTML.indexOf('29.09–02.10') !== -1,
-            'диапазон через границу месяцев');
-        assertTrue(el.innerHTML.indexOf('Отпуск · Иванов Иван Иванович') !== -1,
-            'текст строки: Отпуск · ФИО');
-        assertTrue(el.innerHTML.indexOf('ws-ep-dot-vac') !== -1,
-            'точка отпуска');
-    });
-
-    test('тот же отпуск — в окне ОКТЯБРЯ (заявка: обоих месяцев)', () => {
-        const el = panelHost({ month: 10, vacations: VAC2M });
-        assertTrue(el.innerHTML.indexOf('Отпуска · октябрь 2026 · 1') !== -1,
-            'секция «Отпуска» есть и в следующем месяце');
-        assertTrue(el.innerHTML.indexOf('29.09–02.10') !== -1,
-            'тот же период виден в октябре');
-    });
-
-    test('месяц БЕЗ отпусков — секции «Отпуска» нет (скрыта)', () => {
-        const el = panelHost({ month: 11, vacations: VAC2M });
         assertFalse(el.innerHTML.indexOf('Отпуска · ') !== -1,
-            'ноябрь — отпуск не показывается');
-        assertFalse(el.innerHTML.indexOf('· 0') !== -1,
-            'нулевого счётчика нет');
+            'секция «Отпуска» удалена из окна мероприятий');
+        assertFalse(el.innerHTML.indexOf('Отпуск · Иванов Иван Иванович') !== -1,
+            'строк отпусков нет');
+        assertFalse(el.innerHTML.indexOf('ws-ep-dot-vac') !== -1,
+            'точек отпусков нет');
+        assertFalse(el.innerHTML.indexOf('29.09–02.10') !== -1,
+            'диапазонов отпусков нет');
     });
 
-    test('без данных об отпусках — секции нет (харнесс без _VACATIONS)', () => {
-        const el = panelHost({ month: 9, vacations: [] });
-        assertFalse(el.innerHTML.indexOf('Отпуска · ') !== -1,
-            'пустой список — секция скрыта');
-    });
-
-    test('выбранный день — только НАКРЫВАЮЩИЙ отпуск', () => {
+    test('октябрь — тоже без отпусков; выбранный день, накрытый отпуском — тоже', () => {
+        const el10 = panelHost({ month: 10, vacations: VAC2M });
+        assertFalse(el10.innerHTML.indexOf('Отпуска · ') !== -1,
+            'секции «Отпуска» нет и в следующем месяце');
         const vac = [
             { id: 22, 'таб_номер': '0871', 'часть': 1,
               'дата_начала': '2026-09-02', 'дата_окончания': '2026-09-05',
               'комментарий': '' },
         ];
         const el3 = panelHost({ month: 9, selDay: 3, vacations: vac });
-        assertTrue(el3.innerHTML.indexOf('Отпуска · 03.09 · 1') !== -1,
-            'день 3 накрыт отпуском 02–05.09');
-        const el10 = panelHost({ month: 9, selDay: 10, vacations: vac });
-        assertFalse(el10.innerHTML.indexOf('Отпуска · ') !== -1,
-            'день 10 не накрыт — секция скрыта');
+        assertFalse(el3.innerHTML.indexOf('Отпуска · ') !== -1,
+            'день 3 накрыт отпуском 02–05.09 — но секции нет (Task 404)');
     });
 });
 
@@ -540,19 +520,19 @@ describe('Task 394 — VM: окно мероприятий — СИЗ', () => {
         const el = panelHost({ year: Y, month: M, vacations: vac, ppe: ppe });
         // «1-е число» — прошедшее iff 1-е < сегодня (в этом же месяце)
         const expPast = iso(Y, M, 1) < iso(Y, M, NOW.getDate());
-        // строк отпуска — 2, СИЗ — 2; прошедшие из них: оба «1-го числа»
-        // (отпуск + СИЗ) iff 1-е < сегодня
+        // Task 404: отпуска НЕ показываются — в окне только 2 строки
+        // СИЗ; прошедшая из них — «1-го числа» iff 1-е < сегодня
         const nPast = (el.innerHTML.match(/ws-ep-past/g) || []).length;
-        assertEqual(nPast, expPast ? 2 : 0,
-            'классов ws-ep-past столько, сколько строк с прошедшей датой');
-        assertEqual((el.innerHTML.match(/<span class="ws-ep-item/g) || []).length, 4,
-            'строки: 2 отпуска + 2 СИЗ');
+        assertEqual(nPast, expPast ? 1 : 0,
+            'классов ws-ep-past столько, сколько СИЗ с прошедшей датой');
+        assertEqual((el.innerHTML.match(/<span class="ws-ep-item/g) || []).length, 2,
+            'строки: 2 СИЗ (отпуска не показываются — Task 404)');
     });
 });
 
 describe('Task 394 — VM: окно мероприятий — порядок секций', () => {
 
-    test('порядок: Мероприятия → Отпуска → СИЗ', () => {
+    test('порядок: Мероприятия → СИЗ (отпуска убраны — Task 404)', () => {
         const el = panelHost({
             month: 9,
             trainings: [{ 'таб_номер': '0871', 'тип': 'инструктаж',
@@ -564,10 +544,11 @@ describe('Task 394 — VM: окно мероприятий — порядок с
                     'дата_окончания': '2026-09-25' }],
         });
         const iEv = el.innerHTML.indexOf('Мероприятия · сентябрь 2026');
-        const iVac = el.innerHTML.indexOf('Отпуска · сентябрь 2026');
         const iPpe = el.innerHTML.indexOf('СИЗ · сентябрь 2026');
-        assertTrue(iEv !== -1 && iVac !== -1 && iPpe !== -1, 'все три секции');
-        assertTrue(iEv < iVac && iVac < iPpe, 'порядок: мероприятия → отпуска → СИЗ');
+        assertTrue(iEv !== -1 && iPpe !== -1, 'обе секции');
+        assertTrue(iEv < iPpe, 'порядок: мероприятия → СИЗ');
+        assertFalse(el.innerHTML.indexOf('Отпуска · сентябрь 2026') !== -1,
+            'секции «Отпуска» нет (Task 404)');
     });
 
     test('мероприятия месяца — прежний вид (заголовок/счётчик)', () => {
@@ -591,10 +572,10 @@ describe('Task 394 — VM: окно мероприятий — порядок с
 // ============================================================
 describe('Task 394 — SW', () => {
 
-    test('SW: kipia-test-v630', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v630'") !== -1,
+    test('SW: kipia-test-v631', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v631'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v631') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v632') === -1,
             'двойного бампа не было');
     });
 });
