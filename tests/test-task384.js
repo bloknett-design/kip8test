@@ -27,7 +27,7 @@
 //   диспетчеризация, node --check обоих .gs.
 //   VM-функционально (клиент и сервер): happy-path правок, валидации,
 //   самопересечение/дубль части, лимит 42, не найдено.
-//   SW: kipia-test-v643 (guard v613).
+//   SW: kipia-test-v644 (guard v613).
 //
 // Запуск: через tests/run-all.js (require './test-task384.js').
 
@@ -84,17 +84,16 @@ describe('Task 384 — HTML: шторки с режимами правки', () 
             'кнопка #wsVacSubmitBtn');
     });
 
-    test('комментарий карточки: read-only по Task 385', () => {
-        // HTML-комментарий попапа (CSS-комментарий Task 309 выше по
-        // файлу — не тот маркер). Task 385: карточка — только чтение,
-        // правки переехали на страницу «Работники»
-        const i = INDEX_SRC.indexOf('<!-- Task 309: карточка работника — попап у колонки ФИО');
-        assertTrue(i !== -1, 'HTML-комментарий карточки найден');
+    test('комментарий карточки: удаление попапа по Task 417', () => {
+        // Task 417: попап удалён — старый HTML-комментарий заменён
+        // маркером удаления; подробные данные — карты «Работники»
+        const i = INDEX_SRC.indexOf('<!-- Task 417 (заявка): ПОПАП КАРТОЧКИ ПО ФАМИЛИИ');
+        assertTrue(i !== -1, 'HTML-маркер удаления попапа найден');
         const chunk = INDEX_SRC.slice(i, i + 1600);
-        assertTrue(chunk.indexOf('Task 385: карточка — ТОЛЬКО ЧТЕНИЕ') !== -1,
-            'комментарий описывает Task 385 (read-only)');
-        assertTrue(chunk.indexOf('страницу «Работники»') !== -1,
-            'правки переехали на страницу «Работники»');
+        assertTrue(chunk.indexOf('КАРТАХ работников') !== -1,
+            'подробные данные — в картах работников');
+        assertTrue(chunk.indexOf('«Работники»') !== -1,
+            'страница «Работники» — единственное место карточек');
     });
 });
 
@@ -928,10 +927,10 @@ describe('Task 384 — VM сервер: updateVacation', () => {
 // 8. SW
 // ============================================================
 describe('Task 384 — Service Worker', () => {
-    test('SW: кэш поднят до kipia-test-v643', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v643'") !== -1,
-            'CACHE_VERSION = kipia-test-v643 (Task 384 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v644') !== -1,
+    test('SW: кэш поднят до kipia-test-v644', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v644'") !== -1,
+            'CACHE_VERSION = kipia-test-v644 (Task 384 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v645') !== -1,
             'лишний инкремент (v613) не сделан');
     });
 });

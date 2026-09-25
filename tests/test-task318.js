@@ -33,7 +33,7 @@
 //     таб_№ (текст, Task 304), пишет H (дата) + I (в_архиве=1),
 //     строка НЕ удаляется; ошибки invalid/not_found; аудит;
 //     маршрут в Code.gs.
-//   SW: kipia-test-v643.
+//   SW: kipia-test-v644.
 //
 // Запуск: через tests/run-all.js (require './test-task318.js').
 
@@ -87,13 +87,13 @@ describe('Task 318 — CSS: hover заголовка «Сотрудник +»', 
             'в светлой теме тоже нет rgba');
     });
 
-    test('CSS: цвета совпадают с td.ws-emp-col:hover (ячейки ФИО)', () => {
-        const td = INDEX_SRC.match(/\.ws-grid tbody td\.ws-emp-col:hover \{\s*([^}]*)\}/);
-        assertTrue(!!td && td[1].indexOf('#15202f') !== -1,
-            'td.ws-emp-col:hover — тот же #15202f');
-        const tdl = INDEX_SRC.match(/\[data-theme="light"\] \.ws-grid tbody td\.ws-emp-col:hover \{\s*([^}]*)\}/);
-        assertTrue(!!tdl && tdl[1].indexOf('#e2e8ef') !== -1,
-            'td светлой темы — тот же #e2e8ef');
+    test('CSS: Task 417 — td.ws-emp-col:hover удалён (попапа нет)', () => {
+        // прежние цвета подсветки #15202f/#e2e8ef ушли вместе с
+        // hover-правилами колонки ФИО (окно карточки удалено)
+        assertFalse(INDEX_SRC.indexOf('.ws-grid tbody td.ws-emp-col:hover {') !== -1,
+            'тёмная тема: hover ФИО удалён');
+        assertFalse(INDEX_SRC.indexOf('[data-theme="light"] .ws-grid tbody td.ws-emp-col:hover') !== -1,
+            'светлая тема: hover ФИО удалён');
     });
 
     test('CSS: строка «Уволить…» — красная (опасное действие)', () => {
@@ -635,10 +635,10 @@ describe('Task 318 — Сервер: dismissEmployee (WorkSchedule.gs)', () => {
 // Service Worker
 // ============================================================
 describe('Task 318 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v643', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v643') !== -1,
-            'CACHE_VERSION = kipia-test-v643 (Task 318)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v644') !== -1,
+    test('SW: версия кэша kipia-test-v644', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v644') !== -1,
+            'CACHE_VERSION = kipia-test-v644 (Task 318)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v645') !== -1,
             'лишний инкремент не делался');
     });
 });

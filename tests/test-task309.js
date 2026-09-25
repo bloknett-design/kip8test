@@ -42,7 +42,7 @@
 //   "Ошибка: self.loadTrainings is not a function"»):
 //     — вызовы удалённых страниц loadTrainings()/loadVacations()
 //       больше не встречаются; вместо них loadGrid().
-//   SW: kipia-test-v643.
+//   SW: kipia-test-v644.
 //
 // Запуск: через tests/run-all.js (require './test-task309.js').
 
@@ -65,27 +65,30 @@ function fnBody(src, signature) {
 
 describe('Task 309 — карточка сотрудника у колонки ФИО', () => {
 
-    test('HTML: элементы попапа #wsEmpPopup и кловера #wsEmpPopupCloser', () => {
-        assertTrue(INDEX_SRC.indexOf('id="wsEmpPopupCloser"') !== -1,
-            'кловер для прикреплённого режима');
-        assertTrue(INDEX_SRC.indexOf('id="wsEmpPopup"') !== -1,
-            'контейнер карточки');
-        assertTrue(INDEX_SRC.indexOf('onclick="WorkSchedule.closeEmpPopup()"') !== -1,
-            'клик по кловеру закрывает карточку');
-        // класс-основа ws-cell-popup (позиционирование/фон/рамка)
-        // + модификатор ws-emp-popup
-        assertTrue(INDEX_SRC.indexOf('class="ws-cell-popup ws-emp-popup"') !== -1,
-            'попап наследует стили статусного попапа');
+    test('HTML: Task 417 — попап #wsEmpPopup и кловер УДАЛЕНЫ', () => {
+        // Task 417 (заявка): окно карточки по фамилии удалено полностью
+        assertFalse(INDEX_SRC.indexOf('id="wsEmpPopupCloser"') !== -1,
+            'кловер удалён вместе с попапом');
+        assertFalse(INDEX_SRC.indexOf('id="wsEmpPopup"') !== -1,
+            'контейнер карточки удалён');
+        assertFalse(INDEX_SRC.indexOf('onclick="WorkSchedule.closeEmpPopup()"') !== -1,
+            'клик по кловеру удалён вместе с окном');
+        assertFalse(INDEX_SRC.indexOf('class="ws-cell-popup ws-emp-popup"') !== -1,
+            'модификатор ws-emp-popup больше не рендерится');
+        assertTrue(INDEX_SRC.indexOf('ПОПАП КАРТОЧКИ ПО ФАМИЛИИ УДАЛЁН ПОЛНОСТЬЮ') !== -1,
+            'HTML-маркер удаления Task 417');
     });
 
-    test('Рендер: td.ws-emp-col получает data-tab и onclick onEmpCellClick', () => {
+    test('Рендер: td.ws-emp-col — data-tab жив, onclick УДАЛЁН (Task 417)', () => {
         const gridPart = INDEX_SRC.slice(
             INDEX_SRC.indexOf('_renderGrid: function'),
             INDEX_SRC.indexOf('_fitGrid: function'));
         assertTrue(gridPart.indexOf('data-tab=') !== -1,
-            'колонка ФИО несёт data-tab для обработчика клика');
-        assertTrue(gridPart.indexOf('WorkSchedule.onEmpCellClick(event,') !== -1,
-            'клик по колонке ФИО открывает карточку');
+            'колонка ФИО несёт data-tab (идентификация строки)');
+        assertFalse(gridPart.indexOf('WorkSchedule.onEmpCellClick(event,') !== -1,
+            'Task 417: клика по колонке ФИО больше нет');
+        assertFalse(gridPart.indexOf('_empCardAllowed') !== -1,
+            'Task 417: гейт карточки удалён из рендера');
         // Task 311: пояснительный тултип с ячейки убран
         assertFalse(gridPart.indexOf('Карточка сотрудника: профиль, отпуска, мероприятия') !== -1,
             'title-подсказка на колонке убрана (Task 311)');
@@ -116,15 +119,17 @@ describe('Task 309 — карточка сотрудника у колонки �
             'mouseout на контейнере сетки удалён');
     });
 
-    test('JS: клик — прикреплённый режим (кловер active, Esc закрывает)', () => {
-        const clickPart = fnBody(INDEX_SRC, 'onEmpCellClick: function');
-        assertTrue(clickPart.indexOf('this._openEmpPopup(td, tabNo);') !== -1,
-            'клик открывает карточку (Task 311: без параметра pinned — режим всегда один)');
-        assertTrue(clickPart.indexOf('this.closeCellPopup();') !== -1,
-            'взаимная блокировка: статусный попап закрывается');
-        const openPart = fnBody(INDEX_SRC, '_openEmpPopup: function');
-        assertTrue(openPart.indexOf("closer.classList.add('active')") !== -1,
-            'кловер активен — карточка всегда прикреплена (клик)');
+    test('JS: Task 417 — методы открытия удалены, closeEmpPopup — no-op', () => {
+        assertFalse(INDEX_SRC.indexOf('onEmpCellClick: function') !== -1,
+            'onEmpCellClick удалён (клика по ФИО нет)');
+        assertFalse(INDEX_SRC.indexOf('_openEmpPopup: function') !== -1,
+            '_openEmpPopup удалён');
+        // closeEmpPopup остаётся защитным no-op (окна нет — только флаги)
+        const cpBody = fnBody(INDEX_SRC, 'closeEmpPopup: function');
+        assertTrue(cpBody.indexOf("var popup = document.getElementById('wsEmpPopup');") !== -1,
+            'closeEmpPopup ищет окно (null после удаления)');
+        assertTrue(cpBody.indexOf('this._empPinned = false;') !== -1,
+            'флаги сбрасываются');
         // Esc: обработчик init закрывает ОБА попапа
         const escIdx = INDEX_SRC.indexOf("if (ev.key === 'Escape')");
         assertTrue(escIdx !== -1 &&
@@ -226,8 +231,12 @@ describe('Task 309 — правка и удаление мероприятий',
 
     test('JS: editTraining находит запись по id и открывает форму в режиме правки', () => {
         const et = fnBody(INDEX_SRC, 'editTraining: function');
-        assertTrue(et.indexOf('parseInt(this._TRAININGS[i].id, 10) === tid') !== -1,
-            'поиск записи в _TRAININGS по id');
+        // Task 417: поиск по ЕДИНОМУ пулу — _TRAININGS → _INSTR_ALL →
+        // _EVENTS_ALL (правка архивных записей прошлых лет из карточки)
+        assertTrue(et.indexOf('var pools = [this._TRAININGS, this._INSTR_ALL,') !== -1,
+            'единый пул поиска: срез года + архивы обоих листов');
+        assertTrue(et.indexOf('parseInt(arr[i].id, 10) === tid') !== -1,
+            'поиск записи по id в пуле');
         assertTrue(et.indexOf('this.closeCellPopup();') !== -1 &&
             et.indexOf('this.closeEmpPopup();') !== -1,
             'попапы закрываются до открытия формы');
@@ -336,18 +345,13 @@ describe('Task 309 — рамка ручных д/н', () => {
             'светлая 2px тень удалена');
     });
 
-    test('CSS: колонка ФИО интерактивна (cursor + сплошная подсветка hover)', () => {
-        assertTrue(INDEX_SRC.indexOf('.ws-grid tbody td.ws-emp-col {') !== -1 &&
-            INDEX_SRC.indexOf('.ws-grid tbody td.ws-emp-col:hover {') !== -1,
-            'hover-подсветка колонки');
-        // сплошной фон (sticky-колонка: полупрозрачный просвечивал бы)
-        const hoverRule = INDEX_SRC.slice(
-            INDEX_SRC.indexOf('.ws-grid tbody td.ws-emp-col:hover {'),
-            INDEX_SRC.indexOf('}', INDEX_SRC.indexOf('.ws-grid tbody td.ws-emp-col:hover {')));
-        assertTrue(hoverRule.indexOf('#15202f') !== -1,
-            'тёмная тема: сплошной цвет подсветки');
-        assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .ws-grid tbody td.ws-emp-col:hover') !== -1,
-            'светлая тема подсветки');
+    test('CSS: Task 417 — hover-подсветка колонки ФИО удалена', () => {
+        assertFalse(INDEX_SRC.indexOf('.ws-grid tbody td.ws-emp-col:hover {') !== -1,
+            'тёмная тема: правило hover удалено');
+        assertFalse(INDEX_SRC.indexOf('[data-theme="light"] .ws-grid tbody td.ws-emp-col:hover') !== -1,
+            'светлая тема: правило hover удалено');
+        assertTrue(INDEX_SRC.indexOf('подсветка НАВЕДЕНИЯ колонки ФИО удалена') !== -1,
+            'CSS-маркер удаления Task 417');
     });
 });
 
@@ -384,9 +388,9 @@ describe('Task 309 — регресс-фиксы Task 308 (loadTrainings/loadVac
 
 describe('Task 309 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v643', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v643'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v643');
+    test('SW: версия кэша kipia-test-v644', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v644'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v644');
         assertFalse(SW_SRC.indexOf('kipia-test-v547') !== -1,
             'старой версии v547 нет');
     });

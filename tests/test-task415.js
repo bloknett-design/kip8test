@@ -6,12 +6,11 @@
 // Фикс (CSS, только index.html): записи блоков карты — темы
 // мероприятий/инструктажей (.ws-popup-name) — переносятся
 // на следующую строку вместо обрезания многоточием. Действует
-// в ОБЕИХ проекциях карты: блоки-окна страницы «Работники»
-// (.ws-wcard) и попап карточки у сетки (#wsEmpPopup).
-// Заголовки блоков (.ws-wcard .ws-whead-t) и заголовки секций
-// попапа (.ws-emp-popup .ws-popup-title/.ws-popup-sec) тоже
-// переносятся (поведение ws-whead-wrap Task 405 — по
-// умолчанию). Попап дня «Мероприятия в этот день» и окно
+// в блоках-окнах страницы «Работники» (.ws-wcard; попап
+// карточки у сетки удалён по Task 417 — переносился этим же
+// правилом до удаления). Заголовки блоков (.ws-wcard
+// .ws-whead-t) тоже переносятся (поведение ws-whead-wrap
+// Task 405 — по умолчанию). Попап дня «Мероприятия в этот день» и окно
 // выбора кодов (#wsCellPopup) — прежний компактный
 // однострочный вид (Task 319).
 // ============================================================
@@ -37,12 +36,12 @@ function ruleBlock(sel) {
 describe('Task 415 — SRC: перенос записей', () => {
 
     test('правило переноса записей — обе проекции карты', () => {
-        // селекторы одной группой: .ws-wcard (страница «Работники»)
-        // + #wsEmpPopup (попап карточки у сетки)
-        const i = INDEX_SRC.indexOf(
-            '.ws-wcard .ws-popup-name,\n    #wsEmpPopup .ws-popup-name {');
+        // Task 417: попап удалён — правило живёт только для .ws-wcard
+        const i = INDEX_SRC.indexOf('.ws-wcard .ws-popup-name {');
         assertTrue(i !== -1,
-            'групповое правило .ws-wcard/.wsEmpPopup .ws-popup-name существует');
+            'правило переноса записей .ws-wcard .ws-popup-name существует');
+        assertFalse(INDEX_SRC.indexOf('#wsEmpPopup .ws-popup-name') !== -1,
+            'селектор попапа удалён (Task 417)');
         const block = INDEX_SRC.slice(i, INDEX_SRC.indexOf('}', i) + 1);
         assertTrue(block.indexOf('white-space: normal') !== -1 &&
                    block.indexOf('overflow-wrap: break-word') !== -1 &&
@@ -103,16 +102,18 @@ describe('Task 415 — SRC: заголовки', () => {
             'заголовок блока инструктажей по-прежнему носит класс');
     });
 
-    test('попап карточки: заголовки ФИО/секций переносятся', () => {
-        const i = INDEX_SRC.indexOf(
-            '.ws-emp-popup .ws-popup-title,\n    .ws-emp-popup .ws-popup-sec {');
+    test('Task 417: правила заголовков попапа карточки удалены', () => {
+        assertFalse(INDEX_SRC.indexOf('.ws-emp-popup .ws-popup-sec {') !== -1,
+            'правило заголовков попапа удалено вместе с окном');
+        // перенос заголовков КАРТЫ (страница) жив — .ws-wcard
+        const i = INDEX_SRC.indexOf('.ws-wcard .ws-whead-t {');
         assertTrue(i !== -1,
-            'правило .ws-emp-popup .ws-popup-title/.ws-popup-sec существует');
+            'перенос заголовков блоков карты жив (Task 415)');
         const block = INDEX_SRC.slice(i, INDEX_SRC.indexOf('}', i) + 1);
         assertTrue(block.indexOf('white-space: normal') !== -1 &&
                    block.indexOf('overflow-wrap: break-word') !== -1 &&
                    block.indexOf('text-overflow: clip') !== -1,
-            'заголовки попапа карточки переносятся в окне 380px');
+            'заголовки блоков карты переносятся');
     });
 
     test('базовые .ws-popup-title/.ws-popup-sec вне карты НЕ тронуты', () => {
@@ -151,11 +152,11 @@ describe('Task 415 — SRC: прочие строки карты', () => {
 // ============================================================
 describe('Task 415 — SW версия', () => {
     test('v642', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v643'") !== -1,
-            'SW кэш — kipia-test-v643');
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v644'") !== -1,
+            'SW кэш — kipia-test-v644');
         assertTrue(SW_SRC.indexOf('kipia-test-v641') === -1,
             'v641 не осталась в sw.js');
-        assertTrue(SW_SRC.indexOf('kipia-test-v644') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v645') === -1,
             'двойной бамп отсутствует (guard: v643)');
     });
 });

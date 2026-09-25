@@ -154,8 +154,10 @@ describe('Task 385 — HTML: легенда/страница/переимено�
     });
 
     test('HTML: переименование — карточка и шторки', () => {
-        assertTrue(INDEX_SRC.indexOf('aria-label="Карточка работника"') !== -1,
-            'aria-подпись попапа шахматки');
+        // Task 417: попап карточки шахматки удалён — aria-подпись
+        // ушла вместе с окном; карточки живут на странице «Работники»
+        assertFalse(INDEX_SRC.indexOf('id="wsEmpPopup"') !== -1,
+            'попап карточки удалён (Task 417)');
         assertTrue(INDEX_SRC.indexOf('id="wsEmpSheetTitle">Новый работник<') !== -1,
             'шторка создания: «Новый работник»');
         assertTrue(INDEX_SRC.indexOf('Увольнение работника</div>') !== -1,
@@ -173,10 +175,10 @@ describe('Task 385 — HTML: легенда/страница/переимено�
             'подсказка «Вид» (Task 388: итоги в любом виде)');
     });
 
-    test('SW: кэш поднят до kipia-test-v643', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v643'") !== -1,
-            'CACHE_VERSION = kipia-test-v643 (Task 385 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v644') !== -1,
+    test('SW: кэш поднят до kipia-test-v644', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v644'") !== -1,
+            'CACHE_VERSION = kipia-test-v644 (Task 385 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v645') !== -1,
             'v614 ещё не существует (guard)');
     });
 });
@@ -364,7 +366,7 @@ describe('Task 385 — SRC: шторка «Легенда»', () => {
     test('Esc закрывает легенду', () => {
         // якорь — комментарий Task 309 у Обработчика табеля (первое
         // вхождение "ev.key === 'Escape'" в файле — чужой модуль)
-        const i = INDEX_SRC.indexOf("Task 309: Esc закрывает и карточку");
+        const i = INDEX_SRC.indexOf("Task 309 → 417: попап карточки сотрудника удалён");
         assertTrue(i !== -1, 'якорь обработчика табеля найден');
         const chunk = INDEX_SRC.slice(i, i + 900);
         assertTrue(chunk.indexOf("ev.key === 'Escape'") !== -1,

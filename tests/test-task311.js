@@ -134,15 +134,11 @@ describe('Task 311 — пояснительные окна при наведен
             'mouseleave попапа не слушается');
         assertFalse(INDEX_SRC.indexOf("(hover: hover)") !== -1,
             'медиа-запрос hover больше не проверяется (клик один для всех)');
-        // клик остаётся единственным триггером
-        const clickPart = fnBody(INDEX_SRC, 'onEmpCellClick: function');
-        assertTrue(clickPart.indexOf('this._openEmpPopup(td, tabNo);') !== -1,
-            'клик открывает карточку');
-        const openPart = fnBody(INDEX_SRC, '_openEmpPopup: function');
-        assertTrue(openPart.indexOf("closer.classList.add('active')") !== -1,
-            'кловер активен (карточка всегда прикреплена)');
-        assertTrue(openPart.indexOf('this._empPinned = true;') !== -1,
-            'режим всегда прикреплённый');
+        // Task 417: попап карточки удалён — клика по ФИО больше нет
+        assertFalse(INDEX_SRC.indexOf('onEmpCellClick: function') !== -1,
+            'метод клика по ФИО удалён (Task 417)');
+        assertFalse(INDEX_SRC.indexOf('_openEmpPopup: function') !== -1,
+            'метод открытия попапа удалён (Task 417)');
     });
 
     test('JS: колонка ФИО — title-подсказка убрана', () => {
@@ -247,9 +243,9 @@ describe('Task 311 — кнопка «+ Сотрудник» → заголов�
 
 describe('Task 311 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v643', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v643'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v643');
+    test('SW: версия кэша kipia-test-v644', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v644'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v644');
         assertFalse(SW_SRC.indexOf('kipia-test-v549') !== -1,
             'старой версии v549 нет');
     });

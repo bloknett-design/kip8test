@@ -23,7 +23,7 @@
 //      _openEmpPopup (программные вызовы тоже). Режим зрителя —
 //      класс ws-readonly на #page-work-schedule: CSS выключает
 //      подсветку наведения ФИО (зебра чётных строк живёт).
-//   SW: kipia-test-v643.
+//   SW: kipia-test-v644.
 //
 // Запуск: через tests/run-all.js (require './test-task338.js').
 
@@ -185,66 +185,24 @@ describe('Task 338 — вид зрителя: сменный (итоги/дне�
 // ============================================================
 describe('Task 338 — карточки сотрудников скрыты зрителю', () => {
 
-    test('SRC: _renderGrid — onclick ФИО рендерится только редакторам', () => {
+    test('SRC: Task 417 — onclick ФИО удалён (попапа карточки нет)', () => {
         const fn = methodText(WS_CLIENT, '_renderGrid');
-        assertTrue(fn.indexOf("? ' onclick=\"WorkSchedule.onEmpCellClick") !== -1,
-            'onclick ФИО — тернарник по _empCardAllowed (Task 340)');
-        assertTrue(fn.indexOf("                        : '') +") !== -1,
-            'ветка без прав — атрибут onclick не рендерится');
+        assertFalse(fn.indexOf('onEmpCellClick') !== -1,
+            'клик по ФИО не рендерится (Task 417: попап удалён)');
+        assertFalse(fn.indexOf('_empCardAllowed') !== -1,
+            'гейт _empCardAllowed удалён');
     });
 
-    test('VM: onEmpCellClick — уровень min: карточка не открывается', () => {
-        const host = new Function('return ({' +
-            methodText(WS_CLIENT, 'onEmpCellClick') + '\n' +
-            "_viewLevel: 'min'," +
-            '_empCardAllowed: function() { return this._viewLevel === \'edit\' || this._viewLevel === \'view\'; },' +
-            'closeCellPopup: function() { this.closedCell = true; },' +
-            '_openEmpPopup: function() { this.opened = true; }' +
-            '});')();
-        host.onEmpCellClick({}, '42');
-        assertFalse(host.opened === true, 'попап карточки не открыт (min)');
-        assertFalse(host.closedCell === true, 'ранний выход — до взаимных блокировок');
-    });
-
-    test('VM: onEmpCellClick — редактор: карточка открывается', () => {
-        const host = new Function('return ({' +
-            methodText(WS_CLIENT, 'onEmpCellClick') + '\n' +
-            "_viewLevel: 'edit'," +
-            '_empCardAllowed: function() { return this._viewLevel === \'edit\' || this._viewLevel === \'view\'; },' +
-            'closeCellPopup: function() { this.closedCell = true; },' +
-            '_openEmpPopup: function(td, tab) { this.openedTab = tab; }' +
-            '});')();
-        host.onEmpCellClick({}, '42');
-        assertTrue(host.closedCell === true, 'взаимная блокировка попапов жива');
-        assertEqual(host.openedTab, '42', 'карточка открыта с таб. номером');
-    });
-
-    test('VM: _openEmpPopup — уровень min: DOM не трогается (гейт программы)', () => {
-        // документ-«строгач»: любое обращение к DOM — ошибка
-        const strictDoc = {
-            getElementById: function() { throw new Error('DOM touched'); }
-        };
-        const host = new Function('document', 'return ({' +
-            methodText(WS_CLIENT, '_openEmpPopup') + '\n' +
-            "_viewLevel: 'min'," +
-            '_empCardAllowed: function() { return this._viewLevel === \'edit\' || this._viewLevel === \'view\'; },' +
-            '});')(strictDoc);
-        let threw = null;
-        try { host._openEmpPopup(null, '42'); }
-        catch (e) { threw = e; }
-        assertTrue(threw === null, 'зритель: попап не открывается (DOM не тронут)');
-    });
-
-    test('SRC: CSS ws-readonly — подсветка наведения ФИО выключена', () => {
-        assertTrue(INDEX_SRC.indexOf(
+    test('SRC: Task 417 — CSS ws-readonly hover-правила удалены', () => {
+        assertFalse(INDEX_SRC.indexOf(
             '#page-work-schedule.ws-readonly .ws-grid tbody td.ws-emp-col:hover') !== -1,
-            'тёмная тема: hover ФИО нейтрализован');
-        assertTrue(INDEX_SRC.indexOf(
+            'тёмная тема: hover-правило удалено');
+        assertFalse(INDEX_SRC.indexOf(
             '[data-theme="light"] #page-work-schedule.ws-readonly .ws-grid tbody td.ws-emp-col:hover') !== -1,
-            'светлая тема: hover ФИО нейтрализован');
-        assertTrue(INDEX_SRC.indexOf(
-            '#page-work-schedule.ws-readonly .ws-grid tbody tr:nth-child(even) td.ws-emp-col:hover') !== -1,
-            'чётные строки: зебра живёт (как в покое)');
+            'светлая тема: hover-правило удалено');
+        // класс ws-readonly продолжает ставиться JS (маркер уровня min)
+        assertTrue(INDEX_SRC.indexOf("classList.toggle('ws-readonly', newLevel === 'min')") !== -1,
+            'JS-переключатель ws-readonly жив (совместимость)');
     });
 
     test('SRC: заголовок «Работники» — надпись (Task 386: гейт снят)', () => {
@@ -285,10 +243,10 @@ describe('Task 338 — регрессы прав Task 337', () => {
 // ============================================================
 describe('Task 338 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v643', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v643'") !== -1,
-            'CACHE_VERSION = kipia-test-v643 (Task 338 — только фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v644') !== -1,
+    test('SW: кэш поднят до kipia-test-v644', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v644'") !== -1,
+            'CACHE_VERSION = kipia-test-v644 (Task 338 — только фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v645') !== -1,
             'лишний инкремент (v578) не сделан');
     });
 

@@ -92,10 +92,10 @@ describe('Task 416 — SRC: клиент', () => {
             'список мероприятий печати — сокращение, нет — полное');
     });
 
-    test('карточка: строки мероприятий и инструктажей — короткое название', () => {
+    test('карточка: строки мероприятий и инструктажей — ПОЛНЫЕ названия (Task 417)', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_renderWorkerCard'));
-        assertEqual(2, (fn.match(/this\._instrShortOf\(/g) || []).length,
-            'b3 (мероприятия) и b5 (инструктажи плоским списком)');
+        assertEqual(0, (fn.match(/this\._instrShortOf\(/g) || []).length,
+            'Task 417: b3/b5 не подставляют сокращения — только полные');
     });
 
     test('групповой вид: заголовок группы — сокращение + title с полным', () => {
@@ -270,15 +270,17 @@ describe('Task 416 — VM: карточка', () => {
             '});')({ getElementById: () => null });
     }
 
-    test('КАРТА (asBlocks): плоские строки — сокращение + дата', () => {
+    test('КАРТА (asBlocks): плоские строки — ПОЛНЫЕ названия + дата (Task 417)', () => {
         const host = cardHost({ tpl: TPL, edit: true, trainings: TR });
         const html = host._renderWorkerCard('017', true, true).join('');
-        assertTrue(/ws-popup-event[^>]*>[\s\S]*?Инстр\. ОТ · /.test(html),
-            'строка инструктажа — «Инстр. ОТ · дата»');
-        assertTrue(/ws-popup-event[^>]*>[\s\S]*?ПЗ ЭБ до 1000 В · /.test(html),
-            'строка ПЗ — «ПЗ ЭБ до 1000 В · дата»');
-        assertTrue(html.indexOf('Повторный инструктаж по рабочим') === -1,
-            'полных названий в плоском списке НЕТ');
+        assertTrue(/ws-popup-event[^>]*>[\s\S]*?Повторный инструктаж по рабочим инструкциям ОТ · /.test(html),
+            'строка инструктажа — полное название');
+        assertTrue(html.indexOf('Периодическая проверка знаний на допуск к проведению работ в электроустановках до 1000 В · ') !== -1,
+            'строка ПЗ — полное название');
+        assertFalse(/ws-popup-event[^>]*>[\s\S]*?Инстр\. ОТ · /.test(html),
+            'сокращений в блоках карты НЕТ (Task 417)');
+        assertFalse(/ws-popup-event[^>]*>[\s\S]*?ПЗ ЭБ до 1000 В · /.test(html),
+            'сокращений ПЗ в блоках карты НЕТ (Task 417)');
         assertTrue(/ws-popup-event[^>]*>[\s\S]*?Курс АСУ ТП · /.test(html),
             'мероприятие вне шаблона — полное название (b3)');
     });
@@ -473,11 +475,11 @@ describe('Task 416 — сервер', () => {
 // ============================================================
 describe('Task 416 — SW версия', () => {
     test('v643', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v643'") !== -1,
-            'SW кэш — kipia-test-v643');
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v644'") !== -1,
+            'SW кэш — kipia-test-v644');
         assertTrue(SW_SRC.indexOf('kipia-test-v642') === -1,
             'v642 не осталась в sw.js');
-        assertTrue(SW_SRC.indexOf('kipia-test-v644') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v645') === -1,
             'двойной бамп отсутствует (guard: v644)');
     });
 });

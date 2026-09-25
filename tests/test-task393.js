@@ -184,15 +184,14 @@ describe('Task 393 — CSS: шрифт карточки страницы кру�
             'последнее окно без нижнего зазора');
     });
 
-    test('попап карточки у сетки — прежняя компактная типографика', () => {
-        const r = ruleBlock('.ws-cell-popup.ws-emp-popup {');
-        assertTrue(r !== null && r.indexOf('max-height: 440px;') !== -1,
-            'габариты попапа не изменились');
+    test('Task 417: попап карточки у сетки удалён (CSS)', () => {
+        assertFalse(INDEX_SRC.indexOf('.ws-cell-popup.ws-emp-popup {') !== -1,
+            'габариты попапа удалены вместе с окном');
         // новые правила шрифта — ТОЛЬКО каскад .ws-wcard (страница),
         // селекторов попапа в них нет
         assertTrue(INDEX_SRC.indexOf('.ws-wcard .ws-cell-popup') === -1 &&
                    INDEX_SRC.indexOf('.ws-wcard #wsEmpPopup') === -1,
-            'попап не попадает под каскад .ws-wcard');
+            'каскад .ws-wcard не цепляет удалённый попап');
     });
 });
 
@@ -466,10 +465,10 @@ describe('Task 393 — VM: страница «Работники» — 4 окн�
 // ============================================================
 describe('Task 393 — SW', () => {
 
-    test('SW: kipia-test-v643', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v643'") !== -1,
+    test('SW: kipia-test-v644', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v644'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v644') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v645') === -1,
             'двойного бампа не было');
     });
 });

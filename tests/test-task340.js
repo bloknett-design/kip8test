@@ -16,7 +16,7 @@
 //   сервер (справочные копии): WorkSchedule.gs _requireRead пускает
 //   чтение по view/view.min/edit; RoleMatrixTask340Init.gs —
 //   одноразовое добавление столбца в матрицу.
-//   SW: kipia-test-v643.
+//   SW: kipia-test-v644.
 //
 // Запуск: через tests/run-all.js (require './test-task340.js').
 
@@ -297,76 +297,21 @@ describe('Task 340 — кнопки «Сформировать»/«Вид» по
 // ============================================================
 describe('Task 340 — карточки сотрудников по уровню', () => {
 
-    test('VM: _empCardAllowed — edit/view да, min/null нет', () => {
-        const host = new Function('return ({' +
-            methodText(WS_CLIENT, '_empCardAllowed') + '\n' +
-            "});")();
-        host._viewLevel = 'edit';
-        assertTrue(host._empCardAllowed(), 'edit: карточка доступна');
-        host._viewLevel = 'view';
-        assertTrue(host._empCardAllowed(), 'view: карточка доступна (read-only)');
-        host._viewLevel = 'min';
-        assertFalse(host._empCardAllowed(), 'min: карточки нет');
-        host._viewLevel = null;
-        assertFalse(host._empCardAllowed(), 'без прав: карточки нет');
-    });
-
-    test('SRC: _renderGrid — onclick ФИО по _empCardAllowed', () => {
+    test('SRC: Task 417 — onclick ФИО и _empCardAllowed удалены', () => {
         const fn = methodText(WS_CLIENT, '_renderGrid');
-        assertTrue(fn.indexOf('(this._empCardAllowed()') !== -1,
-            'onclick рендерится уровням edit/view (гейт _empCardAllowed)');
-        assertFalse(fn.indexOf("(this._canEdit\n                            ? ' onclick=\"WorkSchedule.onEmpCellClick") !== -1,
-            'старый тернарник _canEdit в onclick ФИО (Task 338) заменён');
+        assertFalse(fn.indexOf('onEmpCellClick') !== -1,
+            'клик по ФИО не рендерится (попап удалён, Task 417)');
+        assertFalse(fn.indexOf('_empCardAllowed') !== -1,
+            'гейт _empCardAllowed удалён (Task 417)');
     });
 
-    test('SRC: onEmpCellClick/_openEmpPopup — гейт _empCardAllowed', () => {
-        assertTrue(methodText(WS_CLIENT, 'onEmpCellClick')
-            .indexOf('if (!this._empCardAllowed()) return;') !== -1,
-            'клик: двойная защита по уровню');
-        assertTrue(methodText(WS_CLIENT, '_openEmpPopup')
-            .indexOf('if (!this._empCardAllowed()) return;') !== -1,
-            'программное открытие: двойная защита по уровню');
-    });
-
-    test('VM: onEmpCellClick — уровень «view»: карточка открывается', () => {
-        const host = new Function('return ({' +
-            methodText(WS_CLIENT, 'onEmpCellClick') + '\n' +
-            "_viewLevel: 'view'," +
-            '_empCardAllowed: function() { return this._viewLevel === "edit" || this._viewLevel === "view"; },' +
-            'closeCellPopup: function() { this.closedCell = true; },' +
-            '_openEmpPopup: function(td, tab) { this.openedTab = tab; }' +
-            '});')();
-        host.onEmpCellClick({}, '42');
-        assertTrue(host.closedCell === true, 'взаимная блокировка попапов жива');
-        assertEqual(host.openedTab, '42', 'карточка открыта (уровень view)');
-    });
-
-    test('VM: onEmpCellClick — уровень «min»: карточка не открывается', () => {
-        const host = new Function('return ({' +
-            methodText(WS_CLIENT, 'onEmpCellClick') + '\n' +
-            "_viewLevel: 'min'," +
-            '_empCardAllowed: function() { return this._viewLevel === "edit" || this._viewLevel === "view"; },' +
-            'closeCellPopup: function() { this.closedCell = true; },' +
-            '_openEmpPopup: function() { this.opened = true; }' +
-            '});')();
-        host.onEmpCellClick({}, '42');
-        assertFalse(host.opened === true, 'попап карточки не открыт (min)');
-        assertFalse(host.closedCell === true, 'ранний выход — до блокировок');
-    });
-
-    test('VM: _openEmpPopup — уровень «min»: DOM не трогается', () => {
-        const strictDoc = {
-            getElementById: function() { throw new Error('DOM touched'); }
-        };
-        const host = new Function('document', 'return ({' +
-            methodText(WS_CLIENT, '_openEmpPopup') + '\n' +
-            "_viewLevel: 'min'," +
-            '_empCardAllowed: function() { return this._viewLevel === "edit" || this._viewLevel === "view"; }' +
-            '});')(strictDoc);
-        let threw = null;
-        try { host._openEmpPopup(null, '42'); }
-        catch (e) { threw = e; }
-        assertTrue(threw === null, 'min: попап не открывается (DOM не тронут)');
+    test('SRC: Task 417 — методы попапа и гейт удалены', () => {
+        assertFalse(WS_CLIENT.indexOf('onEmpCellClick: function') !== -1,
+            'onEmpCellClick удалён');
+        assertFalse(WS_CLIENT.indexOf('_openEmpPopup: function') !== -1,
+            '_openEmpPopup удалён');
+        assertFalse(WS_CLIENT.indexOf('_empCardAllowed: function') !== -1,
+            '_empCardAllowed удалён');
     });
 
     test('SRC: карточка read-only — элементы правки гейтятся withEdit', () => {
@@ -655,10 +600,10 @@ describe('Task 340 — сервер: _requireRead пускает все три �
 // ============================================================
 describe('Task 340 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v643', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v643'") !== -1,
-            'CACHE_VERSION = kipia-test-v643 (Task 340 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v644') !== -1,
+    test('SW: кэш поднят до kipia-test-v644', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v644'") !== -1,
+            'CACHE_VERSION = kipia-test-v644 (Task 340 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v645') !== -1,
             'лишний инкремент (v579) не сделан');
     });
 
