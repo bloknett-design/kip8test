@@ -100,12 +100,12 @@ describe('Task 410 — SRC: режимы формы', () => {
             'заголовки мероприятия живы');
     });
 
-    test('_applyTrFormMode: скрытие «Тип», ширина «Таб. №», ярлык', () => {
+    test('_applyTrFormMode: скрытие «Тип» + ярлык (Task 411: работник — статичная строка)', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_applyTrFormMode'));
         assertTrue(fn.indexOf("typeGroup.style.display = instr ? 'none' : '';") !== -1,
             'группа «Тип» скрыта в instr-режиме');
-        assertTrue(fn.indexOf("tabGroup.style.flex = instr ? '1 1 100%' : '0 0 35%';") !== -1,
-            '«Таб. №» — во всю ширину в instr-режиме');
+        assertTrue(fn.indexOf('tabGroup.style.flex') === -1,
+            'ширина работника не переключается (Task 411 — статичная строка)');
         assertTrue(fn.indexOf("'Инструктаж / проверка знаний'") !== -1 &&
                    fn.indexOf(": 'Тема'") !== -1,
             'ярлык темы переключается по режиму');
@@ -199,13 +199,11 @@ describe('Task 410 — VM: применение режима к разметке
         return { host: host, els: els };
     }
 
-    test('instr: «Тип» скрыт, «Таб. №» во всю ширину, ярлык темы', () => {
+    test('instr: «Тип» скрыт, ярлык темы (Task 411: работник — статично)', () => {
         const c = modeHost(true);
         c.host._applyTrFormMode();
         assertEqual(c.els.wsTrTypeGroup.style.display, 'none',
             'группа «Тип» скрыта');
-        assertEqual(c.els.wsTrTabGroup.style.flex, '1 1 100%',
-            '«Таб. №» во всю ширину');
         assertEqual(c.els.wsTrTitleLabel.textContent,
             'Инструктаж / проверка знаний', 'ярлык темы instr-режима');
     });
@@ -215,8 +213,6 @@ describe('Task 410 — VM: применение режима к разметке
         c.host._applyTrFormMode();
         assertEqual(c.els.wsTrTypeGroup.style.display, '',
             'группа «Тип» видна');
-        assertEqual(c.els.wsTrTabGroup.style.flex, '0 0 35%',
-            'ширина «Таб. №» прежняя');
         assertEqual(c.els.wsTrTitleLabel.textContent, 'Тема',
             'ярлык «Тема»');
     });
@@ -228,7 +224,7 @@ describe('Task 410 — VM: применение режима к разметке
 describe('Task 410 — SW', () => {
 
     test('версия кэша поднята (v637)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v637') !== -1,
-            'CACHE_VERSION = kipia-test-v637');
+        assertTrue(SW_SRC.indexOf('kipia-test-v638') !== -1,
+            'CACHE_VERSION = kipia-test-v638');
     });
 });
