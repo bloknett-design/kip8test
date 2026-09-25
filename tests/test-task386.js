@@ -392,10 +392,10 @@ describe('Task 386 — SRC: механика', () => {
             'Esc → _setLegend(false)');
     });
 
-    test('SW: кэш поднят до kipia-test-v635', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v635'") !== -1,
-            'CACHE_VERSION = kipia-test-v635 (Task 386 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v636') !== -1,
+    test('SW: кэш поднят до kipia-test-v636', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v636'") !== -1,
+            'CACHE_VERSION = kipia-test-v636 (Task 386 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v637') !== -1,
             'v615 ещё не существует (guard)');
     });
 });

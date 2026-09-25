@@ -285,6 +285,9 @@ require('./test-task407.js');
 // тултип вида на бейджах И/ПЗ; годовые архивы (стрелки ‹год›,
 // eventsAll, снимок сроков «на конец года»)
 require('./test-task408.js');
+// Task 409 — эталон «Список_И_и_ПЗ» (5 пунктов заявки; instrListInit —
+// замещение); периодичность «раз в год» (_fmtPeriodRu)
+require('./test-task409.js');
 require('./test-deploy-url.js');
 
 // Запускаем

@@ -11,8 +11,8 @@
 //    ЗАГОЛОВКАМ строки 1: название/вид/периодичность/основание);
 //    listTrainings отдаёт instrList (шаблон) + instrAll (ВСЕ записи
 //    «Инструктажей» без фильтра года — «последний» инструктаж ищется
-//    по всем годам); instrListInit — разовое создание листа с
-//    типовым наполнением (идемпотентно).
+//    по всем годам); instrListInit — создание листа с эталоном
+//    заявки 409 (5 пунктов; повторный запуск замещает строки).
 // 2) КАРТОЧКА: блок b5 — ГРУППЫ по пунктам шаблона (записи года
 //    со ✎/✕, «след. срок … ✓» / «⚠ просрочено с …», «— не
 //    проводился» / «— в этом году не проводился»), секция «вне
@@ -127,18 +127,20 @@ describe('Task 407 — SRC: сервер (WorkSchedule.gs)', () => {
             'trainings — прежний годовой срез (бейджи/окна не меняются)');
     });
 
-    test('instrListInit: создание листа + идемпотентность', () => {
+    test('instrListInit: создание листа + замещение эталоном (Task 409)', () => {
         const fn = stripComments(methodText(WS_SRC, 'instrListInit'));
-        assertTrue(fn.indexOf('exists: true') !== -1,
-            'лист уже есть — только отчёт (идемпотентно)');
+        assertTrue(fn.indexOf('reset: !created') !== -1,
+            'лист уже есть — замещение строк (reset)');
         assertTrue(fn.indexOf("ss.insertSheet(this.INSTR_LIST_SHEET)") !== -1,
             'создание листа');
         assertTrue(fn.indexOf("'название', 'вид', 'периодичность', 'основание'") !== -1,
             'заголовки столбцов');
-        assertTrue(fn.indexOf("'Охрана труда'") !== -1 &&
-                   fn.indexOf("'Электробезопасность'") !== -1,
-            'типовое наполнение (4 пункта)');
-        assertTrue(WS_SRC.indexOf('Task 407: РАЗОВАЯ инициализация листа «Список_И_и_ПЗ»') !== -1,
+        assertTrue(fn.indexOf("'Повторный инструктаж по рабочим инструкциям ОТ'") !== -1 &&
+                   fn.indexOf("'Периодическая проверка знаний на допуск к самостоятельной работе'") !== -1,
+            'эталонная номенклатура заявки 409');
+        assertTrue(fn.indexOf('clearContent') !== -1,
+            'перед записью — очистка прежних строк');
+        assertTrue(WS_SRC.indexOf('Task 407/409: инициализация листа «Список_И_и_ПЗ»') !== -1,
             'инструкция запуска в редакторе (как trainingsSplitInit)');
     });
 });
@@ -203,8 +205,8 @@ describe('Task 407 — SRC: клиент', () => {
         assertTrue(fn.indexOf('ws-il-head') !== -1 && fn.indexOf('ws-il-name') !== -1,
             'шапка группы');
         assertTrue(fn.indexOf('ws-il-per') !== -1 &&
-                   fn.indexOf("['месяц', 'месяца', 'месяцев']") !== -1,
-            'подпись «раз в N месяцев»');
+                   fn.indexOf('this._fmtPeriodRu(gItem.периодичность)') !== -1,
+            'подпись периодичности — _fmtPeriodRu (Task 409: «раз в год»)');
         assertTrue(fn.indexOf('ws-il-row') !== -1,
             'строки-записи года');
         assertTrue(fn.indexOf('след. срок: ') !== -1 &&
@@ -255,9 +257,9 @@ describe('Task 407 — SRC: клиент', () => {
             'размеры окна карточки (.ws-wcard)');
     });
 
-    test('SW поднят (SW_VERSION = kipia-test-v635)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v635') !== -1,
-            'CACHE_VERSION в sw.js — kipia-test-v635');
+    test('SW поднят (SW_VERSION = kipia-test-v636)', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v636') !== -1,
+            'CACHE_VERSION в sw.js — kipia-test-v636');
     });
 });
 
@@ -311,6 +313,7 @@ describe('Task 407 — VM: блок по шаблону', () => {
             methodText(INDEX_SRC, '_normInstrKind') + ',\n' +
             methodText(INDEX_SRC, '_addMonthsIso') + ',\n' +
             methodText(INDEX_SRC, '_isoDate') + ',\n' +
+            methodText(INDEX_SRC, '_fmtPeriodRu') + ',\n' +
             '_fmtDateRu: function(d) { var p = String(d).split("-");' +
             '  return p.length === 3 ? p[2] + "." + p[1] + "." + p[0] : String(d); },' +
             '_esc: function(s) { return String(s); },' +
@@ -506,6 +509,7 @@ describe('Task 407 — VM: карточка', () => {
             methodText(INDEX_SRC, '_normInstrKind') + ',\n' +
             methodText(INDEX_SRC, '_addMonthsIso') + ',\n' +
             methodText(INDEX_SRC, '_isoDate') + ',\n' +
+            methodText(INDEX_SRC, '_fmtPeriodRu') + ',\n' +
             '_canEdit: ' + (withEdit ? 'true' : 'false') + ',' +
             '_year: new Date().getFullYear(), _month: 8,' +
             '_EMPLOYEES: ' + JSON.stringify(EMP) + ',' +
@@ -784,6 +788,14 @@ describe('Task 407 — GAS-VM: сервер (моки листов)', () => {
                     while (self.rows.length < row) self.rows.push([]);
                     self.rows[row - 1][col - 1] = v;
                 },
+                // Task 409: instrListInit очищает прежние строки
+                clearContent() {
+                    for (let r = row; r < row + numRows; r++) {
+                        for (let c = col; c < col + numCols; c++) {
+                            if (self.rows[r - 1]) self.rows[r - 1][c - 1] = '';
+                        }
+                    }
+                },
                 setFontWeight() { return this; },
                 setBackground() { return this; },
                 setFontColor() { return this; }
@@ -885,33 +897,43 @@ describe('Task 407 — GAS-VM: сервер (моки листов)', () => {
             'нет ключевого заголовка «название» — пустой список');
     });
 
-    test('instrListInit: создаёт лист с заголовками и типовым списком', () => {
+    test('instrListInit: создаёт лист с заголовками и эталоном (Task 409)', () => {
         const sheets = baseSheets();
         const WS = loadWS(sheets);
         const r = WS.instrListInit();
         assertTrue(r.ok && r.created === true, 'лист создан');
         const s = sheets['Список_И_и_ПЗ'];
         assertTrue(!!s, 'лист «Список_И_и_ПЗ» в таблице');
-        assertEqual(5, s.rows.length, 'заголовок + 4 типовых пункта');
+        assertEqual(6, s.rows.length, 'заголовок + 5 пунктов эталона');
         assertEqual('название', s.rows[0][0], 'заголовок 1');
         assertEqual('вид', s.rows[0][1], 'заголовок 2');
         assertEqual('периодичность', s.rows[0][2], 'заголовок 3');
         assertEqual('основание', s.rows[0][3], 'заголовок 4');
-        assertEqual('Охрана труда', s.rows[1][0], 'пункт 1');
+        assertEqual('Повторный инструктаж по рабочим инструкциям ОТ',
+            s.rows[1][0], 'пункт 1 — эталон заявки 409');
         assertEqual(6, s.rows[1][2], 'периодичность пункта 1');
+        assertEqual('инструкция № 53-ОТ', s.rows[5][3],
+            'основание пункта «работы на высоте»');
         // чтение сразу работает
         const lr = WS.listTrainings({ token: 't', year: 2026, month: 8 });
-        assertEqual(4, lr.data.instrList.length, 'шаблон читается после init');
+        assertEqual(5, lr.data.instrList.length, 'шаблон читается после init');
     });
 
-    test('instrListInit: идемпотентно — существующий лист не трогает', () => {
+    test('instrListInit: существующий лист — строки замещаются эталоном (Task 409)', () => {
         const sheets = withListSheet(baseSheets());
         const WS = loadWS(sheets);
-        const before = JSON.stringify(sheets['Список_И_и_ПЗ'].rows);
         const r = WS.instrListInit();
-        assertTrue(r.ok && r.exists === true, 'лист уже есть — только отчёт');
-        assertEqual(4, r.rows, 'строк данных в отчёте');
-        assertEqual(before, JSON.stringify(sheets['Список_И_и_ПЗ'].rows),
-            'содержимое листа НЕ изменено');
+        assertTrue(r.ok && r.reset === true, 'лист уже есть — reset (замещение)');
+        assertEqual(5, r.rows, 'строк данных в отчёте');
+        const s = sheets['Список_И_и_ПЗ'];
+        assertEqual(6, s.rows.length, 'заголовок + 5 пунктов эталона');
+        assertEqual('название', s.rows[0][0], 'заголовок приведён к эталону');
+        assertEqual('Повторный инструктаж по инструкции № 9-ОГЭ',
+            s.rows[2][0], 'пункт 2 эталона');
+        assertTrue(s.rows.every(rr => rr[1] !== 'Проверка знаний'),
+            'прежнее содержимое (столбцы в другом порядке) замещено');
+        // чтение после замещения работает
+        const lr = WS.listTrainings({ token: 't', year: 2026, month: 8 });
+        assertEqual(5, lr.data.instrList.length, 'шаблон читается после reset');
     });
 });

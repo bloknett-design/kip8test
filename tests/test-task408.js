@@ -206,6 +206,7 @@ describe('Task 408 — VM: форма (select по типу)', () => {
             methodText(INDEX_SRC, '_isInstrType') + ',\n' +
             methodText(INDEX_SRC, '_normInstrKind') + ',\n' +
             methodText(INDEX_SRC, '_normInstrKey') + ',\n' +
+            methodText(INDEX_SRC, '_fmtPeriodRu') + ',\n' +
             '_esc: function(s) { return String(s); },' +
             '_plural: function(n, f) { return f[2]; },' +
             '_INSTR_LIST: ' + JSON.stringify(tpl === undefined ? TPL : tpl) +
@@ -420,6 +421,7 @@ describe('Task 408 — VM: годовые архивы', () => {
             methodText(INDEX_SRC, '_normInstrKind') + ',\n' +
             methodText(INDEX_SRC, '_addMonthsIso') + ',\n' +
             methodText(INDEX_SRC, '_isoDate') + ',\n' +
+            methodText(INDEX_SRC, '_fmtPeriodRu') + ',\n' +
             '_fmtDateRu: function(d) { var p = String(d).split("-");' +
             '  return p.length === 3 ? p[2] + "." + p[1] + "." + p[0] : String(d); },' +
             '_esc: function(s) { return String(s); },' +
@@ -668,9 +670,9 @@ describe('Task 408 — GAS-VM: сервер (моки листов)', () => {
 // 7. SW — версия кэша
 // ============================================================
 describe('Task 408 — SW', () => {
-    test('SW: версия кэша kipia-test-v635', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v635'") !== -1,
-            'CACHE_VERSION = kipia-test-v635');
+    test('SW: версия кэша kipia-test-v636', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v636'") !== -1,
+            'CACHE_VERSION = kipia-test-v636');
         assertTrue(SW_SRC.indexOf('kipia-test-v634') === -1,
             'старой версии нет');
     });
