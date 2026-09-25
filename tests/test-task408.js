@@ -518,6 +518,7 @@ describe('Task 408 — VM: кэш (localStorage)', () => {
             methodText(INDEX_SRC, '_restoreCachedView') + ',\n' +
             methodText(INDEX_SRC, '_ymKey') + ',\n' +
             '_normalizeStatusCodes: function(c) { return c; },' +
+            '_normalizeInstrList: function(l) { return l; },' +
             '_fillStatusSelect: function() {},' +
             '_wsCacheKey: "kip8_ws_test_408",' +
             '_STATUS_CODES: [], _PATTERNS: [], _EMPLOYEES: [],' +
@@ -546,6 +547,7 @@ describe('Task 408 — VM: кэш (localStorage)', () => {
             methodText(INDEX_SRC, '_restoreCachedView') + ',\n' +
             methodText(INDEX_SRC, '_ymKey') + ',\n' +
             '_normalizeStatusCodes: function(c) { return c; },' +
+            '_normalizeInstrList: function(l) { return l; },' +
             '_fillStatusSelect: function() {},' +
             '_wsCacheKey: "kip8_ws_test_408",' +
             '_STATUS_CODES: [], _PATTERNS: [], _EMPLOYEES: [],' +
@@ -681,9 +683,9 @@ describe('Task 408 — GAS-VM: сервер (моки листов)', () => {
 // 7. SW — версия кэша
 // ============================================================
 describe('Task 408 — SW', () => {
-    test('SW: версия кэша kipia-test-v638', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v638'") !== -1,
-            'CACHE_VERSION = kipia-test-v638');
+    test('SW: версия кэша kipia-test-v639', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v639'") !== -1,
+            'CACHE_VERSION = kipia-test-v639');
         assertTrue(SW_SRC.indexOf('kipia-test-v634') === -1,
             'старой версии нет');
     });

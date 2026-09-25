@@ -158,8 +158,8 @@ describe('Task 407 — SRC: клиент', () => {
 
     test('_loadTrainings разбирает instrList/instrAll', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_loadTrainings'));
-        assertTrue(fn.indexOf('self._INSTR_LIST = data.instrList || [];') !== -1,
-            'шаблон из ответа (старый сервер — пустой)');
+        assertTrue(fn.indexOf('self._INSTR_LIST = self._normalizeInstrList(data.instrList);') !== -1,
+            'шаблон из ответа (Task 412: пустой сервер — встроенный эталон 409)');
         assertTrue(fn.indexOf('self._INSTR_ALL = data.instrAll || [];') !== -1,
             'все записи «Инструктажей» из ответа');
     });
@@ -257,9 +257,9 @@ describe('Task 407 — SRC: клиент', () => {
             'размеры окна карточки (.ws-wcard)');
     });
 
-    test('SW поднят (SW_VERSION = kipia-test-v638)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v638') !== -1,
-            'CACHE_VERSION в sw.js — kipia-test-v638');
+    test('SW поднят (SW_VERSION = kipia-test-v639)', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v639') !== -1,
+            'CACHE_VERSION в sw.js — kipia-test-v639');
     });
 });
 
@@ -703,6 +703,7 @@ describe('Task 407 — VM: кэш (localStorage)', () => {
             methodText(INDEX_SRC, '_restoreCachedView') + ',\n' +
             methodText(INDEX_SRC, '_ymKey') + ',\n' +
             '_normalizeStatusCodes: function(c) { return c; },' +
+            '_normalizeInstrList: function(l) { return l; },' +
             '_fillStatusSelect: function() {},' +
             '_wsCacheKey: "kip8_ws_test_407",' +
             '_STATUS_CODES: [], _PATTERNS: [], _EMPLOYEES: [],' +
@@ -733,6 +734,7 @@ describe('Task 407 — VM: кэш (localStorage)', () => {
             methodText(INDEX_SRC, '_restoreCachedView') + ',\n' +
             methodText(INDEX_SRC, '_ymKey') + ',\n' +
             '_normalizeStatusCodes: function(c) { return c; },' +
+            '_normalizeInstrList: function(l) { return l; },' +
             '_fillStatusSelect: function() {},' +
             '_wsCacheKey: "kip8_ws_test_407",' +
             '_STATUS_CODES: [], _PATTERNS: [], _EMPLOYEES: [],' +
