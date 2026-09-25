@@ -28,7 +28,7 @@
 //   • CSS @media print: .wsp-mev-item/.wsp-lg — display: block
 //     (один столбик) + page-break-inside: avoid.
 //
-// SW: kipia-test-v642.
+// SW: kipia-test-v643.
 //
 // Запуск: через tests/run-all.js (require './test-task360.js').
 
@@ -240,6 +240,10 @@ describe('Task 360 — VM: список мероприятий месяца', ()
     function sheetHost(opts) {
         opts = opts || {};
         return new Function('ProdCalendar', 'return ({' +
+            methodText(WS_CLIENT, '_instrShortOf') + '\n' +
+            methodText(WS_CLIENT, '_normInstrKey') + '\n' +
+            methodText(WS_CLIENT, '_instrShortOf') + '\n' +
+            methodText(WS_CLIENT, '_normInstrKey') + '\n' +
             methodText(WS_CLIENT, '_buildPrintHtml') + '\n' +
             '_year: 2026, _month: ' + (opts.month || 9) + ', _view: "full",' +
             '_isoDate: function(dt) { return dt.getFullYear() + "-" + ' +
@@ -368,6 +372,10 @@ describe('Task 360 — VM: список мероприятий месяца', ()
 
     test('VM: без _TRAININGS/_EMPLOYEES/_trainingCodeOf (старый мок) — не падает', () => {
         var host = new Function('ProdCalendar', 'return ({' +
+            methodText(WS_CLIENT, '_instrShortOf') + '\n' +
+            methodText(WS_CLIENT, '_normInstrKey') + '\n' +
+            methodText(WS_CLIENT, '_instrShortOf') + '\n' +
+            methodText(WS_CLIENT, '_normInstrKey') + '\n' +
             methodText(WS_CLIENT, '_buildPrintHtml') + '\n' +
             '_year: 2026, _month: 9, _view: "full",' +
             '_isoDate: function(dt) { return "2026-09-01"; },' +
@@ -398,6 +406,10 @@ describe('Task 360 — VM: перечень кодов месяца', () => {
     function sheetHost(opts) {
         opts = opts || {};
         return new Function('ProdCalendar', 'return ({' +
+            methodText(WS_CLIENT, '_instrShortOf') + '\n' +
+            methodText(WS_CLIENT, '_normInstrKey') + '\n' +
+            methodText(WS_CLIENT, '_instrShortOf') + '\n' +
+            methodText(WS_CLIENT, '_normInstrKey') + '\n' +
             methodText(WS_CLIENT, '_buildPrintHtml') + '\n' +
             '_year: 2026, _month: 9, _view: "full",' +
             '_isoDate: function(dt) { return dt.getFullYear() + "-" + ' +
@@ -525,6 +537,10 @@ describe('Task 360 — регресс прежних фич печати', () =>
     function sheetHost(opts) {
         opts = opts || {};
         return new Function('ProdCalendar', 'return ({' +
+            methodText(WS_CLIENT, '_instrShortOf') + '\n' +
+            methodText(WS_CLIENT, '_normInstrKey') + '\n' +
+            methodText(WS_CLIENT, '_instrShortOf') + '\n' +
+            methodText(WS_CLIENT, '_normInstrKey') + '\n' +
             methodText(WS_CLIENT, '_buildPrintHtml') + '\n' +
             '_year: 2026, _month: 9, _view: "full",' +
             '_isoDate: function(dt) { return dt.getFullYear() + "-" + ' +
@@ -574,10 +590,10 @@ describe('Task 360 — регресс прежних фич печати', () =>
 // ============================================================
 describe('Task 360 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v642', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v642'") !== -1,
-            'CACHE_VERSION = kipia-test-v642 (Task 360 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v643') !== -1,
+    test('SW: кэш поднят до kipia-test-v643', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v643'") !== -1,
+            'CACHE_VERSION = kipia-test-v643 (Task 360 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v644') !== -1,
             'v605 ещё не существует (лишний инкремент)');
     });
 });

@@ -180,6 +180,8 @@ describe('Task 404 — VM: панели и кнопки карточки', () =>
               'группа_допуска': 'IV', 'дата_приёма': '2024-03-15' },
         ];
         return new Function('document', 'return ({' +
+            methodText(INDEX_SRC, '_instrShortOf') + ',\n' +
+            methodText(INDEX_SRC, '_normInstrKey') + ',\n' +
             methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
@@ -285,6 +287,8 @@ describe('Task 404 — VM: панели и кнопки карточки', () =>
               'смена': '', 'должность': 'Слесарь КИПиА', 'комментарий': '' },
         ];
         const host = new Function('document', 'return ({' +
+            methodText(INDEX_SRC, '_instrShortOf') + ',\n' +
+            methodText(INDEX_SRC, '_normInstrKey') + ',\n' +
             methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
@@ -329,7 +333,8 @@ describe('Task 404 — VM: окно мероприятий — отпуска н
         const document = { getElementById: function(id) {
             return id === 'wsEventsPanel' ? el : null;
         }};
-        const texts = ['_renderMonthEventsPanel', '_trainingCodeOf', '_statusMeta']
+        const texts = ['_instrShortOf', '_normInstrKey',
+                   '_renderMonthEventsPanel', '_trainingCodeOf', '_statusMeta']
             .map(n => methodText(INDEX_SRC, n));
         const make = new Function('localStorage', 'document', 'confirm',
                                   'KipToast', 'kipConfirm',
@@ -397,12 +402,12 @@ describe('Task 404 — VM: окно мероприятий — отпуска н
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 404 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v642 (Task 404)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v642'") !== -1,
+    test('CACHE_VERSION = kipia-test-v643 (Task 404)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v643'") !== -1,
             'фронтенд менялся — кэш поднят до v631');
     });
     test('guard: v632 отсутствует (следующий бамп)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v643') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v644') === -1,
             'v632 ещё не существует (guard следующего бампа)');
     });
 });

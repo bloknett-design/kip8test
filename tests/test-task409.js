@@ -130,9 +130,9 @@ describe('Task 409 — SRC: клиент (формат периодичност�
             'подсказка — _fmtPeriodRu');
     });
 
-    test('SW поднят (SW_VERSION = kipia-test-v642)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v642') !== -1,
-            'CACHE_VERSION в sw.js — kipia-test-v642');
+    test('SW поднят (SW_VERSION = kipia-test-v643)', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v643') !== -1,
+            'CACHE_VERSION в sw.js — kipia-test-v643');
     });
 });
 
@@ -181,6 +181,8 @@ describe('Task 409 — VM: блок по эталону 5 пунктов', () =>
 
     function sectionHost() {
         return new Function('document', 'return ({' +
+            methodText(INDEX_SRC, '_instrShortOf') + ',\n' +
+            methodText(INDEX_SRC, '_normInstrKey') + ',\n' +
             methodText(INDEX_SRC, '_renderInstrSection') + ',\n' +
             methodText(INDEX_SRC, '_isInstrType') + ',\n' +
             methodText(INDEX_SRC, '_normInstrKey') + ',\n' +

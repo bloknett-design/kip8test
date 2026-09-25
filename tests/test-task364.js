@@ -13,7 +13,7 @@
 //     обёртки на всю ширину; каждая запись/код — отдельной
 //     строкой своего столбика (как в Task 360).
 //
-// SW: kipia-test-v642.
+// SW: kipia-test-v643.
 //
 // Запуск: через tests/run-all.js (require './test-task364.js').
 
@@ -162,7 +162,11 @@ describe('Task 364 — SRC: wsp-bottom на печати', () => {
 function sheetHost(opts) {
     opts = opts || {};
     return new Function('ProdCalendar', 'return ({' +
-        methodText(WS_CLIENT, '_buildPrintHtml') + '\n' +
+        methodText(WS_CLIENT, '_instrShortOf') + '\n' +
+            methodText(WS_CLIENT, '_normInstrKey') + '\n' +
+            methodText(WS_CLIENT, '_instrShortOf') + '\n' +
+            methodText(WS_CLIENT, '_normInstrKey') + '\n' +
+            methodText(WS_CLIENT, '_buildPrintHtml') + '\n' +
         '_year: 2026, _month: 9, ' +
         '_view: ' + JSON.stringify(opts.view || 'full') + ',' +
         '_isoDate: function(dt) { return dt.getFullYear() + "-" + ' +
@@ -259,8 +263,8 @@ describe('Task 364 — VM: ряд мероприятий|кодов в печа�
 // 4. SW — версия кеша
 // ============================================================
 describe('Task 364 — SW: версия кеша', () => {
-    test('SW: CACHE_VERSION = kipia-test-v642', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v642'") !== -1,
+    test('SW: CACHE_VERSION = kipia-test-v643', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v643'") !== -1,
             'SW поднят до v593 (рамка 2px + коды справа от мероприятий)');
     });
 });

@@ -157,11 +157,15 @@ describe('Task 414 — VM: карточка', () => {
 
     function cardHost(opts) {
         return new Function('document', 'return ({' +
+            methodText(INDEX_SRC, '_instrShortOf') + ',\n' +
+            methodText(INDEX_SRC, '_normInstrKey') + ',\n' +
             methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
+            methodText(INDEX_SRC, '_instrShortOf') + ',\n' +
+            methodText(INDEX_SRC, '_normInstrKey') + ',\n' +
             methodText(INDEX_SRC, '_renderInstrSection') + ',\n' +
             methodText(INDEX_SRC, '_isInstrType') + ',\n' +
             methodText(INDEX_SRC, '_normInstrKey') + ',\n' +
@@ -254,11 +258,11 @@ describe('Task 414 — VM: карточка', () => {
 // ============================================================
 describe('Task 414 — SW версия', () => {
     test('v641', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v642'") !== -1,
-            'SW кэш — kipia-test-v642');
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v643'") !== -1,
+            'SW кэш — kipia-test-v643');
         assertTrue(SW_SRC.indexOf('kipia-test-v640') === -1,
             'v640 не осталась в sw.js');
-        assertTrue(SW_SRC.indexOf('kipia-test-v643') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v644') === -1,
             'двойной бамп отсутствует (guard: v642)');
     });
 });

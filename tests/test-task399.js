@@ -101,7 +101,8 @@ function panelHost(opts) {
     const document = { getElementById: function(id) {
         return id === 'wsEventsPanel' ? el : null;
     }};
-    const texts = ['_renderMonthEventsPanel', '_trainingCodeOf',
+    const texts = ['_instrShortOf', '_normInstrKey',
+                   '_renderMonthEventsPanel', '_trainingCodeOf',
                    '_statusMeta', '_isMasterKipia']
         .map(n => methodText(INDEX_SRC, n));
     const make = new Function('localStorage', 'document', 'confirm',
@@ -266,13 +267,13 @@ describe('Task 399 — VM: edit/view/легаси — окно ПОЛНОЕ', ()
 // ============================================================
 describe('Task 399 — SRC: сервис-воркер', () => {
 
-    test('sw.js: CACHE_VERSION kipia-test-v642', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v642'") !== -1,
+    test('sw.js: CACHE_VERSION kipia-test-v643', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v643'") !== -1,
             'бамп v626 -> v627 (клиентский фикс раздаётся из кэша SW)');
     });
 
     test('sw.js: v628 НЕ существует (guard от двойного бампа)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v643') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v644') === -1,
             'v628 отсутствует — следующая задача');
     });
 });

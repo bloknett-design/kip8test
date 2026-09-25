@@ -258,9 +258,9 @@ describe('Task 407 — SRC: клиент', () => {
             'размеры окна карточки (.ws-wcard)');
     });
 
-    test('SW поднят (SW_VERSION = kipia-test-v642)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v642') !== -1,
-            'CACHE_VERSION в sw.js — kipia-test-v642');
+    test('SW поднят (SW_VERSION = kipia-test-v643)', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v643') !== -1,
+            'CACHE_VERSION в sw.js — kipia-test-v643');
     });
 });
 
@@ -308,6 +308,8 @@ describe('Task 407 — VM: блок по шаблону', () => {
     function sectionHost(opts) {
         opts = opts || {};
         return new Function('document', 'return ({' +
+            methodText(INDEX_SRC, '_instrShortOf') + ',\n' +
+            methodText(INDEX_SRC, '_normInstrKey') + ',\n' +
             methodText(INDEX_SRC, '_renderInstrSection') + ',\n' +
             methodText(INDEX_SRC, '_isInstrType') + ',\n' +
             methodText(INDEX_SRC, '_normInstrKey') + ',\n' +
@@ -499,11 +501,15 @@ describe('Task 407 — VM: карточка', () => {
 
     function cardHost(withTpl, withEdit, asBlocks) {
         return new Function('document', 'return ({' +
+            methodText(INDEX_SRC, '_instrShortOf') + ',\n' +
+            methodText(INDEX_SRC, '_normInstrKey') + ',\n' +
             methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
+            methodText(INDEX_SRC, '_instrShortOf') + ',\n' +
+            methodText(INDEX_SRC, '_normInstrKey') + ',\n' +
             methodText(INDEX_SRC, '_renderInstrSection') + ',\n' +
             methodText(INDEX_SRC, '_isInstrType') + ',\n' +
             methodText(INDEX_SRC, '_normInstrKey') + ',\n' +

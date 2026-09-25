@@ -211,6 +211,8 @@ function cardHost(trainings, vacs) {
           'дата_приёма': '2025-01-20' },
     ];
     const host = new Function('document', 'return ({' +
+        methodText(INDEX_SRC, '_instrShortOf') + ',\n' +
+        methodText(INDEX_SRC, '_normInstrKey') + ',\n' +
         methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
         methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
         methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
@@ -349,6 +351,8 @@ function pageHost(trainings) {
         methodText(INDEX_SRC, '_renderWorkersGeneral') + ',\n' +
         methodText(INDEX_SRC, 'selectWorkersTab') + ',\n' +
         methodText(INDEX_SRC, '_isMasterKipia') + ',\n' +
+        methodText(INDEX_SRC, '_instrShortOf') + ',\n' +
+        methodText(INDEX_SRC, '_normInstrKey') + ',\n' +
         methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
         methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
         methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
@@ -439,7 +443,8 @@ function panelHost(opts) {
     const document = { getElementById: function(id) {
         return id === 'wsEventsPanel' ? el : null;
     }};
-    const texts = ['_renderMonthEventsPanel', '_trainingCodeOf', '_statusMeta']
+    const texts = ['_instrShortOf', '_normInstrKey',
+                   '_renderMonthEventsPanel', '_trainingCodeOf', '_statusMeta']
         .map(n => methodText(INDEX_SRC, n));
     const make = new Function('localStorage', 'document', 'confirm',
                               'KipToast', 'kipConfirm',
@@ -621,10 +626,10 @@ describe('Task 394 — VM: окно мероприятий — порядок с
 // ============================================================
 describe('Task 394 — SW', () => {
 
-    test('SW: kipia-test-v642', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v642'") !== -1,
+    test('SW: kipia-test-v643', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v643'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v643') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v644') === -1,
             'двойного бампа не было');
     });
 });

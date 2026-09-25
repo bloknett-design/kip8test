@@ -43,7 +43,7 @@
 //     → под кнопкой, без бара → прежнее поведение);
 //     _openEventsOnlyPopup (рендер окна, кловер, позиция, без
 //     окна кодов).
-//   SW: kipia-test-v642.
+//   SW: kipia-test-v643.
 //
 // Запуск: через tests/run-all.js (require './test-task319.js').
 
@@ -435,6 +435,7 @@ describe('Task 319 — окно кодов и «Мероприятия в это
             }
         };
         const texts = ['_openEventsOnlyPopup', '_renderEventsPopup', '_eventsAt',
+                       '_instrShortOf', '_normInstrKey',
                        '_trainingCodeOf', '_statusMeta', '_esc', '_escAttr']
             .map(n => methodText(INDEX_SRC, n));
         // «var o = {…}; o._canEdit = …; return o;» — без запятых на стыке
@@ -513,10 +514,10 @@ describe('Task 319 — окно кодов и «Мероприятия в это
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 319 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v642', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v642') !== -1,
-            'CACHE_VERSION = kipia-test-v642 (Task 319)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v643') !== -1,
+    test('SW: версия кэша kipia-test-v643', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v643') !== -1,
+            'CACHE_VERSION = kipia-test-v643 (Task 319)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v644') !== -1,
             'нет лишнего инкремента');
     });
 });

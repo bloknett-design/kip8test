@@ -934,8 +934,9 @@ var WorkSchedule = {
 
   // workSchedule.listTrainings
   // payload: { token, year, month }  (если month не указан — все мероприятия года)
-  // returns: { ok:true, data: { trainings: [...], instrList (Task 407),
-  //            instrAll (Task 407), eventsAll (Task 408) } }
+  // returns: { ok:true, data: { trainings: [...], instrList (Task 407;
+  //          Task 416: пункты несут «сокращение» — столбец E листа
+  //          «Список_И_и_ПЗ»), instrAll (Task 407), eventsAll (Task 408) } }
   listTrainings: function(payload) {
     var auth = this._requireRead(payload.token);
     if (auth.error) return auth.error;
@@ -1035,6 +1036,12 @@ var WorkSchedule = {
       'периодичность', 'периодичность, мес.', 'периодичность, мес',
       'периодичность мес.', 'периодичность мес']);
     var baseCol = this._headerColIndex(sheet, ['основание']);
+    // Task 416 (заявка): столбец E «сокращение» — краткие названия
+    // пунктов для компактных показов клиента (печать табеля,
+    // окна мероприятий, мини-окна шахматки/фамилий); заголовка/
+    // ячейки нет — пустая строка (клиент показывает полное
+    // название)
+    var shortCol = this._headerColIndex(sheet, ['сокращение']);
     var values = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
     var out = [];
     for (var i = 0; i < values.length; i++) {
@@ -1049,7 +1056,8 @@ var WorkSchedule = {
         название:      name,
         вид:           kindCol !== null ? String(r[kindCol] || '').trim() : '',
         периодичность: per,
-        основание:     baseCol !== null ? String(r[baseCol] || '').trim() : ''
+        основание:     baseCol !== null ? String(r[baseCol] || '').trim() : '',
+        сокращение:    shortCol !== null ? String(r[shortCol] || '').trim() : ''
       });
     }
     return out;
@@ -2698,7 +2706,14 @@ var WorkSchedule = {
     if (!sheet) {
       sheet = ss.insertSheet(this.INSTR_LIST_SHEET);
     }
-    var headers = ['название', 'вид', 'периодичность', 'основание'];
+    // Task 416 (заявка: столбец E «сокращение»): заголовок листа —
+    // ПЯТЬ столбцов (A..E), но эталонные строки пишутся/чистятся
+    // ТОЛЬКО в A..D — данные столбца E (пользовательские
+    // сокращения) повторный запуск НЕ затирает; заполняются
+    // сокращения вручную в таблице
+    var headers = ['название', 'вид', 'периодичность', 'основание',
+                   'сокращение'];
+    var dataCols = 4;
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     sheet.getRange(1, 1, 1, headers.length)
       .setFontWeight('bold').setBackground('#1F4E5F').setFontColor('#FFFFFF');
@@ -2717,9 +2732,10 @@ var WorkSchedule = {
     ];
     var lastRow = sheet.getLastRow();
     if (lastRow > 1) {
-      sheet.getRange(2, 1, lastRow - 1, headers.length).clearContent();
+      // A..D only (dataCols) — столбец E «сокращение» НЕ трогаем
+      sheet.getRange(2, 1, lastRow - 1, dataCols).clearContent();
     }
-    sheet.getRange(2, 1, items.length, headers.length).setValues(items);
+    sheet.getRange(2, 1, items.length, dataCols).setValues(items);
     try {
       Utils.audit('', created ? 'WORKSCHEDULE_INSTR_LIST_SHEET_CREATED'
                               : 'WORKSCHEDULE_INSTR_LIST_SHEET_RESET', '', '',

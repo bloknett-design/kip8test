@@ -118,8 +118,9 @@ describe('Task 408 — SRC: клиент', () => {
             'тема записи → тултип');
         assertTrue(fn.indexOf('(evTip ? \' title="\' + this._esc(evTip) + \'"\' : \'\')') !== -1,
             'title-атрибут бейджа (пустой темы/справочника — без title)');
-        assertTrue(fn.indexOf('events[evj].code + \' — \' + String(evTr.тема).trim()') !== -1,
-            'формат «код — тема»');
+        assertTrue(fn.indexOf('events[evj].code + \' — \' +') !== -1 &&
+                   fn.indexOf('this._instrShortOf(String(evTr.тема).trim())') !== -1,
+            'формат «код — тема» (Task 416: короткое название при наличии сокращения)');
     });
 
     test('карточка: год блока + навигатор в заголовках (asBlocks)', () => {
@@ -427,6 +428,8 @@ describe('Task 408 — VM: годовые архивы', () => {
               периодичность: 12, основание: 'ежегодно' }
         ];
         const host = new Function('document', 'return ({' +
+            methodText(INDEX_SRC, '_instrShortOf') + ',\n' +
+            methodText(INDEX_SRC, '_normInstrKey') + ',\n' +
             methodText(INDEX_SRC, '_renderInstrSection') + ',\n' +
             methodText(INDEX_SRC, '_isInstrType') + ',\n' +
             methodText(INDEX_SRC, '_normInstrKey') + ',\n' +
@@ -684,9 +687,9 @@ describe('Task 408 — GAS-VM: сервер (моки листов)', () => {
 // 7. SW — версия кэша
 // ============================================================
 describe('Task 408 — SW', () => {
-    test('SW: версия кэша kipia-test-v642', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v642'") !== -1,
-            'CACHE_VERSION = kipia-test-v642');
+    test('SW: версия кэша kipia-test-v643', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v643'") !== -1,
+            'CACHE_VERSION = kipia-test-v643');
         assertTrue(SW_SRC.indexOf('kipia-test-v634') === -1,
             'старой версии нет');
     });
