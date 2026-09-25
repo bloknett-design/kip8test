@@ -297,6 +297,12 @@ function doPost(e) {
       case 'workSchedule.deleteTraining':
         return _json(WorkSchedule.deleteTraining(payload));
 
+      // Task 418: отметка о выполнении записи «Инструктажей» —
+      // столбцы «выполнение» (F) + пересчёт «просрочен» (G);
+      // галочка в блоке «Повторные инструктажи…» карточки работника
+      case 'workSchedule.setTrainingDone':
+        return _json(WorkSchedule.setTrainingDone(payload));
+
       // Task 274: отпуска — план периодов (лист «Отпуска» таблицы
       // табель_КИП_ИОС), автоматическая расстановка «О» в шахматке
       case 'workSchedule.listVacations':

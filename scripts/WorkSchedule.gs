@@ -106,7 +106,8 @@
 //   B: день_цикла (1..N)
 //   C: статус (код; пусто = выходной)
 //
-// Структура листа «Инструктажи» (Task 405 — таблица РАЗДЕЛЕНА):
+// Структура листа «Инструктажи» (Task 405 — таблица РАЗДЕЛЕНА;
+//   Task 418 — столбцы E..G ПЕРЕИМЕНОВАНЫ по заявке):
 //   A: id (auto-increment; нумерация СКВОЗНАЯ с листом
 //      «Мероприятия» — связки Записи_графика.инструкция однозначны)
 //   B: таб_номер (FK на Сотрудники)
@@ -115,23 +116,38 @@
 //      обучение/прогул/примечание живут в листе «Мероприятия» —
 //      разделение по типу, перенос старых строк — trainingsSplitInit)
 //   D: тема
-//   E: дата_начала (Date)
-//   F: дата_окончания (Date)
-//   G: длительность_дней (int)
+//   E: дата_проведения (Date — дата ПЛАНИРУЕМОГО проведения)
+//   F: выполнение (int 0/1 — отметка пользователя о выполнении
+//      из блока «Повторные инструктажи…» карточки работника:
+//      0 = отметки нет, 1 = отметка поставлена; эндпоинт
+//      setTrainingDone. Легаси-даты прежнего «дата_окончания»
+//      читаются как 0 и нормализуются в листе)
+//   G: просрочен (int 0/1 — пересчитывается автоматически:
+//      1 = дата проведения прошла И выполнение = 0;
+//      иначе 0 — дата в будущем/сегодня или отметка есть)
 //   H: комментарий
 //   Task 413: лист может быть удалён вручную — addTraining
 //   создаёт его автоматически (заголовки/стили,
 //   _ensureTrainingsSheet), listTrainings без листа — пустые
 //   списки, не ошибка: архив записей восстанавливается
 //   первым же добавлением
+//   Task 418: ПРЕЖНИЕ столбцы (дата_начала/дата_окончания/
+//   длительность_дней) поддерживаются по заголовкам строки 1 —
+//   формат листа определяет _trainingsSheetFormat ('done'/
+//   'legacy'); чтение 'done' нормализует F/G и ПЕРЕСЧИТЫВАЕТ
+//   «просрочен» прямо в листе (просроченные даты копятся сами),
+//   записи несут и прежние поля для совместимости (дата_начала =
+//   дата_окончания = дата_проведения, длительность_дней = 1)
 //
 // Структура листа «Мероприятия» (Task 405 — вторая половина
 //   разделённой таблицы инструктажей: обучение/прогул/примечание):
 //   A: id, B: таб_номер, C: тип, D: тема, E: дата_начала,
 //   F: дата_окончания, G: длительность_дней, H: комментарий —
-//   формат столбцов как у «Инструктажей»; listTrainings читает ОБА
-//   листа одним списком, addTraining пишет в лист по типу,
-//   deleteTraining ищет id в обоих листах
+//   формат ПРЕЖНИЙ (Task 418 переименовал столбцы только у
+//   «Инструктажей», листы разошлись); listTrainings читает ОБА
+//   листа одним списком, addTraining пишет в лист по типу
+//   (формат строки — по заголовкам листа), deleteTraining ищет
+//   id в обоих листах
 //
 // Структура листа «Список_И_и_ПЗ» (Task 407 — шаблонный список
 //   инструктажей и проверок знаний): столбцы — ПО ЗАГОЛОВКАМ строки 1
@@ -338,12 +354,54 @@ var WorkSchedule = {
       ? this.EVENTS_SHEET : this.TRAININGS_SHEET;
   },
 
-  // Task 405: создать лист «Мероприятия» с заголовками (структура —
-  // как у «Инструктажей»: строка 1 листа-образца копируется; нет
-  // источника — канонические заголовки). Лист уже есть — вернуть
-  // его. Вызывается addTraining при первой записи «мероприятийного»
-  // типа и trainingsSplitInit — до ручного переноса данных
-  // приложение остаётся рабочим
+  // Task 418: формат листа таблицы мероприятий по ЗАГОЛОВКАМ
+  // строки 1 (столбцы A..H, сравнение толерантное — регистр/
+  // пробелы не важны): 'done' — лист «Инструктажей» с
+  // переименованными столбцами заявки (определяющий признак —
+  // любой из заголовков «дата_проведения»/«выполнение»/
+  // «просрочен» в E..G), 'legacy' — прежний формат (дата_начала/
+  // дата_окончания/длительность_дней; лист «Мероприятия» —
+  // всегда legacy). Ошибка чтения заголовков — 'legacy'
+  // (безопасный прежний путь)
+  _trainingsSheetFormat: function(sheet) {
+    try {
+      var head = sheet.getRange(1, 1, 1, 8).getValues()[0];
+      for (var i = 0; i < head.length; i++) {
+        var h = String(head[i] || '').trim().toLowerCase()
+                  .replace(/\s+/g, ' ');
+        if (h === 'выполнение' || h === 'дата_проведения' ||
+            h === 'просрочен') return 'done';
+      }
+    } catch (e) { /* ignore */ }
+    return 'legacy';
+  },
+
+  // Task 418: «сегодня» (полночь зоны скрипта) — граница
+  // просрочки: просрочен = 1, когда дата_проведения СТРОГО
+  // раньше сегодняшнего дня и выполнение = 0
+  _todayStart: function() {
+    var n = new Date();
+    return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+  },
+
+  // Task 418: пересчёт «просрочен» (столбец G) по правилу заявки:
+  //   1 — дата проведения прошла И отметки о выполнении нет;
+  //   0 — отметка стоит (выполнение = 1) ИЛИ дата сегодня/в будущем
+  // Некорректная дата (не Date) — не просрочена (0)
+  _isTrainingLate: function(dateProv, done) {
+    if (done === 1) return 0;
+    if (!(dateProv instanceof Date)) return 0;
+    return (dateProv.getTime() < this._todayStart().getTime()) ? 1 : 0;
+  },
+
+  // Task 405: создать лист «Мероприятия» с заголовками. Task 418:
+  //   форматы листов РАЗОШЛИСЬ (у «Инструктажей» столбцы E..G
+  //   переименованы: дата_проведения/выполнение/просрочен) —
+  //   копирование строки-образца «Инструктажей» УДАЛЕНО: всегда
+  //   канонические ПРЕЖНИЕ заголовки. Лист уже есть — не
+  //   трогается. Вызывается addTraining при первой записи
+  //   «мероприятийного» типа и trainingsSplitInit — до ручного
+  //   переноса данных приложение остаётся рабочим
   _ensureEventsSheet: function() {
     var ss = SpreadsheetApp.openById(this.SPREADSHEET_ID);
     var sheet = ss.getSheetByName(this.EVENTS_SHEET);
@@ -351,15 +409,6 @@ var WorkSchedule = {
     sheet = ss.insertSheet(this.EVENTS_SHEET);
     var headers = ['id', 'таб_номер', 'тип', 'тема', 'дата_начала',
                    'дата_окончания', 'длительность_дней', 'комментарий'];
-    var src = this._getSheet(this.TRAININGS_SHEET);
-    if (src && src.getLastRow() >= 1) {
-      var srcHead = src.getRange(1, 1, 1, 8).getValues()[0];
-      var filled = false;
-      for (var h = 0; h < srcHead.length; h++) {
-        if (String(srcHead[h] || '').trim()) { filled = true; break; }
-      }
-      if (filled) headers = srcHead;
-    }
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     sheet.getRange(1, 1, 1, headers.length)
       .setFontWeight('bold').setBackground('#1F4E5F').setFontColor('#FFFFFF');
@@ -372,13 +421,15 @@ var WorkSchedule = {
   },
 
   // Task 413: создать лист «Инструктажи» с каноническими
-  // заголовками (зеркально _ensureEventsSheet Task 405).
-  // Причина: лист был удалён из файла вручную — добавление
-  // записей падало ошибкой sheet_not_found, а listTrainings не
-  // отдавал данные. Вызывается addTraining при отсутствии
-  // листа: архив записей восстанавливается первым же
+  // заголовками (Task 418 — НОВЫЕ имена столбцов E..G:
+  // дата_проведения/выполнение/просрочен, как у переименованного
+  // пользователем листа). Причина: лист был удалён из файла
+  // вручную — добавление записей падало ошибкой sheet_not_found,
+  // а listTrainings не отдавал данные. Вызывается addTraining при
+  // отсутствии листа: архив записей восстанавливается первым же
   // добавлением (заголовки + строка); лист уже есть —
-  // возвращается как есть
+  // возвращается как есть (его формат определяет
+  // _trainingsSheetFormat, переименовал ли пользователь столбцы)
   _ensureTrainingsSheet: function() {
     var ss = SpreadsheetApp.openById(this.SPREADSHEET_ID);
     var sheet = ss.getSheetByName(this.TRAININGS_SHEET);
@@ -390,8 +441,8 @@ var WorkSchedule = {
       sheet = ss.getSheetByName(this.TRAININGS_SHEET);
       if (!sheet) return null;
     }
-    var headers = ['id', 'таб_номер', 'тип', 'тема', 'дата_начала',
-                   'дата_окончания', 'длительность_дней', 'комментарий'];
+    var headers = ['id', 'таб_номер', 'тип', 'тема', 'дата_проведения',
+                   'выполнение', 'просрочен', 'комментарий'];
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     sheet.getRange(1, 1, 1, headers.length)
       .setFontWeight('bold').setBackground('#1F4E5F').setFontColor('#FFFFFF');
@@ -980,19 +1031,69 @@ var WorkSchedule = {
   // Task 405: чтение ОДНОГО листа мероприятий (строки 2+, столбцы
   // A..H). payload.year/month — фильтр пересечения периода (как в
   // listTrainings до разделения); строки без id пропускаются
+  // Task 418: формат 'done' (лист «Инструктажей» с переименован-
+  //   ными столбцами заявки) — E: дата_проведения, F: выполнение
+  //   (0/1), G: просрочен (0/1, пересчёт: дата прошла и отметки
+  //   нет). ЛЕГАСИ-значения F (даты прежнего «дата_окончания»)
+  //   читаются как выполнение = 0; нормализованное «выполнение» и
+  //   пересчитанный «просрочен» ЗАПИСЫВАЮТСЯ обратно в лист одним
+  //   пакетом на столбец (только при отличии — _writeBackDoneFlags):
+  //   столбцы остаются корректными сами, без ручных правок.
+  //   Для совместимости записи несут и прежние поля (бейджи/окна/
+  //   печать шахматки не меняются): дата_начала = дата_окончания =
+  //   дата_проведения, длительность_дней = 1
   _readTrainingsSheet: function(sheet, payload) {
     var lastRow = sheet.getLastRow();
     if (lastRow < 2) return [];
 
     var values = sheet.getRange(2, 1, lastRow - 1, 8).getValues();
+    // Task 418: формат листа по заголовкам строки 1
+    var fmt = this._trainingsSheetFormat(sheet);
+    var today = this._todayStart();
     var year  = payload.year  ? parseInt(payload.year, 10)  : null;
     var month = payload.month ? parseInt(payload.month, 10) : null;
     var rangeStart = (year && month) ? new Date(year, month - 1, 1) : (year ? new Date(year, 0, 1) : null);
     var rangeEnd   = (year && month) ? new Date(year, month, 1) : (year ? new Date(year + 1, 0, 1) : null);
 
+    // Task 418: колонки нормализации F/G (формат done; выравнивание
+    // по строке values — строки без id пишутся как есть)
+    var fixDone = (fmt === 'done') ? [] : null;
+    var fixLate = (fmt === 'done') ? [] : [];
+
     var out = [];
     for (var i = 0; i < values.length; i++) {
       var r = values[i];
+      if (fmt === 'done') {
+        var hasId = (r[0] || r[0] === 0);
+        var provDate = r[4];
+        // легаси-дата в F (прежний «дата_окончания») → 0
+        var done = (hasId && parseInt(r[5], 10) === 1) ? 1 : 0;
+        var late = (done !== 1 && provDate instanceof Date &&
+                    provDate.getTime() < today.getTime()) ? 1 : 0;
+        fixDone.push(hasId ? done : r[5]);
+        fixLate.push(hasId ? late : r[6]);
+        if (!hasId) continue;
+        // инструктаж/ПЗ — однодневное событие: фильтр года по дате
+        if (rangeStart && rangeEnd) {
+          if (!(provDate instanceof Date)) continue;
+          if (provDate < rangeStart || provDate >= rangeEnd) continue;
+        }
+        var iso = provDate instanceof Date ? this._toIsoDate(provDate) : null;
+        out.push({
+          id:                parseInt(r[0], 10),
+          таб_номер:             String(r[1] || '').trim(),
+          тип:               String(r[2] || '').trim(),
+          тема:              String(r[3] || '').trim(),
+          дата_начала:       iso,
+          дата_окончания:    iso,
+          длительность_дней: 1,
+          комментарий:       String(r[7] || '').trim(),
+          дата_проведения:   iso,
+          выполнение:        done,
+          просрочен:         late
+        });
+        continue;
+      }
       if (!r[0] && r[0] !== 0) continue;
       var startDate = r[4];
       var endDate   = r[5];
@@ -1012,7 +1113,34 @@ var WorkSchedule = {
         комментарий:       String(r[7] || '').trim()
       });
     }
+    // Task 418: нормализовать столбцы F/G листа (формат done)
+    if (fixDone) this._writeBackDoneFlags(sheet, values, fixDone, fixLate);
     return out;
+  },
+
+  // Task 418: записать нормализованные столбцы «выполнение» (F) и
+  // «просрочен» (G) в лист — только формат 'done' и только когда
+  // значения отличаются от лежащих в ячейках (легаси-даты в F,
+  // устаревший «просрочен»). Запись — по столбцу одним setValues
+  // (неизменённые строки пишутся теми же значениями — безопасно);
+  // строки без id не трогаются (в массиве — исходные значения).
+  // Ошибка записи НЕ ломает чтение — данные важнее нормализации
+  _writeBackDoneFlags: function(sheet, values, doneCol, lateCol) {
+    try {
+      var changed = false;
+      for (var i = 0; i < values.length; i++) {
+        var hasId = (values[i][0] || values[i][0] === 0);
+        if (!hasId) continue;
+        // parseInt(Date) → NaN: легаси-дата в F всегда «отличается»
+        if (parseInt(values[i][5], 10) !== doneCol[i]) changed = true;
+        if (parseInt(values[i][6], 10) !== lateCol[i]) changed = true;
+      }
+      if (!changed) return;
+      var fVals = doneCol.map(function(v) { return [v]; });
+      var gVals = lateCol.map(function(v) { return [v]; });
+      sheet.getRange(2, 6, values.length, 1).setValues(fVals);
+      sheet.getRange(2, 7, values.length, 1).setValues(gVals);
+    } catch (e) { /* запись необязательна — чтение важнее */ }
   },
 
   // Task 407: чтение листа «Список_И_и_ПЗ» — шаблонного списка
@@ -2067,7 +2195,9 @@ var WorkSchedule = {
 
   // workSchedule.addTraining
   // payload: { token, таб_номер, тип, тема, дата_начала(ISO), дата_окончания(ISO),
-  //            длительность_дней, комментарий }
+  //            длительность_дней, комментарий, выполнение(0|1 — Task 418,
+  //            необязательно: правка сохраняет отметку о выполнении
+  //            записи «Инструктажей»; новые записи — 0) }
   addTraining: function(payload) {
     var auth = this._requireWrite(payload.token);
     if (auth.error) return auth.error;
@@ -2114,9 +2244,24 @@ var WorkSchedule = {
     if (evMaxId > maxId) maxId = evMaxId;
     var newId = maxId + 1;
 
-    // Task 304: B (таб_№) — текст, ведущие нули не теряются
-    this._appendRowKeepText(sheet,
-      [newId, tabNo, tip, tema, startDate, endDate, duration, comment], [2]);
+    // Task 418: строка — по ФОРМАТУ листа (заголовки строки 1):
+    // «Инструктажи» с переименованными столбцами (дата_проведения/
+    // выполнение/просрочен) — НОВЫЙ формат: выполнение — отметка
+    // пользователя (правка записи сохраняет её, payload.выполнение;
+    // новое добавление — 0), просрочен — пересчёт по дате
+    // проведения. «Мероприятия» и легаси-«Инструктажи» — прежняя
+    // строка (дата_окончания/длительность_дней)
+    var done = (parseInt(payload.выполнение, 10) === 1) ? 1 : 0;
+    if (sheetName !== this.EVENTS_SHEET &&
+        this._trainingsSheetFormat(sheet) === 'done') {
+      this._appendRowKeepText(sheet,
+        [newId, tabNo, tip, tema, startDate, done,
+         this._isTrainingLate(startDate, done), comment], [2]);
+    } else {
+      // Task 304: B (таб_№) — текст, ведущие нули не теряются
+      this._appendRowKeepText(sheet,
+        [newId, tabNo, tip, tema, startDate, endDate, duration, comment], [2]);
+    }
 
     try {
       Utils.audit(user.email, 'WORKSCHEDULE_ADD_TRAINING', '', '',
@@ -2124,6 +2269,57 @@ var WorkSchedule = {
     } catch (e) { /* ignore */ }
 
     return { ok: true, data: { id: newId } };
+  },
+
+  // Task 418: workSchedule.setTrainingDone
+  // payload: { token, id, выполнение (0|1) }
+  // Отметка о выполнении записи «Инструктажей» — галочка строки
+  // блока «Повторные инструктажи и периодическая проверка знаний»
+  // карточки работника (клиент). Пишет столбец F «выполнение» и
+  // пересчитывает G «просрочен» (дата проведения прошла и отметки
+  // нет → 1). Только лист «Инструктажи» НОВОГО формата (заявка
+  // переименовала столбцы); легаси-формат — понятная ошибка
+  // (столбцов «выполнения» в листе нет). Возвращает новые значения
+  // флагов — клиент обновляет запись без перезагрузки сетки
+  setTrainingDone: function(payload) {
+    var auth = this._requireWrite(payload.token);
+    if (auth.error) return auth.error;
+    var user = auth.user;
+
+    var id = parseInt(payload.id, 10);
+    if (isNaN(id)) return { ok: false, error: 'invalid_id' };
+    var done = (parseInt(payload.выполнение, 10) === 1) ? 1 : 0;
+
+    var sheet = this._getSheet(this.TRAININGS_SHEET);
+    if (!sheet) {
+      return { ok: false, error: 'sheet_not_found: ' + this.TRAININGS_SHEET };
+    }
+    if (this._trainingsSheetFormat(sheet) !== 'done') {
+      return { ok: false, error: 'legacy_columns',
+               message: 'Столбцы листа «Инструктажи» не переименованы: нужны дата_проведения, выполнение, просрочен (столбцы E, F, G — заявка Task 418)' };
+    }
+
+    var lastRow = sheet.getLastRow();
+    if (lastRow >= 2) {
+      var ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+      for (var i = 0; i < ids.length; i++) {
+        if (parseInt(ids[i][0], 10) === id) {
+          var row = i + 2;
+          // E: дата_проведения → пересчёт «просрочен» по отметке
+          var provDate = sheet.getRange(row, 5).getValue();
+          var late = this._isTrainingLate(provDate, done);
+          sheet.getRange(row, 6, 1, 2).setValues([[done, late]]);
+          try {
+            Utils.audit(user.email, 'WORKSCHEDULE_SET_TRAINING_DONE', '', '',
+              'Отметка выполнения id=' + id + ' выполнение=' + done +
+              ' просрочен=' + late);
+          } catch (e) { /* ignore */ }
+          return { ok: true, data: { id: id, 'выполнение': done,
+                                     'просрочен': late } };
+        }
+      }
+    }
+    return { ok: false, error: 'not_found' };
   },
 
   // workSchedule.deleteTraining
@@ -2188,10 +2384,22 @@ var WorkSchedule = {
     }
     if (!move.length) return { ok: true, moved: 0, sheet: this.EVENTS_SHEET };
 
+    // Task 418: листы могут быть РАЗНОГО формата — строки
+    // «Инструктажей» с переименованными столбцами (E: дата_проведения,
+    // F: выполнение, G: просрочен) при переносе в «Мероприятия»
+    // конвертируются в ПРЕЖНИЙ формат (F: дата_окончания = дата
+    // начала, G: длительность 1 день — мероприятия многодневны)
+    var srcFmt = this._trainingsSheetFormat(src);
+
     // строки переносятся ЦЕЛИКОМ (id/даты — как в источнике;
     // Task 304: таб_номер — текстом, ведущие нули не теряются)
     for (var m = 0; m < move.length; m++) {
-      this._appendRowKeepText(dst, move[m].vals, [2]);
+      var vals = move[m].vals;
+      if (srcFmt === 'done') {
+        vals = [vals[0], vals[1], vals[2], vals[3], vals[4],
+                vals[4], 1, vals[7]];
+      }
+      this._appendRowKeepText(dst, vals, [2]);
     }
     // удаление перенесённых строк — снизу вверх (номера не съезжают)
     for (var d = move.length - 1; d >= 0; d--) {

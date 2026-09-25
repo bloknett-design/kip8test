@@ -71,10 +71,16 @@ describe('Task 413 — SRC: сервер (WorkSchedule.gs)', () => {
             'метод существует');
         assertTrue(fn.indexOf('insertSheet(this.TRAININGS_SHEET)') !== -1,
             'лист создаётся insertSheet');
-        const hdr = fn.indexOf("'длительность_дней'") !== -1 &&
-                    fn.indexOf("'таб_номер'") !== -1 &&
+        // Task 418: канонические заголовки — столбцы E..G
+        // переименованы пользователем (дата_проведения/выполнение/
+        // просрочен), лист создаётся сразу в новом формате
+        const hdr = fn.indexOf("'дата_проведения'") !== -1 &&
+                    fn.indexOf("'выполнение'") !== -1 &&
+                    fn.indexOf("'просрочен'") !== -1 &&
                     fn.indexOf("'комментарий'") !== -1;
-        assertTrue(hdr, 'канонические заголовки A..H');
+        assertTrue(hdr, 'канонические заголовки A..H (Task 418)');
+        assertTrue(fn.indexOf("'дата_начала'") === -1,
+            'легаси-заголовков больше нет');
         assertTrue(fn.indexOf('setFrozenRows(1)') !== -1,
             'строка заголовков закреплена (как у «Мероприятий»)');
         assertTrue(fn.indexOf('WORKSCHEDULE_TRAININGS_SHEET_CREATED') !== -1,
@@ -311,12 +317,12 @@ describe('Task 413 — GAS-VM: сервер (моки листов)', () => {
         const t = sheets['Инструктажи'];
         assertTrue(!!t, 'лист «Инструктажи» создан');
         assertEqual(t.rows.length, 2, 'шапка + 1 строка данных');
-        // канонические заголовки
+        // Task 418: канонические заголовки — НОВЫЙ формат
         assertEqual(JSON.stringify(t.rows[0]),
             JSON.stringify(['id', 'таб_номер', 'тип', 'тема',
-                           'дата_начала', 'дата_окончания',
-                           'длительность_дней', 'комментарий']),
-            'заголовки A..H канонические');
+                           'дата_проведения', 'выполнение',
+                           'просрочен', 'комментарий']),
+            'заголовки A..H канонические (Task 418)');
         assertEqual(t.frozen, true, 'строка заголовков закреплена');
         // сквозной id: max id «Мероприятий» = 10 → новый id = 11
         assertEqual(t.rows[1][0], 11, 'id = 11 (сквозная нумерация)');
@@ -324,9 +330,11 @@ describe('Task 413 — GAS-VM: сервер (моки листов)', () => {
         assertEqual(t.rows[1][2], 'инструктаж', 'тип');
         assertEqual(t.rows[1][3], 'Повторный инструктаж по рабочим инструкциям ОТ',
             'тема');
-        assertTrue(t.rows[1][4] instanceof Date, 'дата_начала — Date');
-        assertTrue(t.rows[1][5] instanceof Date, 'дата_окончания — Date');
-        assertEqual(t.rows[1][6], 1, 'длительность 1 день (Task 411)');
+        assertTrue(t.rows[1][4] instanceof Date, 'дата_проведения — Date');
+        // Task 418: F — выполнение (новая запись — 0, отметок ещё
+        // нет), G — просрочен (дата 25.08.2026 прошла → 1)
+        assertEqual(t.rows[1][5], 0, 'выполнение = 0 (без отметки)');
+        assertEqual(t.rows[1][6], 1, 'просрочен = 1 (дата прошла)');
     });
 
     test('addTraining: вторая запись — нумерация на созданном листе', () => {
@@ -434,10 +442,10 @@ describe('Task 413 — GAS-VM: сервер (моки листов)', () => {
 // 5. SW — версия кэша
 // ============================================================
 describe('Task 413 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v644', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v644'") !== -1,
+    test('CACHE_VERSION = kipia-test-v645', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v645'") !== -1,
             'SW v640 (Task 413)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v645') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v646') === -1,
             'двойной бамп отсутствует');
     });
 });
