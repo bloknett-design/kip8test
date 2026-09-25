@@ -72,8 +72,9 @@ describe('Task 408 — SRC: сервер (WorkSchedule.gs)', () => {
         const fn = stripComments(methodText(WS_SRC, 'listTrainings'));
         assertTrue(fn.indexOf('eventsAll: (evSheet ? this._readTrainingsSheet(evSheet, {}) : [])') !== -1,
             'поле eventsAll — все записи листа «Мероприятия»');
-        assertTrue(fn.indexOf('instrAll:  this._readTrainingsSheet(sheet, {})') !== -1,
-            'instrAll (Task 407) не тронут');
+        assertTrue(
+            fn.indexOf('instrAll:  sheet ? this._readTrainingsSheet(sheet, {}) : []') !== -1,
+            'instrAll (Task 407) жив; Task 413 — пустой срез без листа');
         assertTrue(fn.indexOf('trainings: trainings') !== -1,
             'годовой срез trainings прежний');
     });
@@ -683,9 +684,9 @@ describe('Task 408 — GAS-VM: сервер (моки листов)', () => {
 // 7. SW — версия кэша
 // ============================================================
 describe('Task 408 — SW', () => {
-    test('SW: версия кэша kipia-test-v639', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v639'") !== -1,
-            'CACHE_VERSION = kipia-test-v639');
+    test('SW: версия кэша kipia-test-v640', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v640'") !== -1,
+            'CACHE_VERSION = kipia-test-v640');
         assertTrue(SW_SRC.indexOf('kipia-test-v634') === -1,
             'старой версии нет');
     });

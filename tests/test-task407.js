@@ -121,8 +121,9 @@ describe('Task 407 — SRC: сервер (WorkSchedule.gs)', () => {
         const fn = stripComments(methodText(WS_SRC, 'listTrainings'));
         assertTrue(fn.indexOf('instrList: this._readInstrListSheet()') !== -1,
             'поле instrList — шаблон «Список_И_и_ПЗ»');
-        assertTrue(fn.indexOf('instrAll:  this._readTrainingsSheet(sheet, {})') !== -1,
-            'поле instrAll — ВСЕ записи «Инструктажей» без фильтра года');
+        assertTrue(
+            fn.indexOf('instrAll:  sheet ? this._readTrainingsSheet(sheet, {}) : []') !== -1,
+            'поле instrAll — ВСЕ записи «Инструктажей» без фильтра года (Task 413: без листа — пустой срез, чтение не падает)');
         assertTrue(fn.indexOf('trainings: trainings') !== -1,
             'trainings — прежний годовой срез (бейджи/окна не меняются)');
     });
@@ -257,9 +258,9 @@ describe('Task 407 — SRC: клиент', () => {
             'размеры окна карточки (.ws-wcard)');
     });
 
-    test('SW поднят (SW_VERSION = kipia-test-v639)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v639') !== -1,
-            'CACHE_VERSION в sw.js — kipia-test-v639');
+    test('SW поднят (SW_VERSION = kipia-test-v640)', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v640') !== -1,
+            'CACHE_VERSION в sw.js — kipia-test-v640');
     });
 });
 

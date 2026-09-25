@@ -20,6 +20,9 @@
 //                                   B..G, J..K; таб_№ — PK, не меняется)
 //   workSchedule.dismissEmployee   — уволить: дата_увольнения (H) + в_архиве=1 (I)
 //   workSchedule.addTraining      — добавить плановое мероприятие
+//                                   (Task 413: лист «Инструктажи»/
+//                                   «Мероприятия» удалён — создаётся
+//                                   автоматически с заголовками)
 //   workSchedule.deleteTraining   — удалить мероприятие
 //   workSchedule.listVacations    — план отпусков (Task 274, лист «Отпуска»)
 //   workSchedule.addVacation      — добавить период отпуска (часть 1..3)
@@ -116,6 +119,11 @@
 //   F: дата_окончания (Date)
 //   G: длительность_дней (int)
 //   H: комментарий
+//   Task 413: лист может быть удалён вручную — addTraining
+//   создаёт его автоматически (заголовки/стили,
+//   _ensureTrainingsSheet), listTrainings без листа — пустые
+//   списки, не ошибка: архив записей восстанавливается
+//   первым же добавлением
 //
 // Структура листа «Мероприятия» (Task 405 — вторая половина
 //   разделённой таблицы инструктажей: обучение/прогул/примечание):
@@ -359,6 +367,38 @@ var WorkSchedule = {
     try {
       Utils.audit('', 'WORKSCHEDULE_EVENTS_SHEET_CREATED', '', '',
         'Создан лист «Мероприятия» (Task 405 — разделение таблицы инструктажей)');
+    } catch (e) { /* ignore */ }
+    return sheet;
+  },
+
+  // Task 413: создать лист «Инструктажи» с каноническими
+  // заголовками (зеркально _ensureEventsSheet Task 405).
+  // Причина: лист был удалён из файла вручную — добавление
+  // записей падало ошибкой sheet_not_found, а listTrainings не
+  // отдавал данные. Вызывается addTraining при отсутствии
+  // листа: архив записей восстанавливается первым же
+  // добавлением (заголовки + строка); лист уже есть —
+  // возвращается как есть
+  _ensureTrainingsSheet: function() {
+    var ss = SpreadsheetApp.openById(this.SPREADSHEET_ID);
+    var sheet = ss.getSheetByName(this.TRAININGS_SHEET);
+    if (sheet) return sheet;
+    try {
+      sheet = ss.insertSheet(this.TRAININGS_SHEET);
+    } catch (e) {
+      // гонка одновременных добавлений: лист создал другой вызов
+      sheet = ss.getSheetByName(this.TRAININGS_SHEET);
+      if (!sheet) return null;
+    }
+    var headers = ['id', 'таб_номер', 'тип', 'тема', 'дата_начала',
+                   'дата_окончания', 'длительность_дней', 'комментарий'];
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.getRange(1, 1, 1, headers.length)
+      .setFontWeight('bold').setBackground('#1F4E5F').setFontColor('#FFFFFF');
+    sheet.setFrozenRows(1);
+    try {
+      Utils.audit('', 'WORKSCHEDULE_TRAININGS_SHEET_CREATED', '', '',
+        'Создан лист «Инструктажи» (Task 413 — автосоздание при добавлении записи; лист был удалён)');
     } catch (e) { /* ignore */ }
     return sheet;
   },
@@ -900,17 +940,20 @@ var WorkSchedule = {
     var auth = this._requireRead(payload.token);
     if (auth.error) return auth.error;
 
+    // Task 413: лист «Инструктажи» может отсутствовать (удалён
+    // вручную) — чтение НЕ падает: trainings/instrAll — пустые
+    // срезы, «Мероприятия» и «Список_И_и_ПЗ» читаются независимо.
+    // Лист создастся автоматически при первом добавлении записи
+    // (addTraining → _ensureTrainingsSheet)
     var sheet = this._getSheet(this.TRAININGS_SHEET);
-    if (!sheet) return { ok: false, error: 'sheet_not_found: ' + this.TRAININGS_SHEET };
+    var trainings = sheet ? this._readTrainingsSheet(sheet, payload) : [];
 
     // Task 405: мероприятие может лежать в ОДНОМ ИЗ ДВУХ листов —
     // «Инструктажи» (инструктаж/проверка_знаний) или «Мероприятия»
     // (обучение/прогул/примечание; формат A..H тот же). Ответ —
     // ОБЪЕДИНЁННЫЙ список обоих листов (бейджи/окна/печать/генерация
-    // видят все мероприятия вместе, нумерация id сквозная). Листа
-    // «Мероприятия» может не быть (до разделения данных) — тогда
-    // отдаются только «Инструктажи»
-    var trainings = this._readTrainingsSheet(sheet, payload);
+    // видят все мероприятия вместе, нумерация id сквозная). Любого
+    // листа может не быть — отдаются имеющиеся (Task 413)
     var evSheet = this._getSheet(this.EVENTS_SHEET);
     if (evSheet) {
       trainings = trainings.concat(this._readTrainingsSheet(evSheet, payload));
@@ -928,7 +971,7 @@ var WorkSchedule = {
     return { ok: true, data: {
       trainings: trainings,
       instrList: this._readInstrListSheet(),
-      instrAll:  this._readTrainingsSheet(sheet, {}),
+      instrAll:  sheet ? this._readTrainingsSheet(sheet, {}) : [],
       eventsAll: (evSheet ? this._readTrainingsSheet(evSheet, {}) : [])
     } };
   },
@@ -2041,11 +2084,17 @@ var WorkSchedule = {
 
     // Task 405: лист записи — по ТИПУ мероприятия (инструктаж/
     // проверка_знаний → «Инструктажи»; обучение/прогул/примечание →
-    // «Мероприятия», лист создаётся при первой записи, если нет)
+    // «Мероприятия», лист создаётся при первой записи, если нет).
+    // Task 413: ОБА листа создаются автоматически (лист
+    // «Инструктажи» был удалён вручную — добавление падало
+    // sheet_not_found; архив записей восстанавливается первым
+    // же добавлением)
     var sheetName = this._trainingsSheetForType(tip);
     var sheet = this._getSheet(sheetName);
-    if (!sheet && sheetName === this.EVENTS_SHEET) {
-      sheet = this._ensureEventsSheet();
+    if (!sheet) {
+      sheet = (sheetName === this.EVENTS_SHEET)
+        ? this._ensureEventsSheet()
+        : this._ensureTrainingsSheet();
     }
     if (!sheet) return { ok: false, error: 'sheet_not_found: ' + sheetName };
 
