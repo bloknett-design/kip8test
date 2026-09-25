@@ -20,7 +20,7 @@
 //       (border-top: 0 — высота шапки не меняется, Task 331 не тронут),
 //       темы красят border-color ярче; правая граница «Сотрудник +»
 //       остаётся ПРОЗРАЧНОЙ в обеих темах (Task 336, полоса ::after);
-//     — sw.js: CACHE_VERSION = kipia-test-v641 (+ guard v586).
+//     — sw.js: CACHE_VERSION = kipia-test-v642 (+ guard v586).
 //   VM (_renderCell, моки как в test-task314.js):
 //     — dayOff=true: пустая ячейка БЕЗ «·» (классы ws-weekend /
 //       ws-status-empty на месте), «.»-код — тоже без «·» (ws-dot-code
@@ -262,13 +262,13 @@ describe('Task 355 — VM: _renderCell (нерабочие дни без «·»)
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 355 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v641', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v641'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v641');
+    test('SW: версия кэша kipia-test-v642', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v642'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v642');
     });
 
     test('SW: двойной бамп не случился (v585 не существует)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v642') === -1,
-            'в sw.js нет kipia-test-v641');
+        assertTrue(SW_SRC.indexOf('kipia-test-v643') === -1,
+            'в sw.js нет kipia-test-v642');
     });
 });

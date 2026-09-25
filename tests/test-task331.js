@@ -55,7 +55,7 @@
 //   ЦЕНТР: .ws-tt-table th/td — text-align: center (прежде вправо;
 //     колонка «Сотрудник» — по-прежнему слева своими правилами),
 //     годовая таблица — тоже по центру.
-//   SW: kipia-test-v641.
+//   SW: kipia-test-v642.
 //
 // Запуск: через tests/run-all.js (require './test-task331.js').
 
@@ -457,10 +457,10 @@ describe('Task 331 — JS: статичный бордюрчик сетки (у�
 // 7. SW: версия кэша
 // ============================================================
 describe('Task 331 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v641', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v641'") !== -1,
-            'CACHE_VERSION = kipia-test-v641');
-        assertFalse(SW_SRC.indexOf('kipia-test-v642') !== -1,
+    test('SW: кэш поднят до kipia-test-v642', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v642'") !== -1,
+            'CACHE_VERSION = kipia-test-v642');
+        assertFalse(SW_SRC.indexOf('kipia-test-v643') !== -1,
             'v571 не существует (один инкремент на Task 331)');
     });
 });

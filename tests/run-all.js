@@ -310,6 +310,10 @@ require('./test-task412.js');
 // срезы (не ошибка); клиент — понятный текст sheet_not_found
 require('./test-task413.js');
 require('./test-task414.js');
+// Task 415 — записи блоков карты работника, не помещающиеся в
+// одну строку, переносятся на следующую (CSS: .ws-wcard /
+// #wsEmpPopup .ws-popup-name + заголовки блоков/секций)
+require('./test-task415.js');
 require('./test-deploy-url.js');
 
 // Запускаем
