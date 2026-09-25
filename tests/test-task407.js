@@ -258,9 +258,9 @@ describe('Task 407 — SRC: клиент', () => {
             'размеры окна карточки (.ws-wcard)');
     });
 
-    test('SW поднят (SW_VERSION = kipia-test-v640)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v640') !== -1,
-            'CACHE_VERSION в sw.js — kipia-test-v640');
+    test('SW поднят (SW_VERSION = kipia-test-v641)', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v641') !== -1,
+            'CACHE_VERSION в sw.js — kipia-test-v641');
     });
 });
 
@@ -537,20 +537,23 @@ describe('Task 407 — VM: карточка', () => {
             '});')(mockDoc({}));
     }
 
-    test('шаблон загружен: группы в карточке (asBlocks)', () => {
+    test('шаблон загружен: карточка — ТОЛЬКО записи (Task 414)', () => {
         const host = cardHost(true, true, true);
         const html = host._renderWorkerCard('017', true, true).join('');
-        assertTrue(html.indexOf('ws-il-head') !== -1 &&
-                   html.indexOf('раз в 6 месяцев') !== -1,
-            'группы шаблона в блоках карточки');
-        assertTrue(html.indexOf('— не проводился') !== -1,
-            '«Пожарная безопасность» без записей — «не проводился»');
-        assertTrue(html.indexOf('вне списка:') === -1,
-            'все записи года соответствуют шаблону');
-        // «след. срок» от сегодняшней записи + 6 мес — всегда будущее
-        assertTrue(html.indexOf('след. срок: ') !== -1 &&
-                   html.indexOf('просрочено') === -1,
-            'актуальный срок от последней записи');
+        // Task 414: карточка — плоский список добавленных записей;
+        // группы шаблона (заголовки/«не проводился»/«след. срок»)
+        // показывает только попап ячейки шахматки
+        assertTrue(html.indexOf('ws-il-head') === -1 &&
+                   html.indexOf('раз в 6 месяцев') === -1,
+            'групп-заголовков шаблона в карточке НЕТ');
+        assertTrue(html.indexOf('— не проводился') === -1 &&
+                   html.indexOf('след. срок') === -1 &&
+                   html.indexOf('вне списка:') === -1,
+            'служебных строк шаблона в карточке НЕТ');
+        assertTrue(/ws-popup-event[^>]*>[\s\S]*?Охрана труда · /.test(html),
+            'плоская строка «тема · дата» — только добавленные записи');
+        assertTrue(html.indexOf('Пожарная безопасность') === -1,
+            'пустой пункт шаблона в карточке не показывается');
     });
 
     test('шаблон загружен: попап — компактный вид', () => {

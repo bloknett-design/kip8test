@@ -309,6 +309,7 @@ require('./test-task412.js');
 // листа (заголовки + первая запись), listTrainings без листа — пустые
 // срезы (не ошибка); клиент — понятный текст sheet_not_found
 require('./test-task413.js');
+require('./test-task414.js');
 require('./test-deploy-url.js');
 
 // Запускаем
