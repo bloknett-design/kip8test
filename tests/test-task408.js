@@ -161,13 +161,13 @@ describe('Task 408 — SRC: клиент', () => {
                    INDEX_SRC.indexOf('id="wsTrItemHint"') !== -1,
             'разметка select и подсказки');
         const sf = stripComments(methodText(INDEX_SRC, '_syncTrTitleField'));
-        assertTrue(sf.indexOf('var useSel = this._isInstrType(tip) &&') !== -1 &&
+        assertTrue(sf.indexOf('var useSel = !!this._trInstrMode &&') !== -1 &&
                    sf.indexOf('(this._INSTR_LIST || []).length > 0;') !== -1,
-            'select только для инструктажа/ПЗ с шаблоном');
+            'select только в instr-режиме с шаблоном (Task 410)');
         assertTrue(sf.indexOf('(вне списка)</option>') !== -1,
             'правка «вне списка» — отдельный пункт');
         const sm = stripComments(methodText(INDEX_SRC, 'submitTrainingForm'));
-        assertTrue(sm.indexOf('var tema = (this._isInstrType(tip) && trSel && !trSel.hidden)') !== -1,
+        assertTrue(sm.indexOf('var tema = (this._trInstrMode && trSel && !trSel.hidden)') !== -1,
             'submit читает тему из select');
         assertTrue(sm.indexOf("'Выберите пункт из списка'") !== -1,
             'сообщение валидации');
@@ -180,7 +180,7 @@ describe('Task 408 — SRC: клиент', () => {
 // ============================================================
 // 3. VM — форма: строгий select + подсказка
 // ============================================================
-describe('Task 408 — VM: форма (select по типу)', () => {
+describe('Task 408 — VM: форма (select «Список_И_и_ПЗ»)', () => {
 
     const TPL = [
         { название: 'Охрана труда', вид: 'инструктаж',
@@ -191,7 +191,9 @@ describe('Task 408 — VM: форма (select по типу)', () => {
           периодичность: 12, основание: 'ежегодно' }
     ];
 
-    function formHost(tip, tpl) {
+    // Task 410: режим формы задаётся явно (instr = select всех
+    // пунктов «Список_И_и_ПЗ»; tip больше не влияет)
+    function formHost(tip, tpl, mode) {
         const els = {
             wsTrType: { value: tip },
             wsTrTitleSel: { hidden: false, innerHTML: 'stale', value: '' },
@@ -209,40 +211,49 @@ describe('Task 408 — VM: форма (select по типу)', () => {
             methodText(INDEX_SRC, '_fmtPeriodRu') + ',\n' +
             '_esc: function(s) { return String(s); },' +
             '_plural: function(n, f) { return f[2]; },' +
+            '_trInstrMode: ' + (mode === false ? 'false' : 'true') + ',' +
             '_INSTR_LIST: ' + JSON.stringify(tpl === undefined ? TPL : tpl) +
             '});')(mockDoc(els));
         return { host: host, els: els };
     }
 
-    test('инструктаж: select показан, ввод скрыт, пункты вида', () => {
-        const c = formHost('инструктаж');
+    test('instr-режим: select показан, ВСЕ пункты шаблона с группами', () => {
+        const c = formHost(null);
         c.host._syncTrTitleField();
         assertTrue(c.els.wsTrTitleSel.hidden === false, 'select виден');
         assertTrue(c.els.wsTrTitle.hidden === true, 'текстовый ввод скрыт');
         const h = c.els.wsTrTitleSel.innerHTML;
         assertTrue(h.indexOf('value="">— выберите из списка —') !== -1,
             'пустой пункт');
+        assertTrue(h.indexOf('<optgroup label="Инструктажи">') !== -1 &&
+                   h.indexOf('<optgroup label="Проверка знаний">') !== -1,
+            'группы по виду (Task 410)');
         assertTrue(h.indexOf('value="Охрана труда"') !== -1 &&
-                   h.indexOf('value="Пожарная безопасность"') !== -1,
-            'пункты вида «инструктаж»');
-        assertTrue(h.indexOf('Электробезопасность') === -1,
-            'ПЗ-пункт не предлагается');
+                   h.indexOf('value="Пожарная безопасность"') !== -1 &&
+                   h.indexOf('value="Электробезопасность"') !== -1,
+            'ВСЕ пункты шаблона — инструктажи и ПЗ одним списком');
         assertEqual('', c.els.wsTrTitleSel.value, 'по умолчанию — не выбрано');
     });
 
-    test('проверка знаний (пробел в типе): только ПЗ-пункты', () => {
-        const c = formHost('проверка знаний');
+    test('группы: инструктажи и ПЗ разделены по видам', () => {
+        const c = formHost(null);
         c.host._syncTrTitleField();
         const h = c.els.wsTrTitleSel.innerHTML;
-        assertTrue(h.indexOf('value="Электробезопасность"') !== -1,
-            'ПЗ-пункт предложен');
-        assertTrue(h.indexOf('Охрана труда') === -1 &&
-                   h.indexOf('Пожарная безопасность') === -1,
-            'инструктажные пункты не предложены');
+        const gi = h.indexOf('<optgroup label="Инструктажи">');
+        const gp = h.indexOf('<optgroup label="Проверка знаний">');
+        assertTrue(gi !== -1 && gp !== -1 && gi < gp, 'обе группы по порядку');
+        const segI = h.slice(gi, gp);
+        assertTrue(segI.indexOf('value="Охрана труда"') !== -1 &&
+                   segI.indexOf('value="Пожарная безопасность"') !== -1,
+            'инструктажи — в своей группе');
+        assertTrue(segI.indexOf('Электробезопасность') === -1,
+            'ПЗ-пункт не в группе инструктажей');
+        assertTrue(h.slice(gp).indexOf('value="Электробезопасность"') !== -1,
+            'ПЗ-пункт — в своей группе');
     });
 
-    test('обучение: свободный ввод (select скрыт, datalist жив)', () => {
-        const c = formHost('обучение');
+    test('event-режим: свободный ввод (select скрыт, datalist жив)', () => {
+        const c = formHost('обучение', undefined, false);
         c.host._syncTrTitleField();
         assertTrue(c.els.wsTrTitleSel.hidden === true, 'select скрыт');
         assertTrue(c.els.wsTrTitle.hidden === false, 'ввод виден');
@@ -252,14 +263,14 @@ describe('Task 408 — VM: форма (select по типу)', () => {
     });
 
     test('шаблона нет — деградация в свободный ввод', () => {
-        const c = formHost('инструктаж', []);
+        const c = formHost(null, []);
         c.host._syncTrTitleField();
         assertTrue(c.els.wsTrTitleSel.hidden === true, 'select скрыт');
         assertTrue(c.els.wsTrTitle.hidden === false, 'ввод виден');
     });
 
     test('правка: тема совпала (регистр/пробелы) — пункт выбран', () => {
-        const c = formHost('инструктаж');
+        const c = formHost(null);
         c.host._syncTrTitleField('  ОХРАНА   труда ');
         assertEqual('Охрана труда', c.els.wsTrTitleSel.value,
             'выбран пункт шаблона (нормализация)');
@@ -268,7 +279,7 @@ describe('Task 408 — VM: форма (select по типу)', () => {
     });
 
     test('правка: тема «вне списка» — отдельный пункт, значение сохранено', () => {
-        const c = formHost('инструктаж');
+        const c = formHost(null);
         c.host._syncTrTitleField('Внеплановый по наряду №4');
         const h = c.els.wsTrTitleSel.innerHTML;
         assertTrue(h.indexOf('Внеплановый по наряду №4 (вне списка)') !== -1,
@@ -278,7 +289,7 @@ describe('Task 408 — VM: форма (select по типу)', () => {
     });
 
     test('подсказка пункта: периодичность + основание', () => {
-        const c = formHost('инструктаж');
+        const c = formHost(null);
         c.host._syncTrTitleField('Охрана труда');
         c.els.wsTrTitleSel.value = 'Охрана труда';
         c.host._updateTrItemHint();
@@ -288,7 +299,7 @@ describe('Task 408 — VM: форма (select по типу)', () => {
     });
 
     test('подсказка: разовый пункт без основания — строка скрыта', () => {
-        const c = formHost('инструктаж');
+        const c = formHost(null);
         c.host._syncTrTitleField('Пожарная безопасность');
         c.els.wsTrTitleSel.value = 'Пожарная безопасность';
         c.host._updateTrItemHint();
@@ -670,9 +681,9 @@ describe('Task 408 — GAS-VM: сервер (моки листов)', () => {
 // 7. SW — версия кэша
 // ============================================================
 describe('Task 408 — SW', () => {
-    test('SW: версия кэша kipia-test-v636', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v636'") !== -1,
-            'CACHE_VERSION = kipia-test-v636');
+    test('SW: версия кэша kipia-test-v637', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v637'") !== -1,
+            'CACHE_VERSION = kipia-test-v637');
         assertTrue(SW_SRC.indexOf('kipia-test-v634') === -1,
             'старой версии нет');
     });

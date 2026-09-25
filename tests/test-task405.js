@@ -197,13 +197,16 @@ describe('Task 405 — SRC: карточка — блоки мероприяти
             'класс применён в заголовке блока инструктажей');
     });
 
-    test('форма: prefillType — тип по умолчанию из кнопки входа', () => {
+    test('форма: prefillType — режим/тип по умолчанию из кнопки входа', () => {
         const fn = stripComments(methodText(INDEX_SRC, 'openTrainingForm'));
         assertTrue(fn.indexOf('editTraining, prefillType') !== -1,
             '4-й аргумент prefillType');
-        assertTrue(fn.indexOf("preTip === 'инструктаж'") !== -1 &&
-                   fn.indexOf("preTip === 'обучение'") !== -1,
-            'валидация переданного типа (фолбэк — инструктаж)');
+        // Task 410: instr-типы → instr-режим (select «Список_И_и_ПЗ»),
+        // мероприятие — обучение/прогул/примечание, фолбэк «обучение»
+        assertTrue(fn.indexOf('this._trInstrMode = this._isInstrType(preTip);') !== -1,
+            'instr-режим из prefillType (Task 410)');
+        assertTrue(fn.indexOf("preTip === 'обучение'") !== -1,
+            'валидация переданного типа мероприятия');
         const addTr = stripComments(methodText(INDEX_SRC, 'onEmpAddTraining'));
         assertTrue(addTr.indexOf("'обучение'") !== -1,
             '«+ Мероприятие…» — дефолт «обучение»');
@@ -573,10 +576,10 @@ describe('Task 405 — GAS-VM: сервер (моки листов)', () => {
 // 5. SW — версия кэша
 // ============================================================
 describe('Task 405 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v636', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v636'") !== -1,
+    test('CACHE_VERSION = kipia-test-v637', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v637'") !== -1,
             'SW v632 (Task 405)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v637') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v638') === -1,
             'двойной бамп отсутствует');
     });
 });

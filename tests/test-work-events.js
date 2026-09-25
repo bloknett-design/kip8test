@@ -401,8 +401,9 @@ describe('Task 303 — клиент: попап ячейки и быстрое �
         assertTrue(INDEX_SRC.indexOf('var today = prefillDate || this._isoDate(new Date());') !== -1,
             'дата ячейки подставляется (фолбэк — сегодня)');
         // Task 309: режим правки — префилл значений записи + заголовок
-        assertTrue(INDEX_SRC.indexOf("sheetTitle.textContent = 'Правка мероприятия'") !== -1,
-            'режим правки меняет заголовок шторки');
+        assertTrue(INDEX_SRC.indexOf("sheetTitle.textContent = this._trInstrMode") !== -1 &&
+                   INDEX_SRC.indexOf("'Правка мероприятия'") !== -1,
+            'режим правки меняет заголовок шторки (Task 410 — тернарник)');
         assertTrue(INDEX_SRC.indexOf("submitBtn.textContent = 'Сохранить'") !== -1,
             'режим правки меняет подпись кнопки');
     });

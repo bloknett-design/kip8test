@@ -309,14 +309,20 @@ describe('Task 306 — клиент: новые коды мероприятий'
         assertEqual(fn('чего-угодно'), '', 'неизвестный тип → пусто');
     });
 
-    test('HTML: форма «Новое мероприятие» — 5 опций типа', () => {
+    test('HTML: форма «Новое мероприятие» — 3 опции типа (Task 410)', () => {
         const sel = INDEX_SRC.match(/<select id="wsTrType"[\s\S]*?<\/select>/);
         assertTrue(!!sel, 'селект типа найден');
-        ['инструктаж', 'обучение', 'проверка_знаний', 'прогул', 'примечание']
+        ['обучение', 'прогул', 'примечание']
             .forEach(v => {
                 assertTrue(sel[0].indexOf('value="' + v + '"') !== -1,
                     'опция «' + v + '» есть');
             });
+        // Task 410: инструктаж/проверка знаний — только через блок
+        // инструктажей (select «Список_И_и_ПЗ»), в типах их нет
+        ['инструктаж', 'проверка_знаний'].forEach(v => {
+            assertTrue(sel[0].indexOf('value="' + v + '"') === -1,
+                'опция «' + v + '» убрана из мероприятий');
+        });
     });
 
     test('JS: карта кодов _trainingCodeOf жива (Task 308: страница удалена)', () => {
@@ -432,8 +438,8 @@ describe('Task 306 — клиент: одна кнопка «Сформиров�
             'окошко календаря (нормы) осталось');
     });
 
-    test('SW: версия кэша kipia-test-v636 (Task 306 — клиент менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v636'") !== -1,
-            'CACHE_VERSION = kipia-test-v636');
+    test('SW: версия кэша kipia-test-v637 (Task 306 — клиент менялся)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v637'") !== -1,
+            'CACHE_VERSION = kipia-test-v637');
     });
 });

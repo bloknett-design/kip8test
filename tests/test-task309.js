@@ -42,7 +42,7 @@
 //   "Ошибка: self.loadTrainings is not a function"»):
 //     — вызовы удалённых страниц loadTrainings()/loadVacations()
 //       больше не встречаются; вместо них loadGrid().
-//   SW: kipia-test-v636.
+//   SW: kipia-test-v637.
 //
 // Запуск: через tests/run-all.js (require './test-task309.js').
 
@@ -244,12 +244,13 @@ describe('Task 309 — правка и удаление мероприятий',
         assertTrue(INDEX_SRC.indexOf('id="wsTrSubmitBtn"') !== -1,
             'кнопка отправки имеет id');
         const otf = fnBody(INDEX_SRC, 'openTrainingForm: function');
-        assertTrue(otf.indexOf("sheetTitle.textContent = 'Правка мероприятия'") !== -1,
-            'заголовок в режиме правки');
+        assertTrue(otf.indexOf(": 'Правка мероприятия'") !== -1,
+            'заголовок в режиме правки (мероприятие; Task 410 — тернарник)');
         assertTrue(otf.indexOf("submitBtn.textContent = 'Сохранить'") !== -1,
             'кнопка в режиме правки');
-        assertTrue(otf.indexOf("sheetTitle.textContent = 'Новое мероприятие'") !== -1,
-            'заголовок в режиме создания');
+        assertTrue(otf.indexOf("sheetTitle.textContent = this._trInstrMode") !== -1 &&
+                   otf.indexOf("'Новое мероприятие'") !== -1,
+            'заголовок в режиме создания (Task 410 — режимы шторки)');
         assertTrue(otf.indexOf('this._editTrainingId = parseInt(editTraining.id, 10);') !== -1,
             'id правимой записи сохраняется в _editTrainingId');
         // префилл значений записи
@@ -383,9 +384,9 @@ describe('Task 309 — регресс-фиксы Task 308 (loadTrainings/loadVac
 
 describe('Task 309 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v636', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v636'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v636');
+    test('SW: версия кэша kipia-test-v637', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v637'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v637');
         assertFalse(SW_SRC.indexOf('kipia-test-v547') !== -1,
             'старой версии v547 нет');
     });

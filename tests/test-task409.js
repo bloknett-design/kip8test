@@ -130,9 +130,9 @@ describe('Task 409 — SRC: клиент (формат периодичност�
             'подсказка — _fmtPeriodRu');
     });
 
-    test('SW поднят (SW_VERSION = kipia-test-v636)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v636') !== -1,
-            'CACHE_VERSION в sw.js — kipia-test-v636');
+    test('SW поднят (SW_VERSION = kipia-test-v637)', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v637') !== -1,
+            'CACHE_VERSION в sw.js — kipia-test-v637');
     });
 });
 
@@ -261,34 +261,37 @@ describe('Task 409 — VM: подсказка формы', () => {
             methodText(INDEX_SRC, '_fmtPeriodRu') + ',\n' +
             '_esc: function(s) { return String(s); },' +
             '_plural: function(n, f) { return f[2]; },' +
+            '_trInstrMode: true,' +
             '_INSTR_LIST: ' + JSON.stringify(FIVE) +
             '});')(mockDoc(els));
         return { host: host, els: els };
     }
 
-    test('инструктаж: select предлагает только 2 пункта вида', () => {
-        const c = formHost('инструктаж');
+    test('select предлагает ВСЕ 5 пунктов эталона с группами', () => {
+        const c = formHost(null);
         c.host._syncTrTitleField();
         const h = c.els.wsTrTitleSel.innerHTML;
-        assertEqual(2, (h.match(/<option value="/g) || []).length - 1,
-            '2 пункта вида (+ пустой)');
+        assertEqual(5, (h.match(/<option value="/g) || []).length - 1,
+            '5 пунктов эталона (+ пустой)');
         assertTrue(h.indexOf('Повторный инструктаж по рабочим инструкциям ОТ') !== -1 &&
-                   h.indexOf('Повторный инструктаж по инструкции № 9-ОГЭ') !== -1,
-            'оба инструктажа');
-        assertTrue(h.indexOf('Периодическая проверка знаний') === -1,
-            'проверки знаний не предложены');
+                   h.indexOf('Повторный инструктаж по инструкции № 9-ОГЭ') !== -1 &&
+                   h.indexOf('Периодическая проверка знаний на допуск к самостоятельной работе') !== -1,
+            'пункты заявки 409');
+        assertTrue(h.indexOf('<optgroup label="Инструктажи">') !== -1 &&
+                   h.indexOf('<optgroup label="Проверка знаний">') !== -1,
+            'группы по виду (Task 410)');
     });
 
-    test('проверка знаний: select предлагает 3 пункта вида', () => {
-        const c = formHost('проверка_знаний');
+    test('группа «Проверка знаний» — 3 пункта эталона', () => {
+        const c = formHost(null);
         c.host._syncTrTitleField();
         const h = c.els.wsTrTitleSel.innerHTML;
-        assertEqual(3, (h.match(/<option value="/g) || []).length - 1,
-            '3 пункта вида (+ пустой)');
-        assertTrue(h.indexOf('при выполнении работ на высоте') !== -1,
+        const gp = h.indexOf('<optgroup label="Проверка знаний">');
+        assertTrue(gp !== -1, 'группа ПЗ есть');
+        assertEqual(3, (h.slice(gp).match(/<option value="/g) || []).length,
+            '3 ПЗ-пункта в своей группе');
+        assertTrue(h.slice(gp).indexOf('при выполнении работ на высоте') !== -1,
             'высота предложена');
-        assertTrue(h.indexOf('Повторный инструктаж') === -1,
-            'инструктажи не предложены');
     });
 
     test('подсказка: «раз в год · Основание: инструкция № 53-ОТ»', () => {
