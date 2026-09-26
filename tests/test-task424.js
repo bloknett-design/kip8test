@@ -17,31 +17,31 @@
 //
 // НОВОЕ (Task 424):
 //   • СЕРВЕР WorkSchedule.gs — eventsInit: разовая инициализация
-//     ЛИСТОВ в файле табель_КИП_ИОС из редактора Apps Script
-//     (как instrListInit): создаёт «Инструктажи» (канонические
-//     заголовки Task 418) и «Мероприятия» (прежде́ний формат
-//     A..H), переносит легаси-строки обучение/прогул/примечание
-//     из «Инструктажей»; идемпотентно; существующие листы НЕ
-//     перезаписываются.
+//     ЛИСТА «Мероприятия» в файле табель_КИП_ИОС из редактора
+//     Apps Script (как instrListInit): создаёт «Мероприятия»
+//     (прежде́ний формат A..H — постоянный архив блока);
+//     идемпотентно; существующий лист НЕ перезаписывается.
+//   • Task 425 (заявка: «инструктажи менять не нужно, для
+//     мероприятий — свои отдельные страницы, блоки не должны
+//     влиять друг на друга»): eventsInit переработан — лист
+//     «Инструктажи» НЕ создаётся и НЕ трогается, перенос строк
+//     из него НЕ выполняется; сверка — ниже (1/2/4).
 //
 // ПРОВЕРКИ:
 //   СЕРВЕР:
-//   1) ГЛАВНЫЙ: пустая таблица → eventsInit создаёт ОБА листа с
-//      каноническими заголовками, ответ sheets=created/created;
-//   2) существующие листы → 'existing', заголовки НЕ тронуты
-//      (пользовательские переименования выживают);
-//   3) миграция: обучение/прогул/примечание из «Инструктажей»
-//      (формат done И legacy) → «Мероприятия» с конвертацией
-//      столбцов; инструктажи остаются; id сохраняются;
-//   4) повторный запуск → moved: 0; без «Инструктажей» →
-//      «Мероприятия» создаётся, перенос пропущен (не ошибка);
+//   1) ГЛАВНЫЙ: пустая таблица → eventsInit создаёт ТОЛЬКО
+//      «Мероприятия» с каноническими заголовками; «Инструктажи»
+//      НЕ создаётся (Task 425);
+//   2) существующие листы → 'existing', заголовки/строки НЕ
+//      тронуты (пользовательские переименования выживают);
+//   4) повторный запуск — идемпотентен;
 //   5) listTrainings: eventsAll читает ВСЕ записи листа
 //      «Мероприятия» (архив без фильтра года).
 //   КЛИЕНТ (соответствие блока заявке):
 //   6) select #wsTrType — РОВНО обучение/прогул/примечание;
 //   7) _wtabYearRecords — события архивного года из _EVENTS_ALL
 //      (стрелки «‹ год ›» показывают прошлое).
-//   SW: kipia-test-v651.
+//   SW: kipia-test-v652.
 // ============================================================
 
 const fs = require('fs');
@@ -92,24 +92,20 @@ function assertArrayEqual(actual, expected, message) {
 // ============================================================
 describe('Task 424 — SRC: сервер eventsInit (WorkSchedule.gs)', () => {
 
-    test('метод eventsInit существует и создаёт ОБА листа', () => {
+    test('ГЛАВНЫЙ (Task 425): метод eventsInit — ТОЛЬКО «Мероприятия», «Инструктажи» не трогает', () => {
         const fn = stripComments(methodText(WS_SRC, 'eventsInit'));
-        assertTrue(fn.indexOf('_ensureTrainingsSheet') !== -1,
-            '«Инструктажи» — через _ensureTrainingsSheet (Task 413)');
         assertTrue(fn.indexOf('_ensureEventsSheet') !== -1,
             '«Мероприятия» — через _ensureEventsSheet (Task 405)');
-        assertTrue(fn.indexOf("sheets[this.TRAININGS_SHEET] = trSheet ? 'existing' : 'created'") !== -1,
-            'отчёт: существующий лист не перезаписывается');
         assertTrue(fn.indexOf("sheets[this.EVENTS_SHEET] = evSheet ? 'existing' : 'created'") !== -1,
-            'отчёт по «Мероприятиям»');
-        assertTrue(fn.indexOf('splitTrainingsSheet()') !== -1,
-            'перенос обучение/прогул/примечание — splitTrainingsSheet');
-    });
-
-    test('перенос без «Инструктажей» — не ошибка (skipped)', () => {
-        const fn = stripComments(methodText(WS_SRC, 'eventsInit'));
-        assertTrue(fn.indexOf("skipped: 'no_Инструктажи'") !== -1,
-            'листа «Инструктажи» нет — перенос пропущен');
+            'отчёт: существующий лист не перезаписывается');
+        assertTrue(fn.indexOf('_ensureTrainingsSheet') === -1,
+            '«Инструктажи» НЕ создаётся (заявка Task 425: инструктажи менять не нужно)');
+        assertTrue(fn.indexOf('splitTrainingsSheet') === -1,
+            'перенос строк из «Инструктажей» НЕ выполняется (блоки независимы)');
+        assertTrue(fn.indexOf('this.TRAININGS_SHEET') === -1,
+            'никаких обращений к листу «Инструктажи»');
+        assertTrue(fn.indexOf('moved') === -1 && fn.indexOf('split') === -1,
+            'в отчёте нет перенесённых строк');
     });
 
     test('wrapper-функция eventsInit() для редактора Apps Script', () => {
@@ -261,23 +257,23 @@ describe('Task 424 — GAS-VM: eventsInit', () => {
     const EV_HEAD = ['id', 'таб_номер', 'тип', 'тема', 'дата_начала',
                      'дата_окончания', 'длительность_дней', 'комментарий'];
 
-    test('ГЛАВНЫЙ: пустая таблица → ОБА листа созданы с каноническими заголовками', () => {
+    test('ГЛАВНЫЙ (Task 425): пустая таблица → создан ТОЛЬКО «Мероприятия», «Инструктажи» НЕ создан', () => {
         const sheets = { 'Сотрудники': new MockSheet([]) };
         const WS = loadWS(sheets);
         const r = WS.eventsInit();
         assertTrue(r.ok, 'ok');
-        assertEqual(r.sheets['Инструктажи'], 'created',
-            '«Инструктажи» создан');
         assertEqual(r.sheets['Мероприятия'], 'created',
             '«Мероприятия» создан');
-        assertEqual(r.moved, 0, 'переносить нечего');
-        assertArrayEqual(sheets['Инструктажи'].rows[0].slice(0, 8), TR_HEAD,
-            'заголовки Task 418 (дата_проведения/выполнение/просрочен)');
+        assertEqual(r.sheets['Инструктажи'], undefined,
+            'в отчёте «Инструктажей» НЕТ — не трогается');
+        assertArrayEqual(Object.keys(r.sheets), ['Мероприятия'],
+            'в отчёте РОВНО один лист');
+        assertEqual(sheets['Инструктажи'], undefined,
+            'физически лист «Инструктажи» НЕ создан (инструктажи менять не нужно)');
         assertArrayEqual(sheets['Мероприятия'].rows[0].slice(0, 8), EV_HEAD,
             'заголовки «Мероприятий» — прежний формат');
-        assertTrue(sheets['Инструктажи'].frozen &&
-                   sheets['Мероприятия'].frozen,
-            'строка заголовков закреплена у обоих листов');
+        assertTrue(sheets['Мероприятия'].frozen,
+            'строка заголовков закреплена');
     });
 
     test('существующие листы — НЕ перезаписываются (existing)', () => {
@@ -289,91 +285,37 @@ describe('Task 424 — GAS-VM: eventsInit', () => {
         };
         const WS = loadWS(sheets);
         const r = WS.eventsInit();
-        assertEqual(r.sheets['Инструктажи'], 'existing',
+        assertEqual(r.sheets['Мероприятия'], 'existing',
             'лист уже есть — отчёт existing');
-        assertEqual(r.sheets['Мероприятия'], 'existing');
+        assertEqual(r.sheets['Инструктажи'], undefined,
+            '«Инструктажи» в отчёте НЕТ (Task 425 — не трогается)');
         assertEqual(sheets['Инструктажи'].rows[0], customTr,
-            'пользовательские заголовки НЕ тронуты');
+            'пользовательские заголовки «Инструктажей» НЕ тронуты');
+        assertEqual(sheets['Инструктажи'].rows[1][3], 'ОТ',
+            'строки «Инструктажей» НЕ тронуты');
         assertEqual(sheets['Мероприятия'].rows[0], customEv,
             'заголовки «Мероприятий» НЕ перезаписаны');
-        assertEqual(r.moved, 0, 'переносить нечего');
     });
 
-    test('миграция: обучение/прогул/примечание (формат done) → «Мероприятия», инструктажи остаются', () => {
-        const sheets = {
-            'Инструктажи': new MockSheet([TR_HEAD,
-                [10, '017', 'инструктаж', 'Повторный ОТ', new Date(2026, 8, 1), 0, 1, ''],
-                [11, '017', 'обучение', 'Охрана труда, вводный курс', new Date(2026, 8, 10), 0, 0, 'цех'],
-                [12, '018', 'прогул', 'Прогул 15.09', new Date(2026, 8, 15), 0, 1, ''],
-                [13, '018', 'примечание', 'Отстранение', new Date(2026, 8, 20), 0, 0, 'примеч.'],
-                [14, '017', 'проверка_знаний', 'Электробезопасность', new Date(2026, 8, 5), 0, 0, '']
-            ])
-        };
-        const WS = loadWS(sheets);
-        const r = WS.eventsInit();
-        assertEqual(r.moved, 3, 'перенесены ТРИ строки (обучение/прогул/примечание)');
-        const evRows = sheets['Мероприятия'].rows.slice(1);
-        assertEqual(evRows.length, 3, 'в «Мероприятиях» — три строки');
-        // конвертация формата done → прежний: F=дата_окончания=дата E, G=1 день
-        const ob = evRows.filter(x => x[2] === 'обучение')[0];
-        assertEqual(ob[0], 11, 'id сохранён (связки Записи_графика)');
-        assertEqual(String(ob[4]).slice(0, 15), String(new Date(2026, 8, 10)).slice(0, 15),
-            'дата_начала = дата_проведения');
-        assertEqual(String(ob[5]).slice(0, 15), String(new Date(2026, 8, 10)).slice(0, 15),
-            'дата_окончания = дата_проведения (done-конвертация)');
-        assertEqual(ob[6], 1, 'длительность_дней = 1');
-        assertEqual(ob[7], 'цех', 'комментарий сохранён');
-        assertEqual(ob[1], '017', 'таб_номер текстом (Task 304)');
-        // инструктажи/ПЗ остались в «Инструктажах»
-        const trRows = sheets['Инструктажи'].rows.slice(1);
-        assertEqual(trRows.length, 2, 'остались инструктаж + ПЗ');
-        assertTrue(trRows.every(x => x[2] === 'инструктаж' || x[2] === 'проверка_знаний'),
-            'в «Инструктажиях» — только инструктажные типы');
-    });
-
-    test('миграция legacy-формата: строки переносятся как есть', () => {
-        const legacyHead = ['id', 'таб_номер', 'тип', 'тема', 'дата_начала',
-                            'дата_окончания', 'длительность_дней', 'комментарий'];
-        const sheets = {
-            'Инструктажи': new MockSheet([legacyHead,
-                [20, '018', 'обучение', 'Пожарная безопасность',
-                 new Date(2026, 4, 12), new Date(2026, 4, 14), 3, 'многодневное']
-            ])
-        };
-        const WS = loadWS(sheets);
-        const r = WS.eventsInit();
-        assertEqual(r.moved, 1, 'перенесена одна строка');
-        const ev = sheets['Мероприятия'].rows[1];
-        assertEqual(ev[0], 20, 'id');
-        assertEqual(ev[6], 3, 'длительность многодневного сохранена');
-        assertEqual(String(ev[5]).slice(0, 15), String(new Date(2026, 4, 14)).slice(0, 15),
-            'дата_окончания прежняя (не однодневная конвертация)');
-        assertEqual(sheets['Инструктажи'].rows.length, 1,
-            'из «Инструктажей» строка удалена');
-    });
-
-    test('повторный запуск — идемпотентен (moved: 0, листы existing)', () => {
+    test('повторный запуск — идемпотентен (existing, лишних строк нет)', () => {
         const sheets = { 'Инструктажи': new MockSheet([TR_HEAD]) };
         const WS = loadWS(sheets);
         WS.eventsInit();
         const r2 = WS.eventsInit();
-        assertEqual(r2.sheets['Инструктажи'], 'existing');
         assertEqual(r2.sheets['Мероприятия'], 'existing');
-        assertEqual(r2.moved, 0, 'переносить больше нечего');
         assertEqual(sheets['Мероприятия'].rows.length, 1,
             'лишних строк не появилось');
     });
 
-    test('листа «Инструктажи» нет → «Мероприятия» создаётся, перенос пропущен', () => {
+    test('без «Инструктажей» → «Мероприятия» создаётся, «Инструктажи» НЕ появляется', () => {
         const sheets = { 'Сотрудники': new MockSheet([]) };
         const WS = loadWS(sheets);
         delete sheets['Инструктажи']; // гарантия отсутствия
-        // _ensureTrainingsSheet создаст «Инструктажи» сам (Task 413) —
-        // перенос пойдёт по пустому листу: moved 0, НЕ ошибка
         const r = WS.eventsInit();
         assertTrue(r.ok, 'инициализация не падает');
         assertTrue(sheets['Мероприятия'], '«Мероприятия» создан');
-        assertEqual(r.moved, 0, 'переносить нечего');
+        assertEqual(sheets['Инструктажи'], undefined,
+            '«Инструктажи» НЕ создан — блоки независимы (Task 425)');
     });
 });
 
@@ -476,10 +418,10 @@ describe('Task 424 — VM: _wtabYearRecords — события архивног�
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 424 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v651', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v651'") !== -1,
+    test('CACHE_VERSION = kipia-test-v652', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v652'") !== -1,
             'SW v651 (Task 424)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v652') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v653') === -1,
             'двойной бамп отсутствует');
     });
 });

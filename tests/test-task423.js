@@ -42,7 +42,7 @@
 //   7) «след. срок» 9-ОГЭ = общий + 3 мес (не +6);
 //   8) тост: сервер '422' → предупреждение «старой версии»
 //      (srvVer < 423); '423' → без предупреждения;
-//   9) SW kipia-test-v651.
+//   9) SW kipia-test-v652.
 // ============================================================
 
 const fs = require('fs');
@@ -113,10 +113,10 @@ describe('Task 423 — SRC: сервер (WorkSchedule.gs)', () => {
             'сравнение со встроенным родителем → период 3');
     });
 
-    test('srvVer 423 — версия сервера в ответе', () => {
+    test('srvVer 425 — версия сервера в ответе', () => {
         const fn = stripComments(methodText(WS_SRC, 'setTrainingDone'));
-        assertTrue(fn.indexOf("srvVer: '423'") !== -1,
-            'клиент отличает сервер Task 423 (период 9-ОГЭ = 3 мес эталона)');
+        assertTrue(fn.indexOf("srvVer: '425'") !== -1,
+            'клиент отличает сервер Task 423+ (период 9-ОГЭ = 3 мес) и Task 425 (мероприятия без автосоздания)');
     });
 
     test('регресс 421/422: правило (0) удалено, окно ребёнка — по себе', () => {
@@ -301,7 +301,7 @@ describe('Task 423 — GAS-VM: «9-ОГЭ +6 вместо +3»', () => {
         const WS = loadWS(sheets);
         const r = WS.setTrainingDone({ token: 't', id: 20, 'выполнение': 1 });
         assertTrue(r.ok, 'ok');
-        assertEqual(r.data.srvVer, '423', 'версия сервера Task 423');
+        assertEqual(r.data.srvVer, '425', 'версия сервера Task 425');
         assertEqual(r.data.created.length, 2, 'созданы ОБЕ записи');
         assertEqual(r.data.created.filter(x => x.тема === U_OGE)[0]
             .дата_проведения, '2026-12-01',
@@ -414,7 +414,7 @@ describe('Task 423 — GAS-VM: «9-ОГЭ +6 вместо +3»', () => {
         const WS = loadWS(sheets);
         const r = WS.setTrainingDone({ token: 't', id: 21, 'выполнение': 1 });
         assertEqual(r.data.created.length, 0, 'записей НЕТ (зависимый пункт)');
-        assertEqual(r.data.srvVer, '423', 'версия сервера в ответе');
+        assertEqual(r.data.srvVer, '425', 'версия сервера в ответе');
         assertTrue(String(r.data.autoNote)
             .indexOf('Task 421: зависимый пункт') !== -1,
             'причина отсутствия автосоздания — в разборе');
@@ -633,10 +633,10 @@ describe('Task 423 — VM: toggleTrainingDone — srvVer < 423', () => {
 // 7. SW — версия кэша
 // ============================================================
 describe('Task 423 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v651', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v651'") !== -1,
+    test('CACHE_VERSION = kipia-test-v652', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v652'") !== -1,
             'SW v650 (Task 423)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v652') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v653') === -1,
             'двойной бамп отсутствует');
     });
 });
