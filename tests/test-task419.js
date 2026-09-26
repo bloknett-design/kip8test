@@ -724,7 +724,7 @@ describe('Task 419 — VM: toggleTrainingDone — новые сроки в пу�
             'даты созданных записей в тосте');
     });
 
-    test('старый сервер (нет created): прежний тост, пулы не растут', async () => {
+    test('старый сервер (нет created): тост + предупреждение Task 422, пулы не растут', async () => {
         const rec = { id: 5, выполнение: 0, просрочен: 1, дата_начала: '2026-01-15' };
         const ctx = makeCtx(rec, { id: 5, выполнение: 1, просрочен: 0 });
         let shown = null;
@@ -735,7 +735,14 @@ describe('Task 419 — VM: toggleTrainingDone — новые сроки в пу�
             delete global.KipToast;
         }
         assertEqual(ctx._INSTR_ALL.length, 1, 'новых записей нет');
-        assertEqual(shown, 'Отмечено выполнение', 'прежний текст тоста');
+        // Task 422: старый Apps Script (нет srvVer) — к тосту
+        // добавляется предупреждение (логика 419..421 не соответствует
+        // репозиторию — «создался только общий» на живых данных)
+        assertTrue(shown !== null &&
+                    shown.indexOf('Отмечено выполнение') === 0,
+            'тост начинается с фиксации: ' + shown);
+        assertTrue(shown.indexOf('старой версии') !== -1,
+            'предупреждение о старом сервере: ' + shown);
     });
 });
 
@@ -816,10 +823,10 @@ describe('Task 419 — VM: «след. срок» 9-ОГЭ от последне
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 419 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v648', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v648'") !== -1,
+    test('CACHE_VERSION = kipia-test-v649', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v649'") !== -1,
             'SW v646 (Task 419)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v649') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v650') === -1,
             'двойной бамп отсутствует');
     });
 });

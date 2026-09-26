@@ -25,7 +25,7 @@
 //   КЛИЕНТ index.html:
 //   6) toggleTrainingDone: пустой created — тост «Отмечено
 //      выполнение» (без «новые сроки»), пулы не растут;
-//   7) SW kipia-test-v648.
+//   7) SW kipia-test-v649.
 // ============================================================
 
 const fs = require('fs');
@@ -429,7 +429,9 @@ describe('Task 421 — VM: toggleTrainingDone — 9-ОГЭ без автосоз
                       дата_начала: '2026-12-01', выполнение: 0, просрочен: 0 };
         const ctx = makeCtx(rec, {
             id: 21, выполнение: 1, просрочен: 0,
-            created: [], updated: []
+            // Task 422: srvVer — сервер актуален, предупреждения в тосте нет
+            srvVer: '422',
+            created: [], updated: [], skipped: []
         });
         let shown = null;
         global.KipToast = { show: function(t) { shown = t; } };
@@ -461,8 +463,13 @@ describe('Task 421 — VM: toggleTrainingDone — 9-ОГЭ без автосоз
         } finally {
             delete global.KipToast;
         }
-        assertEqual(shown, 'Отмечено выполнение',
-            'старый сервер без created — прежний тост');
+        // Task 422: старый Apps Script (нет srvVer) — тост фиксации
+        // + предупреждение обновить WorkSchedule.gs (не ошибка)
+        assertTrue(shown !== null &&
+                    shown.indexOf('Отмечено выполнение') === 0,
+            'тост начинается с фиксации: ' + shown);
+        assertTrue(shown.indexOf('старой версии') !== -1,
+            'предупреждение о старом сервере: ' + shown);
         assertEqual(ctx._INSTR_ALL.length, 1, 'пулы не растут');
     });
 });
@@ -471,10 +478,10 @@ describe('Task 421 — VM: toggleTrainingDone — 9-ОГЭ без автосоз
 // 4. SW — версия кэша
 // ============================================================
 describe('Task 421 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v648', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v648'") !== -1,
+    test('CACHE_VERSION = kipia-test-v649', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v649'") !== -1,
             'SW v648 (Task 421)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v649') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v650') === -1,
             'двойной бамп отсутствует');
     });
 });

@@ -45,7 +45,7 @@
 //       записи, лимит 12 видов, формат даты тултипа, битый JSON;
 //     — VM-СИМУЛЯЦИЯ _renderCell: «.»/статус-мероприятие/отсутствие/
 //       пустая+событие/смена+событие/план+событие.
-//   SW: kipia-test-v648.
+//   SW: kipia-test-v649.
 //
 // Запуск: через tests/run-all.js (require './test-task314.js').
 
@@ -613,9 +613,9 @@ describe('Task 314 — VM: _renderCell (бейджи мероприятий; Tas
 // ------------------------------------------------------------
 describe('Task 314 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v648', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v648'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v648');
+    test('SW: версия кэша kipia-test-v649', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v649'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v649');
         assertFalse(SW_SRC.indexOf('kipia-test-v552') !== -1,
             'старой версии v552 нет');
     });

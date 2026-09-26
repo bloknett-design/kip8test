@@ -2447,6 +2447,13 @@ var WorkSchedule = {
   // Task 421 (заявка): 9-ОГЭ — ЗАВИСИМЫЙ пункт: отметка ребёнка
   // («в составе») ТОЛЬКО фиксирует его выполнение — записей не
   // создаёт (см. _autoCreateNextTrainings)
+  // Task 422 (заявка «при выполнении общего 9-ОГЭ +3 мес не
+  // создаётся»): ответ несёт srvVer (версия серверного кода —
+  // клиент предупреждает о старом Apps Script, где логика
+  // 419..421 не соответствует репозиторию), autoNote (разбор:
+  // пункт/родитель/дети/причины — консоль клиента и аудит) и
+  // skipped (дети без новой записи с ПРИЧИНОЙ — тост клиента);
+  // ошибка автосоздания — в autoNote ответа (не молчание)
   setTrainingDone: function(payload) {
     var auth = this._requireWrite(payload.token);
     if (auth.error) return auth.error;
@@ -2482,15 +2489,20 @@ var WorkSchedule = {
           // (выполнение = 1): новый срок того же пункта + новые
           // сроки детей («в составе») + покрытие незавершённых
           // записей детей (родитель включает пункт — заявка 9-ОГЭ)
-          var created = [], updated = [], autoNote = '';
+          var created = [], updated = [], skipped = [], autoNote = '';
           if (done === 1) {
             try {
               var auto = this._autoCreateNextTrainings(sheet, rowData);
               created = auto.created;
               updated = auto.updated;
+              skipped = auto.skipped || [];
               autoNote = auto.note || '';
             } catch (e) {
-              // автосоздание не должно ломать саму отметку
+              // автосоздание не должно ломать саму отметку;
+              // Task 422: ошибка — в autoNote ответа (клиент тостит
+              // «автосоздание не завершено»), чтобы молчаливый сбой
+              // (квота/защита листа) не выглядел как «запись не создалась»
+              autoNote = 'ОШИБКА автосоздания: ' + e;
               try {
                 Utils.audit(user.email, 'WORKSCHEDULE_TRAINING_AUTOCREATE_ERROR', '', '',
                   'Ошибка автосоздания сроков id=' + id + ': ' + e);
@@ -2505,10 +2517,15 @@ var WorkSchedule = {
                ' покрыто=' + updated.length +
                (autoNote ? ' [' + autoNote + ']' : '') : ''));
           } catch (e) { /* ignore */ }
+          // Task 422: srvVer — версия сервера автосоздания (клиент
+          // отличает старый Apps Script: нет поля — логика 419..421)
           return { ok: true, data: { id: id, 'выполнение': done,
                                      'просрочен': late,
+                                     srvVer: '422',
+                                     autoNote: autoNote,
                                      created: created,
-                                     updated: updated } };
+                                     updated: updated,
+                                     skipped: skipped } };
         }
       }
     }
@@ -2537,12 +2554,18 @@ var WorkSchedule = {
   //      N(ребёнка) — выполнение общего инструктажа создаёт ОБЕ
   //      записи: 9-ОГЭ через 3 мес (самостоятельный) и следующий
   //      общий через 6 мес — чередование «по кругу из года в год»;
+  //      Task 422: окно (дата; дата + N] проверяется ТОЛЬКО по
+  //      записям самого ребёнка — запись РОДИТЕЛЯ в окне ребёнка
+  //      НЕ подавляет создание (заявка: ДВЕ записи; «хвостовой»
+  //      общий в окне — данные пользователя, цикл продолжится его
+  //      выполнением); пропущенные дети — skipped[] с причиной;
   //   3) ПОКРЫТИЕ: незавершённые записи детей с датой <= даты
   //      отмеченного родителя отмечаются выполненными и
   //      возвращаются в updated (клиент обновляет карточку)
   // Снятие отметки и правка здесь НЕ участвуют. created/updated —
   // в форме записей _readTrainingsSheet (клиент кладёт их в пулы
-  // без перезагрузки); note — разбор соответствия для аудита
+  // без перезагрузки); note — разбор соответствия для аудита,
+  // skipped — дети без новой записи с причиной (Task 422)
   _autoCreateNextTrainings: function(sheet, rowData) {
     var created = [], updated = [];
     var tabNo = String(rowData[1] || '').trim();
@@ -2550,7 +2573,7 @@ var WorkSchedule = {
     var tema  = String(rowData[3] || '').trim();
     var provDate = rowData[4];
     if (!tabNo || !tema || !(provDate instanceof Date)) {
-      return { created: created, updated: updated };
+      return { created: created, updated: updated, skipped: [] };
     }
 
     // шаблон: отмеченный пункт, его родитель и его дети
@@ -2564,7 +2587,7 @@ var WorkSchedule = {
     if (!item) {
       // тема вне «Список_И_и_ПЗ» — периодичности нет, создавать
       // нечего (правка/ввод вручную остаются главнее)
-      return { created: created, updated: updated };
+      return { created: created, updated: updated, skipped: [] };
     }
     // родитель пункта — связь «в составе», разрешённая в пункт
     var parentKey = String(item['в составе'] || '').trim();
@@ -2591,7 +2614,9 @@ var WorkSchedule = {
       ? sheet.getRange(2, 1, lastRow - 1, 8).getValues() : [];
     var self = this;
     // Task 420: сравнение темы записи с названием — нестрогое
-    // (норм-ключ ИЛИ сигнатура)
+    // (норм-ключ ИЛИ сигнатура). Task 422: возвращает ДАТУ записи,
+    // занявшей окно (truthy), или null — причина пропуска ребёнка
+    // попадает в ответ/аудит («уже запланирован на ДД.ММ.ГГГГ»)
     var hasInWindow = function(themeName, winStart, winEnd) {
       for (var v = 0; v < values.length; v++) {
         var rv = values[v];
@@ -2601,9 +2626,16 @@ var WorkSchedule = {
         var rd = rv[4];
         if (!(rd instanceof Date)) continue;
         if (rd.getTime() > winStart.getTime() &&
-            rd.getTime() <= winEnd.getTime()) return true;
+            rd.getTime() <= winEnd.getTime()) return rd;
       }
-      return false;
+      return null;
+    };
+    // Task 422: дата «ДД.ММ.ГГГГ» для причин/разбора (клиент — в
+    // тост, аудит — люди читают; _toIsoDate остаётся для записей)
+    var ruDate = function(d) {
+      var dd = String(d.getDate()), mm = String(d.getMonth() + 1);
+      return (dd.length < 2 ? '0' + dd : dd) + '.' +
+             (mm.length < 2 ? '0' + mm : mm) + '.' + d.getFullYear();
     };
 
     // id — ГЛОБАЛЬНЫЙ по обоим листам (как addTraining)
@@ -2633,9 +2665,17 @@ var WorkSchedule = {
       }
     }
 
+    // Task 422 (заявка «при выполнении общего 9-ОГЭ +3 мес не
+    // создаётся»): пропущенные дети — с ПРИЧИНОЙ (тост клиента +
+    // аудит): настоящий дубликат («уже запланирован на ДД.ММ.ГГГГ»),
+    // пустая периодичность, ошибка записи
+    var skipped = [];
+    var childNotes = [];
     for (var c = 0; c < children.length; c++) {
       var ch = children[c];
       var chPer = parseFloat(ch.периодичность) || 0;
+      // имя для людей: сокращение пункта (Task 416) короче названия
+      var chName = String(ch.сокращение || '').trim() || ch.название;
       // (3) ПОКРЫТИЕ: незавершённые записи ребёнка с датой <= даты
       // отмеченного родителя выполняются вместе с ним
       for (var v2 = 0; v2 < values.length; v2++) {
@@ -2653,33 +2693,63 @@ var WorkSchedule = {
         updated.push({ id: parseInt(cv[0], 10), 'выполнение': 1,
                        'просрочен': cLate });
       }
-      // (2) новый срок ребёнка — дата родителя + N(ребёнка);
-      // окно (дата; дата + N] занято записью ребёнка ИЛИ самого
-      // родителя — отдельная запись не нужна
-      if (chPer > 0) {
-        var chDate = this._addMonthsDate(provDate, chPer);
-        if (chDate && !hasInWindow(ch.название, provDate, chDate) &&
-            !hasInWindow(tema, provDate, chDate)) {
-          created.push(this._appendTrainingRow(
-            sheet, ++maxId, tabNo, this._instrTypeOfItem(ch, tip),
-            ch.название, chDate, values));
+      // (2) новый срок ребёнка — дата родителя + N(ребёнка).
+      // Task 422: окно (дата; дата + N] проверяется ТОЛЬКО по
+      // записям САМОГО ребёнка — настоящий дубликат; запись
+      // РОДИТЕЛЯ в окне ребёнка больше НЕ подавляет создание
+      // (заявка: «при выполнении общего — ДВЕ записи»; «хвостовой»
+      // общий — напр., созданный снятым правилом (0) Task 420
+      // или вручную — не должен оставлять 9-ОГЭ без нового срока:
+      // цикл продолжится выполнением той записи, когда подойдёт)
+      try {
+        if (chPer > 0) {
+          var chDate = this._addMonthsDate(provDate, chPer);
+          var hit = chDate ? hasInWindow(ch.название, provDate, chDate)
+                           : null;
+          if (chDate && !hit) {
+            created.push(this._appendTrainingRow(
+              sheet, ++maxId, tabNo, this._instrTypeOfItem(ch, tip),
+              ch.название, chDate, values));
+            childNotes.push(chName + ' → ' + ruDate(chDate));
+          } else {
+            var reason = chDate
+              ? 'уже запланирован на ' + ruDate(hit)
+              : 'периодичность не задана';
+            skipped.push({ тема: chName, причина: reason });
+            childNotes.push(chName + ': не создан — ' + reason);
+          }
+        } else {
+          skipped.push({ тема: chName,
+                         причина: 'периодичность не задана' });
+          childNotes.push(chName + ': не создан — периодичность не задана');
         }
+      } catch (eChild) {
+        // один ребёнок не роняет остальные и саму отметку
+        var msgE = String(eChild && eChild.message || eChild);
+        skipped.push({ тема: chName,
+                       причина: 'ошибка создания (' + msgE + ')' });
+        childNotes.push(chName + ': ошибка — ' + msgE);
       }
     }
 
-    // Task 420/421: разбор соответствия — в журнал аудита (почему
+    // Task 420/421/422: разбор соответствия — в журнал аудита (почему
     // создано именно так; фактический лист пользователя; зависимый
-    // пункт — причина отсутствия автосоздания)
+    // пункт — причина отсутствия автосоздания). Task 422: + решение
+    // по каждому ребёнку (создан → дата / причина пропуска)
     var note = 'пункт=' + item.название +
       ' родитель=' + (parentItem ? parentItem.название
                                   : (parentKey || '-')) +
       ' дети=' + (children.length
         ? children.map(function(ch2) { return ch2.название; }).join('; ')
         : '-') +
+      (childNotes.length
+        ? ' [' + childNotes.join('; ') + ']'
+        : '') +
       (parentItem && children.length === 0
         ? '; Task 421: зависимый пункт — автосоздания нет'
         : '');
-    return { created: created, updated: updated, note: note };
+    return { created: created, updated: updated, skipped: skipped,
+             note: note };
   },
 
   // Task 419: добавить строку «Инструктажей» (формат done) и вернуть
