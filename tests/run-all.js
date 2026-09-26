@@ -327,6 +327,9 @@ require('./test-task417.js');
 require('./test-task418.js');
 require('./test-task419.js');
 require('./test-task420.js');
+// Task 421 — 9-ОГЭ зависимый: отметка ребёнка — только фиксация,
+// записи создаются выполнением общего (правило 0 удалено)
+require('./test-task421.js');
 require('./test-deploy-url.js');
 
 // Запускаем

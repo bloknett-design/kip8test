@@ -38,7 +38,7 @@
 //       ДО вызова addVacation (на сервер не уходит);
 //     — подсказка шторки упоминает ст. 120 и лимит 42 дня.
 //   Тултип плана отпуска в ячейке: чистые дни + «(−N праздн.)».
-//   SW: kipia-test-v647.
+//   SW: kipia-test-v648.
 //
 // Запуск: через tests/run-all.js (require './test-task310.js').
 
@@ -376,9 +376,9 @@ describe('Task 310/311 — тултип плана отпуска в ячейк�
 
 describe('Task 310 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v647', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v647'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v647');
+    test('SW: версия кэша kipia-test-v648', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v648'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v648');
         // Task 311 поднял версию до v550 — v549 (версия Task 310) ушла
         assertFalse(SW_SRC.indexOf('kipia-test-v549') !== -1,
             'старой версии v549 нет');

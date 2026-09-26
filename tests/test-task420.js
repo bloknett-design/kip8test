@@ -25,13 +25,15 @@
 //   4) _autoCreateNextTrainings — (0) ЦИКЛ: отметка РЕБЁНКА →
 //      РОДИТЕЛЬ на дата + N(ребёнка) (после 9-ОГЭ через 3 мес —
 //      общий); (1)/(2)/(3) — прежние, сравнения нестрогие;
-//      note — разбор соответствия в ответе/аудите;
+//      note — разбор соответствия в ответе/аудите.
+//      ⚠ Task 421: правило (0) УДАЛЕНО, (1) — только для
+//      пунктов БЕЗ «в составе» (9-ОГЭ зависимый — фиксация);
 //   КЛИЕНТ index.html:
 //   5) _normalizeInstrList — встроенная связь для ЖИВОГО списка
 //      (дубль серверной логики; старый сервер/кэш);
 //   6) _renderInstrSection — «последнее» событие: нестрогое
 //      сравнение темы с ключами (сигнатура);
-//   7) SW kipia-test-v647.
+//   7) SW kipia-test-v648.
 // ============================================================
 
 const fs = require('fs');
@@ -135,12 +137,16 @@ describe('Task 420 — SRC: сервер (WorkSchedule.gs)', () => {
             'поиск по сигнатурам листа');
     });
 
-    test('_autoCreateNextTrainings: (0) цикл — родитель после ребёнка', () => {
+    test('_autoCreateNextTrainings: цикл (0) УДАЛЁН — ребёнок только фиксируется (Task 421)', () => {
         const fn = stripComments(methodText(WS_SRC, '_autoCreateNextTrainings'));
-        assertTrue(fn.indexOf('parentItem && !children.length') !== -1,
-            'цикл — у отмеченного пункта-ребёнка без своих детей');
-        assertTrue(fn.indexOf('parentItem.название, pParent, values') !== -1,
-            'создаётся запись РОДИТЕЛЯ на дата + N(ребёнка)');
+        assertTrue(fn.indexOf('parentItem && !children.length') === -1,
+            'правило (0) ЦИКЛ Task 420 удалено (Task 421)');
+        assertTrue(fn.indexOf('parentItem.название, pParent, values') === -1,
+            'создание записи РОДИТЕЛЯ из отметки ребёнка удалено');
+        assertTrue(fn.indexOf('per > 0 && !parentItem') !== -1,
+            'правило (1): собственный срок — только у пункта БЕЗ «в составе»');
+        assertTrue(fn.indexOf('зависимый пункт — автосоздания нет') !== -1,
+            'note несёт причину для зависимого пункта (Task 421)');
         assertTrue(fn.indexOf("note: note") !== -1 &&
                     fn.indexOf("'пункт=' + item.название") !== -1,
             'note — разбор соответствия');
@@ -487,7 +493,7 @@ describe('Task 420 — GAS-VM: нестрогая связь 9-ОГЭ и цик�
             .дата_проведения, '2026-12-01', '9-ОГЭ +3 мес');
     });
 
-    test('ЦИКЛ: отметка созданного 9-ОГЭ — ничего нового (общий уже в окне)', () => {
+    test('ЦИКЛ: отметка созданного 9-ОГЭ — ничего нового (зависимый, Task 421)', () => {
         const sheets = doneSheets(userSheets, [
             [20, '017', 'инструктаж', U_OT,
              new Date(2026, 8, 1), 0, 0, '']
@@ -500,7 +506,7 @@ describe('Task 420 — GAS-VM: нестрогая связь 9-ОГЭ и цик�
         const r2 = WS.setTrainingDone(
             { token: 't', id: ogeId, 'выполнение': 1 });
         assertEqual(r2.data.created.length, 0,
-            'шаг 2: общий 01.03.2027 уже в окне (01.12.2026; +3] — ничего');
+            'шаг 2: 9-ОГЭ — зависимый пункт, автосоздания нет (Task 421)');
         assertEqual(sheets['Инструктажи'].rows.length, 4,
             'дублей не появилось');
     });
@@ -693,10 +699,10 @@ describe('Task 420 — VM: «след. срок» 9-ОГЭ (живой спис�
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 420 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v647', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v647'") !== -1,
+    test('CACHE_VERSION = kipia-test-v648', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v648'") !== -1,
             'SW v647 (Task 420)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v648') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v649') === -1,
             'двойной бамп отсутствует');
     });
 });
