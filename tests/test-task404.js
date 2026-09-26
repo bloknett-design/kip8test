@@ -402,12 +402,12 @@ describe('Task 404 — VM: окно мероприятий — отпуска н
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 404 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v650 (Task 404)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v650'") !== -1,
+    test('CACHE_VERSION = kipia-test-v651 (Task 404)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v651'") !== -1,
             'фронтенд менялся — кэш поднят до v631');
     });
     test('guard: v632 отсутствует (следующий бамп)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v651') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v652') === -1,
             'v632 ещё не существует (guard следующего бампа)');
     });
 });
