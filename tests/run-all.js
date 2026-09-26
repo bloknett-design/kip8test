@@ -326,6 +326,7 @@ require('./test-task417.js');
 // пересчёт просрочки, нормализация листа при чтении
 require('./test-task418.js');
 require('./test-task419.js');
+require('./test-task420.js');
 require('./test-deploy-url.js');
 
 // Запускаем

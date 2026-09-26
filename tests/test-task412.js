@@ -158,7 +158,11 @@ describe('Task 412 — SRC: встроенный эталон', () => {
 
     test('_normalizeInstrList: живой список главный, пустой — канон', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_normalizeInstrList'));
-        assertTrue(fn.indexOf('if (items.length) return items;') !== -1,
+        // Task 420: живой список возвращается (с встроенной связью
+        // 9-ОГЭ для листа без столбца «в составе» — дубль серверной
+        // логики), не замещается каноном
+        assertTrue(fn.indexOf('if (items.length) {') !== -1 &&
+                   fn.indexOf('return items;') !== -1,
             'непустой живой список возвращается как есть');
         assertTrue(fn.indexOf('this._INSTR_CANON') !== -1,
             'фолбэк — встроенный канон');
@@ -413,7 +417,7 @@ describe('Task 412 — VM: форма «+ Инструктаж…» (канон)
 describe('Task 412 — SW', () => {
 
     test('версия кэша поднята (v639)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v646') !== -1,
-            'CACHE_VERSION = kipia-test-v646');
+        assertTrue(SW_SRC.indexOf('kipia-test-v647') !== -1,
+            'CACHE_VERSION = kipia-test-v647');
     });
 });

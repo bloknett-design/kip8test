@@ -158,9 +158,10 @@ describe('Task 419 — SRC: сервер (WorkSchedule.gs)', () => {
         // родитель в окне → отдельная запись ребёнка не нужна
         assertTrue(fn.indexOf('parentKey && hasInWindow(parentKey') !== -1,
             'запись родителя в окне покрывает пункт');
-        // (2) дети — дата родителя + N(ребёнка)
-        assertTrue(fn.indexOf("this._normKey(items[j]['в составе']) === tKey") !== -1,
-            'дети = пункты со «в составе» = отмеченный');
+        // (2) дети — дата родителя + N(ребёнка); Task 420: нестрогое
+        // сравнение (сигнатуры) вместо точного ключа
+        assertTrue(fn.indexOf("this._sameInstrName(items[j]['в составе'], tema)") !== -1,
+            'дети = пункты со «в составе» = отмеченный (нестрого)');
         // (3) покрытие: дата ребёнка <= даты родителя, выполнение = 0
         assertTrue(fn.indexOf('cd.getTime() > provDate.getTime()') !== -1 &&
                     fn.indexOf('parseInt(cv[5], 10) === 1') !== -1,
@@ -242,8 +243,10 @@ describe('Task 419 — SRC: клиент (index.html)', () => {
         assertTrue(fn.indexOf('relKeys = [gKey]') !== -1 &&
                     fn.indexOf("this._normInstrKey(gItem['в составе'])") !== -1,
             'родитель добавляется к ключам «последнего» события');
-        assertTrue(fn.indexOf('relKeys.indexOf(') !== -1,
-            'сравнение по пулу ключей');
+        // Task 420: сравнение записей с ключами — нестрогое
+        assertTrue(fn.indexOf('_sigRel') !== -1 &&
+                    fn.indexOf('liHit') !== -1,
+            'тема сравнивается норм-ключом ИЛИ сигнатурой');
     });
 });
 
@@ -443,17 +446,21 @@ describe('Task 419 — GAS-VM: автосоздание новых сроков'
             'новых строк нет — чередование 3/6 мес по кругу');
     });
 
-    test('отметка 9-ОГЭ без общего в окне: создаётся 9-ОГЭ +3 мес', () => {
+    test('отметка 9-ОГЭ без общего в окне: ЦИКЛ — создаётся ОБЩИЙ +3 мес (Task 420)', () => {
         const sheets = doneSheets([
             [21, '017', 'инструктаж', T_OGE,
              new Date(2026, 8, 1), 0, 0, '']
         ]);
         const WS = loadWS(sheets);
         const r = WS.setTrainingDone({ token: 't', id: 21, 'выполнение': 1 });
-        assertEqual(r.data.created.length, 1, 'одна запись (сам пункт)');
-        assertEqual(r.data.created[0].тема, T_OGE, 'тема 9-ОГЭ');
+        assertEqual(r.data.created.length, 1,
+            'одна запись — следующий по циклу РОДИТЕЛЬ (не 9-ОГЭ)');
+        assertEqual(r.data.created[0].тема, T_COMMON,
+            'тема — общий инструктаж (заявка: «ещё после 3 месяцев сново общий»)');
         assertEqual(r.data.created[0].дата_проведения, '2026-12-01',
             '01.09.2026 + 3 мес');
+        assertEqual(r.data.created[0].тип, 'инструктаж',
+            'тип — из вида пункта родителя');
     });
 
     test('отметка ПЗ (12 мес, без связи): создаётся одна запись +12 мес', () => {
@@ -543,13 +550,16 @@ describe('Task 419 — GAS-VM: автосоздание новых сроков'
             'лист не изменился');
     });
 
-    test('кламп конца месяца: 30.11 + 3 мес → 28.02', () => {
+    test('кламп конца месяца: 30.11 + 3 мес → 28.02 (ЦИКЛ — общий)', () => {
         const sheets = doneSheets([
             [21, '017', 'инструктаж', T_OGE,
              new Date(2026, 10, 30), 0, 0, '']
         ]);
         const WS = loadWS(sheets);
         const r = WS.setTrainingDone({ token: 't', id: 21, 'выполнение': 1 });
+        // Task 420: следующий по циклу — ОБЩИЙ на +3 мес
+        assertEqual(r.data.created[0].тема, T_COMMON,
+            'запись цикла — общий инструктаж');
         assertEqual(r.data.created[0].дата_проведения, '2027-02-28',
             '30.11.2026 + 3 мес → 28.02.2027');
     });
@@ -800,10 +810,10 @@ describe('Task 419 — VM: «след. срок» 9-ОГЭ от последне
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 419 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v646', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v646'") !== -1,
+    test('CACHE_VERSION = kipia-test-v647', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v647'") !== -1,
             'SW v646 (Task 419)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v647') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v648') === -1,
             'двойной бамп отсутствует');
     });
 });

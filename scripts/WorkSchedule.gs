@@ -423,6 +423,32 @@ var WorkSchedule = {
                .replace(/\s+/g, ' ');
   },
 
+  // Task 420 (заявка: «отметка общего создала только общий +6 мес,
+  // записи 9-ОГЭ +3 нет»): сигнатура названия — только буквы и
+  // цифры, слитно. Разные СЛОВА дают разные сигнатуры, но
+  // написания «№ 9-ОГЭ»/«9-ОГЭ»/«9 – ОГЭ»/«9‑ОГЭ» (№, тире,
+  // точки, скобки) сводятся к одному ключу «9огэ». Нужна для
+  // нестрогого сравнения _sameInstrName и поиска пунктов
+  // встроенной связи (сигнатура содержит «9огэ» у ребёнка и
+  // «рабочиминструкциям» у родителя)
+  _sigKey: function(s) {
+    return String(s || '').trim().toLowerCase()
+               .replace(/ё/g, 'е')
+               .replace(/[^a-zа-я0-9]/g, '');
+  },
+
+  // Task 420: нестрогое равенство названий «тема записи ↔ название
+  // пункта ↔ связь „в составе“»: норм-ключ ИЛИ сигнатура —
+  // переживает «№», тире, точки, скобки и регистр ручного
+  // заполнения листа (фактические названия пользователя могут
+  // отличаться от эталона заявки 409)
+  _sameInstrName: function(a, b) {
+    if (!a || !b) return false;
+    if (this._normKey(a) === this._normKey(b)) return true;
+    var sa = this._sigKey(a), sb = this._sigKey(b);
+    return !!sa && sa === sb;
+  },
+
   // Task 419: дата + N месяцев (день клампится к концу месяца:
   // 30.11 + 3 мес → 28.02) — новый срок проведения от отмеченной
   // записи (клиентский _addMonthsIso считает так же)
@@ -1248,19 +1274,75 @@ var WorkSchedule = {
         'в составе':   partCol !== null ? String(r[partCol] || '').trim() : ''
       });
     }
-    // Task 419 (заявка 9-ОГЭ): встроенная связь — «Повторный
-    // инструктаж по инструкции № 9-ОГЭ» входит в «Повторный
-    // инструктаж по рабочим инструкциям ОТ»; применяется когда
-    // столбца «в составе» нет/ячейка пуста. Заполненный столбец
-    // ГЛАВНЕЕ (другие пункты связываются только через него)
+    // Task 419/420 (заявка 9-ОГЭ): встроенная связь — пункт 9-ОГЭ
+    // входит в общий повторный инструктаж по рабочим инструкциям
+    // (ОТ). Task 420: названия ищутся НЕСТРОГО — фактический лист
+    // пользователя может отличаться от эталона («№», «Повторный»,
+    // тире, регистр; заявка: «отметка общего создала только общий
+    // +6 мес, записи 9-ОГЭ +3 нет»):
+    //   ребёнок — точное совпадение с эталоном ИЛИ сигнатура
+    //   содержит «9огэ»; родитель — цепочка: эталон → сигнатура
+    //   содержит «рабочиминструкциям» → «общий» + вид не ПЗ.
+    // Связь записывается НАЗВАНИЕМ пункта листа (совпадает с
+    // темами его записей). Заполненный столбец «в составе»
+    // ГЛАВНЕЕ, но значение, не совпадающее ни с одним пунктом
+    // листа, для 9-ОГЭ замещается встроенной связью (опечатка
+    // ручного заполнения). Инверсия (родитель «в составе»
+    // ребёнка) стирается. Пустая периодичность 9-ОГЭ — 3 мес
+    // (эталон заявки: «период 3 месяца»)
     try {
-      var defChild = this._normKey(this.INSTR_DEFAULT_PARENT.child);
+      var defChild = this.INSTR_DEFAULT_PARENT.child;
       var defParent = this.INSTR_DEFAULT_PARENT.parent;
+      var childIdx = -1, parentIdx = -1;
       for (var j = 0; j < out.length; j++) {
-        if (!String(out[j]['в составе'] || '').trim() &&
-            this._normKey(out[j].название) === defChild) {
-          out[j]['в составе'] = defParent;
+        var jKey = this._normKey(out[j].название);
+        if (parentIdx < 0 && jKey === this._normKey(defParent)) parentIdx = j;
+        if (childIdx < 0 && jKey === this._normKey(defChild)) childIdx = j;
+      }
+      if (childIdx < 0) {
+        for (var j2 = 0; j2 < out.length; j2++) {
+          if (this._sigKey(out[j2].название).indexOf('9огэ') >= 0) {
+            childIdx = j2; break;
+          }
         }
+      }
+      if (parentIdx < 0) {
+        for (var j3 = 0; j3 < out.length; j3++) {
+          if (this._sigKey(out[j3].название).indexOf('рабочиминструкциям') >= 0) {
+            parentIdx = j3; break;
+          }
+        }
+      }
+      if (parentIdx < 0) {
+        for (var j4 = 0; j4 < out.length; j4++) {
+          if (this._sigKey(out[j4].название).indexOf('общий') >= 0 &&
+              this._instrTypeOfItem(out[j4], 'инструктаж') === 'инструктаж') {
+            parentIdx = j4; break;
+          }
+        }
+      }
+      if (childIdx >= 0 && parentIdx >= 0 && childIdx !== parentIdx) {
+        // инверсия: родитель «в составе» ребёнка — стереть
+        var pLink = String(out[parentIdx]['в составе'] || '').trim();
+        if (pLink && this._sameInstrName(pLink, out[childIdx].название)) {
+          out[parentIdx]['в составе'] = '';
+        }
+        // столбец главнее, ТОЛЬКО если разрешается в пункт листа
+        var link = String(out[childIdx]['в составе'] || '').trim();
+        var linkOk = false;
+        if (link) {
+          for (var j5 = 0; j5 < out.length; j5++) {
+            if (j5 !== childIdx &&
+                this._sameInstrName(link, out[j5].название)) {
+              linkOk = true; break;
+            }
+          }
+        }
+        if (!linkOk) out[childIdx]['в составе'] = out[parentIdx].название;
+      }
+      // пустая периодичность 9-ОГЭ — 3 мес (эталон заявки)
+      if (childIdx >= 0 && !parseFloat(out[childIdx].периодичность)) {
+        out[childIdx].периодичность = 3;
       }
     } catch (e) { /* ignore — связь не критична для чтения */ }
     return out;
@@ -2357,9 +2439,11 @@ var WorkSchedule = {
   // (столбцов «выполнения» в листе нет). Возвращает новые значения
   // флагов — клиент обновляет запись без перезагрузки сетки.
   // Task 419: отметка ВЫПОЛНЕНО (1) дополнительно автосоздаёт записи
-  // с новыми сроками (периодичность «Списка_И_и_ПЗ», заявка 9-ОГЭ)
+  // с новыми сроками (периодичность «Список_И_и_ПЗ», заявка 9-ОГЭ)
   // — массивы created (новые записи) и updated (покрытые дети) в
-  // ответе; снятие отметки (0) ничего не создаёт и не удаляет
+  // ответе; снятие отметки (0) ничего не создаёт и не удаляет.
+  // Task 420: автосоздание переживает отличия фактических
+  // названий от эталона; аудит несёт разбор соответствия (note)
   setTrainingDone: function(payload) {
     var auth = this._requireWrite(payload.token);
     if (auth.error) return auth.error;
@@ -2395,12 +2479,13 @@ var WorkSchedule = {
           // (выполнение = 1): новый срок того же пункта + новые
           // сроки детей («в составе») + покрытие незавершённых
           // записей детей (родитель включает пункт — заявка 9-ОГЭ)
-          var created = [], updated = [];
+          var created = [], updated = [], autoNote = '';
           if (done === 1) {
             try {
               var auto = this._autoCreateNextTrainings(sheet, rowData);
               created = auto.created;
               updated = auto.updated;
+              autoNote = auto.note || '';
             } catch (e) {
               // автосоздание не должно ломать саму отметку
               try {
@@ -2414,7 +2499,8 @@ var WorkSchedule = {
               'Отметка выполнения id=' + id + ' выполнение=' + done +
               ' просрочен=' + late +
               (done === 1 ? ' автосоздано=' + created.length +
-               ' покрыто=' + updated.length : ''));
+               ' покрыто=' + updated.length +
+               (autoNote ? ' [' + autoNote + ']' : '') : ''));
           } catch (e) { /* ignore */ }
           return { ok: true, data: { id: id, 'выполнение': done,
                                      'просрочен': late,
@@ -2426,10 +2512,20 @@ var WorkSchedule = {
     return { ok: false, error: 'not_found' };
   },
 
-  // Task 419 (заявка): автосоздание записей с новыми сроками
+  // Task 419/420 (заявка): автосоздание записей с новыми сроками
   // проведения при отметке выполнения (setTrainingDone, 0 → 1).
-  // Периодичность N — «Список_И_и_ПЗ» (связь тема ↔ название —
-  // нормализованная, как у клиента). Правила:
+  // Периодичность N — «Список_И_и_ПЗ». Task 420: соответствия
+  // тема ↔ название ↔ «в составе» НЕСТРОГИЕ (норм-ключ ИЛИ
+  // сигнатура — «№»/тире/точки/регистр ручного заполнения не
+  // ломают связь; заявка: «отметка общего создала только общий
+  // +6 мес, записи 9-ОГЭ +3 нет»). Правила:
+  //   0) ЦИКЛ «по кругу» (Task 420): отметка РЕБЁНКА (без его
+  //      собственных детей) — следующий по циклу РОДИТЕЛЬ на
+  //      дата + N(ребёнка): после самостоятельного 9-ОГЭ через
+  //      3 мес идёт общий; создаётся РАНЬШЕ собственного срока —
+  //      запись родителя в окне (дата; дата+N] закрывает отдельную
+  //      запись ребёнка, чередование 3/6 мес не деградирует
+  //      в цепочку «только 9-ОГЭ»;
   //   1) ОТМЕЧЕННЫЙ пункт (N > 0): новая запись того же пункта на
   //      дату + N мес, если в окне (дата; дата + N] ещё нет записи
   //      ни самого пункта, ни его РОДИТЕЛЯ («в составе»: проведение
@@ -2444,7 +2540,7 @@ var WorkSchedule = {
   //      возвращаются в updated (клиент обновляет карточку)
   // Снятие отметки и правка здесь НЕ участвуют. created/updated —
   // в форме записей _readTrainingsSheet (клиент кладёт их в пулы
-  // без перезагрузки)
+  // без перезагрузки); note — разбор соответствия для аудита
   _autoCreateNextTrainings: function(sheet, rowData) {
     var created = [], updated = [];
     var tabNo = String(rowData[1] || '').trim();
@@ -2456,23 +2552,33 @@ var WorkSchedule = {
     }
 
     // шаблон: отмеченный пункт, его родитель и его дети
+    // (Task 420: соответствия НЕСТРОГИЕ — фактические названия
+    // листа могут отличаться от эталона «№»/тире/регистром)
     var items = this._readInstrListSheet();
-    var tKey = this._normKey(tema);
     var item = null;
     for (var i = 0; i < items.length; i++) {
-      if (this._normKey(items[i].название) === tKey) item = items[i];
+      if (this._sameInstrName(items[i].название, tema)) item = items[i];
     }
     if (!item) {
-      // тема вне «Списка_И_и_ПЗ» — периодичности нет, создавать
+      // тема вне «Список_И_и_ПЗ» — периодичности нет, создавать
       // нечего (правка/ввод вручную остаются главнее)
       return { created: created, updated: updated };
     }
-    var parentKey = this._normKey(item['в составе']);
+    // родитель пункта — связь «в составе», разрешённая в пункт
+    var parentKey = String(item['в составе'] || '').trim();
+    var parentItem = null;
+    if (parentKey) {
+      for (var p = 0; p < items.length; p++) {
+        if (this._sameInstrName(items[p].название, parentKey)) {
+          parentItem = items[p];
+        }
+      }
+    }
+    // дети отмеченного пункта
     var children = [];
     for (var j = 0; j < items.length; j++) {
-      var jk = this._normKey(items[j].название);
-      if (parentKey && jk === parentKey) continue;
-      if (jk !== tKey && this._normKey(items[j]['в составе']) === tKey) {
+      if (this._sameInstrName(items[j].название, tema)) continue;
+      if (this._sameInstrName(items[j]['в составе'], tema)) {
         children.push(items[j]);
       }
     }
@@ -2482,12 +2588,14 @@ var WorkSchedule = {
     var values = (lastRow >= 2)
       ? sheet.getRange(2, 1, lastRow - 1, 8).getValues() : [];
     var self = this;
-    var hasInWindow = function(themeKey, winStart, winEnd) {
+    // Task 420: сравнение темы записи с названием — нестрогое
+    // (норм-ключ ИЛИ сигнатура)
+    var hasInWindow = function(themeName, winStart, winEnd) {
       for (var v = 0; v < values.length; v++) {
         var rv = values[v];
         if (!rv[0] && rv[0] !== 0) continue;
         if (String(rv[1] || '').trim() !== tabNo) continue;
-        if (self._normKey(rv[3]) !== themeKey) continue;
+        if (!self._sameInstrName(rv[3], themeName)) continue;
         var rd = rv[4];
         if (!(rd instanceof Date)) continue;
         if (rd.getTime() > winStart.getTime() &&
@@ -2501,11 +2609,25 @@ var WorkSchedule = {
     var evMaxId = this._maxTrainingsId(this._getSheet(this.EVENTS_SHEET));
     if (evMaxId > maxId) maxId = evMaxId;
 
-    // (1) новый срок отмеченного пункта — дата + N мес
     var per = parseFloat(item.периодичность) || 0;
+
+    // (0) ЦИКЛ «по кругу» (Task 420, заявка 9-ОГЭ): следующий —
+    // РОДИТЕЛЬ на дата + N(ребёнка), окно свободно от записей
+    // родителя; только у пункта-ребёнка БЕЗ собственных детей
+    if (parentItem && !children.length && per > 0 &&
+        parseFloat(parentItem.периодичность) > 0) {
+      var pParent = this._addMonthsDate(provDate, per);
+      if (pParent && !hasInWindow(parentKey, provDate, pParent)) {
+        created.push(this._appendTrainingRow(
+          sheet, ++maxId, tabNo, this._instrTypeOfItem(parentItem, tip),
+          parentItem.название, pParent, values));
+      }
+    }
+
+    // (1) новый срок отмеченного пункта — дата + N мес
     if (per > 0) {
       var nextDate = this._addMonthsDate(provDate, per);
-      if (nextDate && !hasInWindow(tKey, provDate, nextDate) &&
+      if (nextDate && !hasInWindow(tema, provDate, nextDate) &&
           !(parentKey && hasInWindow(parentKey, provDate, nextDate))) {
         created.push(this._appendTrainingRow(
           sheet, ++maxId, tabNo, tip, tema, nextDate, values));
@@ -2514,21 +2636,20 @@ var WorkSchedule = {
 
     for (var c = 0; c < children.length; c++) {
       var ch = children[c];
-      var chKey = this._normKey(ch.название);
       var chPer = parseFloat(ch.периодичность) || 0;
       // (3) ПОКРЫТИЕ: незавершённые записи ребёнка с датой <= даты
       // отмеченного родителя выполняются вместе с ним
-      for (var v = 0; v < values.length; v++) {
-        var cv = values[v];
+      for (var v2 = 0; v2 < values.length; v2++) {
+        var cv = values[v2];
         if (!cv[0] && cv[0] !== 0) continue;
         if (String(cv[1] || '').trim() !== tabNo) continue;
-        if (this._normKey(cv[3]) !== chKey) continue;
+        if (!this._sameInstrName(cv[3], ch.название)) continue;
         var cd = cv[4];
         if (!(cd instanceof Date)) continue;
         if (cd.getTime() > provDate.getTime()) continue;
         if (parseInt(cv[5], 10) === 1) continue;
         var cLate = this._isTrainingLate(cd, 1);
-        sheet.getRange(v + 2, 6, 1, 2).setValues([[1, cLate]]);
+        sheet.getRange(v2 + 2, 6, 1, 2).setValues([[1, cLate]]);
         cv[5] = 1; cv[6] = cLate;
         updated.push({ id: parseInt(cv[0], 10), 'выполнение': 1,
                        'просрочен': cLate });
@@ -2538,15 +2659,24 @@ var WorkSchedule = {
       // родителя — отдельная запись не нужна
       if (chPer > 0) {
         var chDate = this._addMonthsDate(provDate, chPer);
-        if (chDate && !hasInWindow(chKey, provDate, chDate) &&
-            !hasInWindow(tKey, provDate, chDate)) {
+        if (chDate && !hasInWindow(ch.название, provDate, chDate) &&
+            !hasInWindow(tema, provDate, chDate)) {
           created.push(this._appendTrainingRow(
             sheet, ++maxId, tabNo, this._instrTypeOfItem(ch, tip),
             ch.название, chDate, values));
         }
       }
     }
-    return { created: created, updated: updated };
+
+    // Task 420: разбор соответствия — в журнал аудита (почему
+    // создано именно так; фактический лист пользователя)
+    var note = 'пункт=' + item.название +
+      ' родитель=' + (parentItem ? parentItem.название
+                                  : (parentKey || '-')) +
+      ' дети=' + (children.length
+        ? children.map(function(ch2) { return ch2.название; }).join('; ')
+        : '-');
+    return { created: created, updated: updated, note: note };
   },
 
   // Task 419: добавить строку «Инструктажей» (формат done) и вернуть
