@@ -223,8 +223,9 @@ describe('Task 407 — SRC: клиент', () => {
         assertTrue(fn.indexOf("(this._INSTR_ALL || []).concat(ins || [])") !== -1 &&
                    fn.indexOf("ar['таб_номер'] !== tabNo") !== -1,
             '«последний» — по ВСЕМ годам (instrAll + срез года, по работнику)');
-        assertTrue(fn.indexOf("this._normInstrKey(all[li].тема) === gKey") !== -1,
-            'связка по нормализованному названию');
+        assertTrue(fn.indexOf("relKeys.indexOf(") !== -1 &&
+                   fn.indexOf("this._normInstrKey(gItem['в составе'])") !== -1,
+            'связка по нормализованному названию (Task 419: «последний» — пункт ИЛИ родитель «в составе»)');
         assertTrue(fn.indexOf('this._trainingCodeOf(gr.тип) || gCode') !== -1,
             'код строки — факт записи (вид пункта — только шапка)');
     });
@@ -258,9 +259,9 @@ describe('Task 407 — SRC: клиент', () => {
             'размеры окна карточки (.ws-wcard)');
     });
 
-    test('SW поднят (SW_VERSION = kipia-test-v645)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v645') !== -1,
-            'CACHE_VERSION в sw.js — kipia-test-v645');
+    test('SW поднят (SW_VERSION = kipia-test-v646)', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v646') !== -1,
+            'CACHE_VERSION в sw.js — kipia-test-v646');
     });
 });
 

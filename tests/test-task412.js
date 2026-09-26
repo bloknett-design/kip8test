@@ -93,10 +93,22 @@ function gasCanonFromSrc() {
     if (!m) throw new Error('эталон instrListInit не найден в WorkSchedule.gs');
     const rows = [...m[1].matchAll(/\['([^']+)',\s*'([^']+)',\s*(\d+),\s*'([^']*)'\]/g)];
     if (rows.length !== 5) throw new Error('ожидалось 5 строк эталона, найдено ' + rows.length);
-    return rows.map(function(r) {
+    const out = rows.map(function(r) {
         return { название: r[1], вид: r[2],
                  периодичность: parseInt(r[3], 10), основание: r[4] };
     });
+    // Task 419 (заявка 9-ОГЭ): столбец F «в составе» — instrListInit
+    // пишет связь в F3 (в пустую ячейку), _readInstrListSheet
+    // применяет встроенную связь INSTR_DEFAULT_PARENT к пункту-ребёнку
+    const dp = WS_SRC.match(
+        /INSTR_DEFAULT_PARENT:\s*\{\s*child:\s*'([^']+)',\s*parent:\s*'([^']+)'/);
+    if (!dp) throw new Error('INSTR_DEFAULT_PARENT не найден в WorkSchedule.gs');
+    const key = s => String(s || '').trim().toLowerCase()
+        .replace(/ё/g, 'е').replace(/\s+/g, ' ');
+    for (const it of out) {
+        if (key(it.название) === key(dp[1])) it['в составе'] = dp[2];
+    }
+    return out;
 }
 
 // ============================================================
@@ -401,7 +413,7 @@ describe('Task 412 — VM: форма «+ Инструктаж…» (канон)
 describe('Task 412 — SW', () => {
 
     test('версия кэша поднята (v639)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v645') !== -1,
-            'CACHE_VERSION = kipia-test-v645');
+        assertTrue(SW_SRC.indexOf('kipia-test-v646') !== -1,
+            'CACHE_VERSION = kipia-test-v646');
     });
 });

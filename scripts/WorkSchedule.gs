@@ -158,7 +158,17 @@
 //   вид — инструктаж/проверка_знаний (толерантно к написанию);
 //   периодичность — число месяцев (пусто/0 = разовый — «следующий
 //     срок» не считается);
-//   основание — приказ/правила (справочно).
+//   основание — приказ/правила (справочно);
+//   в составе (Task 419 — ОПЦИОНАЛЬНО): название пункта-родителя,
+//     в состав которого включён данный пункт (заявка 9-ОГЭ:
+//     «Повторный инструктаж по инструкции № 9-ОГЭ» входит в
+//     «Повторный инструктаж по рабочим инструкциям ОТ» — родитель
+//     раз в 6 месяцев ПОКРЫВАЕТ пункт, между проведениями
+//     родителя пункт проводится самостоятельно, фактически раз в 3 месяца).
+//     Отметка родителя отмечает и покрывает незавершённые записи
+//     пункта; новый срок пункта — от ПОСЛЕДНЕГО события (запись
+//     пункта ИЛИ родителя) + периодичность пункта. Столбца/значения
+//     нет — встроенная связь 9-ОГЭ применяется автоматически.
 //   Создание — разовый запуск instrListInit в редакторе Apps Script.
 //
 // Структура листа «Записи_графика» (ГЛАВНАЯ БД):
@@ -235,6 +245,16 @@ var WorkSchedule = {
   // разового запуска instrListInit) — приложение работает, блок
   // показывает плоский список записей года
   INSTR_LIST_SHEET:   'Список_И_и_ПЗ',
+  // Task 419: встроенная связь «в составе» (заявка 9-ОГЭ): повторный
+  // инструктаж по инструкции № 9-ОГЭ входит в состав повторного
+  // инструктажа по рабочим инструкциям ОТ (6 мес) и проводится
+  // самостоятельно в промежутке (фактически раз в 3 мес). Заполненный
+  // столбец «в составе» листа ГЛАВНЕЕ встроенной связи (для других
+  // пунктов — только столбец)
+  INSTR_DEFAULT_PARENT: {
+    child:  'Повторный инструктаж по инструкции № 9-ОГЭ',
+    parent: 'Повторный инструктаж по рабочим инструкциям ОТ'
+  },
   ENTRIES_SHEET:      'Записи_графика',
   SUMMARY_SHEET:      'Сводка_по_месяцам',
   // Task 274: лист «Отпуска» — план периодов (2–3 части на год).
@@ -392,6 +412,37 @@ var WorkSchedule = {
     if (done === 1) return 0;
     if (!(dateProv instanceof Date)) return 0;
     return (dateProv.getTime() < this._todayStart().getTime()) ? 1 : 0;
+  },
+
+  // Task 419: нормализованный ключ соответствия (как _normInstrKey
+  // клиента): регистр/лишние пробелы/«ё» не важны — тема записи ↔
+  // название пункта ↔ «в составе» (связь ребёнок-родитель)
+  _normKey: function(s) {
+    return String(s || '').trim().toLowerCase()
+               .replace(/ё/g, 'е')
+               .replace(/\s+/g, ' ');
+  },
+
+  // Task 419: дата + N месяцев (день клампится к концу месяца:
+  // 30.11 + 3 мес → 28.02) — новый срок проведения от отмеченной
+  // записи (клиентский _addMonthsIso считает так же)
+  _addMonthsDate: function(d, months) {
+    if (!(d instanceof Date) || !months) return null;
+    var t = new Date(d.getFullYear(), d.getMonth() + months, 1);
+    var dim = new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate();
+    t.setDate(Math.min(d.getDate(), dim));
+    return t;
+  },
+
+  // Task 419: тип записи для автосоздаваемой строки пункта — «вид»
+  // пункта (инструктаж/проверка_знаний, толерантно); пусто/иное —
+  // тип отмеченной записи (факт записи главнее вида пункта — Task 407)
+  _instrTypeOfItem: function(iitem, fallbackTip) {
+    var kind = String((iitem && iitem.вид) || '').trim().toLowerCase()
+                   .replace(/\s+/g, '_');
+    if (kind === 'проверка_знаний') return 'проверка_знаний';
+    if (kind === 'инструктаж') return 'инструктаж';
+    return fallbackTip || 'инструктаж';
   },
 
   // Task 405: создать лист «Мероприятия» с заголовками. Task 418:
@@ -1148,8 +1199,10 @@ var WorkSchedule = {
   // (_headerColIndex, позиция любая): название (ключ соответствия с
   // «темой» записей «Инструктажей»), вид (инструктаж/
   // проверка_знаний), периодичность (число месяцев; пусто = разовый),
-  // основание. Нет листа или ключевого столбца «название» — пустой
-  // список (клиент показывает плоский список записей года)
+  // основание, сокращение (Task 416), в составе (Task 419 — название
+  // пункта-родителя; заявка 9-ОГЭ). Нет листа или ключевого столбца
+  // «название» — пустой список (клиент показывает плоский список
+  // записей года)
   _readInstrListSheet: function() {
     var sheet = this._getSheet(this.INSTR_LIST_SHEET);
     if (!sheet) return [];
@@ -1170,6 +1223,12 @@ var WorkSchedule = {
     // ячейки нет — пустая строка (клиент показывает полное
     // название)
     var shortCol = this._headerColIndex(sheet, ['сокращение']);
+    // Task 419 (заявка 9-ОГЭ): столбец «в составе» — название
+    // пункта-родителя, в состав которого включён пункт (родитель
+    // его покрывает; между проведениями родителя пункт проводится
+    // самостоятельно). Заголовки-синонимы — толерантно
+    var partCol = this._headerColIndex(sheet, [
+      'в составе', 'входит в', 'включён в', 'включен в']);
     var values = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
     var out = [];
     for (var i = 0; i < values.length; i++) {
@@ -1185,9 +1244,25 @@ var WorkSchedule = {
         вид:           kindCol !== null ? String(r[kindCol] || '').trim() : '',
         периодичность: per,
         основание:     baseCol !== null ? String(r[baseCol] || '').trim() : '',
-        сокращение:    shortCol !== null ? String(r[shortCol] || '').trim() : ''
+        сокращение:    shortCol !== null ? String(r[shortCol] || '').trim() : '',
+        'в составе':   partCol !== null ? String(r[partCol] || '').trim() : ''
       });
     }
+    // Task 419 (заявка 9-ОГЭ): встроенная связь — «Повторный
+    // инструктаж по инструкции № 9-ОГЭ» входит в «Повторный
+    // инструктаж по рабочим инструкциям ОТ»; применяется когда
+    // столбца «в составе» нет/ячейка пуста. Заполненный столбец
+    // ГЛАВНЕЕ (другие пункты связываются только через него)
+    try {
+      var defChild = this._normKey(this.INSTR_DEFAULT_PARENT.child);
+      var defParent = this.INSTR_DEFAULT_PARENT.parent;
+      for (var j = 0; j < out.length; j++) {
+        if (!String(out[j]['в составе'] || '').trim() &&
+            this._normKey(out[j].название) === defChild) {
+          out[j]['в составе'] = defParent;
+        }
+      }
+    } catch (e) { /* ignore — связь не критична для чтения */ }
     return out;
   },
 
@@ -2280,7 +2355,11 @@ var WorkSchedule = {
   // нет → 1). Только лист «Инструктажи» НОВОГО формата (заявка
   // переименовала столбцы); легаси-формат — понятная ошибка
   // (столбцов «выполнения» в листе нет). Возвращает новые значения
-  // флагов — клиент обновляет запись без перезагрузки сетки
+  // флагов — клиент обновляет запись без перезагрузки сетки.
+  // Task 419: отметка ВЫПОЛНЕНО (1) дополнительно автосоздаёт записи
+  // с новыми сроками (периодичность «Списка_И_и_ПЗ», заявка 9-ОГЭ)
+  // — массивы created (новые записи) и updated (покрытые дети) в
+  // ответе; снятие отметки (0) ничего не создаёт и не удаляет
   setTrainingDone: function(payload) {
     var auth = this._requireWrite(payload.token);
     if (auth.error) return auth.error;
@@ -2305,21 +2384,196 @@ var WorkSchedule = {
       for (var i = 0; i < ids.length; i++) {
         if (parseInt(ids[i][0], 10) === id) {
           var row = i + 2;
+          // A..H отмечаемой строки (таб_номер/тип/тема/дата нужны
+          // автосозданию новых сроков — Task 419)
+          var rowData = sheet.getRange(row, 1, 1, 8).getValues()[0];
           // E: дата_проведения → пересчёт «просрочен» по отметке
-          var provDate = sheet.getRange(row, 5).getValue();
+          var provDate = rowData[4];
           var late = this._isTrainingLate(provDate, done);
           sheet.getRange(row, 6, 1, 2).setValues([[done, late]]);
+          // Task 419: автосоздание записей с новыми сроками
+          // (выполнение = 1): новый срок того же пункта + новые
+          // сроки детей («в составе») + покрытие незавершённых
+          // записей детей (родитель включает пункт — заявка 9-ОГЭ)
+          var created = [], updated = [];
+          if (done === 1) {
+            try {
+              var auto = this._autoCreateNextTrainings(sheet, rowData);
+              created = auto.created;
+              updated = auto.updated;
+            } catch (e) {
+              // автосоздание не должно ломать саму отметку
+              try {
+                Utils.audit(user.email, 'WORKSCHEDULE_TRAINING_AUTOCREATE_ERROR', '', '',
+                  'Ошибка автосоздания сроков id=' + id + ': ' + e);
+              } catch (e2) { /* ignore */ }
+            }
+          }
           try {
             Utils.audit(user.email, 'WORKSCHEDULE_SET_TRAINING_DONE', '', '',
               'Отметка выполнения id=' + id + ' выполнение=' + done +
-              ' просрочен=' + late);
+              ' просрочен=' + late +
+              (done === 1 ? ' автосоздано=' + created.length +
+               ' покрыто=' + updated.length : ''));
           } catch (e) { /* ignore */ }
           return { ok: true, data: { id: id, 'выполнение': done,
-                                     'просрочен': late } };
+                                     'просрочен': late,
+                                     created: created,
+                                     updated: updated } };
         }
       }
     }
     return { ok: false, error: 'not_found' };
+  },
+
+  // Task 419 (заявка): автосоздание записей с новыми сроками
+  // проведения при отметке выполнения (setTrainingDone, 0 → 1).
+  // Периодичность N — «Список_И_и_ПЗ» (связь тема ↔ название —
+  // нормализованная, как у клиента). Правила:
+  //   1) ОТМЕЧЕННЫЙ пункт (N > 0): новая запись того же пункта на
+  //      дату + N мес, если в окне (дата; дата + N] ещё нет записи
+  //      ни самого пункта, ни его РОДИТЕЛЯ («в составе»: проведение
+  //      родителя покрывает пункт — отдельная запись не нужна);
+  //   2) ДЕТИ отмеченного пункта (пункты со «в составе» = его
+  //      название, заявка 9-ОГЭ): запись ребёнка на дата +
+  //      N(ребёнка) — общий инструктаж каждые 6 мес создаёт и
+  //      9-ОГЭ через 3 мес (самостоятельный) и следующий общий
+  //      через 6 мес — чередование «по кругу из года в год»;
+  //   3) ПОКРЫТИЕ: незавершённые записи детей с датой <= даты
+  //      отмеченного родителя отмечаются выполненными и
+  //      возвращаются в updated (клиент обновляет карточку)
+  // Снятие отметки и правка здесь НЕ участвуют. created/updated —
+  // в форме записей _readTrainingsSheet (клиент кладёт их в пулы
+  // без перезагрузки)
+  _autoCreateNextTrainings: function(sheet, rowData) {
+    var created = [], updated = [];
+    var tabNo = String(rowData[1] || '').trim();
+    var tip   = String(rowData[2] || '').trim();
+    var tema  = String(rowData[3] || '').trim();
+    var provDate = rowData[4];
+    if (!tabNo || !tema || !(provDate instanceof Date)) {
+      return { created: created, updated: updated };
+    }
+
+    // шаблон: отмеченный пункт, его родитель и его дети
+    var items = this._readInstrListSheet();
+    var tKey = this._normKey(tema);
+    var item = null;
+    for (var i = 0; i < items.length; i++) {
+      if (this._normKey(items[i].название) === tKey) item = items[i];
+    }
+    if (!item) {
+      // тема вне «Списка_И_и_ПЗ» — периодичности нет, создавать
+      // нечего (правка/ввод вручную остаются главнее)
+      return { created: created, updated: updated };
+    }
+    var parentKey = this._normKey(item['в составе']);
+    var children = [];
+    for (var j = 0; j < items.length; j++) {
+      var jk = this._normKey(items[j].название);
+      if (parentKey && jk === parentKey) continue;
+      if (jk !== tKey && this._normKey(items[j]['в составе']) === tKey) {
+        children.push(items[j]);
+      }
+    }
+
+    // снимок строк листа (дополненный созданными — проверки окна)
+    var lastRow = sheet.getLastRow();
+    var values = (lastRow >= 2)
+      ? sheet.getRange(2, 1, lastRow - 1, 8).getValues() : [];
+    var self = this;
+    var hasInWindow = function(themeKey, winStart, winEnd) {
+      for (var v = 0; v < values.length; v++) {
+        var rv = values[v];
+        if (!rv[0] && rv[0] !== 0) continue;
+        if (String(rv[1] || '').trim() !== tabNo) continue;
+        if (self._normKey(rv[3]) !== themeKey) continue;
+        var rd = rv[4];
+        if (!(rd instanceof Date)) continue;
+        if (rd.getTime() > winStart.getTime() &&
+            rd.getTime() <= winEnd.getTime()) return true;
+      }
+      return false;
+    };
+
+    // id — ГЛОБАЛЬНЫЙ по обоим листам (как addTraining)
+    var maxId = this._maxTrainingsId(sheet);
+    var evMaxId = this._maxTrainingsId(this._getSheet(this.EVENTS_SHEET));
+    if (evMaxId > maxId) maxId = evMaxId;
+
+    // (1) новый срок отмеченного пункта — дата + N мес
+    var per = parseFloat(item.периодичность) || 0;
+    if (per > 0) {
+      var nextDate = this._addMonthsDate(provDate, per);
+      if (nextDate && !hasInWindow(tKey, provDate, nextDate) &&
+          !(parentKey && hasInWindow(parentKey, provDate, nextDate))) {
+        created.push(this._appendTrainingRow(
+          sheet, ++maxId, tabNo, tip, tema, nextDate, values));
+      }
+    }
+
+    for (var c = 0; c < children.length; c++) {
+      var ch = children[c];
+      var chKey = this._normKey(ch.название);
+      var chPer = parseFloat(ch.периодичность) || 0;
+      // (3) ПОКРЫТИЕ: незавершённые записи ребёнка с датой <= даты
+      // отмеченного родителя выполняются вместе с ним
+      for (var v = 0; v < values.length; v++) {
+        var cv = values[v];
+        if (!cv[0] && cv[0] !== 0) continue;
+        if (String(cv[1] || '').trim() !== tabNo) continue;
+        if (this._normKey(cv[3]) !== chKey) continue;
+        var cd = cv[4];
+        if (!(cd instanceof Date)) continue;
+        if (cd.getTime() > provDate.getTime()) continue;
+        if (parseInt(cv[5], 10) === 1) continue;
+        var cLate = this._isTrainingLate(cd, 1);
+        sheet.getRange(v + 2, 6, 1, 2).setValues([[1, cLate]]);
+        cv[5] = 1; cv[6] = cLate;
+        updated.push({ id: parseInt(cv[0], 10), 'выполнение': 1,
+                       'просрочен': cLate });
+      }
+      // (2) новый срок ребёнка — дата родителя + N(ребёнка);
+      // окно (дата; дата + N] занято записью ребёнка ИЛИ самого
+      // родителя — отдельная запись не нужна
+      if (chPer > 0) {
+        var chDate = this._addMonthsDate(provDate, chPer);
+        if (chDate && !hasInWindow(chKey, provDate, chDate) &&
+            !hasInWindow(tKey, provDate, chDate)) {
+          created.push(this._appendTrainingRow(
+            sheet, ++maxId, tabNo, this._instrTypeOfItem(ch, tip),
+            ch.название, chDate, values));
+        }
+      }
+    }
+    return { created: created, updated: updated };
+  },
+
+  // Task 419: добавить строку «Инструктажей» (формат done) и вернуть
+  // запись в форме _readTrainingsSheet; строка также дописывается в
+  // values (снимок листа) — повторные проверки окна автосоздания её
+  // видят, индекс values совпадает со строкой листа (v + 2)
+  _appendTrainingRow: function(sheet, newId, tabNo, tip, tema, date, values) {
+    var late = this._isTrainingLate(date, 0);
+    this._appendRowKeepText(sheet,
+      [newId, tabNo, tip, tema, date, 0, late, ''], [2]);
+    var iso = this._toIsoDate(date);
+    if (values) {
+      values.push([newId, tabNo, tip, tema, date, 0, late, '']);
+    }
+    return {
+      id: newId,
+      'таб_номер':  tabNo,
+      'тип':        tip,
+      'тема':       tema,
+      'дата_начала':     iso,
+      'дата_окончания':  iso,
+      'длительность_дней': 1,
+      'комментарий':      '',
+      'дата_проведения':  iso,
+      'выполнение':       0,
+      'просрочен':        late
+    };
   },
 
   // workSchedule.deleteTraining
@@ -2915,12 +3169,12 @@ var WorkSchedule = {
       sheet = ss.insertSheet(this.INSTR_LIST_SHEET);
     }
     // Task 416 (заявка: столбец E «сокращение»): заголовок листа —
-    // ПЯТЬ столбцов (A..E), но эталонные строки пишутся/чистятся
-    // ТОЛЬКО в A..D — данные столбца E (пользовательские
-    // сокращения) повторный запуск НЕ затирает; заполняются
-    // сокращения вручную в таблице
+    // ШЕСТЬ столбцов (A..F), но эталонные строки пишутся/чистятся
+    // ТОЛЬКО в A..D — данные столбцов E (пользовательские
+    // сокращения) и F («в составе» — Task 419) повторный запуск НЕ
+    // затирает; заполняются вручную в таблице
     var headers = ['название', 'вид', 'периодичность', 'основание',
-                   'сокращение'];
+                   'сокращение', 'в составе'];
     var dataCols = 4;
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     sheet.getRange(1, 1, 1, headers.length)
@@ -2940,10 +3194,22 @@ var WorkSchedule = {
     ];
     var lastRow = sheet.getLastRow();
     if (lastRow > 1) {
-      // A..D only (dataCols) — столбец E «сокращение» НЕ трогаем
+      // A..D only (dataCols) — столбцы E «сокращение»/F «в составе»
+      // НЕ трогаем
       sheet.getRange(2, 1, lastRow - 1, dataCols).clearContent();
     }
     sheet.getRange(2, 1, items.length, dataCols).setValues(items);
+    // Task 419 (заявка 9-ОГЭ): строка 3 — пункт «№ 9-ОГЭ», связь
+    // «в составе» с общим инструктажом; пишется ТОЛЬКО в пустую
+    // ячейку F3 (пользовательское значение главнее, при чистке
+    // A..D не затирается)
+    try {
+      var f9 = sheet.getRange(3, 6).getValue();
+      if (!String(f9 || '').trim()) {
+        sheet.getRange(3, 6).setValue(
+          'Повторный инструктаж по рабочим инструкциям ОТ');
+      }
+    } catch (e) { /* ignore */ }
     try {
       Utils.audit('', created ? 'WORKSCHEDULE_INSTR_LIST_SHEET_CREATED'
                               : 'WORKSCHEDULE_INSTR_LIST_SHEET_RESET', '', '',
@@ -2995,7 +3261,9 @@ function trainingsSplitInit() {
 //      удаляются; «название» должно совпадать с «темой» записей
 //      таблицы «Инструктажи» (регистр/пробелы/«ё» не важны);
 //      «вид» — инструктаж или проверка_знаний; «периодичность» —
-//      число месяцев (пусто = разовый);
+//      число месяцев (пусто = разовый); «в составе» (F) — название
+//      пункта-родителя (Task 419, заявка 9-ОГЭ; ячейка F3 с
+//      готовой связью создаётся автоматически);
 //   3) лист уже есть — ЗАМЕЩАЕТ строки эталоном 5 пунктов
 //      (Task 409: прежние образцы/правки будут заменены — не
 //      запускайте после ручного заполнения списка).
