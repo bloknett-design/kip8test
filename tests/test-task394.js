@@ -139,14 +139,14 @@ describe('Task 394 — SRC: мероприятия на весь год', () => 
 describe('Task 394 — SRC: CSS сетки и окна мероприятий', () => {
 
     test('десктоп ≥1024px — .ws-wgrid2: ДВЕ колонки flex (Task 395)', () => {
-        const re = /@media \(min-width: 1024px\) \{\s*\.ws-wgrid2 \{[^}]*?display: flex;[^}]*?gap: 12px;[^}]*?align-items: flex-start;\s*\}\s*\.ws-wgrid2 \.ws-wcol \{[^}]*?flex: 1 1 0;[^}]*?min-width: 0;[^}]*?margin-bottom: 0;\s*\}/;
+        const re = /@media \(min-width: 1024px\) \{\s*\.ws-wgrid2 \{[^}]*?display: flex;[^}]*?gap: 5px;[^}]*?align-items: flex-start;\s*\}\s*\.ws-wgrid2 \.ws-wcol \{[^}]*?flex: 1 1 0;[^}]*?min-width: 0;[^}]*?margin-bottom: 0;\s*\}/;
         assertTrue(re.test(INDEX_SRC),
-            'Task 395: две равные flex-колонки; правая (СИЗ) сверху — не тянется');
+            'Task 395: две равные flex-колонки; правая (СИЗ) сверху — не тянется (Task 428: зазор 5px)');
     });
 
     test('мобильный стек жив: зазор margin-bottom у панелей', () => {
-        assertTrue(INDEX_SRC.indexOf('.ws-wtab-body .ws-wcard { margin-bottom: 12px; }') !== -1,
-            'базовый зазор стека (≤1023px) сохранён');
+        assertTrue(INDEX_SRC.indexOf('.ws-wtab-body .ws-wcard { margin-bottom: 5px; }') !== -1,
+            'базовый зазор стека (≤1023px) сохранён (Task 428: 5px)');
         assertTrue(INDEX_SRC.indexOf('.ws-wtab-body .ws-wcard:last-child { margin-bottom: 0; }') !== -1,
             'последнее окно без зазора');
     });
@@ -626,10 +626,10 @@ describe('Task 394 — VM: окно мероприятий — порядок с
 // ============================================================
 describe('Task 394 — SW', () => {
 
-    test('SW: kipia-test-v654', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v654'") !== -1,
+    test('SW: kipia-test-v655', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v655'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v655') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v656') === -1,
             'двойного бампа не было');
     });
 });

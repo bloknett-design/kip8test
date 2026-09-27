@@ -93,15 +93,15 @@ describe('Task 404 — SRC: карточка — три блока в одну �
             'flex БЕЗ переноса — колонки строго в одну линию');
         assertTrue(m[0].indexOf('flex: 1 1 0;') !== -1,
             'равные доли 1 1 0 — три блока гарантированно помещаются');
-        assertTrue(m[0].indexOf('gap: 12px;') !== -1,
-            'зазор между колонками 12px');
+        assertTrue(m[0].indexOf('gap: 5px;') !== -1,
+            'зазор между колонками 5px (Task 428)');
         assertTrue(m[0].indexOf('align-items: flex-start;') !== -1,
             'колонки не тянутся по высоте друг друга');
     });
 
     test('мобайл ≤1023px — стек колонок без раскладки', () => {
-        assertTrue(INDEX_SRC.indexOf('.ws-wgrid2 .ws-wcol { margin-bottom: 12px; }') !== -1,
-            'зазор между колонками в стеке жив');
+        assertTrue(INDEX_SRC.indexOf('.ws-wgrid2 .ws-wcol { margin-bottom: 5px; }') !== -1,
+            'зазор между колонками в стеке жив (Task 428: 5px)');
         assertTrue(INDEX_SRC.indexOf('.ws-wgrid2 .ws-wcol:last-child { margin-bottom: 0; }') !== -1,
             'последняя колонка без зазора');
     });
@@ -402,12 +402,12 @@ describe('Task 404 — VM: окно мероприятий — отпуска н
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 404 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v654 (Task 404)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v654'") !== -1,
+    test('CACHE_VERSION = kipia-test-v655 (Task 404)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v655'") !== -1,
             'фронтенд менялся — кэш поднят до v631');
     });
     test('guard: v632 отсутствует (следующий бамп)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v655') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v656') === -1,
             'v632 ещё не существует (guard следующего бампа)');
     });
 });

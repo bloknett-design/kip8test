@@ -178,8 +178,8 @@ describe('Task 393 — CSS: шрифт карточки страницы кру�
     });
 
     test('стек панелей: зазор между окнами, у последнего — 0', () => {
-        assertTrue(INDEX_SRC.indexOf('.ws-wtab-body .ws-wcard { margin-bottom: 12px; }') !== -1,
-            'зазор между блоками-окнами');
+        assertTrue(INDEX_SRC.indexOf('.ws-wtab-body .ws-wcard { margin-bottom: 5px; }') !== -1,
+            'зазор между блоками-окнами (Task 428: 5px)');
         assertTrue(INDEX_SRC.indexOf('.ws-wtab-body .ws-wcard:last-child { margin-bottom: 0; }') !== -1,
             'последнее окно без нижнего зазора');
     });
@@ -465,10 +465,10 @@ describe('Task 393 — VM: страница «Работники» — 4 окн�
 // ============================================================
 describe('Task 393 — SW', () => {
 
-    test('SW: kipia-test-v654', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v654'") !== -1,
+    test('SW: kipia-test-v655', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v655'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v655') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v656') === -1,
             'двойного бампа не было');
     });
 });

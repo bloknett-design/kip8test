@@ -344,10 +344,10 @@ describe('Task 417 — VM: карточка — полные названия', 
 // 5. SW — версия поднята
 // ============================================================
 describe('Task 417 — SW', () => {
-    test('SW: кэш поднят до kipia-test-v654', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v654'") !== -1,
-            'CACHE_VERSION = kipia-test-v654 (Task 417)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v655') !== -1,
+    test('SW: кэш поднят до kipia-test-v655', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v655'") !== -1,
+            'CACHE_VERSION = kipia-test-v655 (Task 417)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v656') !== -1,
             'следующей версии в кэше нет');
     });
 });

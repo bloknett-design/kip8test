@@ -245,7 +245,7 @@ describe('Task 390 — SRC: CSS — шапка/примыкание/цвета �
             'светлая: тёплый #E4E0D3 — темнее панели окна');
     });
 
-    test('.ws-wtabs: ярлыки ПРИМЫКАЮТ к окну вкладок', () => {
+    test('.ws-wtabs: зазор до окна вкладок — gap раскладки (Task 428)', () => {
         const i = INDEX_SRC.indexOf('.ws-wtabs {');
         assertTrue(i !== -1, 'правило живо');
         const chunk = INDEX_SRC.slice(i, INDEX_SRC.indexOf('\n    }', i) + 7);
@@ -254,8 +254,13 @@ describe('Task 390 — SRC: CSS — шапка/примыкание/цвета �
         assertTrue(chunk.indexOf('padding-right') === -1,
             'в базовом правиле .ws-wtabs вообще нет padding-right');
         const a = ruleBlock('.ws-wtab.active {');
-        assertTrue(a !== null && a.indexOf('margin-right: -1px;') !== -1,
-            'активный ярлык пристыкован к окну (margin-right: -1px)');
+        // Task 428: пристыковка снята — ярлыки закруглены со всех
+        // сторон, зазор до окна — gap 5px раскладки .ws-workers-layout
+        assertTrue(a !== null && a.indexOf('margin-right: -1px') === -1,
+            'Task 428: активный ярлык НЕ пристыкован (радиус справа)');
+        const l = ruleBlock('.ws-workers-layout {');
+        assertTrue(l !== null && l.indexOf('gap: 5px;') !== -1,
+            'Task 428: зазор ярлыки→окно = 5px');
     });
 
     test('.ws-wtab: тёмная — светлее фона страницы, ТЁПЛЫЙ тон', () => {
@@ -292,10 +297,10 @@ describe('Task 390 — SRC: CSS — шапка/примыкание/цвета �
             'светлая: активный — как окно вкладки');
     });
 
-    test('SW: kipia-test-v654', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v654'") !== -1,
+    test('SW: kipia-test-v655', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v655'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v655') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v656') === -1,
             'двойного бампа не было');
     });
 });

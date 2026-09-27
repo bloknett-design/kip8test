@@ -185,8 +185,8 @@ describe('Task 395 — SRC: колонки карточки (десктоп)', (
         const m = INDEX_SRC.match(/@media \(min-width: 1024px\) \{\s*\.ws-wgrid2 \{[^}]*?\}\s*\.ws-wgrid2 \.ws-wcol \{[^}]*?\}\s*\}/);
         assertTrue(m !== null, 'блок медиаправил жив');
         assertTrue(m[0].indexOf('display: flex;') !== -1 &&
-                   m[0].indexOf('gap: 12px;') !== -1,
-            'flex-раскладка с зазором 12px');
+                   m[0].indexOf('gap: 5px;') !== -1,
+            'flex-раскладка с зазором 5px (Task 428)');
         assertTrue(m[0].indexOf('align-items: flex-start;') !== -1,
             'колонки НЕ тянутся по высоте друг друга');
         assertTrue(m[0].indexOf('flex: 1 1 0;') !== -1,
@@ -194,15 +194,15 @@ describe('Task 395 — SRC: колонки карточки (десктоп)', (
     });
 
     test('мобайл — стек: колонки без раскладки, зазор между ними', () => {
-        const base = INDEX_SRC.indexOf('.ws-wgrid2 .ws-wcol { margin-bottom: 12px; }');
+        const base = INDEX_SRC.indexOf('.ws-wgrid2 .ws-wcol { margin-bottom: 5px; }');
         assertTrue(base !== -1,
-            'зазор между колонками в стеке');
+            'зазор между колонками в стеке (Task 428: 5px)');
         assertTrue(INDEX_SRC.indexOf('.ws-wgrid2 .ws-wcol:last-child { margin-bottom: 0; }') !== -1,
             'последняя колонка без зазора');
         // вне @media ≥1024px (мобильный стек) — панелям базовый зазор
         const r = ruleBlock('.ws-wcard {');
-        assertTrue(r.indexOf('margin-bottom: 12px;') !== -1,
-            'зазор панелей внутри колонок жив (Task 393)');
+        assertTrue(r.indexOf('margin-bottom: 5px;') !== -1,
+            'зазор панелей внутри колонок жив (Task 393; Task 428: 5px)');
     });
 });
 
@@ -379,9 +379,9 @@ describe('Task 395 — VM: гейты страницы по матрице', () 
 // ============================================================
 describe('Task 395 — SW-кэш', () => {
     test('SW поднят до v623 (Task 395 — фронтенд менялся)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v654') !== -1,
-            'sw.js: CACHE_VERSION kipia-test-v654');
-        assertTrue(SW_SRC.indexOf('kipia-test-v655') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v655') !== -1,
+            'sw.js: CACHE_VERSION kipia-test-v655');
+        assertTrue(SW_SRC.indexOf('kipia-test-v656') === -1,
             'двойного бампа нет (v624 не существует)');
     });
 });
