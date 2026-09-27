@@ -28,7 +28,7 @@
 //   • CSS @media print: .wsp-mev-item/.wsp-lg — display: block
 //     (один столбик) + page-break-inside: avoid.
 //
-// SW: kipia-test-v658.
+// SW: kipia-test-v659.
 //
 // Запуск: через tests/run-all.js (require './test-task360.js').
 
@@ -127,11 +127,12 @@ describe('Task 360 — SRC: секция мероприятий в печати'
         assertTrue(iTable !== -1 && iMev !== -1 && iLegend !== -1 && iFoot !== -1,
             'все секции на месте');
         assertTrue(iTable < iMev, 'мероприятия ПОД графиком');
-        // Task 432: коды — ПЛАВАЮЩИЙ столбик (float: right), флоат
-        // предшествует обтекаемому тексту: строится ПЕРВЫМ в DOM,
-        // визуально остаётся СПРАВА от списка мероприятий
-        assertTrue(iLegend < iMev, 'перечень кодов — флоатом ПЕРВЫМ в DOM'
-            + ' (Task 432: правый верхний угол wsp-bottom, обтекание)');
+        // Task 433 (заявка: «расположение кодов в печати верни
+        // обратно»): нижняя секция снова ВЕРТИКАЛЬНАЯ — список
+        // мероприятий ПЕРВЫМ, коды — строкой-абзацем ПОД ним
+        // (флоат Task 432 строил коды первыми в DOM)
+        assertTrue(iMev < iLegend, 'перечень кодов — ПОД списком мероприятий'
+            + ' (Task 433: вертикальная секция, флоат снят)');
         assertTrue(iLegend < iFoot, 'сноска после перечня кодов');
     });
 });
@@ -201,29 +202,36 @@ describe('Task 360 — печатный CSS (один столбик)', () => {
             'строка «нет мероприятий»');
     });
 
-    test('SRC: .wsp-mev-item — display: block (один столбик) + без разрыва', () => {
+    test('SRC: .wsp-mev-item — запись-блок [точка][дата][текст] + без разрыва', () => {
         const block = printCss();
         const i = block.indexOf('#wsPrintSheet .wsp-mev-item {');
         const rule = block.slice(i, block.indexOf('}', i) + 1);
-        assertTrue(rule.indexOf('display: block') !== -1,
-            'каждое мероприятие — отдельной строкой');
+        // Task 433: запись — ГИБКИЙ РЯД: [точка][дата][текст],
+        // правая часть (текст) РАСТЯНУТА до конца листа
+        // (.wsp-mev-text flex:1), перенос — только когда текст
+        // не вмещается в одну строку (прежде display: block
+        // Task 360–432)
+        assertTrue(rule.indexOf('display: flex') !== -1,
+            'запись-«блок» — гибкий ряд [точка][дата][текст] (Task 433)');
         assertTrue(rule.indexOf('page-break-inside: avoid') !== -1,
             'строка не рвётся между страницами');
     });
 
-    test('SRC: .wsp-lg — display: block (один код — одна строка)', () => {
+    test('SRC: .wsp-lg — коды В СТРОКУ (Task 433: вернули исходное)', () => {
         const block = printCss();
         const i = block.indexOf('#wsPrintSheet .wsp-lg {');
         assertTrue(i !== -1, 'правило .wsp-lg есть');
         const rule = block.slice(i, block.indexOf('}', i) + 1);
-        assertTrue(rule.indexOf('display: block') !== -1,
-            'каждый код — отдельной строкой');
-        assertTrue(rule.indexOf('page-break-inside: avoid') !== -1,
-            'строка кода не рвётся');
-        assertFalse(rule.indexOf('margin-right') !== -1,
-            'горизонтальный отступ строк убран (не инлайн)');
-        assertFalse(rule.indexOf('white-space: nowrap') !== -1,
-            'перенос длинных наименований разрешён');
+        // Task 433 (заявка: «расположение кодов в печати верни
+        // обратно»): ИСХОДНАЯ форма «в одну строку» (как до Task
+        // 360; столбик Task 360–431 и флоат Task 432 сняты):
+        // коды идут В СТРОКУ, растягиваясь вправо до конца листа
+        assertTrue(rule.indexOf('display: inline') !== -1,
+            'коды — В СТРОКУ (Task 433: единый абзац под списком)');
+        assertTrue(rule.indexOf('margin-right') !== -1,
+            'горизонтальный отступ между кодами (инлайн)');
+        assertTrue(rule.indexOf('white-space: nowrap') !== -1,
+            'код не рвётся внутри (перенос — только между кодами)');
     });
 
     test('SRC: точка цвета мероприятия печатается принудительно', () => {
@@ -593,10 +601,10 @@ describe('Task 360 — регресс прежних фич печати', () =>
 // ============================================================
 describe('Task 360 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v658', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v658'") !== -1,
-            'CACHE_VERSION = kipia-test-v658 (Task 360 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v659') !== -1,
+    test('SW: кэш поднят до kipia-test-v659', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v659'") !== -1,
+            'CACHE_VERSION = kipia-test-v659 (Task 360 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v660') !== -1,
             'v605 ещё не существует (лишний инкремент)');
     });
 });

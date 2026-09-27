@@ -13,7 +13,7 @@
 //     обёртки на всю ширину; каждая запись/код — отдельной
 //     строкой своего столбика (как в Task 360).
 //
-// SW: kipia-test-v658.
+// SW: kipia-test-v659.
 //
 // Запуск: через tests/run-all.js (require './test-task364.js').
 
@@ -95,17 +95,17 @@ describe('Task 364 — SRC: рамка выходных 2px #e57373', () => {
 // ============================================================
 describe('Task 364 — SRC: wsp-bottom на печати', () => {
 
-    test('SRC: CSS .wsp-bottom — обёртка с обтеканием (Task 432)', () => {
+    test('SRC: CSS .wsp-bottom — обёртка вертикальной секции (Task 433)', () => {
         const r = cssRule(INDEX_SRC, '#wsPrintSheet .wsp-bottom');
         assertTrue(r !== '', 'правило обёртки есть');
-        // Task 432 (заявка: «строки столбика мероприятий должны
-        // растягиваться вправо до конца листа, и если места не
-        // хватит, только тогда переноситься на следующую строку»):
-        // flex-ряд заменён ОБТЕКАНИЕМ — коды плавают справа,
-        // строки мероприятий текут вокруг; зазор 10px (Task 375)
-        // жив как margin-left флоата (.wsp-legend)
-        assertTrue(r.indexOf('display: flow-root') !== -1,
-            'flow-root — флоат contained, сноска ниже кодов');
+        // Task 433 (заявка: «расположение кодов в печати верни
+        // обратно…»): флоат Task 432 и flex-ряд Task 364–431
+        // СНЯТЫ — нижняя секция ВЕРТИКАЛЬНАЯ: список мероприятий
+        // на всю ширину, коды — строкой-абзацем ПОД ним
+        assertTrue(r.indexOf('display: flex') === -1,
+            'flex-ряда нет (Task 433: вертикальная секция)');
+        assertTrue(r.indexOf('flow-root') === -1,
+            'флоат-обёртки Task 432 больше нет');
         assertTrue(r.indexOf('margin-top: 2.5mm') !== -1,
             'отступ от таблицы перенесён на обёртку');
     });
@@ -125,16 +125,18 @@ describe('Task 364 — SRC: wsp-bottom на печати', () => {
             'шрифт Task 361 (11px) сохранён');
     });
 
-    test('SRC: CSS .wsp-legend — плавающий столбик справа (Task 432)', () => {
+    test('SRC: CSS .wsp-legend — строка-абзац ПОД списком (Task 433)', () => {
         const r = cssRule(INDEX_SRC, '#wsPrintSheet .wsp-legend');
-        // Task 432: коды — float: right у правого верхнего угла ряда;
-        // зазор от строк мероприятий — 10px (margin-left, Task 431/375)
-        assertTrue(r.indexOf('float: right') !== -1,
-            'коды — плавающий столбик (правый верхний угол)');
-        assertTrue(r.indexOf('margin: 0 0 5px 10px') !== -1,
-            'зазор 10px + 5px снизу');
-        assertTrue(r.indexOf('max-width: 44%') !== -1,
-            'не шире 44% листа');
+        // Task 433 (заявка: «расположение кодов в печати верни
+        // обратно»): ВЕРНУЛИ исходную форму «в одну строку» —
+        // флоат и max-width сняты, блок — обычный абзац ПОД
+        // списком мероприятий, растянутый до конца листа
+        assertTrue(r.indexOf('float:') === -1,
+            'флоат Task 432 снят (коды — не плавающий столбик)');
+        assertTrue(r.indexOf('max-width') === -1,
+            'кап ширины Task 364 снят');
+        assertTrue(r.indexOf('margin-top: 2.5mm') !== -1,
+            'отступ от списка мероприятий сверху');
         assertTrue(r.indexOf('font-size: 11px') !== -1,
             'шрифт Task 361 (11px) сохранён');
     });
@@ -147,25 +149,23 @@ describe('Task 364 — SRC: wsp-bottom на печати', () => {
         const iFoot = b.indexOf('<div class="wsp-foot">');
         assertTrue(iOpen !== -1, 'обёртка wsp-bottom строится');
         assertTrue(iOpen < iMev, 'открытие обёртки до мероприятий');
-        // Task 432 (заявка: строки мероприятий растягиваются до конца
-        // листа): столбик кодов — ПЛАВАЮЩИЙ (float: right), флоат
-        // обязан предшествовать обтекаемому тексту — коды строятся
-        // ПЕРВЫМИ, мероприятия — вторыми
-        assertTrue(iLegend < iMev, 'коды (флоат) раньше мероприятий — Task 432');
-        assertTrue(iLegend < iFoot, 'сноска — после ряда');
+        // Task 433: секция ВЕРТИКАЛЬНАЯ — список мероприятий
+        // ПЕРВЫМ, коды — строкой-абзацем ПОД ним (флоат Task 432
+        // строил коды первыми в DOM)
+        assertTrue(iMev < iLegend, 'коды — ПОД списком мероприятий (Task 433)');
+        assertTrue(iLegend < iFoot, 'сноска — после кодов');
     });
 
-    test('SRC: JS — обёртка закрывается ПОСЛЕ перечня мероприятий (двойной div)', () => {
+    test('SRC: JS — обёртка закрывается ПОСЛЕ кодов (двойной div)', () => {
         const b = stripComments(methodText(WS_CLIENT, '_buildPrintHtml'));
         const iLegend = b.indexOf('<div class="wsp-legend">');
-        const iMev = b.indexOf('<div class="wsp-mev">');
         const iFoot = b.indexOf('<div class="wsp-foot">');
-        // Task 432: закрытие мероприятий и обёртки — ДВА последовательных
-        // оператора (прежде один '</div></div>')
-        const iClose1 = b.indexOf("html += '</div>';", iMev);
+        // Task 433: порядок — мероприятия → коды → закрытие обёртки:
+        // закрытие кодов и обёртки — ДВА последовательных оператора
+        const iClose1 = b.indexOf("html += '</div>';", iLegend);
         const iClose2 = b.indexOf("html += '</div>';", iClose1 + 1);
         assertTrue(iClose1 !== -1 && iClose2 !== -1,
-            'двойное закрытие mev + обёртки');
+            'двойное закрытие legend + обёртки');
         assertTrue(iClose1 > iLegend, 'закрытие после перечня кодов');
         assertTrue(iClose2 - iClose1 < 200,
             'операторы закрытия — подряд');
@@ -239,21 +239,23 @@ describe('Task 364 — VM: ряд мероприятий|кодов в печа�
         var iClose = html.indexOf('</div></div>', iLegend);
         var iFoot = html.indexOf('<div class="wsp-foot">');
         assertTrue(iOpen !== -1, 'обёртка wsp-bottom в листе');
-        // Task 432: коды (флоат) строятся ПЕРВЫМИ, мероприятия — вторыми
-        assertTrue(iOpen < iLegend && iLegend < iMev,
-            'коды и мероприятия внутри обёртки (флоат первым — Task 432)');
+        // Task 433: секция вертикальная — мероприятия ПЕРВЫМИ,
+        // коды — ПОД списком (флоат Task 432 строил коды первыми)
+        assertTrue(iOpen < iMev && iMev < iLegend,
+            'мероприятия, за ними коды — внутри обёртки (Task 433)');
         assertTrue(iClose !== -1 && iClose > iLegend, 'обёртка закрыта после кодов');
         assertTrue(iFoot > iClose, 'сноска — ПОД обёрткой, на всю ширину');
     });
 
-    test('VM: у мероприятий и кодов НЕТ личных отступов сверху (единый ряд)', () => {
+    test('VM: у мероприятий и кодов НЕТ личных обёрток-посредников', () => {
         var html = sheetHost()._buildPrintHtml(EMPS, AGG);
         // структура CSS проверена в SRC; здесь — что оба блока
-        // в одном родителе: между закрытием legend (флоат, Task 432 —
-        // строится первым) и открытием mev нет обёрток-посредников
+        // в одном родителе: между закрытием mev и открытием legend
+        // (Task 433: мероприятия строятся первыми) нет посредников
         var iMev = html.indexOf('<div class="wsp-mev">');
-        var iLegendEnd = html.indexOf('</div>', html.indexOf('<div class="wsp-legend">'));
-        var between = html.slice(iLegendEnd + 6, iMev);
+        var iLegend = html.indexOf('<div class="wsp-legend">');
+        var iMevEnd = html.indexOf('</div>', iMev);
+        var between = html.slice(iMevEnd + 6, iLegend);
         assertEqual(between.replace(/\s+/g, ''), '',
             'legend — непосредственный сосед mev в обёртке');
     });
@@ -284,8 +286,8 @@ describe('Task 364 — VM: ряд мероприятий|кодов в печа�
 // 4. SW — версия кеша
 // ============================================================
 describe('Task 364 — SW: версия кеша', () => {
-    test('SW: CACHE_VERSION = kipia-test-v658', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v658'") !== -1,
-            'SW поднят до v593 (рамка 2px + коды справа от мероприятий)');
+    test('SW: CACHE_VERSION = kipia-test-v659', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v659'") !== -1,
+            'SW поднят до v659 (рамка 2px + коды строкой под мероприятиями — Task 433)');
     });
 });

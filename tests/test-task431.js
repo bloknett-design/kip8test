@@ -32,7 +32,7 @@
 //      ✎ — левее колонки; зритель — колонка с одной галочкой
 //      состояния (выполнено); запись без id — без колонки;
 //      попап (!asBlocks) — БЕЗ галочки, прежний порядок ✎/✕.
-//   SW: kipia-test-v658.
+//   SW: kipia-test-v659.
 // ============================================================
 
 const fs = require('fs');
@@ -88,14 +88,17 @@ describe('Task 431 — SRC: печать (коды справа от мероп�
             'прежний flex 1 1 auto (растяжение, коды у правого края) снят');
     });
 
-    test('.wsp-legend: зазор 10px жив — margin-left флоата (Task 432)', () => {
+    test('.wsp-legend: коды — строка-абзац ПОД списком (Task 433)', () => {
         const i = INDEX_SRC.indexOf('#wsPrintSheet .wsp-legend {');
         assertTrue(i !== -1, 'правило кодов есть');
         const r = INDEX_SRC.slice(i, INDEX_SRC.indexOf('}', i));
-        assertTrue(r.indexOf('float: right') !== -1,
-            'коды — плавающий столбик (Task 432: строки обтекают)');
-        assertTrue(r.indexOf('margin: 0 0 5px 10px') !== -1,
-            'зазор мероприятий→коды = 10px (margin-left флоата)');
+        // Task 433 (заявка: «расположение кодов в печати верни
+        // обратно»): флоат Task 432 и зазор 10px Task 431/375 СНЯТЫ —
+        // коды вернулись исходной строкой-абзацем ПОД списком
+        assertTrue(r.indexOf('float:') === -1,
+            'флоат снят (коды — не плавающий столбик)');
+        assertTrue(r.indexOf('margin-top: 2.5mm') !== -1,
+            'отступ строки кодов от списка мероприятий сверху');
     });
 
     test('wsp-foot — ПОД обоими столбиками (после закрытия wsp-bottom)', () => {
@@ -210,21 +213,21 @@ describe('Task 431 — SRC: галочка над кнопкой удалени�
             'колонка не сжимается');
     });
 
-    test('разметка b5: галочка над рядом «✕ ✎» (Task 432)', () => {
+    test('разметка b5: галочка над рядом «✎ ✕» (Task 433)', () => {
         const start = INDEX_SRC.indexOf('нет инструктажей и проверок знаний за год');
         const end = INDEX_SRC.indexOf('ws-emp-addins', start);
         const FLAT = INDEX_SRC.slice(start, end);
         assertTrue(FLAT.indexOf("var iActEdit = '', iActDel = '';") !== -1,
             'кнопки разделены: ✎ отдельно, ✕ отдельно');
-        // Task 432 (заявка: «кнопку редактировать размести справа от
-        // кнопки удалить, строго на одном уровне»): ✎ и ✕ — в ряду
-        // .ws-act-row (✕ первым), ряд — в колонке под галочкой
+        // Task 433 (заявка: «кнопки редактировать и удалить в блоке
+        // инструктажей поменяй местами»): в ряду .ws-act-row ✎
+        // строится ПЕРВЫМ, ✕ — ПОСЛЕ (в Task 432 было наоборот)
         assertTrue(FLAT.indexOf(
-            "'<span class=\"ws-act-row\">' + iActDel + iActEdit + '</span>'") !== -1,
-            'ряд .ws-act-row: ✕ ПЕРВЫМ, ✎ ПОСЛЕ (✎ — справа)');
+            "'<span class=\"ws-act-row\">' + iActEdit + iActDel + '</span>'") !== -1,
+            'ряд .ws-act-row: ✎ ПЕРВЫМ, ✕ ПОСЛЕ (Task 433: поменяны местами)');
         assertTrue(FLAT.indexOf(
             "'<span class=\"ws-act-col\">' + iChk + iActRow + '</span>'") !== -1,
-            'колонка: галочка НАД рядом ✕✎');
+            'колонка: галочка НАД рядом ✎✕');
         assertTrue(FLAT.indexOf('iLateTag + iRowEnd') !== -1,
             'порядок строки: бейдж → конец строки (колонка кнопок)');
         assertTrue(FLAT.indexOf('asBlocks && iTrId && withEdit') !== -1,
@@ -314,7 +317,7 @@ describe('Task 431 — VM: строка инструктажа (кнопки)', 
         return html.slice(start, html.indexOf('</div>', i) + 6);
     }
 
-    test('редактор: галочка в колонке НАД рядом «✕ ✎»', () => {
+    test('редактор: галочка в колонке НАД рядом «✎ ✕»', () => {
         const host = cardHost({ edit: true });
         const html = host._renderWorkerCard('017', true, true).join('');
         const row = rowOf(html, 'Повторный инструктаж по ОТ');
@@ -324,12 +327,13 @@ describe('Task 431 — VM: строка инструктажа (кнопки)', 
         const iRow = row.indexOf('<span class="ws-act-row">', col);
         const chk = row.indexOf('ws-done-chk', col);
         assertTrue(iRow !== -1 && chk !== -1 && chk < iRow,
-            'внутри колонки галочка РАНЬШЕ ряда (галочка НАД ✕✎)');
-        // Task 432: в ряду ✕ ПЕРВЫМ, ✎ — ПОСЛЕ (справа, на одном уровне)
+            'внутри колонки галочка РАНЬШЕ ряда (галочка НАД ✎✕)');
+        // Task 433 (заявка: кнопки поменяны местами): в ряду ✎
+        // ПЕРВЫМ, ✕ — ПОСЛЕ (Task 432 было ✕ первым)
         const del = row.indexOf('ws-popup-act-del', iRow);
         const edit = row.indexOf('ws-popup-act"', iRow);
-        assertTrue(del !== -1 && edit !== -1 && del < edit,
-            'в ряду .ws-act-row: ✕ первым, ✎ — справа от ✕');
+        assertTrue(del !== -1 && edit !== -1 && edit < del,
+            'в ряду .ws-act-row: ✎ первым, ✕ — после (Task 433)');
     });
 
     test('редактор: колонка с рядом ✕✎ замыкает строку', () => {
@@ -385,7 +389,7 @@ describe('Task 431 — VM: строка инструктажа (кнопки)', 
 // ============================================================
 describe('Task 431 — SW версия', () => {
     test('v657', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v658') !== -1,
-            'SW кэш kipia-test-v658');
+        assertTrue(SW_SRC.indexOf('kipia-test-v659') !== -1,
+            'SW кэш kipia-test-v659');
     });
 });

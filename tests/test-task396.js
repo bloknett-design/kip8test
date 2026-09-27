@@ -251,9 +251,9 @@ describe('Task 396 — SRC: CSS шапок, кнопок и зебры', () => {
             'скругление снято — border-radius: 0 (Task 432)');
     });
 
-    test('SW поднят до kipia-test-v658', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v658'") !== -1,
-            'SW kipia-test-v658');
+    test('SW поднят до kipia-test-v659', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v659'") !== -1,
+            'SW kipia-test-v659');
         assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v623'") === -1,
             'прежней v623 нет');
     });
@@ -414,8 +414,11 @@ describe('Task 396 — VM: блоки-окна (asBlocks) — шапки и кн
                    blocks[0].indexOf('"ws-emp-k">Группа допуска') <
                    blocks[0].indexOf('"ws-emp-k">Дата приёма'),
             'Task 402: Группа допуска — ПОСЛЕ Должности (до Даты приёма)');
-        // b2: 3 периода → 1 alt
-        assertEqual((blocks[1].match(/ws-emp-field ws-row-alt/g) || []).length, 1,
+        // b2: 3 периода → 1 alt; Task 433: строки отпусков несут
+        // класс ws-emp-vac (плотный слот «Часть N»)
+        assertEqual((blocks[1].match(/ws-emp-field ws-emp-vac/g) || []).length, 3,
+            'отпуска: все строки — ws-emp-vac (Task 433)');
+        assertEqual((blocks[1].match(/ws-emp-field ws-emp-vac ws-row-alt/g) || []).length, 1,
             'отпуска: вторая строка — alt');
         // Task 405: b3 — только обучение (1 запись) → 0 alt
         assertEqual((blocks[2].match(/ws-popup-event ws-row-alt/g) || []).length, 0,
@@ -560,9 +563,9 @@ describe('Task 396 — VM: страница «Работники»', () => {
 describe('Task 396 — SW и отсутствие регрессов', () => {
 
     test('SW: v624 — ассерт присутствия, v625 — guard отсутствия', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v658') !== -1,
-            'SW kipia-test-v658');
-        assertTrue(SW_SRC.indexOf('kipia-test-v659') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v659') !== -1,
+            'SW kipia-test-v659');
+        assertTrue(SW_SRC.indexOf('kipia-test-v660') === -1,
             'v625 ещё не существует (guard)');
     });
 

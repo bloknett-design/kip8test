@@ -70,21 +70,25 @@ function cssRule(src, sel) {
 // ============================================================
 describe('Task 375 — SRC: печать табеля, коды справа на 10px', () => {
 
-    test('CSS печать — зазор кодов 10px (Task 432: у флоата)', () => {
-        // Task 432 (заявка: строки мероприятий растягиваются до конца
-        // листа): flex-ряд заменён ОБТЕКАНИЕМ — столбик кодов плавает
-        // (float: right), зазор 10px жив как margin-left флоата
+    test('CSS печать — зазор кодов снят (Task 433: вертикальная секция)', () => {
+        // Task 433 (заявка: «расположение кодов в печати верни
+        // обратно…»): зазор 10px Task 375 между столбиками и флоат
+        // Task 432 СНЯТЫ — коды вернулись исходной строкой-абзацем
+        // ПОД списком мероприятий (вертикальная секция), зазор
+        // между секциями — margin-top 2.5mm
         const r = cssRule(INDEX_SRC, '#wsPrintSheet .wsp-bottom');
         assertTrue(r !== '', 'правило обёртки есть');
-        assertTrue(r.indexOf('display: flow-root') !== -1,
-            'flow-root (Task 432) — сноска ниже плавающих кодов');
+        assertTrue(r.indexOf('display: flow-root') === -1,
+            'флоат-обёртка Task 432 снята');
         assertTrue(r.indexOf('gap: 5mm') === -1,
             'прежний 5mm убран из правила');
+        assertTrue(r.indexOf('gap: 10px') === -1,
+            'зазор 10px между столбиками больше не нужен (столбиков нет)');
         const leg = cssRule(INDEX_SRC, '#wsPrintSheet .wsp-legend');
-        assertTrue(leg.indexOf('float: right') !== -1,
-            'коды — плавающий столбик у правого края');
-        assertTrue(leg.indexOf('margin: 0 0 5px 10px') !== -1,
-            'зазор строк→коды = 10px (margin-left флоата)');
+        assertTrue(leg.indexOf('float:') === -1,
+            'коды — не плавающий столбик (Task 433: строка под списком)');
+        assertTrue(leg.indexOf('margin-top: 2.5mm') !== -1,
+            'отступ строки кодов от списка мероприятий');
         assertTrue(r.indexOf('margin-top: 2.5mm') !== -1,
             'отступ от таблицы на обёртке не тронут');
     });
@@ -565,13 +569,13 @@ describe('Task 375 — SRC: сервер FlowmeterArchive.gs', () => {
 // ============================================================
 describe('Task 375 — SW кэш', () => {
 
-    test('SW: CACHE_VERSION = kipia-test-v658', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v658'") !== -1,
+    test('SW: CACHE_VERSION = kipia-test-v659', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v659'") !== -1,
             'версия кэша поднята до v604');
     });
 
     test('SW: нет v603 (старая) и нет v605 (двойной бамп)', () => {
         assertTrue(SW_SRC.indexOf('kipia-test-v603') === -1, 'старая версия не осталась');
-        assertTrue(SW_SRC.indexOf('kipia-test-v659') === -1, 'двойного бампа не было');
+        assertTrue(SW_SRC.indexOf('kipia-test-v660') === -1, 'двойного бампа не было');
     });
 });
