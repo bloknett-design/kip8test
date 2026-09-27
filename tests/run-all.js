@@ -367,6 +367,16 @@ require('./test-task427.js');
 // в openTrainingForm; CSS — border-radius 8px ярлыков со всех сторон,
 // снята пристыковка active, отступы 5px (body/layout/wcard/wcol/grid)
 require('./test-task428.js');
+// Task 430 — заявка «в общей карте работников — кнопка „Сохранить
+// архив“ (весь архив по работникам в Excel); при печати шахматки
+// табеля — сначала диалог предпросмотра с возможностью сохранения
+// графика в файл»: клиентский xlsx-писатель (zip stored + CRC32 +
+// inlineStr + freeze), _workersArchiveData (дедуп i+id/e+id),
+// _buildArchiveWorkbook, saveWorkersArchive; printGrid →
+// _openPrintPreview (iframe-предпросмотр, Печать/Сохранить в
+// файл/Отмена, Esc), _buildPrintFileHtml (standalone-HTML),
+// фолбэк window.print; адаптация Task 341 под диалог
+require('./test-task430.js');
 require('./test-deploy-url.js');
 
 // Запускаем

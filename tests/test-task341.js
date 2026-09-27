@@ -20,7 +20,7 @@
 // display:none. Печатается ТЕКУЩИЙ вид табеля (у уровня min
 // «Мастер КИПиА» скрыт — _viewEmployees, Task 340).
 //
-// SW: kipia-test-v655.
+// SW: kipia-test-v656.
 //
 // Запуск: через tests/run-all.js (require './test-task341.js').
 
@@ -180,7 +180,12 @@ describe('Task 341 — printGrid (VM)', () => {
     }
 
     function hostOf(doc, opts) {
-        // хост-объект: printGrid + зависимости (моки/переопределения)
+        // хост-объект: printGrid + зависимости (моки/переопределения).
+        // Task 430: «Печать» открывает ДИАЛОГ ПРЕДПРОСМОТРА —
+        // _openPrintPreview мок-шпион (прямой window.print из
+        // printGrid остался только фолбэком без диалога — Task 430)
+        const prev = { calls: 0, html: null };
+        const win = { printCalls: 0, print: function() { win.printCalls++; } };
         const host = new Function('KipToast', 'window', 'document', 'return ({' +
             methodText(WS_CLIENT, 'printGrid') + '\n' +
             '_viewLevel: ' + JSON.stringify(opts.level) + ',' +
@@ -190,20 +195,14 @@ describe('Task 341 — printGrid (VM)', () => {
             '_totalsAgg: function() { return ' + JSON.stringify(opts.agg || { byTab: {}, grand: null }) + '; },' +
             '_totalsEffectiveEntries: function() { return []; },' +
             '_empTypeMap: function() { return {}; },' +
-            '});')(opts.toast, { print: opts.printSpy, calls: 0 });
-        // окно с подсчётом вызовов print
-        const win = { printCalls: 0, print: function() { win.printCalls++; } };
-        const host2 = new Function('KipToast', 'window', 'document', 'return ({' +
-            methodText(WS_CLIENT, 'printGrid') + '\n' +
-            '_viewLevel: ' + JSON.stringify(opts.level) + ',' +
-            '_EMPLOYEES: ' + JSON.stringify(opts.employees || []) + ',' +
-            '_buildPrintHtml: function(v, a) { return "SHEET_HTML_MARKER"; },' +
-            '_viewEmployees: function() { return ' + JSON.stringify(opts.viewEmps || []) + '; },' +
-            '_totalsAgg: function() { return ' + JSON.stringify(opts.agg || { byTab: {}, grand: null }) + '; },' +
-            '_totalsEffectiveEntries: function() { return []; },' +
-            '_empTypeMap: function() { return {}; },' +
             '});')(opts.toast, win, doc);
-        return { host: host2, win: win };
+        // шпион предпросмотра — снаружи new Function (замыкание живо)
+        host._openPrintPreview = function(h) {
+            prev.calls++;
+            prev.html = h;
+            return true;
+        };
+        return { host: host, win: win, prev: prev };
     }
 
     test('VM: без прав (null) — печати нет, лист не создаётся', () => {
@@ -237,13 +236,17 @@ describe('Task 341 — printGrid (VM)', () => {
         assertEqual(toasts.length, 1, 'тост показан');
     });
 
-    test('VM: нормальный вызов — лист создаётся, заполняется, печать', () => {
+    test('VM: нормальный вызов — лист создаётся, заполняется, открывается предпросмотр (Task 430)', () => {
         const doc = makeDoc();
         const r = hostOf(doc, { level: 'view',
                                 employees: [{ 'ФИО': 'Иванов И. И.', 'таб_номер': '017' }],
                                 viewEmps: [{ 'ФИО': 'Иванов И. И.', 'таб_номер': '017' }] });
         r.host.printGrid();
-        assertEqual(r.win.printCalls, 1, 'window.print вызван ровно раз');
+        assertEqual(r.win.printCalls, 0,
+            'прямой window.print НЕ вызван — печать идёт кнопкой диалога (Task 430)');
+        assertEqual(r.prev.calls, 1, 'диалог предпросмотра открыт ровно раз');
+        assertEqual(r.prev.html, 'SHEET_HTML_MARKER',
+            'в диалог ушёл контент из _buildPrintHtml');
         const sheet = doc.elements['wsPrintSheet'];
         assertTrue(!!sheet, 'лист #wsPrintSheet в body');
         assertEqual(sheet.innerHTML, 'SHEET_HTML_MARKER', 'контент из _buildPrintHtml');
@@ -257,7 +260,7 @@ describe('Task 341 — printGrid (VM)', () => {
                                 viewEmps: [{ 'ФИО': 'A', 'таб_номер': '1' }] });
         r.host.printGrid();
         r.host.printGrid();
-        assertEqual(r.win.printCalls, 2, 'печать дважды');
+        assertEqual(r.prev.calls, 2, 'предпросмотр открыт дважды');
         assertEqual(doc.created.length, 1, 'лист создан ОДИН раз');
     });
 });
@@ -508,10 +511,10 @@ describe('Task 341 — _buildPrintHtml (VM)', () => {
 // ============================================================
 describe('Task 341 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v655', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v655'") !== -1,
-            'CACHE_VERSION = kipia-test-v655 (Task 341 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v656') !== -1,
+    test('SW: кэш поднят до kipia-test-v656', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v656'") !== -1,
+            'CACHE_VERSION = kipia-test-v656 (Task 341 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v657') !== -1,
             'лишний инкремент (v580) не сделан');
     });
 
