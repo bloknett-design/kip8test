@@ -476,11 +476,11 @@ describe('Task 416 — сервер', () => {
 // ============================================================
 describe('Task 416 — SW версия', () => {
     test('v643', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v656'") !== -1,
-            'SW кэш — kipia-test-v656');
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v657'") !== -1,
+            'SW кэш — kipia-test-v657');
         assertTrue(SW_SRC.indexOf('kipia-test-v642') === -1,
             'v642 не осталась в sw.js');
-        assertTrue(SW_SRC.indexOf('kipia-test-v657') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v658') === -1,
             'двойной бамп отсутствует (guard: v644)');
     });
 });

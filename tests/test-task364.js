@@ -13,7 +13,7 @@
 //     обёртки на всю ширину; каждая запись/код — отдельной
 //     строкой своего столбика (как в Task 360).
 //
-// SW: kipia-test-v656.
+// SW: kipia-test-v657.
 //
 // Запуск: через tests/run-all.js (require './test-task364.js').
 
@@ -108,10 +108,15 @@ describe('Task 364 — SRC: wsp-bottom на печати', () => {
             'отступ от таблицы перенесён на обёртку');
     });
 
-    test('SRC: CSS .wsp-mev — тянется на свободную ширину слева', () => {
+    test('SRC: CSS .wsp-mev — колонка по своему тексту (Task 431)', () => {
         const r = cssRule(INDEX_SRC, '#wsPrintSheet .wsp-mev');
-        assertTrue(r.indexOf('flex: 1 1 auto') !== -1,
-            'мероприятия занимают остаток ряда');
+        // Task 431 (заявка: «список кодов — в 10px справа от списка
+        // мероприятий, сейчас между ними очень большое
+        // расстояние»): flex-grow снят — столбик мероприятий НЕ
+        // растягивается на всю свободную ширину, коды встают
+        // РЯДОМ с текстом (зазор — gap 10px обёртки)
+        assertTrue(r.indexOf('flex: 0 1 auto') !== -1,
+            'мероприятия НЕ растягиваются (Task 431: 1 1 auto → 0 1 auto)');
         assertTrue(r.indexOf('min-width: 0') !== -1, 'перенос длинных строк');
         assertTrue(r.indexOf('margin-top: 0') !== -1,
             'личный отступ сверху снят (отступ — на обёртке)');
@@ -263,8 +268,8 @@ describe('Task 364 — VM: ряд мероприятий|кодов в печа�
 // 4. SW — версия кеша
 // ============================================================
 describe('Task 364 — SW: версия кеша', () => {
-    test('SW: CACHE_VERSION = kipia-test-v656', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v656'") !== -1,
+    test('SW: CACHE_VERSION = kipia-test-v657', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v657'") !== -1,
             'SW поднят до v593 (рамка 2px + коды справа от мероприятий)');
     });
 });

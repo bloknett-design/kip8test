@@ -277,16 +277,18 @@ describe('Task 389 — SRC: CSS — фоны НЕ прозрачные, левы
     test('.ws-wtab: СПЛОШНОЙ фон неактивного ярлыка', () => {
         const b = ruleBlock('.ws-wtab {');
         assertTrue(b !== null, 'правило живо');
-        assertTrue(b.indexOf('background: #4B4E46;') !== -1,
-            'тёмная (Task 390): тёплый #4B4E46 — светлее фона страницы, ближе к светлой теме');
+        // Task 431: фон — как блоки карт (#243349, раньше тёплый
+        // #4B4E46 Task 390)
+        assertTrue(b.indexOf('background: #243349;') !== -1,
+            'тёмная (Task 431): фон блоков карт #243349');
         assertFalse(/background:\s*rgba\(/.test(b),
             'в правиле .ws-wtab нет полупрозрачных фонов');
     });
 
     test('.ws-wtab:hover: сплошной светлее', () => {
         const b = ruleBlock('.ws-wtab:hover {');
-        assertTrue(b !== null && b.indexOf('background: #575A50;') !== -1,
-            'тёмная (Task 390): тёплый #575A50');
+        assertTrue(b !== null && b.indexOf('background: #2A3A53;') !== -1,
+            'тёмная (Task 431): #2A3A53 — шаг светлее блоков карт');
     });
 
     test('светлая тема: ярлыки сплошные', () => {
@@ -329,8 +331,8 @@ describe('Task 389 — SRC: CSS — фоны НЕ прозрачные, левы
             'внешние отступы ушли контейнеру .ws-wgen-head');
     });
 
-    test('SW: kipia-test-v656', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v656'") !== -1,
+    test('SW: kipia-test-v657', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v657'") !== -1,
             'SWVersion bumped');
     });
 });

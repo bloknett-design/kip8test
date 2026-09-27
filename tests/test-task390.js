@@ -263,24 +263,29 @@ describe('Task 390 — SRC: CSS — шапка/примыкание/цвета �
             'Task 428: зазор ярлыки→окно = 5px');
     });
 
-    test('.ws-wtab: тёмная — светлее фона страницы, ТЁПЛЫЙ тон', () => {
+    test('.ws-wtab: тёмная — фон КАК У БЛОКОВ КАРТ (Task 431)', () => {
         const b = ruleBlock('.ws-wtab {');
         assertTrue(b !== null, 'правило живо');
-        assertTrue(b.indexOf('background: #4B4E46;') !== -1,
-            'неактивный — тёплый #4B4E46 (не var(--bg-primary) #1a2233!)');
+        // Task 431 (заявка: «в тёмной теме фон ярлыков работников
+        // сделай как фон в блоках карт работников»): тёплый тон
+        // Task 390 (#4B4E46) заменён фоном блоков карт #243349
+        assertTrue(b.indexOf('background: #243349;') !== -1,
+            'неактивный — фон блоков карт #243349 (.ws-wcard, Task 395)');
         assertTrue(b.indexOf('color: rgba(255, 255, 255, 0.78);') !== -1,
             'текст ярче под светлый фон');
         assertFalse(b.indexOf('var(--bg-primary') !== -1,
             'больше НЕ фон страницы — не сливается с общим фоном');
+        assertFalse(b.indexOf('#4B4E46') !== -1,
+            'тёплый тон Task 390 снят');
     });
 
     test('тёмная: hover и active — светлее неактивного', () => {
         const h = ruleBlock('.ws-wtab:hover {');
-        assertTrue(h !== null && h.indexOf('background: #575A50;') !== -1,
-            'hover — тёплый #575A50');
+        assertTrue(h !== null && h.indexOf('background: #2A3A53;') !== -1,
+            'hover — шаг светлее #2A3A53 (семейство блоков карт)');
         const a = ruleBlock('.ws-wtab.active {');
-        assertTrue(a !== null && a.indexOf('background: #63665B;') !== -1,
-            'активный — самый светлый #63665B (как активные вкладки браузеров)');
+        assertTrue(a !== null && a.indexOf('background: #31445F;') !== -1,
+            'активный — самый светлый #31445F (как активные вкладки браузеров)');
         assertFalse(a.indexOf('var(--bg-tertiary') !== -1,
             'активный больше НЕ тёмный цвет окна');
     });
@@ -297,10 +302,10 @@ describe('Task 390 — SRC: CSS — шапка/примыкание/цвета �
             'светлая: активный — как окно вкладки');
     });
 
-    test('SW: kipia-test-v656', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v656'") !== -1,
+    test('SW: kipia-test-v657', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v657'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v657') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v658') === -1,
             'двойного бампа не было');
     });
 });
