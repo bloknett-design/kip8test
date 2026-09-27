@@ -13,7 +13,7 @@
 //     обёртки на всю ширину; каждая запись/код — отдельной
 //     строкой своего столбика (как в Task 360).
 //
-// SW: kipia-test-v657.
+// SW: kipia-test-v658.
 //
 // Запуск: через tests/run-all.js (require './test-task364.js').
 
@@ -95,43 +95,46 @@ describe('Task 364 — SRC: рамка выходных 2px #e57373', () => {
 // ============================================================
 describe('Task 364 — SRC: wsp-bottom на печати', () => {
 
-    test('SRC: CSS .wsp-bottom — flex-ряд с зазором', () => {
+    test('SRC: CSS .wsp-bottom — обёртка с обтеканием (Task 432)', () => {
         const r = cssRule(INDEX_SRC, '#wsPrintSheet .wsp-bottom');
         assertTrue(r !== '', 'правило обёртки есть');
-        assertTrue(r.indexOf('display: flex') !== -1, 'flex-раскладка');
-        assertTrue(r.indexOf('flex-direction: row') !== -1,
-            'колонки в один ряд (мероприятия слева, коды справа)');
-        assertTrue(r.indexOf('align-items: flex-start') !== -1,
-            'колонки от общего верха');
-        assertTrue(r.indexOf('gap: 10px') !== -1, 'зазор между столбиками 10px (Task 375: «на расстоянии 10px»)');
+        // Task 432 (заявка: «строки столбика мероприятий должны
+        // растягиваться вправо до конца листа, и если места не
+        // хватит, только тогда переноситься на следующую строку»):
+        // flex-ряд заменён ОБТЕКАНИЕМ — коды плавают справа,
+        // строки мероприятий текут вокруг; зазор 10px (Task 375)
+        // жив как margin-left флоата (.wsp-legend)
+        assertTrue(r.indexOf('display: flow-root') !== -1,
+            'flow-root — флоат contained, сноска ниже кодов');
         assertTrue(r.indexOf('margin-top: 2.5mm') !== -1,
             'отступ от таблицы перенесён на обёртку');
     });
 
-    test('SRC: CSS .wsp-mev — колонка по своему тексту (Task 431)', () => {
+    test('SRC: CSS .wsp-mev — строки на всю ширину листа (Task 432)', () => {
         const r = cssRule(INDEX_SRC, '#wsPrintSheet .wsp-mev');
-        // Task 431 (заявка: «список кодов — в 10px справа от списка
-        // мероприятий, сейчас между ними очень большое
-        // расстояние»): flex-grow снят — столбик мероприятий НЕ
-        // растягивается на всю свободную ширину, коды встают
-        // РЯДОМ с текстом (зазор — gap 10px обёртки)
-        assertTrue(r.indexOf('flex: 0 1 auto') !== -1,
-            'мероприятия НЕ растягиваются (Task 431: 1 1 auto → 0 1 auto)');
-        assertTrue(r.indexOf('min-width: 0') !== -1, 'перенос длинных строк');
+        // Task 432: flex снят — блок мероприятий на всю ширину, строки
+        // ТЕКУТ вокруг плавающих кодов (рядом — до кромки кодов минус
+        // 10px, ниже — до конца листа), переносятся ТОЛЬКО когда
+        // места не хватает (прежде 0 1 auto Task 431 сжимал колонку
+        // по тексту — правая часть листа пустовала)
+        assertTrue(r.indexOf('flex:') === -1,
+            'мероприятия НЕ в flex-колонке (Task 432: обтекание)');
         assertTrue(r.indexOf('margin-top: 0') !== -1,
             'личный отступ сверху снят (отступ — на обёртке)');
         assertTrue(r.indexOf('font-size: 11px') !== -1,
             'шрифт Task 361 (11px) сохранён');
     });
 
-    test('SRC: CSS .wsp-legend — правая колонка без растяжения', () => {
+    test('SRC: CSS .wsp-legend — плавающий столбик справа (Task 432)', () => {
         const r = cssRule(INDEX_SRC, '#wsPrintSheet .wsp-legend');
-        assertTrue(r.indexOf('flex: 0 0 auto') !== -1,
-            'кодам НЕ растягиваться на остаток (правый столбик)');
+        // Task 432: коды — float: right у правого верхнего угла ряда;
+        // зазор от строк мероприятий — 10px (margin-left, Task 431/375)
+        assertTrue(r.indexOf('float: right') !== -1,
+            'коды — плавающий столбик (правый верхний угол)');
+        assertTrue(r.indexOf('margin: 0 0 5px 10px') !== -1,
+            'зазор 10px + 5px снизу');
         assertTrue(r.indexOf('max-width: 44%') !== -1,
             'не шире 44% листа');
-        assertTrue(r.indexOf('margin-top: 0') !== -1,
-            'личный отступ сверху снят');
         assertTrue(r.indexOf('font-size: 11px') !== -1,
             'шрифт Task 361 (11px) сохранён');
     });
@@ -144,18 +147,29 @@ describe('Task 364 — SRC: wsp-bottom на печати', () => {
         const iFoot = b.indexOf('<div class="wsp-foot">');
         assertTrue(iOpen !== -1, 'обёртка wsp-bottom строится');
         assertTrue(iOpen < iMev, 'открытие обёртки до мероприятий');
-        assertTrue(iMev < iLegend, 'мероприятия раньше кодов в ряду');
+        // Task 432 (заявка: строки мероприятий растягиваются до конца
+        // листа): столбик кодов — ПЛАВАЮЩИЙ (float: right), флоат
+        // обязан предшествовать обтекаемому тексту — коды строятся
+        // ПЕРВЫМИ, мероприятия — вторыми
+        assertTrue(iLegend < iMev, 'коды (флоат) раньше мероприятий — Task 432');
         assertTrue(iLegend < iFoot, 'сноска — после ряда');
     });
 
-    test('SRC: JS — обёртка закрывается ПОСЛЕ перечня кодов (двойной div)', () => {
+    test('SRC: JS — обёртка закрывается ПОСЛЕ перечня мероприятий (двойной div)', () => {
         const b = stripComments(methodText(WS_CLIENT, '_buildPrintHtml'));
-        const iClose = b.indexOf("html += '</div></div>';");
         const iLegend = b.indexOf('<div class="wsp-legend">');
+        const iMev = b.indexOf('<div class="wsp-mev">');
         const iFoot = b.indexOf('<div class="wsp-foot">');
-        assertTrue(iClose !== -1, 'двойное закрытие legend + обёртки');
-        assertTrue(iClose > iLegend, 'закрытие после перечня кодов');
-        assertTrue(iClose < iFoot, 'сноска строится после закрытия обёртки');
+        // Task 432: закрытие мероприятий и обёртки — ДВА последовательных
+        // оператора (прежде один '</div></div>')
+        const iClose1 = b.indexOf("html += '</div>';", iMev);
+        const iClose2 = b.indexOf("html += '</div>';", iClose1 + 1);
+        assertTrue(iClose1 !== -1 && iClose2 !== -1,
+            'двойное закрытие mev + обёртки');
+        assertTrue(iClose1 > iLegend, 'закрытие после перечня кодов');
+        assertTrue(iClose2 - iClose1 < 200,
+            'операторы закрытия — подряд');
+        assertTrue(iClose2 < iFoot, 'сноска строится после закрытия обёртки');
     });
 });
 
@@ -225,7 +239,9 @@ describe('Task 364 — VM: ряд мероприятий|кодов в печа�
         var iClose = html.indexOf('</div></div>', iLegend);
         var iFoot = html.indexOf('<div class="wsp-foot">');
         assertTrue(iOpen !== -1, 'обёртка wsp-bottom в листе');
-        assertTrue(iOpen < iMev && iMev < iLegend, 'мероприятия и коды внутри обёртки');
+        // Task 432: коды (флоат) строятся ПЕРВЫМИ, мероприятия — вторыми
+        assertTrue(iOpen < iLegend && iLegend < iMev,
+            'коды и мероприятия внутри обёртки (флоат первым — Task 432)');
         assertTrue(iClose !== -1 && iClose > iLegend, 'обёртка закрыта после кодов');
         assertTrue(iFoot > iClose, 'сноска — ПОД обёрткой, на всю ширину');
     });
@@ -233,11 +249,11 @@ describe('Task 364 — VM: ряд мероприятий|кодов в печа�
     test('VM: у мероприятий и кодов НЕТ личных отступов сверху (единый ряд)', () => {
         var html = sheetHost()._buildPrintHtml(EMPS, AGG);
         // структура CSS проверена в SRC; здесь — что оба блока
-        // в одном родителе: между закрытием mev и открытием legend
-        // нет обёрток-посредников с отступами
-        var iMevEnd = html.indexOf('</div>', html.indexOf('<div class="wsp-mev">'));
-        var iLegend = html.indexOf('<div class="wsp-legend">');
-        var between = html.slice(iMevEnd + 6, iLegend);
+        // в одном родителе: между закрытием legend (флоат, Task 432 —
+        // строится первым) и открытием mev нет обёрток-посредников
+        var iMev = html.indexOf('<div class="wsp-mev">');
+        var iLegendEnd = html.indexOf('</div>', html.indexOf('<div class="wsp-legend">'));
+        var between = html.slice(iLegendEnd + 6, iMev);
         assertEqual(between.replace(/\s+/g, ''), '',
             'legend — непосредственный сосед mev в обёртке');
     });
@@ -268,8 +284,8 @@ describe('Task 364 — VM: ряд мероприятий|кодов в печа�
 // 4. SW — версия кеша
 // ============================================================
 describe('Task 364 — SW: версия кеша', () => {
-    test('SW: CACHE_VERSION = kipia-test-v657', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v657'") !== -1,
+    test('SW: CACHE_VERSION = kipia-test-v658', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v658'") !== -1,
             'SW поднят до v593 (рамка 2px + коды справа от мероприятий)');
     });
 });

@@ -70,21 +70,31 @@ function cssRule(src, sel) {
 // ============================================================
 describe('Task 375 — SRC: печать табеля, коды справа на 10px', () => {
 
-    test('CSS .wsp-bottom — gap: 10px (не 5mm)', () => {
+    test('CSS печать — зазор кодов 10px (Task 432: у флоата)', () => {
+        // Task 432 (заявка: строки мероприятий растягиваются до конца
+        // листа): flex-ряд заменён ОБТЕКАНИЕМ — столбик кодов плавает
+        // (float: right), зазор 10px жив как margin-left флоата
         const r = cssRule(INDEX_SRC, '#wsPrintSheet .wsp-bottom');
         assertTrue(r !== '', 'правило обёртки есть');
-        assertTrue(r.indexOf('gap: 10px') !== -1, 'зазор между столбиками 10px');
-        assertTrue(r.indexOf('gap: 5mm') === -1, 'прежний 5mm убран из правила');
-        assertTrue(r.indexOf('display: flex') !== -1, 'flex-ряд (Task 364) цел');
-        assertTrue(r.indexOf('flex-direction: row') !== -1,
-            'мероприятия слева, коды справа (Task 364) цел');
+        assertTrue(r.indexOf('display: flow-root') !== -1,
+            'flow-root (Task 432) — сноска ниже плавающих кодов');
+        assertTrue(r.indexOf('gap: 5mm') === -1,
+            'прежний 5mm убран из правила');
+        const leg = cssRule(INDEX_SRC, '#wsPrintSheet .wsp-legend');
+        assertTrue(leg.indexOf('float: right') !== -1,
+            'коды — плавающий столбик у правого края');
+        assertTrue(leg.indexOf('margin: 0 0 5px 10px') !== -1,
+            'зазор строк→коды = 10px (margin-left флоата)');
         assertTrue(r.indexOf('margin-top: 2.5mm') !== -1,
             'отступ от таблицы на обёртке не тронут');
     });
 
     test('CSS-комментарий: маркер Task 375 у wsp-bottom', () => {
         const i = INDEX_SRC.indexOf('#wsPrintSheet .wsp-bottom');
-        const zone = INDEX_SRC.slice(Math.max(0, i - 1200), i);
+        // Task 432: над правилом добавился комментарий нового ряда —
+        // окно поиска расширено (1200 → 1800), исторические маркеры
+        // Task 360/361/364/375/431 в слоистом комментарии выше — живы
+        const zone = INDEX_SRC.slice(Math.max(0, i - 1800), i);
         assertTrue(zone.indexOf('Task 375') !== -1, 'комментарий дополнен Task 375');
         assertTrue(zone.indexOf('ровно 10px') !== -1, 'задокументировано «ровно 10px»');
     });
@@ -555,13 +565,13 @@ describe('Task 375 — SRC: сервер FlowmeterArchive.gs', () => {
 // ============================================================
 describe('Task 375 — SW кэш', () => {
 
-    test('SW: CACHE_VERSION = kipia-test-v657', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v657'") !== -1,
+    test('SW: CACHE_VERSION = kipia-test-v658', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v658'") !== -1,
             'версия кэша поднята до v604');
     });
 
     test('SW: нет v603 (старая) и нет v605 (двойной бамп)', () => {
         assertTrue(SW_SRC.indexOf('kipia-test-v603') === -1, 'старая версия не осталась');
-        assertTrue(SW_SRC.indexOf('kipia-test-v658') === -1, 'двойного бампа не было');
+        assertTrue(SW_SRC.indexOf('kipia-test-v659') === -1, 'двойного бампа не было');
     });
 });
