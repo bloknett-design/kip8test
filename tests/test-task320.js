@@ -22,7 +22,8 @@
 //   нерабочие дни пустые, шаблон 5/2 (цикл 7) ложится на неделю
 //   (Пн=1..Вс=7); «сменный» — цикл от старта, календарь не важен.
 //   Производственный календарь: legalic (UrlFetchApp + кэш
-//   CacheService 6 ч) с фолбэком Сб/Вс + ст. 112 + День шахтёра.
+//   CacheService 6 ч) с фолбэком Сб/Вс + ст. 112 (Task 426: День
+//   шахтёра НЕ праздник — наложение удалён).
 //   Сверка 4.7: устаревшие авто-смены (до старта / нерабочие дни
 //   дневного) — удаляются, счётчик removedShift, ручные не трогаются.
 //
@@ -41,11 +42,12 @@
 //   перенесённый выходной 09.03.2026 пусто (фолбэк — рабочая),
 //   праздник 08.03 пусто в обоих; рабочая суббота 26.09 — код дня 6
 //   шаблона, обычные субботы пустые; кэш CacheService — сеть дёргается
-//   один раз; День шахтёра 30.08 в карте обоих режимов; праздник
+//   один раз; День шахтёра 30.08 — обычное воскресенье, рабочий
+//   перенос на него НЕ перекрывается (Task 426); праздник
 //   04.11.2026 пусто (фолбэк), 05.11 рабочая; исключение UrlFetchApp —
 //   фолбэк; без UrlFetchApp — фолбэк; месяц ДО старта — ноль записей;
 //   идемпотентность повторной генерации.
-//   SW: kipia-test-v652 (Task 321 — бамп партии; в Task 320 был v559).
+//   SW: kipia-test-v653 (Task 321 — бамп партии; в Task 320 был v559).
 //
 // Запуск: через tests/run-all.js (require './test-task320.js').
 
@@ -512,17 +514,39 @@ describe('Task 320 — сервер: производственный кален
         assertEqual(entryAt(sheets, '017', '2026-11-05').s, 'Д8', '05.11 — рабочий');
     });
 
-    test('День шахтёра 30.08.2026 — в нерабочей карте обоих режимов', () => {
+    test('День шахтёра 30.08.2026 — обычное воскресенье, НЕ праздник (Task 426)', () => {
+        // фолбэк: 30.08 — воскресенье, нерабочий ПО ДНЮ НЕДЕЛИ
+        // (карта праздников его НЕ содержит)
         const WSfb = loadWS(mkSheets(['017', 'И.', 'дневной', '', 1, new Date(2026, 7, 1), '', '', 0, '', '']),
             undefined, undefined);
         const calFb = WSfb._getProdCal(2026);
-        assertEqual(calFb.off['0830'], 1, 'фолбэк: 30.08 (последнее воскресенье августа) помечен');
+        assertTrue(!calFb.off['0830'],
+            'фолбэк: 30.08 НЕ в карте праздников (выходной — по воскресенью)');
+        const dAug30 = new Date(2026, 7, 30);
+        assertTrue(WSfb._isNonWorkingDay(dAug30, calFb),
+            'фолбэк: 30.08 нерабочий — как воскресенье');
+        // legalic: 30.08 WEEKEND — нерабочий как обычное воскресенье
         const ufa = { fetch: () => ({ getResponseCode: () => 200, getContentText: () => JSON.stringify({ version: { versionId: 'x' }, days: legalicDays(2026) }) }) };
         const WSleg = loadWS(mkSheets(['017', 'И.', 'дневной', '', 1, new Date(2026, 7, 1), '', '', 0, '', '']),
             ufa, undefined);
         const calLeg = WSleg._getProdCal(2026);
-        assertEqual(calLeg.off['0830'], 1, 'legalic: региональный день наложен на федеральный календарь');
+        assertEqual(calLeg.off['0830'], 1, 'legalic: 30.08 (воскресенье) нерабочий');
         assertEqual(calLeg.full, true, 'legalic — полная карта');
+    });
+
+    test('Task 426: рабочий перенос на 30.08 НЕ перекрывается Днём шахтёра', () => {
+        // раньше региональный оверлей возвращал бы этому воскресенью
+        // выходной; заявка Task 426: день не гос. праздник — федеральный
+        // календарь главнее
+        const days = legalicDays(2026, { '0830': 'TRANSFERRED_WORKING' });
+        const ufa = { fetch: () => ({ getResponseCode: () => 200, getContentText: () => JSON.stringify({ version: { versionId: 'x' }, days }) }) };
+        const WS = loadWS(mkSheets(['017', 'И.', 'дневной', '', 1, new Date(2026, 7, 1), '', '', 0, '', '']),
+            ufa, undefined);
+        const cal = WS._getProdCal(2026);
+        assertTrue(!cal.off['0830'],
+            '30.08 РАБОЧИЙ (перенос) — наложения праздника нет');
+        assertFalse(WS._isNonWorkingDay(new Date(2026, 7, 30), cal),
+            'генерация поставит смену в последнее воскресенье августа');
     });
 
     test('legalic: рабочая суббота 26.09 — код дня 6 шаблона, обычные субботы пустые', () => {
@@ -661,10 +685,12 @@ describe('Task 320 — сервер: сверка авто-смен с новы�
 // ============================================================
 describe('Task 320 — сервер: код календаря/генерации', () => {
 
-    test('JS: _getProdCal/_isNonWorkingDay/_minersDayMmdd определены', () => {
-        for (const name of ['_getProdCal', '_isNonWorkingDay', '_minersDayMmdd', '_mmdd']) {
+    test('JS: _getProdCal/_isNonWorkingDay определены, _minersDayMmdd удалён (Task 426)', () => {
+        for (const name of ['_getProdCal', '_isNonWorkingDay', '_mmdd']) {
             assertTrue(WS_GS_SRC.indexOf(name + ': function') !== -1, name + ' есть');
         }
+        assertTrue(WS_GS_SRC.indexOf('_minersDayMmdd: function') === -1,
+            'расчёт Дня шахтёра удалён из сервера (Task 426)');
         assertTrue(WS_GS_SRC.indexOf('_LEGALIC_URL') !== -1, 'URL legalic (как у клиента)');
         assertTrue(WS_GS_SRC.indexOf('CacheService.getScriptCache().put(') !== -1,
             'кэш скрипта 6 ч');
@@ -718,8 +744,8 @@ describe('Task 320 — SW: версия кэша', () => {
     // минимум Task 320 (v559 → v560 в своё время) был сделан и что
     // v559 больше не существует
     test('SW: инкремент Task 320 состоялся (v559 ушел)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v652'") !== -1,
-            'CACHE_VERSION = kipia-test-v652 (актуальная, Task 321)');
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v653'") !== -1,
+            'CACHE_VERSION = kipia-test-v653 (актуальная, Task 321)');
         assertFalse(SW_SRC.indexOf("kipia-test-v559") !== -1,
             'v559 больше не существует');
     });

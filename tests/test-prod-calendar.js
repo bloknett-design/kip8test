@@ -404,9 +404,9 @@ describe('ProdCalendar: настройки — регион фиксирован
 });
 
 describe('ProdCalendar: кэш и ensureYear', () => {
-    test('ключ кэша включает год и регион (фиксированный 42, Task 272)', () => {
+    test('ключ кэша включает год и регион (фиксированный 42; v3 — Task 426)', () => {
         const { PC } = makePC();
-        assertEqual(PC._cacheKey(2026), 'ws_pcal_year2_2026_42');
+        assertEqual(PC._cacheKey(2026), 'ws_pcal_year3_2026_42');
     });
     test('свежий кэш → сеть НЕ дёргается, resolve(false)', () => {
         const fresh = {
@@ -415,7 +415,7 @@ describe('ProdCalendar: кэш и ensureYear', () => {
             days: { '0509': { holiday: 1 } }
         };
         const { PC } = makePC({
-            'ws_pcal_year2_2026_42': JSON.stringify(fresh)
+            'ws_pcal_year3_2026_42': JSON.stringify(fresh)
         });
         PC._fetchYear = function() { throw new Error('сеть не должна вызываться'); };
         let resolved = null;
@@ -433,7 +433,7 @@ describe('ProdCalendar: кэш и ensureYear', () => {
         const changed = await PC.ensureYear(2026, true);
         assertEqual(changed, true, 'пришли новые данные');
         assertTrue(PC._MEM[2026] && PC._MEM[2026].days['0109'].off === 1, 'в памяти');
-        const cached = JSON.parse(storage._d['ws_pcal_year2_2026_42']);
+        const cached = JSON.parse(storage._d['ws_pcal_year3_2026_42']);
         assertEqual(cached.source, 'isdayoff', 'в localStorage');
         assertTrue(cached.days['0501'].off === 1);
     });
@@ -444,7 +444,7 @@ describe('ProdCalendar: кэш и ensureYear', () => {
             days: { '0509': { holiday: 1 } }
         };
         const { PC } = makePC({
-            'ws_pcal_year2_2026_42': JSON.stringify(stale)
+            'ws_pcal_year3_2026_42': JSON.stringify(stale)
         });
         PC._fetchYear = function() { return Promise.reject(new Error('нет сети')); };
         const changed = await PC.ensureYear(2026, true);
@@ -554,10 +554,10 @@ describe('Task 260: интеграция в index.html', () => {
         assertTrue(html.indexOf('.ws-cal-panel {') !== -1,
             'стили окошка календаря в тулбаре');
     });
-    test('SW: версия кэша kipia-test-v652 (Task 298)', () => {
+    test('SW: версия кэша kipia-test-v653 (Task 298)', () => {
         const sw = fs.readFileSync(path.resolve(__dirname, '..', 'sw.js'), 'utf8');
-        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v652'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v652');
+        assertTrue(sw.indexOf("CACHE_VERSION = 'kipia-test-v653'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v653');
     });
     test('Task 311: тултип ячейки убран; название праздника — в попапе клика', () => {
         // Task 311: пояснительные тултипы с ячеек шахматки убраны;
@@ -571,7 +571,8 @@ describe('Task 260: интеграция в index.html', () => {
 
 // ============================================================
 // Task 262: legalic — основной источник, официальные нормы,
-// цепочки переносов, 2027 preliminary, День шахтёра (регион 42)
+// цепочки переносов, 2027 preliminary (Task 426: День шахтёра
+// НЕ праздник — региональный оверлей удалён)
 // ============================================================
 
 // Фикстуры legalic. Особые дни 2026 — РЕАЛЬНЫЕ (export
@@ -649,7 +650,7 @@ function loadLegalic(PC, json, year) {
     parsed.region = 42;
     parsed.regionName = 'Кемеровская область - Кузбасс';
     parsed.fetchedAtMs = Date.now();
-    PC._applyRegionalOverlay(year, parsed);
+    // Task 426: оверлей Дня шахтёра больше НЕ применяется
     PC._MEM[year] = parsed;
     return parsed;
 }
@@ -723,57 +724,33 @@ describe('Task 262: legalic — парсинг и официальные нор�
     });
 });
 
-describe('Task 262: День шахтёра (Кузбасс, регион 42)', () => {
-    test('_minersDayMmdd: последнее воскресенье августа 2024-2027', () => {
-        const { PC } = makePC();
-        assertEqual(PC._minersDayMmdd(2024), '0825', '2024: 25 августа');
-        assertEqual(PC._minersDayMmdd(2025), '0831', '2025: 31 августа');
-        assertEqual(PC._minersDayMmdd(2026), '0830', '2026: 30 августа');
-        assertEqual(PC._minersDayMmdd(2027), '0829', '2027: 29 августа');
+describe('Task 426: День шахтёра — НЕ праздничный день (заявка)', () => {
+    test('JS: _minersDayMmdd/_applyRegionalOverlay/_MINERS_DAY_TITLE удалены', () => {
+        assertTrue(PC_SRC.indexOf('_minersDayMmdd: function') === -1,
+            'расчёт последнего воскресенья августа удалён');
+        assertTrue(PC_SRC.indexOf('_applyRegionalOverlay: function') === -1,
+            'наложение регионального праздника удалено');
+        assertTrue(PC_SRC.indexOf("_MINERS_DAY_TITLE: 'День шахтёра'") === -1,
+            'константа «День шахтёра» удалена');
+        assertTrue(PC_SRC.indexOf("_CACHE_PREFIX: 'ws_pcal_year3_'") !== -1,
+            'кэш v3 — сбрасывает кэш v2 с оверлеем Дня шахтёра');
     });
-    test('оверлей: для региона 42 добавляется, для 54 — нет', () => {
-        const a = makePC();
-        const parsedA = a.PC._parseLegalic(buildLegalicYear(2026, LG2026_SPECIAL));
-        parsedA.region = 42;
-        a.PC._applyRegionalOverlay(2026, parsedA);
-        assertTrue(parsedA.days['0830'] && parsedA.days['0830'].regional === 1,
-            '30.08.2026 — региональный праздник');
-        assertEqual(parsedA.days['0830'].title, 'День шахтёра');
-        assertEqual(parsedA.days['0830'].holiday, 1);
-        assertEqual(parsedA.days['0830'].off, 1);
-
-        const b = makePC();
-        const parsedB = b.PC._parseLegalic(buildLegalicYear(2026, LG2026_SPECIAL));
-        parsedB.region = 54;
-        b.PC._applyRegionalOverlay(2026, parsedB);
-        assertTrue(!parsedB.days['0830'], 'для региона 54 оверлей не применяется');
-    });
-    test('оверлей не перетирает уже размеченный день', () => {
-        const { PC } = makePC();
-        const parsed = PC._parseLegalic(buildLegalicYear(2026, {
-            '0830': { t: 'TRANSFERRED_WORKING', to: '2026-09-01' }
-        }));
-        parsed.region = 42;
-        PC._applyRegionalOverlay(2026, parsed);
-        assertEqual(parsed.days['0830'].work, 1, 'рабочий перенос сохранён');
-        assertTrue(!parsed.days['0830'].regional, 'региональная метка не ставится');
-    });
-    test('dayInfo: 30.08.2026 — День шахтёра (региональный праздник)', () => {
+    test('dayInfo: 30.08.2026 (legalic) — обычное воскресенье, НЕ праздник', () => {
         const { PC } = makePC();
         loadLegalic(PC, buildLegalicYear(2026, LG2026_SPECIAL), 2026);
         const info = PC.dayInfo(2026, 8, 30);
-        assertTrue(info.off, 'нерабочий');
-        assertTrue(info.holiday, 'праздник');
-        assertTrue(info.regional, 'региональный');
-        assertEqual(info.title, 'День шахтёра');
+        assertTrue(info.off, 'нерабочий (воскресенье)');
+        assertFalse(info.holiday, 'НЕ праздник — заявка Task 426');
+        assertFalse(info.regional, 'региональной метки нет');
+        assertEqual(info.title, null, 'названия праздника нет');
     });
-    test('фолбэк без данных: День шахтёра вычисляется для 42', () => {
+    test('фолбэк без данных: 30.08.2026 — обычное воскресенье', () => {
         const { PC } = makePC(); // регион по умолчанию 42
         const info = PC.dayInfo(2026, 8, 30);
         assertEqual(info.source, 'fallback');
-        assertTrue(info.holiday && info.regional, 'праздник региональный');
-        assertEqual(info.title, 'День шахтёра');
         assertTrue(info.off, 'воскресенье — нерабочий');
+        assertFalse(info.holiday, 'НЕ праздник (Task 426)');
+        assertEqual(info.title, null, 'названия нет');
     });
     test('Task 272: сохранённый регион 54 в настройках игнорируется (фикс. 42)', () => {
         const { PC } = makePC({
@@ -782,21 +759,32 @@ describe('Task 262: День шахтёра (Кузбасс, регион 42)', 
         assertEqual(PC.getSettings().region, 42,
             'регион фиксирован — 42, выбор региона удалён из приложения');
         const info = PC.dayInfo(2026, 8, 30);
-        assertTrue(info.holiday && info.regional,
-            'День шахтёра считается — как для региона 42');
-        assertEqual(info.title, 'День шахтёра');
+        assertFalse(info.holiday, 'и для 42 День шахтёра НЕ праздник (Task 426)');
     });
-    test('monthStats: август 2026 содержит День шахтёра в особых днях', () => {
+    test('dayInfo: рабочий перенос на 30.08 НЕ перекрывается праздником', () => {
+        // федеральный календарь объявил последнее воскресенье августа
+        // рабочим переносом — раньше оверлей вернул бы выходной
+        const { PC } = makePC();
+        loadLegalic(PC, buildLegalicYear(2026, {
+            '0830': { t: 'TRANSFERRED_WORKING', to: '2026-09-01' }
+        }), 2026);
+        const info = PC.dayInfo(2026, 8, 30);
+        assertFalse(info.off, 'рабочий перенос сохранён');
+        assertTrue(info.work, 'день рабочий');
+        assertFalse(info.holiday, 'праздником не становится');
+    });
+    test('monthStats: август 2026 БЕЗ Дня шахтёра в особых днях', () => {
         const { PC } = makePC();
         loadLegalic(PC, buildLegalicYear(2026, LG2026_SPECIAL), 2026);
         const st = PC.monthStats(2026, 8);
         const miners = st.specialDays.filter(function(x) { return x.title === 'День шахтёра'; });
-        assertEqual(miners.length, 1, 'ровно один день');
-        assertEqual(miners[0].d, 30);
-        assertEqual(miners[0].kind, 'региональный праздник');
+        assertEqual(miners.length, 0, 'Дня шахтёра в особых днях нет (Task 426)');
+        const anyRegional = st.specialDays.filter(function(x) { return x.kind === 'региональный праздник'; });
+        assertEqual(anyRegional.length, 0, 'региональных праздников нет');
     });
-    test('HTML: закон № 186-ОЗ упоминается в index.html', () => {
-        assertTrue(html.indexOf('186-ОЗ') !== -1, 'ссылка на Закон Кемеровской области');
+    test('HTML: маркер заявки Task 426 в index.html', () => {
+        assertTrue(html.indexOf('Task 426') !== -1,
+            'комментарий-маркер Task 426 в коде клиента');
     });
 });
 
@@ -905,7 +893,7 @@ describe('Task 262: официальные нормы в monthStats', () => {
 });
 
 describe('Task 262/272: приоритет источников _fetchYear', () => {
-    test('регион 42: legalic первый, оверлей применён', async () => {
+    test('регион 42: legalic первый, наложения Дня шахтёра НЕТ (Task 426)', async () => {
         const { PC } = makePC();
         const calls = [];
         PC._fetchLegalic = function() {
@@ -920,8 +908,8 @@ describe('Task 262/272: приоритет источников _fetchYear', () 
         const data = await PC._fetchYear(2026);
         assertEqual(data.source, 'legalic', 'победил legalic');
         assertEqual(calls.join(','), 'legalic', 'резерв не дёргался');
-        assertTrue(data.days['0830'] && data.days['0830'].regional === 1,
-            'День шахтёра наложен');
+        assertTrue(!data.days['0830'],
+            'наложение Дня шахтёра удалено — заявка Task 426');
     });
     test('Task 272: prodcal больше НЕ участвует в цепочке', async () => {
         const { PC } = makePC();
@@ -946,8 +934,8 @@ describe('Task 262/272: приоритет источников _fetchYear', () 
         };
         const data = await PC._fetchYear(2026);
         assertEqual(data.source, 'isdayoff', 'резерв сработал');
-        assertTrue(data.days['0830'] && data.days['0830'].regional === 1,
-            'День шахтёра наложен и на резерв');
+        assertTrue(!data.days['0830'],
+            'наложение Дня шахтёра удалено и на резерве (Task 426)');
     });
     test('все источники недоступны → null (фолбэк Сб/Вс)', async () => {
         const { PC } = makePC();
@@ -958,10 +946,11 @@ describe('Task 262/272: приоритет источников _fetchYear', () 
     });
 });
 
-describe('Task 262: кэш v2 и подписи источников', () => {
-    test('кэш v2 хранит version/norms и вычищает старый ключ Task 260', () => {
+describe('Task 262/426: кэш v3 и подписи источников', () => {
+    test('кэш v3 хранит version/norms и вычищает старые ключи Task 260/v2', () => {
         const { PC, storage } = makePC({
-            'ws_pcal_year_2026_42': '{"source":"isdayoff","fetchedAtMs":1,"days":{}}'
+            'ws_pcal_year_2026_42': '{"source":"isdayoff","fetchedAtMs":1,"days":{}}',
+            'ws_pcal_year2_2026_42': '{"source":"legalic","fetchedAtMs":2,"days":{"0830":{"off":1,"holiday":1,"regional":1,"title":"День шахтёра"}}}'
         });
         PC._saveCache(2026, {
             source: 'legalic', fetchedAtMs: 12345,
@@ -970,11 +959,13 @@ describe('Task 262: кэш v2 и подписи источников', () => {
             norms: { official: true, months: { '01': { h40: 120 } }, year: { h40: 1972 } },
             days: { '0101': { off: 1 } }
         });
-        const cached = JSON.parse(storage._d['ws_pcal_year2_2026_42']);
+        const cached = JSON.parse(storage._d['ws_pcal_year3_2026_42']);
         assertEqual(cached.source, 'legalic', 'legalic принимается кэшем');
         assertEqual(cached.version.id, 'RU-FEDERAL-2026-v1', 'версия в кэше');
         assertEqual(cached.norms.year.h40, 1972, 'нормы в кэше');
-        assertTrue(!('ws_pcal_year_2026_42' in storage._d), 'старый ключ вычищен');
+        assertTrue(!('ws_pcal_year_2026_42' in storage._d), 'ключ Task 260 вычищен');
+        assertTrue(!('ws_pcal_year2_2026_42' in storage._d),
+            'ключ v2 (День шахтёра ещё праздник) вычищен — Task 426');
         // чтение обратно
         const loaded = PC._loadCache(2026);
         assertEqual(loaded.version.id, 'RU-FEDERAL-2026-v1');
@@ -1004,13 +995,15 @@ describe('Task 262: интеграция в index.html', () => {
         assertTrue(html.indexOf("На ' + y + ' год (40-час): <b>'") !== -1,
             'строка годовой нормы — в окошке тулбара');
     });
-    test('JS: День шахтёра и версия календаря остаются в данных (Task 272)', () => {
-        // шторка удалена, но День шахтёра остаётся в оверлее/фолбэке,
-        // версия календаря — в кэше и тултипах
-        assertTrue(html.indexOf('последнее воскресенье августа') !== -1,
-            'правило Дня шахтёра (регион 42) упоминается в комментариях');
-        assertTrue(html.indexOf("_MINERS_DAY_TITLE: 'День шахтёра'") !== -1,
-            'константа Дня шахтёра в модуле');
+    test('JS: маркеры Дня шахтёра удалены из данных (Task 426)', () => {
+        // Task 426 (заявка): день не входит в перечень гос. праздников —
+        // оверлей/фолбэк/константа удалены; версия календаря — в кэше
+        assertTrue(html.indexOf("_MINERS_DAY_TITLE: 'День шахтёра'") === -1,
+            'константы Дня шахтёра в модуле нет');
+        assertTrue(html.indexOf('_applyRegionalOverlay: function') === -1,
+            'наложения регионального праздника нет');
+        assertTrue(html.indexOf('Task 426') !== -1,
+            'правило Task 426 упомянуто в комментариях');
     });
     test('JS: окошко помечает предварительность; тултипы окон УБРАНЫ (Task 328)', () => {
         // Task 328 (заявка): всплывающие подсказки окон бара УБРАНЫ —
