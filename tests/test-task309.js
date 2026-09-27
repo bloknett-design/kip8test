@@ -42,7 +42,7 @@
 //   "Ошибка: self.loadTrainings is not a function"»):
 //     — вызовы удалённых страниц loadTrainings()/loadVacations()
 //       больше не встречаются; вместо них loadGrid().
-//   SW: kipia-test-v653.
+//   SW: kipia-test-v654.
 //
 // Запуск: через tests/run-all.js (require './test-task309.js').
 
@@ -235,8 +235,8 @@ describe('Task 309 — правка и удаление мероприятий',
         // _EVENTS_ALL (правка архивных записей прошлых лет из карточки)
         assertTrue(et.indexOf('var pools = [this._TRAININGS, this._INSTR_ALL,') !== -1,
             'единый пул поиска: срез года + архивы обоих листов');
-        assertTrue(et.indexOf('parseInt(arr[i].id, 10) === tid') !== -1,
-            'поиск записи по id в пуле');
+        assertTrue(et.indexOf('parseInt(arr[i].id, 10) !== tid') !== -1,
+            'поиск записи по id в пуле (Task 427: id + семейство типа)');
         assertTrue(et.indexOf('this.closeCellPopup();') !== -1 &&
             et.indexOf('this.closeEmpPopup();') !== -1,
             'попапы закрываются до открытия формы');
@@ -274,9 +274,9 @@ describe('Task 309 — правка и удаление мероприятий',
         const editBranch = stf.slice(editIdx);
         // порядок: add → delete (сбой add не трогает старую запись)
         const addIdx = editBranch.indexOf("this._api('workSchedule.addTraining', payload)");
-        const delIdx = editBranch.indexOf("deleteTraining', { id: oldId })");
+        const delIdx = editBranch.indexOf("инстр: oldFam })");
         assertTrue(addIdx !== -1 && delIdx !== -1 && addIdx < delIdx,
-            'addTraining выполняется ДО deleteTraining старой записи');
+            'addTraining выполняется ДО deleteTraining старой записи (Task 427: delete адресует семейство типа)');
         assertTrue(editBranch.indexOf("'Мероприятие обновлено'") !== -1,
             'тост об обновлении');
         // сбой частичного шага — сетка перезагружается и ошибка видна
@@ -388,9 +388,9 @@ describe('Task 309 — регресс-фиксы Task 308 (loadTrainings/loadVac
 
 describe('Task 309 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v653', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v653'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v653');
+    test('SW: версия кэша kipia-test-v654', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v654'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v654');
         assertFalse(SW_SRC.indexOf('kipia-test-v547') !== -1,
             'старой версии v547 нет');
     });

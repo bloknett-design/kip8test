@@ -177,6 +177,7 @@ describe('Task 416 — VM: хелпер и окно дня', () => {
             methodText(INDEX_SRC, '_normInstrKey') + ',\n' +
             methodText(INDEX_SRC, '_trainingCodeOf') + ',\n' +
             '_canEdit: false,' +
+            '_isInstrType: function(t) { return t === \'инструктаж\' || t === \'проверка_знаний\'; },' +
             '_EMPLOYEES: [{ \'таб_номер\': \'017\', \'ФИО\': \'Иванов И. И.\' }],' +
             '_TRAININGS: [' +
             '{ id: 41, \'таб_номер\': \'017\', \'тип\': \'инструктаж\',' +
@@ -475,11 +476,11 @@ describe('Task 416 — сервер', () => {
 // ============================================================
 describe('Task 416 — SW версия', () => {
     test('v643', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v653'") !== -1,
-            'SW кэш — kipia-test-v653');
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v654'") !== -1,
+            'SW кэш — kipia-test-v654');
         assertTrue(SW_SRC.indexOf('kipia-test-v642') === -1,
             'v642 не осталась в sw.js');
-        assertTrue(SW_SRC.indexOf('kipia-test-v654') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v655') === -1,
             'двойной бамп отсутствует (guard: v644)');
     });
 });

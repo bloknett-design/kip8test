@@ -95,15 +95,16 @@ describe('Task 405 — SRC: сервер (WorkSchedule.gs)', () => {
             'хелпер чтения одного листа существует');
     });
 
-    test('addTraining: маршрутизация по типу + сквозной id', () => {
+    test('addTraining: маршрутизация по типу + РАЗДЕЛЬНЫЙ id (Task 427)', () => {
         const fn = stripComments(methodText(WS_SRC, 'addTraining'));
         assertTrue(fn.indexOf('this._trainingsSheetForType(tip)') !== -1,
             'лист записи выбирается по типу');
         assertTrue(fn.indexOf('this._ensureEventsSheet()') !== -1,
             'лист «Мероприятия» создаётся при первой записи');
-        assertTrue(fn.indexOf('this._maxTrainingsId(this._getSheet(this.TRAININGS_SHEET))') !== -1 &&
-                   fn.indexOf('this._maxTrainingsId(this._getSheet(this.EVENTS_SHEET))') !== -1,
-            'id — max по ОБОИМ листам (сквозная нумерация)');
+        assertTrue(fn.indexOf('this._maxTrainingsId(sheet) + 1') !== -1,
+            'id — максимум СВОЕГО листа + 1 (заявка Task 427: раздельное нарастание)');
+        assertTrue(fn.indexOf('evMaxId') === -1,
+            'кросс-максимум по чужому листу удалён (сквозная нумерация Task 405 отменена)');
     });
 
     test('deleteTraining: id ищется в обоих листах', () => {
@@ -296,9 +297,9 @@ describe('Task 405 — VM: карточка и сводка', () => {
             'инструктаж и проверка знаний — в новом блоке');
         assertTrue(b5.indexOf('Курс по АСУ ТП') === -1,
             'обучение — НЕ в блоке инструктажей');
-        assertTrue(b5.indexOf('WorkSchedule.editTraining(5)') !== -1 &&
-                   b5.indexOf('WorkSchedule.deleteTraining(5)') !== -1,
-            'кнопки ✎/✕ у записей (редактору)');
+        assertTrue(b5.indexOf('WorkSchedule.editTraining(5, 1)') !== -1 &&
+                   b5.indexOf('WorkSchedule.deleteTraining(5, 1)') !== -1,
+            'кнопки ✎/✕ у записей + семейство инструктажей (Task 427)');
         assertTrue(b5.indexOf('WorkSchedule.onEmpAddInstruction(\u00272706\u0027)') !== -1,
             'кнопка «+ Инструктаж…» с таб. № работника');
     });
@@ -490,7 +491,8 @@ describe('Task 405 — GAS-VM: сервер (моки листов)', () => {
         const WS = loadWS(sheets);
         const r1 = WS.addTraining({ token: 't', 'таб_номер': '017',
             тип: 'инструктаж', тема: 'Новый повторный', дата_начала: '2026-08-25' });
-        assertTrue(r1.ok && r1.data.id === 11, 'id 11 = max(10, 4) + 1 (сквозной)');
+        assertTrue(r1.ok && r1.data.id === 5,
+            'id 5 = max «Инструктажей» (4) + 1 — СВОЯ последовательность листа (Task 427)');
         assertEqual(sheets['Инструктажи'].rows.length, 6,
             'строка добавлена в «Инструктажи» (5+1)');
         assertEqual(sheets['Инструктажи'].rows[5][2], 'инструктаж', 'тип в «Инструктажах»');
@@ -498,7 +500,8 @@ describe('Task 405 — GAS-VM: сервер (моки листов)', () => {
 
         const r2 = WS.addTraining({ token: 't', 'таб_номер': '017',
             тип: 'обучение', тема: 'Новый курс', дата_начала: '2026-08-26' });
-        assertTrue(r2.ok && r2.data.id === 12, 'id 12 — следующий сквозной');
+        assertTrue(r2.ok && r2.data.id === 11,
+            'id 11 = max «Мероприятий» (10) + 1 — СВОЯ последовательность (Task 427: id «Инструктажей» не мешает)');
         assertEqual(sheets['Мероприятия'].rows.length, 3,
             'строка добавлена в «Мероприятия» (2+1)');
         assertEqual(sheets['Мероприятия'].rows[2][2], 'обучение', 'тип в «Мероприятиях»');
@@ -578,10 +581,10 @@ describe('Task 405 — GAS-VM: сервер (моки листов)', () => {
 // 5. SW — версия кэша
 // ============================================================
 describe('Task 405 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v653', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v653'") !== -1,
+    test('CACHE_VERSION = kipia-test-v654', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v654'") !== -1,
             'SW v632 (Task 405)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v654') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v655') === -1,
             'двойной бамп отсутствует');
     });
 });

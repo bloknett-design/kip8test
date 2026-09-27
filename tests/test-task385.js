@@ -175,10 +175,10 @@ describe('Task 385 — HTML: легенда/страница/переимено�
             'подсказка «Вид» (Task 388: итоги в любом виде)');
     });
 
-    test('SW: кэш поднят до kipia-test-v653', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v653'") !== -1,
-            'CACHE_VERSION = kipia-test-v653 (Task 385 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v654') !== -1,
+    test('SW: кэш поднят до kipia-test-v654', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v654'") !== -1,
+            'CACHE_VERSION = kipia-test-v654 (Task 385 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v655') !== -1,
             'v614 ещё не существует (guard)');
     });
 });
@@ -555,8 +555,8 @@ describe('Task 385 — VM: карточка/страница/легенда', ()
         assertTrue(html.indexOf('ws-emp-addtr') !== -1, '«+ Мероприятие…»');
         assertTrue(html.indexOf('WorkSchedule.editVacation(21)') !== -1, '✎ отпуска');
         assertTrue(html.indexOf('WorkSchedule.deleteVacation(21)') !== -1, '✕ отпуска');
-        assertTrue(html.indexOf('WorkSchedule.editTraining(31)') !== -1, '✎ мероприятия');
-        assertTrue(html.indexOf('WorkSchedule.deleteTraining(31)') !== -1, '✕ мероприятия');
+        assertTrue(html.indexOf('WorkSchedule.editTraining(31, 1)') !== -1, '✎ инструктажа + семейство (Task 427)');
+        assertTrue(html.indexOf('WorkSchedule.deleteTraining(31, 1)') !== -1, '✕ инструктажа + семейство (Task 427)');
         // порядок: «Правка данных…» ВЫШЕ «Уволить…»
         assertTrue(html.indexOf('ws-emp-editdata') < html.indexOf('ws-emp-dismiss'),
             '«Правка данных…» выше «Уволить…»');

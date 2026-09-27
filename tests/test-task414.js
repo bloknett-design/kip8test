@@ -218,9 +218,9 @@ describe('Task 414 — VM: карточка', () => {
         assertTrue(html.indexOf('ws-emp-addins') !== -1 &&
                    html.indexOf('+ Инструктаж…') !== -1,
             'кнопка «+ Инструктаж…» в шапке блока карточки');
-        assertTrue(html.indexOf('WorkSchedule.editTraining(51)') !== -1 &&
-                   html.indexOf('WorkSchedule.deleteTraining(53)') !== -1,
-            '✎/✕ у записей с id (редактору)');
+        assertTrue(html.indexOf('WorkSchedule.editTraining(51, 1)') !== -1 &&
+                   html.indexOf('WorkSchedule.deleteTraining(53, 1)') !== -1,
+            '✎/✕ у записей с id + семейство инструктажей (Task 427: раздельные id)');
     });
 
     test('карточка: пустой год — пустое состояние без групп', () => {
@@ -258,11 +258,11 @@ describe('Task 414 — VM: карточка', () => {
 // ============================================================
 describe('Task 414 — SW версия', () => {
     test('v641', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v653'") !== -1,
-            'SW кэш — kipia-test-v653');
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v654'") !== -1,
+            'SW кэш — kipia-test-v654');
         assertTrue(SW_SRC.indexOf('kipia-test-v640') === -1,
             'v640 не осталась в sw.js');
-        assertTrue(SW_SRC.indexOf('kipia-test-v654') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v655') === -1,
             'двойной бамп отсутствует (guard: v642)');
     });
 });

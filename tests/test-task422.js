@@ -29,7 +29,7 @@
 //   5) тост: новые сроки + пропущенные дети с причиной;
 //   6) старый сервер (нет srvVer) — предупреждение в тосте;
 //   7) autoNote — в консоль (F12); ошибка автосоздания — ⚠ в тосте;
-//   8) SW kipia-test-v653.
+//   8) SW kipia-test-v654.
 // ============================================================
 
 const fs = require('fs');
@@ -97,7 +97,7 @@ describe('Task 422 — SRC: сервер (WorkSchedule.gs)', () => {
 
     test('setTrainingDone: srvVer/autoNote/skipped в ответе; ошибка — в autoNote', () => {
         const fn = stripComments(methodText(WS_SRC, 'setTrainingDone'));
-        assertTrue(fn.indexOf("srvVer: '426'") !== -1,
+        assertTrue(fn.indexOf("srvVer: '427'") !== -1,
             'версия сервера автосоздания — в ответе (клиент отличает старый Apps Script); Task 426: День шахтёра не праздник');
         assertTrue(fn.indexOf('autoNote: autoNote') !== -1,
             'разбор автосоздания — в ответе (консоль клиента)');
@@ -272,7 +272,7 @@ describe('Task 422 — GAS-VM: «9-ОГЭ +3 не создаётся»', () => {
         const WS = loadWS(sheets);
         const r = WS.setTrainingDone({ token: 't', id: 20, 'выполнение': 1 });
         assertTrue(r.ok, 'ok');
-        assertEqual(r.data.srvVer, '426', 'версия сервера в ответе');
+        assertEqual(r.data.srvVer, '427', 'версия сервера в ответе');
         assertEqual(r.data.created.length, 2, 'созданы ОБЕ записи');
         assertEqual(r.data.skipped.length, 0, 'пропусков нет');
         assertTrue(String(r.data.autoNote).indexOf('дети=' + T_OGE) !== -1,
@@ -416,7 +416,7 @@ describe('Task 422 — GAS-VM: «9-ОГЭ +3 не создаётся»', () => {
         const r = WS.setTrainingDone({ token: 't', id: 21, 'выполнение': 1 });
         assertEqual(r.data.created.length, 0, 'записей НЕТ (зависимый пункт)');
         assertEqual(r.data.skipped.length, 0, 'пропусков нет');
-        assertEqual(r.data.srvVer, '426', 'версия сервера в ответе');
+        assertEqual(r.data.srvVer, '427', 'версия сервера в ответе');
         assertTrue(String(r.data.autoNote)
             .indexOf('Task 421: зависимый пункт') !== -1,
             'причина отсутствия автосоздания — в разборе');
@@ -494,6 +494,11 @@ describe('Task 422 — VM: toggleTrainingDone — диагностика', () =>
     function makeCtx(rec, respData) {
         const ctx = {
             _canEdit: true,
+            _isInstrType: function(тип) {
+                var t = String(тип || '').trim().toLowerCase()
+                           .replace(/\s+/g, '_');
+                return t === 'инструктаж' || t === 'проверка_знаний';
+            },
             _year: 2026,
             _TRAININGS: [rec],
             _INSTR_ALL: [rec],
@@ -537,7 +542,7 @@ describe('Task 422 — VM: toggleTrainingDone — диагностика', () =>
     test('новые сроки + пропущенный ребёнок: тост несёт ПРИЧИНУ', async () => {
         const rec = JSON.parse(JSON.stringify(REC));
         const ctx = makeCtx(rec, {
-            id: 20, выполнение: 1, просрочен: 0, srvVer: '426',
+            id: 20, выполнение: 1, просрочен: 0, srvVer: '427',
             autoNote: 'пункт=… родитель=- дети=…',
             created: [{ id: 60, тема: '…общий…', дата_начала: '2027-03-01' }],
             updated: [],
@@ -577,7 +582,7 @@ describe('Task 422 — VM: toggleTrainingDone — диагностика', () =>
     test('ошибка автосоздания: ⚠ в тосте, отметка применена', async () => {
         const rec = JSON.parse(JSON.stringify(REC));
         const ctx = makeCtx(rec, {
-            id: 20, выполнение: 1, просрочен: 0, srvVer: '426',
+            id: 20, выполнение: 1, просрочен: 0, srvVer: '427',
             autoNote: 'ОШИБКА автосоздания: mock write failure',
             created: [], updated: [], skipped: []
         });
@@ -606,7 +611,7 @@ describe('Task 422 — VM: toggleTrainingDone — диагностика', () =>
         const rec = JSON.parse(JSON.stringify(REC));
         rec.тема = 'Повторный инструктаж по инструкции № 9-ОГЭ';
         const ctx = makeCtx(rec, {
-            id: 20, выполнение: 1, просрочен: 0, srvVer: '426',
+            id: 20, выполнение: 1, просрочен: 0, srvVer: '427',
             autoNote: 'пункт=… ; Task 421: зависимый пункт — автосоздания нет',
             created: [], updated: [], skipped: []
         });
@@ -622,10 +627,10 @@ describe('Task 422 — VM: toggleTrainingDone — диагностика', () =>
 // 4. SW — версия кэша
 // ============================================================
 describe('Task 422 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v653', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v653'") !== -1,
+    test('CACHE_VERSION = kipia-test-v654', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v654'") !== -1,
             'SW v649 (Task 422)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v654') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v655') === -1,
             'двойной бамп отсутствует');
     });
 });

@@ -264,16 +264,16 @@ describe('Task 404 — VM: панели и кнопки карточки', () =>
         const iDel = blocks[1].indexOf('WorkSchedule.deleteVacation(7)');
         assertTrue(iEv !== -1 && iDel !== -1 && iEv < iDel,
             'отпуск: ✎ (правка) и ✕ (удаление) — оба, ✎ первым');
-        // мероприятия (Task 405: в b3 — обучение id 6)
-        const iEt = blocks[2].indexOf('WorkSchedule.editTraining(6)');
-        const iDt = blocks[2].indexOf('WorkSchedule.deleteTraining(6)');
+        // мероприятия (Task 405: в b3 — обучение id 6; Task 427: + семейство)
+        const iEt = blocks[2].indexOf('WorkSchedule.editTraining(6, 0)');
+        const iDt = blocks[2].indexOf('WorkSchedule.deleteTraining(6, 0)');
         assertTrue(iEt !== -1 && iDt !== -1 && iEt < iDt,
-            'мероприятие (обучение): ✎ и ✕ — оба, ✎ первым');
-        // инструктаж (Task 405: в b5 — «Инструктаж» id 5)
-        const iEi = blocks[4].indexOf('WorkSchedule.editTraining(5)');
-        const iDi = blocks[4].indexOf('WorkSchedule.deleteTraining(5)');
+            'мероприятие (обучение): ✎ и ✕ — оба, ✎ первым (семейство 0 — Task 427)');
+        // инструктаж (Task 405: в b5 — «Инструктаж» id 5; Task 427: семейство 1)
+        const iEi = blocks[4].indexOf('WorkSchedule.editTraining(5, 1)');
+        const iDi = blocks[4].indexOf('WorkSchedule.deleteTraining(5, 1)');
         assertTrue(iEi !== -1 && iDi !== -1 && iEi < iDi,
-            'инструктаж: ✎ и ✕ — в блоке 5, ✎ первым');
+            'инструктаж: ✎ и ✕ — в блоке 5, ✎ первым (семейство 1 — Task 427)');
         // СИЗ — образец
         const iEp = blocks[3].indexOf('WorkSchedule.editPpe(3)');
         const iDp = blocks[3].indexOf('WorkSchedule.deletePpe(3)');
@@ -402,12 +402,12 @@ describe('Task 404 — VM: окно мероприятий — отпуска н
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 404 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v653 (Task 404)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v653'") !== -1,
+    test('CACHE_VERSION = kipia-test-v654 (Task 404)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v654'") !== -1,
             'фронтенд менялся — кэш поднят до v631');
     });
     test('guard: v632 отсутствует (следующий бамп)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v654') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v655') === -1,
             'v632 ещё не существует (guard следующего бампа)');
     });
 });

@@ -107,9 +107,12 @@
 //   C: статус (код; пусто = выходной)
 //
 // Структура листа «Инструктажи» (Task 405 — таблица РАЗДЕЛЕНА;
-//   Task 418 — столбцы E..G ПЕРЕИМЕНОВАНЫ по заявке):
-//   A: id (auto-increment; нумерация СКВОЗНАЯ с листом
-//      «Мероприятия» — связки Записи_графика.инструкция однозначны)
+//   Task 418 — столбцы E..G ПЕРЕИМЕНОВАНЫ по заявке;
+//   Task 427 — нумерация id СВОЯ, раздельная):
+//   A: id (auto-increment — максимум СВОЕГО листа + 1; Task 427:
+//      последовательности «Инструктажей» и «Мероприятий»
+//      РАЗДЕЛЬНЫЕ, одинаковые id разных листов адресуются
+//      семейством типа записи — deleteTraining payload.инстр)
 //   B: таб_номер (FK на Сотрудники)
 //   C: тип — инструктаж/проверка_знаний (Task 306: прогул и
 //      примечание тоже допустимы легаси-строками; Task 405:
@@ -141,13 +144,16 @@
 //
 // Структура листа «Мероприятия» (Task 405 — вторая половина
 //   разделённой таблицы инструктажей: обучение/прогул/примечание):
-//   A: id, B: таб_номер, C: тип, D: тема, E: дата_начала,
+//   A: id (СВОЯ последовательность — Task 427), B: таб_номер,
+//   C: тип, D: тема, E: дата_начала,
 //   F: дата_окончания, G: длительность_дней, H: комментарий —
 //   формат ПРЕЖНИЙ (Task 418 переименовал столбцы только у
 //   «Инструктажей», листы разошлись); listTrainings читает ОБА
 //   листа одним списком, addTraining пишет в лист по типу
 //   (формат строки — по заголовкам листа), deleteTraining ищет
-//   id в обоих листах. Task 424: лист — ПОСТОЯННЫЙ АРХИВ записей
+//   id в обоих листах (Task 427: id листов РАЗДЕЛЬНЫЕ — адресация
+//   id + семейство типа, флаг «инстр» из клиента). Task 424:
+//   лист — ПОСТОЯННЫЙ АРХИВ записей
 //   (строки не удаляются со временем; годовые архивы блока
 //   «Мероприятия · ‹год›» читают ВСЕ записи — eventsAll Task 408);
 //   Task 425 (заявка: «для мероприятий — свои отдельные
@@ -361,7 +367,10 @@ var WorkSchedule = {
     return newRow;
   },
 
-  // Task 405: max id листа мероприятий (столбец A; null-лист — 0)
+  // Task 405: max id ЛИСТА (столбец A; null-лист — 0). Task 427:
+  // вызывается для ОДНОГО конкретного листа — последовательности
+  // id «Инструктажей» и «Мероприятий» раздельные (addTraining —
+  // максимум листа записи, автосоздание — «Инструктажей»)
   _maxTrainingsId: function(sheet) {
     if (!sheet) return 0;
     var lastRow = sheet.getLastRow();
@@ -1094,7 +1103,10 @@ var WorkSchedule = {
     // «Инструктажи» (инструктаж/проверка_знаний) или «Мероприятия»
     // (обучение/прогул/примечание; формат A..H тот же). Ответ —
     // ОБЪЕДИНЁННЫЙ список обоих листов (бейджи/окна/печать/генерация
-    // видят все мероприятия вместе, нумерация id сквозная). Любого
+    // видят все мероприятия вместе; Task 427: нумерация id у
+    // листов РАЗДЕЛЬНАЯ — запись адресуется парой
+    // «id + семейство типа», клиент различает по _isInstrType).
+    // Любого
     // листа может не быть — отдаются имеющиеся (Task 413)
     var evSheet = this._getSheet(this.EVENTS_SHEET);
     if (evSheet) {
@@ -2427,13 +2439,14 @@ var WorkSchedule = {
     }
     if (!sheet) return { ok: false, error: 'sheet_not_found: ' + sheetName };
 
-    // Task 405: id — ГЛОБАЛЬНЫЙ по обоим листам (сквозная
-    // нумерация): связки Записи_графика.инструкция и правка по id
-    // на клиенте однозначны и после разделения таблицы
-    var maxId = this._maxTrainingsId(this._getSheet(this.TRAININGS_SHEET));
-    var evMaxId = this._maxTrainingsId(this._getSheet(this.EVENTS_SHEET));
-    if (evMaxId > maxId) maxId = evMaxId;
-    var newId = maxId + 1;
+    // Task 427 (заявка: «нарастание номеров id должно быть
+    // раздельным»): id — максимум СВОЕГО листа записи + 1
+    // (сквозная нумерация Task 405 по обоим листам УДАЛЕНА —
+    // разделы независимы). Одинаковые id разных листов
+    // адресуются семейством типа записи (deleteTraining
+    // payload.инстр; правка клиента — add новой + delete старой
+    // передаёт флаг), повторной нумерации существующих строк НЕТ
+    var newId = this._maxTrainingsId(sheet) + 1;
 
     // Task 418: строка — по ФОРМАТУ листа (заголовки строки 1):
     // «Инструктажи» с переименованными столбцами (дата_проведения/
@@ -2503,6 +2516,10 @@ var WorkSchedule = {
   // выходной»): региональный оверлей Дня шахтёра удалён из
   // _getProdCal (последнее воскресенье августа — обычный
   // выходной/рабочий перенос); srvVer '426'
+  // Task 427 (заявка: «нарастание номеров id должно быть
+  // раздельным»): последовательности id «Инструктажей» и
+  // «Мероприятий» РАЗДЕЛЬНЫЕ (addTraining — максимум СВОЕГО
+  // листа, автосоздание — только «Инструктажей»); srvVer '427'
   setTrainingDone: function(payload) {
     var auth = this._requireWrite(payload.token);
     if (auth.error) return auth.error;
@@ -2571,10 +2588,11 @@ var WorkSchedule = {
           // логика 419..421; '423' — период 9-ОГЭ = 3 мес от
           // общего при любом значении листа, Task 423; '425' —
           // мероприятия без автосоздания, Task 425; '426' —
-          // День шахтёра не праздник, Task 426)
+          // День шахтёра не праздник, Task 426; '427' —
+          // раздельные последовательности id листов, Task 427)
           return { ok: true, data: { id: id, 'выполнение': done,
                                      'просрочен': late,
-                                     srvVer: '426',
+                                     srvVer: '427',
                                      autoNote: autoNote,
                                      created: created,
                                      updated: updated,
@@ -2710,10 +2728,10 @@ var WorkSchedule = {
              (mm.length < 2 ? '0' + mm : mm) + '.' + d.getFullYear();
     };
 
-    // id — ГЛОБАЛЬНЫЙ по обоим листам (как addTraining)
+    // Task 427: id — нумерация ТОЛЬКО листа «Инструктажей»
+    // (раздельные последовательности: «Мероприятия» не
+    // участвуют, максимум чужого листа больше не мешает)
     var maxId = this._maxTrainingsId(sheet);
-    var evMaxId = this._maxTrainingsId(this._getSheet(this.EVENTS_SHEET));
-    if (evMaxId > maxId) maxId = evMaxId;
 
     var per = parseFloat(item.периодичность) || 0;
 
@@ -2852,8 +2870,18 @@ var WorkSchedule = {
   },
 
   // workSchedule.deleteTraining
-  // payload: { token, id }
+  // payload: { token, id, инстр (0|1 — Task 427, необязательно) }
   // Task 405: id ищется в обоих листах («Инструктажи»/«Мероприятия»)
+  // Task 427 (заявка: «нарастание номеров id должно быть
+  // раздельным»): у листов РАЗДЕЛЬНЫЕ последовательности id —
+  // одинаковый id может лежать в ОБОИХ листах, адресация
+  // дополняется СЕМЕЙСТВОМ типа записи: клиент передаёт флаг
+  // инстр (1 — инструктаж/проверка_знаний, 0 — обучение/прогул/
+  // примечание), сервер принимает строку с id И типом ТОГО ЖЕ
+  // семейства (тип строки читается из столбца C — легаси-
+  // мероприятия в «Инструктажах» Task 425 удаляются так же,
+  // своим листом ПЕРВЫМ). Без флага (старый кэш клиента) —
+  // прежний порядок «Инструктажи» → «Мероприятия», первый id
   deleteTraining: function(payload) {
     var auth = this._requireWrite(payload.token);
     if (auth.error) return auth.error;
@@ -2862,9 +2890,16 @@ var WorkSchedule = {
     var id = parseInt(payload.id, 10);
     if (isNaN(id)) return { ok: false, error: 'invalid_id' };
 
-    // Task 405: id ищется в ОБОИХ листах — «Инструктажи» и
-    // «Мероприятия» (нумерация сквозная, лист неизвестен клиенту)
-    var sheetNames = [this.TRAININGS_SHEET, this.EVENTS_SHEET];
+    // Task 427: семейство типа записи — флаг клиента (кнопки
+    // блоков/попапа карточки, правка add+delete). '' — флага нет
+    var famNum = parseInt(payload.инстр, 10);
+    var fam = (famNum === 1) ? 'instr'
+            : (famNum === 0) ? 'event' : '';
+    // порядок листов: семейство — свой лист ПЕРВЫМ (мероприятие —
+    // «Мероприятия»); без флага — прежний порядок (старый клиент)
+    var sheetNames = (fam === 'event')
+      ? [this.EVENTS_SHEET, this.TRAININGS_SHEET]
+      : [this.TRAININGS_SHEET, this.EVENTS_SHEET];
     for (var sn = 0; sn < sheetNames.length; sn++) {
       var sheet = this._getSheet(sheetNames[sn]);
       if (!sheet) continue;
@@ -2872,14 +2907,24 @@ var WorkSchedule = {
       if (lastRow < 2) continue;
       var ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
       for (var i = 0; i < ids.length; i++) {
-        if (parseInt(ids[i][0], 10) === id) {
-          sheet.deleteRow(i + 2);
-          try {
-            Utils.audit(user.email, 'WORKSCHEDULE_DELETE_TRAINING', '', '',
-              'Удалено мероприятие id=' + id + ' (лист ' + sheetNames[sn] + ')');
-          } catch (e) { /* ignore */ }
-          return { ok: true, data: { id: id } };
+        if (parseInt(ids[i][0], 10) !== id) continue;
+        // Task 427: при флаге тип строки (столбец C) обязан
+        // принадлежать ТОМУ ЖЕ семейству — чужой id (второго
+        // листа с раздельной нумерацией) не снимается
+        if (fam) {
+          var rowTip = String(sheet.getRange(i + 2, 3).getValue())
+                        .trim().toLowerCase().replace(/\s+/g, '_');
+          var rowIsEvent = !!this.TRAINING_EVENTSHEET_TYPES[rowTip];
+          if ((fam === 'instr') === rowIsEvent) continue;
         }
+        sheet.deleteRow(i + 2);
+        try {
+          Utils.audit(user.email, 'WORKSCHEDULE_DELETE_TRAINING', '', '',
+            'Удалено мероприятие id=' + id + ' (лист ' + sheetNames[sn] +
+            (fam ? ', семейство ' + (fam === 'instr' ?
+              'инструктажей' : 'мероприятий') : '') + ')');
+        } catch (e) { /* ignore */ }
+        return { ok: true, data: { id: id } };
       }
     }
     return { ok: false, error: 'not_found' };

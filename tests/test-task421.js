@@ -25,7 +25,7 @@
 //   КЛИЕНТ index.html:
 //   6) toggleTrainingDone: пустой created — тост «Отмечено
 //      выполнение» (без «новые сроки»), пулы не растут;
-//   7) SW kipia-test-v653.
+//   7) SW kipia-test-v654.
 // ============================================================
 
 const fs = require('fs');
@@ -404,6 +404,11 @@ describe('Task 421 — VM: toggleTrainingDone — 9-ОГЭ без автосоз
     function makeCtx(rec, respData) {
         const ctx = {
             _canEdit: true,
+            _isInstrType: function(тип) {
+                var t = String(тип || '').trim().toLowerCase()
+                           .replace(/\s+/g, '_');
+                return t === 'инструктаж' || t === 'проверка_знаний';
+            },
             _year: 2026,
             _TRAININGS: [rec],
             _INSTR_ALL: [rec],
@@ -429,8 +434,8 @@ describe('Task 421 — VM: toggleTrainingDone — 9-ОГЭ без автосоз
                       дата_начала: '2026-12-01', выполнение: 0, просрочен: 0 };
         const ctx = makeCtx(rec, {
             id: 21, выполнение: 1, просрочен: 0,
-            // srvVer актуального сервера (Task 426) — предупреждения в тосте нет
-            srvVer: '426',
+            // srvVer актуального сервера (Task 427) — предупреждения в тосте нет
+            srvVer: '427',
             created: [], updated: [], skipped: []
         });
         let shown = null;
@@ -453,7 +458,7 @@ describe('Task 421 — VM: toggleTrainingDone — 9-ОГЭ без автосоз
     });
 
     test('клиент готов к created от старого сервера (нет поля)', async () => {
-        const rec = { id: 21, выполнение: 0, просрочен: 1,
+        const rec = { id: 21, тип: 'инструктаж', выполнение: 0, просрочен: 1,
                       дата_начала: '2026-06-01' };
         const ctx = makeCtx(rec, { id: 21, выполнение: 1, просрочен: 0 });
         let shown = null;
@@ -478,10 +483,10 @@ describe('Task 421 — VM: toggleTrainingDone — 9-ОГЭ без автосоз
 // 4. SW — версия кэша
 // ============================================================
 describe('Task 421 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v653', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v653'") !== -1,
+    test('CACHE_VERSION = kipia-test-v654', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v654'") !== -1,
             'SW v648 (Task 421)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v654') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v655') === -1,
             'двойной бамп отсутствует');
     });
 });

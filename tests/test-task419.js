@@ -170,8 +170,10 @@ describe('Task 419 — SRC: сервер (WorkSchedule.gs)', () => {
             'покрытие незавершённых записей детей');
         assertTrue(fn.indexOf('_readInstrListSheet()') !== -1,
             'периодичность — из «Списка_И_и_ПЗ»');
-        assertTrue(fn.indexOf('_maxTrainingsId(this._getSheet(this.EVENTS_SHEET))') !== -1,
-            'id — глобальный по обоим листам (как addTraining)');
+        assertTrue(fn.indexOf('this._maxTrainingsId(sheet)') !== -1,
+            'id — нумерация ТОЛЬКО листа «Инструктажей» (Task 427: раздельная)');
+        assertTrue(fn.indexOf('this._maxTrainingsId(this._getSheet(this.EVENTS_SHEET))') === -1,
+            'кросс-максимум «Мероприятий» удалён (заявка Task 427)');
     });
 
     test('_appendTrainingRow: строка done-формата + запись в снимок', () => {
@@ -409,7 +411,7 @@ describe('Task 419 — GAS-VM: автосоздание новых сроков'
         assertEqual(ogChild.выполнение, 0, 'новая запись — без отметки');
         assertEqual(ogChild.просрочен, 0, 'будущая дата — не просрочена');
         assertEqual(ogChild.длительность_дней, 1, 'однодневная (бейджи живы)');
-        // строки в листе: +2, id сквозные
+        // строки в листе: +2, id — СВОЕЙ последовательности листа (Task 427)
         const t = sheets['Инструктажи'];
         assertEqual(t.rows.length, 4, '1 заголовок + 1 исходная + 2 новых');
         assertEqual(t.rows[2][0], 21, 'id первой новой строки');
@@ -584,7 +586,7 @@ describe('Task 419 — GAS-VM: автосоздание новых сроков'
             'прошедший срок без отметки → просрочен (виден в карточке)');
     });
 
-    test('id сквозные с «Мероприятиями»', () => {
+    test('id РАЗДЕЛЬНЫЕ с «Мероприятиями» (Task 427)', () => {
         const sheets = doneSheets([
             [20, '017', 'инструктаж', T_COMMON,
              new Date(2026, 8, 1), 0, 0, '']
@@ -597,10 +599,10 @@ describe('Task 419 — GAS-VM: автосоздание новых сроков'
         ]);
         const WS = loadWS(sheets);
         const r = WS.setTrainingDone({ token: 't', id: 20, 'выполнение': 1 });
-        assertTrue(r.data.created[0].id >= 100,
-            'id глобальный: выше max «Мероприятий» (99)');
-        assertEqual(r.data.created[1].id, r.data.created[0].id + 1,
-            'id инкрементируются');
+        assertEqual(r.data.created[0].id, 21,
+            'id 21 = max «Инструктажей» (20) + 1 — max «Мероприятий» (99) НЕ мешает (Task 427)');
+        assertEqual(r.data.created[1].id, 22,
+            'id 22 — следующий в СВОЕЙ последовательности листа');
     });
 
     test('instrListInit: F3 — связь 9-ОГЭ (в пустую ячейку)', () => {
@@ -642,6 +644,11 @@ describe('Task 419 — VM: toggleTrainingDone — новые сроки в пу�
     function makeCtx(rec, respData) {
         const ctx = {
             _canEdit: true,
+            _isInstrType: function(тип) {
+                var t = String(тип || '').trim().toLowerCase()
+                           .replace(/\s+/g, '_');
+                return t === 'инструктаж' || t === 'проверка_знаний';
+            },
             _year: 2026,
             _TRAININGS: [],
             _INSTR_ALL: [rec],
@@ -689,8 +696,8 @@ describe('Task 419 — VM: toggleTrainingDone — новые сроки в пу�
     });
 
     test('updated: покрытая запись ребёнка получает отметку по id', async () => {
-        const rec = { id: 20, выполнение: 0, просрочен: 0, дата_начала: '2026-09-01' };
-        const child = { id: 15, выполнение: 0, просрочен: 1, дата_начала: '2026-03-01' };
+        const rec = { id: 20, тип: 'инструктаж', выполнение: 0, просрочен: 0, дата_начала: '2026-09-01' };
+        const child = { id: 15, тип: 'инструктаж', выполнение: 0, просрочен: 1, дата_начала: '2026-03-01' };
         const ctx = makeCtx(rec, {
             id: 20, выполнение: 1, просрочен: 0, created: [],
             updated: [{ id: 15, выполнение: 1, просрочен: 0 }]
@@ -702,7 +709,7 @@ describe('Task 419 — VM: toggleTrainingDone — новые сроки в пу�
     });
 
     test('тост перечисляет новые сроки', async () => {
-        const rec = { id: 20, выполнение: 0, просрочен: 0, дата_начала: '2026-09-01' };
+        const rec = { id: 20, тип: 'инструктаж', выполнение: 0, просрочен: 0, дата_начала: '2026-09-01' };
         const ctx = makeCtx(rec, {
             id: 20, выполнение: 1, просрочен: 0, updated: [],
             created: [
@@ -725,7 +732,7 @@ describe('Task 419 — VM: toggleTrainingDone — новые сроки в пу�
     });
 
     test('старый сервер (нет created): тост + предупреждение Task 422, пулы не растут', async () => {
-        const rec = { id: 5, выполнение: 0, просрочен: 1, дата_начала: '2026-01-15' };
+        const rec = { id: 5, тип: 'инструктаж', выполнение: 0, просрочен: 1, дата_начала: '2026-01-15' };
         const ctx = makeCtx(rec, { id: 5, выполнение: 1, просрочен: 0 });
         let shown = null;
         global.KipToast = { show: function(t) { shown = t; } };
@@ -823,10 +830,10 @@ describe('Task 419 — VM: «след. срок» 9-ОГЭ от последне
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 419 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v653', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v653'") !== -1,
+    test('CACHE_VERSION = kipia-test-v654', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v654'") !== -1,
             'SW v646 (Task 419)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v654') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v655') === -1,
             'двойной бамп отсутствует');
     });
 });

@@ -140,8 +140,8 @@ describe('Task 408 — SRC: клиент', () => {
                    fn.indexOf('this._EVENTS_ALL || [],') !== -1 &&
                    fn.indexOf('this._TRAININGS || []);') !== -1,
             'пул: instrAll + eventsAll + годовой срез');
-        assertTrue(fn.indexOf("var k = id ? ('i' + id)") !== -1,
-            'дедуп по id (без id — дата+тема)');
+        assertTrue(fn.indexOf("this._isInstrType(r.тип) ? 'i' + id : 'e' + id") !== -1,
+            'дедуп по id + семейству типа (Task 427: одинаковые id разных листов — ДВЕ записи; без id — дата+тема)');
         assertTrue(fn.indexOf('if (this._isInstrType(r.тип)) ins.push(r);') !== -1,
             'деление по типу: ins/evs');
     });
@@ -666,7 +666,7 @@ describe('Task 408 — GAS-VM: сервер (моки листов)', () => {
         assertTrue(r.ok, 'ok');
         assertEqual(2, r.data.eventsAll.length,
             'обе записи листа (включая 2025)');
-        assertEqual(3, r.data.eventsAll[0].id, 'id сквозной');
+        assertEqual(3, r.data.eventsAll[0].id, 'id записи листа «Мероприятия»');
         assertEqual('обучение', r.data.eventsAll[0].тип, 'тип');
         assertEqual(2, r.data.instrAll.length, 'instrAll не тронут');
         assertEqual(2, r.data.trainings.length,
@@ -687,9 +687,9 @@ describe('Task 408 — GAS-VM: сервер (моки листов)', () => {
 // 7. SW — версия кэша
 // ============================================================
 describe('Task 408 — SW', () => {
-    test('SW: версия кэша kipia-test-v653', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v653'") !== -1,
-            'CACHE_VERSION = kipia-test-v653');
+    test('SW: версия кэша kipia-test-v654', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v654'") !== -1,
+            'CACHE_VERSION = kipia-test-v654');
         assertTrue(SW_SRC.indexOf('kipia-test-v634') === -1,
             'старой версии нет');
     });

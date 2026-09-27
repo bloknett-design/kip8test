@@ -218,7 +218,7 @@ describe('Task 418 — SRC: клиент (index.html)', () => {
             'гейт уровня edit');
         assertTrue(fn.indexOf('this._TRAININGS, this._INSTR_ALL') !== -1 &&
                     fn.indexOf('this._EVENTS_ALL') !== -1,
-            'единый пул поиска (как editTraining, Task 417)');
+            'пулы поиска (Task 427: фильтр инструктажных типов — id таблиц раздельные)');
         assertTrue(fn.indexOf("workSchedule.setTrainingDone'") !== -1,
             'вызов нового эндпоинта');
         assertTrue(fn.indexOf('self._apiErrText(err)') !== -1,
@@ -459,7 +459,8 @@ describe('Task 418 — GAS-VM: сервер (моки листов)', () => {
             дата_начала: '2026-02-01' });
         assertTrue(r.ok, 'ok');
         const row = sheets['Инструктажи'].rows[4];
-        assertEqual(row[0], 11, 'id сквозной (после 10)');
+        assertEqual(row[0], 8,
+            'id 8 = max «Инструктажей» (7) + 1 — СВОЯ последовательность (Task 427; max «Мероприятий» 10 не мешает)');
         assertEqual(row[5], 0, 'новая запись — выполнение 0');
         assertEqual(row[6], 1, 'прошедшая дата → просрочен 1');
         // будущая дата → просрочен 0
@@ -613,6 +614,11 @@ describe('Task 418 — VM: WorkSchedule.toggleTrainingDone', () => {
     function makeCtx(rec) {
         const ctx = {
             _canEdit: true,
+            _isInstrType: function(тип) {
+                var t = String(тип || '').trim().toLowerCase()
+                           .replace(/\s+/g, '_');
+                return t === 'инструктаж' || t === 'проверка_знаний';
+            },
             _TRAININGS: [],
             _INSTR_ALL: [rec],
             _EVENTS_ALL: [],
@@ -695,7 +701,7 @@ describe('Task 418 — VM: WorkSchedule.toggleTrainingDone', () => {
     });
 
     test('ошибка сервера: промис не падает, тост через _apiErrText', async () => {
-        const rec = { id: 5, выполнение: 0, просрочен: 1 };
+        const rec = { id: 5, тип: 'инструктаж', выполнение: 0, просрочен: 1 };
         const ctx = makeCtx(rec);
         ctx._api = function() {
             return Promise.reject(new Error('legacy_columns'));
@@ -723,10 +729,10 @@ describe('Task 418 — VM: WorkSchedule.toggleTrainingDone', () => {
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 418 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v653', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v653'") !== -1,
+    test('CACHE_VERSION = kipia-test-v654', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v654'") !== -1,
             'SW v645 (Task 418)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v654') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v655') === -1,
             'двойной бамп отсутствует');
     });
 });

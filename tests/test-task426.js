@@ -11,14 +11,15 @@
 //     — _minersDayMmdd удалён; наложение в legalic-ветке и фолбэке
 //       _getProdCal удалено (последнее воскресенье августа — обычный
 //       выходной; рабочий перенос на него НЕ перекрывается);
-//     — srvVer '426' в ответе setTrainingDone.
+//     — srvVer '427' в ответе setTrainingDone (поднят Task 427 —
+//       раздельные последовательности id листов).
 //   КЛИЕНТ index.html (ProdCalendar):
 //     — _minersDayMmdd/_applyRegionalOverlay/_MINERS_DAY_TITLE
 //       удалены; dayInfo-фолбэк без Дня шахтёра;
 //     — кэш v3 (ws_pcal_year3_) — сбрасывает кэш v2, в котором
 //       День шахтёра был наложен как праздник;
-//     — регресс: порог предупреждения «старый сервер» srvVer < 423
-//       не тронут (границы Task 423 живы);
+//     — регресс: порог предупреждения «старый сервер» srvVer < 427
+//       (поднят Task 427 поверх исторической границы 423);
 //     — ГЛАВНОЕ (VM, реальный ProdCalendar + методы Task 310):
 //       отпуск 24.08–06.09.2026, захватывающий бывший День шахтёра
 //       (30.08, вс) → праздников в периоде НЕТ, «чистые» дни =
@@ -26,7 +27,7 @@
 //       ст. 112 вычитаются, как раньше.
 //   VM-СЕРВЕР: _getProdCal (legalic / фолбэк) — 30.08 обычное
 //     воскресенье; TRANSFERRED_WORKING на 30.08 остаётся РАБОЧИМ.
-//   SW: kipia-test-v653.
+//   SW: kipia-test-v654.
 //
 // Запуск: через tests/run-all.js (require './test-task426.js').
 
@@ -179,10 +180,10 @@ describe('Task 426 — сервер: День шахтёра удалён из �
             'маркер заявки Task 426 в комментариях сервера');
     });
 
-    test('JS: srvVer 426 в ответе setTrainingDone', () => {
-        assertTrue(WS_GS_SRC.indexOf("srvVer: '426'") !== -1,
-            'srvVer 426 (Task 426: День шахтёра не праздник)');
-        assertTrue(WS_GS_SRC.indexOf("srvVer: '425'") === -1,
+    test('JS: srvVer 427 в ответе setTrainingDone', () => {
+        assertTrue(WS_GS_SRC.indexOf("srvVer: '427'") !== -1,
+            'srvVer 427 (Task 427: раздельные последовательности id; День шахтёра не праздник — Task 426)');
+        assertTrue(WS_GS_SRC.indexOf("srvVer: '426'") === -1,
             'старой версии в коде нет');
     });
 });
@@ -210,10 +211,10 @@ describe('Task 426 — клиент: ProdCalendar без Дня шахтёра',
             'ключ v2 вычищается при сохранении новых данных');
     });
 
-    test('JS: регресс — порог предупреждения «старый сервер» srvVer < 423 жив', () => {
+    test('JS: регресс — порог предупреждения «старый сервер» srvVer < 427', () => {
         const fn = extractMethod(INDEX_SRC, 'toggleTrainingDone');
-        assertTrue(fn !== null && fn.indexOf('parseInt(d.srvVer, 10) < 423') !== -1,
-            'клиент предупреждает при srvVer < 423 (границы Task 423 не тронуты)');
+        assertTrue(fn !== null && fn.indexOf('parseInt(d.srvVer, 10) < 427') !== -1,
+            'клиент предупреждает при srvVer < 427 (Task 427 поднял границу: сквозная нумерация id — тоже старый сервер; историческая 423 поглощена)');
     });
 
     test('JS: регресс — День города Кемерово (12 июня) остаётся названием', () => {
@@ -306,10 +307,10 @@ describe('Task 426 — сервер VM: производственный кал�
 // 5. SW — версия кэша
 // ============================================================
 describe('Task 426 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v653', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v653'") !== -1,
+    test('CACHE_VERSION = kipia-test-v654', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v654'") !== -1,
             'SW v653 (Task 426)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v654') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v655') === -1,
             'двойной бамп отсутствует');
     });
 });

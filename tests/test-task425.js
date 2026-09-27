@@ -17,7 +17,7 @@
 //      (мероприятия без автоматического продления);
 //   2) регресс: правила автосоздания ИНСТРУКТАЖЕЙ живы (Task
 //      419..423 — инструктажи менять не нужно);
-//   3) srvVer '426' — версия сервера в ответе setTrainingDone;
+//   3) srvVer '427' — версия сервера в ответе setTrainingDone;
 //   4) маршрутизация addTraining по типу (_trainingsSheetForType)
 //      не тронута;
 //   5) клиент: eventsInit из приложения НЕ доступен (только
@@ -35,7 +35,7 @@
 //      «Инструктажи» (листы независимы);
 //   9) eventsInit: существующий «Инструктажи» с данными НЕ
 //      тронут (записей 0 в лист), «Мероприятия» создан.
-//   SW: kipia-test-v653.
+//   SW: kipia-test-v654.
 // ============================================================
 
 const fs = require('fs');
@@ -111,11 +111,11 @@ describe('Task 425 — SRC: стоп-правило мероприятий + р�
             'форс-3 эталона 9-ОГЭ (Task 423) жив');
     });
 
-    test('srvVer 426 — версия сервера в ответе setTrainingDone', () => {
+    test('srvVer 427 — версия сервера в ответе setTrainingDone', () => {
         const fn = stripComments(methodText(WS_SRC, 'setTrainingDone'));
-        assertTrue(fn.indexOf("srvVer: '426'") !== -1,
-            'srvVer 426 (Task 426: День шахтёра не праздник; мероприятия без автосоздания — Task 425)');
-        assertTrue(fn.indexOf("srvVer: '423'") === -1,
+        assertTrue(fn.indexOf("srvVer: '427'") !== -1,
+            'srvVer 427 (Task 427: раздельные последовательности id листов; День шахтёра не праздник — Task 426; мероприятия без автосоздания — Task 425)');
+        assertTrue(fn.indexOf("srvVer: '426'") === -1,
             'старой версии в коде нет');
     });
 
@@ -256,7 +256,7 @@ describe('Task 425 — GAS-VM: блоки не влияют друг на дру
         assertTrue(String(r.data.autoNote)
             .indexOf('автосоздания нет') !== -1,
             'причина — в autoNote: ' + r.data.autoNote);
-        assertEqual(r.data.srvVer, '426', 'версия сервера Task 426');
+        assertEqual(r.data.srvVer, '427', 'версия сервера Task 427');
         // отметка ЗАПИСАНА в строку
         assertEqual(sheets['Инструктажи'].rows.length, 2,
             'новых строк не добавлено');
@@ -361,10 +361,10 @@ describe('Task 425 — GAS-VM: блоки не влияют друг на дру
 // 3. SW — версия кэша
 // ============================================================
 describe('Task 425 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v653', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v653'") !== -1,
+    test('CACHE_VERSION = kipia-test-v654', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v654'") !== -1,
             'SW v653 (Task 426)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v654') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v655') === -1,
             'двойной бамп отсутствует');
     });
 });

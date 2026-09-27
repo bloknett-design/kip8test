@@ -43,7 +43,7 @@
 //     → под кнопкой, без бара → прежнее поведение);
 //     _openEventsOnlyPopup (рендер окна, кловер, позиция, без
 //     окна кодов).
-//   SW: kipia-test-v653.
+//   SW: kipia-test-v654.
 //
 // Запуск: через tests/run-all.js (require './test-task319.js').
 
@@ -443,6 +443,7 @@ describe('Task 319 — окно кодов и «Мероприятия в это
         const make = new Function('document', 'window',
             'var o = {' + texts.join('\n') + '\n};' +
             'o._canEdit = false;' +
+            "o._isInstrType = function(t) { return t === 'инструктаж' || t === 'проверка_знаний'; };" +
             "o._EMPLOYEES = [{ 'таб_номер': '0871', 'ФИО': 'Иванов И. И.' }];" +
             "o._TRAININGS = [{ id: 41, 'таб_номер': '0871', тип: 'инструктаж', дата_начала: '2026-09-05', дата_окончания: '2026-09-05', тема: 'Целевой инструктаж' }];" +
             "o._STATUS_CODES = [{ code: 'И', name: 'Инструктаж', color: '#B3E5FC' }];" +
@@ -514,10 +515,10 @@ describe('Task 319 — окно кодов и «Мероприятия в это
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 319 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v653', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v653') !== -1,
-            'CACHE_VERSION = kipia-test-v653 (Task 319)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v654') !== -1,
+    test('SW: версия кэша kipia-test-v654', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v654') !== -1,
+            'CACHE_VERSION = kipia-test-v654 (Task 319)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v655') !== -1,
             'нет лишнего инкремента');
     });
 });

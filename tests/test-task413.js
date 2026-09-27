@@ -324,8 +324,10 @@ describe('Task 413 — GAS-VM: сервер (моки листов)', () => {
                            'просрочен', 'комментарий']),
             'заголовки A..H канонические (Task 418)');
         assertEqual(t.frozen, true, 'строка заголовков закреплена');
-        // сквозной id: max id «Мероприятий» = 10 → новый id = 11
-        assertEqual(t.rows[1][0], 11, 'id = 11 (сквозная нумерация)');
+        // Task 427: РАЗДЕЛЬНАЯ нумерация — id ПЕРВОЙ записи нового
+        // листа «Инструктажи» = 1 (максимум «Мероприятий» 10 не мешает)
+        assertEqual(t.rows[1][0], 1,
+            'id = 1 — СВОЯ последовательность листа (Task 427)');
         assertEqual(t.rows[1][1], '017', 'таб_номер текстом');
         assertEqual(t.rows[1][2], 'инструктаж', 'тип');
         assertEqual(t.rows[1][3], 'Повторный инструктаж по рабочим инструкциям ОТ',
@@ -347,7 +349,8 @@ describe('Task 413 — GAS-VM: сервер (моки листов)', () => {
         const r2 = WS.addTraining({ token: 't', 'таб_номер': '023',
             тип: 'инструктаж', тема: 'Повторный инструктаж по инструкции № 9-ОГЭ',
             дата_начала: '2026-08-27' });
-        assertTrue(r2.ok && r2.data.id === 12, 'id = 12 (11 + 1)');
+        assertTrue(r2.ok && r2.data.id === 2,
+            'id = 2 (1 + 1 — СВОЯ последовательность «Инструктажей», Task 427)');
         assertEqual(sheets['Инструктажи'].rows.length, 3, 'шапка + 2 записи');
     });
 
@@ -442,10 +445,10 @@ describe('Task 413 — GAS-VM: сервер (моки листов)', () => {
 // 5. SW — версия кэша
 // ============================================================
 describe('Task 413 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v653', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v653'") !== -1,
+    test('CACHE_VERSION = kipia-test-v654', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v654'") !== -1,
             'SW v640 (Task 413)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v654') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v655') === -1,
             'двойной бамп отсутствует');
     });
 });

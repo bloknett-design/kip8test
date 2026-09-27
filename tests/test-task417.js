@@ -333,10 +333,10 @@ describe('Task 417 — VM: карточка — полные названия', 
     test('кнопки ✎/✕ в плоских строках живы (правка архивов)', () => {
         const host = cardHost();
         const html = host._renderWorkerCard('0871', true, true).join('');
-        assertTrue(html.indexOf('WorkSchedule.editTraining(51)') !== -1,
-            '✎ зовёт editTraining по id записи');
-        assertTrue(html.indexOf('WorkSchedule.deleteTraining(51)') !== -1,
-            '✕ зовёт deleteTraining по id записи');
+        assertTrue(html.indexOf('WorkSchedule.editTraining(51, 1)') !== -1,
+            '✎ зовёт editTraining по id записи + семейство инструктажей (Task 427)');
+        assertTrue(html.indexOf('WorkSchedule.deleteTraining(51, 1)') !== -1,
+            '✕ зовёт deleteTraining по id записи + семейство (Task 427)');
     });
 });
 
@@ -344,10 +344,10 @@ describe('Task 417 — VM: карточка — полные названия', 
 // 5. SW — версия поднята
 // ============================================================
 describe('Task 417 — SW', () => {
-    test('SW: кэш поднят до kipia-test-v653', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v653'") !== -1,
-            'CACHE_VERSION = kipia-test-v653 (Task 417)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v654') !== -1,
+    test('SW: кэш поднят до kipia-test-v654', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v654'") !== -1,
+            'CACHE_VERSION = kipia-test-v654 (Task 417)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v655') !== -1,
             'следующей версии в кэше нет');
     });
 });
