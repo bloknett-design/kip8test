@@ -32,7 +32,7 @@
 //      ✎ — левее колонки; зритель — колонка с одной галочкой
 //      состояния (выполнено); запись без id — без колонки;
 //      попап (!asBlocks) — БЕЗ галочки, прежний порядок ✎/✕.
-//   SW: kipia-test-v659.
+//   SW: kipia-test-v660.
 // ============================================================
 
 const fs = require('fs');
@@ -277,6 +277,7 @@ describe('Task 431 — VM: строка инструктажа (кнопки)', 
     function cardHost(opts) {
         return new Function('document', 'return ({' +
             methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
+            methodText(INDEX_SRC, '_lastExam1000Date') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
@@ -389,7 +390,7 @@ describe('Task 431 — VM: строка инструктажа (кнопки)', 
 // ============================================================
 describe('Task 431 — SW версия', () => {
     test('v657', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v659') !== -1,
-            'SW кэш kipia-test-v659');
+        assertTrue(SW_SRC.indexOf('kipia-test-v660') !== -1,
+            'SW кэш kipia-test-v660');
     });
 });

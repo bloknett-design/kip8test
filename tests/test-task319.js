@@ -43,7 +43,7 @@
 //     → под кнопкой, без бара → прежнее поведение);
 //     _openEventsOnlyPopup (рендер окна, кловер, позиция, без
 //     окна кодов).
-//   SW: kipia-test-v659.
+//   SW: kipia-test-v660.
 //
 // Запуск: через tests/run-all.js (require './test-task319.js').
 
@@ -436,7 +436,11 @@ describe('Task 319 — окно кодов и «Мероприятия в это
         };
         const texts = ['_openEventsOnlyPopup', '_renderEventsPopup', '_eventsAt',
                        '_instrShortOf', '_normInstrKey',
-                       '_trainingCodeOf', '_statusMeta', '_esc', '_escAttr']
+                       '_trainingCodeOf', '_statusMeta', '_esc',
+                       // Task 434: дата окна — дд.мм.гггг (_fmtDateRu);
+                       // идёт ДО «_escAttr» — вырезка последнего метода без
+                       // хвостовой запятой должна остаться последней
+                       '_fmtDateRu', '_escAttr']
             .map(n => methodText(INDEX_SRC, n));
         // «var o = {…}; o._canEdit = …; return o;» — без запятых на стыке
         // (последний метод может не иметь хвостовой запятой)
@@ -456,6 +460,11 @@ describe('Task 319 — окно кодов и «Мероприятия в это
             'заголовок окна');
         assertTrue(evp.innerHTML.indexOf('Иванов И. И.') !== -1,
             'подстрока контекста (дата · ФИО)');
+        // Task 434: дата окна мероприятий ячейки — дд.мм.гггг (не ISO)
+        assertTrue(evp.innerHTML.indexOf('05.09.2026') !== -1,
+            'Task 434: дата в подстроке — 05.09.2026 (дд.мм.гггг)');
+        assertTrue(evp.innerHTML.indexOf('2026-09-05') === -1,
+            'Task 434: ISO-даты в окне больше нет');
         assertTrue(evp.innerHTML.indexOf('Целевой инструктаж') !== -1,
             'тема мероприятия видна');
         assertTrue(evp.innerHTML.indexOf('editTraining') === -1 &&
@@ -515,10 +524,10 @@ describe('Task 319 — окно кодов и «Мероприятия в это
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 319 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v659', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v659') !== -1,
-            'CACHE_VERSION = kipia-test-v659 (Task 319)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v660') !== -1,
+    test('SW: версия кэша kipia-test-v660', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v660') !== -1,
+            'CACHE_VERSION = kipia-test-v660 (Task 319)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v661') !== -1,
             'нет лишнего инкремента');
     });
 });

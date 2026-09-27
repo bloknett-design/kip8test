@@ -35,7 +35,7 @@
 //       позиционируется СТРОГО НАД ним (eTop = top - eh - 8, сдвиг
 //       окна кодов вниз при нехватке места, левые края выровнены);
 //     — closeCellPopup: закрывает ОБА окна.
-//   SW: kipia-test-v659.
+//   SW: kipia-test-v660.
 //
 // Запуск: через tests/run-all.js (require './test-task313.js').
 
@@ -154,9 +154,12 @@ describe('Task 313 — окно «Мероприятия в этот день» 
         const ep = fnBody(INDEX_SRC, '_renderEventsPopup: function');
         assertTrue(ep.indexOf('<div class="ws-popup-title">Мероприятия в этот день</div>') !== -1,
             'заголовок окна — «Мероприятия в этот день»');
+        // Task 434 (заявка: «в окнах мероприятий ячеек табеля, дату
+        // указывать в формате дд.мм.гггг»): подстрока — дата
+        // ПО-РУССКИ (_fmtDateRu: 2026-09-05 → 05.09.2026), не ISO
         assertTrue(ep.indexOf('ws-events-sub') !== -1 &&
-                   ep.indexOf("this._esc(isoDate) + ' · '") !== -1,
-            'подстрока «дата · ФИО» (контекст ячейки)');
+                   ep.indexOf("this._esc(this._fmtDateRu(isoDate)) + ' · '") !== -1,
+            'подстрока «дата · ФИО» (контекст ячейки, дата дд.мм.гггг)');
     });
 
     test('JS: _renderEventsPopup — строки: цвет, код, название', () => {
@@ -243,9 +246,9 @@ describe('Task 313 — окно «Мероприятия в этот день» 
 
 describe('Task 313 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v659', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v659'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v659');
+    test('SW: версия кэша kipia-test-v660', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v660'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v660');
         assertFalse(SW_SRC.indexOf('kipia-test-v551') !== -1,
             'старой версии v551 нет');
     });

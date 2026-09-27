@@ -187,6 +187,9 @@ describe('Task 416 — VM: хелпер и окно дня', () => {
             '_STATUS_CODES: [],' +
             '_esc: function(s) { return String(s == null ? \'\' : s); },' +
             '_escAttr: function(s) { return String(s == null ? \'\' : s); },' +
+            // Task 434: дата окна мероприятий ячейки — дд.мм.гггг
+            '_fmtDateRu: function(d) { var p = String(d).split("-");' +
+            '  return p.length === 3 ? p[2] + "." + p[1] + "." + p[0] : String(d); },' +
             '_statusMeta: function() { return {}; }' +
             '});')(doc);
         const html = h._renderEventsPopup('2026-09-05', '017');
@@ -239,6 +242,7 @@ describe('Task 416 — VM: карточка', () => {
     function cardHost(opts) {
         return new Function('document', 'return ({' +
             methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
+            methodText(INDEX_SRC, '_lastExam1000Date') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
@@ -476,11 +480,11 @@ describe('Task 416 — сервер', () => {
 // ============================================================
 describe('Task 416 — SW версия', () => {
     test('v643', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v659'") !== -1,
-            'SW кэш — kipia-test-v659');
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v660'") !== -1,
+            'SW кэш — kipia-test-v660');
         assertTrue(SW_SRC.indexOf('kipia-test-v642') === -1,
             'v642 не осталась в sw.js');
-        assertTrue(SW_SRC.indexOf('kipia-test-v660') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v661') === -1,
             'двойной бамп отсутствует (guard: v644)');
     });
 });

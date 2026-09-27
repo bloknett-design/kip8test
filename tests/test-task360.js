@@ -28,7 +28,7 @@
 //   • CSS @media print: .wsp-mev-item/.wsp-lg — display: block
 //     (один столбик) + page-break-inside: avoid.
 //
-// SW: kipia-test-v659.
+// SW: kipia-test-v660.
 //
 // Запуск: через tests/run-all.js (require './test-task360.js').
 
@@ -217,21 +217,35 @@ describe('Task 360 — печатный CSS (один столбик)', () => {
             'строка не рвётся между страницами');
     });
 
-    test('SRC: .wsp-lg — коды В СТРОКУ (Task 433: вернули исходное)', () => {
+    test('SRC: .wsp-lg — коды в ДВЕ КОЛОНКИ (Task 434: под названием «Коды:»)', () => {
         const block = printCss();
         const i = block.indexOf('#wsPrintSheet .wsp-lg {');
         assertTrue(i !== -1, 'правило .wsp-lg есть');
         const rule = block.slice(i, block.indexOf('}', i) + 1);
-        // Task 433 (заявка: «расположение кодов в печати верни
-        // обратно»): ИСХОДНАЯ форма «в одну строку» (как до Task
-        // 360; столбик Task 360–431 и флоат Task 432 сняты):
-        // коды идут В СТРОКУ, растягиваясь вправо до конца листа
-        assertTrue(rule.indexOf('display: inline') !== -1,
-            'коды — В СТРОКУ (Task 433: единый абзац под списком)');
-        assertTrue(rule.indexOf('margin-right') !== -1,
-            'горизонтальный отступ между кодами (инлайн)');
-        assertTrue(rule.indexOf('white-space: nowrap') !== -1,
-            'код не рвётся внутри (перенос — только между кодами)');
+        // Task 434 (заявка: «коды на печати сделать в две колонки
+        // под названием "Коды:"»): заголовок «Коды:» — отдельной
+        // строкой СВЕРХУ, под ним сетка-ДВЕ-КОЛОНКИ .wsp-legend-cols
+        // (grid 1fr 1fr) на всю ширину листа; каждая запись-код —
+        // своя строка колонки, длинное наименование переносится
+        // ВНУТРИ своей колонки (строка Task 433 и столбик Task 360–431
+        // сняты)
+        const t = block.indexOf('#wsPrintSheet .wsp-legend-t {');
+        assertTrue(t !== -1, 'правило заголовка .wsp-legend-t есть');
+        const tRule = block.slice(t, block.indexOf('}', t) + 1);
+        assertTrue(tRule.indexOf('display: block') !== -1,
+            'заголовок «Коды:» — отдельной строкой сверху');
+        const c = block.indexOf('#wsPrintSheet .wsp-legend-cols {');
+        assertTrue(c !== -1, 'правило сетки .wsp-legend-cols есть');
+        const cRule = block.slice(c, block.indexOf('}', c) + 1);
+        assertTrue(cRule.indexOf('display: grid') !== -1 &&
+                   cRule.indexOf('grid-template-columns: 1fr 1fr') !== -1,
+            'две равные колонки на всю ширину листа');
+        assertTrue(rule.indexOf('display: block') !== -1,
+            'каждый код — своя строка колонки (не инлайн)');
+        assertTrue(rule.indexOf('white-space: normal') !== -1,
+            'длинное наименование переносится ВНУТРИ колонки');
+        assertTrue(rule.indexOf('break-inside: avoid') !== -1,
+            'запись кода не рвётся между колонками/страницами');
     });
 
     test('SRC: точка цвета мероприятия печатается принудительно', () => {
@@ -601,10 +615,10 @@ describe('Task 360 — регресс прежних фич печати', () =>
 // ============================================================
 describe('Task 360 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v659', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v659'") !== -1,
-            'CACHE_VERSION = kipia-test-v659 (Task 360 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v660') !== -1,
+    test('SW: кэш поднят до kipia-test-v660', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v660'") !== -1,
+            'CACHE_VERSION = kipia-test-v660 (Task 360 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v661') !== -1,
             'v605 ещё не существует (лишний инкремент)');
     });
 });

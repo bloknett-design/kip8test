@@ -285,6 +285,7 @@ describe('Task 417 — VM: карточка — полные названия', 
     function cardHost() {
         return new Function('document', 'return ({' +
             methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
+            methodText(INDEX_SRC, '_lastExam1000Date') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
@@ -344,10 +345,10 @@ describe('Task 417 — VM: карточка — полные названия', 
 // 5. SW — версия поднята
 // ============================================================
 describe('Task 417 — SW', () => {
-    test('SW: кэш поднят до kipia-test-v659', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v659'") !== -1,
-            'CACHE_VERSION = kipia-test-v659 (Task 417)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v660') !== -1,
+    test('SW: кэш поднят до kipia-test-v660', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v660'") !== -1,
+            'CACHE_VERSION = kipia-test-v660 (Task 417)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v661') !== -1,
             'следующей версии в кэше нет');
     });
 });

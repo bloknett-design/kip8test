@@ -39,7 +39,7 @@
 //      ✕ (внутри .ws-act-row), ряд — внутри колонки, галочка —
 //      выше ряда; зритель — колонка с одной галочкой состояния;
 //      запись без id — без колонки; попап — без галочки/колонки.
-//   SW: kipia-test-v659 (главный), v659 — прежней нет.
+//   SW: kipia-test-v660 (главный), v659 — прежней нет.
 // ============================================================
 
 const fs = require('fs');
@@ -101,22 +101,28 @@ describe('Task 432/433 — SRC: печать (Task 433: флоат снят, с�
             'отступ от таблицы не тронут (Task 364)');
     });
 
-    test('.wsp-legend — строка-абзац ПОД списком, БЕЗ флоата (Task 433)', () => {
+    test('.wsp-legend — ПОД списком, БЕЗ флоата (Task 433/434)', () => {
         const r = ruleBlock('#wsPrintSheet .wsp-legend {');
         assertTrue(r !== '', 'правило кодов есть');
-        // Task 433: коды — единая строка-абзац «Коды: …» ПОД списком
-        // мероприятий (исходное расположение до Task 360)
+        // Task 433: коды — ПОД списком мероприятий (исходное
+        // расположение до Task 360); Task 434: заголовок «Коды:» +
+        // сетка-две-колонки
         assertTrue(r.indexOf('float:') === -1,
             'флоат Task 432 снят (коды — не плавающий столбик)');
         assertTrue(r.indexOf('margin-top: 2.5mm') !== -1,
             'отступ строки кодов от списка мероприятий');
         assertTrue(r.indexOf('max-width') === -1,
             'кап ширины Task 364 снят');
+        // Task 434: ДВЕ КОЛОНКИ под названием «Коды:» (заявка)
+        const c = ruleBlock('#wsPrintSheet .wsp-legend-cols {');
+        assertTrue(c.indexOf('display: grid') !== -1 &&
+                   c.indexOf('grid-template-columns: 1fr 1fr') !== -1,
+            'Task 434: сетка-ДВЕ-КОЛОНКИ на всю ширину листа');
         const lg = ruleBlock('#wsPrintSheet .wsp-lg {');
-        assertTrue(lg.indexOf('display: inline') !== -1,
-            'коды — В СТРОКУ (Task 433: вернули исходную форму)');
-        assertTrue(lg.indexOf('white-space: nowrap') !== -1,
-            'код не рвётся внутри');
+        assertTrue(lg.indexOf('display: block') !== -1,
+            'Task 434: каждый код — своя строка колонки');
+        assertTrue(lg.indexOf('white-space: normal') !== -1,
+            'Task 434: длинное наименование переносится внутри колонки');
     });
 
     test('.wsp-mev — БЕЗ flex-колонки: записи на всю ширину листа', () => {
@@ -299,6 +305,7 @@ describe('Task 432/433 — VM: строка инструктажа (Task 433: �
     function cardHost(opts) {
         return new Function('document', 'return ({' +
             methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
+            methodText(INDEX_SRC, '_lastExam1000Date') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
@@ -418,9 +425,9 @@ describe('Task 432/433 — VM: строка инструктажа (Task 433: �
 // ============================================================
 describe('Task 432 — SW версия', () => {
     test('v658 (главный), v659 — прежней нет', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v659') !== -1,
-            'SW кэш kipia-test-v659');
-        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v660'") !== -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v660') !== -1,
+            'SW кэш kipia-test-v660');
+        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v661'") !== -1,
             'v659 ещё не существует (guard следующего бампа)');
     });
 });

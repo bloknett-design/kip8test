@@ -216,8 +216,12 @@ describe('Task 402 — SRC: карточка и сводная таблица', 
         assertTrue(iPos !== -1 && iGrp !== -1 && iHire !== -1 &&
                    iPos < iGrp && iGrp < iHire,
             'профиль: Должность → Группа допуска → Дата приёма');
-        assertTrue(fn.indexOf("String(emp['группа_допуска'] || '').trim() || '—'") !== -1,
-            'пустая группа — «—» (как Должность)');
+        // Task 402: пустая группа — «—»; Task 434: знак группы в
+        // переменной grpVal (после него добавляется дата «от …»)
+        assertTrue(fn.indexOf("String(emp['группа_допуска'] || '').trim()" ) !== -1,
+            'значение группы — из столбца «группа_допуска»');
+        assertTrue(fn.indexOf("['Группа допуска', grpVal || '—']") !== -1,
+            'пустая группа — «—» (Task 434: grpVal + дата проверки)');
     });
 
     test('сводная «Общая»: колонка «Группа допуска» после «Должности»', () => {
@@ -396,12 +400,12 @@ describe('Task 402 — сервер: WorkSchedule.gs (SRC)', () => {
 // 7. SW — версия кэша
 // ============================================================
 describe('Task 402 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v659 (Task 402)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v659'") !== -1,
+    test('CACHE_VERSION = kipia-test-v660 (Task 402)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v660'") !== -1,
             'фронтенд менялся — кэш поднят до v629');
     });
     test('guard: v630 отсутствует (следующий бамп)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v660') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v661') === -1,
             'v630 ещё не существует (guard следующего бампа)');
     });
 });

@@ -139,6 +139,7 @@ describe('Task 406 — VM: колонки карточки', () => {
             methodText(INDEX_SRC, '_instrShortOf') + ',\n' +
             methodText(INDEX_SRC, '_normInstrKey') + ',\n' +
             methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
+            methodText(INDEX_SRC, '_lastExam1000Date') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
@@ -271,10 +272,10 @@ describe('Task 406 — VM: колонки карточки', () => {
 // ============================================================
 describe('Task 406 — SW', () => {
 
-    test('CACHE_VERSION = kipia-test-v659', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v659'") !== -1,
+    test('CACHE_VERSION = kipia-test-v660', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v660'") !== -1,
             'SW v633 (Task 406)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v660') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v661') === -1,
             'нет забегания вперёд');
     });
 });

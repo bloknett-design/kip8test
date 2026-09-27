@@ -31,7 +31,7 @@
 //     статус-мероприятия без строки в «Инструктажах»; CSS
 //     .wsp-ev-wrap/.wsp-ev/.wsp-ev-plan; сноска поясняет значок.
 //
-// SW: kipia-test-v659.
+// SW: kipia-test-v660.
 //
 // Запуск: через tests/run-all.js (require './test-task361.js').
 
@@ -72,10 +72,12 @@ function mockEsc(s) {
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// увеличенный срез @media print (блок вырос после Tasks 360/361)
+// увеличенный срез @media print (блок вырос после Tasks 360/361;
+// Task 434 добавил сетку-две-колонки кодов — окно 13000→15000,
+// чтобы .wsp-foot оставался внутри среза)
 function printCss() {
     const i = INDEX_SRC.indexOf('@media print');
-    return stripComments(INDEX_SRC.slice(i, i + 13000));
+    return stripComments(INDEX_SRC.slice(i, i + 15000));
 }
 
 // ============================================================
@@ -481,10 +483,10 @@ describe('Task 361 — VM: регресс печатного листа', () => 
 // ============================================================
 describe('Task 361 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v659', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v659'") !== -1,
-            'CACHE_VERSION = kipia-test-v659 (Task 361 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v660') !== -1,
+    test('SW: кэш поднят до kipia-test-v660', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v660'") !== -1,
+            'CACHE_VERSION = kipia-test-v660 (Task 361 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v661') !== -1,
             'v605 ещё не существует (лишний инкремент)');
     });
 
