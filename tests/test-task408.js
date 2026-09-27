@@ -125,12 +125,15 @@ describe('Task 408 — SRC: клиент', () => {
 
     test('карточка: год блока + навигатор в заголовках (asBlocks)', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_renderWorkerCard'));
-        assertTrue(fn.indexOf("var wYear = asBlocks ? this._wtabYearOf(tabNo) : this._year;") !== -1,
-            'год блока — выбор работника (попап: год шахматки)');
-        assertTrue(fn.indexOf('wYear + this._wtabYearNav(tabNo, wYear)') !== -1,
-            '«Мероприятия · год» + стрелки после года');
+        assertTrue(fn.indexOf("var wYearEv = asBlocks ? this._wtabYearOf(tabNo, 0) : this._year;") !== -1 &&
+                   fn.indexOf("var wYearIn = asBlocks ? this._wtabYearOf(tabNo, 1) : this._year;") !== -1,
+            'годы блоков — РАЗДЕЛЬНЫЕ выборы работника (Task 435: fam 0/1; попап: год шахматки)');
+        assertTrue(fn.indexOf('wYearEv + this._wtabYearNav(tabNo, wYearEv, 0)') !== -1,
+            '«Мероприятия · год» + свой навигатор (fam 0)');
+        assertTrue(fn.indexOf('wYearIn + this._wtabYearNav(tabNo, wYearIn, 1)') !== -1,
+            '«Повторные инструктажи… · год» + свой навигатор (fam 1)');
         assertTrue(fn.indexOf('this._renderInstrSection(ins, tabNo, withEdit,') !== -1 &&
-                   fn.indexOf('this._INSTR_LIST, wYear);') !== -1,
+                   fn.indexOf('this._INSTR_LIST, wYearIn);') !== -1,
             'инструктажный блок рендерится с годом');
     });
 
@@ -687,9 +690,9 @@ describe('Task 408 — GAS-VM: сервер (моки листов)', () => {
 // 7. SW — версия кэша
 // ============================================================
 describe('Task 408 — SW', () => {
-    test('SW: версия кэша kipia-test-v660', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v660'") !== -1,
-            'CACHE_VERSION = kipia-test-v660');
+    test('SW: версия кэша kipia-test-v661', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v661'") !== -1,
+            'CACHE_VERSION = kipia-test-v661');
         assertTrue(SW_SRC.indexOf('kipia-test-v634') === -1,
             'старой версии нет');
     });

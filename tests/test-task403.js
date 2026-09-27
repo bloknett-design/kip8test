@@ -708,12 +708,12 @@ describe('Task 403 — VM: сервер — addEmployee (сборка строк
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 403 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v660 (Task 403)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v660'") !== -1,
+    test('CACHE_VERSION = kipia-test-v661 (Task 403)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v661'") !== -1,
             'фронтенд менялся — кэш поднят до v630');
     });
     test('guard: v631 отсутствует (следующий бамп)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v661') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v662') === -1,
             'v631 ещё не существует (guard следующего бампа)');
     });
 });

@@ -96,8 +96,8 @@ describe('Task 394 — SRC: мероприятия на весь год', () => 
     test('карточка: блок 3 — «Мероприятия · ГОД», пустое — «за год»', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_renderWorkerCard'));
         assertTrue(fn.indexOf("Мероприятия · ' +") !== -1 &&
-                   fn.indexOf('wYear + this._wtabYearNav(tabNo, wYear)') !== -1,
-            'заголовок блока — год + навигатор (Task 408)');
+                   fn.indexOf('wYearEv + this._wtabYearNav(tabNo, wYearEv, 0)') !== -1,
+            'заголовок блока — год + навигатор (Task 408; Task 435: fam 0)');
         assertTrue(fn.indexOf('нет мероприятий за год') !== -1,
             'пустое состояние — «нет мероприятий за год»');
         assertFalse(fn.indexOf('monthNames') !== -1,
@@ -626,10 +626,10 @@ describe('Task 394 — VM: окно мероприятий — порядок с
 // ============================================================
 describe('Task 394 — SW', () => {
 
-    test('SW: kipia-test-v660', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v660'") !== -1,
+    test('SW: kipia-test-v661', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v661'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v661') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v662') === -1,
             'двойного бампа не было');
     });
 });
