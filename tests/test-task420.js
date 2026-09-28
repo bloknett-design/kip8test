@@ -33,7 +33,7 @@
 //      (дубль серверной логики; старый сервер/кэш);
 //   6) _renderInstrSection — «последнее» событие: нестрогое
 //      сравнение темы с ключами (сигнатура);
-//   7) SW kipia-test-v664.
+//   7) SW kipia-test-v665.
 // ============================================================
 
 const fs = require('fs');
@@ -699,10 +699,10 @@ describe('Task 420 — VM: «след. срок» 9-ОГЭ (живой спис�
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 420 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v664', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v664'") !== -1,
+    test('CACHE_VERSION = kipia-test-v665', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v665'") !== -1,
             'SW v647 (Task 420)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v665') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v666') === -1,
             'двойной бамп отсутствует');
     });
 });

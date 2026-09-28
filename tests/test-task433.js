@@ -43,7 +43,7 @@
 //      ПЕРВЫМ в ряду .ws-act-row, ✕ — ПОСЛЕ; отпускные строки
 //      несут ws-emp-vac; _buildPrintHtml — мероприятия ПЕРВЫМИ,
 //      коды ПОД ними, записи с [дата][текст].
-//   SW: kipia-test-v664 (главный), v660 — прежней нет.
+//   SW: kipia-test-v665 (главный), v660 — прежней нет.
 // ============================================================
 
 const fs = require('fs');
@@ -182,8 +182,8 @@ describe('Task 433 — SRC: печать (секция вертикальная,
         assertTrue(t.indexOf('display: block') !== -1,
             'заголовок «Коды:» — отдельной строкой СВЕРХУ сетки');
         const c = ruleBlock('#wsPrintSheet .wsp-legend-cols {');
-        assertTrue(c.indexOf('grid-template-columns: 1fr 1fr') !== -1,
-            'две равные колонки на всю ширину листа');
+        assertTrue(c.indexOf('grid-template-columns: 1fr') !== -1,
+            'одна колонка на всю ширину блока кодов (Task 441)');
         assertFalse(r.indexOf('display: inline') !== -1,
             'инлайн-строка Task 433 снята');
     });
@@ -413,9 +413,9 @@ describe('Task 433 — VM: строка инструктажа и строка �
 // ============================================================
 describe('Task 433 — SW: версия кеша', () => {
     test('v659 (главный), v660 — прежней нет', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v664'") !== -1,
-            'SW кэш kipia-test-v664');
-        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v665'") !== -1,
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v665'") !== -1,
+            'SW кэш kipia-test-v665');
+        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v666'") !== -1,
             'v660 ещё не существует (guard следующего бампа)');
     });
 });

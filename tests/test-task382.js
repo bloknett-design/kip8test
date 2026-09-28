@@ -16,7 +16,7 @@
 // возвращается к data-full, скрытый № таб. показывается инлайном
 // на время замера — всё возвращается; late-правило .ws-narrow
 // ПОСЛЕ базового — сужение при прокрутке не тронуто.
-// SW: kipia-test-v664 (guard v612).
+// SW: kipia-test-v665 (guard v612).
 //
 // Запуск: через tests/run-all.js (require './test-task382.js').
 
@@ -434,10 +434,10 @@ describe('Task 382 — VM: _measureTtEmpFullW на моках', () => {
 // 4. Service Worker
 // ============================================================
 describe('Task 382 — Service Worker', () => {
-    test('SW: кэш поднят до kipia-test-v664', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v664'") !== -1,
-            'CACHE_VERSION = kipia-test-v664 (Task 382 — только фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v665') !== -1,
+    test('SW: кэш поднят до kipia-test-v665', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v665'") !== -1,
+            'CACHE_VERSION = kipia-test-v665 (Task 382 — только фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v666') !== -1,
             'лишний инкремент (v612) не сделан');
     });
 });

@@ -46,7 +46,7 @@
 //      дата_начала; записи других работников не мешают;
 //   8) _renderEventsPopup: подстрока окна — «05.09.2026»,
 //      ISO-даты «2026-09-05» в окне НЕТ.
-//   SW: kipia-test-v664 (главный), v660 — прежней нет.
+//   SW: kipia-test-v665 (главный), v660 — прежней нет.
 // ============================================================
 
 const fs = require('fs');
@@ -112,15 +112,19 @@ describe('Task 434 — SRC: печать (коды в две колонки)', (
             'отступ заголовка от сетки кодов');
     });
 
-    test('.wsp-legend-cols — сетка ДВЕ равные колонки', () => {
+    test('.wsp-legend-cols — сетка ОДНА колонка (Task 441)', () => {
         const r = ruleBlock('#wsPrintSheet .wsp-legend-cols {');
         assertTrue(r !== '', 'правило сетки есть');
         assertTrue(r.indexOf('display: grid') !== -1,
             'контейнер — grid');
-        assertTrue(r.indexOf('grid-template-columns: 1fr 1fr') !== -1,
-            'ДВЕ равные колонки на всю ширину листа до конца');
-        assertTrue(r.indexOf('column-gap') !== -1,
-            'горизонтальный зазор между колонками');
+        // Task 441 (заявка: «коды сделай в один столбец»):
+        // ОДНА колонка — прежде ДВЕ равные (Task 434)
+        assertTrue(r.indexOf('grid-template-columns: 1fr') !== -1,
+            'ОДНА колонка на всю ширину блока кодов');
+        assertFalse(r.indexOf('grid-template-columns: 1fr 1fr') !== -1,
+            'две равные колонки Task 434 сняты (Task 441)');
+        assertFalse(r.indexOf('column-gap') !== -1,
+            'column-gap снят — колонок больше нет (Task 441)');
         assertTrue(r.indexOf('row-gap') !== -1,
             'вертикальный зазор между записями');
     });
@@ -467,9 +471,9 @@ describe('Task 434 — VM: окно «Мероприятия в этот ден�
 // ============================================================
 describe('Task 434 — SW: версия кеша', () => {
     test('v659 (главный), v660 — прежней нет', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v664'") !== -1,
-            'SW кэш kipia-test-v664');
-        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v665'") !== -1,
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v665'") !== -1,
+            'SW кэш kipia-test-v665');
+        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v666'") !== -1,
             'v660 ещё не существует (guard следующего бампа)');
     });
 });

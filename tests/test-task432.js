@@ -39,7 +39,7 @@
 //      ✕ (внутри .ws-act-row), ряд — внутри колонки, галочка —
 //      выше ряда; зритель — колонка с одной галочкой состояния;
 //      запись без id — без колонки; попап — без галочки/колонки.
-//   SW: kipia-test-v664 (главный), v659 — прежней нет.
+//   SW: kipia-test-v665 (главный), v659 — прежней нет.
 // ============================================================
 
 const fs = require('fs');
@@ -118,11 +118,11 @@ describe('Task 432/433 — SRC: печать (Task 433: флоат снят, с�
             'верхняя линия общая с мероприятиями (Task 439)');
         assertTrue(r.indexOf('max-width') === -1,
             'кап ширины Task 364 не вернулся');
-        // Task 434: ДВЕ КОЛОНКИ под названием «Коды:» (заявка)
+        // Task 434: две колонки; Task 441 — ОДНА колонка
         const c = ruleBlock('#wsPrintSheet .wsp-legend-cols {');
         assertTrue(c.indexOf('display: grid') !== -1 &&
-                   c.indexOf('grid-template-columns: 1fr 1fr') !== -1,
-            'Task 434: сетка-ДВЕ-КОЛОНКИ на всю ширину листа');
+                   c.indexOf('grid-template-columns: 1fr') !== -1,
+            'Task 441: сетка-ОДНА-КОЛОНКА (прежде ДВЕ, Task 434)');
         const lg = ruleBlock('#wsPrintSheet .wsp-lg {');
         assertTrue(lg.indexOf('display: block') !== -1,
             'Task 434: каждый код — своя строка колонки');
@@ -434,9 +434,9 @@ describe('Task 432/433 — VM: строка инструктажа (Task 433: �
 // ============================================================
 describe('Task 432 — SW версия', () => {
     test('v658 (главный), v659 — прежней нет', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v664') !== -1,
-            'SW кэш kipia-test-v664');
-        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v665'") !== -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v665') !== -1,
+            'SW кэш kipia-test-v665');
+        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v666'") !== -1,
             'v659 ещё не существует (guard следующего бампа)');
     });
 });
