@@ -20,7 +20,7 @@
 // display:none. Печатается ТЕКУЩИЙ вид табеля (у уровня min
 // «Мастер КИПиА» скрыт — _viewEmployees, Task 340).
 //
-// SW: kipia-test-v662.
+// SW: kipia-test-v663.
 //
 // Запуск: через tests/run-all.js (require './test-task341.js').
 
@@ -374,7 +374,7 @@ describe('Task 341 — _buildPrintHtml (VM)', () => {
                 '(dt.getDate() < 10 ? "0" : "") + dt.getDate(); },' +
             '_buildEntryIndex: function() { return ' + JSON.stringify(opts.entries || {}) + '; },' +
             '_PENDING: ' + JSON.stringify(opts.pending || {}) + ',' +
-            '_posLabel: function() { return "Слесарь КИПиА, смена 1"; },' +
+            '_empTipLine: function() { return "смена №1"; },' +
             '_fmtTotalsNum: function(v) { return String(Math.round((v || 0) * 10) / 10).replace(".", ","); },' +
             '_STATUS_CODES: ' + JSON.stringify(opts.codes || [
                 { code: 'Д', name: 'День (12-час)', color: '#FFE082' },
@@ -440,7 +440,10 @@ describe('Task 341 — _buildPrintHtml (VM)', () => {
     test('VM: строки сотрудников — ФИО, должность, итоги (Task 438: без «Часов»)', () => {
         var html = sheetHost()._buildPrintHtml(EMPS, AGG);
         assertTrue(html.indexOf('Иванов Иван Иванович') !== -1, 'ФИО сотрудника');
-        assertTrue(html.indexOf('Слесарь КИПиА, смена 1') !== -1, 'должность под ФИО');
+        assertTrue(html.indexOf('смена №1') !== -1,
+            'Тип под ФИО (Task 439: только ФИО и Тип)');
+        assertTrue(html.indexOf('Слесарь КИПиА') === -1,
+            'должности в колонке больше нет (Task 439)');
         assertTrue(html.indexOf('>21</td>') !== -1, 'дни явки 017');
         assertTrue(html.indexOf('>151,2</td>') === -1,
             'часы НЕ печатаются (Task 438: колонка «Часы» удалена)');
@@ -516,10 +519,10 @@ describe('Task 341 — _buildPrintHtml (VM)', () => {
 // ============================================================
 describe('Task 341 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v662', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v662'") !== -1,
-            'CACHE_VERSION = kipia-test-v662 (Task 341 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v663') !== -1,
+    test('SW: кэш поднят до kipia-test-v663', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
+            'CACHE_VERSION = kipia-test-v663 (Task 341 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v664') !== -1,
             'лишний инкремент (v580) не сделан');
     });
 

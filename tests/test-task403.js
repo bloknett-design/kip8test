@@ -99,10 +99,18 @@ describe('Task 403 — SRC: строка должности столбца ФИ�
             'шторка правки: селект группы жив');
     });
 
-    test('печать НЕ меняется: _posLabel — полный текст должности', () => {
-        const fn = stripComments(methodText(INDEX_SRC, '_posLabel'));
-        assertTrue(fn.indexOf('_shortGrade') === -1,
-            'печатная форма — без сокращения «разряд»');
+    test('печать НЕ показывает должность (Task 439); «разряд» — только в сетке', () => {
+        // Task 439: _posLabel удалён — печать показывает только
+        // ФИО и Тип; сокращение «разряд» (_shortGrade) живёт
+        // только в _empPosLine ячейки сетки
+        assertFalse(INDEX_SRC.indexOf('_posLabel: function') !== -1,
+            'метод _posLabel удалён (Task 439)');
+        const fn = stripComments(methodText(INDEX_SRC, '_empPosLine'));
+        assertTrue(fn.indexOf('_shortGrade') !== -1,
+            'строка должности сетки — с сокращением «разряд»');
+        const b = stripComments(methodText(INDEX_SRC, '_buildPrintHtml'));
+        assertTrue(b.indexOf('_shortGrade') === -1 && b.indexOf('должность') === -1,
+            'печать должность не читает (только _empTipLine)');
     });
 });
 
@@ -708,12 +716,12 @@ describe('Task 403 — VM: сервер — addEmployee (сборка строк
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 403 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v662 (Task 403)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v662'") !== -1,
+    test('CACHE_VERSION = kipia-test-v663 (Task 403)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
             'фронтенд менялся — кэш поднят до v630');
     });
     test('guard: v631 отсутствует (следующий бамп)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v663') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v664') === -1,
             'v631 ещё не существует (guard следующего бампа)');
     });
 });

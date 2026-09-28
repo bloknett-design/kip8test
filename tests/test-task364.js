@@ -13,7 +13,7 @@
 //     обёртки на всю ширину; каждая запись/код — отдельной
 //     строкой своего столбика (как в Task 360).
 //
-// SW: kipia-test-v662.
+// SW: kipia-test-v663.
 //
 // Запуск: через tests/run-all.js (require './test-task364.js').
 
@@ -95,48 +95,47 @@ describe('Task 364 — SRC: рамка выходных 2px #e57373', () => {
 // ============================================================
 describe('Task 364 — SRC: wsp-bottom на печати', () => {
 
-    test('SRC: CSS .wsp-bottom — обёртка вертикальной секции (Task 433)', () => {
+    test('SRC: CSS .wsp-bottom — РЯД: мероприятия слева, коды справа (Task 439)', () => {
         const r = cssRule(INDEX_SRC, '#wsPrintSheet .wsp-bottom');
         assertTrue(r !== '', 'правило обёртки есть');
-        // Task 433 (заявка: «расположение кодов в печати верни
-        // обратно…»): флоат Task 432 и flex-ряд Task 364–431
-        // СНЯТЫ — нижняя секция ВЕРТИКАЛЬНАЯ: список мероприятий
-        // на всю ширину, коды — строкой-абзацем ПОД ним
-        assertTrue(r.indexOf('display: flex') === -1,
-            'flex-ряда нет (Task 433: вертикальная секция)');
+        // Task 439 (заявка: «блок с кодами размести справа от
+        // мероприятий»): нижняя секция — ГИБКИЙ РЯД (флоат Task 432
+        // не вернулся): список мероприятий слева, коды справа
+        assertTrue(r.indexOf('display: flex') !== -1,
+            'обёртка — flex-ряд (Task 439)');
+        assertTrue(r.indexOf('align-items: flex-start') !== -1,
+            'блоки выровнены по верхней линии');
+        assertTrue(r.indexOf('gap: 6mm') !== -1, 'зазор между блоками');
         assertTrue(r.indexOf('flow-root') === -1,
-            'флоат-обёртки Task 432 больше нет');
+            'флоат-обёртки Task 432 не вернулась');
         assertTrue(r.indexOf('margin-top: 2.5mm') !== -1,
-            'отступ от таблицы перенесён на обёртку');
+            'отступ от таблицы на обёртке жив');
     });
 
-    test('SRC: CSS .wsp-mev — строки на всю ширину листа (Task 432)', () => {
+    test('SRC: CSS .wsp-mev — ЛЕВАЯ часть ряда (растягивается, Task 439)', () => {
         const r = cssRule(INDEX_SRC, '#wsPrintSheet .wsp-mev');
-        // Task 432: flex снят — блок мероприятий на всю ширину, строки
-        // ТЕКУТ вокруг плавающих кодов (рядом — до кромки кодов минус
-        // 10px, ниже — до конца листа), переносятся ТОЛЬКО когда
-        // места не хватает (прежде 0 1 auto Task 431 сжимал колонку
-        // по тексту — правая часть листа пустовала)
-        assertTrue(r.indexOf('flex:') === -1,
-            'мероприятия НЕ в flex-колонке (Task 432: обтекание)');
+        // Task 439: мероприятия — левая часть flex-ряда обёртки,
+        // растягиваются на остаток ширины (коды — справа)
+        assertTrue(r.indexOf('flex: 1 1 auto') !== -1,
+            'блок мероприятий растягивается (левая часть ряда)');
+        assertTrue(r.indexOf('min-width: 0') !== -1,
+            'усадка для переносов текста');
         assertTrue(r.indexOf('margin-top: 0') !== -1,
             'личный отступ сверху снят (отступ — на обёртке)');
         assertTrue(r.indexOf('font-size: 11px') !== -1,
             'шрифт Task 361 (11px) сохранён');
     });
 
-    test('SRC: CSS .wsp-legend — строка-абзац ПОД списком (Task 433)', () => {
+    test('SRC: CSS .wsp-legend — ПРАВЫЙ блок ряда (Task 439)', () => {
         const r = cssRule(INDEX_SRC, '#wsPrintSheet .wsp-legend');
-        // Task 433 (заявка: «расположение кодов в печати верни
-        // обратно»): ВЕРНУЛИ исходную форму «в одну строку» —
-        // флоат и max-width сняты, блок — обычный абзац ПОД
-        // списком мероприятий, растянутый до конца листа
+        // Task 439: коды — ПРАВАЯ часть flex-ряда (справа от
+        // мероприятий), фиксированная ширина блока
+        assertTrue(r.indexOf('flex: 0 0 92mm') !== -1,
+            'блок кодов — фикс. ширина 92mm справа (Task 439)');
+        assertTrue(r.indexOf('margin-top: 0') !== -1,
+            'верхняя линия общая с мероприятиями');
         assertTrue(r.indexOf('float:') === -1,
-            'флоат Task 432 снят (коды — не плавающий столбик)');
-        assertTrue(r.indexOf('max-width') === -1,
-            'кап ширины Task 364 снят');
-        assertTrue(r.indexOf('margin-top: 2.5mm') !== -1,
-            'отступ от списка мероприятий сверху');
+            'флоат Task 432 не вернулся');
         assertTrue(r.indexOf('font-size: 11px') !== -1,
             'шрифт Task 361 (11px) сохранён');
     });
@@ -192,7 +191,7 @@ function sheetHost(opts) {
             '(dt.getDate() < 10 ? "0" : "") + dt.getDate(); },' +
         '_buildEntryIndex: function() { return ' + JSON.stringify(opts.entries || {}) + '; },' +
         '_PENDING: {},' +
-        '_posLabel: function() { return "Слесарь КИПиА"; },' +
+        '_empTipLine: function() { return "смена №1"; },' +
         '_fmtTotalsNum: function(v) { return String(Math.round((v || 0) * 10) / 10).replace(".", ","); },' +
         '_STATUS_CODES: ' + JSON.stringify([
             { code: 'Д', name: 'День (12-час)', color: '#FFE082' },
@@ -285,8 +284,8 @@ describe('Task 364 — VM: ряд мероприятий|кодов в печа�
 // 4. SW — версия кеша
 // ============================================================
 describe('Task 364 — SW: версия кеша', () => {
-    test('SW: CACHE_VERSION = kipia-test-v662', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v662'") !== -1,
+    test('SW: CACHE_VERSION = kipia-test-v663', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
             'SW поднят до v659 (рамка 2px + коды строкой под мероприятиями — Task 433)');
     });
 });

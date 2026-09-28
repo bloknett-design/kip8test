@@ -31,7 +31,7 @@
 //     статус-мероприятия без строки в «Инструктажах»; CSS
 //     .wsp-ev-wrap/.wsp-ev/.wsp-ev-plan; сноска поясняет значок.
 //
-// SW: kipia-test-v662.
+// SW: kipia-test-v663.
 //
 // Запуск: через tests/run-all.js (require './test-task361.js').
 
@@ -94,16 +94,16 @@ describe('Task 361 — SRC: колонка «Сотрудник» по текс�
             'локальная функция измерения');
         assertTrue(b.indexOf("empWmm + 'mm\">Работник</th>'") !== -1,
             'inline ширина на th .wsp-emp (Task 385: работник)');
-        assertTrue(b.indexOf('empWmm < 24') !== -1 && b.indexOf('empWmm > 48') !== -1,
-            'кламп 24–48mm');
+        assertTrue(b.indexOf('empWmm < 12') !== -1 && b.indexOf('empWmm > 48') !== -1,
+            'кламп 12–48mm (Task 439: мин снижен — колонка уже');
     });
 
-    test('SRC: измеряются ФИО и должность печатаемых строк', () => {
+    test('SRC: измеряются ФИО и Тип печатаемых строк (Task 439)', () => {
         const b = stripComments(methodText(WS_CLIENT, '_buildPrintHtml'));
         assertTrue(b.indexOf("viewEmps[wi]['ФИО']") !== -1,
             'ФИО сотрудника');
-        assertTrue(b.indexOf('_posLabel(viewEmps[wi])') !== -1,
-            'должность сотрудника');
+        assertTrue(b.indexOf('_empTipLine(viewEmps[wi])') !== -1,
+            'Тип сотрудника (Task 439: должность из колонки убрана)');
         // шрифты измерения = шрифты печати
         assertTrue(b.indexOf('fioPx = 10.5') !== -1, 'ФИО 10.5px');
         assertTrue(b.indexOf('posPx = 8.5') !== -1, 'должность 8.5px');
@@ -346,7 +346,7 @@ describe('Task 361 — VM: ширина «Сотрудник» по тексту
                 '(dt.getDate() < 10 ? "0" : "") + dt.getDate(); },' +
             '_buildEntryIndex: function() { return {}; },' +
             '_PENDING: {},' +
-            '_posLabel: function() { return "Слесарь КИПиА"; },' +
+            '_empTipLine: function() { return "смена №1"; },' +
             '_fmtTotalsNum: function(v) { return String(Math.round((v || 0) * 10) / 10).replace(".", ","); },' +
             '_STATUS_CODES: ' + JSON.stringify(opts.codes || [
                 { code: 'Д', name: 'День (12-час)', color: '#FFE082' }]) + ',' +
@@ -369,13 +369,13 @@ describe('Task 361 — VM: ширина «Сотрудник» по тексту
         return m ? parseFloat(m[1]) : null;
     }
 
-    test('VM: inline ширина на th .wsp-emp в клампе 24–48 (фолбэк-оценка)', () => {
+    test('VM: inline ширина на th .wsp-emp в клампе 12–48 (Task 439)', () => {
         var html = sheetHost()._buildPrintHtml(
             [{ 'ФИО': 'Иванов Иван Иванович', 'таб_номер': '017' }],
             { byTab: {}, grand: null });
         var w = empWidth(html);
         assertTrue(w !== null, 'inline width есть');
-        assertTrue(w >= 24 && w <= 48, 'в клампе 24–48mm: ' + w);
+        assertTrue(w >= 12 && w <= 48, 'в клампе 12–48mm: ' + w);
         // фолбэк-оценка Node (без canvas): 20 симв × 10.5px × 0.62
         // = 130.2px = 34.5mm + 3.5mm ≈ 38mm (шаг 0.5mm вверх)
         assertEqual(w, 38, 'оценка по символам без canvas');
@@ -404,10 +404,12 @@ describe('Task 361 — VM: ширина «Сотрудник» по тексту
         assertEqual(empWidth(html), 41, 'ширина из canvas measureText');
     });
 
-    test('VM: короткие ФИО — минимум 24mm', () => {
+    test('VM: короткие ФИО — ширина по заголовку «Работник» (Task 439)', () => {
         var html = sheetHost()._buildPrintHtml(
             [{ 'ФИО': 'А', 'таб_номер': '001' }], { byTab: {}, grand: null });
-        assertEqual(empWidth(html), 24, 'кламп-минимум 24mm');
+        // «Работник» 8 симв × 11 × 0.62 = 54.6px = 14.4mm + 3.5 =
+        // 17.95 → шаг 0.5mm вверх = 18mm; Тип «смена №1» короче
+        assertEqual(empWidth(html), 18, 'по заголовку «Работник» — 18mm');
     });
 
     test('VM: очень длинное ФИО — максимум 48mm (переносится)', () => {
@@ -417,12 +419,12 @@ describe('Task 361 — VM: ширина «Сотрудник» по тексту
         assertEqual(empWidth(html), 48, 'кламп-максимум 48mm');
     });
 
-    test('VM: самая длинная строка побеждает (ФИО против должности)', () => {
+    test('VM: самая длинная строка побеждает (заголовок против Типа)', () => {
         var html = sheetHost()._buildPrintHtml(
             [{ 'ФИО': 'А', 'таб_номер': '001' }], { byTab: {}, grand: null });
-        // должность-мок «Слесарь КИПиА» (13 симв × 8.5 × 0.62 =
-        // 68.5px = 18.1mm + 3.5 = 21.6) — меньше минимума 24
-        assertEqual(empWidth(html), 24, 'ФИО «А» + короткая должность → 24mm');
+        // Тип-мок «смена №1» (8 симв × 8.5 × 0.62 = 42.2px =
+        // 11.2mm) — короче заголовка «Работник» (14.4mm)
+        assertEqual(empWidth(html), 18, 'ФИО «А» + короткий Тип → 18mm');
     });
 
     test('VM: дни без inline ширины — остаток делится сам', () => {
@@ -450,7 +452,7 @@ describe('Task 361 — VM: регресс печатного листа', () => 
                 '(dt.getDate() < 10 ? "0" : "") + dt.getDate(); },' +
             '_buildEntryIndex: function() { return {}; },' +
             '_PENDING: {},' +
-            '_posLabel: function() { return "Слесарь КИПиА"; },' +
+            '_empTipLine: function() { return "смена №1"; },' +
             '_fmtTotalsNum: function(v) { return String(Math.round((v || 0) * 10) / 10).replace(".", ","); },' +
             '_STATUS_CODES: [{ code: "Д", name: "День (12-час)", color: "#FFE082" }],' +
             '_calDayOff: function(day) { return day % 7 === 0 || day % 7 === 0; },' +
@@ -484,10 +486,10 @@ describe('Task 361 — VM: регресс печатного листа', () => 
 // ============================================================
 describe('Task 361 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v662', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v662'") !== -1,
-            'CACHE_VERSION = kipia-test-v662 (Task 361 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v663') !== -1,
+    test('SW: кэш поднят до kipia-test-v663', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
+            'CACHE_VERSION = kipia-test-v663 (Task 361 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v664') !== -1,
             'v605 ещё не существует (лишний инкремент)');
     });
 

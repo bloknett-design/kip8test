@@ -55,7 +55,7 @@
 //      xSplit=1/ySplit=5;
 //  14) _savePrintPdf/_savePrintXlsx: скачивание (mime/имя) +
 //      тост; сбой генерации — тост об ошибке, без скачивания.
-//   SW: kipia-test-v662 (главный), v663 — следующий не занят.
+//   SW: kipia-test-v663 (главный), v663 — следующий не занят.
 // ============================================================
 
 const fs = require('fs');
@@ -266,7 +266,7 @@ describe('Task 438 — VM: _buildPrintHtml (формат листа)', () => {
                 '(dt.getDate() < 10 ? "0" : "") + dt.getDate(); },' +
             '_buildEntryIndex: function() { return ' + JSON.stringify(opts.entries || {}) + '; },' +
             '_PENDING: ' + JSON.stringify(opts.pending || {}) + ',' +
-            '_posLabel: function() { return "Слесарь КИПиА, смена 1"; },' +
+            '_empTipLine: function() { return "смена №1"; },' +
             '_fmtTotalsNum: function(v) { return String(Math.round((v || 0) * 10) / 10).replace(".", ","); },' +
             '_STATUS_CODES: ' + JSON.stringify(opts.codes || [
                 { code: 'Д', short: 'день 12ч', name: 'День, плановая 12-часовая смена', color: '#FFE082' },
@@ -391,7 +391,7 @@ describe('Task 438 — VM: модель печатной формы (_printModel
                 '(dt.getDate() < 10 ? "0" : "") + dt.getDate(); },' +
             '_buildEntryIndex: function() { return ' + JSON.stringify(opts.entries || {}) + '; },' +
             '_PENDING: ' + JSON.stringify(opts.pending || {}) + ',' +
-            '_posLabel: function() { return "Слесарь КИПиА, смена 1"; },' +
+            '_empTipLine: function() { return "смена №1"; },' +
             '_STATUS_CODES: ' + JSON.stringify(opts.codes || [
                 { code: 'Д', short: 'день 12ч', name: 'День, плановая 12-часовая смена', color: '#FFE082' },
                 { code: 'Н', short: 'ночь 12ч', name: 'Ночь, плановая 12-часовая смена', color: '#B0BEC5' },
@@ -547,7 +547,7 @@ describe('Task 438 — VM: раскладка страниц PDF (_printPdfLayou
         }
         const rows = [];
         for (let r = 0; r < nRows; r++) {
-            rows.push({ fio: 'Работник №' + (r + 1), pos: '', tab: String(r),
+            rows.push({ fio: 'Работник №' + (r + 1), tip: '', tab: String(r),
                         cells: [], inAgg: true, work: 21, overDays: 0 });
         }
         const events = [];
@@ -727,7 +727,7 @@ describe('Task 438 — VM: книга Excel (_buildTabelWorkbook)', () => {
                 '2026-09-04|017': { 'статус': '.' }
             }) + '; },' +
             '_PENDING: {},' +
-            '_posLabel: function() { return "Слесарь КИПиА, смена 1"; },' +
+            '_empTipLine: function() { return "смена №1"; },' +
             '_STATUS_CODES: ' + JSON.stringify([
                 { code: 'Д', short: 'день 12ч', name: 'День, плановая 12-часовая смена', color: '#FFE082' },
                 { code: 'ОТ', short: 'отпуск', name: 'Отпуск, ежегодный основной оплачиваемый отпуск', color: '#ECEFF1' },
@@ -901,7 +901,7 @@ describe('Task 438 — VM: кнопки «Сохранить PDF» / «Сохр�
             '_printModel: function() {' +
             '    return { year: 2026, month: 9, view: "full",' +
             '             days: [{ d: 1, dow: "Вт", off: false }],' +
-            '             rows: [{ fio: "Иванов И. И.", pos: "", tab: "017",' +
+            '             rows: [{ fio: "Иванов И. И.", tip: "", tab: "017",' +
             '                      cells: [], inAgg: true, work: 21,' +
             '                      overDays: 3 }],' +
             '             events: [], codes: [] };' +
@@ -988,15 +988,15 @@ describe('Task 438 — VM: кнопки «Сохранить PDF» / «Сохр�
 // ============================================================
 describe('Task 438 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v662', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v662'") !== -1,
-            'CACHE_VERSION = kipia-test-v662 (Task 438 — печать/PDF/Excel)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v663') !== -1,
+    test('SW: кэш поднят до kipia-test-v663', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
+            'CACHE_VERSION = kipia-test-v663 (Task 438 — печать/PDF/Excel)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v664') !== -1,
             'лишний инкремент (v663) не сделан');
     });
 
     test('SW: в index.html нет захардкоженной версии кэша', () => {
-        assertFalse(INDEX_SRC.indexOf('kipia-test-v662') !== -1,
+        assertFalse(INDEX_SRC.indexOf('kipia-test-v663') !== -1,
             'клиент не знает номер кэша (версией управляет sw.js)');
     });
 });

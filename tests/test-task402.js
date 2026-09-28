@@ -162,13 +162,15 @@ describe('Task 402 — SRC: рендер ячейки (тип — третья �
             'колонка ФИО — по самому широкому тексту из ТРЁХ строк');
     });
 
-    test('печать НЕ меняется: _posLabel остаётся у _buildPrintHtml', () => {
+    test('печать использует Тип (Task 439): _empTipLine, _posLabel удалён', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_buildPrintHtml'));
-        assertTrue(fn.indexOf('this._posLabel(') !== -1,
-            'печатная форма — прежний склеенный формат (Task 361)');
+        assertTrue(fn.indexOf('this._empTipLine(') !== -1,
+            'печатная форма — Тип под ФИО (Task 439: «только ФИО и Тип»)');
         const grid = stripComments(methodText(INDEX_SRC, '_renderGrid'));
         assertTrue(grid.indexOf('this._posLabel(') === -1,
-            'сетка _posLabel больше не использует (только _empPosLine/_empTipLine)');
+            'сетка _posLabel не использует (только _empPosLine/_empTipLine)');
+        assertFalse(INDEX_SRC.indexOf('_posLabel: function') !== -1,
+            'метод _posLabel удалён (Task 439 — потребителей не осталось)');
     });
 });
 
@@ -400,12 +402,12 @@ describe('Task 402 — сервер: WorkSchedule.gs (SRC)', () => {
 // 7. SW — версия кэша
 // ============================================================
 describe('Task 402 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v662 (Task 402)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v662'") !== -1,
+    test('CACHE_VERSION = kipia-test-v663 (Task 402)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
             'фронтенд менялся — кэш поднят до v629');
     });
     test('guard: v630 отсутствует (следующий бамп)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v663') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v664') === -1,
             'v630 ещё не существует (guard следующего бампа)');
     });
 });

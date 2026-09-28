@@ -43,7 +43,7 @@
 //      ПЕРВЫМ в ряду .ws-act-row, ✕ — ПОСЛЕ; отпускные строки
 //      несут ws-emp-vac; _buildPrintHtml — мероприятия ПЕРВЫМИ,
 //      коды ПОД ними, записи с [дата][текст].
-//   SW: kipia-test-v662 (главный), v660 — прежней нет.
+//   SW: kipia-test-v663 (главный), v660 — прежней нет.
 // ============================================================
 
 const fs = require('fs');
@@ -95,17 +95,18 @@ function mockDoc(els) {
 // ============================================================
 describe('Task 433 — SRC: печать (секция вертикальная, коды строкой)', () => {
 
-    test('.wsp-bottom — блочный поток: флоат и flex сняты', () => {
+    test('.wsp-bottom — РЯД: мероприятия слева, коды справа (Task 439)', () => {
         const r = ruleBlock('#wsPrintSheet .wsp-bottom {');
         assertTrue(r !== '', 'правило обёртки есть');
-        assertTrue(r.indexOf('display:') === -1,
-            'обёртка — обычный блочный поток (Task 433)');
+        // Task 439 (заявка: «блок с кодами размести справа от
+        // мероприятий»): вертикальная секция Task 433 снова стала
+        // РЯДОМ (flex; флоат Task 432 не вернулся)
+        assertTrue(r.indexOf('display: flex') !== -1,
+            'обёртка — flex-ряд (Task 439)');
         assertTrue(r.indexOf('flow-root') === -1,
-            'флоат-обёртка Task 432 снята');
-        assertTrue(r.indexOf('flex') === -1,
-            'flex-ряда Task 364–431 нет');
-        assertTrue(r.indexOf('gap') === -1,
-            'gap снят — столбиков рядом больше нет');
+            'флоат-обёртка Task 432 не вернулась');
+        assertTrue(r.indexOf('gap: 6mm') !== -1,
+            'зазор между мероприятиями и кодами (Task 439)');
         assertTrue(r.indexOf('margin-top: 2.5mm') !== -1,
             'отступ от таблицы (Task 364) жив');
     });
@@ -147,15 +148,19 @@ describe('Task 433 — SRC: печать (секция вертикальная,
             'точка цвета не сжимается');
     });
 
-    test('.wsp-legend — коды вернулись исходной строкой ПОД списком', () => {
+    test('.wsp-legend — ПРАВЫЙ блок ряда (Task 439: справа от мероприятий)', () => {
         const r = ruleBlock('#wsPrintSheet .wsp-legend {');
         assertTrue(r !== '', 'правило кодов есть');
         assertTrue(r.indexOf('float') === -1,
-            'флоат Task 432 снят');
+            'флоат Task 432 не вернулся');
         assertTrue(r.indexOf('max-width') === -1,
-            'кап ширины Task 364 снят');
-        assertTrue(r.indexOf('margin-top: 2.5mm') !== -1,
-            'отступ строки кодов от списка мероприятий');
+            'кап ширины Task 364 не вернулся');
+        // Task 439: коды — СПРАВА от мероприятий (фикс. ширина,
+        // общая верхняя линия), прежний отступ «под списком» снят
+        assertTrue(r.indexOf('flex: 0 0 92mm') !== -1,
+            'фиксированная ширина блока кодов (Task 439)');
+        assertTrue(r.indexOf('margin-top: 0') !== -1,
+            'верхняя линия общая с мероприятиями (Task 439)');
         assertTrue(r.indexOf('font-size: 11px') !== -1,
             'шрифт Task 361 (11px) жив');
     });
@@ -405,9 +410,9 @@ describe('Task 433 — VM: строка инструктажа и строка �
 // ============================================================
 describe('Task 433 — SW: версия кеша', () => {
     test('v659 (главный), v660 — прежней нет', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v662'") !== -1,
-            'SW кэш kipia-test-v662');
-        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
+            'SW кэш kipia-test-v663');
+        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v664'") !== -1,
             'v660 ещё не существует (guard следующего бампа)');
     });
 });

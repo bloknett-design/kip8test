@@ -20,7 +20,7 @@
 //     экранная сетка (бейджи мероприятий на экране остаются —
 //     классы ws-ev-badge/ws-ev-wrap, Task 314).
 //
-// SW: kipia-test-v662.
+// SW: kipia-test-v663.
 //
 // Запуск: через tests/run-all.js (require './test-task343.js').
 
@@ -236,7 +236,7 @@ describe('Task 343 — _buildPrintHtml (VM)', () => {
                 '(dt.getDate() < 10 ? "0" : "") + dt.getDate(); },' +
             '_buildEntryIndex: function() { return ' + JSON.stringify(opts.entries || {}) + '; },' +
             '_PENDING: ' + JSON.stringify(opts.pending || {}) + ',' +
-            '_posLabel: function() { return "Слесарь КИПиА, смена 1"; },' +
+            '_empTipLine: function() { return "смена №1"; },' +
             '_fmtTotalsNum: function(v) { return String(Math.round((v || 0) * 10) / 10).replace(".", ","); },' +
             '_STATUS_CODES: ' + JSON.stringify(opts.codes || [
                 { code: 'Д', name: 'День (12-час)', color: '#FFE082' },
@@ -302,10 +302,10 @@ describe('Task 343 — _buildPrintHtml (VM)', () => {
 // ============================================================
 describe('Task 343 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v662', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v662'") !== -1,
-            'CACHE_VERSION = kipia-test-v662 (Task 343 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v663') !== -1,
+    test('SW: кэш поднят до kipia-test-v663', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
+            'CACHE_VERSION = kipia-test-v663 (Task 343 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v664') !== -1,
             'лишний инкремент (v582) не сделан');
     });
 

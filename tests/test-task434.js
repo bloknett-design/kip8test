@@ -46,7 +46,7 @@
 //      дата_начала; записи других работников не мешают;
 //   8) _renderEventsPopup: подстрока окна — «05.09.2026»,
 //      ISO-даты «2026-09-05» в окне НЕТ.
-//   SW: kipia-test-v662 (главный), v660 — прежней нет.
+//   SW: kipia-test-v663 (главный), v660 — прежней нет.
 // ============================================================
 
 const fs = require('fs');
@@ -150,8 +150,12 @@ describe('Task 434 — SRC: печать (коды в две колонки)', (
             'флоат Task 432 не вернулся');
         assertTrue(r.indexOf('max-width') === -1,
             'кап ширины Task 364 не вернулся');
-        assertTrue(r.indexOf('margin-top: 2.5mm') !== -1,
-            'отступ от списка мероприятий (Task 433) жив');
+        // Task 439: коды — ПРАВЫЙ блок ряда (справа от
+        // мероприятий), верхняя линия общая — отступа сверху нет
+        assertTrue(r.indexOf('flex: 0 0 92mm') !== -1,
+            'фиксированная ширина блока кодов (Task 439)');
+        assertTrue(r.indexOf('margin-top: 0') !== -1,
+            'верхняя линия общая с мероприятиями (Task 439)');
         assertTrue(r.indexOf('font-size: 11px') !== -1,
             'шрифт Task 361 (11px) жив');
     });
@@ -461,9 +465,9 @@ describe('Task 434 — VM: окно «Мероприятия в этот ден�
 // ============================================================
 describe('Task 434 — SW: версия кеша', () => {
     test('v659 (главный), v660 — прежней нет', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v662'") !== -1,
-            'SW кэш kipia-test-v662');
-        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
+            'SW кэш kipia-test-v663');
+        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v664'") !== -1,
             'v660 ещё не существует (guard следующего бампа)');
     });
 });
