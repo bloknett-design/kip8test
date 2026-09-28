@@ -261,9 +261,9 @@ describe('Task 407 — SRC: клиент', () => {
             'размеры окна карточки (.ws-wcard)');
     });
 
-    test('SW поднят (SW_VERSION = kipia-test-v663)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v663') !== -1,
-            'CACHE_VERSION в sw.js — kipia-test-v663');
+    test('SW поднят (SW_VERSION = kipia-test-v664)', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v664') !== -1,
+            'CACHE_VERSION в sw.js — kipia-test-v664');
     });
 });
 
@@ -510,6 +510,8 @@ describe('Task 407 — VM: карточка', () => {
             methodText(INDEX_SRC, '_lastExam1000Date') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearMax') + ',\n' +
+        methodText(INDEX_SRC, '_vacYearRange') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
             methodText(INDEX_SRC, '_instrShortOf') + ',\n' +

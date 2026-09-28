@@ -82,8 +82,11 @@ describe('Task 375 — SRC: печать табеля, коды справа н�
             'флоат-обёртка Task 432 снята');
         assertTrue(r.indexOf('gap: 5mm') === -1,
             'прежний 5mm убран из правила');
-        assertTrue(r.indexOf('gap: 10px') === -1,
-            'зазор 10px между столбиками больше не нужен (столбиков нет)');
+        // Task 440 (заявка: «коды справа от мероприятий на
+        // расстоянии друг от друга 10px»): ряд Task 439 — зазор
+        // между блоками СНОВА ровно 10px (как в Task 375)
+        assertTrue(r.indexOf('gap: 10px') !== -1,
+            'зазор между блоками ряда — ровно 10px (Task 440)');
         const leg = cssRule(INDEX_SRC, '#wsPrintSheet .wsp-legend');
         assertTrue(leg.indexOf('float:') === -1,
             'коды — не плавающий столбик (Task 439: правый блок ряда)');
@@ -571,13 +574,13 @@ describe('Task 375 — SRC: сервер FlowmeterArchive.gs', () => {
 // ============================================================
 describe('Task 375 — SW кэш', () => {
 
-    test('SW: CACHE_VERSION = kipia-test-v663', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
+    test('SW: CACHE_VERSION = kipia-test-v664', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v664'") !== -1,
             'версия кэша поднята до v604');
     });
 
     test('SW: нет v603 (старая) и нет v605 (двойной бамп)', () => {
         assertTrue(SW_SRC.indexOf('kipia-test-v603') === -1, 'старая версия не осталась');
-        assertTrue(SW_SRC.indexOf('kipia-test-v664') === -1, 'двойного бампа не было');
+        assertTrue(SW_SRC.indexOf('kipia-test-v665') === -1, 'двойного бампа не было');
     });
 });

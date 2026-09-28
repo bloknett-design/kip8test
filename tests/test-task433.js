@@ -43,7 +43,7 @@
 //      ПЕРВЫМ в ряду .ws-act-row, ✕ — ПОСЛЕ; отпускные строки
 //      несут ws-emp-vac; _buildPrintHtml — мероприятия ПЕРВЫМИ,
 //      коды ПОД ними, записи с [дата][текст].
-//   SW: kipia-test-v663 (главный), v660 — прежней нет.
+//   SW: kipia-test-v664 (главный), v660 — прежней нет.
 // ============================================================
 
 const fs = require('fs');
@@ -105,8 +105,9 @@ describe('Task 433 — SRC: печать (секция вертикальная,
             'обёртка — flex-ряд (Task 439)');
         assertTrue(r.indexOf('flow-root') === -1,
             'флоат-обёртка Task 432 не вернулась');
-        assertTrue(r.indexOf('gap: 6mm') !== -1,
-            'зазор между мероприятиями и кодами (Task 439)');
+        // Task 440: зазор ряда — ровно 10px (прежде 6mm)
+        assertTrue(r.indexOf('gap: 10px') !== -1,
+            'зазор между мероприятиями и кодами — 10px (Task 440)');
         assertTrue(r.indexOf('margin-top: 2.5mm') !== -1,
             'отступ от таблицы (Task 364) жив');
     });
@@ -336,6 +337,8 @@ describe('Task 433 — VM: строка инструктажа и строка �
             methodText(INDEX_SRC, '_lastExam1000Date') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearMax') + ',\n' +
+        methodText(INDEX_SRC, '_vacYearRange') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
             methodText(INDEX_SRC, '_renderInstrSection') + ',\n' +
@@ -410,9 +413,9 @@ describe('Task 433 — VM: строка инструктажа и строка �
 // ============================================================
 describe('Task 433 — SW: версия кеша', () => {
     test('v659 (главный), v660 — прежней нет', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
-            'SW кэш kipia-test-v663');
-        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v664'") !== -1,
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v664'") !== -1,
+            'SW кэш kipia-test-v664');
+        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v665'") !== -1,
             'v660 ещё не существует (guard следующего бампа)');
     });
 });

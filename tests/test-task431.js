@@ -32,7 +32,7 @@
 //      ✎ — левее колонки; зритель — колонка с одной галочкой
 //      состояния (выполнено); запись без id — без колонки;
 //      попап (!asBlocks) — БЕЗ галочки, прежний порядок ✎/✕.
-//   SW: kipia-test-v663.
+//   SW: kipia-test-v664.
 // ============================================================
 
 const fs = require('fs');
@@ -73,16 +73,20 @@ function mockDoc(els) {
 // ============================================================
 describe('Task 431 — SRC: печать (коды справа от мероприятий)', () => {
 
-    test('.wsp-mev: ЛЕВАЯ часть ряда — flex 1 1 auto (Task 439)', () => {
+    test('.wsp-mev: ЛЕВАЯ часть ряда — flex 0 1 auto (Task 431 → 440)', () => {
         const i = INDEX_SRC.indexOf('#wsPrintSheet .wsp-mev {');
         assertTrue(i !== -1, 'правило .wsp-mev есть');
         const r = INDEX_SRC.slice(i, INDEX_SRC.indexOf('}', i));
-        // Task 439 (заявка: «блок с кодами размести справа от
-        // мероприятий»): мероприятия — растягиваемая ЛЕВАЯ часть
-        // flex-ряда (правая — блок кодов 92mm); возвращённый
-        // flex 1 1 auto (как в Task 364–431) снова уместен
-        assertTrue(r.indexOf('flex: 1 1 auto') !== -1,
-            'растяжение мероприятий на остаток ширины (Task 439)');
+        // Task 440 (заявка: «коды справа от мероприятий на
+        // расстоянии друг от друга 10px» — как в 431 «сейчас между
+        // ними очень большое расстояние»): flex-grow СНЯТ (Task 439
+        // временно вернул 1 1 auto) — коды встают в 10px от ПРАВОГО
+        // КРАЯ ТЕКСТА мероприятий; перенос длинных текстов жив
+        // (flex-shrink + min-width: 0)
+        assertTrue(r.indexOf('flex: 0 1 auto') !== -1,
+            'мероприятия НЕ растягиваются — коды за текстом (Task 440)');
+        assertTrue(r.indexOf('min-width: 0') !== -1,
+            'min-width — усадка для переносов текста');
     });
 
     test('.wsp-legend: коды — ПРАВЫЙ блок ряда (Task 439)', () => {
@@ -284,6 +288,8 @@ describe('Task 431 — VM: строка инструктажа (кнопки)', 
             methodText(INDEX_SRC, '_lastExam1000Date') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearMax') + ',\n' +
+        methodText(INDEX_SRC, '_vacYearRange') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
             methodText(INDEX_SRC, '_renderInstrSection') + ',\n' +
@@ -394,7 +400,7 @@ describe('Task 431 — VM: строка инструктажа (кнопки)', 
 // ============================================================
 describe('Task 431 — SW версия', () => {
     test('v657', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v663') !== -1,
-            'SW кэш kipia-test-v663');
+        assertTrue(SW_SRC.indexOf('kipia-test-v664') !== -1,
+            'SW кэш kipia-test-v664');
     });
 });

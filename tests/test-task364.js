@@ -13,7 +13,7 @@
 //     обёртки на всю ширину; каждая запись/код — отдельной
 //     строкой своего столбика (как в Task 360).
 //
-// SW: kipia-test-v663.
+// SW: kipia-test-v664.
 //
 // Запуск: через tests/run-all.js (require './test-task364.js').
 
@@ -105,19 +105,23 @@ describe('Task 364 — SRC: wsp-bottom на печати', () => {
             'обёртка — flex-ряд (Task 439)');
         assertTrue(r.indexOf('align-items: flex-start') !== -1,
             'блоки выровнены по верхней линии');
-        assertTrue(r.indexOf('gap: 6mm') !== -1, 'зазор между блоками');
+        // Task 440 (заявка: «на расстоянии друг от друга 10px»):
+        // зазор ряда — ровно 10px (прежде 6mm Task 439)
+        assertTrue(r.indexOf('gap: 10px') !== -1, 'зазор между блоками — 10px (Task 440)');
         assertTrue(r.indexOf('flow-root') === -1,
             'флоат-обёртки Task 432 не вернулась');
         assertTrue(r.indexOf('margin-top: 2.5mm') !== -1,
             'отступ от таблицы на обёртке жив');
     });
 
-    test('SRC: CSS .wsp-mev — ЛЕВАЯ часть ряда (растягивается, Task 439)', () => {
+    test('SRC: CSS .wsp-mev — ЛЕВАЯ часть ряда (без растяжения, Task 440)', () => {
         const r = cssRule(INDEX_SRC, '#wsPrintSheet .wsp-mev');
-        // Task 439: мероприятия — левая часть flex-ряда обёртки,
-        // растягиваются на остаток ширины (коды — справа)
-        assertTrue(r.indexOf('flex: 1 1 auto') !== -1,
-            'блок мероприятий растягивается (левая часть ряда)');
+        // Task 439: мероприятия — левая часть flex-ряда обёртки
+        // (коды — справа). Task 440: flex-grow СНЯТ — коды встают в
+        // 10px от текста мероприятий (семантика Task 431), длинные
+        // тексты переносятся (flex-shrink + min-width: 0)
+        assertTrue(r.indexOf('flex: 0 1 auto') !== -1,
+            'блок мероприятий НЕ растягивается — коды за текстом (Task 440)');
         assertTrue(r.indexOf('min-width: 0') !== -1,
             'усадка для переносов текста');
         assertTrue(r.indexOf('margin-top: 0') !== -1,
@@ -284,8 +288,8 @@ describe('Task 364 — VM: ряд мероприятий|кодов в печа�
 // 4. SW — версия кеша
 // ============================================================
 describe('Task 364 — SW: версия кеша', () => {
-    test('SW: CACHE_VERSION = kipia-test-v663', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
+    test('SW: CACHE_VERSION = kipia-test-v664', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v664'") !== -1,
             'SW поднят до v659 (рамка 2px + коды строкой под мероприятиями — Task 433)');
     });
 });

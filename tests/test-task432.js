@@ -39,7 +39,7 @@
 //      ✕ (внутри .ws-act-row), ряд — внутри колонки, галочка —
 //      выше ряда; зритель — колонка с одной галочкой состояния;
 //      запись без id — без колонки; попап — без галочки/колонки.
-//   SW: kipia-test-v663 (главный), v659 — прежней нет.
+//   SW: kipia-test-v664 (главный), v659 — прежней нет.
 // ============================================================
 
 const fs = require('fs');
@@ -96,8 +96,9 @@ describe('Task 432/433 — SRC: печать (Task 433: флоат снят, с�
             'флоат-обёртка Task 432 не вернулась');
         assertTrue(r.indexOf('display: flex') !== -1,
             'обёртка — flex-ряд (Task 439)');
-        assertTrue(r.indexOf('gap: 6mm') !== -1,
-            'зазор между блоками ряда (Task 439)');
+        // Task 440: зазор ряда — ровно 10px (прежде 6mm)
+        assertTrue(r.indexOf('gap: 10px') !== -1,
+            'зазор между блоками ряда — 10px (Task 440)');
         assertTrue(r.indexOf('margin-top: 2.5mm') !== -1,
             'отступ от таблицы не тронут (Task 364)');
     });
@@ -129,11 +130,13 @@ describe('Task 432/433 — SRC: печать (Task 433: флоат снят, с�
             'Task 434: длинное наименование переносится внутри колонки');
     });
 
-    test('.wsp-mev — ЛЕВАЯ часть ряда (flex 1 1 auto, Task 439)', () => {
+    test('.wsp-mev — ЛЕВАЯ часть ряда (flex 0 1 auto, Task 440)', () => {
         const r = ruleBlock('#wsPrintSheet .wsp-mev {');
         assertTrue(r !== '', 'правило мероприятий есть');
-        assertTrue(r.indexOf('flex: 1 1 auto') !== -1,
-            'мероприятия растягиваются на остаток ряда (Task 439)');
+        // Task 440: flex-grow снят — коды в 10px от ТЕКСТА
+        // мероприятий (семантика Task 431), не у правого края листа
+        assertTrue(r.indexOf('flex: 0 1 auto') !== -1,
+            'мероприятия НЕ растягиваются (Task 440)');
         assertTrue(r.indexOf('min-width: 0') !== -1,
             'min-width — усадка для переносов текста (Task 439)');
     });
@@ -312,6 +315,8 @@ describe('Task 432/433 — VM: строка инструктажа (Task 433: �
             methodText(INDEX_SRC, '_lastExam1000Date') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearMax') + ',\n' +
+        methodText(INDEX_SRC, '_vacYearRange') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
             methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
             methodText(INDEX_SRC, '_renderInstrSection') + ',\n' +
@@ -429,9 +434,9 @@ describe('Task 432/433 — VM: строка инструктажа (Task 433: �
 // ============================================================
 describe('Task 432 — SW версия', () => {
     test('v658 (главный), v659 — прежней нет', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v663') !== -1,
-            'SW кэш kipia-test-v663');
-        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v664'") !== -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v664') !== -1,
+            'SW кэш kipia-test-v664');
+        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v665'") !== -1,
             'v659 ещё не существует (guard следующего бампа)');
     });
 });

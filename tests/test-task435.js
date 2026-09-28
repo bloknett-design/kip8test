@@ -29,7 +29,7 @@
 //      от друга: мероприятия 2025 (fam 0) + инструктажи 2023
 //      (fam 1) одновременно, записи каждого блока — своего года;
 //      попап (не asBlocks) — год шахматки у обоих блоков.
-//   SW: kipia-test-v663 (главный), v660 — прежней нет.
+//   SW: kipia-test-v664 (главный), v660 — прежней нет.
 // ============================================================
 
 const fs = require('fs');
@@ -89,16 +89,18 @@ describe('Task 435 — SRC: раздельные годы блоков карт�
         const fn = stripComments(methodText(INDEX_SRC, '_wtabYearOf'));
         assertTrue(fn.indexOf('_wtabYearOf: function(tabNo, fam)') !== -1,
             'сигнатура с fam');
-        assertTrue(fn.indexOf("var store = (fam === 1) ? this._wtabYearInstr : this._wtabYear;") !== -1,
-            'fam 1 — хранилище инструктажей, fam 0/не задан — мероприятий');
+        assertTrue(fn.indexOf("var store = (fam === 1) ? this._wtabYearInstr") !== -1 &&
+                   fn.indexOf("(fam === 2) ? this._wtabYearVac : this._wtabYear;") !== -1,
+            'fam 1 — инструктажи, fam 2 — отпуска (Task 440), fam 0/не задан — мероприятия');
     });
 
     test('_wtabYearShift: fam 1 — только _wtabYearInstr', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_wtabYearShift'));
         assertTrue(fn.indexOf('_wtabYearShift: function(tabNo, delta, fam)') !== -1,
             'сигнатура с fam');
-        assertTrue(fn.indexOf("var store = (fam === 1) ? '_wtabYearInstr' : '_wtabYear';") !== -1,
-            'смена года пишет ТОЛЬКО в своё хранилище');
+        assertTrue(fn.indexOf("var store = (fam === 1) ? '_wtabYearInstr'") !== -1 &&
+                   fn.indexOf("(fam === 2) ? '_wtabYearVac' : '_wtabYear';") !== -1,
+            'смена года пишет ТОЛЬКО в своё хранилище (fam 2 — отпуска, Task 440)');
         assertTrue(fn.indexOf('this._wtabYearOf(tabNo, fam)') !== -1,
             'год и границы — по своему семейству');
     });
@@ -107,8 +109,8 @@ describe('Task 435 — SRC: раздельные годы блоков карт�
         const fn = stripComments(methodText(INDEX_SRC, '_wtabYearNav'));
         assertTrue(fn.indexOf('_wtabYearNav: function(tabNo, year, fam)') !== -1,
             'сигнатура с fam');
-        assertTrue(fn.indexOf("var famArg = (fam === 1) ? ', 1' : '';") !== -1,
-            'третий аргумент — только у навигатора инструктажей');
+        assertTrue(fn.indexOf("var famArg = (fam === 1 || fam === 2) ? ', ' + fam : '';") !== -1,
+            'третий аргумент — у навигаторов инструктажей (1) и отпусков (2, Task 440)');
         assertTrue(fn.indexOf("+ famArg + ')\">‹</span>'") !== -1,
             'левая стрелка передаёт famArg');
         assertTrue(fn.indexOf("+ famArg + ')\">›</span>'") !== -1,
@@ -167,6 +169,8 @@ function yearHost(stores) {
     return new Function('document', 'return ({' +
         methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
         methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearMax') + ',\n' +
+        methodText(INDEX_SRC, '_vacYearRange') + ',\n' +
         methodText(INDEX_SRC, '_wtabYearShift') + ',\n' +
         methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
         methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
@@ -327,6 +331,8 @@ function cardHost(stores) {
         methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
         methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
         methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearMax') + ',\n' +
+        methodText(INDEX_SRC, '_vacYearRange') + ',\n' +
         methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
         methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
         methodText(INDEX_SRC, '_isInstrType') + ',\n' +
@@ -414,10 +420,10 @@ describe('Task 435 — VM: карточка — блоки не влияют д�
 // ============================================================
 // 4. SW — версия кэша
 // ============================================================
-describe('Task 435 — SW: версия kipia-test-v663', () => {
-    test('CACHE_VERSION = kipia-test-v663, прежней v660 нет', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
-            'CACHE_VERSION = kipia-test-v663');
+describe('Task 435 — SW: версия kipia-test-v664', () => {
+    test('CACHE_VERSION = kipia-test-v664, прежней v660 нет', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v664'") !== -1,
+            'CACHE_VERSION = kipia-test-v664');
         assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v660'") !== -1,
             'v660 как активная версия больше не существует');
     });

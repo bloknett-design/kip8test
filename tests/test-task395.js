@@ -232,6 +232,8 @@ function pageHost(opts) {
         methodText(INDEX_SRC, '_renderWorkerCard') + ',\n' +
         methodText(INDEX_SRC, '_wtabYearOf') + ',\n' +
         methodText(INDEX_SRC, '_wtabYearMin') + ',\n' +
+        methodText(INDEX_SRC, '_wtabYearMax') + ',\n' +
+        methodText(INDEX_SRC, '_vacYearRange') + ',\n' +
         methodText(INDEX_SRC, '_wtabYearNav') + ',\n' +
         methodText(INDEX_SRC, '_wtabYearRecords') + ',\n' +
         methodText(INDEX_SRC, '_renderWorkerCardPanels') + ',\n' +
@@ -379,9 +381,9 @@ describe('Task 395 — VM: гейты страницы по матрице', () 
 // ============================================================
 describe('Task 395 — SW-кэш', () => {
     test('SW поднят до v623 (Task 395 — фронтенд менялся)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v663') !== -1,
-            'sw.js: CACHE_VERSION kipia-test-v663');
-        assertTrue(SW_SRC.indexOf('kipia-test-v664') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v664') !== -1,
+            'sw.js: CACHE_VERSION kipia-test-v664');
+        assertTrue(SW_SRC.indexOf('kipia-test-v665') === -1,
             'двойного бампа нет (v624 не существует)');
     });
 });

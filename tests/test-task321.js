@@ -712,8 +712,11 @@ describe('Task 321 — панель: переключатели', () => {
 
     test('JS: loadGrid(force) сбрасывает годовой кэш и синхронизирует месяц', () => {
         const lg = methodText(WS_CLIENT, 'loadGrid');
-        assertTrue(lg.indexOf('if (force) this._YEAR_DATA = null;') !== -1,
-            'принудительное обновление сбрасывает кэш года');
+        // Task 440: force сбрасывает и кэш года, и пул соседних
+        // годов отпусков (навигация блока «Отпуска»)
+        assertTrue(lg.indexOf('this._YEAR_DATA = null;') !== -1 &&
+                   lg.indexOf('this._VAC_YEARS = {};') !== -1,
+            'принудительное обновление сбрасывает кэш года и пул годов отпусков');
         assertTrue(lg.indexOf('_YEAR_DATA.months[self._month] = self._ENTRIES') !== -1,
             'свежий месяц попадает в годовой кэш без новой сети');
     });
@@ -1092,10 +1095,10 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
 // 11. SW: версия кэша
 // ============================================================
 describe('Task 321 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v663 (Task 323)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
-            'CACHE_VERSION = kipia-test-v663');
-        assertFalse(SW_SRC.indexOf('kipia-test-v664') !== -1,
+    test('SW: кэш поднят до kipia-test-v664 (Task 323)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v664'") !== -1,
+            'CACHE_VERSION = kipia-test-v664');
+        assertFalse(SW_SRC.indexOf('kipia-test-v665') !== -1,
             'v561 не существует (один инкремент на Task 321)');
     });
 });

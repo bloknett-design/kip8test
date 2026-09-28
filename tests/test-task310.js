@@ -38,7 +38,7 @@
 //       ДО вызова addVacation (на сервер не уходит);
 //     — подсказка шторки упоминает ст. 120 и лимит 42 дня.
 //   Тултип плана отпуска в ячейке: чистые дни + «(−N праздн.)».
-//   SW: kipia-test-v663.
+//   SW: kipia-test-v664.
 //
 // Запуск: через tests/run-all.js (require './test-task310.js').
 
@@ -248,7 +248,8 @@ describe('Task 310 — карточка: чистые дни периодов (T
 
     test('JS: дни периодов чистые (_vacNetDaysInYear), пометка праздников; итог года УБРАН', () => {
         const rep = fnBody(INDEX_SRC, '_renderWorkerCard: function');
-        assertTrue(rep.indexOf('_vacNetDaysInYear(vv, this._year)') !== -1,
+        // Task 440: дни — по году БЛОКА «Отпуска» (wYearVac)
+        assertTrue(rep.indexOf('_vacNetDaysInYear(vv, wYearVac)') !== -1,
             'дни периода в году — чистые (за вычетом праздников)');
         assertTrue(rep.indexOf('(−') !== -1 && rep.indexOf(' праздн.)') !== -1,
             'строка периода помечает вычтенные праздники');
@@ -376,9 +377,9 @@ describe('Task 310/311 — тултип плана отпуска в ячейк�
 
 describe('Task 310 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v663', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v663');
+    test('SW: версия кэша kipia-test-v664', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v664'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v664');
         // Task 311 поднял версию до v550 — v549 (версия Task 310) ушла
         assertFalse(SW_SRC.indexOf('kipia-test-v549') !== -1,
             'старой версии v549 нет');

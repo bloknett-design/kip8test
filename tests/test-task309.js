@@ -42,7 +42,7 @@
 //   "Ошибка: self.loadTrainings is not a function"»):
 //     — вызовы удалённых страниц loadTrainings()/loadVacations()
 //       больше не встречаются; вместо них loadGrid().
-//   SW: kipia-test-v663.
+//   SW: kipia-test-v664.
 //
 // Запуск: через tests/run-all.js (require './test-task309.js').
 
@@ -170,10 +170,12 @@ describe('Task 309 — карточка сотрудника у колонки �
 
     test('JS: отпуска в карточке — фильтр по году, чистые дни, БЕЗ итога года', () => {
         const rp = fnBody(INDEX_SRC, '_renderWorkerCard: function');
-        assertTrue(rp.indexOf('this._vacDaysInYear(v, this._year)') !== -1,
-            'периоды фильтруются по году шахматки');
-        assertTrue(rp.indexOf('this._vacNetDaysInYear(vv, this._year)') !== -1,
-            'дни периода — чистые (за вычетом праздников, Task 310)');
+        // Task 440: навигация ‹год› блока «Отпуска» — фильтр и дни
+        // по году БЛОКА wYearVac (попап — год шахматки)
+        assertTrue(rp.indexOf('this._vacDaysInYear(v, wYearVac)') !== -1,
+            'периоды фильтруются по году блока (Task 440)');
+        assertTrue(rp.indexOf('this._vacNetDaysInYear(vv, wYearVac)') !== -1,
+            'дни периода — чистые (за вычетом праздников, Task 310), по году блока');
         // Task 311: строка-итог «Итого в году» убрана из карточки
         assertFalse(rp.indexOf('Итого в году: ') !== -1,
             'итог-строка года убрана (Task 311)');
@@ -388,9 +390,9 @@ describe('Task 309 — регресс-фиксы Task 308 (loadTrainings/loadVac
 
 describe('Task 309 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v663', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v663');
+    test('SW: версия кэша kipia-test-v664', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v664'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v664');
         assertFalse(SW_SRC.indexOf('kipia-test-v547') !== -1,
             'старой версии v547 нет');
     });

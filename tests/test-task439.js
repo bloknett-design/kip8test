@@ -46,7 +46,7 @@
 //      канонический слот «» (нет дубля «Выходной, плановый
 //      выходной день»); справочник только с «.» рендерит
 //      «Выходного» из «.» (регресс Task 387);
-//   SW: kipia-test-v663 (главный), v664 — следующий не занят.
+//   SW: kipia-test-v664 (главный), v664 — следующий не занят.
 // ============================================================
 
 const fs = require('fs');
@@ -151,20 +151,25 @@ describe('Task 439 — SRC: коды справа от мероприятий (C
         return INDEX_SRC.slice(i, INDEX_SRC.indexOf('}', i) + 1);
     }
 
-    test('CSS: .wsp-bottom — flex-ряд с зазором 6mm', () => {
+    test('CSS: .wsp-bottom — flex-ряд с зазором 10px (Task 440)', () => {
         const r = ruleBlock('#wsPrintSheet .wsp-bottom {');
         assertTrue(r.indexOf('display: flex') !== -1, 'обёртка — гибкий ряд');
         assertTrue(r.indexOf('align-items: flex-start') !== -1,
             'блоки прижаты к общей верхней линии');
-        assertTrue(r.indexOf('gap: 6mm') !== -1, 'зазор между блоками 6mm');
+        // Task 440 (заявка: «на расстоянии друг от друга 10px»)
+        assertTrue(r.indexOf('gap: 10px') !== -1,
+            'зазор между блоками — ровно 10px');
+        assertTrue(r.indexOf('gap: 6mm') === -1,
+            'прежний зазор 6mm убран');
         assertTrue(r.indexOf('margin-top: 2.5mm') !== -1,
             'отступ секции от таблицы жив (Task 364)');
     });
 
     test('CSS: .wsp-mev — левая часть ряда, .wsp-legend — правая 92mm', () => {
         const mev = ruleBlock('#wsPrintSheet .wsp-mev {');
-        assertTrue(mev.indexOf('flex: 1 1 auto') !== -1,
-            'мероприятия растягиваются на остаток ширины (слева)');
+        // Task 440: flex-grow снят (было 1 1 auto) — коды за текстом
+        assertTrue(mev.indexOf('flex: 0 1 auto') !== -1,
+            'мероприятия НЕ растягиваются — коды за текстом (Task 440)');
         assertTrue(mev.indexOf('min-width: 0') !== -1, 'усадка для переносов текста');
         const leg = ruleBlock('#wsPrintSheet .wsp-legend {');
         assertTrue(leg.indexOf('flex: 0 0 92mm') !== -1,
@@ -427,8 +432,9 @@ describe('Task 439 — VM: раскладка PDF (коды рядом с мер
     test('VM: раскладка несёт геометрию зон (codeW/colGap/evW)', () => {
         const lay = layoutHost()._printPdfLayout(fakeModel(2, 1, 2));
         assertEqual(lay.codeW, 235, 'ширина правой зоны кодов');
-        assertEqual(lay.colGap, 12, 'зазор между мероприятиями и кодами');
-        assertEqual(lay.evW, lay.W - 2 * lay.M - 235 - 12,
+        // Task 440: зазор 10px = 7.5pt (1px = 0.75pt)
+        assertEqual(lay.colGap, 7.5, 'зазор между мероприятиями и кодами — 7.5pt (= 10px)');
+        assertEqual(lay.evW, lay.W - 2 * lay.M - 235 - 7.5,
             'левая зона мероприятий = остаток ширины');
         // переопределение зон через opts
         const lay2 = layoutHost()._printPdfLayout(fakeModel(2, 1, 2),
@@ -464,8 +470,12 @@ describe('Task 439 — SRC: отрисовка PDF (_printPdfPaintPage)', () => 
 
     test('SRC: коды — ПРАВАЯ зона (codeX), мероприятия — левая с переносом', () => {
         const b = stripComments(methodText(WS_CLIENT, '_printPdfPaintPage'));
-        assertTrue(b.indexOf('var codeX = x0 + CW - codeW;') !== -1,
-            'правая зона кодов: codeX = x0 + CW − codeW');
+        // Task 440: codeX — за фактическим краем текста мероприятий
+        // (evRightMax + colGap, ограничен правым краем листа);
+        // край листа остаётся ОГРАНИЧЕНИЕМ (x0 + CW - codeW в min)
+        assertTrue(b.indexOf('codeX = Math.min(evRightMax + colGap,') !== -1 &&
+                   b.indexOf('x0 + CW - codeW)') !== -1,
+            'зона кодов: за текстом мероприятий, не правее края листа');
         assertTrue(b.indexOf("ctx.fillText('Коды:', codeX, y + 8)") !== -1,
             'заголовок «Коды:» рисуется в правой зоне');
         assertTrue(b.indexOf('var botY = y;') !== -1 &&
@@ -631,8 +641,10 @@ describe('Task 439 — VM: Excel (Тип в колонке A, коды в кол
         const sheet = Buffer.from(
             z.files.filter(f => f.name === 'xl/worksheets/sheet1.xml')[0].data)
             .toString('utf8');
-        assertTrue(/<c r="D\d+" t="inlineStr" s="1"><is><t>Коды:<\/t><\/is><\/c>/
-            .test(sheet), '«Коды:» — колонка D со стилем шапки');
+        // Task 440: «Коды:» — стиль 8 (шапка + indent 1 — зазор
+        // ~7px от текста мероприятий, Excel-эквивалент 10px)
+        assertTrue(/<c r="D\d+" t="inlineStr" s="8"><is><t>Коды:<\/t><\/is><\/c>/
+            .test(sheet), '«Коды:» — колонка D со стилем шапки и отступом');
         assertTrue(sheet.indexOf('Мероприятия · сентябрь 2026 · 1') !== -1,
             'заголовок мероприятий — колонка A той же строки');
     });
@@ -821,15 +833,15 @@ describe('Task 439 — VM: _renderCellPopup (дедуп «.»)', () => {
 // ============================================================
 describe('Task 439 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v663', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
-            'CACHE_VERSION = kipia-test-v663 (Task 439 — печать/попап)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v664') !== -1,
+    test('SW: кэш поднят до kipia-test-v664', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v664'") !== -1,
+            'CACHE_VERSION = kipia-test-v664 (Task 439 — печать/попап)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v665') !== -1,
             'лишний инкремент (v664) не сделан');
     });
 
     test('SW: в index.html нет захардкоженной версии кэша', () => {
-        assertFalse(INDEX_SRC.indexOf('kipia-test-v663') !== -1,
+        assertFalse(INDEX_SRC.indexOf('kipia-test-v664') !== -1,
             'клиент не знает номер кэша (версией управляет sw.js)');
     });
 });

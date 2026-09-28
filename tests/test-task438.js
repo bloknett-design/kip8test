@@ -55,7 +55,7 @@
 //      xSplit=1/ySplit=5;
 //  14) _savePrintPdf/_savePrintXlsx: скачивание (mime/имя) +
 //      тост; сбой генерации — тост об ошибке, без скачивания.
-//   SW: kipia-test-v663 (главный), v663 — следующий не занят.
+//   SW: kipia-test-v664 (главный), v663 — следующий не занят.
 // ============================================================
 
 const fs = require('fs');
@@ -988,15 +988,15 @@ describe('Task 438 — VM: кнопки «Сохранить PDF» / «Сохр�
 // ============================================================
 describe('Task 438 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v663', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
-            'CACHE_VERSION = kipia-test-v663 (Task 438 — печать/PDF/Excel)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v664') !== -1,
+    test('SW: кэш поднят до kipia-test-v664', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v664'") !== -1,
+            'CACHE_VERSION = kipia-test-v664 (Task 438 — печать/PDF/Excel)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v665') !== -1,
             'лишний инкремент (v663) не сделан');
     });
 
     test('SW: в index.html нет захардкоженной версии кэша', () => {
-        assertFalse(INDEX_SRC.indexOf('kipia-test-v663') !== -1,
+        assertFalse(INDEX_SRC.indexOf('kipia-test-v664') !== -1,
             'клиент не знает номер кэша (версией управляет sw.js)');
     });
 });
