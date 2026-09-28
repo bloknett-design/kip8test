@@ -32,7 +32,7 @@
 //      ✎ — левее колонки; зритель — колонка с одной галочкой
 //      состояния (выполнено); запись без id — без колонки;
 //      попап (!asBlocks) — БЕЗ галочки, прежний порядок ✎/✕.
-//   SW: kipia-test-v665.
+//   SW: kipia-test-v666.
 // ============================================================
 
 const fs = require('fs');
@@ -73,58 +73,52 @@ function mockDoc(els) {
 // ============================================================
 describe('Task 431 — SRC: печать (коды справа от мероприятий)', () => {
 
-    test('.wsp-mev: ЛЕВАЯ часть ряда — flex 0 1 auto (Task 431 → 440)', () => {
+    test('.wsp-mev: без ограничений — вся ширина листа (Task 442)', () => {
         const i = INDEX_SRC.indexOf('#wsPrintSheet .wsp-mev {');
         assertTrue(i !== -1, 'правило .wsp-mev есть');
         const r = INDEX_SRC.slice(i, INDEX_SRC.indexOf('}', i));
-        // Task 440 (заявка: «коды справа от мероприятий на
-        // расстоянии друг от друга 10px» — как в 431 «сейчас между
-        // ними очень большое расстояние»): flex-grow СНЯТ (Task 439
-        // временно вернул 1 1 auto) — коды встают в 10px от ПРАВОГО
-        // КРАЯ ТЕКСТА мероприятий; перенос длинных текстов жив
-        // (flex-shrink + min-width: 0)
-        assertTrue(r.indexOf('flex: 0 1 auto') !== -1,
-            'мероприятия НЕ растягиваются — коды за текстом (Task 440)');
-        assertTrue(r.indexOf('min-width: 0') !== -1,
-            'min-width — усадка для переносов текста');
+        // Task 442: столбца кодов справа больше нет — ограничения
+        // зоны мероприятий (flex/min-width из Tasks 439/440) сняты
+        assertTrue(r.indexOf('flex:') === -1,
+            'flex-ограничений нет (кодов справа больше нет, Task 442)');
+        assertTrue(r.indexOf('min-width') === -1,
+            'усадки зоны нет (зоны больше нет)');
     });
 
-    test('.wsp-legend: коды — ПРАВЫЙ блок ряда (Task 439)', () => {
+    test('.wsp-legend: правило УДАЛЕНО (Task 442)', () => {
         const i = INDEX_SRC.indexOf('#wsPrintSheet .wsp-legend {');
-        assertTrue(i !== -1, 'правило кодов есть');
-        const r = INDEX_SRC.slice(i, INDEX_SRC.indexOf('}', i));
-        // Task 439 (заявка: «блок с кодами размести справа от
-        // мероприятий»): коды — ПРАВАЯ часть flex-ряда фикс. ширины
-        assertTrue(r.indexOf('float:') === -1,
-            'флоат не вернулся (коды — не плавающий столбик)');
-        assertTrue(r.indexOf('flex: 0 0 92mm') !== -1,
-            'фиксированная ширина блока кодов (Task 439)');
-        assertTrue(r.indexOf('margin-top: 0') !== -1,
-            'отступ строки кодов от списка мероприятий сверху');
+        assertTrue(i === -1,
+            'правила .wsp-legend нет — блок кодов удалён (Task 442)');
+        assertTrue(INDEX_SRC.indexOf('#wsPrintSheet .wsp-lg {') === -1,
+            'правила .wsp-lg тоже нет');
     });
 
-    test('wsp-foot удалена; закрытия секций — три оператора подряд (Task 438)', () => {
+    test('wsp-foot удалена; секция одна — мероприятия (Task 442)', () => {
         // Task 438 (заявка: «нижний текст убери»): сноска wsp-foot
-        // УДАЛЕНА — но структура секций не изменилась
+        // УДАЛЕНА; Task 442: легенда кодов удалена — в обёртке
+        // осталась единственная секция мероприятий
         const f = INDEX_SRC.indexOf("html += '<div class=\"wsp-foot\">");
         assertTrue(f === -1, 'сноска wsp-foot не строится (Task 438)');
         const iLegend = INDEX_SRC.indexOf("html += '<div class=\"wsp-legend\">");
-        assertTrue(iLegend !== -1, 'легенда кодов строится');
-        // Task 434 жив: закрытия сетки-колонок, легенды и обёртки —
-        // ТРИ последовательных оператора (сноска шла после них)
-        const close1 = INDEX_SRC.indexOf("html += '</div>';", iLegend);
+        assertTrue(iLegend === -1,
+            'легенда кодов НЕ строится (Task 442)');
+        const iMev = INDEX_SRC.indexOf("html += '<div class=\"wsp-mev\">");
+        assertTrue(iMev !== -1, 'секция мероприятий строится');
+        const open = INDEX_SRC.lastIndexOf("html += '<div class=\"wsp-bottom\">'", iMev);
+        assertTrue(open !== -1 && open < iMev,
+            'обёртка wsp-bottom открывается раньше секции');
+        // закрытие секции и обёртки — два последовательных оператора
+        // (между ними — только комментарий Task 442, сырой исходник)
+        const close1 = INDEX_SRC.indexOf("html += '</div>';", iMev);
         const close2 = INDEX_SRC.indexOf("html += '</div>';", close1 + 1);
-        const close3 = INDEX_SRC.indexOf("html += '</div>';", close2 + 1);
-        assertTrue(close1 !== -1 && close2 !== -1 && close3 !== -1 &&
-                   close2 - close1 < 200 && close3 - close2 < 200,
-            'закрытия сетки/легенды/обёртки — подряд (Task 434 жив)');
-        const open = INDEX_SRC.lastIndexOf("html += '<div class=\"wsp-bottom\">'", iLegend);
-        assertTrue(open !== -1 && open < iLegend,
-            'обёртка wsp-bottom открывается раньше секций');
-        // внутри обёртки — ОБА блока: мероприятия + коды
-        const wrap = INDEX_SRC.slice(open, close3);
-        assertTrue(wrap.indexOf('wsp-mev') !== -1 && wrap.indexOf('wsp-legend') !== -1,
-            'в обёртке — список мероприятий и перечень кодов');
+        assertTrue(close1 !== -1 && close2 !== -1 && close2 - close1 < 400,
+            'закрытия секции/обёртки — подряд');
+        const wrap = INDEX_SRC.slice(open, close2);
+        // разметка легенды (в комментарии Task 442 слово
+        // wsp-legend встречается — ищем именно РАЗМЕТКУ)
+        assertTrue(wrap.indexOf('wsp-mev') !== -1 &&
+                   wrap.indexOf('<div class="wsp-legend">') === -1,
+            'в обёртке — только список мероприятий (Task 442)');
     });
 });
 
@@ -400,7 +394,7 @@ describe('Task 431 — VM: строка инструктажа (кнопки)', 
 // ============================================================
 describe('Task 431 — SW версия', () => {
     test('v657', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v665') !== -1,
-            'SW кэш kipia-test-v665');
+        assertTrue(SW_SRC.indexOf('kipia-test-v666') !== -1,
+            'SW кэш kipia-test-v666');
     });
 });

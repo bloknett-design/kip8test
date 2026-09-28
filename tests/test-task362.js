@@ -18,7 +18,7 @@
 //     печататься (баг из заявки); сноска листа ссылается на
 //     перечень выше.
 //
-// SW: kipia-test-v665.
+// SW: kipia-test-v666.
 //
 // Запуск: через tests/run-all.js (require './test-task362.js').
 
@@ -81,15 +81,13 @@ describe('Task 362 — SRC: мероприятия только печатаем
             'запись чужого вида пропускается');
     });
 
-    test('SRC: коды мероприятий месяца попадают в usedCodes', () => {
+    test('SRC: пометка кодов мероприятий в usedCodes УДАЛЕНА (Task 442)', () => {
         const b = stripComments(methodText(WS_CLIENT, '_buildPrintHtml'));
-        assertTrue(b.indexOf('_trainingCodeOf(evList[eci][\'тип\'])') !== -1,
-            'код типа записи «Инструктажей»');
-        assertTrue(b.indexOf('usedCodes[evCd] = true') !== -1,
-            'код мероприятия помечается в usedCodes');
-        // пустой код (неизвестный тип) не помечается
-        assertTrue(b.indexOf('if (evCd) usedCodes[evCd] = true;') !== -1,
-            'только непустой код');
+        assertTrue(b.indexOf('usedCodes[evCd] = true') === -1,
+            'сбора usedCodes нет — перечня кодов больше нет');
+        // код типа по-прежнему читается для ТЕКСТА строки списка
+        assertTrue(b.indexOf('_trainingCodeOf(ev[\'тип\'])') !== -1,
+            'код типа живёт в тексте мероприятий (список ниже таблицы)');
     });
 });
 
@@ -283,67 +281,41 @@ describe('Task 362 — VM: перечень кодов месяца', () => {
         '2026-09-10|023': { 'статус': 'Д8' }
     };
 
-    test('VM: дневной вид — «ПЗ — Проверка знаний» печатается (баг заявки)', () => {
+    test('VM: перечень кодов месяца УДАЛЁН (Task 442)', () => {
+        // прежде: коды мероприятий/сетки попадали в перечень;
+        // теперь перечня нет вовсе — при любых записях
         var html = sheetHost({ view: 'day', trainings: TRAININGS, entries: ENTRIES })
             ._buildPrintHtml([EMPS[1]], AGG);
-        var lg = legendSection(html);
-        assertTrue(lg.indexOf('ПЗ — Проверка знаний') !== -1,
-            'наименование кода ПЗ из списка мероприятий (записи сетки нет)');
-        assertTrue(lg.indexOf('ОБ — Обучение') !== -1,
-            'код ОБ мероприятия тоже объяснён');
-        assertTrue(lg.indexOf('Д8 — День 8-час') !== -1,
-            'код сетки дневного на месте');
+        assertTrue(html.indexOf('wsp-legend') === -1,
+            'легенды кодов нет (Task 442: столбец удалён)');
+        assertTrue(html.indexOf('ПЗ — Проверка знаний') === -1,
+            'расшифровки ПЗ нет');
+        assertTrue(html.indexOf('Д8 — День 8-час') === -1,
+            'расшифровки Д8 нет');
+        // список мероприятий при этом жив и несёт коди в тексте
+        var sec = mevSection(html);
+        assertTrue(sec.indexOf('ПЗ · Проверка знаний промбезопасности') !== -1,
+            'мероприятие ПЗ — в списке под таблицей');
     });
 
-    test('VM: дневной вид — коды сменного НЕ печатаются', () => {
-        var html = sheetHost({ view: 'day', trainings: TRAININGS, entries: ENTRIES })
-            ._buildPrintHtml([EMPS[1]], AGG);
-        var lg = legendSection(html);
-        assertTrue(lg.indexOf('И — Инструктаж') === -1,
-            'код И сменного не в дневном виде');
-        assertTrue(lg.indexOf('Н — Ночь') === -1,
-            'код Н сменного не в дневном виде');
-        assertTrue(lg.indexOf('Д — День (12-час)') === -1,
-            'код Д сменного не в дневном виде');
-    });
-
-    test('VM: сменный вид — код И из мероприятия, ПЗ/ОБ нет', () => {
+    test('VM: сменный вид — легенды нет, мероприятия живы (Task 442)', () => {
         var html = sheetHost({ view: 'shift', trainings: TRAININGS, entries: ENTRIES })
             ._buildPrintHtml([EMPS[0]], AGG);
-        var lg = legendSection(html);
-        assertTrue(lg.indexOf('И — Инструктаж') !== -1,
-            'код И мероприятия сменного объяснён');
-        assertTrue(lg.indexOf('Д — День (12-час)') !== -1 &&
-                   lg.indexOf('Н — Ночь (12-час)') !== -1,
-            'коды сетки сменного на месте');
-        assertTrue(lg.indexOf('ПЗ —') === -1 && lg.indexOf('ОБ —') === -1,
-            'коды дневного в сменном виде НЕ печатаются');
+        assertTrue(html.indexOf('wsp-legend') === -1, 'легенды нет');
+        var sec = mevSection(html);
+        assertTrue(sec.indexOf('И · Повторный инструктаж') !== -1,
+            'мероприятие сменного на месте');
     });
 
-    test('VM: полный вид — коды всех мероприятий месяца', () => {
+    test('VM: полный вид — легенды нет (Task 442)', () => {
         var html = sheetHost({ view: 'full', trainings: TRAININGS, entries: ENTRIES })
             ._buildPrintHtml(EMPS, AGG);
-        var lg = legendSection(html);
-        assertTrue(lg.indexOf('И — Инструктаж') !== -1 &&
-                   lg.indexOf('ОБ — Обучение') !== -1 &&
-                   lg.indexOf('ПЗ — Проверка знаний') !== -1,
-            'полный вид: И/ОБ/ПЗ объяснены');
+        assertTrue(html.indexOf('wsp-legend') === -1,
+            'полный вид: перечня кодов тоже нет');
+        assertTrue(html.indexOf('Коды:') === -1, 'заголовка нет');
     });
 
-    test('VM: мероприятие вне месяца код в перечень НЕ даёт', () => {
-        var trs = [
-            { 'таб_номер': '017', 'тип': 'инструктаж',
-              'дата_начала': '2026-10-05', 'тема': 'Октябрь' }];
-        var html = sheetHost({ view: 'shift', trainings: trs, entries: ENTRIES })
-            ._buildPrintHtml([EMPS[0]], AGG);
-        var lg = legendSection(html);
-        assertTrue(lg.indexOf('И — Инструктаж') === -1,
-            'код И октября в сентябрьском перечне отсутствует');
-        assertTrue(lg.indexOf('Д — День (12-час)') !== -1,
-            'коды сетки сентября живы');
-    });
-
-    test('VM: неизвестный тип мероприятия — строка без кода, перечень не растёт', () => {
+    test('VM: неизвестный тип мероприятия — строка без кода (Task 442)', () => {
         var trs = [
             { 'таб_номер': '023', 'тип': 'иное',
               'дата_начала': '2026-09-12', 'тема': 'Встреча' }];
@@ -352,23 +324,20 @@ describe('Task 362 — VM: перечень кодов месяца', () => {
         var sec = mevSection(html);
         assertTrue(sec.indexOf('Встреча · Петров Пётр Петрович') !== -1,
             'строка без кода печатается (тема · ФИО)');
-        var lg = legendSection(html);
-        assertTrue(lg.indexOf('wsp-lg') === -1 || lg.indexOf('Д8 —') !== -1,
-            'перечень не упал');
-        assertTrue(lg.indexOf('И —') === -1 && lg.indexOf('ПЗ —') === -1 &&
-                   lg.indexOf('ОБ —') === -1,
-            'пустой код типа ничего не добавил');
+        assertTrue(html.indexOf('wsp-legend') === -1,
+            'легенды нет — «добавлять» код некуда (Task 442)');
     });
 
-    test('VM: статус-мероприятие сетки по-прежнему даёт код (без «Инструктажей»)', () => {
+    test('VM: статус-мероприятие сетки — пустая ячейка без бейджа (Task 442)', () => {
         // запись сетки И у дневного БЕЗ строки в «Инструктажах» —
-        // код обязан попасть в перечень из цикла строк (Task 360)
+        // ячейка пустая: ни кода, ни значка (Task 442)
         var entries = { '2026-09-10|023': { 'статус': 'ПЗ' } };
         var html = sheetHost({ view: 'day', trainings: [], entries: entries })
             ._buildPrintHtml([EMPS[1]], AGG);
-        var lg = legendSection(html);
-        assertTrue(lg.indexOf('ПЗ — Проверка знаний') !== -1,
-            'код статус-мероприятия сетки объяснён');
+        assertTrue(html.indexOf('wsp-ev') === -1,
+            'бейджей в печати нет (Task 442)');
+        assertTrue(html.indexOf('wsp-legend') === -1,
+            'перечня кодов нет');
     });
 });
 
@@ -387,8 +356,8 @@ describe('Task 362 — VM: регресс прежних фич печати', (
         assertTrue(html.indexOf('<table class="wsp-grid">') !== -1, 'таблица');
         assertTrue(html.indexOf('<div class="wsp-mev">') !== -1,
             'секция мероприятий (Task 360)');
-        assertTrue(html.indexOf('<div class="wsp-legend">') !== -1,
-            'перечень кодов (Task 360)');
+        assertTrue(html.indexOf('<div class="wsp-legend">') === -1,
+            'перечня кодов НЕТ (Task 442)');
         assertTrue(html.indexOf('wsp-sum') === -1, 'итоговой строки нет (Task 343)');
         assertTrue(html.indexOf('wsp-foot') === -1,
             'сноски нет (Task 438)');
@@ -412,10 +381,10 @@ describe('Task 362 — VM: регресс прежних фич печати', (
 // ============================================================
 describe('Task 362 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v665', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v665'") !== -1,
-            'CACHE_VERSION = kipia-test-v665 (Task 362 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v666') !== -1,
+    test('SW: кэш поднят до kipia-test-v666', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v666'") !== -1,
+            'CACHE_VERSION = kipia-test-v666 (Task 362 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v667') !== -1,
             'v605 ещё не существует (лишний инкремент)');
     });
 

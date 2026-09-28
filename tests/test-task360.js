@@ -28,7 +28,7 @@
 //   • CSS @media print: .wsp-mev-item/.wsp-lg — display: block
 //     (один столбик) + page-break-inside: avoid.
 //
-// SW: kipia-test-v665.
+// SW: kipia-test-v666.
 //
 // Запуск: через tests/run-all.js (require './test-task360.js').
 
@@ -118,24 +118,19 @@ describe('Task 360 — SRC: секция мероприятий в печати'
             'префикс wsp-ev не используется в секции мероприятий (бейджи ячеек Task 361 — в _printCell)');
     });
 
-    test('SRC: порядок секций — таблица → обёртка(мероприятия→коды)', () => {
+    test('SRC: порядок секций — таблица → обёртка(мероприятия)', () => {
         const b = stripComments(methodText(WS_CLIENT, '_buildPrintHtml'));
         const iTable = b.indexOf("'</tbody></table>'");
         const iMev = b.indexOf('<div class="wsp-mev">');
-        const iLegend = b.indexOf('<div class="wsp-legend">');
         const iFoot = b.indexOf('<div class="wsp-foot">');
-        assertTrue(iTable !== -1 && iMev !== -1 && iLegend !== -1,
-            'все секции на месте');
+        assertTrue(iTable !== -1 && iMev !== -1,
+            'таблица и секция мероприятий на месте');
         assertTrue(iFoot === -1, 'сноски wsp-foot нет (Task 438)');
         assertTrue(iTable < iMev, 'мероприятия ПОД графиком');
-        // Task 433 (заявка: «расположение кодов в печати верни
-        // обратно»): нижняя секция снова ВЕРТИКАЛЬНАЯ — список
-        // мероприятий ПЕРВЫМ, коды — строкой-абзацем ПОД ним
-        // (флоат Task 432 строил коды первыми в DOM)
-        assertTrue(iMev < iLegend, 'перечень кодов — ПОД списком мероприятий'
-            + ' (Task 433: вертикальная секция, флоат снят)');
-        // Task 438: сноски после кодов больше нет — лист заканчивается
-        // перечнем кодов
+        // Task 442: перечень кодов УДАЛЁН — секция одна, лист
+        // заканчивается списком мероприятий
+        assertTrue(b.indexOf('wsp-legend') === -1,
+            'легенды кодов нет (Task 442: столбец удалён)');
     });
 });
 
@@ -144,34 +139,14 @@ describe('Task 360 — SRC: секция мероприятий в печати'
 // ============================================================
 describe('Task 360 — SRC: перечень кодов месяца', () => {
 
-    test('SRC: usedCodes собирается по эффективным записям строк', () => {
+    test('SRC: usedCodes и легенда УДАЛЕНЫ (Task 442)', () => {
         const b = stripComments(methodText(WS_CLIENT, '_buildPrintHtml'));
-        assertTrue(b.indexOf('var usedCodes = {}') !== -1,
-            'карта кодов месяца');
-        assertTrue(b.indexOf("usedCodes[effEntry['статус']]") !== -1,
-            'код отмечается по эффективной записи ячейки');
-    });
-
-    test('SRC: легенда фильтруется по usedCodes, порядок — справочник', () => {
-        const b = stripComments(methodText(WS_CLIENT, '_buildPrintHtml'));
-        const iFilter = b.indexOf('if (!usedCodes[codes[ci].code]');
-        const iWykh = b.indexOf("!(codes[ci].code === '' && usedCodes['.'])");
-        const iLoop = b.indexOf('for (var ci = 0; ci < codes.length; ci++)');
-        assertTrue(iFilter !== -1, 'коды вне месяца пропускаются');
-        assertTrue(iWykh !== -1, 'Task 387: легаси-«.» раскрывается строкой «Выходного»');
-        assertTrue(iLoop !== -1 && iFilter > iLoop,
-            'фильтр внутри цикла справочника (порядок = справочник)');
-    });
-
-    test('SRC: легаси-код вне справочника — в конце, без цвета/имени', () => {
-        const b = stripComments(methodText(WS_CLIENT, '_buildPrintHtml'));
-        assertTrue(b.indexOf('var legacy = [];') !== -1,
-            'список легаси-кодов');
-        assertTrue(b.indexOf('legacy.sort()') !== -1,
-            'легаси сортируются');
-        const iLegacy = b.indexOf('var legacy = [];');
-        const iLegend = b.indexOf('<div class="wsp-legend">');
-        assertTrue(iLegacy > iLegend, 'легаси добавляются ПОСЛЕ кодов справочника');
+        assertTrue(b.indexOf('var usedCodes = {}') === -1,
+            'карты кодов месяца нет — перечню некуда собираться');
+        assertTrue(b.indexOf('var legacy = [];') === -1,
+            'легаси-кодов нет');
+        assertTrue(b.indexOf('wsp-lg') === -1,
+            'записей легенды нет');
     });
 });
 
@@ -220,35 +195,14 @@ describe('Task 360 — печатный CSS (один столбик)', () => {
             'строка не рвётся между страницами');
     });
 
-    test('SRC: .wsp-lg — коды в ДВЕ КОЛОНКИ (Task 434: под названием «Коды:»)', () => {
+    test('SRC: правила легенды .wsp-lg/.wsp-legend-* УДАЛЕНЫ (Task 442)', () => {
         const block = printCss();
-        const i = block.indexOf('#wsPrintSheet .wsp-lg {');
-        assertTrue(i !== -1, 'правило .wsp-lg есть');
-        const rule = block.slice(i, block.indexOf('}', i) + 1);
-        // Task 434 (заявка: «коды на печати сделать в две колонки
-        // под названием "Коды:"»): заголовок «Коды:» — отдельной
-        // строкой СВЕРХУ, под ним сетка-ДВЕ-КОЛОНКИ .wsp-legend-cols
-        // (grid 1fr 1fr) на всю ширину листа; каждая запись-код —
-        // своя строка колонки, длинное наименование переносится
-        // ВНУТРИ своей колонки (строка Task 433 и столбик Task 360–431
-        // сняты)
-        const t = block.indexOf('#wsPrintSheet .wsp-legend-t {');
-        assertTrue(t !== -1, 'правило заголовка .wsp-legend-t есть');
-        const tRule = block.slice(t, block.indexOf('}', t) + 1);
-        assertTrue(tRule.indexOf('display: block') !== -1,
-            'заголовок «Коды:» — отдельной строкой сверху');
-        const c = block.indexOf('#wsPrintSheet .wsp-legend-cols {');
-        assertTrue(c !== -1, 'правило сетки .wsp-legend-cols есть');
-        const cRule = block.slice(c, block.indexOf('}', c) + 1);
-        assertTrue(cRule.indexOf('display: grid') !== -1 &&
-                   cRule.indexOf('grid-template-columns: 1fr') !== -1,
-            'одна колонка на всю ширину блока кодов (Task 441)');
-        assertTrue(rule.indexOf('display: block') !== -1,
-            'каждый код — своя строка колонки (не инлайн)');
-        assertTrue(rule.indexOf('white-space: normal') !== -1,
-            'длинное наименование переносится ВНУТРИ колонки');
-        assertTrue(rule.indexOf('break-inside: avoid') !== -1,
-            'запись кода не рвётся между колонками/страницами');
+        assertTrue(block.indexOf('#wsPrintSheet .wsp-lg {') === -1,
+            'правила .wsp-lg нет (столбец кодов удалён)');
+        assertTrue(block.indexOf('#wsPrintSheet .wsp-legend-t {') === -1,
+            'правила заголовка «Коды:» нет');
+        assertTrue(block.indexOf('#wsPrintSheet .wsp-legend-cols {') === -1,
+            'правила сетки кодов нет');
     });
 
     test('SRC: точка цвета мероприятия печатается принудительно', () => {
@@ -469,91 +423,43 @@ describe('Task 360 — VM: перечень кодов месяца', () => {
     ];
     var AGG = { byTab: {}, grand: null };
 
-    function legendSection(html) {
-        var i = html.indexOf('<div class="wsp-legend">');
-        return html.slice(i, html.indexOf('</div>', i));
-    }
-
-    test('VM: только коды месяца — Д есть, Н/ОТ НЕ используются', () => {
+    // Task 442: легенда кодов удалена — legendSection больше не
+    // нужна; проверяем ОТСУТСТВИЕ перечня на листе
+    test('VM: перечень кодов на листе НЕТ (Task 442)', () => {
         var entries = {
             '2026-09-02|017': { 'статус': 'Д' },
             '2026-09-03|031': { 'статус': 'Д' },
             '2026-09-04|017': { 'статус': '.' }
         };
         var html = sheetHost({ entries: entries })._buildPrintHtml(EMPS, AGG);
-        var lg = legendSection(html);
-        assertTrue(lg.indexOf('Д — День (12-час)') !== -1, 'код Д месяца');
-        assertTrue(lg.indexOf('. — Плановый выходной') !== -1, 'код «.» месяца');
-        assertTrue(lg.indexOf('Н — Ночь') === -1, 'неиспользуемый Н НЕ печатается');
-        assertTrue(lg.indexOf('ОТ — Отпуск') === -1, 'неиспользуемый ОТ НЕ печатается');
+        assertTrue(html.indexOf('wsp-legend') === -1,
+            'легенды кодов нет (столбец удалён, Task 442)');
+        assertTrue(html.indexOf('Д — День (12-час)') === -1,
+            'расшифровки кода Д нет');
+        assertTrue(html.indexOf('Коды:') === -1, 'заголовка «Коды:» нет');
+        assertTrue(html.indexOf('Мероприятия · ') !== -1,
+            'список мероприятий жив (Task 360)');
     });
 
-    test('VM: порядок кодов — как в справочнике', () => {
-        var entries = {
-            '2026-09-02|017': { 'статус': 'ОТ' },
-            '2026-09-03|017': { 'статус': 'Н' },
-            '2026-09-04|017': { 'статус': 'Д' }
-        };
-        var html = sheetHost({ entries: entries })._buildPrintHtml(EMPS, AGG);
-        var lg = legendSection(html);
-        var iD = lg.indexOf('Д —');
-        var iN = lg.indexOf('Н —');
-        var iO = lg.indexOf('ОТ —');
-        assertTrue(iD !== -1 && iN !== -1 && iO !== -1, 'все три кода месяца');
-        assertTrue(iD < iN && iN < iO, 'порядок справочника: Д, Н, ОТ');
-    });
-
-    test('VM: локальная правка добавляет код, __delete убирает', () => {
-        var entries = { '2026-09-02|017': { 'статус': 'Д' } };
-        // правка 03.09 → ОТ (код появляется), удаление 02.09 (код Д исчезает)
-        var pending = {
-            '2026-09-03|017': { 'статус': 'ОТ' },
-            '2026-09-02|017': { '__delete': true }
-        };
-        var html = sheetHost({ entries: entries, pending: pending })
-            ._buildPrintHtml(EMPS, AGG);
-        var lg = legendSection(html);
-        assertTrue(lg.indexOf('ОТ — Отпуск') !== -1,
-            'код локальной правки попадает в перечень');
-        assertTrue(lg.indexOf('Д —') === -1,
-            'удалённая запись исключает код Д');
-    });
-
-    test('VM: легаси-код вне справочника — в конце, только код', () => {
-        var entries = {
-            '2026-09-02|017': { 'статус': 'Д' },
-            '2026-09-03|017': { 'статус': 'ZZ' }
-        };
-        var html = sheetHost({ entries: entries })._buildPrintHtml(EMPS, AGG);
-        var lg = legendSection(html);
-        var iD = lg.indexOf('Д —');
-        var iZ = lg.indexOf('>ZZ<');
-        assertTrue(iZ !== -1, 'легаси-код печатается');
-        assertTrue(lg.indexOf('ZZ —') === -1, 'без имени (нет в справочнике)');
-        assertTrue(iD !== -1 && iZ > iD, 'легаси-код ПОСЛЕ кодов справочника');
-    });
-
-    test('VM: записей нет — «Коды:» без строк (структура жива, регресс 343)', () => {
+    test('VM: пустой месяц записей — легенды нет, лист валиден', () => {
         var html = sheetHost()._buildPrintHtml(EMPS, AGG);
-        var lg = legendSection(html);
-        assertTrue(lg.indexOf('Коды:') !== -1, 'заголовок перечня жив');
-        assertTrue(lg.indexOf('wsp-lg') === -1 || lg.indexOf('<i') === -1,
-            'строк кодов нет (все статусы месяца отсутствуют)');
+        assertTrue(html.indexOf('wsp-legend') === -1,
+            'легенды нет и без записей (Task 442)');
+        assertTrue(html.indexOf('нет мероприятий в этом месяце') !== -1,
+            'заглушка мероприятий жива (Task 360)');
     });
 
-    test('VM: печатаемые строки определяют коды (вид — не все сотрудники)', () => {
-        // только Иванов печатается — его коды в перечне, код
-        // Сидорова (единственный Н) НЕ попадает
+    test('VM: печатаемые строки больше не влияют на перечень (его нет)', () => {
         var entries = {
             '2026-09-02|017': { 'статус': 'Д' },
             '2026-09-03|031': { 'статус': 'Н' }
         };
         var html = sheetHost({ entries: entries })
             ._buildPrintHtml([EMPS[0]], AGG);
-        var lg = legendSection(html);
-        assertTrue(lg.indexOf('Д — День (12-час)') !== -1, 'код печатаемой строки');
-        assertTrue(lg.indexOf('Н —') === -1,
-            'код НЕпечатаемой строки в перечень не попадает');
+        assertTrue(html.indexOf('wsp-legend') === -1,
+            'легенды нет при любых записях (Task 442)');
+        assertTrue(html.indexOf('Н —') === -1 && html.indexOf('Д — День') === -1,
+            'расшифровок кодов на листе нет');
     });
 });
 
@@ -616,10 +522,10 @@ describe('Task 360 — регресс прежних фич печати', () =>
 // ============================================================
 describe('Task 360 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v665', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v665'") !== -1,
-            'CACHE_VERSION = kipia-test-v665 (Task 360 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v666') !== -1,
+    test('SW: кэш поднят до kipia-test-v666', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v666'") !== -1,
+            'CACHE_VERSION = kipia-test-v666 (Task 360 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v667') !== -1,
             'v605 ещё не существует (лишний инкремент)');
     });
 });

@@ -121,12 +121,12 @@ describe('Task 388 — SRC: миниатюры всегда сплошные с 
             'бейдж рендерится одним видом (без пунктирного класса)');
     });
 
-    test('печать: _printCell — бейдж всегда сплошной', () => {
+    test('печать: _printCell — бейджей НЕТ (Task 442)', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_printCell'));
-        assertFalse(fn.indexOf('wsp-ev-plan') !== -1,
-            'пунктирных бейджей-план в печати нет');
-        assertTrue(fn.indexOf("evMeta.color ? ' style=\"background:' + evMeta.color") !== -1,
-            'inline-цвет кода — безусловно');
+        assertTrue(fn.indexOf('wsp-ev') === -1,
+            'бейджей в печати нет вовсе (мини-значки удалены, Task 442)');
+        assertTrue(fn.indexOf('evMeta') === -1,
+            'цветов бейджей в печатной ячейке нет');
         assertFalse(INDEX_SRC.indexOf('.wsp-ev.wsp-ev-plan { border-style: dashed; }') !== -1,
             'CSS-правило пунктирного бейджа печати удалено');
     });
@@ -260,10 +260,10 @@ describe('Task 388 — SRC: итоги учёта доступны в любом
             'тосты сменного/дневного вида обещают итоги');
     });
 
-    test('SW: кэш поднят до kipia-test-v665', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v665'") !== -1,
-            'CACHE_VERSION = kipia-test-v665 (Task 388 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v666') !== -1,
+    test('SW: кэш поднят до kipia-test-v666', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v666'") !== -1,
+            'CACHE_VERSION = kipia-test-v666 (Task 388 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v667') !== -1,
             'v617 ещё не существует (guard)');
     });
 });
@@ -411,8 +411,8 @@ describe('Task 388 — VM: миниатюры/легенда', () => {
             'бейдж «*» сплошной и на легаси-«.»-ячейке');
     });
 
-    // --- _printCell: бейдж печати на пустой ячейке — сплошной ---
-    test('VM: печать — «*» на пустой ячейке со заливкой цветом кода', () => {
+    // --- _printCell: бейджей печати больше нет (Task 442) ---
+    test('VM: печать — «*» в ячейке НЕ отображается (Task 442)', () => {
         const host = new Function('return ({' +
             methodText(INDEX_SRC, '_printCell') + ',\n' +
             '_EVENT_CODES: ["И","ОБ","ПЗ","ПР","*"],' +
@@ -424,10 +424,10 @@ describe('Task 388 — VM: миниатюры/легенда', () => {
             '});')();
         const td = host._printCell(6, '2026-09-06',
             { 'таб_номер': '017' }, null);
-        assertFalse(td.indexOf('wsp-ev-plan') !== -1, 'пунктирного бейджа нет');
-        assertTrue(/class="wsp-ev"/.test(td), 'бейдж один вида (сплошной)');
-        assertTrue(td.indexOf('background:#FFAB91') !== -1,
-            'заливка цветом «*» — и на печати');
+        assertTrue(td.indexOf('wsp-ev') === -1,
+            'бейджа НЕТ (мини-значки удалены, Task 442)');
+        assertTrue(td.indexOf('background:#FFAB91') === -1,
+            'заливки цвета «*» в печати нет');
     });
 
     // --- _legendHtml: краткие обозначения в строках ---

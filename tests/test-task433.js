@@ -43,7 +43,7 @@
 //      ПЕРВЫМ в ряду .ws-act-row, ✕ — ПОСЛЕ; отпускные строки
 //      несут ws-emp-vac; _buildPrintHtml — мероприятия ПЕРВЫМИ,
 //      коды ПОД ними, записи с [дата][текст].
-//   SW: kipia-test-v665 (главный), v660 — прежней нет.
+//   SW: kipia-test-v666 (главный), v660 — прежней нет.
 // ============================================================
 
 const fs = require('fs');
@@ -95,19 +95,17 @@ function mockDoc(els) {
 // ============================================================
 describe('Task 433 — SRC: печать (секция вертикальная, коды строкой)', () => {
 
-    test('.wsp-bottom — РЯД: мероприятия слева, коды справа (Task 439)', () => {
+    test('.wsp-bottom — ряда НЕТ, секция одна (Task 442)', () => {
         const r = ruleBlock('#wsPrintSheet .wsp-bottom {');
         assertTrue(r !== '', 'правило обёртки есть');
-        // Task 439 (заявка: «блок с кодами размести справа от
-        // мероприятий»): вертикальная секция Task 433 снова стала
-        // РЯДОМ (flex; флоат Task 432 не вернулся)
-        assertTrue(r.indexOf('display: flex') !== -1,
-            'обёртка — flex-ряд (Task 439)');
+        // Task 442: столбец кодов удалён — ряд Tasks 439/440 снят,
+        // обёртка снова простой блок (вертикальная секция навсегда)
+        assertTrue(r.indexOf('display: flex') === -1,
+            'flex-ряда НЕТ (Task 442)');
         assertTrue(r.indexOf('flow-root') === -1,
             'флоат-обёртка Task 432 не вернулась');
-        // Task 440: зазор ряда — ровно 10px (прежде 6mm)
-        assertTrue(r.indexOf('gap: 10px') !== -1,
-            'зазор между мероприятиями и кодами — 10px (Task 440)');
+        assertTrue(r.indexOf('gap') === -1,
+            'зазора между блоками нет (Task 442)');
         assertTrue(r.indexOf('margin-top: 2.5mm') !== -1,
             'отступ от таблицы (Task 364) жив');
     });
@@ -149,67 +147,26 @@ describe('Task 433 — SRC: печать (секция вертикальная,
             'точка цвета не сжимается');
     });
 
-    test('.wsp-legend — ПРАВЫЙ блок ряда (Task 439: справа от мероприятий)', () => {
-        const r = ruleBlock('#wsPrintSheet .wsp-legend {');
-        assertTrue(r !== '', 'правило кодов есть');
-        assertTrue(r.indexOf('float') === -1,
-            'флоат Task 432 не вернулся');
-        assertTrue(r.indexOf('max-width') === -1,
-            'кап ширины Task 364 не вернулся');
-        // Task 439: коды — СПРАВА от мероприятий (фикс. ширина,
-        // общая верхняя линия), прежний отступ «под списком» снят
-        assertTrue(r.indexOf('flex: 0 0 92mm') !== -1,
-            'фиксированная ширина блока кодов (Task 439)');
-        assertTrue(r.indexOf('margin-top: 0') !== -1,
-            'верхняя линия общая с мероприятиями (Task 439)');
-        assertTrue(r.indexOf('font-size: 11px') !== -1,
-            'шрифт Task 361 (11px) жив');
+    test('.wsp-legend/.wsp-lg — правила УДАЛЕНЫ (Task 442)', () => {
+        assertTrue(ruleBlock('#wsPrintSheet .wsp-legend {') === '',
+            'правила .wsp-legend нет (Task 442: столбец кодов удалён)');
+        assertTrue(ruleBlock('#wsPrintSheet .wsp-lg {') === '' &&
+                   ruleBlock('#wsPrintSheet .wsp-legend-t {') === '' &&
+                   ruleBlock('#wsPrintSheet .wsp-legend-cols {') === '',
+            'правил заголовка/сетки/записей кодов нет');
     });
 
-    test('.wsp-lg — коды в ДВЕ КОЛОНКИ под заголовком (Task 434)', () => {
-        const r = ruleBlock('#wsPrintSheet .wsp-lg {');
-        assertTrue(r !== '', 'правило кода есть');
-        // Task 434 (заявка: «коды на печати сделать в две колонки
-        // под названием "Коды:"»): строка-абзац Task 433 и столбик
-        // Task 360–431 сняты — сетка-две-колонки .wsp-legend-cols
-        assertTrue(r.indexOf('display: block') !== -1,
-            'каждый код — своя строка колонки');
-        assertTrue(r.indexOf('white-space: normal') !== -1,
-            'длинное наименование переносится ВНУТРИ колонки');
-        assertTrue(r.indexOf('break-inside: avoid') !== -1,
-            'запись кода не рвётся между колонками/страницами');
-        const t = ruleBlock('#wsPrintSheet .wsp-legend-t {');
-        assertTrue(t.indexOf('display: block') !== -1,
-            'заголовок «Коды:» — отдельной строкой СВЕРХУ сетки');
-        const c = ruleBlock('#wsPrintSheet .wsp-legend-cols {');
-        assertTrue(c.indexOf('grid-template-columns: 1fr') !== -1,
-            'одна колонка на всю ширину блока кодов (Task 441)');
-        assertFalse(r.indexOf('display: inline') !== -1,
-            'инлайн-строка Task 433 снята');
-    });
-
-    test('JS: порядок секции — мероприятия, ЗА НИМИ коды (Task 434: + сетка)', () => {
+    test('JS: секция одна — мероприятия (Task 442)', () => {
         const b = stripComments(methodText(INDEX_SRC, '_buildPrintHtml'));
         const iOpen = b.indexOf('<div class="wsp-bottom">');
         const iMev = b.indexOf('<div class="wsp-mev">');
-        const iLegend = b.indexOf('<div class="wsp-legend">');
         const iFoot = b.indexOf('<div class="wsp-foot">');
-        assertTrue(iOpen !== -1 && iMev !== -1 && iLegend !== -1,
-            'все секции строятся');
+        assertTrue(iOpen !== -1 && iMev !== -1,
+            'обёртка и секция мероприятий строятся');
         assertTrue(iFoot === -1, 'сноска wsp-foot удалена (Task 438)');
-        assertTrue(iOpen < iMev && iMev < iLegend,
-            'порядок: обёртка → МЕРОПРИЯТИЯ → КОДЫ (Task 433)');
-        // Task 434: заголовок «Коды:» и СЕТКА-ДВЕ-КОЛОНКИ открываются
-        // сразу за легендой
-        const iCols = b.indexOf('<div class="wsp-legend-cols">');
-        assertTrue(iCols !== -1 && iLegend < iCols,
-            'Task 434: сетка .wsp-legend-cols внутри легенды');
-        const iClose1 = b.indexOf("html += '</div>';", iLegend);
-        const iClose2 = b.indexOf("html += '</div>';", iClose1 + 1);
-        const iClose3 = b.indexOf("html += '</div>';", iClose2 + 1);
-        assertTrue(iClose1 !== -1 && iClose2 !== -1 && iClose3 !== -1 &&
-                   iClose2 - iClose1 < 200 && iClose3 - iClose2 < 200,
-            'Task 434: закрытия сетки, легенды и обёртки — три последовательных оператора');
+        assertTrue(iOpen < iMev, 'порядок: обёртка → МЕРОПРИЯТИЯ');
+        assertTrue(b.indexOf('wsp-legend') === -1,
+            'секции кодов нет (Task 442)');
     });
 
     test('JS: запись содержит [дата][текст] (правая часть — текст)', () => {
@@ -413,9 +370,9 @@ describe('Task 433 — VM: строка инструктажа и строка �
 // ============================================================
 describe('Task 433 — SW: версия кеша', () => {
     test('v659 (главный), v660 — прежней нет', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v665'") !== -1,
-            'SW кэш kipia-test-v665');
-        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v666'") !== -1,
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v666'") !== -1,
+            'SW кэш kipia-test-v666');
+        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v667'") !== -1,
             'v660 ещё не существует (guard следующего бампа)');
     });
 });

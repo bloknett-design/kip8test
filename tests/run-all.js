@@ -460,6 +460,7 @@ require('./test-task440.js');
 // HTML-печати (grid 1fr), PDF (codeRows без деления, lx без
 // сдвига colW2) и Excel (колонка D — строка на код)
 require('./test-task441.js');
+require('./test-task442.js');
 require('./test-deploy-url.js');
 
 // Запускаем

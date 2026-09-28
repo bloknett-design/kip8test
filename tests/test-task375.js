@@ -82,16 +82,14 @@ describe('Task 375 — SRC: печать табеля, коды справа н�
             'флоат-обёртка Task 432 снята');
         assertTrue(r.indexOf('gap: 5mm') === -1,
             'прежний 5mm убран из правила');
-        // Task 440 (заявка: «коды справа от мероприятий на
-        // расстоянии друг от друга 10px»): ряд Task 439 — зазор
-        // между блоками СНОВА ровно 10px (как в Task 375)
-        assertTrue(r.indexOf('gap: 10px') !== -1,
-            'зазор между блоками ряда — ровно 10px (Task 440)');
+        // Task 442: блок кодов удалён — зазора между блоками и
+        // самого ряда больше нет (зазор 10px Tasks 375/440 снят
+        // вместе с правым блоком)
+        assertTrue(r.indexOf('gap') === -1,
+            'зазора между блоками нет — блока кодов больше нет (Task 442)');
         const leg = cssRule(INDEX_SRC, '#wsPrintSheet .wsp-legend');
-        assertTrue(leg.indexOf('float:') === -1,
-            'коды — не плавающий столбик (Task 439: правый блок ряда)');
-        assertTrue(leg.indexOf('margin-top: 0') !== -1,
-            'отступ строки кодов снят (Task 439: общая верхняя линия с мероприятиями)');
+        assertTrue(leg === '',
+            'правила .wsp-legend нет (столбец кодов удалён, Task 442)');
         assertTrue(r.indexOf('margin-top: 2.5mm') !== -1,
             'отступ от таблицы на обёртке не тронут');
     });
@@ -574,13 +572,13 @@ describe('Task 375 — SRC: сервер FlowmeterArchive.gs', () => {
 // ============================================================
 describe('Task 375 — SW кэш', () => {
 
-    test('SW: CACHE_VERSION = kipia-test-v665', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v665'") !== -1,
+    test('SW: CACHE_VERSION = kipia-test-v666', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v666'") !== -1,
             'версия кэша поднята до v604');
     });
 
     test('SW: нет v603 (старая) и нет v605 (двойной бамп)', () => {
         assertTrue(SW_SRC.indexOf('kipia-test-v603') === -1, 'старая версия не осталась');
-        assertTrue(SW_SRC.indexOf('kipia-test-v666') === -1, 'двойного бампа не было');
+        assertTrue(SW_SRC.indexOf('kipia-test-v667') === -1, 'двойного бампа не было');
     });
 });

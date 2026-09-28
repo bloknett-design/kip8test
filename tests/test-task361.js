@@ -31,7 +31,7 @@
 //     статус-мероприятия без строки в «Инструктажах»; CSS
 //     .wsp-ev-wrap/.wsp-ev/.wsp-ev-plan; сноска поясняет значок.
 //
-// SW: kipia-test-v665.
+// SW: kipia-test-v666.
 //
 // Запуск: через tests/run-all.js (require './test-task361.js').
 
@@ -122,8 +122,18 @@ describe('Task 361 — SRC: колонка «Сотрудник» по текс�
 
     test('SRC: у колонок дней НЕТ своей ширины — делят остаток поровну', () => {
         const block = printCss();
-        assertTrue(block.indexOf('#wsPrintSheet .wsp-day {') === -1,
-            'правило .wsp-day { width: 6.5mm } удалено (fixed-раскладка: дни делят остаток)');
+        // Task 442 вернул правило .wsp-day (font-weight 400 — будние
+        // числа НЕ жирные), но ШИРИНЫ в нём по-прежнему нет
+        const i = block.indexOf('#wsPrintSheet .wsp-day {');
+        if (i !== -1) {
+            const r = block.slice(i, block.indexOf('}', i) + 1);
+            assertTrue(r.indexOf('width') === -1,
+                'правило .wsp-day (Task 442) БЕЗ ширины — дни делят остаток');
+            assertTrue(r.indexOf('font-weight: 400') !== -1,
+                'Task 442: будние числа — обычные (не жирные)');
+        }
+        assertTrue(block.indexOf('width: 6.5mm') === -1,
+            'прежняя ширина 6.5mm не вернулась (fixed-раскладка жива)');
         assertTrue(block.indexOf('#wsPrintSheet .wsp-day span {') !== -1,
             'день недели под числом жив (регресс)');
         assertTrue(block.indexOf('#wsPrintSheet .wsp-day.wsp-off') !== -1,
@@ -160,17 +170,15 @@ describe('Task 361 — SRC: размеры и шрифты листа', () => {
             'штампа «Распечатано» нет — правило удалено (Task 438)');
     });
 
-    test('SRC: строки ПОД таблицей крупнее', () => {
+    test('SRC: строки ПОД таблицей крупнее (легенды нет — Task 442)', () => {
         assertTrue(ruleOf('#wsPrintSheet .wsp-mev {').indexOf('font-size: 11px') !== -1,
             'список мероприятий 11px (был 8px)');
-        assertTrue(ruleOf('#wsPrintSheet .wsp-legend {').indexOf('font-size: 11px') !== -1,
-            'перечень кодов 11px (был 8px)');
+        assertTrue(INDEX_SRC.indexOf('#wsPrintSheet .wsp-legend {') === -1,
+            'правило .wsp-legend удалено вместе с перечнем (Task 442)');
         assertTrue(INDEX_SRC.indexOf('#wsPrintSheet .wsp-foot {') === -1,
             'сноска удалена — правило .wsp-foot убрано (Task 438)');
         const i = ruleOf('#wsPrintSheet .wsp-mev-item i {');
         assertTrue(i.indexOf('width: 9px') !== -1, 'точка цвета 9px (была 7px)');
-        const lg = ruleOf('#wsPrintSheet .wsp-lg i {');
-        assertTrue(lg.indexOf('width: 9px') !== -1, 'точка кода 9px (была 7px)');
     });
 
     test('SRC: таблица крупнее — ячейки выше, шрифты таблицы больше', () => {
@@ -205,35 +213,26 @@ describe('Task 361 — SRC: размеры и шрифты листа', () => {
 // ============================================================
 describe('Task 361 — SRC: бейджи мероприятий в печати', () => {
 
-    test('SRC: CSS .wsp-ev-wrap/.wsp-ev/.wsp-ev-plan в @media print', () => {
+    test('SRC: CSS бейджей .wsp-ev* УДАЛЕНЫ (Task 442)', () => {
         const block = printCss();
-        const wrap = block.indexOf('#wsPrintSheet .wsp-ev-wrap {');
-        assertTrue(wrap !== -1, 'правило .wsp-ev-wrap есть');
-        const wrapRule = block.slice(wrap, block.indexOf('}', wrap) + 1);
-        assertTrue(wrapRule.indexOf('position: absolute') !== -1,
-            'позиционирование в углу ячейки');
-        assertTrue(wrapRule.indexOf('bottom:') !== -1 && wrapRule.indexOf('right:') !== -1,
-            'правый НИЖНИЙ угол (точка переработки — верхний)');
-        const ev = block.indexOf('#wsPrintSheet .wsp-ev {');
-        const evRule = block.slice(ev, block.indexOf('}', ev) + 1);
-        assertTrue(evRule.indexOf('print-color-adjust: exact') !== -1,
-            'цвет бейджа печатается принудительно');
-        assertFalse(block.indexOf('wsp-ev-plan') !== -1,
-            'пунктирного бейджа-план нет (Task 388: заливка всегда)');
+        assertTrue(block.indexOf('#wsPrintSheet .wsp-ev-wrap {') === -1,
+            'правила .wsp-ev-wrap нет (значки удалены)');
+        assertTrue(block.indexOf('#wsPrintSheet .wsp-ev {') === -1,
+            'правила .wsp-ev нет');
+        assertTrue(block.indexOf('wsp-ev-plan') === -1,
+            'и пунктирного плана нет (сняты вместе со значками)');
     });
 
-    test('SRC: _printCell — события дня, виртуальный бейдж, solid/plan', () => {
+    test('SRC: _printCell — бейджей НЕТ (Task 442)', () => {
         const c = stripComments(methodText(WS_CLIENT, '_printCell'));
-        assertTrue(c.indexOf('_eventsAt') !== -1, 'источник — _eventsAt');
-        assertTrue(c.indexOf('events.concat') !== -1,
-            'виртуальный бейдж статус-мероприятия без строки в «Инструктажах»');
-        // Task 388: бейдж печати ВСЕГДА сплошной с цветом кода
-        assertFalse(c.indexOf('wsp-ev-plan') !== -1,
-            'пунктирных бейджей нет (Task 388)');
-        assertTrue(c.indexOf("evMeta.color ? ' style=\"background:' + evMeta.color") !== -1,
-            'inline-цвет кода из справочника');
-        assertTrue(c.indexOf("content + evHtml + '</td>'") !== -1,
-            'бейджи добавляются в ячейку после кода');
+        assertTrue(c.indexOf('_eventsAt') === -1,
+            'события дня печатной ячейкой не запрашиваются');
+        assertTrue(c.indexOf('events.concat') === -1,
+            'виртуального бейджа нет');
+        assertTrue(c.indexOf('wsp-ev') === -1,
+            'разметки бейджей в ячейке нет (Task 442)');
+        assertTrue(c.indexOf("content + '</td>'") !== -1,
+            'ячейка закрывается сразу после кода/точки');
     });
 
     test('SRC: сноска удалена — пояснений значка больше нет (Task 438)', () => {
@@ -265,48 +264,46 @@ describe('Task 361 — VM: _printCell бейджи', () => {
 
     var EMP = { 'таб_номер': '017' };
 
-    test('VM: смена Д + событие И — код в центре + сплошной бейдж с цветом', () => {
+    test('VM: смена Д + событие И — только код в центре, бейджа НЕТ (Task 442)', () => {
         var td = cellHost({ meta: { code: 'Д', color: '#FFE082' },
                             events: [{ code: 'И', training: 7 }] })
             ._printCell(2, '2026-09-02', EMP, { 'статус': 'Д' });
         assertTrue(td.indexOf('background:#FFE082;">Д<') !== -1,
             'код смены Д в центре ячейки (регресс 341)');
-        assertTrue(td.indexOf('class="wsp-ev"') !== -1, 'бейдж сплошной (день сформирован)');
-        assertTrue(td.indexOf('>И</span>') !== -1, 'код мероприятия в бейдже');
-        assertTrue(td.indexOf('wsp-ev-plan') === -1, 'пунктирного нет');
+        assertTrue(td.indexOf('wsp-ev') === -1,
+            'бейджа НЕТ (Task 442: мини-значки удалены)');
     });
 
-    test('VM: пустая ячейка + 2 события — два СПЛОШНЫХ бейджа с заливкой (Task 388)', () => {
+    test('VM: пустая ячейка + 2 события — бейджей НЕТ (Task 442)', () => {
         var td = cellHost({ events: [{ code: 'И', training: 1 },
                                       { code: 'ПР', training: 2 }] })
             ._printCell(6, '2026-09-06', EMP, null);
-        var n = (td.match(/class="wsp-ev"/g) || []).length;
-        assertEqual(n, 2, 'два сплошных бейджа');
-        assertTrue(td.indexOf('background:') !== -1,
-            'с заливкой цветом кода (Task 388)');
+        assertTrue(td.indexOf('wsp-ev') === -1, 'бейджей нет вовсе');
+        assertTrue(td.indexOf('background:') === -1, 'заливки нет');
     });
 
-    test('VM: статус-мероприятие И покрыто событием — один бейдж (без дубля)', () => {
+    test('VM: статус-мероприятие И — ПУСТАЯ ячейка (Task 442)', () => {
         var td = cellHost({ meta: { code: 'И', color: '#B3E5FC' },
                             events: [{ code: 'И', training: 7 }] })
             ._printCell(5, '2026-09-05', EMP, { 'статус': 'И' });
-        var n = (td.match(/class="wsp-ev"/g) || []).length;
-        assertEqual(n, 1, 'виртуальный бейдж НЕ дублирует запись «Инструктажей»');
+        assertTrue(td.indexOf('>И<') === -1, 'кода нет');
+        assertTrue(td.indexOf('wsp-ev') === -1, 'бейджа нет');
+        assertTrue(td.indexOf('background:') === -1, 'фона нет');
     });
 
-    test('VM: статус-мероприятие ОБ БЕЗ записи — виртуальный бейдж строится', () => {
+    test('VM: статус-мероприятие ОБ БЕЗ записи — ПУСТАЯ ячейка (Task 442)', () => {
         var td = cellHost({ meta: { code: 'ОБ', color: '#D1C4E9' } })
             ._printCell(7, '2026-09-07', EMP, { 'статус': 'ОБ' });
-        assertTrue(td.indexOf('>ОБ</span>') !== -1, 'виртуальный бейдж');
-        assertTrue(td.indexOf('background:#D1C4E9') !== -1, 'с цветом справочника');
+        assertTrue(td.indexOf('>ОБ<') === -1, 'кода нет');
+        assertTrue(td.indexOf('wsp-ev') === -1, 'бейджа нет');
     });
 
-    test('VM: переработка + событие — точка сверху, бейдж снизу (без конфликтов)', () => {
+    test('VM: переработка + событие — точка есть, бейджа нет (Task 442)', () => {
         var td = cellHost({ events: [{ code: 'И', training: 7 }] })
             ._printCell(3, '2026-09-03', EMP,
                         { 'статус': 'д', 'переработка': 1 });
         assertTrue(td.indexOf('wsp-over') !== -1, 'красная точка переработки');
-        assertTrue(td.indexOf('wsp-ev-wrap') !== -1, 'бейдж мероприятия');
+        assertTrue(td.indexOf('wsp-ev') === -1, 'бейджа нет (Task 442)');
     });
 
     test('VM: без событий — бейджей нет (регресс)', () => {
@@ -474,7 +471,8 @@ describe('Task 361 — VM: регресс печатного листа', () => 
         assertTrue(html.indexOf('wsp-title') !== -1, 'заголовок');
         assertTrue(html.indexOf('<table class="wsp-grid">') !== -1, 'таблица');
         assertTrue(html.indexOf('<div class="wsp-mev">') !== -1, 'секция мероприятий (Task 360)');
-        assertTrue(html.indexOf('<div class="wsp-legend">') !== -1, 'перечень кодов (Task 360)');
+        assertTrue(html.indexOf('<div class="wsp-legend">') === -1,
+            'перечня кодов НЕТ (Task 442: столбец удалён)');
         assertTrue(html.indexOf('значок в углу ячейки') === -1,
             'сноски с пояснением значка нет (Task 438)');
         assertTrue(html.indexOf('wsp-sum') === -1, 'итоговой строки нет (Task 343 жив)');
@@ -486,10 +484,10 @@ describe('Task 361 — VM: регресс печатного листа', () => 
 // ============================================================
 describe('Task 361 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v665', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v665'") !== -1,
-            'CACHE_VERSION = kipia-test-v665 (Task 361 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v666') !== -1,
+    test('SW: кэш поднят до kipia-test-v666', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v666'") !== -1,
+            'CACHE_VERSION = kipia-test-v666 (Task 361 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v667') !== -1,
             'v605 ещё не существует (лишний инкремент)');
     });
 

@@ -46,7 +46,7 @@
 //      дата_начала; записи других работников не мешают;
 //   8) _renderEventsPopup: подстрока окна — «05.09.2026»,
 //      ISO-даты «2026-09-05» в окне НЕТ.
-//   SW: kipia-test-v665 (главный), v660 — прежней нет.
+//   SW: kipia-test-v666 (главный), v660 — прежней нет.
 // ============================================================
 
 const fs = require('fs');
@@ -101,86 +101,35 @@ function d(day) { return YEAR + '-09-' + (day < 10 ? '0' + day : day); }
 // ============================================================
 describe('Task 434 — SRC: печать (коды в две колонки)', () => {
 
-    test('.wsp-legend-t — заголовок «Коды:» отдельной строкой', () => {
-        const r = ruleBlock('#wsPrintSheet .wsp-legend-t {');
-        assertTrue(r !== '', 'правило заголовка есть');
-        assertTrue(r.indexOf('display: block') !== -1,
-            'заголовок — своя строка СВЕРХУ сетки кодов');
-        assertTrue(r.indexOf('font-weight: 700') !== -1,
-            'заголовок жирный (как прежде)');
-        assertTrue(r.indexOf('margin-bottom') !== -1,
-            'отступ заголовка от сетки кодов');
+    test('правила легенды кодов УДАЛЕНЫ (Task 442)', () => {
+        // Task 442 (заявка: «убери … столбец с кодами»): вся
+        // легенда (заголовок, сетка, записи) снята из печати
+        assertTrue(ruleBlock('#wsPrintSheet .wsp-legend-t {') === '',
+            'правила .wsp-legend-t нет');
+        assertTrue(ruleBlock('#wsPrintSheet .wsp-legend-cols {') === '',
+            'правила .wsp-legend-cols нет');
+        assertTrue(ruleBlock('#wsPrintSheet .wsp-lg {') === '',
+            'правила .wsp-lg нет');
+        assertTrue(ruleBlock('#wsPrintSheet .wsp-legend {') === '',
+            'правила .wsp-legend нет');
     });
 
-    test('.wsp-legend-cols — сетка ОДНА колонка (Task 441)', () => {
-        const r = ruleBlock('#wsPrintSheet .wsp-legend-cols {');
-        assertTrue(r !== '', 'правило сетки есть');
-        assertTrue(r.indexOf('display: grid') !== -1,
-            'контейнер — grid');
-        // Task 441 (заявка: «коды сделай в один столбец»):
-        // ОДНА колонка — прежде ДВЕ равные (Task 434)
-        assertTrue(r.indexOf('grid-template-columns: 1fr') !== -1,
-            'ОДНА колонка на всю ширину блока кодов');
-        assertFalse(r.indexOf('grid-template-columns: 1fr 1fr') !== -1,
-            'две равные колонки Task 434 сняты (Task 441)');
-        assertFalse(r.indexOf('column-gap') !== -1,
-            'column-gap снят — колонок больше нет (Task 441)');
-        assertTrue(r.indexOf('row-gap') !== -1,
-            'вертикальный зазор между записями');
-    });
-
-    test('.wsp-lg — запись кода своей строкой колонки', () => {
-        const r = ruleBlock('#wsPrintSheet .wsp-lg {');
-        assertTrue(r !== '', 'правило записи есть');
-        assertTrue(r.indexOf('display: block') !== -1,
-            'каждый код — своя строка колонки');
-        assertTrue(r.indexOf('white-space: normal') !== -1,
-            'длинное наименование переносится ВНУТРИ колонки');
-        assertTrue(r.indexOf('break-inside: avoid') !== -1 &&
-                   r.indexOf('page-break-inside: avoid') !== -1,
-            'запись не рвётся между колонками и страницами');
-        assertTrue(r.indexOf('min-width: 0') !== -1,
-            'усадка при переполнении разрешена');
-        assertFalse(r.indexOf('white-space: nowrap') !== -1,
-            'nowrap Task 433 снят (строка-абзац больше не нужна)');
-        assertFalse(r.indexOf('display: inline') !== -1,
-            'инлайн-строка Task 433 снята');
-    });
-
-    test('.wsp-legend — без флоата и капа (регресс 432/433)', () => {
-        const r = ruleBlock('#wsPrintSheet .wsp-legend {');
-        assertTrue(r !== '', 'правило легенды есть');
-        assertTrue(r.indexOf('float') === -1,
-            'флоат Task 432 не вернулся');
-        assertTrue(r.indexOf('max-width') === -1,
-            'кап ширины Task 364 не вернулся');
-        // Task 439: коды — ПРАВЫЙ блок ряда (справа от
-        // мероприятий), верхняя линия общая — отступа сверху нет
-        assertTrue(r.indexOf('flex: 0 0 92mm') !== -1,
-            'фиксированная ширина блока кодов (Task 439)');
-        assertTrue(r.indexOf('margin-top: 0') !== -1,
-            'верхняя линия общая с мероприятиями (Task 439)');
-        assertTrue(r.indexOf('font-size: 11px') !== -1,
-            'шрифт Task 361 (11px) жив');
-    });
-
-    test('JS: «Коды:» + сетка в DOM, три последовательных закрытия', () => {
+    test('JS: легенды в DOM НЕТ — секция мероприятий одна (Task 442)', () => {
         const b = stripComments(methodText(INDEX_SRC, '_buildPrintHtml'));
-        const iLegend = b.indexOf('<div class="wsp-legend">');
-        const iTitle = b.indexOf('<span class="wsp-legend-t">Коды:</span>');
-        const iCols = b.indexOf('<div class="wsp-legend-cols">');
-        assertTrue(iLegend !== -1 && iTitle !== -1 && iCols !== -1,
-            'легенда, заголовок «Коды:» и сетка строятся');
-        assertTrue(iLegend < iTitle && iTitle < iCols,
-            'порядок: легенда → заголовок «Коды:» → сетка-колонки');
-        const iClose1 = b.indexOf("html += '</div>';", iCols);
-        const iClose2 = b.indexOf("html += '</div>';", iClose1 + 1);
-        const iClose3 = b.indexOf("html += '</div>';", iClose2 + 1);
+        assertTrue(b.indexOf('<div class="wsp-legend">') === -1,
+            'легенда не строится (Task 442)');
+        assertTrue(b.indexOf('Коды:') === -1,
+            'заголовка «Коды:» нет');
+        assertTrue(b.indexOf('wsp-legend-cols') === -1,
+            'сетки колонок нет');
         const iFoot = b.indexOf('<div class="wsp-foot">');
-        assertTrue(iClose1 !== -1 && iClose2 !== -1 && iClose3 !== -1 &&
-                   iClose2 - iClose1 < 200 && iClose3 - iClose2 < 200,
-            'закрытия сетки, легенды и обёртки — три последовательных оператора');
         assertTrue(iFoot === -1, 'сноска wsp-foot удалена (Task 438)');
+        // закрытие секции мероприятий + обёртки — два оператора
+        const iMev = b.indexOf('<div class="wsp-mev">');
+        const iClose1 = b.indexOf("html += '</div>';", iMev);
+        const iClose2 = b.indexOf("html += '</div>';", iClose1 + 1);
+        assertTrue(iClose1 !== -1 && iClose2 !== -1 && iClose2 - iClose1 < 200,
+            'закрытия секции/обёртки — подряд');
     });
 
     test('JS: мероприятие — прежний ряд [дата][текст] (регресс 433)', () => {
@@ -471,9 +420,9 @@ describe('Task 434 — VM: окно «Мероприятия в этот ден�
 // ============================================================
 describe('Task 434 — SW: версия кеша', () => {
     test('v659 (главный), v660 — прежней нет', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v665'") !== -1,
-            'SW кэш kipia-test-v665');
-        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v666'") !== -1,
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v666'") !== -1,
+            'SW кэш kipia-test-v666');
+        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v667'") !== -1,
             'v660 ещё не существует (guard следующего бампа)');
     });
 });

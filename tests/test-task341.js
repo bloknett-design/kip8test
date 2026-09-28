@@ -20,7 +20,7 @@
 // display:none. Печатается ТЕКУЩИЙ вид табеля (у уровня min
 // «Мастер КИПиА» скрыт — _viewEmployees, Task 340).
 //
-// SW: kipia-test-v665.
+// SW: kipia-test-v666.
 //
 // Запуск: через tests/run-all.js (require './test-task341.js').
 
@@ -301,33 +301,35 @@ describe('Task 341 — _printCell (VM)', () => {
         assertTrue(td.indexOf('background:') === -1, 'фона нет');
     });
 
-    test('VM: статус-мероприятие (И) — ПУСТАЯ ячейка + бейдж в углу (Task 361)', () => {
+    test('VM: статус-мероприятие (И) — ПУСТАЯ ячейка БЕЗ бейджа (Task 442)', () => {
         var td = cellHost({ meta: { code: 'И', color: '#B3E5FC' },
                             events: [{ code: 'И', training: 7 }] })
             ._printCell(5, '2026-09-05', EMP, { 'статус': 'И' });
         assertTrue(td.indexOf('>И</td>') === -1, 'большого кода нет');
-        assertTrue(td.indexOf('wsp-ev-wrap') !== -1,
-            'бейдж мероприятия в печати есть (Task 361 вернул)');
-        assertTrue(td.indexOf('background:#B3E5FC') !== -1,
-            'сплошной бейдж с цветом кода (день сформирован)');
+        assertTrue(td.indexOf('wsp-ev') === -1,
+            'бейджа мероприятия НЕТ (Task 442 удалил мини-значки)');
+        assertTrue(td.indexOf('background:') === -1,
+            'фона нет — ячейка пустая (событие — в списке под таблицей)');
     });
 
-    test('VM: событие в ПУСТОЙ ячейке — пунктирный бейдж-план (Task 361)', () => {
+    test('VM: событие в ПУСТОЙ ячейке — бейджей нет (Task 442)', () => {
         var td = cellHost({ events: [{ code: 'И', training: 7 }] })
             ._printCell(6, '2026-09-06', EMP, null);
-        assertFalse(td.indexOf('wsp-ev-plan') !== -1,
-            'пунктирного бейджа нет (Task 388)');
-        assertTrue(td.indexOf('background:') !== -1,
-            'заливка цветом кода — и у несформированного дня (Task 388)');
+        assertTrue(td.indexOf('wsp-ev') === -1,
+            'бейджей нет — мини-значки удалены (Task 442)');
+        assertTrue(td.indexOf('background:') === -1,
+            'заливки нет (пустой день без статуса)');
     });
 
-    test('VM: статус-мероприятие БЕЗ строки в «Инструктажах» — ВИРТУАЛЬНЫЙ бейдж (Task 361)', () => {
+    test('VM: статус-мероприятие БЕЗ строки в «Инструктажах» — ячейка пустая (Task 442)', () => {
         var td = cellHost({ meta: { code: 'ОБ', color: '#D1C4E9' } })
             ._printCell(7, '2026-09-07', EMP, { 'статус': 'ОБ' });
-        assertTrue(td.indexOf('wsp-ev') !== -1 && td.indexOf('>ОБ</span>') !== -1,
-            'виртуальный бейдж строится — день не теряет мероприятие');
-        assertTrue(td.indexOf('background:#D1C4E9') !== -1,
-            'цвет кода из справочника');
+        assertTrue(td.indexOf('wsp-ev') === -1,
+            'виртуального бейджа нет (Task 442 удалил значки)');
+        assertTrue(td.indexOf('>ОБ<') === -1,
+            'код мероприятия в ячейке не печатается');
+        assertTrue(td.indexOf('background:') === -1,
+            'фона нет — мероприятие раскрывается списком ниже');
     });
 
     test('VM: план отпуска в пустой ячейке — класс wsp-vac', () => {
@@ -336,19 +338,21 @@ describe('Task 341 — _printCell (VM)', () => {
         assertTrue(td.indexOf('wsp-vac') !== -1, 'пунктирная рамка');
     });
 
-    test('VM: нерабочий день — серая заливка ТОЛЬКО пустой ячейки', () => {
+    test('VM: нерабочий день — БЕЗ заливки, маркер контура (Task 442)', () => {
         var empty = cellHost({ dayOff: true })
             ._printCell(12, '2026-09-12', EMP, null);
         assertTrue(empty.indexOf('wsp-cell-off') !== -1,
-            'пустая нерабочая — заливка');
+            'пустая нерабочая — маркер полосы выходных');
+        assertTrue(empty.indexOf('background:') === -1,
+            'заливки НЕТ (Task 442: фоном не выделяем)');
         var coded = cellHost({ dayOff: true })
             ._printCell(13, '2026-09-13', EMP, { 'статус': 'Н' });
-        assertTrue(coded.indexOf('wsp-cell-off') === -1,
-            'статусная нерабочая — свой цвет');
+        assertTrue(coded.indexOf('wsp-cell-off') !== -1,
+            'статусная нерабочая — тоже в полосе контура (Task 442)');
         var vac = cellHost({ dayOff: true, vac: {} })
             ._printCell(14, '2026-09-14', EMP, null);
-        assertTrue(vac.indexOf('wsp-cell-off') === -1,
-            'план отпуска — без серой заливки');
+        assertTrue(vac.indexOf('wsp-cell-off') !== -1,
+            'план отпуска в выходной — тоже в полосе (Task 442)');
     });
 
     test('VM: переработка — красная точка', () => {
@@ -468,11 +472,13 @@ describe('Task 341 — _buildPrintHtml (VM)', () => {
         assertTrue(html.indexOf('wsp-sum') === -1, 'строки «Итого» нет (Task 343)');
         assertTrue(html.indexOf('>40</td>') === -1, 'итога дней нет (grand 40)');
         assertTrue(html.indexOf('>288</td>') === -1, 'итога часов нет (grand 288)');
-        assertTrue(html.indexOf('wsp-legend') !== -1, 'легенда кодов');
-        assertTrue(html.indexOf('Д — День (12-час)') !== -1,
-            'код месяца Д с расшифровкой из справочника');
-        assertTrue(html.indexOf('Н — Ночь (12-час)') !== -1,
-            'код месяца Н с расшифровкой');
+        // Task 442: легенда кодов УДАЛЕНА — расшифровок на листе нет
+        assertTrue(html.indexOf('wsp-legend') === -1,
+            'легенды кодов нет (Task 442: столбец удалён)');
+        assertTrue(html.indexOf('Д — День (12-час)') === -1,
+            'расшифровки кода Д нет');
+        assertTrue(html.indexOf('Н — Ночь (12-час)') === -1,
+            'расшифровки кода Н нет');
         assertTrue(html.indexOf('wsp-foot') === -1,
             'пояснения внизу удалены (Task 438)');
     });
@@ -519,10 +525,10 @@ describe('Task 341 — _buildPrintHtml (VM)', () => {
 // ============================================================
 describe('Task 341 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v665', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v665'") !== -1,
-            'CACHE_VERSION = kipia-test-v665 (Task 341 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v666') !== -1,
+    test('SW: кэш поднят до kipia-test-v666', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v666'") !== -1,
+            'CACHE_VERSION = kipia-test-v666 (Task 341 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v667') !== -1,
             'лишний инкремент (v580) не сделан');
     });
 

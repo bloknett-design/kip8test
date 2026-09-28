@@ -46,7 +46,7 @@
 //      канонический слот «» (нет дубля «Выходной, плановый
 //      выходной день»); справочник только с «.» рендерит
 //      «Выходного» из «.» (регресс Task 387);
-//   SW: kipia-test-v665 (главный), v664 — следующий не занят.
+//   SW: kipia-test-v666 (главный), v664 — следующий не занят.
 // ============================================================
 
 const fs = require('fs');
@@ -151,43 +151,34 @@ describe('Task 439 — SRC: коды справа от мероприятий (C
         return INDEX_SRC.slice(i, INDEX_SRC.indexOf('}', i) + 1);
     }
 
-    test('CSS: .wsp-bottom — flex-ряд с зазором 10px (Task 440)', () => {
+    test('CSS: .wsp-bottom — ОДНА колонка (Task 442: кодов нет)', () => {
         const r = ruleBlock('#wsPrintSheet .wsp-bottom {');
-        assertTrue(r.indexOf('display: flex') !== -1, 'обёртка — гибкий ряд');
-        assertTrue(r.indexOf('align-items: flex-start') !== -1,
-            'блоки прижаты к общей верхней линии');
-        // Task 440 (заявка: «на расстоянии друг от друга 10px»)
-        assertTrue(r.indexOf('gap: 10px') !== -1,
-            'зазор между блоками — ровно 10px');
-        assertTrue(r.indexOf('gap: 6mm') === -1,
-            'прежний зазор 6mm убран');
+        assertTrue(r.indexOf('display: flex') === -1,
+            'flex-ряд снят — блока кодов справа больше нет (Task 442)');
+        assertTrue(r.indexOf('gap') === -1,
+            'зазора между блоками нет (снят вместе с блоком кодов)');
         assertTrue(r.indexOf('margin-top: 2.5mm') !== -1,
             'отступ секции от таблицы жив (Task 364)');
     });
 
-    test('CSS: .wsp-mev — левая часть ряда, .wsp-legend — правая 92mm', () => {
+    test('CSS: .wsp-mev — вся ширина, .wsp-legend удалён (Task 442)', () => {
         const mev = ruleBlock('#wsPrintSheet .wsp-mev {');
-        // Task 440: flex-grow снят (было 1 1 auto) — коды за текстом
-        assertTrue(mev.indexOf('flex: 0 1 auto') !== -1,
-            'мероприятия НЕ растягиваются — коды за текстом (Task 440)');
-        assertTrue(mev.indexOf('min-width: 0') !== -1, 'усадка для переносов текста');
-        const leg = ruleBlock('#wsPrintSheet .wsp-legend {');
-        assertTrue(leg.indexOf('flex: 0 0 92mm') !== -1,
-            'блок кодов — фиксированная ширина 92mm (справа)');
-        assertTrue(leg.indexOf('margin-top: 0') !== -1,
-            'отступ сверху снят — общая верхняя линия с мероприятиями');
+        assertTrue(mev.indexOf('flex:') === -1 && mev.indexOf('min-width') === -1,
+            'мероприятия не ограничены — столбик на всю ширину листа');
+        assertTrue(ruleBlock('#wsPrintSheet .wsp-legend {') === '' &&
+                   INDEX_SRC.indexOf('#wsPrintSheet .wsp-legend {') === -1,
+            'правило .wsp-legend удалено вместе с блоком кодов');
     });
 
-    test('DOM: порядок секций — мероприятия, затем коды, внутри обёртки', () => {
+    test('DOM: в обёртке — только мероприятия (Task 442)', () => {
         const b = stripComments(methodText(WS_CLIENT, '_buildPrintHtml'));
         const iOpen = b.indexOf('<div class="wsp-bottom">');
         const iMev = b.indexOf('<div class="wsp-mev">');
-        const iLegend = b.indexOf('<div class="wsp-legend">');
-        const iCols = b.indexOf('<div class="wsp-legend-cols">');
-        assertTrue(iOpen !== -1 && iMev !== -1 && iLegend !== -1,
-            'обёртка и секции строятся');
-        assertTrue(iOpen < iMev && iMev < iLegend && iLegend < iCols,
-            'порядок: обёртка → мероприятия → коды (+сетка 2 колонки Task 434)');
+        assertTrue(iOpen !== -1 && iMev !== -1,
+            'обёртка и секция мероприятий строятся');
+        assertTrue(iOpen < iMev, 'обёртка → мероприятия');
+        assertTrue(b.indexOf('wsp-legend') === -1,
+            'секции кодов в разметке нет (столбец удалён, Task 442)');
     });
 });
 
@@ -266,26 +257,24 @@ describe('Task 439 — VM: печатный лист (колонка + ряд)',
         assertEqual(w, 43.5, 'по самому длинному ФИО печатаемых строк');
     });
 
-    test('VM: мероприятия и коды — в одной обёртке, коды следом', () => {
+    test('VM: в обёртке — только мероприятия (Task 442)', () => {
         const html = sheetHost({ entries: { '2026-09-02|017': { 'статус': 'ОТ' } } })
             ._buildPrintHtml(EMPS, AGG);
         const iOpen = html.indexOf('<div class="wsp-bottom">');
         const iMev = html.indexOf('<div class="wsp-mev">');
-        const iLegend = html.indexOf('<div class="wsp-legend">');
-        const iClose = html.indexOf('</div></div>', iLegend);
-        assertTrue(iOpen !== -1 && iMev !== -1 && iLegend !== -1,
-            'секции строятся');
-        assertTrue(iOpen < iMev && iMev < iLegend,
-            'мероприятия слева (первый в DOM), коды — справа (второй)');
-        const row = html.slice(iOpen, iClose);
+        assertTrue(iOpen !== -1 && iMev !== -1,
+            'обёртка и секция мероприятий строятся');
+        assertTrue(iOpen < iMev, 'мероприятия — первая (и единственная) секция');
+        const row = html.slice(iOpen, html.indexOf('</div></div>', iOpen));
         assertTrue(row.indexOf('Мероприятия · сентябрь 2026 · 1') !== -1,
-            'заголовок мероприятий в ряду');
-        assertTrue(row.indexOf('Коды:') !== -1, 'заголовок кодов в ряду');
-        assertTrue(row.indexOf('ОТ — отпуск') !== -1,
-            'код месяца в блоке кодов');
+            'заголовок мероприятий на месте');
+        assertTrue(row.indexOf('Коды:') === -1,
+            'заголовка кодов нет (столбец удалён, Task 442)');
+        assertTrue(row.indexOf('ОТ — отпуск') === -1,
+            'расшифровок кодов нет');
     });
 
-    test('VM: пустой месяц мероприятий — заглушка слева, коды справа', () => {
+    test('VM: пустой месяц мероприятий — заглушка, кодов нет', () => {
         const html = sheetHost({ trainings: [],
                                  entries: { '2026-09-02|017': { 'статус': 'ОТ' } } })
             ._buildPrintHtml(EMPS, AGG);
@@ -293,7 +282,7 @@ describe('Task 439 — VM: печатный лист (колонка + ряд)',
         const row = html.slice(iOpen, html.indexOf('</div></div>', iOpen));
         assertTrue(row.indexOf('нет мероприятий в этом месяце') !== -1,
             'заглушка мероприятий на месте');
-        assertTrue(row.indexOf('Коды:') !== -1, 'блок кодов строится');
+        assertTrue(row.indexOf('Коды:') === -1, 'блока кодов нет (Task 442)');
     });
 });
 
@@ -307,7 +296,6 @@ describe('Task 439 — VM: _printModel (tip)', () => {
         return new Function('ProdCalendar', 'return ({' +
             methodText(WS_CLIENT, '_printModel') + ',' +
             methodText(WS_CLIENT, '_printEventsData') + ',' +
-            methodText(WS_CLIENT, '_printCodesData') + ',' +
             '_year: 2026, _month: 9, _view: ' + JSON.stringify(opts.view || 'full') + ',' +
             '_isoDate: function(dt) { return dt.getFullYear() + "-" + ' +
                 '(dt.getMonth() < 9 ? "0" : "") + (dt.getMonth() + 1) + "-" + ' +
@@ -385,70 +373,66 @@ describe('Task 439 — VM: раскладка PDF (коды рядом с мер
             '});')();
     }
 
-    test('VM: компактный месяц — ОДНА страница: таблица + события + коды', () => {
+    test('VM: компактный месяц — ОДНА страница: таблица + события', () => {
         const lay = layoutHost()._printPdfLayout(fakeModel(10, 3, 4));
         assertEqual(lay.pages.length, 1, 'всё на одной странице');
         const p = lay.pages[0];
         assertEqual(p.events.length, 3, 'события на ней же');
-        assertEqual(p.codes.length, 4, 'коды на ней же (справа от событий)');
+        assertTrue(!p.codes, 'кодов нет (Task 442: столбец удалён)');
     });
 
-    test('VM: ГРАНИЧНЫЙ случай — пара (max) влезает, сумма не влезала бы', () => {
+    test('VM: ГРАНИЧНЫЙ случай — события влезают под таблицей', () => {
         // A4-альбом: contentH = 595 − 2×23 = 549. Первая страница:
         // шапка 34 + gap 8 + лента 24 → 21 строка. При 22 строках
         // вторая страница: used = 24 + 22 + 8 = 54. 33 события:
-        // evH = 18 + 33×13 = 447; cdH (4 кода, ОДИН столбец
-        // Task 441) = 74. Прежняя сумма (447 + 8 + 74 = 529;
-        // 54 + 529 = 583 > 549) не влезала — теперь пара =
-        // max(447, 74) = 447; 54 + 447 = 501 ≤ 549:
-        // события И коды — на последней странице таблицы
+        // evH = 18 + 33×13 = 447; 54 + 447 = 501 ≤ 549 — события
+        // на последней странице таблицы (кодов больше нет, Task 442)
         const lay = layoutHost()._printPdfLayout(fakeModel(22, 33, 4));
-        assertEqual(lay.pages.length, 2, '2 страницы (прежде было бы 3)');
+        assertEqual(lay.pages.length, 2, '2 страницы');
         const last = lay.pages[1];
         assertEqual(last.rows.length, 1, 'вторая страница — последняя строка');
         assertEqual(last.events.length, 33, 'все события на ней');
-        assertTrue(!!last.codes, 'коды РЯДОМ с событиями (Task 439: max, не сумма)');
+        assertTrue(!last.codes, 'кодов нет (Task 442)');
     });
 
-    test('VM: много событий — режутся, коды — с последним куском', () => {
+    test('VM: много событий — режутся по страницам', () => {
         const lay = layoutHost()._printPdfLayout(fakeModel(60, 200, 4));
         const evPages = lay.pages.filter(p => p.events && p.rows.length === 0);
         assertTrue(evPages.length >= 2, '200 событий — несколько страниц');
         const last = lay.pages[lay.pages.length - 1];
-        assertTrue(!!last.codes, 'коды размещены (рядом с последним куском событий)');
+        assertTrue(!!last.events, 'последняя страница — мероприятия');
+        assertTrue(!last.codes, 'кодов нет (Task 442)');
         let evTotal = 0;
         for (const p of evPages) evTotal += p.events.length;
         assertEqual(evTotal, 200, 'все события распределены без потерь');
     });
 
-    test('VM: тесная страница — коды отдельной страницей (не теряются)', () => {
-        // низкая «страница» (H=300): пара событий+кодов не влезает —
-        // коды уходят на собственную страницу
+    test('VM: тесная страница — события режутся, ничего не теряется', () => {
+        // низкая «страница» (H=300): события не влезают под лентой —
+        // уходят отдельными страницами (кодов больше нет, Task 442)
         const lay = layoutHost()._printPdfLayout(fakeModel(0, 100, 40), { H: 300 });
         const last = lay.pages[lay.pages.length - 1];
-        assertTrue(!!last.codes, 'коды — на последней странице');
-        assertEqual(last.codes.length, 40, 'все 40 кодов (одной страницей)');
+        assertTrue(!!last.events, 'последняя страница — мероприятия');
+        let evTotal = 0;
+        for (const p of lay.pages) {
+            if (p.events) evTotal += p.events.length;
+        }
+        assertEqual(evTotal, 100, 'все 100 событий распределены');
     });
 
-    test('VM: раскладка несёт геометрию зон (codeW/colGap/evW)', () => {
+    test('VM: раскладка — мероприятия на ВСЮ ширину (evW)', () => {
         const lay = layoutHost()._printPdfLayout(fakeModel(2, 1, 2));
-        assertEqual(lay.codeW, 235, 'ширина правой зоны кодов');
-        // Task 440: зазор 10px = 7.5pt (1px = 0.75pt)
-        assertEqual(lay.colGap, 7.5, 'зазор между мероприятиями и кодами — 7.5pt (= 10px)');
-        assertEqual(lay.evW, lay.W - 2 * lay.M - 235 - 7.5,
-            'левая зона мероприятий = остаток ширины');
-        // переопределение зон через opts
-        const lay2 = layoutHost()._printPdfLayout(fakeModel(2, 1, 2),
-                                                  { codeW: 300, colGap: 20 });
-        assertEqual(lay2.codeW, 300, 'codeW переопределяется opts');
-        assertEqual(lay2.colGap, 20, 'colGap переопределяется opts');
+        assertTrue(!('codeW' in lay), 'зоны кодов нет (Task 442)');
+        assertTrue(!('colGap' in lay), 'зазора мероприятий↔коды нет');
+        assertEqual(lay.evW, lay.W - 2 * lay.M,
+            'зона мероприятий = вся ширина листа (без вычета кодов)');
     });
 
-    test('VM: пустой месяц (0 строк, 0 событий) — заглушка + коды рядом', () => {
+    test('VM: пустой месяц (0 строк, 0 событий) — заглушка', () => {
         const lay = layoutHost()._printPdfLayout(fakeModel(0, 0, 2));
         const last = lay.pages[lay.pages.length - 1];
         assertTrue(!!last.events, 'события-заглушка размещены');
-        assertTrue(!!last.codes, 'коды размещены');
+        assertTrue(!last.codes, 'кодов нет (Task 442)');
     });
 });
 
@@ -469,21 +453,17 @@ describe('Task 439 — SRC: отрисовка PDF (_printPdfPaintPage)', () => 
             'кламп ширины 46–150 pt (мин снижен с 70 — Тип короче)');
     });
 
-    test('SRC: коды — ПРАВАЯ зона (codeX), мероприятия — левая с переносом', () => {
+    test('SRC: зоны кодов нет, мероприятия — вся ширина (Task 442)', () => {
         const b = stripComments(methodText(WS_CLIENT, '_printPdfPaintPage'));
-        // Task 440: codeX — за фактическим краем текста мероприятий
-        // (evRightMax + colGap, ограничен правым краем листа);
-        // край листа остаётся ОГРАНИЧЕНИЕМ (x0 + CW - codeW в min)
-        assertTrue(b.indexOf('codeX = Math.min(evRightMax + colGap,') !== -1 &&
-                   b.indexOf('x0 + CW - codeW)') !== -1,
-            'зона кодов: за текстом мероприятий, не правее края листа');
-        assertTrue(b.indexOf("ctx.fillText('Коды:', codeX, y + 8)") !== -1,
-            'заголовок «Коды:» рисуется в правой зоне');
-        assertTrue(b.indexOf('var botY = y;') !== -1 &&
-                   b.indexOf('y = botY;') !== -1,
-            'общая верхняя линия блоков (botY)');
-        assertTrue(b.indexOf('evMaxW') !== -1 && b.indexOf('evWords') !== -1,
-            'текст мероприятий переносится по словам в левой зоне');
+        assertTrue(b.indexOf('codeX') === -1 && b.indexOf('evZoneW') === -1,
+            'геометрии зон кодов (Task 439/440) нет — столбец удалён');
+        assertTrue(b.indexOf("'Коды:'") === -1,
+            'заголовка «Коды:» в PDF нет');
+        assertTrue(b.indexOf('botY') === -1,
+            'общей верхней линии пары блоков нет');
+        assertTrue(b.indexOf('var evMaxW = x0 + CW - ex;') !== -1 &&
+                   b.indexOf('evWords') !== -1,
+            'текст мероприятий переносится по словам до края ЛИСТА');
     });
 });
 
@@ -497,7 +477,7 @@ describe('Task 439 — VM: Excel (Тип в колонке A, коды в кол
         return new Function('ProdCalendar', 'return ({' +
             methodText(WS_CLIENT, '_printModel') + ',' +
             methodText(WS_CLIENT, '_printEventsData') + ',' +
-            methodText(WS_CLIENT, '_printCodesData') + ',' +
+            methodText(WS_CLIENT, '_wsTabelStyleMap') + ',' +
             methodText(WS_CLIENT, '_wsTabelStylesXml') + ',' +
             methodText(WS_CLIENT, '_wsTabelRows') + ',' +
             methodText(WS_CLIENT, '_wsTabelSheetXml') + ',' +
@@ -563,10 +543,10 @@ describe('Task 439 — VM: Excel (Тип в колонке A, коды в кол
             'ФИО + \\n + Тип в одной ячейке (Task 439)');
     });
 
-    test('VM: коды — в колонке D на тех же строках, что мероприятия', () => {
+    test('VM: блок — только A/B, колонок C/D нет (Task 442)', () => {
         const host = tabelHost();
         const rows = host._wsTabelRows(host._printModel(EMPS, AGG), {});
-        // строка-заголовок блока: A = «Мероприятия · …», D = «Коды:»
+        // строка-заголовок блока: A = «Мероприятия · …» (одна ячейка)
         let hdr = null;
         for (const r of rows) {
             if (r[0] && String(r[0].v).indexOf('Мероприятия · ') === 0) {
@@ -574,21 +554,17 @@ describe('Task 439 — VM: Excel (Тип в колонке A, коды в кол
             }
         }
         assertTrue(hdr !== null, 'заголовок блока мероприятий найден');
-        assertEqual(hdr.length, 4, 'строка заголовка: A + зазор C + D');
-        assertEqual(hdr[3].v, 'Коды:', '«Коды:» — в колонке D (справа)');
-        assertEqual(hdr[1], null, 'B в заголовке пуст (дата мероприятия ниже)');
-        // первая строка данных блока: A = дата, B = текст, D = код
+        assertEqual(hdr.length, 1, 'заголовок — ОДНА ячейка (без «Коды:»)');
+        // первая строка данных блока: A = дата, B = текст — и всё
         const idx = rows.indexOf(hdr);
         const first = rows[idx + 1];
         assertEqual(first[0].v, '02.09', 'дата мероприятия в A');
         assertTrue(String(first[1].v).indexOf('И · Повторный инструктаж') === 0,
             'текст мероприятия в B');
-        assertTrue(String(first[3].v).indexOf(' — ') !== -1 ||
-                   String(first[3].v).length > 0,
-            'код месяца — в колонке D той же строки');
+        assertTrue(first.length <= 2, 'правее B ячеек нет (Task 442)');
     });
 
-    test('VM: пустой месяц — заглушка в A, «Коды:» всё равно в D', () => {
+    test('VM: пустой месяц — заглушка в A, кодов нет', () => {
         const host = tabelHost();
         host._TRAININGS = [];
         const rows = host._wsTabelRows(host._printModel(EMPS, AGG), {});
@@ -601,7 +577,7 @@ describe('Task 439 — VM: Excel (Тип в колонке A, коды в кол
         const first = rows[rows.indexOf(hdr) + 1];
         assertEqual(first[0].v, 'нет мероприятий в этом месяце',
             'заглушка мероприятий в колонке A');
-        assertEqual(hdr[3].v, 'Коды:', 'заголовок кодов — в D');
+        assertEqual(hdr.length, 1, 'заголовка «Коды:» нет (Task 442)');
     });
 
     test('VM: ширина столбца A — по самому большому тексту (не 30)', () => {
@@ -636,18 +612,16 @@ describe('Task 439 — VM: Excel (Тип в колонке A, коды в кол
             'в ячейке A6 — ФИО и Тип двумя строками');
     });
 
-    test('VM: «Коды:» в колонке D листа (заголовок справа от мероприятий)', () => {
+    test('VM: «Коды:» в книге НЕТ (Task 442), мероприятия живы', () => {
         const wb = tabelHost()._buildTabelWorkbook(EMPS, AGG);
         const z = parseZip(wb.bytes);
         const sheet = Buffer.from(
             z.files.filter(f => f.name === 'xl/worksheets/sheet1.xml')[0].data)
             .toString('utf8');
-        // Task 440: «Коды:» — стиль 8 (шапка + indent 1 — зазор
-        // ~7px от текста мероприятий, Excel-эквивалент 10px)
-        assertTrue(/<c r="D\d+" t="inlineStr" s="8"><is><t>Коды:<\/t><\/is><\/c>/
-            .test(sheet), '«Коды:» — колонка D со стилем шапки и отступом');
+        assertTrue(sheet.indexOf('>Коды:<') === -1,
+            'секции «Коды:» в листе нет (столбец удалён, Task 442)');
         assertTrue(sheet.indexOf('Мероприятия · сентябрь 2026 · 1') !== -1,
-            'заголовок мероприятий — колонка A той же строки');
+            'заголовок мероприятий — колонка A');
     });
 
     function parseZip(bytes) {
@@ -834,15 +808,15 @@ describe('Task 439 — VM: _renderCellPopup (дедуп «.»)', () => {
 // ============================================================
 describe('Task 439 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v665', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v665'") !== -1,
-            'CACHE_VERSION = kipia-test-v665 (Task 439 — печать/попап)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v666') !== -1,
+    test('SW: кэш поднят до kipia-test-v666', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v666'") !== -1,
+            'CACHE_VERSION = kipia-test-v666 (Task 439 — печать/попап)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v667') !== -1,
             'лишний инкремент (v664) не сделан');
     });
 
     test('SW: в index.html нет захардкоженной версии кэша', () => {
-        assertFalse(INDEX_SRC.indexOf('kipia-test-v665') !== -1,
+        assertFalse(INDEX_SRC.indexOf('kipia-test-v666') !== -1,
             'клиент не знает номер кэша (версией управляет sw.js)');
     });
 });
