@@ -31,7 +31,7 @@
 //     статус-мероприятия без строки в «Инструктажах»; CSS
 //     .wsp-ev-wrap/.wsp-ev/.wsp-ev-plan; сноска поясняет значок.
 //
-// SW: kipia-test-v661.
+// SW: kipia-test-v662.
 //
 // Запуск: через tests/run-all.js (require './test-task361.js').
 
@@ -154,10 +154,10 @@ describe('Task 361 — SRC: размеры и шрифты листа', () => {
             'заголовок 18px (был 15px)');
         assertTrue(ruleOf('#wsPrintSheet .wsp-sub {').indexOf('font-size: 14px') !== -1,
             'месяц/год/вид 14px (был 12px)');
-        assertTrue(ruleOf('#wsPrintSheet .wsp-meta {').indexOf('font-size: 12px') !== -1,
-            'норма месяца 12px (была 10px)');
-        assertTrue(ruleOf('#wsPrintSheet .wsp-printed {').indexOf('font-size: 11px') !== -1,
-            'штамп «Распечатано» 11px (был 9px)');
+        assertTrue(INDEX_SRC.indexOf('#wsPrintSheet .wsp-meta {') === -1,
+            'строки нормы нет — правило удалено (Task 438)');
+        assertTrue(INDEX_SRC.indexOf('#wsPrintSheet .wsp-printed {') === -1,
+            'штампа «Распечатано» нет — правило удалено (Task 438)');
     });
 
     test('SRC: строки ПОД таблицей крупнее', () => {
@@ -165,8 +165,8 @@ describe('Task 361 — SRC: размеры и шрифты листа', () => {
             'список мероприятий 11px (был 8px)');
         assertTrue(ruleOf('#wsPrintSheet .wsp-legend {').indexOf('font-size: 11px') !== -1,
             'перечень кодов 11px (был 8px)');
-        assertTrue(ruleOf('#wsPrintSheet .wsp-foot {').indexOf('font-size: 10px') !== -1,
-            'сноска 10px (была 7.5px)');
+        assertTrue(INDEX_SRC.indexOf('#wsPrintSheet .wsp-foot {') === -1,
+            'сноска удалена — правило .wsp-foot убрано (Task 438)');
         const i = ruleOf('#wsPrintSheet .wsp-mev-item i {');
         assertTrue(i.indexOf('width: 9px') !== -1, 'точка цвета 9px (была 7px)');
         const lg = ruleOf('#wsPrintSheet .wsp-lg i {');
@@ -191,9 +191,9 @@ describe('Task 361 — SRC: размеры и шрифты листа', () => {
 
     test('SRC: итоговые колонки и точка переработки шире/крупнее', () => {
         assertTrue(ruleOf('#wsPrintSheet .wsp-tot {').indexOf('width: 10mm') !== -1,
-            '«Дни»/«Часы» 10mm (были 9mm)');
-        assertTrue(ruleOf('#wsPrintSheet .wsp-tot.wsp-tot-over {').indexOf('width: 14mm') !== -1,
-            '«Перераб.» 14mm (была 12mm)');
+            '«Дни» 10mm (были 9mm)');
+        assertTrue(ruleOf('#wsPrintSheet .wsp-tot.wsp-tot-over {').indexOf('width: 12mm') !== -1,
+            '«Перераб.» 12mm (Task 438: только дни; было 14mm под «дни/ч»)');
         const over = ruleOf('#wsPrintSheet .wsp-over {');
         assertTrue(over.indexOf('width: 2.2mm') !== -1 && over.indexOf('height: 2.2mm') !== -1,
             'точка переработки 2.2mm (была 1.6mm)');
@@ -236,10 +236,10 @@ describe('Task 361 — SRC: бейджи мероприятий в печати'
             'бейджи добавляются в ячейку после кода');
     });
 
-    test('SRC: сноска поясняет значок мероприятия в углу ячейки', () => {
+    test('SRC: сноска удалена — пояснений значка больше нет (Task 438)', () => {
         const b = stripComments(methodText(WS_CLIENT, '_buildPrintHtml'));
-        assertTrue(b.indexOf('значок в углу ячейки') !== -1,
-            'пояснение значка мероприятия');
+        assertTrue(b.indexOf('значок в углу ячейки') === -1,
+            'сноска с пояснением значка удалена вместе со wsp-foot (Task 438)');
         assertFalse(b.indexOf('день ещё не сформирован') !== -1,
             'пояснение «день ещё не сформирован» удалено (Task 388)');
     });
@@ -473,7 +473,8 @@ describe('Task 361 — VM: регресс печатного листа', () => 
         assertTrue(html.indexOf('<table class="wsp-grid">') !== -1, 'таблица');
         assertTrue(html.indexOf('<div class="wsp-mev">') !== -1, 'секция мероприятий (Task 360)');
         assertTrue(html.indexOf('<div class="wsp-legend">') !== -1, 'перечень кодов (Task 360)');
-        assertTrue(html.indexOf('значок в углу ячейки') !== -1, 'сноска с пояснением значка (Task 361)');
+        assertTrue(html.indexOf('значок в углу ячейки') === -1,
+            'сноски с пояснением значка нет (Task 438)');
         assertTrue(html.indexOf('wsp-sum') === -1, 'итоговой строки нет (Task 343 жив)');
     });
 });
@@ -483,10 +484,10 @@ describe('Task 361 — VM: регресс печатного листа', () => 
 // ============================================================
 describe('Task 361 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v661', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v661'") !== -1,
-            'CACHE_VERSION = kipia-test-v661 (Task 361 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v662') !== -1,
+    test('SW: кэш поднят до kipia-test-v662', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v662'") !== -1,
+            'CACHE_VERSION = kipia-test-v662 (Task 361 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v663') !== -1,
             'v605 ещё не существует (лишний инкремент)');
     });
 

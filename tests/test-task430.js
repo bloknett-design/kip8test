@@ -41,7 +41,7 @@
 //      оверлей удалён, Esc → закрыт;
 //  14) printGrid фолбэк: без _openPrintPreview — window.print
 //      (прежнее поведение Task 341).
-//   SW: kipia-test-v661.
+//   SW: kipia-test-v662.
 // ============================================================
 
 const fs = require('fs');
@@ -125,9 +125,9 @@ describe('Task 430 — SRC: printGrid открывает предпросмот�
 
     test('printGrid: диалог ДО печати, window.print — фолбэк', () => {
         const m = methodText(INDEX_SRC, 'printGrid');
-        const iPrev = m.indexOf('this._openPrintPreview(html)');
+        const iPrev = m.indexOf('this._openPrintPreview(html, {');
         const iPrint = m.indexOf('window.print()');
-        assertTrue(iPrev !== -1, 'printGrid зовёт _openPrintPreview');
+        assertTrue(iPrev !== -1, 'printGrid зовёт _openPrintPreview (Task 438: с контекстом)');
         assertTrue(iPrint !== -1, 'фолбэк window.print жив');
         assertTrue(iPrev < iPrint, 'предпросмотр РАНЬШЕ печати');
         assertTrue(m.indexOf('if (!opened) window.print()') !== -1,
@@ -151,13 +151,17 @@ describe('Task 430 — SRC: printGrid открывает предпросмот�
             '281мм печатной области @96dpi');
     });
 
-    test('кнопки диалога: Печать / Сохранить в файл / Отмена', () => {
+    test('кнопки диалога: Печать / Сохранить PDF / Сохранить Excel / Отмена', () => {
         const i = INDEX_SRC.indexOf("class=\"wspprev-btn wspprev-print\"");
         assertTrue(i !== -1, 'кнопка Печать');
-        const seg = INDEX_SRC.slice(i, i + 900);
-        assertTrue(seg.indexOf('wspprev-save') !== -1, 'кнопка Сохранить в файл');
+        const seg = INDEX_SRC.slice(i, i + 1200);
+        assertTrue(seg.indexOf('wspprev-pdf') !== -1, 'кнопка Сохранить PDF (Task 438)');
+        assertTrue(seg.indexOf('wspprev-xlsx') !== -1, 'кнопка Сохранить Excel (Task 438)');
         assertTrue(seg.indexOf('wspprev-cancel') !== -1, 'кнопка Отмена');
-        assertTrue(seg.indexOf('Сохранить в файл') !== -1, 'текст кнопки файла');
+        assertTrue(seg.indexOf('Сохранить PDF') !== -1, 'текст кнопки PDF');
+        assertTrue(seg.indexOf('Сохранить Excel') !== -1, 'текст кнопки Excel');
+        assertTrue(seg.indexOf('wspprev-save') === -1,
+            'кнопки «Сохранить в файл» (HTML) больше нет (Task 438)');
     });
 
     test('экран предпросмотра не появляется в печатном окне', () => {
@@ -667,30 +671,19 @@ describe('Task 430 — VM: _buildPrintFileHtml', () => {
         assertTrue(html.indexOf('padding:0') !== -1, 'без внешних отступов');
     });
 
-    test('_savePrintFile: имя График_работы_‹Месяц›_‹год›.html', () => {
-        const dl = { calls: [] };
-        const toasts = [];
-        const KipToast = { show: function(m) { toasts.push(m); } };
-        const host = new Function('KipToast', 'return ({' +
-            methodText(INDEX_SRC, '_savePrintFile') + ',\n' +
-            methodText(INDEX_SRC, '_buildPrintFileHtml') + ',\n' +
-            "_printCssText: function() { return ''; }," +
-            '_esc: function(s) { return String(s); },' +
-            '_month: 9, _year: 2026,' +
-            '});')(KipToast);
-        host._wsDownload = function(b, m, n) {
-            dl.calls.push({ m: m, n: n });
-            return true;
-        };
-        host._wsXlsBytes = function(s) { return s; };
-        host._savePrintFile('SHEET');
-        assertEqual(dl.calls.length, 1, 'файл отдан в загрузки');
-        assertEqual(dl.calls[0].n, 'График_работы_Сентябрь_2026.html',
-            'имя файла графика');
-        assertEqual(dl.calls[0].m, 'text/html;charset=utf-8', 'mime html');
-        assertEqual(toasts.length, 1, 'тост показан');
-        assertTrue(toasts[0].indexOf('График сохранён') !== -1,
-            'текст тоста');
+    test('_savePrintFile (HTML) удалён — вместо него PDF/Excel (Task 438)', () => {
+        // Заявка Task 438: «сделай возможность сохранения в файл
+        // вместо html в PDF и Excel» — HTML-выгрузка удалена
+        assertTrue(INDEX_SRC.indexOf('_savePrintFile: function') === -1,
+            'метод _savePrintFile удалён из клиента');
+        assertTrue(INDEX_SRC.indexOf('График_работы_Сентябрь_2026.html') === -1 &&
+                   INDEX_SRC.indexOf("+'_' +\n                       this._year + '.html'") === -1,
+            'HTML-имя файла больше не собирается');
+        assertTrue(INDEX_SRC.indexOf('_savePrintPdf: function') !== -1,
+            'метод _savePrintPdf определён (PDF)');
+        assertTrue(INDEX_SRC.indexOf('_savePrintXlsx: function') !== -1,
+            'метод _savePrintXlsx определён (Excel)');
+        // полные VM-проверки выгрузок PDF/Excel — tests/test-task438.js
     });
 });
 
@@ -915,10 +908,10 @@ describe('Task 430 — VM: printGrid без диалога — прежняя п
 // ============================================================
 describe('Task 430 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v661', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v661'") !== -1,
-            'CACHE_VERSION = kipia-test-v661 (Task 430 — предпросмотр печати + архив)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v662') !== -1,
+    test('SW: кэш поднят до kipia-test-v662', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v662'") !== -1,
+            'CACHE_VERSION = kipia-test-v662 (Task 430 — предпросмотр печати + архив)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v663') !== -1,
             'лишний инкремент не сделан');
     });
 

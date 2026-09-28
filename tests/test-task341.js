@@ -20,7 +20,7 @@
 // display:none. Печатается ТЕКУЩИЙ вид табеля (у уровня min
 // «Мастер КИПиА» скрыт — _viewEmployees, Task 340).
 //
-// SW: kipia-test-v661.
+// SW: kipia-test-v662.
 //
 // Запуск: через tests/run-all.js (require './test-task341.js').
 
@@ -402,13 +402,14 @@ describe('Task 341 — _buildPrintHtml (VM)', () => {
         { 'ФИО': 'Сидоров Сидор Сидорович', 'таб_номер': '031' }
     ];
 
-    test('VM: шапка — заголовок, месяц/год, вид, штамп печати', () => {
+    test('VM: шапка — заголовок, месяц/год, вид (Task 438: 2 строки)', () => {
         var html = sheetHost({ view: 'shift' })._buildPrintHtml(EMPS, AGG);
-        assertTrue(html.indexOf('График работы — табель учёта рабочего времени') !== -1,
-            'заголовок листа');
+        assertTrue(html.indexOf('<div class="wsp-title">График работы</div>') !== -1,
+            'заголовок листа (Task 438: «График работы»)');
         assertTrue(html.indexOf('Сентябрь 2026') !== -1, 'месяц и год');
         assertTrue(html.indexOf('вид табеля: сменный') !== -1, 'вид табеля');
-        assertTrue(html.indexOf('Распечатано:') !== -1, 'штамп «Распечатано»');
+        assertTrue(html.indexOf('Распечатано:') === -1,
+            'штампа «Распечатано» нет (Task 438)');
     });
 
     test('VM: шапка таблицы — 30 дней сентября с днями недели', () => {
@@ -436,15 +437,17 @@ describe('Task 341 — _buildPrintHtml (VM)', () => {
         assertTrue(th5.indexOf('wsp-off') !== -1, 'суббота — класс выходного');
     });
 
-    test('VM: строки сотрудников — ФИО, должность, итоги «Дни»/«Часы»', () => {
+    test('VM: строки сотрудников — ФИО, должность, итоги (Task 438: без «Часов»)', () => {
         var html = sheetHost()._buildPrintHtml(EMPS, AGG);
         assertTrue(html.indexOf('Иванов Иван Иванович') !== -1, 'ФИО сотрудника');
         assertTrue(html.indexOf('Слесарь КИПиА, смена 1') !== -1, 'должность под ФИО');
         assertTrue(html.indexOf('>21</td>') !== -1, 'дни явки 017');
-        assertTrue(html.indexOf('>151,2</td>') !== -1, 'часы 017 с запятой');
-        assertTrue(html.indexOf('<th class="wsp-tot">Дни</th>') !== -1 &&
-                   html.indexOf('<th class="wsp-tot">Часы</th>') !== -1,
-            'заголовки колонок итогов');
+        assertTrue(html.indexOf('>151,2</td>') === -1,
+            'часы НЕ печатаются (Task 438: колонка «Часы» удалена)');
+        assertTrue(html.indexOf('<th class="wsp-tot">Дни</th>') !== -1,
+            'заголовок колонки «Дни»');
+        assertTrue(html.indexOf('<th class="wsp-tot">Часы</th>') === -1,
+            'колонки «Часы» нет (Task 438)');
     });
 
     test('VM: итоговой строки НЕТ (Task 343), легенда и пояснения живы (Task 360: коды месяца)', () => {
@@ -467,14 +470,16 @@ describe('Task 341 — _buildPrintHtml (VM)', () => {
             'код месяца Д с расшифровкой из справочника');
         assertTrue(html.indexOf('Н — Ночь (12-час)') !== -1,
             'код месяца Н с расшифровкой');
-        assertTrue(html.indexOf('wsp-foot') !== -1, 'пояснения внизу');
+        assertTrue(html.indexOf('wsp-foot') === -1,
+            'пояснения внизу удалены (Task 438)');
     });
 
-    test('VM: норма месяца — из ProdCalendar (когда доступен)', () => {
+    test('VM: нормы в шапке НЕТ даже при живом ProdCalendar (Task 438)', () => {
         var pcal = { monthStats: function(y, m) { return { workDays: 22, hours40: 176 }; } };
         var html = sheetHost({ pcal: pcal })._buildPrintHtml(EMPS, AGG);
-        assertTrue(html.indexOf('Норма (40-час. неделя): 22 раб. дн. · 176 ч') !== -1,
-            'строка нормы');
+        assertTrue(html.indexOf('Норма (40-час') === -1,
+            'строка нормы удалена из шапки (Task 438)');
+        assertTrue(html.indexOf('22 раб. дн.') === -1, 'цифр нормы нет');
     });
 
     test('VM: ProdCalendar недоступен — лист БЕЗ нормы (не падает)', () => {
@@ -511,10 +516,10 @@ describe('Task 341 — _buildPrintHtml (VM)', () => {
 // ============================================================
 describe('Task 341 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v661', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v661'") !== -1,
-            'CACHE_VERSION = kipia-test-v661 (Task 341 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v662') !== -1,
+    test('SW: кэш поднят до kipia-test-v662', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v662'") !== -1,
+            'CACHE_VERSION = kipia-test-v662 (Task 341 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v663') !== -1,
             'лишний инкремент (v580) не сделан');
     });
 

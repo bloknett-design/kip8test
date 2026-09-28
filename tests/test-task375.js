@@ -105,10 +105,12 @@ describe('Task 375 — SRC: печать табеля, коды справа н�
 
     test('«gap: 5mm» больше нигде в печати не встречается', () => {
         // единственное историческое упоминание 5mm — само правило,
-        // оно заменено; проверяем полный источник печати
+        // оно заменено; проверяем полный print-блок (от @media print
+        // до следующей секции CSS — Task 438: якорь .wsp-foot
+        // удалён вместе со сноской)
         const z = INDEX_SRC.indexOf('@media print');
-        const z2 = INDEX_SRC.indexOf('}', INDEX_SRC.indexOf('#wsPrintSheet .wsp-foot'));
-        const printCss = INDEX_SRC.slice(z, z2);
+        const z2 = INDEX_SRC.indexOf('/* Task 317', z);
+        const printCss = INDEX_SRC.slice(z, z2 !== -1 ? z2 : z + 20000);
         assertTrue(printCss.indexOf('gap: 5mm') === -1,
             'в print-блоке не осталось зазора 5mm');
     });
@@ -569,13 +571,13 @@ describe('Task 375 — SRC: сервер FlowmeterArchive.gs', () => {
 // ============================================================
 describe('Task 375 — SW кэш', () => {
 
-    test('SW: CACHE_VERSION = kipia-test-v661', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v661'") !== -1,
+    test('SW: CACHE_VERSION = kipia-test-v662', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v662'") !== -1,
             'версия кэша поднята до v604');
     });
 
     test('SW: нет v603 (старая) и нет v605 (двойной бамп)', () => {
         assertTrue(SW_SRC.indexOf('kipia-test-v603') === -1, 'старая версия не осталась');
-        assertTrue(SW_SRC.indexOf('kipia-test-v662') === -1, 'двойного бампа не было');
+        assertTrue(SW_SRC.indexOf('kipia-test-v663') === -1, 'двойного бампа не было');
     });
 });

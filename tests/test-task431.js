@@ -32,7 +32,7 @@
 //      ✎ — левее колонки; зритель — колонка с одной галочкой
 //      состояния (выполнено); запись без id — без колонки;
 //      попап (!asBlocks) — БЕЗ галочки, прежний порядок ✎/✕.
-//   SW: kipia-test-v661.
+//   SW: kipia-test-v662.
 // ============================================================
 
 const fs = require('fs');
@@ -101,22 +101,28 @@ describe('Task 431 — SRC: печать (коды справа от мероп�
             'отступ строки кодов от списка мероприятий сверху');
     });
 
-    test('wsp-foot — ПОД обоими столбиками (после закрытия wsp-bottom)', () => {
+    test('wsp-foot удалена; закрытия секций — три оператора подряд (Task 438)', () => {
+        // Task 438 (заявка: «нижний текст убери»): сноска wsp-foot
+        // УДАЛЕНА — но структура секций не изменилась
         const f = INDEX_SRC.indexOf("html += '<div class=\"wsp-foot\">");
-        assertTrue(f !== -1, 'сноска wsp-foot есть');
-        // Task 432: закрытие мероприятий и обёртки — ДВА последовательных
-        // оператора (прежде один '</div></div>')
-        const close2 = INDEX_SRC.lastIndexOf("html += '</div>';", f);
-        const close1 = INDEX_SRC.lastIndexOf("html += '</div>';", close2 - 1);
-        assertTrue(close1 !== -1 && close2 !== -1 && close2 - close1 < 200,
-            'перед сноской — закрытие mev + обёртки (два оператора)');
-        const open = INDEX_SRC.lastIndexOf("html += '<div class=\"wsp-bottom\">'", close1);
-        assertTrue(open !== -1 && open < close1,
-            'обёртка wsp-bottom открывается раньше — сноска ПОД обоими столбиками');
-        // внутри обёртки — ОБА столбика: коды (флоат, первым — Task 432) + мероприятия
-        const wrap = INDEX_SRC.slice(open, close1);
+        assertTrue(f === -1, 'сноска wsp-foot не строится (Task 438)');
+        const iLegend = INDEX_SRC.indexOf("html += '<div class=\"wsp-legend\">");
+        assertTrue(iLegend !== -1, 'легенда кодов строится');
+        // Task 434 жив: закрытия сетки-колонок, легенды и обёртки —
+        // ТРИ последовательных оператора (сноска шла после них)
+        const close1 = INDEX_SRC.indexOf("html += '</div>';", iLegend);
+        const close2 = INDEX_SRC.indexOf("html += '</div>';", close1 + 1);
+        const close3 = INDEX_SRC.indexOf("html += '</div>';", close2 + 1);
+        assertTrue(close1 !== -1 && close2 !== -1 && close3 !== -1 &&
+                   close2 - close1 < 200 && close3 - close2 < 200,
+            'закрытия сетки/легенды/обёртки — подряд (Task 434 жив)');
+        const open = INDEX_SRC.lastIndexOf("html += '<div class=\"wsp-bottom\">'", iLegend);
+        assertTrue(open !== -1 && open < iLegend,
+            'обёртка wsp-bottom открывается раньше секций');
+        // внутри обёртки — ОБА блока: мероприятия + коды
+        const wrap = INDEX_SRC.slice(open, close3);
         assertTrue(wrap.indexOf('wsp-mev') !== -1 && wrap.indexOf('wsp-legend') !== -1,
-            'в ряду — столбик мероприятий и столбик кодов');
+            'в обёртке — список мероприятий и перечень кодов');
     });
 });
 
@@ -390,7 +396,7 @@ describe('Task 431 — VM: строка инструктажа (кнопки)', 
 // ============================================================
 describe('Task 431 — SW версия', () => {
     test('v657', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v661') !== -1,
-            'SW кэш kipia-test-v661');
+        assertTrue(SW_SRC.indexOf('kipia-test-v662') !== -1,
+            'SW кэш kipia-test-v662');
     });
 });

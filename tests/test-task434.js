@@ -46,7 +46,7 @@
 //      дата_начала; записи других работников не мешают;
 //   8) _renderEventsPopup: подстрока окна — «05.09.2026»,
 //      ISO-даты «2026-09-05» в окне НЕТ.
-//   SW: kipia-test-v661 (главный), v660 — прежней нет.
+//   SW: kipia-test-v662 (главный), v660 — прежней нет.
 // ============================================================
 
 const fs = require('fs');
@@ -172,7 +172,7 @@ describe('Task 434 — SRC: печать (коды в две колонки)', (
         assertTrue(iClose1 !== -1 && iClose2 !== -1 && iClose3 !== -1 &&
                    iClose2 - iClose1 < 200 && iClose3 - iClose2 < 200,
             'закрытия сетки, легенды и обёртки — три последовательных оператора');
-        assertTrue(iClose3 < iFoot, 'сноска — после закрытия обёртки');
+        assertTrue(iFoot === -1, 'сноска wsp-foot удалена (Task 438)');
     });
 
     test('JS: мероприятие — прежний ряд [дата][текст] (регресс 433)', () => {
@@ -461,9 +461,9 @@ describe('Task 434 — VM: окно «Мероприятия в этот ден�
 // ============================================================
 describe('Task 434 — SW: версия кеша', () => {
     test('v659 (главный), v660 — прежней нет', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v661'") !== -1,
-            'SW кэш kipia-test-v661');
-        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v662'") !== -1,
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v662'") !== -1,
+            'SW кэш kipia-test-v662');
+        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
             'v660 ещё не существует (guard следующего бампа)');
     });
 });

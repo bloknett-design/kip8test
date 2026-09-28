@@ -39,7 +39,7 @@
 //      ✕ (внутри .ws-act-row), ряд — внутри колонки, галочка —
 //      выше ряда; зритель — колонка с одной галочкой состояния;
 //      запись без id — без колонки; попап — без галочки/колонки.
-//   SW: kipia-test-v661 (главный), v659 — прежней нет.
+//   SW: kipia-test-v662 (главный), v659 — прежней нет.
 // ============================================================
 
 const fs = require('fs');
@@ -164,16 +164,16 @@ describe('Task 432/433 — SRC: печать (Task 433: флоат снят, с�
             'порядок: обёртка → мероприятия → коды (вертикальная секция)');
     });
 
-    test('JS: закрытие кодов и обёртки — два оператора перед сноской', () => {
+    test('JS: закрытие кодов и обёртки — два оператора (сноски нет)', () => {
         const b = methodText(INDEX_SRC, '_buildPrintHtml');
         const iFoot = b.indexOf('<div class="wsp-foot">');
         const iClose1 = b.indexOf("html += '</div>';", b.indexOf('<div class="wsp-legend">'));
         const iClose2 = b.indexOf("html += '</div>';", iClose1 + 1);
-        assertTrue(iFoot !== -1 && iClose1 !== -1 && iClose2 !== -1,
+        assertTrue(iFoot === -1, 'сноска wsp-foot удалена (Task 438)');
+        assertTrue(iClose1 !== -1 && iClose2 !== -1,
             'закрытия кодов и обёртки строятся');
         assertTrue(iClose2 - iClose1 < 200,
             'два последовательных оператора закрытия (legend + обёртка)');
-        assertTrue(iClose2 < iFoot, 'сноска — ПОСЛЕ закрытия обёртки');
     });
 });
 
@@ -425,9 +425,9 @@ describe('Task 432/433 — VM: строка инструктажа (Task 433: �
 // ============================================================
 describe('Task 432 — SW версия', () => {
     test('v658 (главный), v659 — прежней нет', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v661') !== -1,
-            'SW кэш kipia-test-v661');
-        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v662'") !== -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v662') !== -1,
+            'SW кэш kipia-test-v662');
+        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
             'v659 ещё не существует (guard следующего бампа)');
     });
 });

@@ -131,12 +131,12 @@ describe('Task 388 — SRC: миниатюры всегда сплошные с 
             'CSS-правило пунктирного бейджа печати удалено');
     });
 
-    test('печать: сноска без «день ещё не сформирован»', () => {
+    test('печать: сноски нет вовсе (Task 438)', () => {
         const b = stripComments(methodText(INDEX_SRC, '_buildPrintHtml'));
         assertFalse(b.indexOf('день ещё не сформирован') !== -1,
             'пояснение пунктирного значка удалено');
-        assertTrue(b.indexOf('значок в углу ячейки') !== -1,
-            'пояснение значка мероприятия живо (регресс 361)');
+        assertTrue(b.indexOf('значок в углу ячейки') === -1,
+            'сноска удалена целиком (Task 438); значки видны в ячейках, перечень кодов — выше');
     });
 });
 
@@ -260,10 +260,10 @@ describe('Task 388 — SRC: итоги учёта доступны в любом
             'тосты сменного/дневного вида обещают итоги');
     });
 
-    test('SW: кэш поднят до kipia-test-v661', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v661'") !== -1,
-            'CACHE_VERSION = kipia-test-v661 (Task 388 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v662') !== -1,
+    test('SW: кэш поднят до kipia-test-v662', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v662'") !== -1,
+            'CACHE_VERSION = kipia-test-v662 (Task 388 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v663') !== -1,
             'v617 ещё не существует (guard)');
     });
 });

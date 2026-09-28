@@ -43,7 +43,7 @@
 //      ПЕРВЫМ в ряду .ws-act-row, ✕ — ПОСЛЕ; отпускные строки
 //      несут ws-emp-vac; _buildPrintHtml — мероприятия ПЕРВЫМИ,
 //      коды ПОД ними, записи с [дата][текст].
-//   SW: kipia-test-v661 (главный), v660 — прежней нет.
+//   SW: kipia-test-v662 (главный), v660 — прежней нет.
 // ============================================================
 
 const fs = require('fs');
@@ -188,8 +188,9 @@ describe('Task 433 — SRC: печать (секция вертикальная,
         const iMev = b.indexOf('<div class="wsp-mev">');
         const iLegend = b.indexOf('<div class="wsp-legend">');
         const iFoot = b.indexOf('<div class="wsp-foot">');
-        assertTrue(iOpen !== -1 && iMev !== -1 && iLegend !== -1 && iFoot !== -1,
+        assertTrue(iOpen !== -1 && iMev !== -1 && iLegend !== -1,
             'все секции строятся');
+        assertTrue(iFoot === -1, 'сноска wsp-foot удалена (Task 438)');
         assertTrue(iOpen < iMev && iMev < iLegend,
             'порядок: обёртка → МЕРОПРИЯТИЯ → КОДЫ (Task 433)');
         // Task 434: заголовок «Коды:» и СЕТКА-ДВЕ-КОЛОНКИ открываются
@@ -203,7 +204,6 @@ describe('Task 433 — SRC: печать (секция вертикальная,
         assertTrue(iClose1 !== -1 && iClose2 !== -1 && iClose3 !== -1 &&
                    iClose2 - iClose1 < 200 && iClose3 - iClose2 < 200,
             'Task 434: закрытия сетки, легенды и обёртки — три последовательных оператора');
-        assertTrue(iClose3 < iFoot, 'сноска — после закрытия обёртки');
     });
 
     test('JS: запись содержит [дата][текст] (правая часть — текст)', () => {
@@ -405,9 +405,9 @@ describe('Task 433 — VM: строка инструктажа и строка �
 // ============================================================
 describe('Task 433 — SW: версия кеша', () => {
     test('v659 (главный), v660 — прежней нет', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v661'") !== -1,
-            'SW кэш kipia-test-v661');
-        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v662'") !== -1,
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v662'") !== -1,
+            'SW кэш kipia-test-v662');
+        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
             'v660 ещё не существует (guard следующего бампа)');
     });
 });

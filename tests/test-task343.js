@@ -20,7 +20,7 @@
 //     экранная сетка (бейджи мероприятий на экране остаются —
 //     классы ws-ev-badge/ws-ev-wrap, Task 314).
 //
-// SW: kipia-test-v661.
+// SW: kipia-test-v662.
 //
 // Запуск: через tests/run-all.js (require './test-task343.js').
 
@@ -80,9 +80,10 @@ describe('Task 343 — итоговая строка убрана из печа�
     test('SRC: колонки построчных итогов живы (регресс 342)', () => {
         const b = stripComments(methodText(WS_CLIENT, '_buildPrintHtml'));
         assertTrue(b.indexOf('<th class="wsp-tot">Дни</th>') !== -1, 'колонка «Дни»');
-        assertTrue(b.indexOf('<th class="wsp-tot">Часы</th>') !== -1, 'колонка «Часы»');
-        assertTrue(b.indexOf('wsp-tot-over">Перераб.<span>дни/ч</span></th>') !== -1,
-            'колонка «Перераб.» (Task 342)');
+        assertTrue(b.indexOf('<th class="wsp-tot">Часы</th>') === -1,
+            'колонка «Часы» удалена (Task 438)');
+        assertTrue(b.indexOf('wsp-tot-over">Перераб.<span>дни</span></th>') !== -1,
+            'колонка «Перераб.» — только дни (Task 342/438)');
         assertTrue(b.indexOf('agg.byTab') !== -1, 'построчные итоги из agg.byTab');
     });
 
@@ -120,14 +121,14 @@ describe('Task 343/361 — бейджи мероприятий в печати',
             'правила .wsp-ev-plan нет (Task 388: пунктирные удалены)');
     });
 
-    test('SRC: сноска wsp-foot упоминает значок мероприятия (Task 361)', () => {
+    test('SRC: сноска wsp-foot удалена (Task 438)', () => {
         const b = stripComments(methodText(WS_CLIENT, '_buildPrintHtml'));
-        assertTrue(b.indexOf('значок в углу ячейки') !== -1,
-            'упоминание значка мероприятия есть');
-        assertTrue(b.indexOf('пунктирная рамка ячейки — плановый отпуск') !== -1,
-            'пояснение плана отпуска живо (регресс 341)');
-        assertTrue(b.indexOf('красная точка — переработка') !== -1,
-            'пояснение переработки живо (регресс 341/342)');
+        assertTrue(b.indexOf('<div class="wsp-foot">') === -1,
+            'сноска не строится (Task 438)');
+        assertTrue(b.indexOf('значок в углу ячейки') === -1,
+            'текст сноски про значок удалён вместе со сноской');
+        assertTrue(b.indexOf('красная точка — переработка') === -1,
+            'текст сноски про переработку удалён');
     });
 
     test('SRC: ЭКРАННАЯ сетка не тронута — бейджи на экране живут (Task 314)', () => {
@@ -264,8 +265,10 @@ describe('Task 343 — _buildPrintHtml (VM)', () => {
         assertTrue(html.indexOf('wsp-sum') === -1, 'wsp-sum нет');
         assertTrue(html.indexOf('Итого') === -1, 'слова «Итого» нет');
         // построчные итоги при этом на месте
-        assertTrue(html.indexOf('<td class="wsp-tot wsp-tot-over">1/12</td>') !== -1,
-            'колонка «Перераб.» сотрудника жива (регресс 342)');
+        assertTrue(html.indexOf('<td class="wsp-tot wsp-tot-over">1</td>') !== -1,
+            'колонка «Перераб.» сотрудника жива — только дни (Task 438)');
+        assertTrue(html.indexOf('<td class="wsp-tot wsp-tot-over">1/12</td>') === -1,
+            'старый формат «1/12» не печатается (Task 438)');
     });
 
     test('VM: agg БЕЗ grand (null) — лист строится, не падает', () => {
@@ -275,25 +278,22 @@ describe('Task 343 — _buildPrintHtml (VM)', () => {
         assertTrue(html.indexOf('>21</td>') !== -1, 'построчные дни на месте');
     });
 
-    test('VM: структура — шапка, строки, легенда, сноска; после строк таблица закрывается', () => {
+    test('VM: структура — шапка, строки, легенда; после строк таблица закрывается', () => {
         var agg = { byTab: {}, grand: null };
         var html = sheetHost()._buildPrintHtml(EMPS, agg);
         var iClose = html.indexOf('</tbody></table>');
         assertTrue(iClose !== -1, 'таблица закрыта');
         assertTrue(html.indexOf('wsp-legend') !== -1, 'легенда после таблицы');
-        assertTrue(html.indexOf('wsp-foot') !== -1, 'сноска жива');
+        assertTrue(html.indexOf('wsp-foot') === -1, 'сноски нет (Task 438)');
         assertTrue(html.indexOf('<tr class="') === -1 ||
                    html.indexOf('wsp-sum') === -1, 'служебных строк нет');
     });
 
-    test('VM: сноска — пояснения живы + значок мероприятия упомянут (Task 361)', () => {
+    test('VM: сноски нет — лист заканчивается перечнем кодов (Task 438)', () => {
         var html = sheetHost()._buildPrintHtml(EMPS, { byTab: {}, grand: null });
-        var foot = html.slice(html.indexOf('wsp-foot'));
-        assertTrue(foot.indexOf('мероприятие') !== -1,
-            'значок мероприятия в углу ячейки пояснён (Task 361)');
-        assertTrue(foot.indexOf('«Перераб.» — дни/часы переработки') !== -1,
-            'пояснение колонки (регресс 342)');
-        assertTrue(foot.indexOf('пунктирная рамка') !== -1, 'план отпуска пояснён');
+        assertTrue(html.indexOf('wsp-foot') === -1, 'сноски нет (Task 438)');
+        assertTrue(html.indexOf('сокращённый предпраздничный') === -1,
+            'текста сноски нет');
     });
 });
 
@@ -302,10 +302,10 @@ describe('Task 343 — _buildPrintHtml (VM)', () => {
 // ============================================================
 describe('Task 343 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v661', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v661'") !== -1,
-            'CACHE_VERSION = kipia-test-v661 (Task 343 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v662') !== -1,
+    test('SW: кэш поднят до kipia-test-v662', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v662'") !== -1,
+            'CACHE_VERSION = kipia-test-v662 (Task 343 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v663') !== -1,
             'лишний инкремент (v582) не сделан');
     });
 

@@ -13,7 +13,7 @@
 //     обёртки на всю ширину; каждая запись/код — отдельной
 //     строкой своего столбика (как в Task 360).
 //
-// SW: kipia-test-v661.
+// SW: kipia-test-v662.
 //
 // Запуск: через tests/run-all.js (require './test-task364.js').
 
@@ -153,7 +153,7 @@ describe('Task 364 — SRC: wsp-bottom на печати', () => {
         // ПЕРВЫМ, коды — строкой-абзацем ПОД ним (флоат Task 432
         // строил коды первыми в DOM)
         assertTrue(iMev < iLegend, 'коды — ПОД списком мероприятий (Task 433)');
-        assertTrue(iLegend < iFoot, 'сноска — после кодов');
+        assertTrue(iFoot === -1, 'сноски нет (Task 438)');
     });
 
     test('SRC: JS — обёртка закрывается ПОСЛЕ кодов (двойной div)', () => {
@@ -169,7 +169,6 @@ describe('Task 364 — SRC: wsp-bottom на печати', () => {
         assertTrue(iClose1 > iLegend, 'закрытие после перечня кодов');
         assertTrue(iClose2 - iClose1 < 200,
             'операторы закрытия — подряд');
-        assertTrue(iClose2 < iFoot, 'сноска строится после закрытия обёртки');
     });
 });
 
@@ -244,7 +243,7 @@ describe('Task 364 — VM: ряд мероприятий|кодов в печа�
         assertTrue(iOpen < iMev && iMev < iLegend,
             'мероприятия, за ними коды — внутри обёртки (Task 433)');
         assertTrue(iClose !== -1 && iClose > iLegend, 'обёртка закрыта после кодов');
-        assertTrue(iFoot > iClose, 'сноска — ПОД обёрткой, на всю ширину');
+        assertTrue(iFoot === -1, 'сноски нет (Task 438)');
     });
 
     test('VM: у мероприятий и кодов НЕТ личных обёрток-посредников', () => {
@@ -286,8 +285,8 @@ describe('Task 364 — VM: ряд мероприятий|кодов в печа�
 // 4. SW — версия кеша
 // ============================================================
 describe('Task 364 — SW: версия кеша', () => {
-    test('SW: CACHE_VERSION = kipia-test-v661', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v661'") !== -1,
+    test('SW: CACHE_VERSION = kipia-test-v662', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v662'") !== -1,
             'SW поднят до v659 (рамка 2px + коды строкой под мероприятиями — Task 433)');
     });
 });

@@ -17,7 +17,7 @@
 // Счётчики переработки УЖЕ были в agg (Task 322) — новая только
 // печатная колонка; сетка/«Итоги учёта» на экране не менялись.
 //
-// SW: kipia-test-v661.
+// SW: kipia-test-v662.
 //
 // Запуск: через tests/run-all.js (require './test-task342.js').
 
@@ -56,15 +56,15 @@ function mockEsc(s) {
 // ============================================================
 describe('Task 342 — CSS колонки «Перераб.»', () => {
 
-    test('SRC: правило .wsp-tot-over (ширина 14mm, Task 361)', () => {
+    test('SRC: правило .wsp-tot-over (ширина 12mm, Task 438)', () => {
         const i = INDEX_SRC.indexOf('#wsPrintSheet .wsp-tot.wsp-tot-over');
         assertTrue(i !== -1, 'правило ширины wsp-tot-over есть');
         const block = INDEX_SRC.slice(i, i + 200);
-        assertTrue(block.indexOf('width: 14mm') !== -1,
-            'ширина 14mm (Task 361: шире «Дни»/«Часы» — 10mm, шрифт 11px)');
+        assertTrue(block.indexOf('width: 12mm') !== -1,
+            'ширина 12mm (Task 438: в колонке только дни, было 14mm)');
     });
 
-    test('SRC: подпись заголовка «дни/ч» — мелкий блок, как дни недели', () => {
+    test('SRC: подпись заголовка «дни» — мелкий блок, как дни недели', () => {
         const i = INDEX_SRC.indexOf('#wsPrintSheet .wsp-tot-over span');
         assertTrue(i !== -1, 'стиль подписи есть');
         const block = INDEX_SRC.slice(i, i + 200);
@@ -73,7 +73,7 @@ describe('Task 342 — CSS колонки «Перераб.»', () => {
             'блочная подпись 7.5px (Task 361; как wsp-day span)');
     });
 
-    test('SRC: базовые колонки «Дни»/«Часы» не тронуты (10mm, Task 361)', () => {
+    test('SRC: базовая колонка «Дни» не тронута (10mm, Task 361)', () => {
         assertTrue(INDEX_SRC.indexOf(
             '#wsPrintSheet .wsp-tot { width: 10mm; font-weight: 700; }') !== -1,
             'wsp-tot 10mm на месте (Task 361: 9→10mm под шрифт 11px)');
@@ -82,29 +82,34 @@ describe('Task 342 — CSS колонки «Перераб.»', () => {
 
 describe('Task 342 — разметка _buildPrintHtml (SRC)', () => {
 
-    test('SRC: шапка — 3 колонки итогов, «Перераб.» с подписью', () => {
+    test('SRC: шапка — 2 колонки итогов, «Перераб.» с подписью «дни»', () => {
         const b = methodText(WS_CLIENT, '_buildPrintHtml');
         assertTrue(b.indexOf('<th class="wsp-tot">Дни</th>') !== -1, 'Дни');
-        assertTrue(b.indexOf('<th class="wsp-tot">Часы</th>') !== -1, 'Часы');
-        assertTrue(b.indexOf('wsp-tot-over">Перераб.<span>дни/ч</span></th>') !== -1,
-            '«Перераб.» + подпись «дни/ч»');
+        assertTrue(b.indexOf('<th class="wsp-tot">Часы</th>') === -1,
+            'Часы удалены (Task 438)');
+        assertTrue(b.indexOf('wsp-tot-over">Перераб.<span>дни</span></th>') !== -1,
+            '«Перераб.» + подпись «дни» (Task 438)');
     });
 
-    test('SRC: строка сотрудника — ячейка wsp-tot-over из agg (overDays/over)', () => {
+    test('SRC: строка сотрудника — ячейка wsp-tot-over из agg (только дни)', () => {
         const b = methodText(WS_CLIENT, '_buildPrintHtml');
         const i = b.indexOf("'<td class=\"wsp-tot wsp-tot-over\">'");
         assertTrue(i !== -1, 'ячейка колонки в строках');
-        const tail = b.slice(i, i + 400);
-        assertTrue(tail.indexOf('a.overDays') !== -1 && tail.indexOf('a.over') !== -1,
-            'значение из счётчиков agg (overDays/over)');
-        assertTrue(tail.indexOf('_fmtTotalsNum') !== -1,
-            'часы форматируются _fmtTotalsNum (запятая)');
+        const tail = b.slice(i, i + 300);
+        assertTrue(tail.indexOf('a.overDays') !== -1,
+            'значение — дни переработки (overDays, Task 438)');
+        assertTrue(tail.indexOf("a.overDays + '/'") === -1,
+            'склейка «дни/часы» удалена (Task 438)');
+        assertTrue(tail.indexOf('_fmtTotalsNum') === -1,
+            'форматирование часов не используется (Task 438)');
     });
 
-    test('SRC: сноска поясняет колонку «Перераб.» (а не отсылает в приложение)', () => {
+    test('SRC: сноски wsp-foot больше нет (Task 438)', () => {
         const b = methodText(WS_CLIENT, '_buildPrintHtml');
-        assertTrue(b.indexOf('«Перераб.» — дни/часы переработки') !== -1,
-            'пояснение формата в сноске');
+        assertFalse(b.indexOf('<div class="wsp-foot">') !== -1,
+            'сноска удалена целиком (Task 438)');
+        assertFalse(b.indexOf('«Перераб.» — дни/часы переработки') !== -1,
+            'пояснение формата вместе со сноской убрано');
         assertFalse(b.indexOf('учтена в приложении («Итоги учёта»') !== -1,
             'старая отсылка удалена');
     });
@@ -146,25 +151,27 @@ describe('Task 342 — _buildPrintHtml (VM): значения «Перераб.�
         { 'ФИО': 'Новый Н. Н.', 'таб_номер': '999' }
     ];
 
-    test('VM: переработка — «дни/часы» («3/36»)', () => {
+    test('VM: переработка — только дни («3»)', () => {
         var agg = {
             byTab: { '017': { work: 21, hours: 151.2, over: 36, overDays: 3 },
                      '031': { work: 19, hours: 136.8, over: 0, overDays: 0 } },
             grand: { work: 40, hours: 288, over: 36, overDays: 3 }
         };
         var html = sheetHost()._buildPrintHtml(EMPS, agg);
-        assertTrue(html.indexOf('<td class="wsp-tot wsp-tot-over">3/36</td>') !== -1,
-            'значение «3/36» (3 дня, 36 часов)');
+        assertTrue(html.indexOf('<td class="wsp-tot wsp-tot-over">3</td>') !== -1,
+            'значение «3» — только дни (Task 438)');
+        assertTrue(html.indexOf('<td class="wsp-tot wsp-tot-over">3/36</td>') === -1,
+            'старый формат «3/36» не печатается');
     });
 
-    test('VM: дробные часы — с запятой («2/16,5»)', () => {
+    test('VM: переработка без часов — целые дни («2»)', () => {
         var agg = {
             byTab: { '017': { work: 21, hours: 151.2, over: 16.5, overDays: 2 } },
             grand: { work: 21, hours: 151.2, over: 16.5, overDays: 2 }
         };
         var html = sheetHost()._buildPrintHtml([EMPS[0]], agg);
-        assertTrue(html.indexOf('<td class="wsp-tot wsp-tot-over">2/16,5</td>') !== -1,
-            'дробные часы печатаются с запятой');
+        assertTrue(html.indexOf('<td class="wsp-tot wsp-tot-over">2</td>') !== -1,
+            'значение «2» — дни; часы (16,5) не печатаются (Task 438)');
     });
 
     test('VM: нулевая переработка — «—» (как годовая вкладка)', () => {
@@ -192,14 +199,11 @@ describe('Task 342 — _buildPrintHtml (VM): значения «Перераб.�
             'пустая ячейка без прочерка');
     });
 
-    test('VM: сноска wsp-foot — новый текст про «Перераб.»', () => {
+    test('VM: сноски wsp-foot нет (Task 438)', () => {
         var agg = { byTab: {}, grand: null };
         var html = sheetHost()._buildPrintHtml([EMPS[2]], agg);
-        var foot = html.slice(html.indexOf('wsp-foot'));
-        assertTrue(foot.indexOf('«Перераб.» — дни/часы переработки') !== -1,
-            'пояснение формата');
-        assertTrue(foot.indexOf('(без переработки д/н)') !== -1,
-            '«Дни»/«Часы» помечены как без переработки');
+        assertTrue(html.indexOf('wsp-foot') === -1,
+            'сноска внизу листа удалена (Task 438)');
     });
 });
 
@@ -208,15 +212,15 @@ describe('Task 342 — _buildPrintHtml (VM): значения «Перераб.�
 // ============================================================
 describe('Task 342 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v661', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v661'") !== -1,
-            'CACHE_VERSION = kipia-test-v661 (Task 342 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v662') !== -1,
+    test('SW: кэш поднят до kipia-test-v662', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v662'") !== -1,
+            'CACHE_VERSION = kipia-test-v662 (Task 342 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v663') !== -1,
             'лишний инкремент (v581) не сделан');
     });
 
     test('SW: в index.html нет захардкоженной версии кэша', () => {
-        assertFalse(INDEX_SRC.indexOf('kipia-test-v661') !== -1,
+        assertFalse(INDEX_SRC.indexOf('kipia-test-v662') !== -1,
             'клиент не знает номер кэша (версией управляет sw.js)');
     });
 });
