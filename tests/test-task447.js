@@ -3,9 +3,9 @@
 // баре с кнопками добавь кнопку "Талоны", для перехода на страницу
 // формирования отчёта по талонам питания выданным работникам на
 // текущий месяц. Строгая форма отчёта приложена в файле excel
-// (файл на сервер не дошёл — форма собрана по стандарту:
-// шапка/таблица/итого/подпись, A4 книжная, Times New Roman),
-// печатать отчёт необходимо строго по ней. Предварительно
+// (изначально файл не дошёл — форма была собрана по стандарту;
+// Task 448 привёл печатную вёрстку СТРОГО к присланному листу
+// «Отчет»), печатать отчёт необходимо строго по ней. Предварительно
 // формируется отчёт о количестве выданных талонов работникам на
 // текущий месяц в соответствии с количеством дней явки работников
 // по итогам учёта в шахматке табеля, и с возможностью ручной
@@ -74,10 +74,11 @@ const MM = (NOWM < 10 ? '0' + NOWM : '' + NOWM);
 const WS_SRC = INDEX_SRC.slice(INDEX_SRC.indexOf('var WorkSchedule = {'));
 
 // Значение строковой константы _TALONS_PRINT_CSS (НЕ функция —
-// вычисляем конкатенацию фрагментов из исходника)
+// вычисляем конкатенацию фрагментов из исходника; Task 448:
+// константа заканчивается правилом сетки .wst-c7)
 const TALONS_CSS_VALUE = new Function('return ({' + (function() {
     const start = WS_SRC.indexOf('_TALONS_PRINT_CSS:');
-    const marker = "opacity: 0.85; }',";
+    const marker = "'#wsPrintSheet.wst-sheet .wst-c7 { width: 22.2%; }',";
     const end = WS_SRC.indexOf(marker, start);
     if (start === -1 || end === -1) throw new Error('_TALONS_PRINT_CSS не найден');
     return WS_SRC.slice(start, end + marker.length);
@@ -273,18 +274,31 @@ describe('Task 447 — SRC: печать по форме', () => {
             'снятие инжекта (печать графика снова альбомная)');
     });
 
-    test('_buildTalonsPrintHtml: строгая структура формы', () => {
+    test('_buildTalonsPrintHtml: строгая структура формы (Task 448 — по Excel)', () => {
         const fn = methodText(WS_SRC, '_buildTalonsPrintHtml');
-        for (const part of ['>Отчёт<', 'по талонам питания, выданным работникам',
-                            'за ', '№ п/п', 'Таб. №', 'ФИО работника',
-                            'Должность', 'Дней явки', 'Выдано талонов',
-                            'Итого', 'Отчёт составил:', '(подпись)',
-                            '(расшифровка)', 'Дата:']) {
+        for (const part of ['Наименование предприятия ООО ПО "Токем"',
+                            '>ОТЧЕТ<',
+                            'на выдачу талонов Л.П.П. (лечебно-профилактическое питание) за ',
+                            'Цех № 8 пр-во ИОС', '№ п/п', 'Табельный номер',
+                            'Ф.И.О.', 'Должность',
+                            'Кол-во отработан-ных часов',
+                            'Кол-во выданных талонов', 'Роспись о получении',
+                            '12 часовые', '8 часовые', 'ИТОГО:', '(шт.)',
+                            'Рук. подразделения', 'Игушов Н.В.',
+                            'С табелем сверено:', 'Котельникова И.А.',
+                            '(подпись материально-ответственного лица)',
+                            'Руководитель СОТ и ПБ', 'Фензель В.П.',
+                            '(подпись)']) {
             assertTrue(fn.indexOf(part) !== -1, 'форма содержит: ' + part);
         }
         assertTrue(fn.indexOf('wst-rep-table') !== -1 &&
                    fn.indexOf('table-header-group') === -1,
             'таблица формы (повтор шапки — в CSS-константе)');
+        // старая вёрстка (до Task 448) полностью ушла
+        for (const gone of ['Отчёт составил:', '(расшифровка)',
+                            'wst-rep-period', 'Дней явки', 'wst-r-num']) {
+            assertTrue(fn.indexOf(gone) === -1, 'старого блока нет: ' + gone);
+        }
     });
 
     test('_TALONS_PRINT_CSS: Times New Roman, рамки, повтор шапки', () => {
@@ -297,8 +311,11 @@ describe('Task 447 — SRC: печать по форме', () => {
                    fn.indexOf('page-break-inside: avoid') !== -1,
             'многостраничность: повтор шапки, строки не рвутся');
         assertTrue(fn.indexOf('.wst-rep-title') !== -1 &&
-                   fn.indexOf('.wst-rep-period') !== -1,
-            'шапка формы: заголовок + период');
+                   fn.indexOf('.wst-rep-org') !== -1 &&
+                   fn.indexOf('.wst-rep-dept') !== -1,
+            'шапка формы: предприятие + заголовок + цех (Task 448)');
+        assertTrue(fn.indexOf('.wst-rep-period') === -1,
+            'старого класса периода больше нет');
     });
 
     test('_buildTalonsFileHtml: standalone-документ КНИЖНОГО листа', () => {
@@ -961,6 +978,7 @@ describe('Task 447 — VM: печать отчёта', () => {
             methodText(WS_SRC, '_empTypeMap') + ',\n' +
             methodText(WS_SRC, 'printTalonsReport') + ',\n' +
             methodText(WS_SRC, '_buildTalonsPrintHtml') + ',\n' +
+            methodText(WS_SRC, '_talonsSignBlock') + ',\n' +
             methodText(WS_SRC, '_buildTalonsFileHtml') + ',\n' +
             methodText(WS_SRC, '_talonsInjectPrintStyle') + ',\n' +
             methodText(WS_SRC, '_talonsRemovePrintStyle') + ',\n' +
@@ -998,9 +1016,9 @@ describe('Task 447 — VM: печать отчёта', () => {
         const sheet = dom.elements['wsPrintSheet'];
         assertTrue(!!sheet, 'лист создан в body');
         assertEqual(sheet.className, 'wst-sheet', 'класс отчёта');
-        assertTrue(sheet.innerHTML.indexOf('Отчёт') !== -1 &&
-                   sheet.innerHTML.indexOf('по талонам питания') !== -1,
-            'форма отчёта в листе');
+        assertTrue(sheet.innerHTML.indexOf('ОТЧЕТ') !== -1 &&
+                   sheet.innerHTML.indexOf('на выдачу талонов Л.П.П.') !== -1,
+            'форма отчёта в листе (строгая форма Task 448)');
         const st = dom.elements['wsTalonsPrintStyle'];
         assertTrue(!!st, 'инжект-стиль в head');
         assertTrue(st.textContent.indexOf('@page { size: A4 portrait; margin: 12mm 10mm; }') !== -1,
@@ -1025,11 +1043,14 @@ describe('Task 447 — VM: печать отчёта', () => {
             'данные месяца не готовы (сетка на другом) — листа нет');
     });
 
-    test('_buildTalonsPrintHtml: строки, правка, итого, подписи', () => {
+    test('_buildTalonsPrintHtml: группы 12/8, часы, итого (шт.), подписи', () => {
         const h = printHost(printDom(), { print: function() {} }, {});
         const model = h._talonsRows();
         model.totals = { days: 3, talons: 5, edited: 1 };
-        model.rows.push({ emp: { 'ФИО': 'Сидоров С. С.', 'должность': 'Электрик' },
+        // Сидоров — СМЕННЫЙ: попадает в группу «12 часовые»,
+        // Иванов (дневной) — в «8 часовые»
+        model.rows.push({ emp: { 'ФИО': 'Сидоров С. С.', 'тип': 'сменный',
+                                 'должность': 'Электрик' },
                           tab: '031', days: 1, talons: 3, edited: true });
         const html = h._buildTalonsPrintHtml(model);
         assertTrue(html.indexOf('за ' + MONTH_NAMES[NOWM - 1] + ' ' + NOWY + ' г.') !== -1,
@@ -1041,16 +1062,41 @@ describe('Task 447 — VM: печать отчёта', () => {
                    html.indexOf('Электрик') !== -1,
             'должности');
         assertTrue(html.indexOf('wst-rep-table') !== -1, 'таблица формы');
-        const iTotal = html.indexOf('Итого');
-        assertTrue(iTotal !== -1, 'строка Итого есть');
-        assertTrue(html.indexOf('>3</td>') !== -1 && html.indexOf('>5</td>') !== -1,
-            'итоговые числа (дни/талоны)');
-        assertTrue(html.indexOf('Отчёт составил:') !== -1 &&
-                   html.indexOf('(подпись)') !== -1 &&
-                   html.indexOf('(расшифровка)') !== -1 &&
-                   html.indexOf('Дата:') !== -1,
-            'подписной блок');
-        assertTrue(html.indexOf('wst-r-total') !== -1, 'итоговая строка — жирным');
+        // группы: «12 часовые» идёт РАНЬШЕ «8 часовых», в «12» —
+        // только Сидоров (№1), в «8» — Иванов (№2, сквозная нумерация)
+        const i12 = html.indexOf('12 часовые');
+        const i8 = html.indexOf('8 часовые');
+        assertTrue(i12 !== -1 && i8 !== -1 && i12 < i8,
+            'группы «12 часовые» → «8 часовые» по порядку формы');
+        // часы: Сидоров 3 талона × 12 = 36; Иванов (Д8+Н = 2 явки) × 8 = 16
+        assertTrue(html.indexOf('>36</td>') !== -1 &&
+                   html.indexOf('>16</td>') !== -1,
+            'часы = талоны × 12/8 (формула листа)');
+        const iSid = html.indexOf('Сидоров С. С.');
+        const iIvan = html.indexOf('Иванов И. И.');
+        assertTrue(iSid !== -1 && iIvan !== -1 && iSid < iIvan,
+            'сменный — выше в таблице (группа «12 часовые» первая)');
+        assertTrue(html.indexOf('<td class="wst-r-n">1</td>') !== -1 &&
+                   html.indexOf('<td class="wst-r-n">2</td>') !== -1,
+            'сквозная нумерация 1, 2');
+        // ИТОГО по группам: 12 часовые — 3 (шт.), 8 часовые — 2 (шт.)
+        assertTrue(html.indexOf('wst-t-val') !== -1 &&
+                   html.indexOf('>3</td><td class="wst-t-unit">(шт.)</td>') !== -1 &&
+                   html.indexOf('>2</td><td class="wst-t-unit">(шт.)</td>') !== -1,
+            'ИТОГО: суммы талонов по группам в (шт.)');
+        assertTrue(html.indexOf('ИТОГО:') !== -1,
+            'метка ИТОГО есть');
+        // подписи строго по форме
+        for (const part of ['Рук. подразделения', 'Игушов Н.В.',
+                            'С табелем сверено:', 'Котельникова И.А.',
+                            '(подпись материально-ответственного лица)',
+                            'Руководитель СОТ и ПБ', 'Фензель В.П.',
+                            '_________________']) {
+            assertTrue(html.indexOf(part) !== -1, 'подписи: ' + part);
+        }
+        assertTrue(html.indexOf('Отчёт составил:') === -1 &&
+                   html.indexOf('Дата:') === -1,
+            'старого подписного блока больше нет');
     });
 
     test('_buildTalonsFileHtml: standalone-документ предпросмотра', () => {
@@ -1125,11 +1171,11 @@ describe('Task 447 — VM: печать отчёта', () => {
 // 8. SW — версия кэша
 // ============================================================
 describe('Task 447 — SW', () => {
-    test('SW: кэш поднят до kipia-test-v671 (Task 447)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v671'") !== -1,
-            'CACHE_VERSION = kipia-test-v671');
-        assertTrue(SW_SRC.indexOf('kipia-test-v672') === -1,
-            'kipia-test-v672 не существует');
+    test('SW: кэш поднят до kipia-test-v672 (Task 447)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v672'") !== -1,
+            'CACHE_VERSION = kipia-test-v672');
+        assertTrue(SW_SRC.indexOf('kipia-test-v673') === -1,
+            'kipia-test-v673 не существует');
         assertTrue(SW_SRC.indexOf('Task 447') !== -1,
             'комментарий Task 447 в истории версий');
     });
