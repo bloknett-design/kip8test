@@ -468,6 +468,7 @@ require('./test-task442.js');
 // ppeMigrateManufacture() в PPEInit.gs, поле «Дата
 // изготовления» в шторке, «изгот.» в карточке
 require('./test-task443.js');
+require('./test-task444.js');
 require('./test-deploy-url.js');
 
 // Запускаем
