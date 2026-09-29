@@ -41,7 +41,7 @@
 //      оверлей удалён, Esc → закрыт;
 //  14) printGrid фолбэк: без _openPrintPreview — window.print
 //      (прежнее поведение Task 341).
-//   SW: kipia-test-v668.
+//   SW: kipia-test-v669.
 // ============================================================
 
 const fs = require('fs');
@@ -86,7 +86,8 @@ describe('Task 430 — SRC: кнопка «Сохранить архив»', () 
             'onclick зовёт saveWorkersArchive');
         assertTrue(around.indexOf('ws-workers-archive') !== -1,
             'класс ws-workers-archive');
-        assertTrue(around.indexOf('Сохранить архив') !== -1, 'текст кнопки');
+        assertTrue(around.indexOf('Скачать архив') !== -1,
+            'текст кнопки (Task 445: «Сохранить архив» → «Скачать архив»)');
     });
 
     test('кнопка НЕ под условием _canEdit — видна уровню view', () => {
@@ -303,20 +304,24 @@ describe('Task 430 — VM: _workersArchiveData', () => {
           'смена': '', 'должность': 'Слесарь КИПиА', 'группа_допуска': '',
           'дата_приёма': '2024-03-15' }
     ];
+    // Task 445: год архива = ТЕКУЩИЙ календарный год — фикстуры
+    // собираются ОТНОСИТЕЛЬНО NOWY (не ломаются со временем)
+    const NOWY = new Date().getFullYear();
+    const D = (y, md) => (y + '-' + md);
     const INSTR_ALL = [
         { id: 5, 'таб_номер': '017', 'тип': 'инструктаж',
-          'тема': 'Повторный инструктаж ОТ', 'дата_начала': '2026-03-02',
-          'дата_окончания': '2026-03-02', 'длительность_дней': 1,
+          'тема': 'Повторный инструктаж ОТ', 'дата_начала': D(NOWY, '03-02'),
+          'дата_окончания': D(NOWY, '03-02'), 'длительность_дней': 1,
           'выполнение': 1, 'просрочен': 0, 'комментарий': '' },
         { id: 6, 'таб_номер': '999', 'тип': 'проверка_знаний',
-          'тема': 'Электроустановки до 1000 В', 'дата_начала': '2025-06-10',
-          'дата_окончания': '2025-06-10', 'длительность_дней': 1,
+          'тема': 'Электроустановки до 1000 В', 'дата_начала': D(NOWY - 1, '06-10'),
+          'дата_окончания': D(NOWY - 1, '06-10'), 'длительность_дней': 1,
           'выполнение': 0, 'просрочен': 1, 'комментарий': 'перенос' }
     ];
     const EVENTS_ALL = [
         { id: 5, 'таб_номер': '017', 'тип': 'обучение',
-          'тема': 'Курс АСУ ТП', 'дата_начала': '2026-09-03',
-          'дата_окончания': '2026-09-05', 'длительность_дней': 3,
+          'тема': 'Курс АСУ ТП', 'дата_начала': D(NOWY, '09-03'),
+          'дата_окончания': D(NOWY, '09-05'), 'длительность_дней': 3,
           'комментарий': 'центр' }
     ];
         // годовой срез: дубль инструктажа id 5 (из instrAll), новое
@@ -324,19 +329,19 @@ describe('Task 430 — VM: _workersArchiveData', () => {
         // по t-ключу дата|тема — снимается дедупом)
     const TRAININGS = [
         { id: 5, 'таб_номер': '017', 'тип': 'инструктаж',
-          'тема': 'Повторный инструктаж ОТ', 'дата_начала': '2026-03-02',
-          'дата_окончания': '2026-03-02', 'длительность_дней': 1 },
+          'тема': 'Повторный инструктаж ОТ', 'дата_начала': D(NOWY, '03-02'),
+          'дата_окончания': D(NOWY, '03-02'), 'длительность_дней': 1 },
         { id: 9, 'таб_номер': '031', 'тип': 'прогул',
-          'тема': 'Прогул', 'дата_начала': '2026-09-01',
-          'дата_окончания': '2026-09-01', 'длительность_дней': 1,
+          'тема': 'Прогул', 'дата_начала': D(NOWY, '09-01'),
+          'дата_окончания': D(NOWY, '09-01'), 'длительность_дней': 1,
           'комментарий': '' },
         { id: null, 'таб_номер': '031', 'тип': 'прогул',
-          'тема': 'Прогул', 'дата_начала': '2026-09-01',
-          'дата_окончания': '2026-09-01', 'длительность_дней': 1,
+          'тема': 'Прогул', 'дата_начала': D(NOWY, '09-01'),
+          'дата_окончания': D(NOWY, '09-01'), 'длительность_дней': 1,
           'комментарий': '' },
         { id: null, 'таб_номер': '031', 'тип': 'прогул',
-          'тема': 'Прогул', 'дата_начала': '2026-09-01',
-          'дата_окончания': '2026-09-01', 'длительность_дней': 1,
+          'тема': 'Прогул', 'дата_начала': D(NOWY, '09-01'),
+          'дата_окончания': D(NOWY, '09-01'), 'длительность_дней': 1,
           'комментарий': '' }
     ];
 
@@ -372,7 +377,7 @@ describe('Task 430 — VM: _workersArchiveData', () => {
         assertEqual(d.instr[1][7], 'да', 'просрочен=1 → да');
         assertEqual(d.instr[2][6], 'да', 'выполнение=1 → да');
         assertEqual(d.instr[2][7], 'нет', 'просрочен=0 → нет');
-        assertEqual(d.instr[2][5], '02.03.2026', 'дата проведения dd.mm.yyyy');
+        assertEqual(d.instr[2][5], '02.03.' + NOWY, 'дата проведения dd.mm.yyyy');
         assertEqual(d.instr[2][2], 'Иванов И. И.', 'ФИО подставлен');
         assertEqual(d.instr[1][2], '', 'неизвестный таб → ФИО пустое (не падает)');
     });
@@ -386,7 +391,7 @@ describe('Task 430 — VM: _workersArchiveData', () => {
         assertEqual(d.events[2][0], 9, 'запись годового среза дошла');
         assertEqual(d.events[3][0], 5, 'мероприятие id 5 сохранилось (Task 427)');
         assertEqual(d.events[3][4], 'Курс АСУ ТП', 'тема');
-        assertEqual(d.events[3][6], '05.09.2026', 'дата окончания');
+        assertEqual(d.events[3][6], '05.09.' + NOWY, 'дата окончания');
         assertEqual(d.events[3][7], 3, 'длительность — число');
         let noId = 0;
         for (let i = 1; i < d.events.length; i++) {
@@ -404,7 +409,9 @@ describe('Task 430 — VM: _workersArchiveData', () => {
             '});')();
         const d = h._workersArchiveData();
         assertEqual(d.employees.length, 1, 'только шапка справочника');
+        assertEqual(d.vacations.length, 1, 'только шапка отпусков (Task 445)');
         assertEqual(d.instr.length, 1, 'только шапка инструктажей');
+        assertEqual(d.ppe.length, 1, 'только шапка СИЗ (Task 445)');
         assertEqual(d.events.length, 1, 'только шапка мероприятий');
     });
 });
@@ -484,10 +491,11 @@ describe('Task 430 — VM: _buildArchiveWorkbook', () => {
         };
     }
 
-    test('zip: 8 частей, stored, EOCD/каталог консистентны', () => {
+    test('zip: 10 частей, stored, EOCD/каталог консистентны', () => {
         const wb = wbHost()._buildArchiveWorkbook();
         const z = parseZip(wb.bytes);
-        assertEqual(z.files.length, 8, 'все части книги в контейнере (3 листа + 5 служебных)');
+        assertEqual(z.files.length, 10,
+            'все части книги в контейнере (5 листов + 5 служебных; Task 445)');
         assertEqual(z.eocd, 0x06054b50, 'EOCD-сигнатура в хвосте');
         assertEqual(z.cdOffset, z.files.reduce(
             (s, f) => s + 30 + f.name.length + f.usize, 0),
@@ -497,7 +505,9 @@ describe('Task 430 — VM: _buildArchiveWorkbook', () => {
                             'xl/workbook.xml', 'xl/_rels/workbook.xml.rels',
                             'xl/styles.xml', 'xl/worksheets/sheet1.xml',
                             'xl/worksheets/sheet2.xml',
-                            'xl/worksheets/sheet3.xml']) {
+                            'xl/worksheets/sheet3.xml',
+                            'xl/worksheets/sheet4.xml',
+                            'xl/worksheets/sheet5.xml']) {
             assertTrue(names.indexOf(need) !== -1, 'часть ' + need);
         }
         for (const f of z.files) {
@@ -516,14 +526,24 @@ describe('Task 430 — VM: _buildArchiveWorkbook', () => {
         }
     });
 
-    test('workbook.xml: три листа по именам', () => {
+    test('workbook.xml: ПЯТЬ листов по именам (Task 445)', () => {
         const wb = wbHost()._buildArchiveWorkbook();
         const z = parseZip(wb.bytes);
         const wbxml = z.files.find(f => f.name === 'xl/workbook.xml');
         const txt = Buffer.from(wbxml.data).toString('utf8');
         assertTrue(txt.indexOf('name="Работники"') !== -1, 'лист Работники');
+        assertTrue(txt.indexOf('name="Отпуска"') !== -1, 'лист Отпуска (Task 445)');
         assertTrue(txt.indexOf('name="Инструктажи"') !== -1, 'лист Инструктажи');
+        assertTrue(txt.indexOf('name="СИЗ"') !== -1, 'лист СИЗ (Task 445)');
         assertTrue(txt.indexOf('name="Мероприятия"') !== -1, 'лист Мероприятия');
+        // порядок листов: Работники → Отпуска → Инструктажи → СИЗ → Мероприятия
+        const iE = txt.indexOf('name="Работники"');
+        const iV = txt.indexOf('name="Отпуска"');
+        const iI = txt.indexOf('name="Инструктажи"');
+        const iP = txt.indexOf('name="СИЗ"');
+        const iM = txt.indexOf('name="Мероприятия"');
+        assertTrue(iE < iV && iV < iI && iI < iP && iP < iM,
+            'порядок листов книги (Task 445)');
         assertTrue(txt.indexOf('sheetId="1"') !== -1, 'sheetId проставлены');
     });
 
@@ -536,11 +556,11 @@ describe('Task 430 — VM: _buildArchiveWorkbook', () => {
         assertTrue(txt.indexOf('15.03.2024') !== -1, 'дата приёма');
     });
 
-    test('лист 2: комментарий с & < > выгружается экранированным', () => {
+    test('лист 3 (Инструктажи; Task 445 — Отпуска стал листом 2): спецсимволы', () => {
         const wb = wbHost()._buildArchiveWorkbook();
         const z = parseZip(wb.bytes);
-        const s2 = z.files.find(f => f.name === 'xl/worksheets/sheet2.xml');
-        const txt = Buffer.from(s2.data).toString('utf8');
+        const s3 = z.files.find(f => f.name === 'xl/worksheets/sheet3.xml');
+        const txt = Buffer.from(s3.data).toString('utf8');
         assertTrue(txt.indexOf('a &amp; b &lt;c&gt;') !== -1,
             'спецсимволы экранированы в xlsx');
     });
@@ -551,7 +571,9 @@ describe('Task 430 — VM: _buildArchiveWorkbook', () => {
         assertTrue(wb.name.indexOf('Архив_по_работникам_') === 0,
             'имя с датой выгрузки');
         assertEqual(wb.counts.employees, 1, 'счётчик работников');
+        assertEqual(wb.counts.vacations, 0, 'счётчик отпусков (Task 445)');
         assertEqual(wb.counts.instr, 1, 'счётчик инструктажей');
+        assertEqual(wb.counts.ppe, 0, 'счётчик СИЗ (Task 445)');
         assertEqual(wb.counts.events, 1, 'счётчик мероприятий');
         assertTrue(wb.bytes instanceof Uint8Array, 'bytes — Uint8Array');
         assertTrue(wb.bytes.length > 1000, 'книга не пустая');
@@ -603,10 +625,13 @@ describe('Task 430 — VM: saveWorkersArchive', () => {
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'mime xlsx');
         assertEqual(r.toasts.length, 1, 'тост показан');
-        assertTrue(r.toasts[0].indexOf('Архив сохранён') !== -1,
-            'тост об успехе');
+        assertTrue(r.toasts[0].indexOf('Архив скачан') !== -1,
+            'тост об успехе (Task 445: «скачан» — по кнопке «Скачать архив»)');
         assertTrue(r.toasts[0].indexOf('1 работник') !== -1,
             'состав: работники');
+        assertTrue(r.toasts[0].indexOf('0 отпусков') !== -1 &&
+                   r.toasts[0].indexOf('0 СИЗ') !== -1,
+            'состав: отпуска и СИЗ (Task 445)');
     });
 
     test('уровень null (раздел закрыт) — тишина', () => {
@@ -908,10 +933,10 @@ describe('Task 430 — VM: printGrid без диалога — прежняя п
 // ============================================================
 describe('Task 430 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v668', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v668'") !== -1,
-            'CACHE_VERSION = kipia-test-v668 (Task 430 — предпросмотр печати + архив)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v669') !== -1,
+    test('SW: кэш поднят до kipia-test-v669', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v669'") !== -1,
+            'CACHE_VERSION = kipia-test-v669 (Task 430 — предпросмотр печати + архив)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v670') !== -1,
             'лишний инкремент не сделан');
     });
 

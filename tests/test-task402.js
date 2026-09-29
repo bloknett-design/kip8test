@@ -230,10 +230,10 @@ describe('Task 402 — SRC: карточка и сводная таблица', 
         const fn = stripComments(methodText(INDEX_SRC, '_renderWorkersGeneral'));
         assertTrue(fn.indexOf('<th>Должность</th><th>Группа допуска</th>') !== -1,
             'шапка: Должность → Группа допуска');
-        const iPos = fn.indexOf("String(emp['должность'] || '')");
-        const iGrp = fn.indexOf("String(emp['группа_допуска'] || '')");
+        const iPos = fn.indexOf("this._esc(String(emp['должность'] || '')");
+        const iGrp = fn.indexOf("this._esc(grpVal || '—')");
         assertTrue(iPos !== -1 && iGrp !== -1 && iPos < iGrp,
-            'строки: группа после должности');
+            'строки: ячейка группы после должности (Task 445: grpVal + дата проверки)');
     });
 });
 
@@ -402,12 +402,12 @@ describe('Task 402 — сервер: WorkSchedule.gs (SRC)', () => {
 // 7. SW — версия кэша
 // ============================================================
 describe('Task 402 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v668 (Task 402)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v668'") !== -1,
+    test('CACHE_VERSION = kipia-test-v669 (Task 402)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v669'") !== -1,
             'фронтенд менялся — кэш поднят до v629');
     });
     test('guard: v630 отсутствует (следующий бамп)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v669') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v670') === -1,
             'v630 ещё не существует (guard следующего бампа)');
     });
 });

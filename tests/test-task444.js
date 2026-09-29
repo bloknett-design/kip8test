@@ -279,10 +279,10 @@ describe('Task 444 — VM: карточка, цвета даты окончан�
 // ============================================================
 describe('Task 444 — SW: версия кэша', () => {
 
-    test('SW: kipia-test-v668', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v668'") !== -1,
+    test('SW: kipia-test-v669', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v669'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v669') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v670') === -1,
             'двойного бампа не было');
     });
 

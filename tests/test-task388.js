@@ -260,10 +260,10 @@ describe('Task 388 — SRC: итоги учёта доступны в любом
             'тосты сменного/дневного вида обещают итоги');
     });
 
-    test('SW: кэш поднят до kipia-test-v668', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v668'") !== -1,
-            'CACHE_VERSION = kipia-test-v668 (Task 388 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v669') !== -1,
+    test('SW: кэш поднят до kipia-test-v669', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v669'") !== -1,
+            'CACHE_VERSION = kipia-test-v669 (Task 388 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v670') !== -1,
             'v617 ещё не существует (guard)');
     });
 });
@@ -324,11 +324,16 @@ describe('Task 388 — SRC: страница «Работники» — вкла
     test('«Общая» вкладка — сводная таблица по всем работникам', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_renderWorkersGeneral'));
         assertTrue(fn.indexOf('ws-wgen-table') !== -1, 'таблица сводки');
-        ['Таб. №', 'ФИО', 'Режим работы', 'Должность', 'Дата приёма',
-         'Отпуск', 'Мероприятия'].forEach(h =>
+        ['Таб. №', 'ФИО', 'Режим работы', 'Должность', 'Группа допуска',
+         'Дата приёма'].forEach(h =>
             assertTrue(fn.indexOf(h) !== -1, 'колонка «' + h + '»'));
-        assertTrue(fn.indexOf('_vacNetDaysInYear') !== -1,
-            'отпуск года — «чистые» дни (ст. 120)');
+        // Task 445: колонки года отпуска/мероприятий/инструктажей УДАЛЕНЫ
+        assertTrue(fn.indexOf('<th>Отпуск') === -1 &&
+                   fn.indexOf('<th>Мероприятия') === -1 &&
+                   fn.indexOf('<th>Инструктажи') === -1,
+            'колонки Отпуск/Мероприятия/Инструктажи удалены (Task 445)');
+        assertTrue(fn.indexOf('_vacNetDaysInYear') === -1,
+            '«чистые» дни отпуска в сводке больше не считаются (Task 445)');
     });
 
     test('CSS: вкладки столбиком слева + мобайл горизонтальной лентой', () => {
@@ -778,25 +783,29 @@ describe('Task 388 — VM: страница «Работники» — вкла�
         assertTrue(body.indexOf('ws-wgen-table') !== -1, 'сводка показана');
     });
 
-    test('VM: сводная таблица — отпуск и мероприятия посчитаны', () => {
+    test('VM: сводная таблица — колонки года удалены (Task 445)', () => {
         const t = workersHost(true);
         const html = t.host._renderWorkersGeneral(
             t.host._EMPLOYEES.slice().sort(function(a, b) {
                 return String(a['ФИО']).localeCompare(String(b['ФИО']), 'ru');
             }));
-        // Иванов: отпуск 10 (мок _vacNetDaysInYear), 1 мероприятие
+        // Иванов: отпуск/мероприятия/инструктажи больше НЕ считаются
         const ivanovRow = html.slice(html.indexOf('Иванов И. И.'),
                                      html.indexOf('</tr>', html.indexOf('Иванов И. И.')));
-        assertTrue(ivanovRow.indexOf('10 дней') !== -1,
-            'отпуск Иванова — 10 (дней, реальное склонение)');
-        // Task 405: колонки разделены — мероприятия 2 (обучения),
-        // инструктажи 1; пара ячеек целиком (срез БЕЗ </tr>)
-        assertTrue(ivanovRow.indexOf('<td>2</td><td>1</td>') !== -1,
-            'Иванов: мероприятия 2, инструктажи 1 (Task 405)');
-        // Петров: без отпуска/мероприятий — прочерки
+        assertTrue(ivanovRow.indexOf('10 дней') === -1,
+            'колонки отпуска в сводке нет (Task 445)');
+        assertTrue(ivanovRow.indexOf('<td>2</td><td>1</td>') === -1,
+            'колонок мероприятий/инструктажей нет (Task 445)');
+        // ровно ШЕСТЬ ячеек строки (таб/ФИО/режим/должность/группа/приём)
+        const iIvRow = html.lastIndexOf('<tr>', html.indexOf('Иванов И. И.'));
+        const ivanovFull = html.slice(iIvRow, html.indexOf('</tr>', iIvRow));
+        assertEqual((ivanovFull.match(/<td/g) || []).length, 6,
+            'строка — 6 ячеек (Task 445)');
+        // Петров: без группы допуска — прочерк
         const petrovRow = html.slice(html.indexOf('Петров П. П.'),
                                      html.indexOf('</tr>', html.indexOf('Петров П. П.')));
-        assertTrue(petrovRow.indexOf('—') !== -1, 'прочерки у Петрова');
+        assertTrue(petrovRow.indexOf('<td>—</td>') !== -1,
+            'прочерк пустой группы у Петрова');
         // смена Иванова — в режиме работы
         assertTrue(ivanovRow.indexOf('сменный, смена №2') !== -1,
             'режим работы со сменой');

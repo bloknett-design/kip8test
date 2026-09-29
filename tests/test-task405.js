@@ -343,33 +343,39 @@ describe('Task 405 — VM: карточка и сводка', () => {
         assertTrue(host._isInstrType(undefined) === false, 'нет типа');
     });
 
-    test('«Общая» сводка: колонки «Мероприятия» и «Инструктажи» по типам', () => {
+    test('«Общая» сводка: колонки года удалены; группа допуска с датой (Task 445)', () => {
         const host = new Function('document', 'return ({' +
             methodText(INDEX_SRC, '_renderWorkersGeneral') + ',\n' +
             methodText(INDEX_SRC, '_isInstrType') + ',\n' +
             methodText(INDEX_SRC, '_isMasterKipia') + ',\n' +
+            methodText(INDEX_SRC, '_lastExam1000Date') + ',\n' +
             '_year: 2026,' +
             '_EMPLOYEES: ' + JSON.stringify(EMP) + ',' +
             '_TRAININGS: ' + JSON.stringify(TRAININGS) + ',' +
             '_esc: function(s) { return String(s); },' +
             '_escAttr: function(s) { return String(s); },' +
             '_plural: function(n, f) { return f[2]; },' +
-            '_fmtDateRu: function(d) { return String(d); },' +
+            '_fmtDateRu: function(d) { d = String(d);' +
+            '  var p = d.split("-"); return p.length === 3 ?' +
+            '  p[2] + "." + p[1] + "." + p[0] : d; },' +
             '_vacNetDaysInYear: function(v, y) { return 14; }' +
             '});')(mockDoc({}));
         const html = host._renderWorkersGeneral(EMP.slice());
-        assertTrue(html.indexOf('<th>Мероприятия · 2026</th>') !== -1,
-            'колонка «Мероприятия · 2026»');
-        assertTrue(html.indexOf('<th>Инструктажи · 2026</th>') !== -1,
-            'НОВАЯ колонка «Инструктажи · 2026»');
-        // 2 мероприятия (обучение+примечание) и 2 инструктажа
-        assertTrue(html.indexOf('<td>2</td>') !== -1, 'счёт мероприятий = 2');
-        const cells = html.match(/<td>(2|—)<\/td>/g) || [];
-        assertTrue(cells.length >= 2, 'ячейки мероприятий/инструктажей заполнены');
-        const iMer = html.indexOf('<th>Мероприятия · 2026</th>');
-        const iIns = html.indexOf('<th>Инструктажи · 2026</th>');
-        assertTrue(iMer !== -1 && iIns !== -1 && iMer < iIns,
-            'инструктажи — правее мероприятий');
+        // Task 445: колонки «Мероприятия · год»/«Инструктажи · год» УДАЛЕНЫ
+        assertTrue(html.indexOf('<th>Мероприятия · 2026</th>') === -1,
+            'колонки «Мероприятия · 2026» больше нет (Task 445)');
+        assertTrue(html.indexOf('<th>Инструктажи · 2026</th>') === -1,
+            'колонки «Инструктажи · 2026» больше нет (Task 445)');
+        // Task 445: группа допуска — со датой последней проверки до 1000 В
+        // (Галкин: IV; TRAININGS-фикстура не содержит выполненных
+        // проверок «до 1000 В» — дата не подставляется)
+        const iG = html.indexOf('Галкин Д. Н.');
+        const iGRow = html.lastIndexOf('<tr>', iG);
+        const row = html.slice(iGRow, html.indexOf('</tr>', iGRow));
+        assertTrue(row.indexOf('<td>IV</td>') !== -1,
+            'ячейка группы — только знак (нет выполненной проверки до 1000 В)');
+        assertEqual((row.match(/<td/g) || []).length, 6,
+            'строка — 6 ячеек (Task 445)');
     });
 });
 
@@ -584,10 +590,10 @@ describe('Task 405 — GAS-VM: сервер (моки листов)', () => {
 // 5. SW — версия кэша
 // ============================================================
 describe('Task 405 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v668', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v668'") !== -1,
+    test('CACHE_VERSION = kipia-test-v669', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v669'") !== -1,
             'SW v632 (Task 405)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v669') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v670') === -1,
             'двойной бамп отсутствует');
     });
 });

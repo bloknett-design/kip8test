@@ -112,10 +112,14 @@ describe('Task 394 — SRC: мероприятия на весь год', () => 
             'записи вне года не показываются');
     });
 
-    test('«Общая» вкладка — колонка «Мероприятия · ГОД»', () => {
+    test('«Общая» вкладка — колонок «· ГОД» НЕТ (удалены, Task 445)', () => {
         const fn = stripComments(methodText(INDEX_SRC, '_renderWorkersGeneral'));
-        assertTrue(fn.indexOf("'<th>Мероприятия · ' + this._year + '</th>'") !== -1,
-            'заголовок колонки — год');
+        assertTrue(fn.indexOf("'<th>Мероприятия · ' + this._year + '</th>'") === -1,
+            'колонка «Мероприятия · год» удалена (Task 445)');
+        assertTrue(fn.indexOf("'<th>Инструктажи · ' + this._year + '</th>'") === -1,
+            'колонка «Инструктажи · год» удалена (Task 445)');
+        assertTrue(fn.indexOf("'<th>Отпуск · ' + this._year + '</th>'") === -1,
+            'колонка «Отпуск · год» удалена (Task 445)');
         assertFalse(fn.indexOf('monthNames') !== -1,
             'monthNames сводке больше не нужен');
     });
@@ -426,16 +430,17 @@ describe('Task 394 — VM: страница «Работники» — сетк�
         const body = t.els.wsWorkersBody.innerHTML;
         assertFalse(body.indexOf('ws-wgrid2') !== -1,
             '«Общая» — без сетки карточки');
-        assertTrue(body.indexOf('<th>Мероприятия · 2026</th>') !== -1,
-            'колонка сводки — «Мероприятия · 2026» (год)');
-        // Task 405: инструктажи — СВОЯ колонка сводки
-        assertTrue(body.indexOf('<th>Инструктажи · 2026</th>') !== -1,
-            'колонка сводки — «Инструктажи · 2026» (Task 405)');
-        // счётчики в ячейках: у 2706 — 1 мероприятие (обучение Б)
-        // и 2 инструктажа (А, В); год, типы разделены
-        const re = /<tr><td>2706<\/td>[\s\S]*?<td>1<\/td><td>2<\/td><\/tr>/;
-        assertTrue(re.test(body),
-            'ячейка Галкина — 1 мероприятие и 2 инструктажа (Task 405)');
+        // Task 445: колонки года «Мероприятия»/«Инструктажи» УДАЛЕНЫ
+        assertTrue(body.indexOf('<th>Мероприятия · 2026</th>') === -1,
+            'колонки «Мероприятия · 2026» больше нет (Task 445)');
+        assertTrue(body.indexOf('<th>Инструктажи · 2026</th>') === -1,
+            'колонки «Инструктажи · 2026» больше нет (Task 445)');
+        // строка работника — РОВНО шесть ячеек (счётчики годовЫХ
+        // записей не рендерятся)
+        const i27 = body.indexOf('<tr><td>2706</td>');
+        const row27 = body.slice(i27, body.indexOf('</tr>', i27));
+        assertEqual((row27.match(/<td/g) || []).length, 6,
+            'шесть ячеек: таб/ФИО/режим/должность/группа/приём (Task 445)');
     });
 });
 
@@ -630,10 +635,10 @@ describe('Task 394 — VM: окно мероприятий — порядок с
 // ============================================================
 describe('Task 394 — SW', () => {
 
-    test('SW: kipia-test-v668', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v668'") !== -1,
+    test('SW: kipia-test-v669', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v669'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v669') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v670') === -1,
             'двойного бампа не было');
     });
 });
