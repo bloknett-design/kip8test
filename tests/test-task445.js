@@ -28,6 +28,10 @@
 //     шахматки); saveWorkersArchive ПЕРЕД сборкой лениво тянет
 //     отпуска соседних годов (_vacYearEnsure), в VM без него —
 //     сборка синхронна; тост «Архив скачан — …» из 5 счётчиков.
+//   • Task 446 (адаптация тестов): листы Отпуска/Инструктажи/
+//     СИЗ/Мероприятия БЕЗ колонок id/«Таб. №» (первая колонка —
+//     работник), «Инструктажи» сортируются по фамилиям — ассерты
+//     перестроены под новые индексы колонок.
 // ============================================================
 
 const fs = require('fs');
@@ -171,9 +175,9 @@ describe('Task 445 — SRC: структура архива (5 листов)', (
             'фолбэк на _VACATIONS года шахматки');
         assertTrue(fn.indexOf("'v' + vId") !== -1,
             'дедуп отпусков по id');
-        assertTrue(fn.indexOf("['id', 'Таб. №', 'ФИО', 'Часть',") !== -1 &&
+        assertTrue(fn.indexOf("['ФИО', 'Часть',") !== -1 &&
                    fn.indexOf("'Дата начала', 'Дата окончания', 'Дней',") !== -1,
-            'колонки листа «Отпуска»');
+            'колонки листа «Отпуска» (Task 446: без id/«Таб. №»)');
     });
 
     test('лист «Инструктажи»: предыдущий + текущий + следующий годы', () => {
@@ -357,14 +361,14 @@ describe('Task 445 — VM: _workersArchiveData (годовые фильтры)',
         assertEqual(d.vacations.length, 4,
             'шапка + 3 отпуска (пограничный период — ОДИН, дедуп по id)');
         // сортировка: ФИО (Иванов 017 → Сидоров 031), затем дата
-        assertEqual(d.vacations[1][2], 'Иванов И. И.', 'первый — Иванов');
-        assertEqual(d.vacations[1][4], '29.12.' + (NOWY - 1),
+        assertEqual(d.vacations[1][0], 'Иванов И. И.', 'первый — Иванов');
+        assertEqual(d.vacations[1][2], '29.12.' + (NOWY - 1),
             'пограничный: дата начала прошлого года');
-        assertEqual(d.vacations[2][4], '01.06.' + NOWY, 'второй Иванова — лето');
-        assertEqual(d.vacations[3][2], 'Сидоров С. С.', 'Сидоров — по алфавиту ниже');
-        // колонки: часть/дней
-        assertEqual(d.vacations[2][3], 2, 'часть 2 — числом');
-        assertEqual(d.vacations[2][6], 10, 'дней 10 — числом');
+        assertEqual(d.vacations[2][2], '01.06.' + NOWY, 'второй Иванова — лето');
+        assertEqual(d.vacations[3][0], 'Сидоров С. С.', 'Сидоров — по алфавиту ниже');
+        // колонки: часть/дней (Task 446: без id/«Таб. №»)
+        assertEqual(d.vacations[2][1], 2, 'часть 2 — числом');
+        assertEqual(d.vacations[2][4], 10, 'дней 10 — числом');
     });
 
     test('отпуска: фолбэк на _VACATIONS года шахматки (пула нет)', () => {
@@ -376,7 +380,7 @@ describe('Task 445 — VM: _workersArchiveData (годовые фильтры)',
             vacYear: NOWY
         })._workersArchiveData();
         assertEqual(d.vacations.length, 2, 'шапка + отпуск из _VACATIONS');
-        assertEqual(d.vacations[1][4], '04.08.' + NOWY, 'дата начала');
+        assertEqual(d.vacations[1][2], '04.08.' + NOWY, 'дата начала');
     });
 
     test('отпуска: посторонний год шахматки в лист НЕ попадает', () => {
@@ -407,8 +411,12 @@ describe('Task 445 — VM: _workersArchiveData (годовые фильтры)',
             ]
         })._workersArchiveData();
         assertEqual(d.instr.length, 4, 'шапка + 3 записи (prev/cur/next)');
-        const ids = d.instr.slice(1).map(r => r[0]);
-        assertEqual(ids.join(','), '2,3,4', 'вошли ровно prev/cur/next');
+        const dates = d.instr.slice(1).map(r => r[3]);
+        assertEqual(dates.join(','),
+            ['01.06.' + (NOWY - 1), '02.03.' + NOWY,
+             '02.03.' + (NOWY + 1)].join(','),
+            'вошли ровно prev/cur/next (Task 446: дата проведения — [3]); ' +
+            'все записи одного работника — подряд');
     });
 
     test('инструктажи: дата_проведения приоритетнее дата_начала', () => {
@@ -441,8 +449,11 @@ describe('Task 445 — VM: _workersArchiveData (годовые фильтры)',
             ]
         })._workersArchiveData();
         assertEqual(d.events.length, 4, 'шапка + 3 (пересекающие текущий год)');
-        const ids = d.events.slice(1).map(r => r[0]);
-        assertEqual(ids.join(','), '2,3,4', 'вошли пересекающие год периоды');
+        const starts = d.events.slice(1).map(r => r[3]);
+        assertEqual(starts.join(','),
+            ['29.12.' + (NOWY - 1), '01.09.' + NOWY,
+             '30.12.' + NOWY].join(','),
+            'вошли пересекающие год периоды (Task 446: дата начала — [3])');
     });
 
     test('СИЗ: полные колонки, «До износа» как есть, фолбэк ФИО', () => {
@@ -466,17 +477,17 @@ describe('Task 445 — VM: _workersArchiveData (годовые фильтры)',
         })._workersArchiveData();
         assertEqual(d.ppe.length, 3, 'шапка + 2 СИЗ');
         // сортировка по таб. №: 017 (очки) → 031 (каска)
-        assertEqual(d.ppe[1][4], 'Очки закрытые', 'первый — таб 017');
-        assertEqual(d.ppe[2][4], 'Каска защитная', 'второй — таб 031');
+        assertEqual(d.ppe[1][2], 'Очки закрытые', 'первый — таб 017');
+        assertEqual(d.ppe[2][2], 'Каска защитная', 'второй — таб 031');
         const row = d.ppe[2];
-        assertEqual(row[2], 'Сидоров С. С.',
+        assertEqual(row[0], 'Сидоров С. С.',
             'пустое поле «работник» — ФИО из справочника (фолбэк)');
-        assertEqual(row[5], '15.01.' + NOWY, 'дата выдачи dd.mm.yyyy');
-        assertEqual(row[6], '01.06.' + (NOWY - 1), 'дата изготовления');
-        assertEqual(row[7], '2 года', 'срок годности как есть');
-        assertEqual(row[8], '01.06.' + (NOWY + 1), 'дата окончания dd.mm.yyyy');
-        assertEqual(d.ppe[1][8], 'До износа', '«До износа» — текст без форматирования');
-        assertEqual(d.ppe[1][2], 'Иванов И. И.', 'своё поле «работник» приоритетно');
+        assertEqual(row[3], '15.01.' + NOWY, 'дата выдачи dd.mm.yyyy');
+        assertEqual(row[4], '01.06.' + (NOWY - 1), 'дата изготовления');
+        assertEqual(row[5], '2 года', 'срок годности как есть');
+        assertEqual(row[6], '01.06.' + (NOWY + 1), 'дата окончания dd.mm.yyyy');
+        assertEqual(d.ppe[1][6], 'До износа', '«До износа» — текст без форматирования');
+        assertEqual(d.ppe[1][0], 'Иванов И. И.', 'своё поле «работник» приоритетно');
     });
 
     test('лист «Работники» не изменился (справочник)', () => {
@@ -509,6 +520,7 @@ describe('Task 445 — VM: saveWorkersArchive (ленивые годы)', () => 
             methodText(INDEX_SRC, '_wsXlsEsc') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsSheetXml') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsStylesXml') + ',\n' +
+            methodText(INDEX_SRC, '_wsXlsZebraGroups') + ',\n' +
             methodText(INDEX_SRC, '_plural') + ',\n' +
             "_isInstrType: function() { return false; }," +
             "_isoDate: function(d) { return '2026-09-29'; }," +
@@ -579,16 +591,16 @@ describe('Task 445 — VM: saveWorkersArchive (ленивые годы)', () => 
 // ============================================================
 describe('Task 445 — SW и регресс', () => {
 
-    test('SW: кэш поднят до kipia-test-v669 (Task 445)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v669'") !== -1,
-            'CACHE_VERSION = kipia-test-v669');
+    test('SW: кэш поднят до kipia-test-v670 (Task 445)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v670'") !== -1,
+            'CACHE_VERSION = kipia-test-v670');
         assertTrue(SW_SRC.indexOf('Task 445') !== -1,
             'комментарий Task 445 в истории версий');
     });
 
     test('guard: двойного бампа не было', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v670') === -1,
-            'kipia-test-v670 не существует');
+        assertTrue(SW_SRC.indexOf('kipia-test-v671') === -1,
+            'kipia-test-v671 не существует');
     });
 
     test('регресс: старый листовой Excel не вернулся', () => {

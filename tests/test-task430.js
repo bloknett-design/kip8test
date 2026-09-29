@@ -30,6 +30,9 @@
 //   9) _workersArchiveData: сортировка ФИО, дедуп i+id/e+id
 //      (Task 427 — раздельные id), _TRAININGS-дубли сняты, ФИО
 //      подставлены, даты dd.mm.yyyy, выполнение да/нет;
+//      Task 446 (адаптация): листы Отпуска/Инструктажи/СИЗ/
+//      Мероприятия без колонок id/«Таб. №», «Инструктажи» — по
+//      фамилиям (пустое ФИО выше всех);
 //  10) _buildArchiveWorkbook: имя .xlsx, листы «Работники»/
 //      «Инструктажи»/«Мероприятия» в workbook.xml, counts;
 //  11) saveWorkersArchive: скачивание (имя/mime xlsx) + тост
@@ -41,7 +44,7 @@
 //      оверлей удалён, Esc → закрыт;
 //  14) printGrid фолбэк: без _openPrintPreview — window.print
 //      (прежнее поведение Task 341).
-//   SW: kipia-test-v669.
+//   SW: kipia-test-v670.
 // ============================================================
 
 const fs = require('fs');
@@ -287,7 +290,8 @@ describe('Task 430 — VM: утилиты xlsx', () => {
         const s = h._wsXlsStylesXml();
         assertTrue(s.indexOf('<b/>') !== -1, 'жирный шрифт');
         assertTrue(s.indexOf('FF4472C4') !== -1, 'заливка шапки');
-        assertTrue(s.indexOf('cellXfs count="2"') !== -1, '2 стиля ячеек');
+        assertTrue(s.indexOf('cellXfs count="3"') !== -1,
+            '3 стиля ячеек (Task 446: + заливка зебры #F2F2F2)');
     });
 });
 
@@ -370,35 +374,32 @@ describe('Task 430 — VM: _workersArchiveData', () => {
     test('инструктажи: дедуп i+id, датасет без _TRAININGS-дубля', () => {
         const d = dataHost()._workersArchiveData();
         assertEqual(d.instr.length, 3, 'шапка + 2 записи (id 5 не задвоен)');
-        // сортировка по ДАТЕ asc: id 6 (06-2025) раньше id 5 (03-2026)
-        assertEqual(d.instr[1][0], 6, 'первый — ранний по дате id 6');
-        assertEqual(d.instr[2][0], 5, 'второй — id 5');
-        assertEqual(d.instr[1][6], 'нет', 'выполнение=0 → нет');
-        assertEqual(d.instr[1][7], 'да', 'просрочен=1 → да');
-        assertEqual(d.instr[2][6], 'да', 'выполнение=1 → да');
-        assertEqual(d.instr[2][7], 'нет', 'просрочен=0 → нет');
-        assertEqual(d.instr[2][5], '02.03.' + NOWY, 'дата проведения dd.mm.yyyy');
-        assertEqual(d.instr[2][2], 'Иванов И. И.', 'ФИО подставлен');
-        assertEqual(d.instr[1][2], '', 'неизвестный таб → ФИО пустое (не падает)');
+        // Task 446: сортировка по ФАМИЛИИ (пустая — выше всех) →
+        // дата: id 6 (таб 999, ФИО '') раньше id 5 (Иванов, 03-е)
+        assertEqual(d.instr[1][0], '',
+            'первый — неизвестный таб → ФИО пустое (не падает)');
+        assertEqual(d.instr[1][3], '10.06.' + (NOWY - 1), 'дата id 6');
+        assertEqual(d.instr[2][0], 'Иванов И. И.', 'второй — Иванов (по фамилиям)');
+        assertEqual(d.instr[2][3], '02.03.' + NOWY, 'дата проведения dd.mm.yyyy');
+        assertEqual(d.instr[1][4], 'нет', 'выполнение=0 → нет');
+        assertEqual(d.instr[1][5], 'да', 'просрочен=1 → да');
+        assertEqual(d.instr[2][4], 'да', 'выполнение=1 → да');
+        assertEqual(d.instr[2][5], 'нет', 'просрочен=0 → нет');
     });
 
     test('мероприятия: id 5 (тот же id что у инструктажа!) — НЕ дубль', () => {
         const d = dataHost()._workersArchiveData();
         assertEqual(d.events.length, 4,
             'шапка + 3 (e5 жив рядом с i5; e9 из среза; запись без id — отдельная, её дубль из среза снят)');
-        // сортировка по дате asc, затем id: без-id (0) → e9 → e5 (03-е)
-        assertEqual(d.events[1][0], '', 'первая — запись без id (t-ключ)');
-        assertEqual(d.events[2][0], 9, 'запись годового среза дошла');
-        assertEqual(d.events[3][0], 5, 'мероприятие id 5 сохранилось (Task 427)');
-        assertEqual(d.events[3][4], 'Курс АСУ ТП', 'тема');
-        assertEqual(d.events[3][6], '05.09.' + NOWY, 'дата окончания');
-        assertEqual(d.events[3][7], 3, 'длительность — число');
-        let noId = 0;
-        for (let i = 1; i < d.events.length; i++) {
-            if (d.events[i][0] === '') noId++;
-        }
-        assertEqual(noId, 1,
-            'записей без id — одна (дубль t-ключа снят дедупом)');
+        // Task 446: колонок id/«Таб. №» нет; сортировка по дате asc,
+        // затем id: без-id (0) → e9 → e5 (03-е) — Сидоров×2, Иванов
+        assertEqual(d.events[1][0], 'Сидоров С. С.', 'первая — прогул без id (t-ключ)');
+        assertEqual(d.events[1][3], '01.09.' + NOWY, 'дата начала прогулов');
+        assertEqual(d.events[2][0], 'Сидоров С. С.', 'запись годового среза дошла (e9)');
+        assertEqual(d.events[3][0], 'Иванов И. И.', 'мероприятие e5 сохранилось (Task 427)');
+        assertEqual(d.events[3][2], 'Курс АСУ ТП', 'тема');
+        assertEqual(d.events[3][4], '05.09.' + NOWY, 'дата окончания');
+        assertEqual(d.events[3][5], 3, 'длительность — число');
     });
 
     test('пустые пулы — только шапки', () => {
@@ -449,6 +450,7 @@ describe('Task 430 — VM: _buildArchiveWorkbook', () => {
             methodText(INDEX_SRC, '_wsXlsEsc') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsSheetXml') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsStylesXml') + ',\n' +
+            methodText(INDEX_SRC, '_wsXlsZebraGroups') + ',\n' +
             "_isInstrType: function(t) { return t === 'инструктаж'; }," +
             '_isoDate: function(d) { return d.toISOString().slice(0, 10); }' +
             ',' +
@@ -600,6 +602,7 @@ describe('Task 430 — VM: saveWorkersArchive', () => {
             methodText(INDEX_SRC, '_wsXlsEsc') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsSheetXml') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsStylesXml') + ',\n' +
+            methodText(INDEX_SRC, '_wsXlsZebraGroups') + ',\n' +
             methodText(INDEX_SRC, '_plural') + ',\n' +
             "_isInstrType: function() { return false; }," +
             "_isoDate: function(d) { return '2026-09-27'; }," +
@@ -933,10 +936,10 @@ describe('Task 430 — VM: printGrid без диалога — прежняя п
 // ============================================================
 describe('Task 430 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v669', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v669'") !== -1,
-            'CACHE_VERSION = kipia-test-v669 (Task 430 — предпросмотр печати + архив)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v670') !== -1,
+    test('SW: кэш поднят до kipia-test-v670', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v670'") !== -1,
+            'CACHE_VERSION = kipia-test-v670 (Task 430 — предпросмотр печати + архив)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v671') !== -1,
             'лишний инкремент не сделан');
     });
 
