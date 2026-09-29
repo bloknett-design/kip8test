@@ -258,20 +258,22 @@ describe('Task 392 — SRC: загрузка, кэш, сервер, PPEInit.gs',
             'аудит трёх операций');
     });
 
-    test('WorkSchedule.gs: дата окончания АВТО (выдача + срок, кламп дня)', () => {
+    test('WorkSchedule.gs: дата окончания АВТО (базовая дата + срок, кламп дня; Task 443 — приоритет изготовления)', () => {
         const fn = methodText(WS_GS_SRC, '_ppeExpiry');
         assertTrue(fn.indexOf("_ppeTermMonths(term)") !== -1, 'срок → месяцы');
-        assertTrue(fn.indexOf("issueDate.getMonth() + months") !== -1,
-            'месяцы прибавляются к дате выдачи');
+        assertTrue(fn.indexOf("baseDate.getMonth() + months") !== -1,
+            'месяцы прибавляются к базовой дате (Task 443: изготовление в приоритете, иначе выдача)');
         assertTrue(fn.indexOf("new Date(y, mo + 1, 0).getDate()") !== -1,
             'кламп дня к длине целевого месяца');
         assertTrue(fn.indexOf("return 'До износа';") !== -1, '«До износа» — строкой');
         const add = stripComments(methodText(WS_GS_SRC, 'addPpe'));
-        assertTrue(add.indexOf('this._ppeExpiry(issued, term)') !== -1,
-            'addPpe считает дату окончания автоматически');
+        assertTrue(add.indexOf('var base = manufactured || issued;') !== -1 &&
+                   add.indexOf('this._ppeExpiry(base, term)') !== -1,
+            'addPpe считает дату окончания автоматически (база — изготовление/выдача)');
         const upd = stripComments(methodText(WS_GS_SRC, 'updatePpe'));
-        assertTrue(upd.indexOf('this._ppeExpiry(issued, term)') !== -1,
-            'updatePpe пересчитывает дату окончания');
+        assertTrue(upd.indexOf('var base = manufactured || issued;') !== -1 &&
+                   upd.indexOf('this._ppeExpiry(base, term)') !== -1,
+            'updatePpe пересчитывает дату окончания (база — изготовление/выдача)');
     });
 
     test('WorkSchedule.gs: колонки-копии работник/должность (C/D)', () => {
@@ -317,10 +319,10 @@ describe('Task 392 — SRC: загрузка, кэш, сервер, PPEInit.gs',
             'таб_№ — текстовый формат (Task 304)');
     });
 
-    test('SW: kipia-test-v666', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v666'") !== -1,
+    test('SW: kipia-test-v667', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v667'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v667') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v668') === -1,
             'двойного бампа не было');
     });
 });
@@ -819,7 +821,7 @@ function makePpeServer() {
     const methods = ['_parseIsoDate', '_parseSheetDate', '_safeDate', '_toIsoDate',
                      '_appendRowKeepText', 'listPpe', 'addPpe', 'updatePpe',
                      'deletePpe', '_ppeLookupEmployee', '_ppeTermMonths',
-                     '_ppeExpiry'];
+                     '_ppeExpiry', '_ppeHasManufactureCol'];
     const src = methods.map(n => extractMethod(WS_GS_SRC, n)).filter(Boolean).join(',\n');
     vm.runInContext(`
         var WSS = {
@@ -847,17 +849,19 @@ function makePpeServer() {
 describe('Task 392 — VM сервер: listPpe', () => {
 
     function ppeSheet() {
+        // Task 443: столбец G «дата_изготовления» (10 столбцов)
         return [
             ['id', 'таб_номер', 'работник', 'должность', 'наименование_СИЗ',
-             'дата_выдачи', 'срок_годности', 'дата_окончания', 'примечание'],
+             'дата_выдачи', 'дата_изготовления', 'срок_годности',
+             'дата_окончания', 'примечание'],
             [1, '2706', 'Галкин Д. Н.', 'Мастер КИПиА',
              'Костюм для защиты от растворов кислот и щелочей',
-             new Date(2026, 7, 17), '1 год', new Date(2027, 7, 17), ''],
+             new Date(2026, 7, 17), '', '1 год', new Date(2027, 7, 17), ''],
             [2, '2706', 'Галкин Д. Н.', 'Мастер КИПиА', 'Очки закрытые',
-             '', 'До износа', 'До износа', ''],
+             '', '', 'До износа', 'До износа', ''],
             [3, '0377', 'Первов С. А.', 'Слесарь КИПиА', 'Ботинки',
-             '2026-08-17', '1,5 года', '2028-02-17', ''],
-            ['', '', '', '', '', '', '', '', ''],  // пустой стилевой хвост
+             '2026-08-17', '2025-02-15', '1,5 года', '2028-02-17', ''],
+            ['', '', '', '', '', '', '', '', '', ''],  // пустой стилевой хвост
         ];
     }
 
@@ -873,6 +877,10 @@ describe('Task 392 — VM сервер: listPpe', () => {
         assertEqual(ppe[1].дата_окончания, 'До износа', '«До износа» строкой');
         assertEqual(ppe[2].дата_выдачи, '2026-08-17', 'текстовая дата распарсена');
         assertEqual(ppe[2].дата_окончания, '2028-02-17', 'текстовое окончание');
+        // Task 443: дата изготовления читается (текстовая — парсится,
+        // пустая — пустая строка)
+        assertEqual(ppe[2].дата_изготовления, '2025-02-15', 'дата изготовления (текст → ISO)');
+        assertEqual(ppe[0].дата_изготовления, '', 'без даты изготовления — пусто');
         assertEqual(ppe[0].наименование, 'Костюм для защиты от растворов кислот и щелочей',
             'наименование');
     });
@@ -894,8 +902,10 @@ describe('Task 392 — VM сервер: addPpe', () => {
         ];
     }
     function ppeEmpty() {
+        // Task 443: шапка новой структуры (G — дата изготовления)
         return [['id', 'таб_номер', 'работник', 'должность', 'наименование_СИЗ',
-                 'дата_выдачи', 'срок_годности', 'дата_окончания', 'примечание']];
+                 'дата_выдачи', 'дата_изготовления', 'срок_годности',
+                 'дата_окончания', 'примечание']];
     }
 
     test('happy-path: id, копии C/D, авто-дата окончания, текстовый B', () => {
@@ -915,9 +925,12 @@ describe('Task 392 — VM сервер: addPpe', () => {
         assertEqual(row[3], 'Мастер КИПиА', 'D: должность (копия)');
         assertEqual(row[4], 'Костюм для защиты от растворов кислот и щелочей', 'E: наименование');
         assertEqual(row[5].getTime(), new Date(2026, 7, 17).getTime(), 'F: дата выдачи');
-        assertEqual(row[6], '1 год', 'G: срок');
-        assertEqual(row[7].getTime(), new Date(2027, 7, 17).getTime(),
-            'H: АВТО-дата окончания = выдача + 1 год');
+        assertTrue(row[6] === null || row[6] === '',
+            'G: без даты изготовления — пусто (Task 443)');
+        assertEqual(row[7], '1 год', 'H: срок (Task 443: сместился из G)');
+        assertEqual(row[8].getTime(), new Date(2027, 7, 17).getTime(),
+            'I: АВТО-дата окончания = выдача + 1 год (без изготовления)');
+        assertEqual(row[9], '', 'J: примечание (Task 443: сместилось из I)');
         assertTrue(sheet._formats.some(f => f.col === 2 && f.f === '@'),
             'B — текстовый формат (Task 304)');
         assertTrue(api.audits().indexOf('WORKSCHEDULE_ADD_PPE') !== -1, 'аудит');
@@ -929,13 +942,13 @@ describe('Task 392 — VM сервер: addPpe', () => {
         const sheet = api.setSheet('СИЗ', ppeEmpty());
         api.WSS.addPpe({ token: 't', 'таб_номер': '2706',
             наименование: 'Очки закрытые', срок_годности: 'До износа' });
-        assertEqual(sheet._data[1][7], 'До износа', 'H = «До износа» (текст)');
+        assertEqual(sheet._data[1][8], 'До износа', 'I = «До износа» (текст; Task 443)');
         api.WSS.addPpe({ token: 't', 'таб_номер': '2706',
             наименование: 'Ботинки', срок_годности: '1,5 года' });
         assertTrue(sheet._data[2][5] === null || sheet._data[2][5] === '',
             'F: не выдано — пусто');
-        assertTrue(sheet._data[2][7] === null || sheet._data[2][7] === '',
-            'H: без даты — пусто');
+        assertTrue(sheet._data[2][8] === null || sheet._data[2][8] === '',
+            'I: без даты — пусто');
         assertEqual(sheet._data[2][0], 2, 'id инкрементится');
     });
 
@@ -963,17 +976,19 @@ describe('Task 392 — VM сервер: updatePpe / deletePpe', () => {
         ];
     }
     function ppeSheet() {
+        // Task 443: шапка новой структуры (G — дата изготовления)
         return [
             ['id', 'таб_номер', 'работник', 'должность', 'наименование_СИЗ',
-             'дата_выдачи', 'срок_годности', 'дата_окончания', 'примечание'],
+             'дата_выдачи', 'дата_изготовления', 'срок_годности',
+             'дата_окончания', 'примечание'],
             [5, '2706', 'Галкин Д. Н.', 'Мастер КИПиА (стар.)', 'Каска защитная',
-             new Date(2025, 0, 10), '2 года', new Date(2027, 0, 10), 'До износа'],
+             new Date(2025, 0, 10), '', '2 года', new Date(2027, 0, 10), 'До износа'],
             [6, '2706', 'Галкин Д. Н.', 'Мастер КИПиА', 'Подшлемник',
-             '', '', '', ''],
+             '', '', '', '', ''],
         ];
     }
 
-    test('updatePpe: B..I по id, копии освежены, дата пересчитана', () => {
+    test('updatePpe: B..J по id, копии освежены, дата пересчитана', () => {
         const api = makePpeServer();
         api.setSheet('Сотрудники', empSheet());
         const sheet = api.setSheet('СИЗ', ppeSheet());
@@ -988,10 +1003,12 @@ describe('Task 392 — VM сервер: updatePpe / deletePpe', () => {
         assertEqual(row[0], 5, 'A: id не меняется');
         assertEqual(row[3], 'Мастер КИПиА', 'D: должность освежена из справочника');
         assertEqual(row[5].getTime(), new Date(2026, 8, 1).getTime(), 'F: новая дата выдачи');
-        assertEqual(row[6], '1 год', 'G: новый срок');
-        assertEqual(row[7].getTime(), new Date(2027, 8, 1).getTime(),
-            'H: АВТО-дата пересчитана');
-        assertEqual(row[8], 'новая выдача', 'I: примечание');
+        assertTrue(row[6] === null || row[6] === '',
+            'G: дата изготовления пустая (Task 443)');
+        assertEqual(row[7], '1 год', 'H: новый срок (Task 443: сместился из G)');
+        assertEqual(row[8].getTime(), new Date(2027, 8, 1).getTime(),
+            'I: АВТО-дата пересчитана (Task 443: сместилась из H)');
+        assertEqual(row[9], 'новая выдача', 'J: примечание (Task 443: сместилось из I)');
         assertEqual(sheet._data[2][4], 'Подшлемник', 'чужая строка не тронута');
         assertTrue(sheet._formats.some(f => f.row === 2 && f.col === 2 && f.f === '@'),
             'B — текстовый формат при правке');

@@ -30,10 +30,14 @@
 //                                   B..F по id; проверки не считают
 //                                   саму строку)
 //   workSchedule.deleteVacation   — удалить период отпуска
-//   workSchedule.listPpe          — СИЗ работников (Task 392, лист «СИЗ»)
+//   workSchedule.listPpe          — СИЗ работников (Task 392, лист «СИЗ»;
+//                                   Task 443 — читает и дату изготовления,
+//                                   понимает ОБЕ структуры листа по шапке)
 //   workSchedule.addPpe           — выдать СИЗ работнику (дата окончания
-//                                   считается автоматически: выдача + срок)
-//   workSchedule.updatePpe        — правка записи СИЗ (B..I по id)
+//                                   считается автоматически: дата
+//                                   изготовления в приоритете, иначе дата
+//                                   выдачи, + срок — Task 443)
+//   workSchedule.updatePpe        — правка записи СИЗ (B..J по id — Task 443)
 //   workSchedule.deletePpe        — удалить запись СИЗ
 //
 // Авторизация — по тому же паттерну, что Flowmeter.gs:
@@ -222,7 +226,9 @@
 //
 // Структура листа «СИЗ» (Task 392 — средства индивидуальной защиты;
 //   перечень — Приказ Минтруда России от 29.10.2021 N767н, образец —
-//   файл «Таблица СИЗ работникам КИП ИОС.xlsx»; создаёт PPEInit.gs):
+//   файл «Таблица СИЗ работникам КИП ИОС.xlsx»; создаёт PPEInit.gs;
+//   Task 443 — столбец G «дата_изготовления» вставлен после F, прежние
+//   G/H/I сместились в H/I/J, миграция ppeMigrateManufacture в PPEInit.gs):
 //   A: id (auto-increment)
 //   B: таб_номер (FK на Сотрудники; ТЕКСТ — Task 304)
 //   C: работник (ФИО — копия для читаемости листа; заполняется
@@ -230,12 +236,17 @@
 //   D: должность (копия для читаемости листа; автоматически)
 //   E: наименование_СИЗ
 //   F: дата_выдачи (Date; может быть пусто — не выдано)
-//   G: срок_годности («1 год» / «1,5 года» / «2 года» / «3 года» /
+//   G: дата_изготовления (Date; может быть пусто — Task 443; при
+//      наличии — ПРИОРИТЕТ расчёта даты окончания: изготовление +
+//      срок годности, дата выдачи (F) носит информационный
+//      характер; пример — фильтрующие коробки противогазов, у
+//      которых срок исчисляется с даты производства)
+//   H: срок_годности («1 год» / «1,5 года» / «2 года» / «3 года» /
 //      «6 мес.» / «До износа» / пусто)
-//   H: дата_окончания (заполняется АВТОМАТИЧЕСКИ: дата выдачи +
-//      срок годности; «До износа» для соответствующего срока; без
-//      даты выдачи — пусто)
-//   I: примечание
+//   I: дата_окончания (заполняется АВТОМАТИЧЕСКИ: приоритетная дата
+//      (изготовление G, иначе выдача F) + срок годности; «До
+//      износа» для соответствующего срока; без даты — пусто)
+//   J: примечание
 // ============================================================
 
 var WorkSchedule = {
@@ -3222,6 +3233,13 @@ var WorkSchedule = {
   // (стилевой холст getLastRow, урок Task 294) — пропускается.
   // Даты могут лежать текстом — парсим _parseSheetDate (урок
   // Task 279); дата_окончания «До износа» остаётся СТРОКОЙ.
+  // Task 443: столбец G «дата_изготовления» вставлен после F
+  // «дата_выдачи» — срок/окончание/примечание сместились G→H,
+  // H→I, I→J. ЧТЕНИЕ понимает ОБЕ структуры листа (по шапке
+  // строки 1): новая (G «дата_изготовления») и легаси (G
+  // «срок_годности» — лист до миграции ppeMigrateManufacture:
+  // записи читаются как прежде, дата_изготовления пустая; запись
+  // addPpe/updatePpe при этом возвращает ppe_not_migrated).
   listPpe: function(payload) {
     var auth = this._requireRead(payload.token);
     if (auth.error) return auth.error;
@@ -3232,10 +3250,24 @@ var WorkSchedule = {
     var lastRow = sheet.getLastRow();
     if (lastRow < 2) return { ok: true, data: { ppe: [] } };
 
+    // Карта служебных столбцов по шапке (Task 443): mfg: 0 —
+    // легаси-лист без столбца изготовления (поле = '')
+    var head = sheet.getRange(1, 1, 1, 10).getValues()[0];
+    var gHead = String(head[6] || '').trim();
+    var cols = null;
+    if (gHead === 'дата_изготовления') {
+      cols = { issued: 6, mfg: 7, term: 8, expiry: 9, note: 10 };
+    } else if (gHead === 'срок_годности') {
+      cols = { issued: 6, mfg: 0, term: 7, expiry: 8, note: 9 };
+    }
+    if (!cols) {
+      return { ok: false, error: 'ppe_columns_unknown',
+               message: 'Лист «СИЗ»: столбец G — не «дата_изготовления» и не «срок_годности», структура не распознана' };
+    }
+
     // Читаем id (A), таб_номер (B), работник (C), должность (D),
-    // наименование (E), дата_выдачи (F), срок (G), дата_окончания
-    // (H), примечание (I)
-    var values = sheet.getRange(2, 1, lastRow - 1, 9).getValues();
+    // наименование (E) и служебные столбцы по карте cols
+    var values = sheet.getRange(2, 1, lastRow - 1, 10).getValues();
     var ppe = [];
     for (var i = 0; i < values.length; i++) {
       var r = values[i];
@@ -3243,8 +3275,9 @@ var WorkSchedule = {
       var name = String(r[4] || '').trim();
       if (!tabNo && !name) continue;
       var vId = parseInt(r[0], 10);
-      var issued = this._parseSheetDate(r[5]);
-      var expRaw = r[7];
+      var issued = this._parseSheetDate(r[cols.issued - 1]);
+      var mfg = cols.mfg ? this._parseSheetDate(r[cols.mfg - 1]) : null;
+      var expRaw = r[cols.expiry - 1];
       var expiry = '';
       if (expRaw instanceof Date) {
         expiry = this._toIsoDate(expRaw);
@@ -3259,12 +3292,24 @@ var WorkSchedule = {
         должность:       String(r[3] || '').trim(),
         наименование:    name,
         дата_выдачи:     issued ? this._toIsoDate(issued) : '',
-        срок_годности:   String(r[6] || '').trim(),
+        дата_изготовления: mfg ? this._toIsoDate(mfg) : '',
+        срок_годности:   String(r[cols.term - 1] || '').trim(),
         дата_окончания:  expiry,
-        примечание:      String(r[8] || '').trim()
+        примечание:      String(r[cols.note - 1] || '').trim()
       });
     }
     return { ok: true, data: { ppe: ppe } };
+  },
+
+  // Task 443: у листа «СИЗ» есть столбец G «дата_изготовления»?
+  // (шапка строки 1). Запись addPpe/updatePpe требует НОВУЮ
+  // структуру: после сдвига G→H→I→J запись в старый лист положила
+  // бы срок/окончание/примечание не в свои столбцы — вместо этого
+  // понятная ошибка ppe_not_migrated (как legacy_columns в
+  // setTrainingDone, урок Task 418)
+  _ppeHasManufactureCol: function(sheet) {
+    var head = sheet.getRange(1, 7, 1, 1).getValues()[0];
+    return String(head[0] || '').trim() === 'дата_изготовления';
   },
 
   // Task 392: работник по таб. № в листе «Сотрудники» — для колонок-
@@ -3305,16 +3350,20 @@ var WorkSchedule = {
     return (mm >= 1 && mm <= 600) ? mm : null;
   },
 
-  // Task 392: дата окончания срока годности = дата выдачи + срок
+  // Task 392: дата окончания срока годности = базовая дата + срок
   // (кламп дня к длине целевого месяца: 31.08 + 6 мес → 28/29.02).
+  // Task 443: базовая дата = дата ИЗГОТОВЛЕНИЯ (ПРИОРИТЕТ, если
+  // указана — срок годности фильтрующих коробок противогазов и
+  // т.п. исчисляется с даты производства), иначе дата выдачи;
+  // выбор делает вызывающий код (base = manufactured || issued).
   // «До износа» → строка «До износа»; без даты/срока → null
-  _ppeExpiry: function(issueDate, term) {
+  _ppeExpiry: function(baseDate, term) {
     var months = this._ppeTermMonths(term);
     if (months === -1) return 'До износа';
-    if (!months || !issueDate) return null;
-    var y = issueDate.getFullYear();
-    var mo = issueDate.getMonth() + months;
-    var day = issueDate.getDate();
+    if (!months || !baseDate) return null;
+    var y = baseDate.getFullYear();
+    var mo = baseDate.getMonth() + months;
+    var day = baseDate.getDate();
     var last = new Date(y, mo + 1, 0).getDate();
     if (day > last) day = last;
     return new Date(y, mo, day);
@@ -3322,12 +3371,16 @@ var WorkSchedule = {
 
   // workSchedule.addPpe
   // payload: { token, таб_номер, наименование, дата_выдачи(ISO|''),
-  //            срок_годности, примечание }
+  //            дата_изготовления(ISO|'' — Task 443), срок_годности,
+  //            примечание }
   // Добавляет запись СИЗ работнику. Работник/должность (C/D) — копия
   // из справочника «Сотрудники» (для читаемости листа). Дата
-  // окончания (H) считается АВТОМАТИЧЕСКИ: дата выдачи + срок
-  // годности; «До износа» → текст «До износа»; без даты выдачи —
-  // пусто (образец файла «Таблица СИЗ работникам КИП ИОС»).
+  // окончания (I) считается АВТОМАТИЧЕСКИ: ПРИОРИТЕТ у даты
+  // изготовления (G): если указана — окончание = изготовление +
+  // срок, дата выдачи (F) носит информационный характер; без даты
+  // изготовления — дата выдачи + срок (Task 392); «До износа» →
+  // текст «До износа»; без дат — пусто. Требует НОВУЮ структуру
+  // листа (Task 443) — легаси-шапка → ppe_not_migrated.
   addPpe: function(payload) {
     var auth = this._requireWrite(payload.token);
     if (auth.error) return auth.error;
@@ -3348,11 +3401,19 @@ var WorkSchedule = {
 
     var sheet = this._getSheet(this.PPE_SHEET);
     if (!sheet) return { ok: false, error: 'sheet_not_found: ' + this.PPE_SHEET };
+    if (!this._ppeHasManufactureCol(sheet)) {
+      return { ok: false, error: 'ppe_not_migrated',
+               message: 'Лист «СИЗ»: нет столбца G «дата_изготовления» — запустите ppeMigrateManufacture() в редакторе Apps Script (Task 443)' };
+    }
 
     var issued = payload.дата_выдачи ? this._parseIsoDate(payload.дата_выдачи) : null;
+    var manufactured = payload.дата_изготовления ? this._parseIsoDate(payload.дата_изготовления) : null;
     var term = String(payload.срок_годности || '').trim().slice(0, 50);
     var comment = String(payload.примечание || '').slice(0, 200);
-    var expiry = this._ppeExpiry(issued, term);  // Date|'До износа'|null
+    // Task 443: приоритет даты изготовления (фильтрующие коробки
+    // противогазов — срок с даты производства); иначе — дата выдачи
+    var base = manufactured || issued;
+    var expiry = this._ppeExpiry(base, term);  // Date|'До износа'|null
 
     // max id в столбце A
     var lastRow = sheet.getLastRow();
@@ -3366,16 +3427,19 @@ var WorkSchedule = {
     }
     var newId = maxId + 1;
 
-    // Task 304: B (таб_№) — текст, ведущие нули не теряются
+    // Task 304: B (таб_№) — текст, ведущие нули не теряются.
+    // Task 443: строка — ДЕСЯТЬ значений (F выдача, G изготовление,
+    // H срок, I окончание, J примечание)
     this._appendRowKeepText(sheet,
-      [newId, tabNo, emp.fio, emp.position, name, issued, term, expiry, comment],
+      [newId, tabNo, emp.fio, emp.position, name, issued, manufactured, term, expiry, comment],
       [2]);
 
     try {
       Utils.audit(user.email, 'WORKSCHEDULE_ADD_PPE', '', '',
         'Добавлено СИЗ id=' + newId + ' таб_номер=' + tabNo +
         ' «' + name + '»' +
-        (issued ? ' выдано ' + this._toIsoDate(issued) : ''));
+        (issued ? ' выдано ' + this._toIsoDate(issued) : '') +
+        (manufactured ? ' изгот. ' + this._toIsoDate(manufactured) : ''));
     } catch (e) { /* ignore */ }
 
     return { ok: true, data: { id: newId } };
@@ -3383,11 +3447,15 @@ var WorkSchedule = {
 
   // workSchedule.updatePpe
   // payload: { token, id, таб_номер, наименование, дата_выдачи(ISO|''),
-  //            срок_годности, примечание }
+  //            дата_изготовления(ISO|'' — Task 443), срок_годности,
+  //            примечание }
   // Правка записи СИЗ из карточки работника (шторка «Правка СИЗ»).
-  // Обновляет B..I строки по id (A не меняется); работник/должность
-  // (C/D) освежаются из справочника «Сотрудники»; дата окончания
-  // (H) пересчитывается. Task 304: B (таб_номер) — текстовый формат.
+  // Обновляет B..J строки по id (A не меняется; Task 443 — 9
+  // значений: срок H, окончание I, примечание J); работник/
+  // должность (C/D) освежаются из справочника «Сотрудники»; дата
+  // окончания (I) пересчитывается с ПРИОРИТЕТОМ даты изготовления
+  // (G). Task 304: B (таб_номер) — текстовый формат. Требует новую
+  // структуру листа — легаси-шапка → ppe_not_migrated.
   updatePpe: function(payload) {
     var auth = this._requireWrite(payload.token);
     if (auth.error) return auth.error;
@@ -3410,6 +3478,10 @@ var WorkSchedule = {
 
     var sheet = this._getSheet(this.PPE_SHEET);
     if (!sheet) return { ok: false, error: 'sheet_not_found: ' + this.PPE_SHEET };
+    if (!this._ppeHasManufactureCol(sheet)) {
+      return { ok: false, error: 'ppe_not_migrated',
+               message: 'Лист «СИЗ»: нет столбца G «дата_изготовления» — запустите ppeMigrateManufacture() в редакторе Apps Script (Task 443)' };
+    }
 
     var lastRow = sheet.getLastRow();
     if (lastRow < 2) return { ok: false, error: 'not_found' };
@@ -3423,14 +3495,19 @@ var WorkSchedule = {
     if (rowIndex === -1) return { ok: false, error: 'not_found' };
 
     var issued = payload.дата_выдачи ? this._parseIsoDate(payload.дата_выдачи) : null;
+    var manufactured = payload.дата_изготовления ? this._parseIsoDate(payload.дата_изготовления) : null;
     var term = String(payload.срок_годности || '').trim().slice(0, 50);
     var comment = String(payload.примечание || '').slice(0, 200);
-    var expiry = this._ppeExpiry(issued, term);
+    // Task 443: приоритет даты изготовления, иначе — дата выдачи
+    var base = manufactured || issued;
+    var expiry = this._ppeExpiry(base, term);
 
-    // Запись B..I (id в A не меняется); Task 304: B — текст
+    // Запись B..J (id в A не меняется; Task 443 — 9 значений:
+    // F выдача, G изготовление, H срок, I окончание, J примечание);
+    // Task 304: B — текст
     sheet.getRange(rowIndex, 2).setNumberFormat('@');
-    sheet.getRange(rowIndex, 2, 1, 8).setValues(
-      [[tabNo, emp.fio, emp.position, name, issued, term, expiry, comment]]);
+    sheet.getRange(rowIndex, 2, 1, 9).setValues(
+      [[tabNo, emp.fio, emp.position, name, issued, manufactured, term, expiry, comment]]);
 
     try {
       Utils.audit(user.email, 'WORKSCHEDULE_UPDATE_PPE', '', '',
