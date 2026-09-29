@@ -210,7 +210,7 @@ describe('Task 386 — HTML: «Обозначения» (кнопка/два в�
         assertTrue(INDEX_SRC.indexOf("'ws-legend':                'Обозначения'") !== -1,
             'PAGE_LABELS: «Обозначения»');
         assertTrue(INDEX_SRC.indexOf(
-            "_WORK_SCHEDULE_PAGES: ['work-schedule', 'ws-totals', 'ws-workers', 'ws-legend']") !== -1,
+            "_WORK_SCHEDULE_PAGES: ['work-schedule', 'ws-totals', 'ws-workers', 'ws-legend', 'ws-talons']") !== -1,
             '_WORK_SCHEDULE_PAGES: доступ наследует табель (всем уровням)');
         const iHook = INDEX_SRC.indexOf("if (page === 'ws-legend')");
         assertTrue(iHook !== -1, 'хук navigateTo(ws-legend) есть');
@@ -392,10 +392,10 @@ describe('Task 386 — SRC: механика', () => {
             'Esc → _setLegend(false)');
     });
 
-    test('SW: кэш поднят до kipia-test-v670', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v670'") !== -1,
-            'CACHE_VERSION = kipia-test-v670 (Task 386 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v671') !== -1,
+    test('SW: кэш поднят до kipia-test-v671', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v671'") !== -1,
+            'CACHE_VERSION = kipia-test-v671 (Task 386 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v672') !== -1,
             'v615 ещё не существует (guard)');
     });
 });
