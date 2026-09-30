@@ -597,6 +597,8 @@ describe('Task 451 — VM: печатная форма', () => {
             methodText(WS_SRC, '_totalsZero') + ',\n' +
             methodText(WS_SRC, '_empTypeMap') + ',\n' +
             methodText(WS_SRC, '_buildTalonsPrintHtml') + ',\n' +
+            methodText(WS_SRC, '_talonsColgroup') + ',\n' +
+            methodText(WS_SRC, '_talonsTextWidth') + ',\n' +
             methodText(WS_SRC, '_talonsPosition') + ',\n' +
             methodText(WS_SRC, '_talonsSignBlock') + ',\n' +
             '_TALONS_PRINT_CSS: ' + JSON.stringify(TALONS_CSS_VALUE) + ',\n' +
@@ -741,11 +743,11 @@ describe('Task 451 — VM: печатная форма', () => {
 // 7. SW — версия кэша
 // ============================================================
 describe('Task 451 — SW', () => {
-    test('SW: кэш поднят до kipia-test-v677 (Task 451)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v677'") !== -1,
-            'CACHE_VERSION = kipia-test-v677');
-        assertTrue(SW_SRC.indexOf('kipia-test-v678') === -1,
-            'kipia-test-v678 не существует');
+    test('SW: кэш поднят до kipia-test-v678 (Task 451)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v678'") !== -1,
+            'CACHE_VERSION = kipia-test-v678');
+        assertTrue(SW_SRC.indexOf('kipia-test-v679') === -1,
+            'kipia-test-v679 не существует');
         assertTrue(SW_SRC.indexOf('Task 451') !== -1,
             'комментарий Task 451 в истории версий');
     });

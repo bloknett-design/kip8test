@@ -342,6 +342,8 @@ describe('Task 452 — VM: печатная форма по дням', () => {
             methodText(WS_SRC, '_overHours') + ',\n' +
             methodText(WS_SRC, '_statusMeta') + ',\n' +
             methodText(WS_SRC, '_buildTalonsPrintHtml') + ',\n' +
+            methodText(WS_SRC, '_talonsColgroup') + ',\n' +
+            methodText(WS_SRC, '_talonsTextWidth') + ',\n' +
             methodText(WS_SRC, '_talonsPosition') + ',\n' +
             methodText(WS_SRC, '_talonsSignBlock') + ',\n' +
             '_esc: function(s) { return String(s); },' +
@@ -427,11 +429,11 @@ describe('Task 452 — VM: печатная форма по дням', () => {
 // 5. SW — версия кэша
 // ============================================================
 describe('Task 452 — SW', () => {
-    test('SW: кэш поднят до kipia-test-v677 (Task 452)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v677'") !== -1,
-            'CACHE_VERSION = kipia-test-v677');
-        assertTrue(SW_SRC.indexOf('kipia-test-v678') === -1,
-            'kipia-test-v678 не существует');
+    test('SW: кэш поднят до kipia-test-v678 (Task 452)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v678'") !== -1,
+            'CACHE_VERSION = kipia-test-v678');
+        assertTrue(SW_SRC.indexOf('kipia-test-v679') === -1,
+            'kipia-test-v679 не существует');
         assertTrue(SW_SRC.indexOf('Task 452') !== -1,
             'комментарий Task 452 в истории версий');
     });

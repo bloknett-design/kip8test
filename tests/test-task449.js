@@ -105,12 +105,12 @@ describe('Task 449 — SRC: один лист А4 (компакт)', () => {
             'цех 12pt, низ 2.5мм (было 14pt/4мм)');
     });
 
-    test('таблица сжата: th 10.5pt/9мм, td 11pt/6мм, группы 4.2мм', () => {
+    test('таблица сжата: th 10.5pt/9мм, td 11pt/2.5em (две строки — Task 454), группы 4.2мм', () => {
         const css = TALONS_CSS_VALUE;
         assertTrue(css.indexOf('th { border: 1px solid #000; font-weight: 400; text-align: center; vertical-align: middle; padding: 0.6mm 1mm; font-size: 10.5pt; height: 9mm; }') !== -1,
             'шапка таблицы 10.5pt/9мм (было 12pt/14мм)');
-        assertTrue(css.indexOf('td { border: 1px solid #000; text-align: center; vertical-align: middle; padding: 0.5mm 1mm; font-size: 11pt; height: 6mm; overflow: hidden; }') !== -1,
-            'строки данных 11pt/6мм (было 12pt/9мм)');
+        assertTrue(css.indexOf('td { border: 1px solid #000; text-align: center; vertical-align: middle; padding: 0.5mm 1mm; font-size: 11pt; height: 2.5em; overflow: hidden; }') !== -1,
+            'строки данных 11pt/2.5em — ДВЕ строки текста (Task 454; было 6мм)');
         assertTrue(css.indexOf('.wst-r-group td { height: 4.2mm; }') !== -1,
             'строки-ярлыки групп 4.2мм (было 6мм)');
     });
@@ -351,6 +351,8 @@ describe('Task 449 — VM: должности, группы, ИТОГО, шап�
             methodText(WS_SRC, '_totalsZero') + ',\n' +
             methodText(WS_SRC, '_empTypeMap') + ',\n' +
             methodText(WS_SRC, '_buildTalonsPrintHtml') + ',\n' +
+            methodText(WS_SRC, '_talonsColgroup') + ',\n' +
+            methodText(WS_SRC, '_talonsTextWidth') + ',\n' +
             methodText(WS_SRC, '_talonsPosition') + ',\n' +
             methodText(WS_SRC, '_talonsSignBlock') + ',\n' +
             '_TALONS_PRINT_CSS: ' + JSON.stringify(TALONS_CSS_VALUE) + ',\n' +
@@ -464,11 +466,11 @@ describe('Task 449 — VM: должности, группы, ИТОГО, шап�
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 449 — SW', () => {
-    test('SW: кэш поднят до kipia-test-v677 (Task 449)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v677'") !== -1,
-            'CACHE_VERSION = kipia-test-v677');
-        assertTrue(SW_SRC.indexOf('kipia-test-v678') === -1,
-            'kipia-test-v678 не существует');
+    test('SW: кэш поднят до kipia-test-v678 (Task 449)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v678'") !== -1,
+            'CACHE_VERSION = kipia-test-v678');
+        assertTrue(SW_SRC.indexOf('kipia-test-v679') === -1,
+            'kipia-test-v679 не существует');
         assertTrue(SW_SRC.indexOf('Task 449') !== -1,
             'комментарий Task 449 в истории версий');
     });

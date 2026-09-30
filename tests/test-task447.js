@@ -1034,6 +1034,8 @@ describe('Task 447 — VM: печать отчёта', () => {
             methodText(WS_SRC, '_empTypeMap') + ',\n' +
             methodText(WS_SRC, 'printTalonsReport') + ',\n' +
             methodText(WS_SRC, '_buildTalonsPrintHtml') + ',\n' +
+            methodText(WS_SRC, '_talonsColgroup') + ',\n' +
+            methodText(WS_SRC, '_talonsTextWidth') + ',\n' +
             methodText(WS_SRC, '_talonsPosition') + ',\n' +
             methodText(WS_SRC, '_talonsSignBlock') + ',\n' +
             methodText(WS_SRC, '_buildTalonsFileHtml') + ',\n' +
@@ -1230,11 +1232,11 @@ describe('Task 447 — VM: печать отчёта', () => {
 // 8. SW — версия кэша
 // ============================================================
 describe('Task 447 — SW', () => {
-    test('SW: кэш поднят до kipia-test-v677 (Task 447)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v677'") !== -1,
-            'CACHE_VERSION = kipia-test-v677');
-        assertTrue(SW_SRC.indexOf('kipia-test-v678') === -1,
-            'kipia-test-v678 не существует');
+    test('SW: кэш поднят до kipia-test-v678 (Task 447)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v678'") !== -1,
+            'CACHE_VERSION = kipia-test-v678');
+        assertTrue(SW_SRC.indexOf('kipia-test-v679') === -1,
+            'kipia-test-v679 не существует');
         assertTrue(SW_SRC.indexOf('Task 447') !== -1,
             'комментарий Task 447 в истории версий');
     });

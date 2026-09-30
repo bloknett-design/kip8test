@@ -201,8 +201,8 @@ describe('Task 448 — SRC: CSS сетки/шрифты/акценты', () => {
             '«ОТЧЕТ» — жирная 13pt, поле 2мм (было 14pt/4.5мм)');
         assertTrue(css.indexOf('padding: 0.6mm 1mm; font-size: 10.5pt; height: 9mm;') !== -1,
             'шапка таблицы 10.5pt/9мм (было 12pt/14мм)');
-        assertTrue(css.indexOf('padding: 0.5mm 1mm; font-size: 11pt; height: 6mm;') !== -1,
-            'строки данных 11pt/6мм (было 12pt/9мм)');
+        assertTrue(css.indexOf('padding: 0.5mm 1mm; font-size: 11pt; height: 2.5em;') !== -1,
+            'строки данных 11pt/2.5em — ДВЕ строки текста, центр по вертикали (Task 454; было 6мм)');
         assertTrue(css.indexOf('font-size: 11pt; height: 5.2mm;') !== -1,
             'строки ИТОГО 11pt/5.2мм (было 12pt/6мм)');
         assertTrue(css.indexOf('font-size: 11pt; height: 5.5mm; vertical-align: bottom;') !== -1,
@@ -338,6 +338,8 @@ describe('Task 448 — VM: группы, часы, итоги, подписи', 
             methodText(WS_SRC, '_totalsZero') + ',\n' +
             methodText(WS_SRC, '_empTypeMap') + ',\n' +
             methodText(WS_SRC, '_buildTalonsPrintHtml') + ',\n' +
+            methodText(WS_SRC, '_talonsColgroup') + ',\n' +
+            methodText(WS_SRC, '_talonsTextWidth') + ',\n' +
             methodText(WS_SRC, '_talonsPosition') + ',\n' +
             methodText(WS_SRC, '_talonsSignBlock') + ',\n' +
             '_TALONS_PRINT_CSS: ' + JSON.stringify(TALONS_CSS_VALUE) + ',\n' +
@@ -471,11 +473,11 @@ describe('Task 448 — VM: группы, часы, итоги, подписи', 
 // 4. SW — версия кэша
 // ============================================================
 describe('Task 448 — SW', () => {
-    test('SW: кэш поднят до kipia-test-v677 (Task 448)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v677'") !== -1,
-            'CACHE_VERSION = kipia-test-v677');
-        assertTrue(SW_SRC.indexOf('kipia-test-v678') === -1,
-            'kipia-test-v678 не существует');
+    test('SW: кэш поднят до kipia-test-v678 (Task 448)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v678'") !== -1,
+            'CACHE_VERSION = kipia-test-v678');
+        assertTrue(SW_SRC.indexOf('kipia-test-v679') === -1,
+            'kipia-test-v679 не существует');
         assertTrue(SW_SRC.indexOf('Task 448') !== -1,
             'комментарий Task 448 в истории версий');
     });
