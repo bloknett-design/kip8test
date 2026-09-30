@@ -159,10 +159,12 @@ describe('Task 449 — SRC: влево и специфичность', () => {
             'старых слабых правил больше нет');
     });
 
-    test('ярлык группы — влево в объединённой ячейке; td.класс 1,3,1', () => {
+    test('ярлык группы — ПО ЦЕНТРУ объединённой ячейки (Task 450); td.класс 1,3,1', () => {
         const css = TALONS_CSS_VALUE;
-        assertTrue(css.indexOf('.wst-rep-table td.wst-r-glab { text-align: left; padding-left: 2mm; }') !== -1,
-            'ярлык «12/8 часовые» — влево с отступом 2мм');
+        assertTrue(css.indexOf('.wst-rep-table td.wst-r-glab { text-align: center; }') !== -1,
+            'ярлык «12/8 часовые» — по центру (Task 450; в 449 был влево с отступом 2мм)');
+        assertTrue(css.indexOf('.wst-rep-table td.wst-r-glab { text-align: left') === -1,
+            'прежнего левого правила больше нет');
     });
 
     test('метки ИТОГО и (шт.) — td.класс; класс wst-t-grp удалён', () => {
@@ -461,11 +463,11 @@ describe('Task 449 — VM: должности, группы, ИТОГО, шап�
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 449 — SW', () => {
-    test('SW: кэш поднят до kipia-test-v673 (Task 449)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v673'") !== -1,
-            'CACHE_VERSION = kipia-test-v673');
-        assertTrue(SW_SRC.indexOf('kipia-test-v674') === -1,
-            'kipia-test-v674 не существует');
+    test('SW: кэш поднят до kipia-test-v674 (Task 449)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v674'") !== -1,
+            'CACHE_VERSION = kipia-test-v674');
+        assertTrue(SW_SRC.indexOf('kipia-test-v675') === -1,
+            'kipia-test-v675 не существует');
         assertTrue(SW_SRC.indexOf('Task 449') !== -1,
             'комментарий Task 449 в истории версий');
     });
