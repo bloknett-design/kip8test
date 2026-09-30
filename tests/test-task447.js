@@ -279,7 +279,7 @@ describe('Task 447 — SRC: печать по форме', () => {
         for (const part of ['Наименование предприятия ООО ПО "Токем"',
                             '>ОТЧЕТ<',
                             'на выдачу талонов Л.П.П. (лечебно-профилактическое питание) за ',
-                            'Цех № 8 пр-во ИОС', '№ п/п', 'Табельный номер',
+                            'Цех № 8 пр-во ИОС', '№<br>п/п', 'Табельный номер',
                             'Ф.И.О.', 'Должность',
                             'Кол-во отработан-ных часов',
                             'Кол-во выданных талонов', 'Роспись о получении',
@@ -978,6 +978,7 @@ describe('Task 447 — VM: печать отчёта', () => {
             methodText(WS_SRC, '_empTypeMap') + ',\n' +
             methodText(WS_SRC, 'printTalonsReport') + ',\n' +
             methodText(WS_SRC, '_buildTalonsPrintHtml') + ',\n' +
+            methodText(WS_SRC, '_talonsPosition') + ',\n' +
             methodText(WS_SRC, '_talonsSignBlock') + ',\n' +
             methodText(WS_SRC, '_buildTalonsFileHtml') + ',\n' +
             methodText(WS_SRC, '_talonsInjectPrintStyle') + ',\n' +
@@ -1058,9 +1059,9 @@ describe('Task 447 — VM: печать отчёта', () => {
         assertTrue(html.indexOf('Иванов И. И.') !== -1 &&
                    html.indexOf('Сидоров С. С.') !== -1,
             'ФИО работников');
-        assertTrue(html.indexOf('Слесарь КИПиА') !== -1 &&
+        assertTrue(html.indexOf('Слесарь по КИП и А') !== -1 &&
                    html.indexOf('Электрик') !== -1,
-            'должности');
+            'должности (КИПиА → по КИП и А — формат формы; прочие — как есть)');
         assertTrue(html.indexOf('wst-rep-table') !== -1, 'таблица формы');
         // группы: «12 часовые» идёт РАНЬШЕ «8 часовых», в «12» —
         // только Сидоров (№1), в «8» — Иванов (№2, сквозная нумерация)
@@ -1171,11 +1172,11 @@ describe('Task 447 — VM: печать отчёта', () => {
 // 8. SW — версия кэша
 // ============================================================
 describe('Task 447 — SW', () => {
-    test('SW: кэш поднят до kipia-test-v672 (Task 447)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v672'") !== -1,
-            'CACHE_VERSION = kipia-test-v672');
-        assertTrue(SW_SRC.indexOf('kipia-test-v673') === -1,
-            'kipia-test-v673 не существует');
+    test('SW: кэш поднят до kipia-test-v673 (Task 447)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v673'") !== -1,
+            'CACHE_VERSION = kipia-test-v673');
+        assertTrue(SW_SRC.indexOf('kipia-test-v674') === -1,
+            'kipia-test-v674 не существует');
         assertTrue(SW_SRC.indexOf('Task 447') !== -1,
             'комментарий Task 447 в истории версий');
     });

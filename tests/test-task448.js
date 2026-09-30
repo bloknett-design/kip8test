@@ -11,6 +11,12 @@
 // сверено — Котельникова И.А. (материально-ответственное лицо),
 // Руководитель СОТ и ПБ — Фензель В.П.).
 //
+// Task 449 (сверху): форма УПЛОТНЕНА до одного листа А4 —
+// шапка 12/13pt, th 10.5pt/9мм, td 11pt/6.3мм, ИТОГО/подписи
+// 11pt, подсказки 7pt; «№<br>п/п»; группы — colspan 7; ИТОГО —
+// по одной строке на группу; ФИО/Должность — влево (1,3,1);
+// должности — «Слесарь по КИП и А» (_talonsPosition).
+//
 // Реализация (ТОЛЬКО печатная вёрстка, index.html):
 //   • _TALONS_PRINT_CSS — сетка 7 колонок по ширинам Excel
 //     (4.2/12/18.2/20/11.9/11.5/22.2%), шапка 14pt / таблица
@@ -98,7 +104,7 @@ describe('Task 448 — SRC: строгая форма по Excel', () => {
 
     test('таблица — РОВНО семь колонок, заголовки дословно из формы', () => {
         const fn = methodText(WS_SRC, '_buildTalonsPrintHtml');
-        const heads = ['№ п/п', 'Табельный номер', 'Ф.И.О.', 'Должность',
+        const heads = ['№<br>п/п', 'Табельный номер', 'Ф.И.О.', 'Должность',
                        'Кол-во отработан-ных часов',
                        'Кол-во выданных талонов', 'Роспись о получении'];
         for (const h of heads) {
@@ -122,17 +128,19 @@ describe('Task 448 — SRC: строгая форма по Excel', () => {
         assertTrue(fn.indexOf('>12 часовые<') !== -1 &&
                    fn.indexOf('>8 часовые<') !== -1,
             'ярлыки групп в таблице');
-        // ярлык группы — в колонке «Должность» (colspan 3 + 1 + 3)
-        assertTrue(fn.indexOf('<td colspan="3"></td>') !== -1,
-            'строка-разделитель: пустые A–C, ярлык в D, пустые E–G');
+        // ярлык группы — в ОБЪЕДИНЁННОЙ ячейке на всю ширину
+        // таблицы (Task 449; прежде — в колонке «Должность»)
+        assertTrue(fn.indexOf('<td colspan="7" class="wst-r-glab">12 часовые</td>') !== -1 &&
+                   fn.indexOf('<td colspan="7" class="wst-r-glab">8 часовые</td>') !== -1,
+            'строки групп — объединённые ячейки colspan 7');
     });
 
     test('ИТОГО — две строки по группам, суммы в (шт.)', () => {
         const fn = stripComments(methodText(WS_SRC, '_buildTalonsPrintHtml'));
         assertTrue(fn.indexOf('ИТОГО:') !== -1, 'метка «ИТОГО:» (с двоеточием)');
-        assertTrue(fn.indexOf("'<td class=\"wst-t-grp\">12 часовые</td>'") !== -1 &&
-                   fn.indexOf("'<td class=\"wst-t-grp\">8 часовые</td>'") !== -1,
-            'строки итогов по группам');
+        assertTrue(fn.indexOf("'<tr><td colspan=\"5\" class=\"wst-t-itog\">ИТОГО: 12 часовые</td>'") !== -1 &&
+                   fn.indexOf("'<tr><td colspan=\"5\" class=\"wst-t-itog\">8 часовые</td>'") !== -1,
+            'итоги — по ОДНОЙ строке на группу (Task 449)');
         assertTrue(fn.indexOf('(шт.)') !== -1, 'единицы (шт.)');
         assertTrue(fn.indexOf('groupSum') !== -1,
             'суммы считаются ПО ГРУППАМ (не общий итог)');
@@ -184,18 +192,26 @@ describe('Task 448 — SRC: строгая форма по Excel', () => {
 // ============================================================
 describe('Task 448 — SRC: CSS сетки/шрифты/акценты', () => {
 
-    test('шрифты: шапка 14pt, таблица 12pt, подсказки 8pt (как в Excel)', () => {
+    test('шрифты: компакт ОДНОГО листа А4 (Task 449)', () => {
         const css = TALONS_CSS_VALUE;
-        assertTrue(css.indexOf('.wst-rep-org { font-size: 14pt; }') !== -1,
-            'предприятие 14pt');
-        assertTrue(css.indexOf('.wst-rep-title { text-align: center; font-size: 14pt; font-weight: 700;') !== -1,
-            '«ОТЧЕТ» — жирная 14pt');
-        assertTrue(css.indexOf('font-size: 12pt; height: 14mm;') !== -1,
-            'шапка таблицы 12pt');
-        assertTrue(css.indexOf('font-size: 12pt; height: 9mm;') !== -1,
-            'строки данных 12pt');
-        assertTrue(css.indexOf('.wst-s-hint { font-size: 8pt;') !== -1,
-            'подсказки подписей 8pt');
+        assertTrue(css.indexOf('.wst-rep-org { font-size: 12pt; }') !== -1,
+            'предприятие 12pt (было 14pt)');
+        assertTrue(css.indexOf('.wst-rep-title { text-align: center; font-size: 13pt; font-weight: 700; margin-top: 2mm; }') !== -1,
+            '«ОТЧЕТ» — жирная 13pt, поле 2мм (было 14pt/4.5мм)');
+        assertTrue(css.indexOf('padding: 0.6mm 1mm; font-size: 10.5pt; height: 9mm;') !== -1,
+            'шапка таблицы 10.5pt/9мм (было 12pt/14мм)');
+        assertTrue(css.indexOf('padding: 0.5mm 1mm; font-size: 11pt; height: 6mm;') !== -1,
+            'строки данных 11pt/6мм (было 12pt/9мм)');
+        assertTrue(css.indexOf('font-size: 11pt; height: 5.2mm;') !== -1,
+            'строки ИТОГО 11pt/5.2мм (было 12pt/6мм)');
+        assertTrue(css.indexOf('font-size: 11pt; height: 5.5mm; vertical-align: bottom;') !== -1,
+            'строки подписей 11pt/5.5мм (было 12pt/7мм)');
+        assertTrue(css.indexOf('td.wst-s-hint { font-size: 7pt; height: 3.5mm;') !== -1,
+            'подсказки подписей 7pt/3.5мм (было 8pt/4.5мм — и тонули в td-правиле)');
+        assertTrue(css.indexOf('.wst-s-gap { height: 2.2mm; }') !== -1,
+            'разделители подписей 2.2мм (было 5.5мм)');
+        assertTrue(css.indexOf('margin-top: 3.5mm; }') !== -1,
+            'блок подписей в 3.5мм от ИТОГО (было 9мм)');
     });
 
     test('сетка 7 колонок по ширинам Excel — едина для всех трёх таблиц', () => {
@@ -320,6 +336,7 @@ describe('Task 448 — VM: группы, часы, итоги, подписи', 
             methodText(WS_SRC, '_totalsZero') + ',\n' +
             methodText(WS_SRC, '_empTypeMap') + ',\n' +
             methodText(WS_SRC, '_buildTalonsPrintHtml') + ',\n' +
+            methodText(WS_SRC, '_talonsPosition') + ',\n' +
             methodText(WS_SRC, '_talonsSignBlock') + ',\n' +
             '_TALONS_PRINT_CSS: ' + JSON.stringify(TALONS_CSS_VALUE) + ',\n' +
             '_codeHours: function(c) { return ({ "Д": 12, "Н": 12, "Д8": 8 })[c] || 0; },' +
@@ -387,8 +404,8 @@ describe('Task 448 — VM: группы, часы, итоги, подписи', 
         const html = h._buildTalonsPrintHtml(h._talonsRows());
         assertTrue(html.indexOf('wst-t-val') !== -1, 'блок ИТОГО есть');
         // 12 часовые: 5 (шт.); 8 часовые: 2 (шт.) — порядок строк
-        const i12t = html.indexOf('<td class="wst-t-grp">12 часовые</td>');
-        const i8t = html.indexOf('<td class="wst-t-grp">8 часовые</td>');
+        const i12t = html.indexOf('<td colspan="5" class="wst-t-itog">ИТОГО: 12 часовые</td>');
+        const i8t = html.indexOf('<td colspan="5" class="wst-t-itog">8 часовые</td>');
         const v1 = html.indexOf('<td class="wst-t-val">5</td>');
         const v2 = html.indexOf('<td class="wst-t-val">2</td>');
         assertTrue(i12t !== -1 && i8t !== -1 && i12t < i8t,
@@ -452,11 +469,11 @@ describe('Task 448 — VM: группы, часы, итоги, подписи', 
 // 4. SW — версия кэша
 // ============================================================
 describe('Task 448 — SW', () => {
-    test('SW: кэш поднят до kipia-test-v672 (Task 448)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v672'") !== -1,
-            'CACHE_VERSION = kipia-test-v672');
-        assertTrue(SW_SRC.indexOf('kipia-test-v673') === -1,
-            'kipia-test-v673 не существует');
+    test('SW: кэш поднят до kipia-test-v673 (Task 448)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v673'") !== -1,
+            'CACHE_VERSION = kipia-test-v673');
+        assertTrue(SW_SRC.indexOf('kipia-test-v674') === -1,
+            'kipia-test-v674 не существует');
         assertTrue(SW_SRC.indexOf('Task 448') !== -1,
             'комментарий Task 448 в истории версий');
     });
