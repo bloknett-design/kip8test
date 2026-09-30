@@ -20,9 +20,9 @@
 //     удалена;
 //   • ЭКРАННАЯ СТРАНИЦА: колонка «Выдано талонов» РАЗДЕЛЕНА на
 //     «Выдано 12 ч. талонов» и «Выдано 8 ч. талонов» (input на
-//     каждую категорию, data-cat + data-auto); авто: сменные —
-//     12ч = дням явки, дневные/прочие — 8ч = дням явки, чужая
-//     категория — 0; правка НЕ зависит от правки второй
+//     каждую категорию, data-cat + data-auto); авто — ПО ДНЯМ
+//     месяца (Task 452: 7,2/8 ч → 8ч, 12 ч → 12ч, переработка
+//     «д»/«н» учтена); правка НЕ зависит от правки второй
 //     категории (_TALONS_EDIT[таб] = {t12, t8} — только
 //     правленные поля, пустой объект — ключ целиком);
 //   • ИТОГИ: общий итог дней явки НЕ показывается (заявка);
@@ -100,13 +100,17 @@ const TALONS_CSS_VALUE = new Function('return ({' + (function() {
 // ============================================================
 describe('Task 451 — SRC: модель _talonsRows', () => {
 
-    test('авто-категории: сменные — 12ч по явкам, прочие — 8ч', () => {
+    test('авто-категории ПО ДНЯМ месяца (Task 452: 7,2/8 → 8ч, 12 → 12ч)', () => {
         const fn = stripComments(methodText(WS_SRC, '_talonsRows'));
-        assertTrue(fn.indexOf("var is12 = String(emp['тип'] || '').trim() === 'сменный';") !== -1,
-            'признак 12-часовой категории — тип «сменный»');
-        assertTrue(fn.indexOf('var auto12 = is12 ? days : 0;') !== -1 &&
-                   fn.indexOf('var auto8 = is12 ? 0 : days;') !== -1,
-            'авто: своя категория = дням явки, чужая — 0');
+        assertTrue(fn.indexOf('var agg = this._talonsAgg(eff,') !== -1,
+            'агрегация — ПО-ДНЁВНАЯ классификация _talonsAgg');
+        assertTrue(fn.indexOf('var days = a ? a.days : 0;') !== -1,
+            'дни — счётчик дней _talonsAgg (переработка учтена)');
+        assertTrue(fn.indexOf('var auto12 = a ? a.t12 : 0;') !== -1 &&
+                   fn.indexOf('var auto8 = a ? a.t8 : 0;') !== -1,
+            'авто: талоны категории = дням своей категории по часам');
+        assertTrue(fn.indexOf('is12') === -1,
+            'тип работника категорию НЕ определяет (заявка Task 452)');
     });
 
     test('правки: {t12, t8} по категориям, независимо', () => {
@@ -299,6 +303,7 @@ describe('Task 451 — VM: _talonsRows', () => {
             methodText(WS_SRC, '_talonsMonthInfo') + ',\n' +
             methodText(WS_SRC, '_talonsEffectiveEntries') + ',\n' +
             methodText(WS_SRC, '_talonsRows') + ',\n' +
+            methodText(WS_SRC, '_talonsAgg') + ',\n' +
             methodText(WS_SRC, '_totalsAgg') + ',\n' +
             methodText(WS_SRC, '_totalsZero') + ',\n' +
             methodText(WS_SRC, '_empTypeMap') + ',\n' +
@@ -323,7 +328,7 @@ describe('Task 451 — VM: _talonsRows', () => {
         return null;
     };
 
-    test('авто: дневной — t8 по явкам, сменный — t12 по явкам', () => {
+    test('авто ПО ДНЯМ: Д8 → 8ч талоны, Н → 12ч (тип не важен)', () => {
         const h = rowsHost({ entries: [
             { 'дата': D(MM + '-01'), 'таб_номер': '017', 'статус': 'Д8' },
             { 'дата': D(MM + '-02'), 'таб_номер': '017', 'статус': 'Д8' },
@@ -332,12 +337,12 @@ describe('Task 451 — VM: _talonsRows', () => {
         ] });
         const m = h._talonsRows();
         const iv = byTab(m, '017');
-        assertEqual(iv.t8, 2, 'Иванов (дневной): 8ч талоны = 2 явкам');
+        assertEqual(iv.t8, 2, 'Иванов (дневной): 2 дня Д8 → 2 талона 8ч (по часам дней)');
         assertEqual(iv.t12, 0, 'Иванов: 12ч авто = 0');
         assertEqual(iv.auto8, 2, 'авто 8ч = 2');
         assertEqual(iv.auto12, 0, 'авто 12ч = 0');
         const gu = byTab(m, '024');
-        assertEqual(gu.t12, 2, 'Гусев (сменный): 12ч талоны = 2 явкам');
+        assertEqual(gu.t12, 2, 'Гусев (сменный): 2 дня Н → 2 талона 12ч (по часам дней)');
         assertEqual(gu.t8, 0, 'Гусев: 8ч авто = 0');
         assertEqual(m.totals.t12, 2, 'итог 12ч = 2');
         assertEqual(m.totals.t8, 2, 'итог 8ч = 2');
@@ -434,6 +439,7 @@ describe('Task 451 — VM: onTalonsInput по категориям', () => {
             methodText(WS_SRC, '_talonsMonthInfo') + ',\n' +
             methodText(WS_SRC, '_talonsEffectiveEntries') + ',\n' +
             methodText(WS_SRC, '_talonsRows') + ',\n' +
+            methodText(WS_SRC, '_talonsAgg') + ',\n' +
             methodText(WS_SRC, '_totalsAgg') + ',\n' +
             methodText(WS_SRC, '_totalsZero') + ',\n' +
             methodText(WS_SRC, '_empTypeMap') + ',\n' +
@@ -586,6 +592,7 @@ describe('Task 451 — VM: печатная форма', () => {
             methodText(WS_SRC, '_talonsMonthInfo') + ',\n' +
             methodText(WS_SRC, '_talonsEffectiveEntries') + ',\n' +
             methodText(WS_SRC, '_talonsRows') + ',\n' +
+            methodText(WS_SRC, '_talonsAgg') + ',\n' +
             methodText(WS_SRC, '_totalsAgg') + ',\n' +
             methodText(WS_SRC, '_totalsZero') + ',\n' +
             methodText(WS_SRC, '_empTypeMap') + ',\n' +
@@ -734,11 +741,11 @@ describe('Task 451 — VM: печатная форма', () => {
 // 7. SW — версия кэша
 // ============================================================
 describe('Task 451 — SW', () => {
-    test('SW: кэш поднят до kipia-test-v675 (Task 451)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v675'") !== -1,
-            'CACHE_VERSION = kipia-test-v675');
-        assertTrue(SW_SRC.indexOf('kipia-test-v676') === -1,
-            'kipia-test-v676 не существует');
+    test('SW: кэш поднят до kipia-test-v676 (Task 451)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v676'") !== -1,
+            'CACHE_VERSION = kipia-test-v676');
+        assertTrue(SW_SRC.indexOf('kipia-test-v677') === -1,
+            'kipia-test-v677 не существует');
         assertTrue(SW_SRC.indexOf('Task 451') !== -1,
             'комментарий Task 451 в истории версий');
     });

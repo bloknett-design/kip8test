@@ -21,10 +21,11 @@
 //   • страница #page-ws-talons (+ PAGE_PARENTS/PAGE_LABELS/хук
 //     navigateTo/_WORK_SCHEDULE_PAGES): гейт — не-редакторов
 //     возвращает в табель;
-//   • явки — счётчик «Явки (дни)» итогов учёта (_totalsAgg.work)
-//     по ЭФФЕКТИВНЫМ записям месяца (серверные + _PENDING,
-//     фильтр по YYYY-MM); талоны = явке, ручная правка — карта
-//     _TALONS_EDIT (память сессии, архив не нужен);
+//   • явки — дни с рабочими часами ВКЛЮЧАЯ ПЕРЕРАБОТКУ («д»/«н»)
+//     (_talonsAgg, Task 452) по ЭФФЕКТИВНЫМ записям месяца
+//     (серверные + _PENDING, фильтр по YYYY-MM); талоны — ПО
+//     ДНЯМ: 7,2/8 ч → 8ч, 12 ч → 12ч (Task 452), ручная правка —
+//     карта _TALONS_EDIT (память сессии, архив не нужен);
 //   • шахматка на другом месяце — записи текущего месяца лениво
 //     тянет _talonsFetchMonth (кэш _TALONS_CACHE);
 //   • печать строго по форме: #wsPrintSheet.wst-sheet + инжект
@@ -184,12 +185,15 @@ describe('Task 447 — SRC: модель/правки', () => {
             'иначе — кэш подтянутого месяца');
         assertTrue(fn.indexOf('ready: !!entries') !== -1,
             'готовность модели — данные месяца есть');
-        assertTrue(fn.indexOf('a ? a.work : 0') !== -1,
-            'дни явки — счётчик «Явки (дни)» итогов учёта');
-        assertTrue(fn.indexOf("=== 'сменный'") !== -1 &&
-                   fn.indexOf('var auto12 = is12 ? days : 0;') !== -1 &&
-                   fn.indexOf('var auto8 = is12 ? 0 : days;') !== -1,
-            'авто: сменные — 12ч талоны по явкам, прочие — 8ч (Task 451)');
+        assertTrue(fn.indexOf('var days = a ? a.days : 0;') !== -1,
+            'дни явки — счётчик дней _talonsAgg (с переработкой — Task 452)');
+        assertTrue(fn.indexOf('var agg = this._talonsAgg(eff,') !== -1,
+            'агрегация — ПО-ДНЁВНАЯ классификация (_talonsAgg, Task 452)');
+        assertTrue(fn.indexOf('var auto12 = a ? a.t12 : 0;') !== -1 &&
+                   fn.indexOf('var auto8 = a ? a.t8 : 0;') !== -1,
+            'авто: 12/8ч талоны — по часам дней (7,2/8 → 8ч, 12 → 12ч; Task 452)');
+        assertTrue(fn.indexOf('is12') === -1,
+            'тип работника категорию больше НЕ определяет (Task 452)');
         assertTrue(fn.indexOf('edit.t12 !== undefined && edit.t12 !== auto12') !== -1 &&
                    fn.indexOf('edit.t8 !== undefined && edit.t8 !== auto8') !== -1,
             'правка категории перекрывает авто (категории независимы — Task 451)');
@@ -436,6 +440,7 @@ describe('Task 447 — VM: _talonsRows', () => {
             methodText(WS_SRC, '_talonsMonthInfo') + ',\n' +
             methodText(WS_SRC, '_talonsEffectiveEntries') + ',\n' +
             methodText(WS_SRC, '_talonsRows') + ',\n' +
+            methodText(WS_SRC, '_talonsAgg') + ',\n' +
             methodText(WS_SRC, '_totalsAgg') + ',\n' +
             methodText(WS_SRC, '_totalsZero') + ',\n' +
             methodText(WS_SRC, '_empTypeMap') + ',\n' +
@@ -522,7 +527,9 @@ describe('Task 447 — VM: _talonsRows', () => {
         const m2 = h._talonsRows();
         assertTrue(m2.ready, 'кэш даёт готовность');
         assertEqual(m2.rows[0].days, 1, 'явка из кэша (1 день)');
-        assertEqual(m2.rows[0].t8, 1, 'дневной: талоны = явке (8ч)');
+        assertEqual(m2.rows[0].t12, 1,
+            'смена 12 ч — 12ч талон даже у дневного (Task 452)');
+        assertEqual(m2.rows[0].t8, 0, '8ч талоны — 0 (день 12-часовой)');
     });
 
     test('работник без записей — 0 явок, строка в отчёте', () => {
@@ -574,6 +581,7 @@ describe('Task 447 — VM: onTalonsInput / talonsResetEdits', () => {
             methodText(WS_SRC, '_talonsMonthInfo') + ',\n' +
             methodText(WS_SRC, '_talonsEffectiveEntries') + ',\n' +
             methodText(WS_SRC, '_talonsRows') + ',\n' +
+            methodText(WS_SRC, '_talonsAgg') + ',\n' +
             methodText(WS_SRC, '_totalsAgg') + ',\n' +
             methodText(WS_SRC, '_totalsZero') + ',\n' +
             methodText(WS_SRC, '_empTypeMap') + ',\n' +
@@ -739,6 +747,7 @@ describe('Task 447 — VM: _renderTalonsPage / onTalonsPageOpen', () => {
             methodText(WS_SRC, '_talonsMonthInfo') + ',\n' +
             methodText(WS_SRC, '_talonsEffectiveEntries') + ',\n' +
             methodText(WS_SRC, '_talonsRows') + ',\n' +
+            methodText(WS_SRC, '_talonsAgg') + ',\n' +
             methodText(WS_SRC, '_totalsAgg') + ',\n' +
             methodText(WS_SRC, '_totalsZero') + ',\n' +
             methodText(WS_SRC, '_empTypeMap') + ',\n' +
@@ -762,7 +771,7 @@ describe('Task 447 — VM: _renderTalonsPage / onTalonsPageOpen', () => {
                   'должность': 'Слесарь КИПиА' }]) + ',' +
             '_ENTRIES: ' + JSON.stringify(opts.entries || [
                 { 'дата': NOWY + '-' + MM + '-01', 'таб_номер': '017', 'статус': 'Д8' },
-                { 'дата': NOWY + '-' + MM + '-02', 'таб_номер': '017', 'статус': 'Н' }]) + ',' +
+                { 'дата': NOWY + '-' + MM + '-02', 'таб_номер': '017', 'статус': 'Д8' }]) + ',' +
             '_PENDING: {}, _TALONS_EDIT: {}, _TALONS_CACHE: null,' +
             '_year: ' + (opts.year !== undefined ? opts.year : NOWY) + ',' +
             '_month: ' + (opts.month !== undefined ? opts.month : NOWM) + ',' +
@@ -1019,6 +1028,7 @@ describe('Task 447 — VM: печать отчёта', () => {
             methodText(WS_SRC, '_talonsMonthInfo') + ',\n' +
             methodText(WS_SRC, '_talonsEffectiveEntries') + ',\n' +
             methodText(WS_SRC, '_talonsRows') + ',\n' +
+            methodText(WS_SRC, '_talonsAgg') + ',\n' +
             methodText(WS_SRC, '_totalsAgg') + ',\n' +
             methodText(WS_SRC, '_totalsZero') + ',\n' +
             methodText(WS_SRC, '_empTypeMap') + ',\n' +
@@ -1041,7 +1051,7 @@ describe('Task 447 — VM: печать отчёта', () => {
             '_closePrintPreview: function() {},' +
             '_EMPLOYEES: [{ "таб_номер": "017", "ФИО": "Иванов И. И.", "тип": "дневной", "должность": "Слесарь КИПиА" }],' +
             '_ENTRIES: ' + JSON.stringify([{ 'дата': NOWY + '-' + MM + '-01', 'таб_номер': '017', 'статус': 'Д8' },
-                { 'дата': NOWY + '-' + MM + '-02', 'таб_номер': '017', 'статус': 'Н' }]) + ',' +
+                { 'дата': NOWY + '-' + MM + '-02', 'таб_номер': '017', 'статус': 'Д8' }]) + ',' +
             '_PENDING: {}, _TALONS_EDIT: {}, _TALONS_CACHE: null,' +
             '_year: ' + NOWY + ', _month: ' + NOWM + ',' +
             '_viewLevel: ' + JSON.stringify(opts.viewLevel !== undefined ? opts.viewLevel : 'edit') + ',' +
@@ -1220,11 +1230,11 @@ describe('Task 447 — VM: печать отчёта', () => {
 // 8. SW — версия кэша
 // ============================================================
 describe('Task 447 — SW', () => {
-    test('SW: кэш поднят до kipia-test-v675 (Task 447)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v675'") !== -1,
-            'CACHE_VERSION = kipia-test-v675');
-        assertTrue(SW_SRC.indexOf('kipia-test-v676') === -1,
-            'kipia-test-v676 не существует');
+    test('SW: кэш поднят до kipia-test-v676 (Task 447)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v676'") !== -1,
+            'CACHE_VERSION = kipia-test-v676');
+        assertTrue(SW_SRC.indexOf('kipia-test-v677') === -1,
+            'kipia-test-v677 не существует');
         assertTrue(SW_SRC.indexOf('Task 447') !== -1,
             'комментарий Task 447 в истории версий');
     });

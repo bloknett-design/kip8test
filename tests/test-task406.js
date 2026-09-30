@@ -274,10 +274,10 @@ describe('Task 406 — VM: колонки карточки', () => {
 // ============================================================
 describe('Task 406 — SW', () => {
 
-    test('CACHE_VERSION = kipia-test-v675', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v675'") !== -1,
+    test('CACHE_VERSION = kipia-test-v676', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v676'") !== -1,
             'SW v633 (Task 406)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v676') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v677') === -1,
             'нет забегания вперёд');
     });
 });

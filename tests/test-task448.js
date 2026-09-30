@@ -333,6 +333,7 @@ describe('Task 448 — VM: группы, часы, итоги, подписи', 
             methodText(WS_SRC, '_talonsMonthInfo') + ',\n' +
             methodText(WS_SRC, '_talonsEffectiveEntries') + ',\n' +
             methodText(WS_SRC, '_talonsRows') + ',\n' +
+            methodText(WS_SRC, '_talonsAgg') + ',\n' +
             methodText(WS_SRC, '_totalsAgg') + ',\n' +
             methodText(WS_SRC, '_totalsZero') + ',\n' +
             methodText(WS_SRC, '_empTypeMap') + ',\n' +
@@ -351,7 +352,7 @@ describe('Task 448 — VM: группы, часы, итоги, подписи', 
                   'должность': 'Слесарь КИПиА' }]) + ',' +
             '_ENTRIES: ' + JSON.stringify([
                 { 'дата': NOWY + '-' + MM + '-01', 'таб_номер': '017', 'статус': 'Д8' },
-                { 'дата': NOWY + '-' + MM + '-02', 'таб_номер': '017', 'статус': 'Н' },
+                { 'дата': NOWY + '-' + MM + '-02', 'таб_номер': '017', 'статус': 'Д8' },
                 { 'дата': NOWY + '-' + MM + '-03', 'таб_номер': '024', 'статус': 'Д' },
                 { 'дата': NOWY + '-' + MM + '-04', 'таб_номер': '024', 'статус': 'Н' },
                 { 'дата': NOWY + '-' + MM + '-05', 'таб_номер': '024', 'статус': 'Н' }]) + ',' +
@@ -470,11 +471,11 @@ describe('Task 448 — VM: группы, часы, итоги, подписи', 
 // 4. SW — версия кэша
 // ============================================================
 describe('Task 448 — SW', () => {
-    test('SW: кэш поднят до kipia-test-v675 (Task 448)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v675'") !== -1,
-            'CACHE_VERSION = kipia-test-v675');
-        assertTrue(SW_SRC.indexOf('kipia-test-v676') === -1,
-            'kipia-test-v676 не существует');
+    test('SW: кэш поднят до kipia-test-v676 (Task 448)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v676'") !== -1,
+            'CACHE_VERSION = kipia-test-v676');
+        assertTrue(SW_SRC.indexOf('kipia-test-v677') === -1,
+            'kipia-test-v677 не существует');
         assertTrue(SW_SRC.indexOf('Task 448') !== -1,
             'комментарий Task 448 в истории версий');
     });
