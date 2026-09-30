@@ -121,10 +121,10 @@ describe('Task 448 — SRC: строгая форма по Excel', () => {
     test('группы «12 часовые» / «8 часовые»: деление по типу «сменный»', () => {
         const fn = stripComments(methodText(WS_SRC, '_buildTalonsPrintHtml'));
         assertTrue(fn.indexOf("tip === 'сменный'") !== -1,
-            'тип «сменный» — признак группы «12 часовые»');
-        assertTrue(fn.indexOf('rowsOf(g12, 12)') !== -1 &&
-                   fn.indexOf('rowsOf(g8, 8)') !== -1,
-            'часы: 12-часовым × 12, 8-часовым × 8 (формула листа E=F×12/8)');
+            'тип «сменный» — признак группы «12 часовые» (авто/нулевой fallback — Task 451)');
+        assertTrue(fn.indexOf("rowsOf(g12, 12, 't12')") !== -1 &&
+                   fn.indexOf("rowsOf(g8, 8, 't8')") !== -1,
+            'часы: 12-часовым × 12 (талоны t12), 8-часовым × 8 (t8) — формула листа E=F×12/8');
         assertTrue(fn.indexOf('>12 часовые<') !== -1 &&
                    fn.indexOf('>8 часовые<') !== -1,
             'ярлыки групп в таблице');
@@ -167,14 +167,15 @@ describe('Task 448 — SRC: строгая форма по Excel', () => {
         assertEqual(gaps, 2, 'два разделителя между тремя подписями');
     });
 
-    test('экранная страница НЕ тронута: правки/чипы/«Дней явки» на месте', () => {
+    test('экранная страница: правки/чипы/«Дней явки» на месте (12/8 раздельно — Task 451)', () => {
         const fn = methodText(WS_SRC, '_renderTalonsPage');
         assertTrue(fn.indexOf('Дней явки') !== -1,
-            'экранная таблица по-прежнему показывает дни явки');
+            'экранная таблица по-прежнему показывает дни явки (колонка-источник)');
         assertTrue(fn.indexOf('wst-count') !== -1,
             'поля ручной правки на месте');
-        assertTrue(INDEX_SRC.indexOf('wstTotalTalonsChip') !== -1,
-            'чипы итогов на месте');
+        assertTrue(INDEX_SRC.indexOf('wstTotalT12Chip') !== -1 &&
+                   INDEX_SRC.indexOf('wstTotalT8Chip') !== -1,
+            'чипы итогов на месте — 12/8 раздельно (Task 451)');
     });
 
     test('инжект @page и standalone-документ — без изменений', () => {
@@ -390,8 +391,8 @@ describe('Task 448 — VM: группы, часы, итоги, подписи', 
         let html = h._buildTalonsPrintHtml(h._talonsRows());
         assertTrue(html.indexOf('>36</td>') !== -1, 'Гусев: 3 × 12 = 36 часов');
         assertTrue(html.indexOf('>16</td>') !== -1, 'Иванов: 2 × 8 = 16 часов');
-        // ручная правка Гусева до 5 талонов → часы 60
-        h._TALONS_EDIT['024'] = 5;
+        // ручная правка 12ч Гусева до 5 талонов → часы 60
+        h._TALONS_EDIT['024'] = { t12: 5 };
         html = h._buildTalonsPrintHtml(h._talonsRows());
         assertTrue(html.indexOf('>60</td>') !== -1,
             'после правки: 5 × 12 = 60 часов (правка учитывается)');
@@ -400,7 +401,7 @@ describe('Task 448 — VM: группы, часы, итоги, подписи', 
     test('ИТОГО по группам: суммы талонов, НЕ дней и не общий итог', () => {
         const dom = printDom();
         const h = printHost(dom, { print: function() {} });
-        h._TALONS_EDIT['024'] = 5; // Гусев 5, Иванов 2
+        h._TALONS_EDIT['024'] = { t12: 5 }; // Гусев 5 (12ч), Иванов 2 (8ч)
         const html = h._buildTalonsPrintHtml(h._talonsRows());
         assertTrue(html.indexOf('wst-t-val') !== -1, 'блок ИТОГО есть');
         // 12 часовые: 5 (шт.); 8 часовые: 2 (шт.) — порядок строк
@@ -469,11 +470,11 @@ describe('Task 448 — VM: группы, часы, итоги, подписи', 
 // 4. SW — версия кэша
 // ============================================================
 describe('Task 448 — SW', () => {
-    test('SW: кэш поднят до kipia-test-v674 (Task 448)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v674'") !== -1,
-            'CACHE_VERSION = kipia-test-v674');
-        assertTrue(SW_SRC.indexOf('kipia-test-v675') === -1,
-            'kipia-test-v675 не существует');
+    test('SW: кэш поднят до kipia-test-v675 (Task 448)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v675'") !== -1,
+            'CACHE_VERSION = kipia-test-v675');
+        assertTrue(SW_SRC.indexOf('kipia-test-v676') === -1,
+            'kipia-test-v676 не существует');
         assertTrue(SW_SRC.indexOf('Task 448') !== -1,
             'комментарий Task 448 в истории версий');
     });

@@ -186,8 +186,15 @@ describe('Task 447 — SRC: модель/правки', () => {
             'готовность модели — данные месяца есть');
         assertTrue(fn.indexOf('a ? a.work : 0') !== -1,
             'дни явки — счётчик «Явки (дни)» итогов учёта');
-        assertTrue(fn.indexOf("edited ? this._TALONS_EDIT[tab] : days") !== -1,
-            'талоны = ручная правка, иначе дни явки');
+        assertTrue(fn.indexOf("=== 'сменный'") !== -1 &&
+                   fn.indexOf('var auto12 = is12 ? days : 0;') !== -1 &&
+                   fn.indexOf('var auto8 = is12 ? 0 : days;') !== -1,
+            'авто: сменные — 12ч талоны по явкам, прочие — 8ч (Task 451)');
+        assertTrue(fn.indexOf('edit.t12 !== undefined && edit.t12 !== auto12') !== -1 &&
+                   fn.indexOf('edit.t8 !== undefined && edit.t8 !== auto8') !== -1,
+            'правка категории перекрывает авто (категории независимы — Task 451)');
+        assertTrue(fn.indexOf("localeCompare(famOf(b), 'ru')") !== -1,
+            'сортировка по алфавиту фамилий (Task 451)');
     });
 
     test('_talonsEffectiveEntries: правки _PENDING с фильтром месяца', () => {
@@ -200,11 +207,14 @@ describe('Task 447 — SRC: модель/правки', () => {
             'новая правка дня без записи — добавляется как «руч»');
     });
 
-    test('onTalonsInput: живая правка без ре-рендера', () => {
+    test('onTalonsInput: живая правка категории без ре-рендера', () => {
         const fn = stripComments(methodText(WS_SRC, 'onTalonsInput'));
-        assertTrue(fn.indexOf('val === days') !== -1 &&
-                   fn.indexOf('delete this._TALONS_EDIT[tab]') !== -1,
-            'значение РАВНОЕ явке снимает правку');
+        assertTrue(fn.indexOf("cat !== 't12' && cat !== 't8'") !== -1,
+            'категория поля — t12 | t8 (Task 451: две колонки талонов)');
+        assertTrue(fn.indexOf('val === auto') !== -1 &&
+                   fn.indexOf('delete cur[cat];') !== -1 &&
+                   fn.indexOf('delete this._TALONS_EDIT[tab];') !== -1,
+            'значение РАВНОЕ авто снимает правку; пустой объект — ключ целиком');
         assertTrue(fn.indexOf('!isFinite(val) || val < 0') !== -1 &&
                    fn.indexOf('val = 0') !== -1,
             'некорректное/отрицательное — 0');
@@ -443,7 +453,7 @@ describe('Task 447 — VM: _talonsRows', () => {
             '});')();
     }
 
-    test('сетка на текущем месяце: талоны предзаполнены по явкам', () => {
+    test('сетка на текущем месяце: талоны предзаполнены по явкам (12/8 раздельно)', () => {
         const entries = [
             { 'дата': D(MM + '-01'), 'таб_номер': '017', 'статус': 'Д8' },
             { 'дата': D(MM + '-02'), 'таб_номер': '017', 'статус': 'Д8' },
@@ -454,15 +464,19 @@ describe('Task 447 — VM: _talonsRows', () => {
         const m = h._talonsRows();
         assertTrue(m.ready, 'готово — записи сетки');
         assertEqual(m.rows.length, 2, 'строка на каждого работника');
+        // порядок — ПО АЛФАВИТУ фамилий (Иванов < Сидоров)
+        assertEqual(m.rows[0].emp['ФИО'], 'Иванов И. И.', 'первый — Иванов (алфавит)');
         const iv = m.rows[0];
         assertEqual(iv.days, 2, 'Иванов: 2 явки (Д8×2; ОТ — не явка)');
-        assertEqual(iv.talons, 2, 'талонов предзаполнено = явкам');
+        assertEqual(iv.t8, 2, 'дневной: 8ч талоны = явкам (Task 451)');
+        assertEqual(iv.t12, 0, 'дневной: 12ч талоны — авто 0 (Task 451)');
         assertFalse(iv.edited, 'без правки');
         const sid = m.rows[1];
         assertEqual(sid.days, 1, 'Сидоров: 1 явка (Н)');
-        assertEqual(sid.talons, 1, 'талон = явке');
-        assertEqual(m.totals.days, 3, 'итого дней явки');
-        assertEqual(m.totals.talons, 3, 'итого талонов');
+        assertEqual(sid.t12, 1, 'сменный: 12ч талоны = явкам (Task 451)');
+        assertEqual(sid.t8, 0, 'сменный: 8ч талоны — авто 0 (Task 451)');
+        assertEqual(m.totals.t12, 1, 'итого 12ч талонов — отдельно (Task 451)');
+        assertEqual(m.totals.t8, 2, 'итого 8ч талонов — отдельно (Task 451)');
         assertEqual(m.totals.edited, 0, 'правок нет');
     });
 
@@ -477,20 +491,20 @@ describe('Task 447 — VM: _talonsRows', () => {
             'правка ячейки поверх записи: день стал явкой');
     });
 
-    test('ручная правка талонов перекрывает явку, правки — в итогах', () => {
+    test('ручная правка талонов перекрывает авто категории, правки — в итогах', () => {
         const h = rowsHost({ entries: [
             { 'дата': D(MM + '-01'), 'таб_номер': '017', 'статус': 'Д8' },
             { 'дата': D(MM + '-02'), 'таб_номер': '017', 'статус': 'Д8' },
             { 'дата': D(MM + '-03'), 'таб_номер': '017', 'статус': 'Д8' },
             { 'дата': D(MM + '-01'), 'таб_номер': '031', 'статус': 'Н' }
-        ], year: NOWY, month: NOWM, edits: { '017': 5 } });
+        ], year: NOWY, month: NOWM, edits: { '017': { t8: 5 } } });
         const m = h._talonsRows();
         const iv = m.rows[0];
         assertEqual(iv.days, 3, 'явок — 3');
-        assertEqual(iv.talons, 5, 'правка: 5 талонов');
+        assertEqual(iv.t8, 5, 'правка: 5 8ч-талонов у дневного (Task 451)');
         assertTrue(iv.edited, 'строка помечена правленной');
-        assertEqual(m.totals.days, 4, 'итого явок 3+1');
-        assertEqual(m.totals.talons, 6, 'итого талонов 5+1');
+        assertEqual(m.totals.t12, 1, 'итого 12ч: 1 (Сидоров по явкам)');
+        assertEqual(m.totals.t8, 5, 'итого 8ч: 5 (правка Иванова)');
         assertEqual(m.totals.edited, 1, 'одна правка');
     });
 
@@ -507,8 +521,8 @@ describe('Task 447 — VM: _talonsRows', () => {
         ] };
         const m2 = h._talonsRows();
         assertTrue(m2.ready, 'кэш даёт готовность');
-        assertEqual(m2.rows[0].days, 1, 'явка из кэша (Д = 12ч смена, 1 день)');
-        assertEqual(m2.rows[0].talons, 1, 'талон = явке');
+        assertEqual(m2.rows[0].days, 1, 'явка из кэша (1 день)');
+        assertEqual(m2.rows[0].t8, 1, 'дневной: талоны = явке (8ч)');
     });
 
     test('работник без записей — 0 явок, строка в отчёте', () => {
@@ -516,7 +530,8 @@ describe('Task 447 — VM: _talonsRows', () => {
         const m = h._talonsRows();
         assertEqual(m.rows.length, 2, 'обе строки в отчёте');
         assertEqual(m.rows[0].days, 0, 'явок 0 (месяц не сформирован)');
-        assertEqual(m.rows[0].talons, 0, 'талонов 0');
+        assertEqual(m.rows[0].t8, 0, '8ч талонов 0 (дневной, авто)');
+        assertEqual(m.rows[0].t12, 0, '12ч талонов 0 (авто)');
     });
 });
 
@@ -534,7 +549,10 @@ describe('Task 447 — VM: onTalonsInput / talonsResetEdits', () => {
             set className(x) { this._cls = x; },
             getAttribute: function(k) {
                 if (k === 'data-tab') return '017';
-                if (k === 'data-days') return '3';
+                // Task 451: категория + авто-количество (дневной,
+                // 3 явки — авто 8ч = 3, соответствует модели хоста)
+                if (k === 'data-cat') return 't8';
+                if (k === 'data-auto') return '3';
                 return null;
             },
             parentNode: null
@@ -570,7 +588,11 @@ describe('Task 447 — VM: onTalonsInput / talonsResetEdits', () => {
             "_escAttr: function(s) { return String(s); }," +
             '_apiErrText: function(e) { return String(e); },' +
             '_EMPLOYEES: [{ "таб_номер": "017", "ФИО": "Иванов И. И.", "тип": "дневной", "должность": "Слесарь" }],' +
-            '_ENTRIES: [], _PENDING: {},' +
+            '_ENTRIES: ' + JSON.stringify([
+                { 'дата': NOWY + '-' + MM + '-01', 'таб_номер': '017', 'статус': 'Д8' },
+                { 'дата': NOWY + '-' + MM + '-02', 'таб_номер': '017', 'статус': 'Д8' },
+                { 'дата': NOWY + '-' + MM + '-03', 'таб_номер': '017', 'статус': 'Д8' }]) + ',' +
+            '_PENDING: {},' +
             '_TALONS_EDIT: {}, _TALONS_CACHE: null,' +
             '_year: ' + NOWY + ', _month: ' + NOWM + ',' +
             '_viewLevel: "edit", _canEdit: true,' +
@@ -582,57 +604,70 @@ describe('Task 447 — VM: onTalonsInput / talonsResetEdits', () => {
         return h;
     }
 
-    test('правка ≠ явке: карта + класс + бейдж разницы', () => {
+    test('правка ≠ авто: карта категории + класс + бейдж разницы', () => {
         const h = inputHost(undefined);
         h._el._v = '7';
         h.onTalonsInput(h._el);
-        assertEqual(h._TALONS_EDIT['017'], 7, 'правка сохранена');
+        assertEqual(h._TALONS_EDIT['017'].t8, 7, 'правка сохранена в категории t8');
         assertEqual(h._el.className, 'wst-count wst-count-edited',
             'поле подсвечено как правленное');
-        assertEqual(h._badge.textContent, '+4', 'бейдж: +4 к 3 явкам');
+        assertEqual(h._badge.textContent, '+4', 'бейдж: +4 к авто 3');
         assertEqual(h._badge.className, 'wst-diff wst-diff-up', 'больше — зелёный');
         assertFalse(h._badge.hidden, 'бейдж виден');
     });
 
-    test('правка МЕНЬШЕ явок: бейдж отрицательный', () => {
+    test('правка МЕНЬШЕ авто: бейдж отрицательный', () => {
         const h = inputHost(undefined);
         h._el._v = '1';
         h.onTalonsInput(h._el);
-        assertEqual(h._TALONS_EDIT['017'], 1, 'правка 1');
+        assertEqual(h._TALONS_EDIT['017'].t8, 1, 'правка 1 в категории t8');
         assertEqual(h._badge.textContent, '-2', 'бейдж: −2');
         assertEqual(h._badge.className, 'wst-diff wst-diff-down', 'меньше — оранжево-красный');
     });
 
-    test('значение = явке: правка снимается, бейдж скрыт', () => {
+    test('значение = авто: правка снимается, бейдж скрыт', () => {
         const h = inputHost(undefined);
-        h._TALONS_EDIT['017'] = 9;
+        h._TALONS_EDIT['017'] = { t8: 9 };
         h._el._v = '3';
         h.onTalonsInput(h._el);
         assertFalse(Object.prototype.hasOwnProperty.call(h._TALONS_EDIT, '017'),
-            'правка снята (авто-подсчёт)');
+            'правка снята (пустой объект — ключ целиком, авто-подсчёт)');
         assertEqual(h._el.className, 'wst-count', 'подсветка снята');
         assertTrue(h._badge.hidden, 'бейдж скрыт');
+    });
+
+    test('снятие одной категории НЕ трогает вторую (обе правки независимы)', () => {
+        const h = inputHost(undefined);
+        h._TALONS_EDIT['017'] = { t12: 2, t8: 9 };
+        h._el._v = '3'; // t8 = авто 3 → правка t8 снята, t12 жива
+        h.onTalonsInput(h._el);
+        assertEqual(h._TALONS_EDIT['017'].t12, 2,
+            'правка t12 сохранена при снятии t8');
+        assertFalse(Object.prototype.hasOwnProperty.call(h._TALONS_EDIT['017'], 't8'),
+            'поле t8 снято');
     });
 
     test('некорректное/отрицательное значение — 0', () => {
         const h = inputHost(undefined);
         h._el._v = '-5';
         h.onTalonsInput(h._el);
-        assertEqual(h._TALONS_EDIT['017'], 0, 'отрицательное — 0');
+        assertEqual(h._TALONS_EDIT['017'].t8, 0, 'отрицательное — 0');
         h._el._v = 'abc';
         h.onTalonsInput(h._el);
-        assertEqual(h._TALONS_EDIT['017'], 0, 'не-число — 0');
+        assertEqual(h._TALONS_EDIT['017'].t8, 0, 'не-число — 0');
     });
 
-    test('итоги страницы пересчитаны точечно (чипы + строка Итого)', () => {
+    test('итоги страницы пересчитаны точечно (чипы 12/8 + строка Итого)', () => {
         const h = inputHost(undefined);
         h._el._v = '7';
         h.onTalonsInput(h._el);
-        // у Иванова 0 явок (нет записей) → правка 7: итог талонов 7
-        assertEqual(h._dom._vals['wstTotalTalons'].textContent, '7',
-            'итого талонов обновлено');
-        assertEqual(h._dom._vals['wstTotalTalonsChip'].textContent, '7',
-            'чип шапки обновлён');
+        // у Иванова авто 8ч = 3 явкам → правка 7: итог 8ч = 7, 12ч = 0
+        assertEqual(h._dom._vals['wstTotalT8'].textContent, '7',
+            'итого 8ч талонов обновлено');
+        assertEqual(h._dom._vals['wstTotalT8Chip'].textContent, '7',
+            'чип шапки 8ч обновлён');
+        assertEqual(h._dom._vals['wstTotalT12Chip'].textContent, '0',
+            'чип шапки 12ч — отдельно (Task 451)');
         assertEqual(h._dom._vals['wstEditCount'].textContent, '1',
             'счётчик правок обновлён');
         assertFalse(h._dom._vals['wstChipEdit'].hidden, 'чип правок виден');
@@ -643,7 +678,7 @@ describe('Task 447 — VM: onTalonsInput / talonsResetEdits', () => {
         const toasts = [];
         const toast = { show: function(m) { toasts.push(m); } };
         const h = inputHost(toast);
-        h._TALONS_EDIT['017'] = 9;
+        h._TALONS_EDIT['017'] = { t8: 9 };
         h._renderCalls = 0;
         // подменяем рендер счётчиком (в хосте он реальный — считаем
         // вызовы обёрткой)
@@ -741,7 +776,7 @@ describe('Task 447 — VM: _renderTalonsPage / onTalonsPageOpen', () => {
                    dom.document, nav);
     }
 
-    test('edit: шапка + таблица + input + итого; талоны = явкам', () => {
+    test('edit: шапка + таблица + два input (12/8) + итого; талоны = явкам', () => {
         const dom = pageDom(true);
         const h = pageHost(dom, null, {});
         h._renderTalonsPage();
@@ -750,15 +785,26 @@ describe('Task 447 — VM: _renderTalonsPage / onTalonsPageOpen', () => {
             'шапка отчёта');
         assertTrue(html.indexOf(MONTH_NAMES[NOWM - 1]) !== -1,
             'текущий месяц в шапке');
-        assertTrue(html.indexOf('Дней явки') !== -1 &&
-                   html.indexOf('Выдано талонов') !== -1,
-            'колонки таблицы');
+        assertTrue(html.indexOf('Дней явки') !== -1,
+            'колонка дней явки осталась (источник авто-подсчёта)');
+        assertTrue(html.indexOf('Выдано 12 ч. талонов') !== -1 &&
+                   html.indexOf('Выдано 8 ч. талонов') !== -1 &&
+                   html.indexOf('>Выдано талонов<') === -1,
+            'две колонки талонов — 12/8 раздельно (Task 451), общей больше нет');
         assertTrue(html.indexOf('type="number"') !== -1 &&
                    html.indexOf('oninput="WorkSchedule.onTalonsInput(this)"') !== -1,
             'правка талонов — input');
+        assertTrue(html.indexOf('data-cat="t12"') !== -1 &&
+                   html.indexOf('data-cat="t8"') !== -1,
+            'каждый input знает категорию (data-cat, Task 451)');
         assertTrue(html.indexOf('value="2"') !== -1,
             'талонов предзаполнено по 2 явкам');
         assertTrue(html.indexOf('Итого') !== -1, 'строка Итого');
+        assertTrue(html.indexOf('wstTotalT12') !== -1 &&
+                   html.indexOf('wstTotalT8') !== -1 &&
+                   html.indexOf('wstTotalDays') === -1 &&
+                   html.indexOf('wstTotalTalonsChip') === -1,
+            'итоги 12/8 раздельно; общий итог дней явки не показывается (Task 451)');
         assertTrue(html.indexOf('wst-print-btn') !== -1 &&
                    html.indexOf('Печать отчёта') !== -1 &&
                    html.indexOf('Обновить данные') !== -1 &&
@@ -1047,12 +1093,14 @@ describe('Task 447 — VM: печать отчёта', () => {
     test('_buildTalonsPrintHtml: группы 12/8, часы, итого (шт.), подписи', () => {
         const h = printHost(printDom(), { print: function() {} }, {});
         const model = h._talonsRows();
-        model.totals = { days: 3, talons: 5, edited: 1 };
+        model.totals = { t12: 3, t8: 2, edited: 1 };
         // Сидоров — СМЕННЫЙ: попадает в группу «12 часовые»,
         // Иванов (дневной) — в «8 часовые»
         model.rows.push({ emp: { 'ФИО': 'Сидоров С. С.', 'тип': 'сменный',
                                  'должность': 'Электрик' },
-                          tab: '031', days: 1, talons: 3, edited: true });
+                          tab: '031', days: 1, t12: 3, t8: 0,
+                          auto12: 1, auto8: 0,
+                          edited12: true, edited8: false, edited: true });
         const html = h._buildTalonsPrintHtml(model);
         assertTrue(html.indexOf('за ' + MONTH_NAMES[NOWM - 1] + ' ' + NOWY + ' г.') !== -1,
             'период: текущий месяц и год');
@@ -1172,11 +1220,11 @@ describe('Task 447 — VM: печать отчёта', () => {
 // 8. SW — версия кэша
 // ============================================================
 describe('Task 447 — SW', () => {
-    test('SW: кэш поднят до kipia-test-v674 (Task 447)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v674'") !== -1,
-            'CACHE_VERSION = kipia-test-v674');
-        assertTrue(SW_SRC.indexOf('kipia-test-v675') === -1,
-            'kipia-test-v675 не существует');
+    test('SW: кэш поднят до kipia-test-v675 (Task 447)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v675'") !== -1,
+            'CACHE_VERSION = kipia-test-v675');
+        assertTrue(SW_SRC.indexOf('kipia-test-v676') === -1,
+            'kipia-test-v676 не существует');
         assertTrue(SW_SRC.indexOf('Task 447') !== -1,
             'комментарий Task 447 в истории версий');
     });

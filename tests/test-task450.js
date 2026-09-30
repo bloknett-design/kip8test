@@ -108,25 +108,34 @@ describe('Task 450 — SRC: подписи (линия по центру + че�
             'подсказка 7pt — по центру (Task 449, не тронуто)');
     });
 
-    test('черта над «(ф.и.о.)» — border-top на всю ширину колонок 6–7', () => {
+    test('черта под фамилией — ПО ДЛИНЕ самой длинной фамилии (Task 451)', () => {
         const css = TALONS_CSS_VALUE;
-        assertTrue(css.indexOf('.wst-sign-table td.wst-s-fio { border-top: 1px solid #000; }') !== -1,
-            'td.wst-s-fio — border-top 1px (черта между фамилией и пояснением)');
-        // специфичность 1,3,1 > базового td-правила (1,2,1) с border:none
+        assertTrue(css.indexOf('.wst-s-nbox { position: relative; display: inline-block; border-bottom: 1px solid #000;') !== -1,
+            'черта — border-bottom бокса .wst-s-nbox (НЕ на всю ширину колонок 6–7)');
+        assertTrue(css.indexOf('.wst-s-gh { visibility: hidden; white-space: nowrap; }') !== -1,
+            'призрак .wst-s-gh — невидимый текст longest задаёт ширину бокса');
+        assertTrue(css.indexOf('.wst-s-nm { position: absolute; left: 0; right: 0; top: 0; text-align: center;') !== -1,
+            'фамилия .wst-s-nm — абсолютно поверх призрака, по центру черты');
+        assertTrue(css.indexOf('td.wst-s-fio') === -1,
+            'прежней черты border-top на всю ширину (Task 450) больше нет');
+        // специфичность: базовое td-правило подписей на месте
         assertTrue(css.indexOf('.wst-sign-table td { border: none;') !== -1,
-            'базовое td-правило подписей на месте (wst-s-fio перекрывает)');
+            'базовое td-правило подписей на месте');
     });
 
-    test('_talonsSignBlock: класс wst-s-fio у «(ф.и.о.)», линия 17 «_» на месте', () => {
+    test('_talonsSignBlock: призрак longest + фамилия .wst-s-nm; линия 17 «_» на месте', () => {
         const fn = stripComments(methodText(WS_SRC, '_talonsSignBlock'));
-        assertTrue(fn.indexOf('<td colspan="2" class="wst-s-hint wst-s-fio">(ф.и.о.)</td>') !== -1,
-            'ячейка пояснения — wst-s-hint wst-s-fio (черта сверху)');
+        assertTrue(fn.indexOf('<span class="wst-s-gh">') !== -1 &&
+                   fn.indexOf('this._esc(longest || name)') !== -1,
+            'призрак — текст самой длинной фамилии (fallback — сама фамилия)');
+        assertTrue(fn.indexOf('<span class="wst-s-nm">') !== -1,
+            'фамилия — .wst-s-nm поверх призрака');
         assertTrue(fn.indexOf('_________________') !== -1,
             'линия подписи — 17 подчёркиваний (как в форме, не тронуто)');
         assertTrue(fn.indexOf('<td class="wst-s-line">_________________</td>') !== -1,
             'линия — в колонке 4 (по центру — правилом CSS)');
-        assertTrue((fn.match(/wst-s-fio/g) || []).length === 1,
-            'класс wst-s-fio — ровно один в блоке');
+        assertTrue((fn.match(/wst-s-fio/g) || []).length === 0,
+            'класс wst-s-fio полностью ушёл (Task 451)');
     });
 
     test('три подписи + разделители — как прежде (регресс Task 448)', () => {
@@ -334,7 +343,7 @@ describe('Task 450 — VM: разряды, группы, подписи', () => 
             'ни одного численного разряда в форме');
     });
 
-    test('печать: группы colspan 7 + ИТОГО + подписи (регресс 448/449)', () => {
+    test('печать: группы colspan 7 + ИТОГО + подписи (регресс 448/449 + призрак 451)', () => {
         const h = printHost(printDom(), { print: function() {} });
         const html = h._buildTalonsPrintHtml(h._talonsRows());
         assertTrue(html.indexOf('<td colspan="7" class="wst-r-glab">12 часовые</td>') !== -1 &&
@@ -343,17 +352,19 @@ describe('Task 450 — VM: разряды, группы, подписи', () => 
         assertTrue(html.indexOf('<td colspan="5" class="wst-t-itog">ИТОГО: 12 часовые</td>') !== -1 &&
                    html.indexOf('<td colspan="5" class="wst-t-itog">8 часовые</td>') !== -1,
             'ИТОГО — по одной строке на группу');
-        // подписи: линия и черта — по три штуки
-        assertEqual((html.match(/wst-s-fio/g) || []).length, 3,
-            'черта над «(ф.и.о.)» — во всех трёх подписях');
+        // подписи: линия и черта-бокс — по три штуки
+        assertEqual((html.match(/wst-s-nbox/g) || []).length, 3,
+            'черта-бокс (по длине longest) — во всех трёх подписях (Task 451)');
         assertEqual((html.match(/wst-s-line/g) || []).length, 3,
             'линия подписи — во всех трёх блоках');
         assertEqual((html.match(/_________________/g) || []).length, 3,
             '17 подчёркиваний — три линии');
         assertEqual((html.match(/\(ф\.и\.о\.\)/g) || []).length, 3,
             'три пояснения «(ф.и.о.)»');
-        assertTrue(html.indexOf('class="wst-s-hint wst-s-fio">(ф.и.о.)') !== -1,
-            'пояснение — с классом черты');
+        assertTrue(html.indexOf('wst-s-fio') === -1,
+            'прежний класс черты на всю ширину не используется');
+        assertEqual((html.match(/<span class="wst-s-gh">Котельникова И\.А\.<\/span>/g) || []).length, 3,
+            'призрак во всех трёх блоках — САМАЯ ДЛИННАЯ фамилия «Котельникова И.А.»');
     });
 });
 
@@ -361,11 +372,11 @@ describe('Task 450 — VM: разряды, группы, подписи', () => 
 // 3. SW — версия кэша
 // ============================================================
 describe('Task 450 — SW', () => {
-    test('SW: кэш поднят до kipia-test-v674 (Task 450)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v674'") !== -1,
-            'CACHE_VERSION = kipia-test-v674');
-        assertTrue(SW_SRC.indexOf('kipia-test-v675') === -1,
-            'kipia-test-v675 не существует');
+    test('SW: кэш поднят до kipia-test-v675 (Task 450)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v675'") !== -1,
+            'CACHE_VERSION = kipia-test-v675');
+        assertTrue(SW_SRC.indexOf('kipia-test-v676') === -1,
+            'kipia-test-v676 не существует');
         assertTrue(SW_SRC.indexOf('Task 450') !== -1,
             'комментарий Task 450 в истории версий');
     });

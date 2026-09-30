@@ -230,8 +230,8 @@ describe('Task 449 — SRC: «№ п/п» в две строчки, группы
         assertTrue(fn.indexOf("'\" class=\"wst-t-itog\">ИТОГО: 12 часовые</td>' +") === -1,
             'нет мусорных конкатенаций');
         const i12 = fn.indexOf("ИТОГО: 12 часовые</td>' +");
-        const v12 = fn.indexOf("' + groupSum(g12) + '");
-        assertTrue(i12 !== -1 && v12 !== -1, 'суммы по группам на месте');
+        const v12 = fn.indexOf("' + groupSum(g12, 't12') + '");
+        assertTrue(i12 !== -1 && v12 !== -1, 'суммы по группам на месте (по категории t12/t8 — Task 451)');
     });
 
     test('должности — через _talonsPosition (формат строгой формы)', () => {
@@ -463,11 +463,11 @@ describe('Task 449 — VM: должности, группы, ИТОГО, шап�
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 449 — SW', () => {
-    test('SW: кэш поднят до kipia-test-v674 (Task 449)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v674'") !== -1,
-            'CACHE_VERSION = kipia-test-v674');
-        assertTrue(SW_SRC.indexOf('kipia-test-v675') === -1,
-            'kipia-test-v675 не существует');
+    test('SW: кэш поднят до kipia-test-v675 (Task 449)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v675'") !== -1,
+            'CACHE_VERSION = kipia-test-v675');
+        assertTrue(SW_SRC.indexOf('kipia-test-v676') === -1,
+            'kipia-test-v676 не существует');
         assertTrue(SW_SRC.indexOf('Task 449') !== -1,
             'комментарий Task 449 в истории версий');
     });
