@@ -5,7 +5,8 @@
 // расставляться коды статусов "д" ... и "н" ...» — с правилами
 // примыкания выходного дня и очерёдности по последнему «д»/«н».
 //
-// Реализация (полностью КЛИЕНТСКАЯ, производный слой):
+// Реализация (полностью КЛИЕНТСКАЯ; Task 458 — материализация
+// в записи, развитие Task 456/457):
 //   • _autoDnPlan — расчёт авто-«д»/«н» открытого месяца:
 //     потенциальная смена отпускника (_plannedShiftAt: «Д»/«Н»)
 //     → выходной день кандидата (плановый выходной цикла, пустая
@@ -13,17 +14,17 @@
 //     (обе стороны выходные, либо выходной + рабочий совпадающий
 //     по времени суток) → очерёдность (последний «д»/«н» дальше
 //     от даты расстановки — первый);
-//   • _AUTO_DN — кэш слоя, пересчитывается каждым _renderGrid;
-//   • _renderCell — код «д»/«н» как основной (фон справочника);
-//     Task 457: отображение КАК РУЧНОЙ код — рамка ws-manual-dn
-//     + метка ws-source-manual, ws-auto-dn — инертный маркер;
+//   • _AUTO_DN — кэш плана, пересчитывается каждым _renderGrid;
+//     Task 458: план МАТЕРИАЛИЗУЕТСЯ в записи — _autoDnMaterialize
+//     создаёт правки _PENDING (как ручной ввод), «Сохранить» →
+//     setManualEntry (источник «руч») — сервер/архивы/«Год»/другие
+//     устройства видят их как обычные ручные записи (test-task458);
+//   • _renderCell — правка «д»/«н» рендерится штатно КАК РУЧНОЙ
+//     (рамка ws-manual-dn + метка ws-source-manual, Task 309/457);
+//     ws-auto-dn — инертный маркер реестра слоя (Task 458);
 //   • попап ячейки — подсказка «Авто: … (замещение отпуска,
-//     учитывается в Итогах/Талонах/печати)» + активная строка
-//     «д»/«н» (Task 457);
-//   • слой НЕ пишется в «Записи_графика»; Task 457: ВХОДИТ в
-//     Итоги учёта/Талоны/печать виртуальными записями
-//     _autoDnEntries (агрегаторы остаются чистыми — слой
-//     подмешивается на местах вызова).
+//     правка — как у ручной записи)» по реестру + активная строка
+//     «д»/«н» (current = эффективный статус).
 // ============================================================
 
 const fs = require('fs');
@@ -67,8 +68,8 @@ describe('Task 456 — SRC: _autoDnPlan (правила заявки)', () => {
         const idx = WS_SRC.indexOf('_autoDnPlan: function(');
         assertTrue(idx !== -1, 'метод _autoDnPlan определён');
         // комментарий-документация метода длинный (правила заявки
-        // целиком) — окно 2600 символов
-        assertTrue(WS_SRC.slice(Math.max(0, idx - 2600), idx)
+        // целиком + покрытие дня Task 458) — окно 3600 символов
+        assertTrue(WS_SRC.slice(Math.max(0, idx - 3600), idx)
                        .indexOf('Task 456') !== -1,
             'комментарий-ссылка на заявку Task 456');
     });
@@ -153,31 +154,32 @@ describe('Task 456 — SRC: рендер сетки/ячейки/попап + CS
             'кэш производного слоя в состоянии WorkSchedule');
     });
 
-    test('_renderCell: авто-код — как РУЧНОЙ (рамка + метка + маркер)', () => {
+    test('_renderCell: авто-«д»/«н» — правка КАК РУЧНОЙ + маркер реестра', () => {
         const fn = methodText(WS_SRC, '_renderCell');
         assertTrue(fn.indexOf("classes.push('ws-auto-dn');") !== -1,
-            'класс ws-auto-dn на ячейке авто-кода (инертный маркер слоя, Task 457)');
-        assertTrue(fn.indexOf("classes.push('ws-manual-dn');") !== -1,
-            'рамка ws-manual-dn — как у ручной записи «д»/«н» (Task 457: отображение как ручные)');
-        assertTrue(fn.indexOf("classes.push('ws-source-manual');") !== -1,
-            'метка источника ws-source-manual — полный паритет с ручной записью');
-        assertTrue(fn.indexOf("(showMainCode ? (status || autoDn) :") !== -1,
-            'код «д»/«н» выводится в центре пустой ячейки');
-        assertTrue(fn.indexOf('(this._AUTO_DN || {})') !== -1,
-            'план читается из _AUTO_DN с защитой от undefined');
-        assertTrue(fn.indexOf('!status && !isPending') !== -1,
-            'записи/правки слой не перекрывает');
+            'класс ws-auto-dn — инертный маркер реестра слоя (Task 458)');
+        assertTrue(fn.indexOf('ws-manual-dn') !== -1,
+            'материализованная правка = ручной вид (рамка ws-manual-dn, Task 309/457)');
+        assertTrue(fn.indexOf("(showMainCode ? status :") !== -1,
+            'код ячейки — эффективный статус (правка/запись), дисплей-ветка слоя удалена');
+        assertTrue(fn.indexOf("typeof this._autoDnIsKey === 'function'") !== -1,
+            'маркер — по реестру _autoDnIsKey (гвард typeof — старые VM-харнессы)');
+        assertEqual(fn.indexOf('(this._AUTO_DN || {})'), -1,
+            '_renderCell больше не читает план напрямую (записи — источник правды)');
     });
 
-    test('попап ячейки: подсказка об авто-коде + активная строка', () => {
+    test('попап ячейки: подсказка по реестру + активная строка', () => {
         const fn = methodText(WS_SRC, '_renderCellPopup');
         assertTrue(fn.indexOf('ws-popup-auto') !== -1,
             'строка-подсказка .ws-popup-auto');
         assertTrue(fn.indexOf('замещение отпуска') !== -1 &&
-                   fn.indexOf('учитывается в Итогах/Талонах/печати') !== -1,
-            'текст поясняет природу авто-кода и учёт в отчётах (Task 457)');
-        assertTrue(fn.indexOf('current = autoCode;') !== -1,
-            'строка «д»/«н» подсвечивается активной — как у ручной записи (Task 457)');
+                   fn.indexOf('правка — как у ручной записи') !== -1,
+            'текст поясняет природу авто-кода (Task 458: правка как у ручной)');
+        assertEqual(fn.indexOf('current = autoCode;'), -1,
+            'активная строка — штатный путь (current = эффективный статус записи/правки)');
+        assertTrue(fn.indexOf("current === 'д' || current === 'н'") !== -1 &&
+                   fn.indexOf("typeof this._autoDnIsKey === 'function'") !== -1,
+            'подсказка — по реестру слоя для действующего «д»/«н»');
     });
 
     test('CSS: стили авто ws-auto-dn сняты (Task 457 — как ручные)', () => {
@@ -193,61 +195,65 @@ describe('Task 456 — SRC: рендер сетки/ячейки/попап + CS
 });
 
 // ============================================================
-// 3. SRC — Task 457: слой ВХОДИТ в Итоги/Талоны/печать через
-//    виртуальные записи _autoDnEntries (агрегаторы чистые);
-//    в «Записи_графика» по-прежнему НЕ пишется
+// 3. SRC — Task 458: план МАТЕРИАЛИЗУЕТСЯ в записи (правки
+//    _PENDING как ручной ввод); отчёты читают их штатно,
+//    виртуальный слой _autoDnEntries удалён
 // ============================================================
-describe('Task 456/457 — SRC: слой в отчётах, записи не создаются', () => {
+describe('Task 456/458 — SRC: записи и отчёты без виртуального слоя', () => {
 
-    test('_printCell (печать шахматки) показывает код слоя', () => {
+    test('_printCell (печать шахматки) — без псевдо-записи слоя', () => {
         const fn = methodText(WS_SRC, '_printCell');
-        assertTrue(fn.indexOf("(this._AUTO_DN || {})") !== -1,
-            'Task 457: пустой ячейке с авто-кодом строится псевдо-запись — код в печати');
+        assertEqual(fn.indexOf('_AUTO_DN'), -1,
+            'Task 458: авто-«д»/«н» — записи, печать получает их штатно');
         assertEqual(fn.indexOf('wsp-ev'), -1,
             'бейджей по-прежнему нет (Task 442)');
     });
 
-    test('_totalsAgg остаётся ЧИСТЫМ — слой подмешивается на местах вызова', () => {
+    test('_totalsAgg остаётся ЧИСТЫМ — записи приходят эффективными', () => {
         const fn = methodText(WS_SRC, '_totalsAgg');
         assertEqual(fn.indexOf('_AUTO_DN'), -1,
-            'агрегатор считает записи; авто-слой добавляют вызывающие (Task 457)');
+            'агрегатор считает записи (правки _PENDING — в эффективных записях)');
         assertEqual(fn.indexOf('_autoDnEntries'), -1,
             'классификация кодов не меняется (Task 322)');
     });
 
-    test('_talonsRows (Талоны) учитывает слой (Task 457)', () => {
+    test('_talonsRows (Талоны) — без подмешивания слоя', () => {
         const fn = methodText(WS_SRC, '_talonsRows');
-        assertTrue(fn.indexOf('this._autoDnEntries(mi.y, mi.m)') !== -1,
-            'виртуальные записи слоя в агрегации талонов');
-        assertTrue(fn.indexOf("typeof this._autoDnEntries === 'function'") !== -1,
-            'гвард typeof — старые VM-харнессы без метода не падают');
+        assertEqual(fn.indexOf('_autoDnEntries'), -1,
+            'Task 458: авто-«д»/«н» — записи (материализация в _PENDING)');
+        assertTrue(fn.indexOf('this._talonsEffectiveEntries(entries, mi.y, mi.m)') !== -1,
+            'эффективные записи месяца — день явки + талон штатно');
     });
 
-    test('Итоги/печать: _renderTotalsMonth и printGrid подмешивают слой', () => {
+    test('Итоги/печать: _renderTotalsMonth и printGrid — эффективные записи', () => {
         const tm = methodText(WS_SRC, '_renderTotalsMonth');
-        assertTrue(tm.indexOf('this._autoDnEntries(this._year, this._month)') !== -1,
-            'Итоги месяца: виртуальные записи — переработка over/overDays');
+        assertEqual(tm.indexOf('_autoDnEntries'), -1,
+            'Итоги месяца: правки _PENDING материализации — штатный путь');
         const pg = methodText(WS_SRC, 'printGrid');
-        assertTrue(pg.indexOf('this._autoDnEntries(this._year, this._month)') !== -1,
+        assertEqual(pg.indexOf('_autoDnEntries'), -1,
             'печать: тот же agg (колонка «Перераб./дни», PDF/Excel)');
+        assertTrue(pg.indexOf('this._totalsEffectiveEntries()') !== -1,
+            'agg — по эффективным записям (сервер + _PENDING)');
     });
 
-    test('записи НЕ создаются: слой не попадает в saveAll/_applyCellStatus', () => {
+    test('записи создаются материализацией: _autoDnMaterialize в _renderGrid', () => {
+        const rg = methodText(WS_SRC, '_renderGrid');
+        assertTrue(rg.indexOf('this._autoDnMaterialize()') !== -1,
+            'Task 458: пустые ячейки плана становятся правками _PENDING');
+        assertTrue(rg.indexOf("typeof this._autoDnMaterialize === 'function'") !== -1,
+            'гвард typeof — старые VM-харнессы не падают');
         const sa = methodText(WS_SRC, 'saveAll');
         assertEqual(sa.indexOf('_autoDnEntries'), -1,
-            '«Сохранить» не отправляет слой на сервер');
-        const ac = methodText(WS_SRC, '_applyCellStatus');
-        assertEqual(ac.indexOf('_autoDnEntries'), -1,
-            'правки ячеек работают с записями/_PENDING, слой — только чтение');
+            '«Сохранить» отправляет правки штатно (setManualEntry)');
     });
 });
 
 // ============================================================
 // 4. SRC — SW
 // ============================================================
-describe('Task 456 — SRC: SW kipia-test-v681', () => {
-    test('CACHE_VERSION = kipia-test-v681, прежней v679 нет', () => {
-        assertTrue(SW_SRC.indexOf("'kipia-test-v681'") !== -1,
+describe('Task 456 — SRC: SW kipia-test-v682', () => {
+    test('CACHE_VERSION = kipia-test-v682, прежней v679 нет', () => {
+        assertTrue(SW_SRC.indexOf("'kipia-test-v682'") !== -1,
             'новая версия SW v680');
         assertEqual(SW_SRC.indexOf("'kipia-test-v679'"), -1,
             'старой версии v679 не осталось');

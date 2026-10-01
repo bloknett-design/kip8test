@@ -3,22 +3,24 @@
 // в Итоги/Талоны/печать входит» (развитие Task 456: авто-«д»/«н»
 // замещения отпуска).
 //
-// Реализация:
-//   • _autoDnEntries(y, m) — ВИРТУАЛЬНЫЕ записи слоя _AUTO_DN
-//     (месяц сетки): {дата, таб_номер, статус «д»/«н»,
-//     источник «авто»} — только для агрегации отчётов, в
-//     «Записи_графика» НЕ пишутся, без часов/переработки;
+// Реализация (после Task 458 — материализация в записи):
+//   • Task 457 (снят Task 458): ВИРТУАЛЬНЫЕ записи _autoDnEntries
+//     удалены — авто-«д»/«н» стали РЕАЛЬНЫМИ записями: план
+//     материализуется в правки _PENDING (_autoDnMaterialize),
+//     «Сохранить» → setManualEntry (источник «руч») — как ручные;
 //   • Итоги учёта (месяц) + печать/PDF/Excel: переработка
-//     over/overDays (как у ручных «д»/«н», Task 322 — в явки/
-//     часы не попадает), код в печатной сетке (_printCell /
-//     _printModel — псевдо-запись с цветом справочника);
-//   • Талоны: день явки + 12-часовой талон (получатели слоя —
-//     всегда сменные, _overHours = 12);
-//   • отображение «как ручные»: рамка ws-manual-dn + метка
-//     ws-source-manual (индиго-пунктир ws-auto-dn снят — класс
-//     инертный маркер), активная строка «д»/«н» в попапе;
-//   • границы: записи не создаются (saveAll/_applyCellStatus
-//     слой не трогают), Годовой итог — по серверным записям.
+//     over/overDays (Task 322, в явки/часы не попадает) — ШТАТНЫЙ
+//     путь эффективных записей (сервер + _PENDING), без
+//     подмешивания слоя; код в печатной сетке (_printCell /
+//     _printModel — эффективная запись);
+//   • Талоны: день явки + 12-часовой талон (получатели — всегда
+//     сменные, _overHours = 12) — штатная агрегация;
+//   • отображение «как ручные»: материализованная правка — вид
+//     ручной записи (рамка ws-manual-dn + метка ws-source-manual
+//     у правки с источником «руч», Task 309), ws-auto-dn —
+//     инертный маркер реестра, активная строка «д»/«н» в попапе;
+//   • после «Сохранить» записи видны серверу, архивам, «Году» и
+//     другим устройствам — полностью как ручные (заявка Task 458).
 // ============================================================
 
 const fs = require('fs');
@@ -54,105 +56,70 @@ function methodText(src, name) {
 const WS_SRC = INDEX_SRC.slice(INDEX_SRC.indexOf('var WorkSchedule = {'));
 
 // ============================================================
-// 1. SRC — метод _autoDnEntries: виртуальные записи слоя
+// 1. SRC — виртуальные записи удалены, включение штатное
 // ============================================================
-describe('Task 457 — SRC: _autoDnEntries (виртуальные записи слоя)', () => {
+describe('Task 457/458 — SRC: отчёты без виртуального слоя', () => {
 
-    test('метод существует, комментарий-ссылка на заявку над ним', () => {
-        const idx = WS_SRC.indexOf('_autoDnEntries: function(');
-        assertTrue(idx !== -1, 'метод _autoDnEntries определён');
-        assertTrue(WS_SRC.slice(Math.max(0, idx - 1200), idx)
-                       .indexOf('Task 457') !== -1,
-            'комментарий-ссылка на заявку Task 457');
+    test('метод _autoDnEntries УДАЛЁН — ссылок в модуле нет', () => {
+        assertEqual(WS_SRC.indexOf('_autoDnEntries'), -1,
+            'Task 458: авто-«д»/«н» — записи, виртуальный слой не нужен');
     });
 
-    test('фильтр месяца: префикс YYYY-MM-, чужой месяц — пусто', () => {
-        const fn = methodText(WS_SRC, '_autoDnEntries');
-        assertTrue(fn.indexOf("(m < 10 ? '0' : '') + m") !== -1,
-            'двузначный месяц префикса');
-        assertTrue(fn.indexOf("indexOf(pref) !== 0") !== -1,
-            'ключи вне месяца сетки отбрасываются');
-    });
-
-    test('форма записи: статус из плана, источник «авто», БЕЗ часов/переработки', () => {
-        const fn = methodText(WS_SRC, '_autoDnEntries');
-        assertTrue(fn.indexOf("'статус': plan[k]") !== -1 &&
-                   fn.indexOf("'источник': 'авто'") !== -1,
-            'синтетическая строка для агрегации');
-        assertEqual(fn.indexOf('часы'), -1,
-            'поле «часы» слою не нужно (сменным — 12 в _overHours)');
-        assertEqual(fn.indexOf('переработка'), -1,
-            'флаг переработки (точка) — атрибут записи, у слоя его нет');
-    });
-
-    test('_autoDnEntries стоит ПОСЛЕ _autoDnPlan (рядом со слоем)', () => {
-        const iPlan = WS_SRC.indexOf('_autoDnPlan: function(');
-        const iEnt = WS_SRC.indexOf('_autoDnEntries: function(');
-        assertTrue(iPlan !== -1 && iEnt !== -1 && iEnt > iPlan,
-            'метод рядом с расчётом слоя');
-    });
-});
-
-// ============================================================
-// 2. SRC — включение в отчёты и печать
-// ============================================================
-describe('Task 457 — SRC: Итоги/Талоны/печать включают слой', () => {
-
-    test('Итоги месяца и печать: concat виртуальных записей (гвард typeof)', () => {
+    test('Итоги месяца: эффективные записи, БЕЗ подмешивания', () => {
         const tm = methodText(WS_SRC, '_renderTotalsMonth');
-        assertTrue(tm.indexOf('entries.concat(') !== -1 &&
-                   tm.indexOf('this._autoDnEntries(this._year, this._month)') !== -1,
-            'Итоги: эффективные записи + слой');
-        assertTrue(tm.indexOf("typeof this._autoDnEntries === 'function'") !== -1,
-            'гвард — старые VM-харнессы без метода не падают');
+        assertTrue(tm.indexOf('this._totalsEffectiveEntries()') !== -1,
+            'Итоги: сервер + правки _PENDING (материализация — в них)');
+        assertEqual(tm.indexOf('entries.concat('), -1,
+            'concat виртуальных записей удалён (двойной счёт невозможен)');
+    });
+
+    test('печать: printGrid — тот же agg по эффективным записям', () => {
         const pg = methodText(WS_SRC, 'printGrid');
-        assertTrue(pg.indexOf('this._autoDnEntries(this._year, this._month)') !== -1,
-            'печать: тот же agg — колонка «Перераб./дни», PDF/Excel');
+        assertTrue(pg.indexOf('this._totalsEffectiveEntries()') !== -1 &&
+                   pg.indexOf('this._totalsAgg(') !== -1,
+            'печать: колонка «Перераб./дни» — по записям/правкам');
+        assertEqual(pg.indexOf('.concat('), -1,
+            'подмешивания слоя в agg печати нет');
     });
 
-    test('Талоны: _talonsRows подмешивает слой месяца отчёта', () => {
+    test('Талоны: _talonsRows — эффективные записи месяца сетки', () => {
         const fn = methodText(WS_SRC, '_talonsRows');
-        assertTrue(fn.indexOf('eff.concat(this._autoDnEntries(mi.y, mi.m))') !== -1,
+        assertTrue(fn.indexOf('this._talonsEffectiveEntries(entries, mi.y, mi.m)') !== -1,
             'агрегация талонов: месяц — как у записей сетки (Task 455)');
+        assertEqual(fn.indexOf('eff.concat('), -1,
+            'concat слоя удалён — правки _PENDING в _talonsEffectiveEntries');
     });
 
-    test('печать сетки: _printCell — псевдо-запись авто-кода', () => {
-        const fn = methodText(WS_SRC, '_printCell');
-        assertTrue(fn.indexOf("if (!entry) {") !== -1 &&
-                   fn.indexOf("entry = { 'статус': autoDn };") !== -1,
-            'пустой ячейке с авто-кодом — псевдо-запись (код + фон справочника)');
-        assertTrue(fn.indexOf("(this._AUTO_DN || {})") !== -1,
-            'защита от undefined — печать работает и без слоя');
+    test('печать сетки: _printCell и _printModel — записи штатно', () => {
+        const pc = methodText(WS_SRC, '_printCell');
+        assertEqual(pc.indexOf('_AUTO_DN'), -1,
+            'псевдо-запись слоя Task 457 удалена — правка/запись даёт код');
+        const pm = methodText(WS_SRC, '_printModel');
+        assertEqual(pm.indexOf('_AUTO_DN'), -1,
+            'подстановка слоя в PDF/Excel удалена — eff несёт код');
+        assertTrue(pm.indexOf('var pending = pend[key] || null;') !== -1,
+            '_printModel читает _PENDING — материализованные коды в PDF/Excel');
     });
 
-    test('PDF/Excel: _printModel — код слоя в ячейках модели', () => {
-        const fn = methodText(WS_SRC, '_printModel');
-        assertTrue(fn.indexOf('(this._AUTO_DN || {})[key]') !== -1,
-            'пустая ячейка с авто-кодом получает статус и цвет справочника');
-        assertTrue(fn.indexOf('if (!status) {') !== -1,
-            'слой не перекрывает записи/правки (только пустые ячейки)');
-    });
-
-    test('граница: записи НЕ создаются — saveAll/_applyCellStatus чисты', () => {
-        const sa = methodText(WS_SRC, 'saveAll');
-        assertEqual(sa.indexOf('_autoDnEntries'), -1,
-            '«Сохранить» не отправляет слой на сервер');
-        const ac = methodText(WS_SRC, '_applyCellStatus');
-        assertEqual(ac.indexOf('_autoDnEntries'), -1,
-            'правки ячеек — с записями/_PENDING, слой только читается');
+    test('записи создаются: материализация в _renderGrid (гвард typeof)', () => {
+        const rg = methodText(WS_SRC, '_renderGrid');
+        assertTrue(rg.indexOf('this._autoDnMaterialize()') !== -1,
+            '«Сохранить» получает материализованные правки штатно');
+        assertTrue(rg.indexOf("typeof this._autoDnMaterialize === 'function'") !== -1,
+            'гвард — старые VM-харнессы без метода не падают');
         const ap = methodText(WS_SRC, '_autoDnPlan');
         assertEqual(ap.indexOf('_autoDnEntries'), -1,
-            'расчёт слоя не зависит от собственных виртуальных записей (нет рекурсии)');
+            'расчёт плана не зависит от виртуальных записей (нет рекурсии)');
     });
 });
 
 // ============================================================
-// 3. SRC — SW
+// 2. SRC — SW
 // ============================================================
-describe('Task 457 — SRC: SW kipia-test-v681', () => {
-    test('CACHE_VERSION = kipia-test-v681, прежней v680 нет', () => {
-        assertTrue(SW_SRC.indexOf("'kipia-test-v681'") !== -1,
-            'новая версия SW v681');
+describe('Task 457 — SRC: SW kipia-test-v682', () => {
+    test('CACHE_VERSION = kipia-test-v682, прежней v680 нет', () => {
+        assertTrue(SW_SRC.indexOf("'kipia-test-v682'") !== -1,
+            'новая версия SW v682');
         assertEqual(SW_SRC.indexOf("'kipia-test-v680'"), -1,
             'старой версии v680 не осталось');
         assertTrue(SW_SRC.indexOf('Task 457') !== -1,
@@ -161,63 +128,10 @@ describe('Task 457 — SRC: SW kipia-test-v681', () => {
 });
 
 // ============================================================
-// 4. VM — _autoDnEntries: карта слоя → записи
+// 3. VM — Итоги: переработка over/overDays по материализованным
+//    правкам (паттерн «план → _PENDING → эффективные записи»)
 // ============================================================
-describe('Task 457 — VM: _autoDnEntries', () => {
-
-    const MAP = {
-        '2026-10-03|02': 'д',
-        '2026-10-08|02': 'н',
-        '2026-09-15|02': 'д',   // чужой месяц (сентябрь)
-        '2026-11-02|03': 'н'    // чужой месяц (ноябрь)
-    };
-
-    function host(map) {
-        return new Function('return ({' +
-            methodText(WS_SRC, '_autoDnEntries') + ',' +
-            '_AUTO_DN: ' + JSON.stringify(map) + ',' +
-            '});')();
-    }
-
-    test('записи только месяца сетки, поля синтетической строки', () => {
-        const out = host(MAP)._autoDnEntries(2026, 10);
-        assertEqual(out.length, 2, 'октябрьских записей — 2');
-        for (const r of out) {
-            assertEqual(r['источник'], 'авто', 'источник — авто');
-            assertTrue(r['дата'].indexOf('2026-10-') === 0, 'дата октября');
-            assertTrue(r['статус'] === 'д' || r['статус'] === 'н',
-                'статус — код слоя');
-        }
-        assertEqual(out[0]['дата'], '2026-10-03', 'дата из ключа');
-        assertEqual(out[0]['таб_номер'], '02', 'таб. номер из ключа');
-        assertEqual(out[0]['статус'], 'д', 'статус из карты слоя');
-    });
-
-    test('фильтр месяца: сентябрь/ноябрь — свои записи, пустой месяц — []', () => {
-        assertEqual(host(MAP)._autoDnEntries(2026, 9).length, 1,
-            'сентябрь: 1 запись');
-        assertEqual(host(MAP)._autoDnEntries(2026, 11).length, 1,
-            'ноябрь: 1 запись');
-        assertEqual(host(MAP)._autoDnEntries(2026, 12).length, 0,
-            'декабря в слое нет');
-    });
-
-    test('защита: _AUTO_DN undefined/пустая карта/повреждённый ключ', () => {
-        assertEqual(new Function('return ({' +
-            methodText(WS_SRC, '_autoDnEntries') + '});')()
-            ._autoDnEntries(2026, 10).length, 0,
-            'undefined-карта (до первого _renderGrid) — пусто');
-        assertEqual(host({})._autoDnEntries(2026, 10).length, 0,
-            'пустой слой — пусто');
-        assertEqual(host({ 'битый-ключ': 'д' })._autoDnEntries(2026, 10).length, 0,
-            'ключ без «|» пропускается');
-    });
-});
-
-// ============================================================
-// 5. VM — Итоги: переработка over/overDays, явки/часы не тронуты
-// ============================================================
-describe('Task 457 — VM: Итоги учёта с виртуальными записями', () => {
+describe('Task 457 — VM: Итоги учёта с материализованными правками', () => {
 
     const CODES = [
         { code: 'Д', name: 'День (12-час)', color: '#c8e6c9' },
@@ -225,11 +139,19 @@ describe('Task 457 — VM: Итоги учёта с виртуальными з�
         { code: 'н', name: 'Ночь в вых./праздник', color: '#cfd8f5' }
     ];
 
+    // ПРАВКА материализации — поля как у ручного ввода «д»/«н»
+    // сменному (без часов: переработка 12 ч по типу, Task 322)
+    function dnPending(day, code) {
+        return {
+            'статус': code, 'переработка': 0, 'замещает': null,
+            'комментарий': '', 'часы': null
+        };
+    }
+
     function aggHost(opts) {
         opts = opts || {};
         return new Function('return ({' +
             methodText(WS_SRC, '_totalsEffectiveEntries') + ',' +
-            methodText(WS_SRC, '_autoDnEntries') + ',' +
             methodText(WS_SRC, '_totalsZero') + ',' +
             methodText(WS_SRC, '_totalsAgg') + ',' +
             methodText(WS_SRC, '_codeHours') + ',' +
@@ -242,59 +164,61 @@ describe('Task 457 — VM: Итоги учёта с виртуальными з�
                 { 'дата': '2026-10-06', 'таб_номер': '02', 'статус': 'Д', 'источник': 'авто' },
                 { 'дата': '2026-10-07', 'таб_номер': '02', 'статус': 'Н', 'источник': 'авто' },
                 { 'дата': '2026-10-14', 'таб_номер': '02', 'статус': 'Д', 'источник': 'авто' }]) + ',' +
-            '_PENDING: ' + JSON.stringify(opts.pending || {}) + ',' +
-            '_AUTO_DN: ' + JSON.stringify(opts.autoDn !== undefined ? opts.autoDn
-                : { '2026-10-03|02': 'д', '2026-10-19|02': 'н' }) + ',' +
+            '_PENDING: ' + JSON.stringify(opts.pending !== undefined ? opts.pending
+                : (function() {
+                    // паттерн материализации Task 458: план дня 3 «д»,
+                    // дня 19 «н» — правки _PENDING
+                    var p = {};
+                    p['2026-10-03|02'] = dnPending(3, 'д');
+                    p['2026-10-19|02'] = dnPending(19, 'н');
+                    return p;
+                })()) + ',' +
             '_STATUS_CODES: ' + JSON.stringify(CODES) + ',' +
             '});')();
     }
 
-    // паттерн _renderTotalsMonth/printGrid: записи + слой
-    function aggWith(h) {
-        return h._totalsAgg(
-            h._totalsEffectiveEntries()
-                .concat(h._autoDnEntries(2026, 10)),
-            h._empTypeMap(h._EMPLOYEES));
+    function aggOf(h) {
+        return h._totalsAgg(h._totalsEffectiveEntries(),
+                            h._empTypeMap(h._EMPLOYEES));
     }
 
-    test('слой = ПЕРЕРАБОТКА: over/overDays растут, явки/часы НЕ тронуты', () => {
+    test('материализованные «д»/«н» = ПЕРЕРАБОТКА: over/overDays растут, явки/часы НЕ тронуты', () => {
         const h = aggHost({});
-        const before = h._totalsAgg(h._totalsEffectiveEntries(),
-                                    h._empTypeMap(h._EMPLOYEES)).byTab['02'];
-        const after = aggWith(h).byTab['02'];
-        assertEqual(before.work, 3, 'без слоя: 3 явки');
-        assertEqual(before.over, 0, 'без слоя: переработки нет');
-        assertEqual(after.work, 3, 'явки НЕ изменились (д/н — не явка, Task 322)');
-        assertEqual(after.hours, before.hours, 'часы явок НЕ изменились');
-        assertEqual(after.overDays, 2, '2 дня переработки — виртуальные д/н');
-        assertEqual(after.over, 24, 'сменному 12 ч × 2 = 24 ч');
-        assertEqual(after.total, before.total + 2, 'total — все дни табеля');
+        const a = aggOf(h).byTab['02'];
+        assertEqual(a.work, 3, 'явки — только записи (д/н — не явка, Task 322)');
+        assertEqual(a.overDays, 2, '2 дня переработки — материализованные д/н');
+        assertEqual(a.over, 24, 'сменному 12 ч × 2 = 24 ч');
+        assertEqual(a.total, 5, 'total — все дни табеля');
     });
 
-    test('ручной «д» и авто «н» — один счётчик (суммирование)', () => {
+    test('ручной «д» и материализованный «н» — один счётчик (суммирование)', () => {
         const h = aggHost({
             entries: [{ 'дата': '2026-10-05', 'таб_номер': '02',
                         'статус': 'д', 'источник': 'руч', 'часы': null }],
-            autoDn: { '2026-10-20|02': 'н' }
+            pending: (function() {
+                var p = {};
+                p['2026-10-20|02'] = dnPending(20, 'н');
+                return p;
+            })()
         });
-        const a = aggWith(h).byTab['02'];
+        const a = aggOf(h).byTab['02'];
         assertEqual(a.overDays, 2, 'ручной «д» + авто «н» = 2 дня');
         assertEqual(a.over, 24, '12 + 12 = 24 ч');
         assertEqual(a.work, 0, 'явок нет');
     });
 
-    test('auto «д» НЕ добавляет явок в сравнении с пустым слоем', () => {
-        const h = aggHost({ autoDn: {} });
-        const a = aggWith(h).byTab['02'];
-        assertEqual(a.work, 3, 'слой пуст — только записи');
+    test('пустые правки — счётчики только по записям', () => {
+        const h = aggHost({ pending: {} });
+        const a = aggOf(h).byTab['02'];
+        assertEqual(a.work, 3, 'правок нет — только записи');
         assertEqual(a.overDays, 0, 'переработки нет');
     });
 });
 
 // ============================================================
-// 6. VM — Талоны: день явки + 12-часовой талон
+// 4. VM — Талоны: день явки + 12-часовой талон по правкам
 // ============================================================
-describe('Task 457 — VM: Талоны с виртуальными записями', () => {
+describe('Task 457 — VM: Талоны с материализованными правками', () => {
 
     const CODES = [
         { code: 'Д', name: 'День (12-час)', color: '#c8e6c9' },
@@ -302,9 +226,9 @@ describe('Task 457 — VM: Талоны с виртуальными запися
         { code: 'н', name: 'Ночь в вых./праздник', color: '#cfd8f5' }
     ];
 
-    function talonsHost(autoDn, entries) {
+    function talonsHost(pending, entries) {
         return new Function('return ({' +
-            methodText(WS_SRC, '_autoDnEntries') + ',' +
+            methodText(WS_SRC, '_talonsEffectiveEntries') + ',' +
             methodText(WS_SRC, '_talonsAgg') + ',' +
             methodText(WS_SRC, '_overHours') + ',' +
             methodText(WS_SRC, '_codeHours') + ',' +
@@ -312,25 +236,30 @@ describe('Task 457 — VM: Талоны с виртуальными запися
             methodText(WS_SRC, '_empTypeMap') + ',' +
             '_EMPLOYEES: [{ "таб_номер": "02", "ФИО": "Белов Б. Б.", "тип": "сменный" }],' +
             '_ENTRIES: ' + JSON.stringify(entries || []) + ',' +
-            '_AUTO_DN: ' + JSON.stringify(autoDn || {}) + ',' +
+            '_PENDING: ' + JSON.stringify(pending || {}) + ',' +
             '_STATUS_CODES: ' + JSON.stringify(CODES) + ',' +
             '});')();
     }
 
-    test('авто «д»/«н»: дни явки и 12-часовые талоны (сменный)', () => {
-        const h = talonsHost({ '2026-10-03|02': 'д', '2026-10-08|02': 'н' },
-            [{ 'дата': '2026-10-06', 'таб_номер': '02', 'статус': 'Д' }]);
-        // паттерн _talonsRows: eff + слой
-        const eff = h._ENTRIES.concat(h._autoDnEntries(2026, 10));
+    test('материализованные «д»/«н»: дни явки и 12-часовые талоны (сменный)', () => {
+        // паттерн Task 458: правки материализации в _PENDING
+        const h = talonsHost({
+            '2026-10-03|02': { 'статус': 'д', 'переработка': 0,
+                               'замещает': null, 'комментарий': '', 'часы': null },
+            '2026-10-08|02': { 'статус': 'н', 'переработка': 0,
+                               'замещает': null, 'комментарий': '', 'часы': null }
+        }, [{ 'дата': '2026-10-06', 'таб_номер': '02', 'статус': 'Д' }]);
+        // паттерн _talonsRows: eff = _talonsEffectiveEntries(_ENTRIES, y, m)
+        const eff = h._talonsEffectiveEntries(h._ENTRIES, 2026, 10);
         const a = h._talonsAgg(eff, h._empTypeMap(h._EMPLOYEES)).byTab['02'];
-        assertEqual(a.days, 3, '2 смены Д + 2 виртуальных д/н = 3 дня явки');
+        assertEqual(a.days, 3, 'смена Д + 2 материализованных д/н = 3 дня явки');
         assertEqual(a.t12, 3, '12-часовые талоны: Д + д + н');
         assertEqual(a.t8, 0, '8-часовых нет');
     });
 
-    test('пустой слой — талоны только по записям', () => {
+    test('правок нет — талоны только по записям', () => {
         const h = talonsHost({}, [{ 'дата': '2026-10-06', 'таб_номер': '02', 'статус': 'Д8' }]);
-        const eff = h._ENTRIES.concat(h._autoDnEntries(2026, 10));
+        const eff = h._talonsEffectiveEntries(h._ENTRIES, 2026, 10);
         const a = h._talonsAgg(eff, h._empTypeMap(h._EMPLOYEES)).byTab['02'];
         assertEqual(a.days, 1, 'запись одна');
         assertEqual(a.t8, 1, 'Д8 — 8-часовой талон');
@@ -338,7 +267,8 @@ describe('Task 457 — VM: Талоны с виртуальными запися
 });
 
 // ============================================================
-// 7. VM — печать: _printCell и _printModel с авто-кодом
+// 5. VM — печать: _printCell и _printModel с материализованной
+//    правкой (эффективная запись — как у ручного кода)
 // ============================================================
 describe('Task 457 — VM: печать сетки (_printCell/_printModel)', () => {
 
@@ -349,7 +279,7 @@ describe('Task 457 — VM: печать сетки (_printCell/_printModel)', ()
     ];
     const EMP = { 'таб_номер': '02', 'ФИО': 'Белов Б. Б.', 'тип': 'сменный' };
 
-    function printHost(autoDn) {
+    function printHost() {
         return new Function('return ({' +
             methodText(WS_SRC, '_printCell') + ',' +
             methodText(WS_SRC, '_statusMeta') + ',' +
@@ -358,47 +288,35 @@ describe('Task 457 — VM: печать сетки (_printCell/_printModel)', ()
             methodText(WS_SRC, '_esc') + ',' +
             '_EVENT_CODES: [],' +
             '_STATUS_CODES: ' + JSON.stringify(CODES) + ',' +
-            '_AUTO_DN: ' + JSON.stringify(autoDn || {}) + ',' +
             '_VACATIONS: [],' +
             '_year: 2026, _month: 10,' +
             '});')();
     }
 
-    test('_printCell: авто-код — как запись (код + фон, без точки/vac)', () => {
-        const h = printHost({ '2026-10-03|02': 'д' });
-        const td = h._printCell(3, '2026-10-03', EMP, null, false);
+    test('_printCell: материализованная правка «д» — как запись (код + фон)', () => {
+        const h = printHost();
+        // правка материализации: источник «руч» у эффективной записи
+        const td = h._printCell(3, '2026-10-03', EMP,
+            { 'статус': 'д', 'источник': 'руч' }, false);
         assertTrue(td.indexOf('>д<') !== -1, 'код «д» в ячейке печати');
         assertTrue(td.indexOf('background:#dcecc9') !== -1,
             'фон — цвет справочника «д»');
-        assertEqual(td.indexOf('wsp-over'), -1, 'точки переработки нет (не запись)');
+        assertEqual(td.indexOf('wsp-over'), -1, 'точки переработки нет (переработка 0)');
         assertEqual(td.indexOf('wsp-vac'), -1, 'плана отпуска нет');
     });
 
-    test('_printCell: запись поверх — авто не вмешивается', () => {
-        const h = printHost({ '2026-10-03|02': 'д' });
-        const td = h._printCell(3, '2026-10-03', EMP,
-            { 'статус': 'Д', 'источник': 'авто' }, false);
-        assertTrue(td.indexOf('>Д<') !== -1, 'код записи');
-        assertEqual(td.indexOf('>д<'), -1, 'слой перекрыт записью');
-    });
-
-    test('_printCell: без слоя пустая ячейка остаётся пустой', () => {
-        const h = printHost({});
+    test('_printCell: без записи ячейка остаётся пустой (слой не рисует)', () => {
+        const h = printHost();
         const td = h._printCell(3, '2026-10-03', EMP, null, false);
-        assertEqual(td.indexOf('>д<'), -1, 'кода нет');
+        assertEqual(td.indexOf('>д<'), -1, 'кода нет — только записи/правки');
         assertEqual(td.indexOf('background:'), -1, 'фона нет');
-        // слой персонален: авто другого работника ячейку не занимает
-        const h2 = printHost({ '2026-10-03|03': 'д' });
-        assertEqual(h2._printCell(3, '2026-10-03', EMP, null, false)
-            .indexOf('>д<'), -1,
-            'авто чужого таб. номера не показывается');
     });
 
-    test('_printModel: авто-код в ячейках PDF/Excel + итоги строки', () => {
+    test('_printModel: правка «д» в ячейках PDF/Excel + итоги строки', () => {
         const h = new Function('return ({' +
             methodText(WS_SRC, '_printModel') + ',' +
             methodText(WS_SRC, '_buildEntryIndex') + ',' +
-            methodText(WS_SRC, '_autoDnEntries') + ',' +
+            methodText(WS_SRC, '_totalsEffectiveEntries') + ',' +
             methodText(WS_SRC, '_totalsZero') + ',' +
             methodText(WS_SRC, '_totalsAgg') + ',' +
             methodText(WS_SRC, '_codeHours') + ',' +
@@ -413,29 +331,26 @@ describe('Task 457 — VM: печать сетки (_printCell/_printModel)', ()
             '_STATUS_CODES: ' + JSON.stringify(CODES) + ',' +
             '_EMPLOYEES: [' + JSON.stringify(EMP) + '],' +
             '_ENTRIES: [{ "дата": "2026-10-06", "таб_номер": "02", "статус": "Д", "источник": "авто" }],' +
-            '_PENDING: {},' +
-            '_AUTO_DN: { "2026-10-03|02": "д" },' +
+            '_PENDING: { "2026-10-03|02": { "статус": "д", "переработка": 0,' +
+            ' "замещает": null, "комментарий": "", "часы": null } },' +
             '_VACATIONS: [],' +
             '_view: "full",' +
             '_year: 2026, _month: 10,' +
             '});')();
-        // agg — паттерн printGrid: записи + слой
-        const agg = h._totalsAgg(
-            [{ 'дата': '2026-10-06', 'таб_номер': '02', 'статус': 'Д', 'источник': 'авто' }]
-                .concat(h._autoDnEntries(2026, 10)),
+        // agg — паттерн printGrid: эффективные записи (сервер + _PENDING)
+        const agg = h._totalsAgg(h._totalsEffectiveEntries(),
             h._empTypeMap(h._EMPLOYEES));
         const model = h._printModel([EMP], agg);
         assertEqual(model.rows.length, 1, 'строка работника');
         const day3 = model.rows[0].cells[2];   // 3 октября
-        assertEqual(day3.status, 'д', 'авто-код в ячейке модели');
+        assertEqual(day3.status, 'д', 'правка «д» в ячейке модели');
         assertEqual(day3.color, '#dcecc9', 'цвет справочника «д»');
-        assertFalse(day3.overtime, 'точки переработки нет');
         assertFalse(day3.vac, 'это не план отпуска');
         const day6 = model.rows[0].cells[5];   // 6 октября — запись
         assertEqual(day6.status, 'Д', 'запись на месте');
         const day4 = model.rows[0].cells[3];   // 4 октября — пусто
-        assertEqual(day4.status, '', 'без записи и слоя — пусто');
+        assertEqual(day4.status, '', 'без записи и правки — пусто');
         assertEqual(model.rows[0].work, 1, 'явка — запись Д');
-        assertEqual(model.rows[0].overDays, 1, '«Перераб./дни» — виртуальный «д»');
+        assertEqual(model.rows[0].overDays, 1, '«Перераб./дни» — правка «д»');
     });
 });

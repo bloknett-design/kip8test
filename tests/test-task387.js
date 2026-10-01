@@ -236,7 +236,7 @@ describe('Task 387 — SRC: панель/пояснения/«Выходной»
         const rc = methodText(INDEX_SRC, '_renderCell');
         assertTrue(rc.indexOf("var isDotCode = (status === '.');") !== -1,
             'детектор «.» в _renderCell');
-        assertTrue(rc.indexOf("(showMainCode ? (status || autoDn) : (vacPlan ? 'ОТ' : ''))") !== -1,
+        assertTrue(rc.indexOf("(showMainCode ? status : (vacPlan ? 'ОТ' : ''))") !== -1,
             '«.» и пустая — чистый центр (без «·»)');
         assertTrue(rc.indexOf("if (isDotCode) classes.push('ws-dot-code');") !== -1,
             'класс-маркер ws-dot-code');
@@ -565,10 +565,10 @@ describe('Task 387 — VM: легенда/попап/select/ширина', () =>
 
 describe('Task 387 — SW', () => {
 
-    test('SW: кэш поднят до kipia-test-v681', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v681'") !== -1,
-            'CACHE_VERSION = kipia-test-v681 (Task 387 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v682') !== -1,
+    test('SW: кэш поднят до kipia-test-v682', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v682'") !== -1,
+            'CACHE_VERSION = kipia-test-v682 (Task 387 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v683') !== -1,
             'v616 ещё не существует (guard)');
     });
 });
