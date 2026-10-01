@@ -564,6 +564,10 @@ require('./test-task457.js');
 // (_autoDnMaterialize), реестр _AUTO_DN_KEYS + localStorage,
 // «в» поверх авто — «.»-надгробие (паттерн Task 453)
 require('./test-task458.js');
+// Task 459 — архив .xlsx: лист «СИЗ» — строки по АЛФАВИТУ
+// ФАМИЛИЙ колонки «Работник» (прежде — по таб. №), «Должность» —
+// БЕЗ разрядов (_ppePosNoGrade)
+require('./test-task459.js');
 require('./test-deploy-url.js');
 
 // Запускаем

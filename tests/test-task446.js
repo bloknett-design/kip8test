@@ -202,6 +202,7 @@ describe('Task 446 — VM: _workersArchiveData', () => {
         opts = opts || {};
         return new Function('return ({' +
             methodText(INDEX_SRC, '_workersArchiveData') + ',\n' +
+            methodText(INDEX_SRC, '_ppePosNoGrade') + ',\n' +
             "_isInstrType: function(t) { return t === 'инструктаж' || t === 'проверка_знаний'; }," +
             '_EMPLOYEES: ' + JSON.stringify(EMP) + ',' +
             '_INSTR_ALL: ' + JSON.stringify(opts.instrAll || []) + ',' +
@@ -283,7 +284,7 @@ describe('Task 446 — VM: _workersArchiveData', () => {
         assertEqual(d.instr[4][3], '10.01.' + NOWY, 'Сидоров: его дата');
     });
 
-    test('отпуска/СИЗ/мероприятия: сортировки прежние, данные на местах', () => {
+    test('отпуска/СИЗ/мероприятия: сортировки на местах (СИЗ — Task 459 по фамилиям)', () => {
         const d = dataHost({
             vacYears: {
                 [NOWY - 1]: [{ id: 11, 'таб_номер': '031', часть: 1,
@@ -320,10 +321,12 @@ describe('Task 446 — VM: _workersArchiveData', () => {
         assertEqual(d.vacations[1][0], 'Иванов И. И.', 'отпуска: первый Иванов');
         assertEqual(d.vacations[2][0], 'Сидоров С. С.', 'отпуска: второй Сидоров');
         assertEqual(d.vacations[2][3], '11.01.' + NOWY, 'отпуска: дата окончания [3]');
-        // СИЗ: сортировка по таб. № (017 → 031) — прежняя
-        assertEqual(d.ppe[1][0], 'Иванов И. И.', 'СИЗ: первый — таб 017');
+        // СИЗ: сортировка по ФАМИЛИЯМ (Task 459): Иванов → Сидоров
+        assertEqual(d.ppe[1][0], 'Иванов И. И.',
+            'СИЗ: первый — Иванов (по фамилии, Task 459)');
         assertEqual(d.ppe[1][4], '01.06.' + (NOWY - 1), 'СИЗ: изготовление [4]');
-        assertEqual(d.ppe[2][0], 'Сидоров С. С.', 'СИЗ: второй — таб 031 (фолбэк ФИО)');
+        assertEqual(d.ppe[2][0], 'Сидоров С. С.',
+            'СИЗ: второй — Сидоров (фолбэк ФИО)');
         // мероприятия: сортировка по ДАТЕ — прежняя (Сидоров 01.09 раньше)
         assertEqual(d.events[1][0], 'Сидоров С. С.', 'мероприятия: по дате, не по фамилии');
         assertEqual(d.events[2][0], 'Иванов И. И.', 'мероприятия: вторая — Иванов');
@@ -483,6 +486,7 @@ describe('Task 446 — VM: _buildArchiveWorkbook (зебра + структур�
         return new Function('return ({' +
             methodText(INDEX_SRC, '_workersArchiveData') + ',\n' +
             methodText(INDEX_SRC, '_buildArchiveWorkbook') + ',\n' +
+            methodText(INDEX_SRC, '_ppePosNoGrade') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsZip') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsBytes') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsCrc32') + ',\n' +
@@ -619,7 +623,7 @@ describe('Task 446 — VM: _buildArchiveWorkbook (зебра + структур�
             'колонок id/«Таб. №» нет');
         assertTrue(txt.indexOf('<t>Работник</t>') !== -1,
             'первая колонка — «Работник»');
-        // сортировка по таб.: 017 Иванов (строка 2) → 031 Сидоров (строка 3)
+        // Task 459: сортировка по фамилиям — Иванов (строка 2) → Сидоров (строка 3)
         // Иванов — первая группа (без заливки), Сидоров — вторая (s="2")
         assertTrue(txt.indexOf('<c r="A2" t="inlineStr">') !== -1,
             'Иванов: без s="2"');
@@ -667,16 +671,16 @@ describe('Task 446 — VM: _buildArchiveWorkbook (зебра + структур�
 // ============================================================
 describe('Task 446 — SW и регресс', () => {
 
-    test('SW: кэш поднят до kipia-test-v682 (Task 446)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v682'") !== -1,
-            'CACHE_VERSION = kipia-test-v682');
+    test('SW: кэш поднят до kipia-test-v683 (Task 446)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v683'") !== -1,
+            'CACHE_VERSION = kipia-test-v683');
         assertTrue(SW_SRC.indexOf('Task 446') !== -1,
             'комментарий Task 446 в истории версий');
     });
 
     test('guard: двойного бампа не было', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v683') === -1,
-            'kipia-test-v683 не существует');
+        assertTrue(SW_SRC.indexOf('kipia-test-v684') === -1,
+            'kipia-test-v684 не существует');
     });
 
     test('регресс: id/«Таб. №» не вернулись в 4 листа архива', () => {

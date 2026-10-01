@@ -326,6 +326,7 @@ describe('Task 445 — VM: _workersArchiveData (годовые фильтры)',
         opts = opts || {};
         return new Function('return ({' +
             methodText(INDEX_SRC, '_workersArchiveData') + ',\n' +
+            methodText(INDEX_SRC, '_ppePosNoGrade') + ',\n' +
             "_isInstrType: function(t) { return t === 'инструктаж' || t === 'проверка_знаний'; }," +
             '_EMPLOYEES: ' + JSON.stringify(EMP) + ',' +
             '_INSTR_ALL: ' + JSON.stringify(opts.instrAll || []) + ',' +
@@ -476,9 +477,12 @@ describe('Task 445 — VM: _workersArchiveData (годовые фильтры)',
             ]
         })._workersArchiveData();
         assertEqual(d.ppe.length, 3, 'шапка + 2 СИЗ');
-        // сортировка по таб. №: 017 (очки) → 031 (каска)
-        assertEqual(d.ppe[1][2], 'Очки закрытые', 'первый — таб 017');
-        assertEqual(d.ppe[2][2], 'Каска защитная', 'второй — таб 031');
+        // Task 459: сортировка по ФАМИЛИЯМ — Иванов (очки) →
+        // Сидоров (каска); таб. № больше не первичный ключ
+        assertEqual(d.ppe[1][2], 'Очки закрытые',
+            'первый — Иванов (по фамилии, Task 459)');
+        assertEqual(d.ppe[2][2], 'Каска защитная',
+            'второй — Сидоров (по фамилии)');
         const row = d.ppe[2];
         assertEqual(row[0], 'Сидоров С. С.',
             'пустое поле «работник» — ФИО из справочника (фолбэк)');
@@ -591,16 +595,16 @@ describe('Task 445 — VM: saveWorkersArchive (ленивые годы)', () => 
 // ============================================================
 describe('Task 445 — SW и регресс', () => {
 
-    test('SW: кэш поднят до kipia-test-v682 (Task 445)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v682'") !== -1,
-            'CACHE_VERSION = kipia-test-v682');
+    test('SW: кэш поднят до kipia-test-v683 (Task 445)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v683'") !== -1,
+            'CACHE_VERSION = kipia-test-v683');
         assertTrue(SW_SRC.indexOf('Task 445') !== -1,
             'комментарий Task 445 в истории версий');
     });
 
     test('guard: двойного бампа не было', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v683') === -1,
-            'kipia-test-v683 не существует');
+        assertTrue(SW_SRC.indexOf('kipia-test-v684') === -1,
+            'kipia-test-v684 не существует');
     });
 
     test('регресс: старый листовой Excel не вернулся', () => {
