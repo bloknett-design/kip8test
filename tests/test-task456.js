@@ -14,13 +14,16 @@
 //     по времени суток) → очерёдность (последний «д»/«н» дальше
 //     от даты расстановки — первый);
 //   • _AUTO_DN — кэш слоя, пересчитывается каждым _renderGrid;
-//   • _renderCell — код «д»/«н» как основной (фон справочника) +
-//     пунктирная рамка ws-auto-dn (индиго — отличима от ручных
-//     ws-manual-dn и правок ws-pending);
-//   • попап ячейки — подсказка «Авто: … (замещение отпуска, в
-//     записи не сохранён)»;
-//   • слой НЕ пишется в «Записи_графика» и НЕ входит в Итоги
-//     учёта/Талоны/печать (записи — источник правды отчётов).
+//   • _renderCell — код «д»/«н» как основной (фон справочника);
+//     Task 457: отображение КАК РУЧНОЙ код — рамка ws-manual-dn
+//     + метка ws-source-manual, ws-auto-dn — инертный маркер;
+//   • попап ячейки — подсказка «Авто: … (замещение отпуска,
+//     учитывается в Итогах/Талонах/печати)» + активная строка
+//     «д»/«н» (Task 457);
+//   • слой НЕ пишется в «Записи_графика»; Task 457: ВХОДИТ в
+//     Итоги учёта/Талоны/печать виртуальными записями
+//     _autoDnEntries (агрегаторы остаются чистыми — слой
+//     подмешивается на местах вызова).
 // ============================================================
 
 const fs = require('fs');
@@ -150,10 +153,14 @@ describe('Task 456 — SRC: рендер сетки/ячейки/попап + CS
             'кэш производного слоя в состоянии WorkSchedule');
     });
 
-    test('_renderCell: авто-код — основной контент + фон справочника + рамка', () => {
+    test('_renderCell: авто-код — как РУЧНОЙ (рамка + метка + маркер)', () => {
         const fn = methodText(WS_SRC, '_renderCell');
         assertTrue(fn.indexOf("classes.push('ws-auto-dn');") !== -1,
-            'класс ws-auto-dn на ячейке авто-кода');
+            'класс ws-auto-dn на ячейке авто-кода (инертный маркер слоя, Task 457)');
+        assertTrue(fn.indexOf("classes.push('ws-manual-dn');") !== -1,
+            'рамка ws-manual-dn — как у ручной записи «д»/«н» (Task 457: отображение как ручные)');
+        assertTrue(fn.indexOf("classes.push('ws-source-manual');") !== -1,
+            'метка источника ws-source-manual — полный паритет с ручной записью');
         assertTrue(fn.indexOf("(showMainCode ? (status || autoDn) :") !== -1,
             'код «д»/«н» выводится в центре пустой ячейки');
         assertTrue(fn.indexOf('(this._AUTO_DN || {})') !== -1,
@@ -162,58 +169,85 @@ describe('Task 456 — SRC: рендер сетки/ячейки/попап + CS
             'записи/правки слой не перекрывает');
     });
 
-    test('попап ячейки: подсказка об авто-коде (в записи не сохранён)', () => {
+    test('попап ячейки: подсказка об авто-коде + активная строка', () => {
         const fn = methodText(WS_SRC, '_renderCellPopup');
         assertTrue(fn.indexOf('ws-popup-auto') !== -1,
             'строка-подсказка .ws-popup-auto');
         assertTrue(fn.indexOf('замещение отпуска') !== -1 &&
-                   fn.indexOf('в записи не сохранён') !== -1,
-            'текст поясняет природу авто-кода');
+                   fn.indexOf('учитывается в Итогах/Талонах/печати') !== -1,
+            'текст поясняет природу авто-кода и учёт в отчётах (Task 457)');
+        assertTrue(fn.indexOf('current = autoCode;') !== -1,
+            'строка «д»/«н» подсвечивается активной — как у ручной записи (Task 457)');
     });
 
-    test('CSS: рамка авто ws-auto-dn (индиго-пунктир) + строка попапа', () => {
-        assertTrue(INDEX_SRC.indexOf('.ws-grid tbody td.ws-cell.ws-auto-dn {') !== -1,
-            'правило .ws-auto-dn');
-        assertTrue(INDEX_SRC.indexOf('.ws-grid tbody td.ws-cell.ws-auto-dn {\n' +
-                     '        outline: 2px dashed rgba(121, 134, 203, 0.95);') !== -1,
-            'пунктирная рамка индиго — отличима от ws-pending/ws-vac-plan');
+    test('CSS: стили авто ws-auto-dn сняты (Task 457 — как ручные)', () => {
+        assertTrue(INDEX_SRC.indexOf('.ws-grid tbody td.ws-cell.ws-auto-dn {') === -1,
+            'правила .ws-auto-dn удалены — класс инертный маркер');
+        assertTrue(INDEX_SRC.indexOf('outline: 2px dashed rgba(121, 134, 203') === -1,
+            'индиго-пунктир снят');
+        assertTrue(INDEX_SRC.indexOf('.ws-grid tbody td.ws-cell.ws-manual-dn::before {') !== -1,
+            'рамка ручных д/н на месте — авто рендерится ею');
         assertTrue(INDEX_SRC.indexOf('.ws-popup-auto {') !== -1,
             'правило .ws-popup-auto');
     });
 });
 
 // ============================================================
-// 3. SRC — изоляция слоя: НЕ записи, НЕ Итоги, НЕ Талоны, НЕ печать
+// 3. SRC — Task 457: слой ВХОДИТ в Итоги/Талоны/печать через
+//    виртуальные записи _autoDnEntries (агрегаторы чистые);
+//    в «Записи_графика» по-прежнему НЕ пишется
 // ============================================================
-describe('Task 456 — SRC: производный слой НЕ входит в отчёты/печать', () => {
+describe('Task 456/457 — SRC: слой в отчётах, записи не создаются', () => {
 
-    test('_printCell (печать шахматки) слой не показывает', () => {
+    test('_printCell (печать шахматки) показывает код слоя', () => {
         const fn = methodText(WS_SRC, '_printCell');
-        assertEqual(fn.indexOf('_AUTO_DN'), -1,
-            'печать — по записям (прецедент Task 442: экранные слои в печати не показываются)');
-        assertEqual(fn.indexOf('ws-auto-dn'), -1,
-            'рамка авто — только экранный признак');
+        assertTrue(fn.indexOf("(this._AUTO_DN || {})") !== -1,
+            'Task 457: пустой ячейке с авто-кодом строится псевдо-запись — код в печати');
+        assertEqual(fn.indexOf('wsp-ev'), -1,
+            'бейджей по-прежнему нет (Task 442)');
     });
 
-    test('_totalsAgg (Итоги учёта) авто-«д»/«н» не считает', () => {
+    test('_totalsAgg остаётся ЧИСТЫМ — слой подмешивается на местах вызова', () => {
         const fn = methodText(WS_SRC, '_totalsAgg');
         assertEqual(fn.indexOf('_AUTO_DN'), -1,
-            'переработка — только по записям (Task 322)');
+            'агрегатор считает записи; авто-слой добавляют вызывающие (Task 457)');
+        assertEqual(fn.indexOf('_autoDnEntries'), -1,
+            'классификация кодов не меняется (Task 322)');
     });
 
-    test('_talonsRows (Талоны) авто-«д»/«н» не учитывает', () => {
+    test('_talonsRows (Талоны) учитывает слой (Task 457)', () => {
         const fn = methodText(WS_SRC, '_talonsRows');
-        assertEqual(fn.indexOf('_AUTO_DN'), -1,
-            'талоны — по записям сетки (Task 447–455)');
+        assertTrue(fn.indexOf('this._autoDnEntries(mi.y, mi.m)') !== -1,
+            'виртуальные записи слоя в агрегации талонов');
+        assertTrue(fn.indexOf("typeof this._autoDnEntries === 'function'") !== -1,
+            'гвард typeof — старые VM-харнессы без метода не падают');
+    });
+
+    test('Итоги/печать: _renderTotalsMonth и printGrid подмешивают слой', () => {
+        const tm = methodText(WS_SRC, '_renderTotalsMonth');
+        assertTrue(tm.indexOf('this._autoDnEntries(this._year, this._month)') !== -1,
+            'Итоги месяца: виртуальные записи — переработка over/overDays');
+        const pg = methodText(WS_SRC, 'printGrid');
+        assertTrue(pg.indexOf('this._autoDnEntries(this._year, this._month)') !== -1,
+            'печать: тот же agg (колонка «Перераб./дни», PDF/Excel)');
+    });
+
+    test('записи НЕ создаются: слой не попадает в saveAll/_applyCellStatus', () => {
+        const sa = methodText(WS_SRC, 'saveAll');
+        assertEqual(sa.indexOf('_autoDnEntries'), -1,
+            '«Сохранить» не отправляет слой на сервер');
+        const ac = methodText(WS_SRC, '_applyCellStatus');
+        assertEqual(ac.indexOf('_autoDnEntries'), -1,
+            'правки ячеек работают с записями/_PENDING, слой — только чтение');
     });
 });
 
 // ============================================================
 // 4. SRC — SW
 // ============================================================
-describe('Task 456 — SRC: SW kipia-test-v680', () => {
-    test('CACHE_VERSION = kipia-test-v680, прежней v679 нет', () => {
-        assertTrue(SW_SRC.indexOf("'kipia-test-v680'") !== -1,
+describe('Task 456 — SRC: SW kipia-test-v681', () => {
+    test('CACHE_VERSION = kipia-test-v681, прежней v679 нет', () => {
+        assertTrue(SW_SRC.indexOf("'kipia-test-v681'") !== -1,
             'новая версия SW v680');
         assertEqual(SW_SRC.indexOf("'kipia-test-v679'"), -1,
             'старой версии v679 не осталось');

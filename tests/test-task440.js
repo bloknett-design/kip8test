@@ -35,7 +35,7 @@
 //   VM (карточка): «Отпуска · год» + навигатор fam 2, записи
 //     года пула; попап — год шахматки без навигатора.
 //   VM (Excel): стили indent ×2, count 9+colors, сетка s9.
-//   SW: kipia-test-v680 (guard v665).
+//   SW: kipia-test-v681 (guard v665).
 // ============================================================
 
 const fs = require('fs');
@@ -651,10 +651,10 @@ describe('Task 440 — VM: Excel (зазор кодов отступом)', () =
 // ============================================================
 // 8. SW — версия кэша
 // ============================================================
-describe('Task 440 — SW: версия kipia-test-v680', () => {
-    test('CACHE_VERSION = kipia-test-v680, прежней v663 нет', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v680'") !== -1,
-            'CACHE_VERSION = kipia-test-v680');
+describe('Task 440 — SW: версия kipia-test-v681', () => {
+    test('CACHE_VERSION = kipia-test-v681, прежней v663 нет', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v681'") !== -1,
+            'CACHE_VERSION = kipia-test-v681');
         assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v663'") !== -1,
             'v663 как активная версия больше не существует');
     });
