@@ -358,7 +358,7 @@ describe('Task 448 — VM: группы, часы, итоги, подписи', 
                 { 'дата': NOWY + '-' + MM + '-03', 'таб_номер': '024', 'статус': 'Д' },
                 { 'дата': NOWY + '-' + MM + '-04', 'таб_номер': '024', 'статус': 'Н' },
                 { 'дата': NOWY + '-' + MM + '-05', 'таб_номер': '024', 'статус': 'Н' }]) + ',' +
-            '_PENDING: {}, _TALONS_EDIT: {}, _TALONS_CACHE: null,' +
+            '_PENDING: {}, _TALONS_EDIT: {},' +
             '_year: ' + NOWY + ', _month: ' + NOWM + ',' +
             '_viewLevel: \'edit\', _canEdit: true,' +
             '_STATUS_CODES: [],' +
@@ -473,11 +473,11 @@ describe('Task 448 — VM: группы, часы, итоги, подписи', 
 // 4. SW — версия кэша
 // ============================================================
 describe('Task 448 — SW', () => {
-    test('SW: кэш поднят до kipia-test-v678 (Task 448)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v678'") !== -1,
-            'CACHE_VERSION = kipia-test-v678');
-        assertTrue(SW_SRC.indexOf('kipia-test-v679') === -1,
-            'kipia-test-v679 не существует');
+    test('SW: кэш поднят до kipia-test-v679 (Task 448)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v679'") !== -1,
+            'CACHE_VERSION = kipia-test-v679');
+        assertTrue(SW_SRC.indexOf('kipia-test-v680') === -1,
+            'kipia-test-v680 не существует');
         assertTrue(SW_SRC.indexOf('Task 448') !== -1,
             'комментарий Task 448 в истории версий');
     });

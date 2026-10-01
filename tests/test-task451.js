@@ -314,7 +314,6 @@ describe('Task 451 — VM: _talonsRows', () => {
             '_ENTRIES: ' + JSON.stringify(opts.entries || []) + ',' +
             '_PENDING: ' + JSON.stringify(opts.pending || {}) + ',' +
             '_TALONS_EDIT: ' + JSON.stringify(opts.edits || {}) + ',' +
-            '_TALONS_CACHE: ' + JSON.stringify(opts.cache === undefined ? null : opts.cache) + ',' +
             '_year: ' + NOWY + ', _month: ' + NOWM + ',' +
             '_STATUS_CODES: [],' +
             '});')();
@@ -456,7 +455,7 @@ describe('Task 451 — VM: onTalonsInput по категориям', () => {
                 { 'дата': NOWY + '-' + MM + '-02', 'таб_номер': '024', 'статус': 'Н' },
                 { 'дата': NOWY + '-' + MM + '-03', 'таб_номер': '024', 'статус': 'Н' }]) + ',' +
             '_PENDING: {},' +
-            '_TALONS_EDIT: {}, _TALONS_CACHE: null,' +
+            '_TALONS_EDIT: {},' +
             '_year: ' + NOWY + ', _month: ' + NOWM + ',' +
             '_STATUS_CODES: [],' +
             '});')(dom);
@@ -610,7 +609,6 @@ describe('Task 451 — VM: печатная форма', () => {
             '_ENTRIES: ' + JSON.stringify(entries) + ',' +
             '_PENDING: {},' +
             '_TALONS_EDIT: ' + JSON.stringify(edits || {}) + ',' +
-            '_TALONS_CACHE: null,' +
             '_year: ' + NOWY + ', _month: ' + NOWM + ',' +
             '_viewLevel: \'edit\', _canEdit: true,' +
             '_STATUS_CODES: [],' +
@@ -743,11 +741,11 @@ describe('Task 451 — VM: печатная форма', () => {
 // 7. SW — версия кэша
 // ============================================================
 describe('Task 451 — SW', () => {
-    test('SW: кэш поднят до kipia-test-v678 (Task 451)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v678'") !== -1,
-            'CACHE_VERSION = kipia-test-v678');
-        assertTrue(SW_SRC.indexOf('kipia-test-v679') === -1,
-            'kipia-test-v679 не существует');
+    test('SW: кэш поднят до kipia-test-v679 (Task 451)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v679'") !== -1,
+            'CACHE_VERSION = kipia-test-v679');
+        assertTrue(SW_SRC.indexOf('kipia-test-v680') === -1,
+            'kipia-test-v680 не существует');
         assertTrue(SW_SRC.indexOf('Task 451') !== -1,
             'комментарий Task 451 в истории версий');
     });

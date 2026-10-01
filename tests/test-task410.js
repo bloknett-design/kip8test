@@ -224,7 +224,7 @@ describe('Task 410 — VM: применение режима к разметке
 describe('Task 410 — SW', () => {
 
     test('версия кэша поднята (v637)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v678') !== -1,
-            'CACHE_VERSION = kipia-test-v678');
+        assertTrue(SW_SRC.indexOf('kipia-test-v679') !== -1,
+            'CACHE_VERSION = kipia-test-v679');
     });
 });

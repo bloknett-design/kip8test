@@ -231,7 +231,7 @@ describe('Task 454 — VM: colgroup печатной формы', () => {
             '_esc: function(s) { return String(s); },' +
             '_EMPLOYEES: ' + JSON.stringify(employees) + ',' +
             '_ENTRIES: ' + JSON.stringify(entries) + ',' +
-            '_PENDING: {}, _TALONS_EDIT: {}, _TALONS_CACHE: null,' +
+            '_PENDING: {}, _TALONS_EDIT: {},' +
             '_year: ' + NOWY + ', _month: ' + NOWM + ',' +
             '_STATUS_CODES: [],' +
             '});')(docStub);
@@ -321,11 +321,11 @@ describe('Task 454 — VM: colgroup печатной формы', () => {
 // 5. SW — версия кэша
 // ============================================================
 describe('Task 454 — SW', () => {
-    test('SW: кэш поднят до kipia-test-v678 (Task 454)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v678'") !== -1,
-            'CACHE_VERSION = kipia-test-v678');
-        assertTrue(SW_SRC.indexOf('kipia-test-v679') === -1,
-            'kipia-test-v679 не существует');
+    test('SW: кэш поднят до kipia-test-v679 (Task 454)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v679'") !== -1,
+            'CACHE_VERSION = kipia-test-v679');
+        assertTrue(SW_SRC.indexOf('kipia-test-v680') === -1,
+            'kipia-test-v680 не существует');
         assertTrue(SW_SRC.indexOf('Task 454') !== -1,
             'комментарий Task 454 в истории версий');
     });

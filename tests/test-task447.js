@@ -26,8 +26,9 @@
 //     (серверные + _PENDING, фильтр по YYYY-MM); талоны — ПО
 //     ДНЯМ: 7,2/8 ч → 8ч, 12 ч → 12ч (Task 452), ручная правка —
 //     карта _TALONS_EDIT (память сессии, архив не нужен);
-//   • шахматка на другом месяце — записи текущего месяца лениво
-//     тянет _talonsFetchMonth (кэш _TALONS_CACHE);
+//   • месяц отчёта — МЕСЯЦ ОТКРЫТОЙ ШАХМАТКИ (Task 455;
+//     подтяжка _talonsFetchMonth и кэш _TALONS_CACHE удалены,
+//     записи — всегда живая сетка);
 //   • печать строго по форме: #wsPrintSheet.wst-sheet + инжект
 //     @page A4 portrait (перекрывает альбомную графика) +
 //     предпросмотр (Только «Печать»/«Отмена», без PDF/Excel).
@@ -177,14 +178,12 @@ describe('Task 447 — SRC: модель/правки', () => {
 
     test('_talonsRows: источник месяца + предзаполнение по явкам', () => {
         const fn = stripComments(methodText(WS_SRC, '_talonsRows'));
-        assertTrue(fn.indexOf('this._year === mi.y && this._month === mi.m') !== -1 &&
-                   fn.indexOf('entries = this._ENTRIES;') !== -1,
-            'сетка на текущем месяце — её живые записи');
-        assertTrue(fn.indexOf('this._TALONS_CACHE') !== -1 &&
-                   fn.indexOf('entries = this._TALONS_CACHE.entries;') !== -1,
-            'иначе — кэш подтянутого месяца');
-        assertTrue(fn.indexOf('ready: !!entries') !== -1,
-            'готовность модели — данные месяца есть');
+        assertTrue(fn.indexOf('var entries = this._ENTRIES;') !== -1,
+            'записи — ВСЕГДА живая сетка (Task 455: месяц отчёта = месяцу шахматки)');
+        assertTrue(fn.indexOf('this._TALONS_CACHE') === -1,
+            'кэш подтянутого месяца удалён (Task 455 — не нужен)');
+        assertTrue(fn.indexOf('ready') === -1,
+            'мёртвое поле ready убрано из модели (Task 455)');
         assertTrue(fn.indexOf('var days = a ? a.days : 0;') !== -1,
             'дни явки — счётчик дней _talonsAgg (с переработкой — Task 452)');
         assertTrue(fn.indexOf('var agg = this._talonsAgg(eff,') !== -1,
@@ -377,12 +376,22 @@ describe('Task 447 — VM: _talonsMonthInfo / _talonsEffectiveEntries', () => {
             '});')();
     }
 
-    test('_talonsMonthInfo: текущий календарный месяц', () => {
+    test('_talonsMonthInfo: МЕСЯЦ ШАХМАТКИ; без сетки — текущий (Task 455)', () => {
         const h = baseHost();
+        // сетка не инициализирована (deep link до init) — фолбэк
+        const mi0 = h._talonsMonthInfo();
+        assertEqual(mi0.y, NOWY, 'фолбэк: год — текущий');
+        assertEqual(mi0.m, NOWM, 'фолбэк: месяц — текущий');
+        assertEqual(mi0.name, MONTH_NAMES[NOWM - 1],
+            'фолбэк: имя месяца (нижний регистр)');
+        // сетка на ПРОШЛОМ месяце — отчёт следует за ней
+        const pm = (NOWM > 1) ? (NOWM - 1) : 12;
+        const pmY = (NOWM > 1) ? NOWY : NOWY - 1;
+        h._year = pmY; h._month = pm;
         const mi = h._talonsMonthInfo();
-        assertEqual(mi.y, NOWY, 'год — текущий');
-        assertEqual(mi.m, NOWM, 'месяц — текущий');
-        assertEqual(mi.name, MONTH_NAMES[NOWM - 1], 'имя месяца (нижний регистр)');
+        assertEqual(mi.y, pmY, 'год — месяц сетки (переход года)');
+        assertEqual(mi.m, pm, 'месяц — месяц сетки');
+        assertEqual(mi.name, MONTH_NAMES[pm - 1], 'имя — месяц сетки');
     });
 
     test('правки _PENDING накладываются, __delete исключает день', () => {
@@ -451,7 +460,6 @@ describe('Task 447 — VM: _talonsRows', () => {
             '_ENTRIES: ' + JSON.stringify(opts.entries || []) + ',' +
             '_PENDING: ' + JSON.stringify(opts.pending || {}) + ',' +
             '_TALONS_EDIT: ' + JSON.stringify(opts.edits || {}) + ',' +
-            '_TALONS_CACHE: ' + JSON.stringify(opts.cache === undefined ? null : opts.cache) + ',' +
             '_year: ' + (opts.year !== undefined ? opts.year : 'null') + ',' +
             '_month: ' + (opts.month !== undefined ? opts.month : 'null') + ',' +
             '_STATUS_CODES: [],' +
@@ -467,7 +475,6 @@ describe('Task 447 — VM: _talonsRows', () => {
         ];
         const h = rowsHost({ entries: entries, year: NOWY, month: NOWM });
         const m = h._talonsRows();
-        assertTrue(m.ready, 'готово — записи сетки');
         assertEqual(m.rows.length, 2, 'строка на каждого работника');
         // порядок — ПО АЛФАВИТУ фамилий (Иванов < Сидоров)
         assertEqual(m.rows[0].emp['ФИО'], 'Иванов И. И.', 'первый — Иванов (алфавит)');
@@ -513,23 +520,22 @@ describe('Task 447 — VM: _talonsRows', () => {
         assertEqual(m.totals.edited, 1, 'одна правка');
     });
 
-    test('другой месяц сетки: кэш подтянутого месяца / ready=false без кэша', () => {
-        // сетка на ПРОШЛОМ месяце, кэша нет — модель не готова
+    test('другой месяц сетки: отчёт по НЕМУ из живых записей (Task 455)', () => {
+        // сетка на ПРОШЛОМ месяце с записями — модель строится по
+        // записям СЕТКИ (кэш/подтяжка удалены, ready в модели нет)
         const pm = (NOWM > 1) ? (NOWM - 1) : 12;
-        const h = rowsHost({ year: NOWY, month: pm, entries: [] });
-        const m1 = h._talonsRows();
-        assertFalse(m1.ready, 'без кэша — not ready (страница покажет загрузку)');
-        assertEqual(m1.rows.length, 0, 'строк нет');
-        // кэш текущего месяца — модель готова из кэша
-        h._TALONS_CACHE = { year: NOWY, month: NOWM, entries: [
-            { 'дата': D(MM + '-01'), 'таб_номер': '017', 'статус': 'Д' }
-        ] };
-        const m2 = h._talonsRows();
-        assertTrue(m2.ready, 'кэш даёт готовность');
-        assertEqual(m2.rows[0].days, 1, 'явка из кэша (1 день)');
-        assertEqual(m2.rows[0].t12, 1,
+        const pmY = (NOWM > 1) ? NOWY : NOWY - 1;
+        const pmm = (pm < 10 ? '0' + pm : '' + pm);
+        const h = rowsHost({ year: pmY, month: pm, entries: [
+            { 'дата': pmY + '-' + pmm + '-01', 'таб_номер': '017', 'статус': 'Д' }
+        ] });
+        const m = h._talonsRows();
+        assertEqual(m.month.y, pmY, 'модель: год — месяц сетки');
+        assertEqual(m.month.m, pm, 'модель: месяц — месяц сетки');
+        assertEqual(m.rows[0].days, 1, 'явка из записей сетки (1 день)');
+        assertEqual(m.rows[0].t12, 1,
             'смена 12 ч — 12ч талон даже у дневного (Task 452)');
-        assertEqual(m2.rows[0].t8, 0, '8ч талоны — 0 (день 12-часовой)');
+        assertEqual(m.rows[0].t8, 0, '8ч талоны — 0 (день 12-часовой)');
     });
 
     test('работник без записей — 0 явок, строка в отчёте', () => {
@@ -601,7 +607,7 @@ describe('Task 447 — VM: onTalonsInput / talonsResetEdits', () => {
                 { 'дата': NOWY + '-' + MM + '-02', 'таб_номер': '017', 'статус': 'Д8' },
                 { 'дата': NOWY + '-' + MM + '-03', 'таб_номер': '017', 'статус': 'Д8' }]) + ',' +
             '_PENDING: {},' +
-            '_TALONS_EDIT: {}, _TALONS_CACHE: null,' +
+            '_TALONS_EDIT: {},' +
             '_year: ' + NOWY + ', _month: ' + NOWM + ',' +
             '_viewLevel: "edit", _canEdit: true,' +
             '_STATUS_CODES: [],' +
@@ -756,7 +762,6 @@ describe('Task 447 — VM: _renderTalonsPage / onTalonsPageOpen', () => {
             methodText(WS_SRC, 'onTalonsPageOpen') + ',\n' +
             methodText(WS_SRC, 'openTalonsPage') + ',\n' +
             methodText(WS_SRC, 'talonsRefresh') + ',\n' +
-            methodText(WS_SRC, '_talonsFetchMonth') + ',\n' +
             '_codeHours: function(c) { return ({ "Д": 12, "Н": 12, "Д8": 8 })[c] || 0; },' +
             '_overHours: function() { return 0; },' +
             '_statusMeta: function() { return null; },' +
@@ -772,14 +777,13 @@ describe('Task 447 — VM: _renderTalonsPage / onTalonsPageOpen', () => {
             '_ENTRIES: ' + JSON.stringify(opts.entries || [
                 { 'дата': NOWY + '-' + MM + '-01', 'таб_номер': '017', 'статус': 'Д8' },
                 { 'дата': NOWY + '-' + MM + '-02', 'таб_номер': '017', 'статус': 'Д8' }]) + ',' +
-            '_PENDING: {}, _TALONS_EDIT: {}, _TALONS_CACHE: null,' +
+            '_PENDING: {}, _TALONS_EDIT: {},' +
             '_year: ' + (opts.year !== undefined ? opts.year : NOWY) + ',' +
             '_month: ' + (opts.month !== undefined ? opts.month : NOWM) + ',' +
             '_viewLevel: ' + JSON.stringify(opts.viewLevel !== undefined ? opts.viewLevel : 'edit') + ',' +
             '_canEdit: ' + (opts.viewLevel === 'edit') + ',' +
             '_initialized: ' + (opts.initialized !== undefined ? opts.initialized : true) + ',' +
             '_talonsGridReady: ' + (opts.gridReady !== undefined ? opts.gridReady : true) + ',' +
-            '_talonsLoading: false,' +
             '_STATUS_CODES: [],' +
             '});')(undefined, { addEventListener: function() {} },
                    dom.document, nav);
@@ -793,7 +797,7 @@ describe('Task 447 — VM: _renderTalonsPage / onTalonsPageOpen', () => {
         assertTrue(html.indexOf('Отчёт по талонам питания — ') !== -1,
             'шапка отчёта');
         assertTrue(html.indexOf(MONTH_NAMES[NOWM - 1]) !== -1,
-            'текущий месяц в шапке');
+            'месяц сетки в шапке (Task 455 — сетка задаёт месяц)');
         assertTrue(html.indexOf('Дней явки') !== -1,
             'колонка дней явки осталась (источник авто-подсчёта)');
         assertTrue(html.indexOf('Выдано 12 ч. талонов') !== -1 &&
@@ -846,54 +850,33 @@ describe('Task 447 — VM: _renderTalonsPage / onTalonsPageOpen', () => {
             'индикатор загрузки');
     });
 
-    test('другой месяц сетки без кэша — загрузка + подтяжка listEntries', () => {
+    test('другой месяц сетки — отчёт сразу из живых записей (Task 455)', () => {
         const dom = pageDom(true);
         const pm = (NOWM > 1) ? (NOWM - 1) : 12;
-        const h = pageHost(dom, null, { year: NOWY, month: pm });
+        const pmY = (NOWM > 1) ? NOWY : NOWY - 1;
+        const pmm = (pm < 10 ? '0' + pm : '' + pm);
+        const pmName = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь',
+                        'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь',
+                        'декабрь'][pm - 1];
+        const h = pageHost(dom, null, {
+            year: pmY, month: pm,
+            entries: [{ 'дата': pmY + '-' + pmm + '-01',
+                        'таб_номер': '017', 'статус': 'Д' }]
+        });
         let apiCalls = [];
         h._api = function(a, p) {
             apiCalls.push([a, p]);
-            return Promise.resolve({ entries: [
-                { 'дата': NOWY + '-' + MM + '-01', 'таб_номер': '017', 'статус': 'Д' }
-            ] });
+            return Promise.resolve({ entries: [] });
         };
         h._renderTalonsPage();
-        assertTrue(dom.body.innerHTML.indexOf('flow-loading') !== -1,
-            'загрузка месяца');
-        assertEqual(apiCalls.length, 1, 'listEntries вызван');
-        assertEqual(apiCalls[0][0], 'workSchedule.listEntries', 'правильный action');
-        assertEqual(apiCalls[0][1].year, NOWY, 'год — текущий');
-        assertEqual(apiCalls[0][1].month, NOWM, 'месяц — текущий');
-    });
-
-    test('_talonsFetchMonth: кэш заполнен → повторный рендер активной страницы', (t) => {
-        const dom = pageDom(true);
-        const h = pageHost(dom, null, { year: NOWY, month: 1, entries: [] });
-        h._year = NOWY; h._month = 1; // сетка на январе (не текущий)
-        h._TALONS_CACHE = null;
-        let resolveApi;
-        h._api = function() {
-            return new Promise(function(res) { resolveApi = res; });
-        };
-        h._renderTalonsPage();
-        resolveApi({ entries: [
-            { 'дата': NOWY + '-' + MM + '-01', 'таб_номер': '017', 'статус': 'Д' }
-        ] });
-        // только МИКРОзадачи: макрозадача (setTimeout) разбудила бы
-        // посторонние таймеры других тест-файлов (анимации моков)
-        var steps = [];
-        for (var si = 0; si < 12; si++) {
-            steps.push(function() { return Promise.resolve(); });
-        }
-        var chain = Promise.resolve();
-        steps.forEach(function(st) { chain = chain.then(st); });
-        return chain.then(function() {
-            assertEqual(h._TALONS_CACHE.year, NOWY, 'кэш: год');
-            assertEqual(h._TALONS_CACHE.month, NOWM, 'кэш: месяц');
-            assertEqual(h._TALONS_CACHE.entries.length, 1, 'кэш: записи');
-            assertTrue(dom.body.innerHTML.indexOf('value="1"') !== -1,
-                'после подтяжки талон = 1 явке (Д — 12ч, 1 день)');
-        });
+        assertEqual(apiCalls.length, 0,
+            'подтяжки месяца НЕТ — записи уже в сетке (Task 455)');
+        assertTrue(dom.body.innerHTML.indexOf('flow-loading') === -1,
+            'загрузки нет — отчёт готов сразу');
+        assertTrue(dom.body.innerHTML.indexOf(pmName) !== -1,
+            'шапка — месяц сетки');
+        assertTrue(dom.body.innerHTML.indexOf('value="1"') !== -1,
+            'талон = 1 явке (Д — 12 ч, 1 день)');
     });
 
     test('onTalonsPageOpen: не-редактора возвращает в табель', () => {
@@ -940,15 +923,15 @@ describe('Task 447 — VM: _renderTalonsPage / onTalonsPageOpen', () => {
             'страница отрендерена');
     });
 
-    test('talonsRefresh: текущий месяц сетки — refreshData; другой — сброс кэша', () => {
+    test('talonsRefresh: ВСЕГДА refreshData — месяц отчёта = месяцу сетки (Task 455)', () => {
         const dom = pageDom(true);
         const h = pageHost(dom, null, {});
         h.talonsRefresh();
         assertEqual(h._refreshCalls, 1, 'перечитали данные сетки');
+        // сетка на другом месяце — ТОЖЕ refreshData (кэша больше нет)
         h._year = NOWY; h._month = 1;
-        h._TALONS_CACHE = { year: NOWY, month: NOWM, entries: [1] };
         h.talonsRefresh();
-        assertEqual(h._TALONS_CACHE, null, 'кэш сброшен — перезагрузка месяцa');
+        assertEqual(h._refreshCalls, 2, 'другой месяц — снова refreshData');
     });
 });
 
@@ -1054,11 +1037,10 @@ describe('Task 447 — VM: печать отчёта', () => {
             '_EMPLOYEES: [{ "таб_номер": "017", "ФИО": "Иванов И. И.", "тип": "дневной", "должность": "Слесарь КИПиА" }],' +
             '_ENTRIES: ' + JSON.stringify([{ 'дата': NOWY + '-' + MM + '-01', 'таб_номер': '017', 'статус': 'Д8' },
                 { 'дата': NOWY + '-' + MM + '-02', 'таб_номер': '017', 'статус': 'Д8' }]) + ',' +
-            '_PENDING: {}, _TALONS_EDIT: {}, _TALONS_CACHE: null,' +
+            '_PENDING: {}, _TALONS_EDIT: {},' +
             '_year: ' + NOWY + ', _month: ' + NOWM + ',' +
             '_viewLevel: ' + JSON.stringify(opts.viewLevel !== undefined ? opts.viewLevel : 'edit') + ',' +
             '_canEdit: true, _initialized: true, _talonsGridReady: true,' +
-            '_talonsLoading: false,' +
             '_STATUS_CODES: [],' +
             '});')(undefined, win, dom.document);
     }
@@ -1095,11 +1077,13 @@ describe('Task 447 — VM: печать отчёта', () => {
         h.printTalonsReport();
         assertEqual(win.printCalls, 0, 'view — тишина');
         assertFalse(!!dom.elements['wsPrintSheet'], 'лист не создан');
+        // Task 455: guard готовности удалён (записи всегда живые) —
+        // «нет данных» = нет работников
         const h2 = printHost(dom, win, {});
-        h2._TALONS_CACHE = null; h2._ENTRIES = []; h2._year = NOWY; h2._month = 1;
+        h2._EMPLOYEES = []; h2._ENTRIES = [];
         h2.printTalonsReport();
         assertFalse(!!dom.elements['wsPrintSheet'],
-            'данные месяца не готовы (сетка на другом) — листа нет');
+            'работников нет — листа нет (тост «Нет работников для отчёта»)');
     });
 
     test('_buildTalonsPrintHtml: группы 12/8, часы, итого (шт.), подписи', () => {
@@ -1115,7 +1099,7 @@ describe('Task 447 — VM: печать отчёта', () => {
                           edited12: true, edited8: false, edited: true });
         const html = h._buildTalonsPrintHtml(model);
         assertTrue(html.indexOf('за ' + MONTH_NAMES[NOWM - 1] + ' ' + NOWY + ' г.') !== -1,
-            'период: текущий месяц и год');
+            'период: месяц сетки и год');
         assertTrue(html.indexOf('Иванов И. И.') !== -1 &&
                    html.indexOf('Сидоров С. С.') !== -1,
             'ФИО работников');
@@ -1232,11 +1216,11 @@ describe('Task 447 — VM: печать отчёта', () => {
 // 8. SW — версия кэша
 // ============================================================
 describe('Task 447 — SW', () => {
-    test('SW: кэш поднят до kipia-test-v678 (Task 447)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v678'") !== -1,
-            'CACHE_VERSION = kipia-test-v678');
-        assertTrue(SW_SRC.indexOf('kipia-test-v679') === -1,
-            'kipia-test-v679 не существует');
+    test('SW: кэш поднят до kipia-test-v679 (Task 447)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v679'") !== -1,
+            'CACHE_VERSION = kipia-test-v679');
+        assertTrue(SW_SRC.indexOf('kipia-test-v680') === -1,
+            'kipia-test-v680 не существует');
         assertTrue(SW_SRC.indexOf('Task 447') !== -1,
             'комментарий Task 447 в истории версий');
     });
