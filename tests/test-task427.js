@@ -44,7 +44,7 @@
 //      инструктаж id 5);
 //  17) _doDeleteTraining: API payload несёт инстр;
 //  18) toggleTrainingDone: помечается ТОЛЬКО копия инструктажа.
-//   SW: kipia-test-v679.
+//   SW: kipia-test-v680.
 // ============================================================
 
 const fs = require('fs');
@@ -621,10 +621,10 @@ describe('Task 427 — VM: клиент (семейство решает кол�
 // 5. SW — версия кэша
 // ============================================================
 describe('Task 427 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v679', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v679'") !== -1,
+    test('CACHE_VERSION = kipia-test-v680', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v680'") !== -1,
             'SW v654 (Task 427)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v680') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v681') === -1,
             'двойной бамп отсутствует');
     });
 });

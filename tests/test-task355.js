@@ -20,7 +20,7 @@
 //       (border-top: 0 — высота шапки не меняется, Task 331 не тронут),
 //       темы красят border-color ярче; правая граница «Сотрудник +»
 //       остаётся ПРОЗРАЧНОЙ в обеих темах (Task 336, полоса ::after);
-//     — sw.js: CACHE_VERSION = kipia-test-v679 (+ guard v586).
+//     — sw.js: CACHE_VERSION = kipia-test-v680 (+ guard v586).
 //   VM (_renderCell, моки как в test-task314.js):
 //     — dayOff=true: пустая ячейка БЕЗ «·» (классы ws-weekend /
 //       ws-status-empty на месте), «.»-код — тоже без «·» (ws-dot-code
@@ -68,7 +68,7 @@ describe('Task 355 — SRC: «·» убрана из нерабочих ячее
         // Task 356: «·» убрана и в пустых ячейках рабочих дней —
         // прежний тернарник (vacPlan ? 'ОТ' : (dayOff ? '' : '·'))
         // свёлся к (vacPlan ? 'ОТ' : '')
-        assertTrue(cell.indexOf("(showMainCode ? status : (vacPlan ? 'ОТ' : ''))") !== -1,
+        assertTrue(cell.indexOf("(showMainCode ? (status || autoDn) : (vacPlan ? 'ОТ' : ''))") !== -1,
             'контент ячейки: код статуса | «ОТ» плана | пусто');
         assertTrue(cell.indexOf("(dayOff ? '' : '·')") === -1,
             'старый тернарник dayOff-точки удалён (Task 356)');
@@ -262,13 +262,13 @@ describe('Task 355 — VM: _renderCell (нерабочие дни без «·»)
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 355 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v679', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v679'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v679');
+    test('SW: версия кэша kipia-test-v680', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v680'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v680');
     });
 
     test('SW: двойной бамп не случился (v585 не существует)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v680') === -1,
-            'в sw.js нет kipia-test-v679');
+        assertTrue(SW_SRC.indexOf('kipia-test-v681') === -1,
+            'в sw.js нет kipia-test-v680');
     });
 });
