@@ -569,6 +569,11 @@ require('./test-task458.js');
 // БЕЗ разрядов (_ppePosNoGrade)
 require('./test-task459.js');
 require('./test-task460.js');
+// Task 461 — форма СИЗ («Работники»): подсказки наименований —
+// ДИНАМИЧЕСКИ из листа «СИЗ» (уникальные «наименование_СИЗ» без
+// повторов, _fillPpeNameOptions при открытии шторки; пустой лист —
+// статичный запасной набор из 8 позиций)
+require('./test-task461.js');
 require('./test-deploy-url.js');
 
 // Запускаем

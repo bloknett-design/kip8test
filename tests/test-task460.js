@@ -19,7 +19,7 @@
 //   • доступ — как у страницы «Документация ИОС» (без отдельного
 //     права): _KIP_IOS_PAGES + LVL_KIP8_PRO + _applyServerAccess
 //     (flowmeter.view без КИП ИОС) + пункт сайдбара;
-//   • sw.js → kipia-test-v684.
+//   • sw.js → kipia-test-v685.
 // ============================================================
 
 const fs = require('fs');
@@ -314,8 +314,8 @@ describe('Task 460 — SRC: права доступа', () => {
 // ============================================================
 describe('Task 460 — SW', () => {
 
-    test('kipia-test-v684 + комментарий Task 460', () => {
-        assertTrue(SW_SRC.indexOf("kipia-test-v684") !== -1, 'версия поднята до v684');
+    test('kipia-test-v685 + комментарий Task 460', () => {
+        assertTrue(SW_SRC.indexOf("kipia-test-v685") !== -1, 'версия поднята до v684');
         assertTrue(SW_SRC.indexOf('kipia-test-v683') === -1, 'старой версии v683 нет');
         assertTrue(SW_SRC.indexOf('Task 460') !== -1, 'комментарий Task 460 в истории');
         assertTrue(SW_SRC.indexOf('Плановые мероприятия') !== -1,

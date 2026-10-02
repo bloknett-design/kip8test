@@ -322,10 +322,10 @@ describe('Task 392 — SRC: загрузка, кэш, сервер, PPEInit.gs',
             'таб_№ — текстовый формат (Task 304)');
     });
 
-    test('SW: kipia-test-v684', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v684'") !== -1,
+    test('SW: kipia-test-v685', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v685'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v685') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v686') === -1,
             'двойного бампа не было');
     });
 });
@@ -546,7 +546,7 @@ function ppeHost(ppe) {
     const methods = [
         'onEmpAddPpe', 'editPpe', 'openPpeForm', 'closePpeForm',
         'onPpeFormInput', 'submitPpeForm', 'deletePpe', '_doDeletePpe',
-        '_ppeTermMonths', '_ppeExpiry',
+        '_ppeTermMonths', '_ppeExpiry', '_fillPpeNameOptions',
         '_esc', '_escAttr', '_apiErrText', '_isoDate', '_fmtDateRu',
         '_parseIsoLocal',
     ];
