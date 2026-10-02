@@ -7063,3 +7063,16 @@ Work Log:
 
 Stage Summary:
 - Task 462 ЧАСТЬ 1 (kip8test) ВЫПОЛНЕН: доступ к «Плановым мероприятиям» — ОТДЕЛЬНОЕ право plan.events в матрице KIP8_Access: init-скрипт RoleMatrixTask462Init.gs (колонка + галочки = текущий доступ, идемпотентно), клиент _PLAN_EVENTS_PAGES + perm('plan.events') + переходный фоллбек (пока колонки нет — поведение 460), fail-closed, право самодостаточно (не зависит от КИП ИОС/расходомеров), серверный код не менялся. SW kipia-test-v685→v686, тесты 5107/0 (+test-task462 ×29; адаптация 460 + role-access; бамп 146 файлов), браузер 24/24. РАЗВЁРНУТ В kip8test (CI/прод — см. ниже). ПОСЛЕ ПРОВЕРКИ пользователем: запуск task462AddPlanEventsPermission в Apps Script (или ДО — порядок любой), расстановка галочек в matrix; затем команда «перенеси в kip8» — партия 460+461+462 одним инкрементом kipia-v498→v499. СЛЕДУЮЩИЙ НОМЕР: 463.
+
+---
+Task ID: 462 — ПУШ (закрытие части 1)
+Agent: main (Super Z)
+Task: Фиксация результата развёртывания Task 462 в kip8test.
+
+Work Log:
+- Коммит 63b10de (159 файлов), пуш в kip8test (PAT временно через push-url, сброс, «URL clean»).
+- CI 4/4 success: CI Tests (5107/0) / Deploy GitHub Pages / Sync index.html to kip8test-desktop / pages build and deployment — все на 63b10de.
+- Прод https://bloknett-design.github.io/kip8test/ подтверждён curl: const CACHE_VERSION = 'kipia-test-v686'; маркеры Task 462 в развёрнутом index.html — 16 вхождений (_PLAN_EVENTS_PAGES / plan.events).
+
+Stage Summary:
+- Task 462 РАЗВЁРНУТ В kip8test @63b10de (SW kipia-test-v686, CI 4/4, прод подтверждён). Ожидается проверка пользователем: (1) запуск task462AddPlanEventsPermission в Apps Script (RoleMatrixTask462Init.gs; порядок любой — до/после обновления клиента работает переходный фоллбек); (2) проверка галочек plan.events в matrix и поведения раздела; (3) команда «перенеси в kip8» — партия 460+461+462, инкремент kipia-v498→v499. СЛЕДУЮЩИЙ НОМЕР: 463.
