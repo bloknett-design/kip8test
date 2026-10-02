@@ -568,6 +568,7 @@ require('./test-task458.js');
 // ФАМИЛИЙ колонки «Работник» (прежде — по таб. №), «Должность» —
 // БЕЗ разрядов (_ppePosNoGrade)
 require('./test-task459.js');
+require('./test-task460.js');
 require('./test-deploy-url.js');
 
 // Запускаем
