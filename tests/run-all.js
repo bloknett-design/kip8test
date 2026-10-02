@@ -579,6 +579,11 @@ require('./test-task461.js');
 // RoleMatrixTask462Init.gs; группа _PLAN_EVENTS_PAGES + переходный
 // фоллбек, пока колонки в матрице нет)
 require('./test-task462.js');
+// Task 463 — «Плановые мероприятия»: ИНТЕРАКТИВНЫЕ отметки
+// выполнения (клик по ячейке месяца → диалог с датой → зелёная
+// галочка вместо тусклого крестика) + архив в файле
+// Мероприятия_КИП_ИОС (PlanEvents.gs / PlanEventsInit.gs)
+require('./test-task463.js');
 require('./test-deploy-url.js');
 
 // Запускаем
