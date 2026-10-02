@@ -106,10 +106,12 @@ const SUBSECTIONS = extractSubsections();
 const ENTRIES = extractEntryPoints();
 
 // Все страницы, доступные хоть какой-то роли (без '*')
+// Task 462: + _PLAN_EVENTS_PAGES (право plan.events; до этого
+// plan-events входил в _KIP_IOS_PAGES)
 const ALL_PAGES = [].concat(
     Kip._BASE_PAGES, Kip._CALC_PAGES, Kip._LIBRARY_PAGES, Kip._KIP_IOS_PAGES,
-    Kip._FLOWMETER_PAGES, Kip._CHARTS_PAGES, Kip._SECRET_PAGES, Kip._WHATS_NEW_PAGES,
-    Kip._WORK_SCHEDULE_PAGES
+    Kip._PLAN_EVENTS_PAGES, Kip._FLOWMETER_PAGES, Kip._CHARTS_PAGES,
+    Kip._SECRET_PAGES, Kip._WHATS_NEW_PAGES, Kip._WORK_SCHEDULE_PAGES
 );
 
 // Роли по карте доступа

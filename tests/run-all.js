@@ -574,6 +574,11 @@ require('./test-task460.js');
 // повторов, _fillPpeNameOptions при открытии шторки; пустой лист —
 // статичный запасной набор из 8 позиций)
 require('./test-task461.js');
+// Task 462 — «Плановые мероприятия»: доступ через ОТДЕЛЬНОЕ право
+// plan.events в матрице KIP8_Access (колонку добавляет
+// RoleMatrixTask462Init.gs; группа _PLAN_EVENTS_PAGES + переходный
+// фоллбек, пока колонки в матрице нет)
+require('./test-task462.js');
 require('./test-deploy-url.js');
 
 // Запускаем

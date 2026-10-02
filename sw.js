@@ -185,8 +185,11 @@
 // datalist #wsPpeNameList ДИНАМИЧЕСКИ из листа «СИЗ» (уникальные
 // «наименование_СИЗ» без повторов, _fillPpeNameOptions); статичный
 // набор 8 позиций — запасной при пустом листе.
+// Task 462: «Плановые мероприятия» — ОТДЕЛЬНОЕ право plan.events
+// в матрице KIP8_Access (колонку добавляет RoleMatrixTask462Init.gs);
+// до появления колонки — прежнее поведение (за «Документацией ИОС»).
 // ВСЕГДА на одном уровне (обе колонки: скролл-зона + 5px + 12px).
-const CACHE_VERSION = 'kipia-test-v685';
+const CACHE_VERSION = 'kipia-test-v686';
 const CACHE_NAME = CACHE_VERSION;
 
 // Отдельный кэш для картинок Google Drive (превью + полные).

@@ -19,7 +19,11 @@
 //   • доступ — как у страницы «Документация ИОС» (без отдельного
 //     права): _KIP_IOS_PAGES + LVL_KIP8_PRO + _applyServerAccess
 //     (flowmeter.view без КИП ИОС) + пункт сайдбара;
-//   • sw.js → kipia-test-v685.
+//     [Task 462] доступ переведён на ОТДЕЛЬНОЕ право plan.events
+//     (группа _PLAN_EVENTS_PAGES, уровни с PLAN_EVENTS, в
+//     _applyServerAccess — perm('plan.events') + переходный
+//     фоллбек пока колонки в матрице нет; см. test-task462.js);
+//   • sw.js → kipia-test-v686.
 // ============================================================
 
 const fs = require('fs');
@@ -279,25 +283,29 @@ describe('Task 460 — SRC: навигация и закрепление', () =>
 });
 
 // ============================================================
-// 5. SRC — доступ (как у «Документации ИОС», без отдельного права)
+// 5. SRC — доступ (Task 460: следовал за «Документацией ИОС»;
+//    Task 462 перевёл на отдельное право plan.events)
 // ============================================================
-describe('Task 460 — SRC: права доступа', () => {
+describe('Task 460 — SRC: права доступа (обновлено Task 462)', () => {
 
-    test('_KIP_IOS_PAGES включает plan-events', () => {
+    test('plan-events — своя группа _PLAN_EVENTS_PAGES, НЕ в _KIP_IOS_PAGES', () => {
+        assertTrue(INDEX_SRC.indexOf("_PLAN_EVENTS_PAGES: ['plan-events'],") !== -1,
+            'группа доступа plan-events (Task 462)');
         const idx = INDEX_SRC.indexOf('_KIP_IOS_PAGES:');
-        const block = INDEX_SRC.slice(idx, idx + 1200);
-        assertTrue(block.indexOf("'plan-events']") !== -1,
-            'plan-events в конце массива _KIP_IOS_PAGES');
+        const end = INDEX_SRC.indexOf('_PLAN_EVENTS_PAGES:');
+        const block = INDEX_SRC.slice(idx, end);
+        assertTrue(block.indexOf("'plan-events'") === -1,
+            'plan-events больше НЕ в массиве _KIP_IOS_PAGES (Task 462)');
     });
 
-    test('LVL_KIP8_PRO: вместе с docs-ios (легаси-карта)', () => {
-        assertTrue(INDEX_SRC.indexOf("FLOWMETER, ['docs-ios', 'plan-events']);") !== -1,
-            'КИП8 pro получает docs-ios + plan-events');
+    test('LVL_KIP8_PRO: docs-ios + PLAN_EVENTS (легаси-карта)', () => {
+        assertTrue(INDEX_SRC.indexOf("FLOWMETER, PLAN_EVENTS, ['docs-ios']);") !== -1,
+            'КИП8 pro получает docs-ios + plan-events (через PLAN_EVENTS)');
     });
 
-    test('_applyServerAccess: flowmeter.view без КИП ИОС → docs-ios + plan-events', () => {
-        assertTrue(INDEX_SRC.indexOf("if (!kipios) _add(['docs-ios', 'plan-events']);") !== -1,
-            'серверная матрица: страница идёт вместе с хабом');
+    test('_applyServerAccess: flowmeter.view без КИП ИОС → только docs-ios', () => {
+        assertTrue(INDEX_SRC.indexOf("if (!kipios) _add(['docs-ios']);") !== -1,
+            'серверная матрица: хаб отдельно, план-эвентс — по праву plan.events');
     });
 
     test('пункт сайдбара в группе «Документация ИОС»', () => {
@@ -314,8 +322,8 @@ describe('Task 460 — SRC: права доступа', () => {
 // ============================================================
 describe('Task 460 — SW', () => {
 
-    test('kipia-test-v685 + комментарий Task 460', () => {
-        assertTrue(SW_SRC.indexOf("kipia-test-v685") !== -1, 'версия поднята до v684');
+    test('kipia-test-v686 + комментарий Task 460', () => {
+        assertTrue(SW_SRC.indexOf("kipia-test-v686") !== -1, 'версия поднята до v684');
         assertTrue(SW_SRC.indexOf('kipia-test-v683') === -1, 'старой версии v683 нет');
         assertTrue(SW_SRC.indexOf('Task 460') !== -1, 'комментарий Task 460 в истории');
         assertTrue(SW_SRC.indexOf('Плановые мероприятия') !== -1,

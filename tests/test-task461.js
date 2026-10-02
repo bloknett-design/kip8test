@@ -23,7 +23,7 @@
 //     набор из 8 позиций образца (Task 392); свободный текст
 //     не запрещён;
 //   • сервер НЕ меняется (listPpe уже отдаёт все записи листа);
-//   • sw.js → kipia-test-v685.
+//   • sw.js → kipia-test-v686.
 // ============================================================
 
 const fs = require('fs');
@@ -443,9 +443,9 @@ describe('Task 461 — VM: openPpeForm заполняет datalist', () => {
 // ============================================================
 describe('Task 461 — SW: версия', () => {
 
-    test("CACHE_VERSION = 'kipia-test-v685'", () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v685'") !== -1,
-            'SW поднят до kipia-test-v685 (Task 461)');
+    test("CACHE_VERSION = 'kipia-test-v686'", () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v686'") !== -1,
+            'SW поднят до kipia-test-v686 (Task 461)');
     });
 
     test('старая версия kipia-test-v684 отсутствует', () => {
@@ -454,7 +454,7 @@ describe('Task 461 — SW: версия', () => {
     });
 
     test('комментарий Task 461 в шапке версий sw.js', () => {
-        const i = SW_SRC.indexOf('kipia-test-v685');
+        const i = SW_SRC.indexOf('kipia-test-v686');
         const above = SW_SRC.slice(Math.max(0, i - 700), i);
         assertTrue(above.indexOf('Task 461') !== -1, 'упоминание Task 461');
         assertTrue(above.indexOf('wsPpeNameList') !== -1 ||
