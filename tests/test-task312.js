@@ -42,7 +42,7 @@
 //       (белый, как фон пустых ячеек с точкой — светлая тема
 //       --bg-primary #FAF9F5); ОСНОВНОЕ значение пользователь
 //       меняет в листе «Коды_статусов» сам (код #FAF9F5).
-//   SW: kipia-test-v687 (Task 313: v551 → v552 — окно мероприятий
+//   SW: kipia-test-v688 (Task 313: v551 → v552 — окно мероприятий
 //       над окном кодов + подсветка сегодняшней даты).
 //
 // Запуск: через tests/run-all.js (require './test-task312.js').
@@ -320,9 +320,9 @@ describe('Task 312/314 — «.» (плановый выходной): симво
 
 describe('Task 312 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v687', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v687'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v687');
+    test('SW: версия кэша kipia-test-v688', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v688'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v688');
         assertFalse(SW_SRC.indexOf('kipia-test-v550') !== -1,
             'старой версии v550 нет');
     });

@@ -233,15 +233,15 @@ describe('Task 374 — VM: результаты расчёта без кнопк
 // ============================================================
 // D. SW v603 (guard v604)
 // ============================================================
-describe('Task 374 — SW: версия кэша kipia-test-v687', () => {
+describe('Task 374 — SW: версия кэша kipia-test-v688', () => {
 
-    test('CACHE_VERSION = kipia-test-v687', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v687'") !== -1,
+    test('CACHE_VERSION = kipia-test-v688', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v688'") !== -1,
             'SW бампнут до v603');
     });
 
     test('Guard: v605 ещё не существует', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v688') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v689') === -1,
             'v604 не должен существовать (следующий бамп)');
     });
 });

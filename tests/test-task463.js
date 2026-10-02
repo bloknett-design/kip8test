@@ -17,16 +17,21 @@
 //   подтверждения (наименование + месяц + дата выполнения, input
 //   type=date, по умолчанию сегодня) → planEvents.mark → ЗЕЛЁНАЯ
 //   галочка (pe-m-done) вместо крестика + title с датой; кнопка
-//   «Обновить» в шапке (peRefreshBtn); подсказка peHint;
-//   отмеченная ячейка → тост «Уже отмечено…» (повторного mark НЕТ);
-//   ошибка сети/сервера → тост, ячейка остаётся крестиком;
-//   сервер (scripts/PlanEvents.gs + 2 case в Code.gs): list/mark,
+//   «Обновить» в шапке (peRefreshBtn); ошибка сети/сервера → тост,
+//   ячейка остаётся крестиком;
+//   сервер (scripts/PlanEvents.gs + case в Code.gs): list/mark,
 //   доступ — право plan.events (Task 462), ИДЕМПОТЕНТНОСТЬ mark
 //   (запись (год, месяц, мероприятие) уже есть → already: true);
 //   архив — лист «Архив» файла Мероприятия_КИП_ИОС (создаётся
 //   одноразовым PlanEventsInit.gs: id, дата_выполнения, мероприятие,
 //   год, месяц, email, время_отметки);
-//   SW: kipia-test-v687.
+//   SW: kipia-test-v688.
+//
+// АДАПТАЦИЯ Task 464 (правка/снятие отметок + мобайл): подсказка
+//   peHint УДАЛЕНА (заявка); кнопка подтверждения «Подтвердить»
+//   (была «Отметить»), «Отмена» подкрашена красным (pe-cancel-red);
+//   отмеченная ячейка → диалог правки _editDialog (не тост); новые
+//   тесты поведения — tests/test-task464.js.
 //
 // Запуск: через tests/run-all.js (require './test-task463.js').
 
@@ -111,14 +116,13 @@ describe('Task 463 — SRC: HTML страницы plan-events', () => {
             'кнопка между началом страницы и таблицей');
     });
 
-    test('подсказка над таблицей (peHint)', () => {
-        const i = INDEX_SRC.indexOf('class="pe-hint" id="peHint"');
-        assertTrue(i !== -1, 'подсказка определена');
-        const block = INDEX_SRC.slice(i, i + 400);
-        assertTrue(block.indexOf('Нажмите на ячейку месяца') !== -1,
-            'текст подсказки про клик по ячейке');
-        assertTrue(block.indexOf('Мероприятия_КИП_ИОС') !== -1,
-            'упомянут файл архива');
+    test('подсказка над таблицей УДАЛЕНА (Task 464)', () => {
+        assertTrue(INDEX_SRC.indexOf('peHint') === -1,
+            'элемент peHint удалён');
+        assertTrue(INDEX_SRC.indexOf('class="pe-hint"') === -1,
+            'класс pe-hint удалён');
+        assertTrue(INDEX_SRC.indexOf('Нажмите на ячейку месяца') === -1,
+            'текст подсказки удалён');
     });
 
     test('таблица имеет id="peTable"', () => {
@@ -246,11 +250,14 @@ describe('Task 463 — SRC: модуль PlanEventsData', () => {
             'снятие title у крестика');
     });
 
-    test('_cellClick: отмеченная ячейка → тост, НОВОЙ отметки не шлёт', () => {
+    test('_cellClick: отмеченная ячейка → диалог правки (Task 464), НЕ mark', () => {
         const fn = stripComments(methodText(PE_MODULE_SRC, '_cellClick'));
-        assertTrue(fn.indexOf('Уже отмечено: выполнено ') !== -1,
-            'тост «Уже отмечено»');
-        assertTrue(fn.indexOf('return') !== -1, 'ранний выход');
+        assertTrue(fn.indexOf('_editDialog') !== -1,
+            'отмеченная → диалог правки _editDialog');
+        assertTrue(fn.indexOf('_unmarkCell') !== -1,
+            'ветка снятия отметки');
+        assertTrue(fn.indexOf('_saveDate') !== -1,
+            'ветка правки даты');
         assertTrue(fn.indexOf('_confirmDialog') !== -1,
             'пустая ячейка → диалог');
     });
@@ -263,7 +270,10 @@ describe('Task 463 — SRC: модуль PlanEventsData', () => {
         assertTrue(fn.indexOf('id="peDialogDate"') !== -1, 'id поля');
         assertTrue(fn.indexOf('_todayIso()') !== -1,
             'по умолчанию — сегодня');
-        assertTrue(fn.indexOf('Отметить') !== -1, 'кнопка «Отметить»');
+        assertTrue(fn.indexOf('Подтвердить') !== -1,
+            'кнопка «Подтвердить» (Task 464: была «Отметить»)');
+        assertTrue(fn.indexOf('pe-cancel-red') !== -1,
+            '«Отмена» подкрашена красным (Task 464)');
         assertTrue(fn.indexOf('Отмена') !== -1, 'кнопка «Отмена»');
         assertTrue(fn.indexOf('MONTHS[month - 1]') !== -1,
             'месяц в подписи из MONTHS');
@@ -529,7 +539,8 @@ describe('Task 463 — SRC: Code.gs маршрутизация', () => {
     });
 
     test('упоминание модуля в шапке Code.gs', () => {
-        assertTrue(CODE_SRC.indexOf('PlanEvents (Task 463)') !== -1,
+        // Task 464: шапка дополнена — 'PlanEvents (Task 463/464)'
+        assertTrue(CODE_SRC.indexOf('PlanEvents (Task 463') !== -1,
             'документация сигнатур дополнена');
     });
 });
@@ -539,14 +550,14 @@ describe('Task 463 — SRC: Code.gs маршрутизация', () => {
 // ============================================================
 describe('Task 463 — SW: версия кэша', () => {
 
-    test('CACHE_VERSION = kipia-test-v687', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v687';") !== -1,
-            'текущая версия v687');
+    test('CACHE_VERSION = kipia-test-v688', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v688';") !== -1,
+            'текущая версия v688 (бамп Task 464)');
     });
 
-    test('v686 в sw.js отсутствует', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v686') === -1,
-            'старой версии нет');
+    test('v687 в sw.js отсутствует', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v687') === -1,
+            'версии до Task 464 нет');
     });
 
     test('комментарий Task 463 с файлом архива', () => {

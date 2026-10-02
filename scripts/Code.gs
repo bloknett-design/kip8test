@@ -44,10 +44,12 @@
  *                           permissions, granted, warnings}
  *     Гейт GATE_ACTIONS: admin* → admin.panel, каб. журнал (записи)
  *     → cablejournal.edit — по матрице KIP8_Access (до модуля).
- *   PlanEvents (Task 463) — «Плановые мероприятия»: отметки
+ *   PlanEvents (Task 463/464) — «Плановые мероприятия»: отметки
  *     выполнения, архив файла Мероприятия_КИП_ИОС:
  *     PlanEvents.list(payload)   → {ok, data/error}
  *     PlanEvents.mark(payload)  → {ok, data/error} (идемпотентно)
+ *     PlanEvents.update(payload) → {ok, data/error} (Task 464: дата)
+ *     PlanEvents.unmark(payload) → {ok, data/error} (Task 464: снятие)
  * ============================================================
  */
 
@@ -352,6 +354,13 @@ function doPost(e) {
 
       case 'planEvents.mark':
         return _json(PlanEvents.mark(payload));
+
+      // Task 464: правка даты отметки + снятие отметки
+      case 'planEvents.update':
+        return _json(PlanEvents.update(payload));
+
+      case 'planEvents.unmark':
+        return _json(PlanEvents.unmark(payload));
 
       default:
         return _json({ ok: false, error: 'Unknown action: ' + action });

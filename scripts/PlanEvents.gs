@@ -6,23 +6,39 @@
 // Utils.gs, RoleMatrixGate.gs, WorkSchedule.gs (проект
 // развёртывания AKfycbyt… — ОДИН бэкенд на kip8 и kip8test).
 //
-// В Code.gs (doPost) добавить два case (см. scripts/Code.gs —
+// В Code.gs (doPost) добавить четыре case (см. scripts/Code.gs —
 // эталон уже обновлён):
 //   case 'planEvents.list':
 //     return _json(PlanEvents.list(payload));
 //   case 'planEvents.mark':
 //     return _json(PlanEvents.mark(payload));
+//   case 'planEvents.update':        // Task 464
+//     return _json(PlanEvents.update(payload));
+//   case 'planEvents.unmark':        // Task 464
+//     return _json(PlanEvents.unmark(payload));
 //
 // ЭНДПОИНТЫ (через KipAuth.api клиента — модуль PlanEventsData):
 //   planEvents.list — отметки года: {token, year}
 //     → {ok, data: {marks: [{id, дата_выполнения, мероприятие,
-//        год, месяц}], srvVer: '463'}}
+//        год, месяц}], srvVer: '464'}}
 //   planEvents.mark — отметить выполнение: {token, year, month,
 //     event, date('ГГГГ-ММ-ДД')}
 //     → {ok, data: {mark: {…}, already: bool}}
 //     ИДЕМПОТЕНТНОСТЬ: запись (год, месяц, мероприятие) уже есть →
 //     новая НЕ создаётся, возвращается существующая (already: true)
 //     — защита от дублей при повторных кликах/ретраях клиента.
+//   planEvents.update — изменить дату выполнения (Task 464):
+//     {token, year, month, event, date}
+//     → {ok, data: {mark: {…}}} | {ok: false, error: 'not_found'}
+//     Обновляет дата_выполнения + время_отметки найденной записи
+//     (все дубли ключа — тоже); отметки нет → not_found (клиент
+//     предложит обновить список).
+//   planEvents.unmark — снять отметку (Task 464):
+//     {token, year, month, event}
+//     → {ok, data: {removed: bool}}
+//     Удаляет строку(и) ключа из листа «Архив»; ИДЕМПОТЕНТНО:
+//     отметки нет → removed: false (без ошибки — повторные клики
+//     и ретраи безопасны).
 //
 // ДАННЫЕ — ОТДЕЛЬНЫЙ файл Мероприятия_КИП_ИОС (Google Sheets):
 //   SPREADSHEET_ID ниже. Лист «Архив» создаётся одноразовым
@@ -56,10 +72,10 @@ var PlanEvents = {
   SPREADSHEET_ID: '1uX8Bz6FBS9HniZfWQnHeeyccTwwjwyvpPFWyFkIclCs',
   ARCHIVE_SHEET: 'Архив',
 
-  // Task 463: версия серверного кода (клиент отличает старый
+  // Task 463/464: версия серверного кода (клиент отличает старый
   // Apps Script: нет action → «Unknown action» — молчаливая
-  // деградация без отметок, см. DEPLOY Task 463)
-  SRV_VER: '463',
+  // деградация без отметок, см. DEPLOY Task 463/464)
+  SRV_VER: '464',
 
   // ============================================================
   // planEvents.list — отметки года
@@ -158,6 +174,139 @@ var PlanEvents = {
         'Отмечено: ' + event + ' — ' + date + ' (' + month + '/' + year + ')');
     } catch (e) { /* ignore */ }
     return { ok: true, data: { mark: this._rowToMark(row), already: false } };
+  },
+
+  // ============================================================
+  // planEvents.update — изменить дату выполнения (Task 464)
+  // ============================================================
+  // payload: {token, year, month(1..12), event, date('ГГГГ-ММ-ДД')}
+  // returns: { ok: true, data: { mark: {...} } }
+  //   | { ok: false, error: 'not_found' } — записи с ключом нет
+  // Обновляет дата_выполнения (B) + время_отметки (G) у ВСЕХ строк
+  // ключа (год, месяц, мероприятие) — ручные дубли тоже правятся
+  update: function(payload) {
+    var g = this._requireAccess(payload.token);
+    if (g.error) return g.error;
+    var user = g.user;
+
+    var year = parseInt(payload.year, 10);
+    var month = parseInt(payload.month, 10);
+    var event = String(payload.event || '').trim();
+    var date = this._normDate(payload.date);
+    if (isNaN(year) || year < 2000 || year > 2100) {
+      return { ok: false, error: 'invalid_year',
+               message: 'Год отметки не распознан' };
+    }
+    if (isNaN(month) || month < 1 || month > 12) {
+      return { ok: false, error: 'invalid_month',
+               message: 'Месяц отметки должен быть 1..12' };
+    }
+    if (!event || event.length > 200) {
+      return { ok: false, error: 'invalid_event',
+               message: 'Наименование мероприятия пустое или длиннее 200 символов' };
+    }
+    if (!date) {
+      return { ok: false, error: 'invalid_date',
+               message: 'Дата выполнения не распознана (нужен формат ГГГГ-ММ-ДД)' };
+    }
+
+    var sheet = this._getArchiveSheet();
+    if (!sheet) {
+      return { ok: false, error: 'sheet_not_found',
+               message: 'Лист «Архив» в файле Мероприятия_КИП_ИОС не найден — запустите planEventsDeploy() (scripts/PlanEventsInit.gs, Task 463)' };
+    }
+
+    // Поиск строк ключа (сверху вниз; правка не сдвигает строки)
+    var hitRows = [];
+    var lastRow = sheet.getLastRow();
+    if (lastRow >= 2) {
+      var vals = sheet.getRange(2, 1, lastRow - 1, 7).getValues();
+      for (var i = 0; i < vals.length; i++) {
+        var rec = this._rowToMark(vals[i]);
+        if (!rec) continue;
+        if (rec['год'] === year && rec['месяц'] === month &&
+            rec['мероприятие'] === event) {
+          hitRows.push(i + 2);           // позиция строки листа
+        }
+      }
+    }
+    if (!hitRows.length) {
+      return { ok: false, error: 'not_found',
+               message: 'Отметка не найдена — возможно, её уже сняли. Нажмите «Обновить» в шапке раздела' };
+    }
+    for (var j = 0; j < hitRows.length; j++) {
+      sheet.getRange(hitRows[j], 2).setValue(date);             // B: дата
+      sheet.getRange(hitRows[j], 7).setValue(this._isoNow());   // G: время
+    }
+    try {
+      Utils.audit(user.email, 'PLAN_EVENTS_UPDATE', '', '',
+        'Дата отметки изменена: ' + event + ' — ' + date +
+        ' (' + month + '/' + year + ')');
+    } catch (e) { /* ignore */ }
+    return { ok: true, data: { mark: {
+      id: null,
+      'дата_выполнения': date,
+      'мероприятие': event,
+      'год': year,
+      'месяц': month
+    } } };
+  },
+
+  // ============================================================
+  // planEvents.unmark — снять отметку (Task 464)
+  // ============================================================
+  // payload: {token, year, month(1..12), event}
+  // returns: { ok: true, data: { removed: bool } }
+  //   ИДЕМПОТЕНТНО: записи нет → removed: false (не ошибка)
+  // Удаляет ВСЕ строки ключа (в т.ч. ручные дубли); обход с КОНЦА
+  // списка — позиции после удаления не съезжают
+  unmark: function(payload) {
+    var g = this._requireAccess(payload.token);
+    if (g.error) return g.error;
+    var user = g.user;
+
+    var year = parseInt(payload.year, 10);
+    var month = parseInt(payload.month, 10);
+    var event = String(payload.event || '').trim();
+    if (isNaN(year) || year < 2000 || year > 2100) {
+      return { ok: false, error: 'invalid_year',
+               message: 'Год отметки не распознан' };
+    }
+    if (isNaN(month) || month < 1 || month > 12) {
+      return { ok: false, error: 'invalid_month',
+               message: 'Месяц отметки должен быть 1..12' };
+    }
+    if (!event || event.length > 200) {
+      return { ok: false, error: 'invalid_event',
+               message: 'Наименование мероприятия пустое или длиннее 200 символов' };
+    }
+
+    var sheet = this._getArchiveSheet();
+    if (!sheet) {
+      return { ok: false, error: 'sheet_not_found',
+               message: 'Лист «Архив» в файле Мероприятия_КИП_ИОС не найден — запустите planEventsDeploy() (scripts/PlanEventsInit.gs, Task 463)' };
+    }
+
+    var removed = 0;
+    var lastRow = sheet.getLastRow();
+    if (lastRow >= 2) {
+      var vals = sheet.getRange(2, 1, lastRow - 1, 7).getValues();
+      for (var i = vals.length - 1; i >= 0; i--) {
+        var rec = this._rowToMark(vals[i]);
+        if (!rec) continue;
+        if (rec['год'] === year && rec['месяц'] === month &&
+            rec['мероприятие'] === event) {
+          sheet.deleteRow(i + 2);
+          removed++;
+        }
+      }
+    }
+    try {
+      Utils.audit(user.email, 'PLAN_EVENTS_UNMARK', '', '',
+        'Отметка снята: ' + event + ' (' + month + '/' + year + ')' +
+        (removed ? '' : ' — не найдена'));
+    } catch (e) { /* ignore */ }
+    return { ok: true, data: { removed: removed > 0 } };
   },
 
   // ============================================================

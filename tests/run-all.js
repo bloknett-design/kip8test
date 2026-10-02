@@ -584,6 +584,7 @@ require('./test-task462.js');
 // галочка вместо тусклого крестика) + архив в файле
 // Мероприятия_КИП_ИОС (PlanEvents.gs / PlanEventsInit.gs)
 require('./test-task463.js');
+require('./test-task464.js');
 require('./test-deploy-url.js');
 
 // Запускаем

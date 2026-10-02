@@ -23,7 +23,7 @@
 //     (группа _PLAN_EVENTS_PAGES, уровни с PLAN_EVENTS, в
 //     _applyServerAccess — perm('plan.events') + переходный
 //     фоллбек пока колонки в матрице нет; см. test-task462.js);
-//   • sw.js → kipia-test-v687.
+//   • sw.js → kipia-test-v688.
 // ============================================================
 
 const fs = require('fs');
@@ -214,9 +214,13 @@ describe('Task 460 — SRC: CSS pe-*', () => {
         assertTrue(idx !== -1, 'правило скрытия скроллбара есть');
     });
 
-    test('пропорции образца: широкая колонка наименований + узкие месяцы', () => {
-        assertTrue(INDEX_SRC.indexOf('.pe-col-name { width: 300px; }') !== -1,
-            'колонка наименований 300px');
+    test('пропорции: колонка наименований по тексту (Task 464) + узкие месяцы', () => {
+        // Task 464: фиксированные 300px заменены на auto + nowrap —
+        // ширина по самому длинному наименованию (заявка пользователя)
+        assertTrue(INDEX_SRC.indexOf('.pe-col-name { width: auto; }') !== -1,
+            'колонка наименований по тексту (width: auto, Task 464)');
+        assertTrue(INDEX_SRC.indexOf('.pe-name, .pe-th-name { white-space: nowrap; }') !== -1,
+            'наименования без переносов');
         assertTrue(INDEX_SRC.indexOf('.pe-col-month { width: 46px; }') !== -1,
             'месяцы 46px');
     });
@@ -322,8 +326,8 @@ describe('Task 460 — SRC: права доступа (обновлено Task 4
 // ============================================================
 describe('Task 460 — SW', () => {
 
-    test('kipia-test-v687 + комментарий Task 460', () => {
-        assertTrue(SW_SRC.indexOf("kipia-test-v687") !== -1, 'версия поднята до v684');
+    test('kipia-test-v688 + комментарий Task 460', () => {
+        assertTrue(SW_SRC.indexOf("kipia-test-v688") !== -1, 'версия поднята до v684');
         assertTrue(SW_SRC.indexOf('kipia-test-v683') === -1, 'старой версии v683 нет');
         assertTrue(SW_SRC.indexOf('Task 460') !== -1, 'комментарий Task 460 в истории');
         assertTrue(SW_SRC.indexOf('Плановые мероприятия') !== -1,
