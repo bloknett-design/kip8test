@@ -23,7 +23,7 @@
 //     (группа _PLAN_EVENTS_PAGES, уровни с PLAN_EVENTS, в
 //     _applyServerAccess — perm('plan.events') + переходный
 //     фоллбек пока колонки в матрице нет; см. test-task462.js);
-//   • sw.js → kipia-test-v693.
+//   • sw.js → kipia-test-v694.
 // ============================================================
 
 const fs = require('fs');
@@ -34,9 +34,13 @@ const ROOT = path.join(__dirname, '..');
 const INDEX_SRC = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const SW_SRC = fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8');
 
-// Данные образца (файл «Пример таблицы мероприятий.xlsx», лист 1)
+// Данные образца (файл «Пример таблицы мероприятий.xlsx», лист 1).
+// Task 470: точка в конце сокращения ноября («Ноя.» — как у прочих
+// сокращённых месяцев), в группу «В конце месяца» добавлено мероприятие
+// «Работы на следующий месяц», НОВАЯ группа «На текущий месяц»
+// с мероприятием «Работы на месяц».
 const MONTHS_SAMPLE = ['Янв.', 'Фев.', 'Мар.', 'Апр.', 'Май', 'Июн.',
-                       'Июл.', 'Авг.', 'Сен.', 'Окт.', 'Ноя', 'Дек.'];
+                       'Июл.', 'Авг.', 'Сен.', 'Окт.', 'Ноя.', 'Дек.'];
 const GROUPS_SAMPLE = [
     { name: 'В начале месяца', acts: [
         'Проверка электроинструмента (приспособлений)',
@@ -47,7 +51,12 @@ const GROUPS_SAMPLE = [
         'Отчёт по талонам',
         'Выписка из ППР на следующий месяц',
         'Журнал учёта электрооборудования',
-        'Отчёт по графику ППР'] },
+        'Отчёт по графику ППР',
+        // Task 470: новое мероприятие группы «В конце месяца»
+        'Работы на следующий месяц'] },
+    // Task 470: новая группа «На текущий месяц»
+    { name: 'На текущий месяц', acts: [
+        'Работы на месяц'] },
 ];
 
 function section(name) {
@@ -119,7 +128,7 @@ describe('Task 460 — SRC: таблица по образцу «Меропри�
             '«2026 год» на 12 колонок (B1:M1 образца)');
     });
 
-    test('12 месяцев образца; «Фев.» — опечатка образца «Феф.» ИСПРАВЛЕНА', () => {
+    test('12 месяцев образца; «Фев.» — опечатка образца «Феф.» ИСПРАВЛЕНА; «Ноя.» с точкой (Task 470)', () => {
         const m = page.match(/<tr class="pe-head-months">\s*([\s\S]*?)\s*<\/tr>/);
         assertTrue(m !== null, 'строка месяцев найдена');
         const ths = [];
@@ -128,45 +137,56 @@ describe('Task 460 — SRC: таблица по образцу «Меропри�
         while ((mm = re.exec(m[1])) !== null) ths.push(mm[1]);
         assertEqual(ths.length, 12, 'ровно 12 колонок месяцев');
         assertEqual(ths.join('|'), MONTHS_SAMPLE.join('|'),
-            'месяцы — в порядке и написании образца');
+            'месяцы — в порядке и написании образца («Ноя.» — Task 470)');
         assertTrue(ths[1] === 'Фев.', 'второй месяц — «Фев.»');
+        assertTrue(ths[10] === 'Ноя.', 'ноябрь — «Ноя.» с точкой (Task 470)');
         assertFalse(th_of(page, 'Феф.'), 'опечатки «Феф.» в th-ячейках нет');
+        assertFalse(th_of(page, 'Ноя'), 'сокращения ноября без точки нет (Task 470)');
     });
 
-    test('группы «В начале месяца» / «В конце месяца» — строки-заголовки colspan 13', () => {
+    test('группы «В начале месяца» / «В конце месяца» / «На текущий месяц» — строки-заголовки colspan 13', () => {
         assertTrue(page.indexOf('<tr class="pe-group"><td colspan="13">В начале месяца</td></tr>') !== -1,
             'группа «В начале месяца»');
         assertTrue(page.indexOf('<tr class="pe-group"><td colspan="13">В конце месяца</td></tr>') !== -1,
             'группа «В конце месяца»');
+        // Task 470: новая группа «На текущий месяц»
+        assertTrue(page.indexOf('<tr class="pe-group"><td colspan="13">На текущий месяц</td></tr>') !== -1,
+            'группа «На текущий месяц» (Task 470)');
     });
 
-    test('8 мероприятий — текст и ПОРЯДОК в точности по образцу', () => {
+    test('10 мероприятий — образец (8) + заявка Task 470 (2); текст и ПОРЯДОК', () => {
         const names = [];
         const re = /<td class="pe-name">([^<]*)<\/td>/g;
         let m;
         while ((m = re.exec(page)) !== null) names.push(m[1]);
-        const expected = GROUPS_SAMPLE[0].acts.concat(GROUPS_SAMPLE[1].acts);
-        assertEqual(names.length, 8, 'ровно 8 мероприятий');
+        const expected = GROUPS_SAMPLE[0].acts.concat(
+            GROUPS_SAMPLE[1].acts, GROUPS_SAMPLE[2].acts);
+        assertEqual(names.length, 10, 'ровно 10 мероприятий (8 образца + 2 Task 470)');
         assertEqual(names.join('|'), expected.join('|'),
-            'перечень и порядок — по образцу (группа 1, затем группа 2)');
+            'перечень и порядок — образец, затем заявка Task 470');
     });
 
-    test('порядок строк: группы охватывают СВОИ мероприятия (3 + 5)', () => {
+    test('порядок строк: группы охватывают СВОИ мероприятия (3 + 6 + 1)', () => {
         const g1 = page.indexOf('>В начале месяца</td></tr>');
         const a3 = page.indexOf('Проверка огнетушителей</td>');
         const g2 = page.indexOf('>В конце месяца</td></tr>');
         const a8 = page.indexOf('Отчёт по графику ППР</td>');
-        assertTrue(g1 !== -1 && g2 !== -1 && a3 !== -1 && a8 !== -1, 'все маркеры найдены');
+        const a9 = page.indexOf('Работы на следующий месяц</td>');
+        const g3 = page.indexOf('>На текущий месяц</td></tr>');
+        const a10 = page.indexOf('Работы на месяц</td>');
+        assertTrue(g1 !== -1 && g2 !== -1 && a3 !== -1 && a8 !== -1 &&
+                   a9 !== -1 && g3 !== -1 && a10 !== -1, 'все маркеры найдены');
         assertTrue(g1 < a3 && a3 < g2, '3 мероприятия ДО группы «В конце месяца»');
-        assertTrue(g2 < a8, '5 мероприятий ПОСЛЕ группы «В конце месяца»');
+        assertTrue(g2 < a8 && a8 < a9, '6 мероприятий ПОСЛЕ группы «В конце месяца»');
+        assertTrue(a9 < g3 && g3 < a10, '«Работы на следующий месяц» ДО, «Работы на месяц» ПОСЛЕ группы «На текущий месяц» (Task 470)');
     });
 
-    test('ячейки месяцев ПУСТЫЕ: 96 шт., без текста и отметок (как в образце)', () => {
+    test('ячейки месяцев ПУСТЫЕ: 120 шт., без текста и отметок (как в образце)', () => {
         const cnt = (page.match(/<td class="pe-m"><\/td>/g) || []).length;
-        assertEqual(cnt, 96, '8 строк × 12 месяцев = 96 пустых ячеек');
+        assertEqual(cnt, 120, '10 строк × 12 месяцев = 120 пустых ячеек');
         // в строках мероприятий нет отметок (✓/✗/+/V/дата) вне td.pe-m
         const rows = page.split('<tr class="pe-row">').slice(1);
-        assertEqual(rows.length, 8, '8 строк мероприятий');
+        assertEqual(rows.length, 10, '10 строк мероприятий');
         for (const r of rows) {
             const body = r.split('</tr>')[0];
             const tds = (body.match(/<td[^>]*>([^<]*)<\/td>/g) || []);
@@ -326,8 +346,8 @@ describe('Task 460 — SRC: права доступа (обновлено Task 4
 // ============================================================
 describe('Task 460 — SW', () => {
 
-    test('kipia-test-v693 + комментарий Task 460', () => {
-        assertTrue(SW_SRC.indexOf("kipia-test-v693") !== -1, 'версия поднята до v684');
+    test('kipia-test-v694 + комментарий Task 460', () => {
+        assertTrue(SW_SRC.indexOf("kipia-test-v694") !== -1, 'версия поднята до v684');
         assertTrue(SW_SRC.indexOf('kipia-test-v683') === -1, 'старой версии v683 нет');
         assertTrue(SW_SRC.indexOf('Task 460') !== -1, 'комментарий Task 460 в истории');
         assertTrue(SW_SRC.indexOf('Плановые мероприятия') !== -1,

@@ -28,7 +28,7 @@
 //   всех строк ключа, not_found если записи нет;
 //   planEvents.unmark — deleteRow всех строк ключа (с конца),
 //   идемпотентно removed:false; SRV_VER '464';
-//   SW: kipia-test-v693.
+//   SW: kipia-test-v694.
 //
 // Запуск: через tests/run-all.js (require './test-task464.js').
 
@@ -104,8 +104,9 @@ describe('Task 464 — SRC: HTML страницы plan-events', () => {
             'aria-label селектора');
     });
 
-    test('разметка 96 ячеек не содержит классов месяцев (ставит JS)', () => {
-        assertEqual(96, INDEX_SRC.split('<td class="pe-m"></td>').length - 1,
+    test('разметка ячеек не содержит классов месяцев (ставит JS)', () => {
+        // Task 470: 96 → 120 пустых ячеек (новые мероприятия Task 470)
+        assertEqual(120, INDEX_SRC.split('<td class="pe-m"></td>').length - 1,
             'пустые ячейки месяцев в разметке не тронуты');
     });
 });
@@ -414,8 +415,8 @@ describe('Task 464 — SRC: Code.gs маршрутизация', () => {
 // ============================================================
 describe('Task 464 — SW: версия кэша', () => {
 
-    test('CACHE_VERSION = kipia-test-v693', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v693';") !== -1,
+    test('CACHE_VERSION = kipia-test-v694', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v694';") !== -1,
             'текущая версия v688');
     });
 

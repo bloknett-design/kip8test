@@ -23,7 +23,7 @@
 //     набор из 8 позиций образца (Task 392); свободный текст
 //     не запрещён;
 //   • сервер НЕ меняется (listPpe уже отдаёт все записи листа);
-//   • sw.js → kipia-test-v693.
+//   • sw.js → kipia-test-v694.
 // ============================================================
 
 const fs = require('fs');
@@ -443,9 +443,9 @@ describe('Task 461 — VM: openPpeForm заполняет datalist', () => {
 // ============================================================
 describe('Task 461 — SW: версия', () => {
 
-    test("CACHE_VERSION = 'kipia-test-v693'", () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v693'") !== -1,
-            'SW поднят до kipia-test-v693 (Task 461)');
+    test("CACHE_VERSION = 'kipia-test-v694'", () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v694'") !== -1,
+            'SW поднят до kipia-test-v694 (Task 461)');
     });
 
     test('старая версия kipia-test-v684 отсутствует', () => {
@@ -454,13 +454,16 @@ describe('Task 461 — SW: версия', () => {
     });
 
     test('комментарий Task 461 в шапке версий sw.js', () => {
-        const i = SW_SRC.indexOf('kipia-test-v693');
+        const i = SW_SRC.indexOf('kipia-test-v694');
         // Task 463: окно 700 → 2000 — комментарий Task 463 в шапке sw.js
         // отодвинул комментарий Task 461 за границу прежнего окна.
         // Task 468: окно 2000 → 2500 — комментарий Task 468 (5 строк
         // о раскладке «Плановых мероприятий») снова отодвинул
-        // комментарий Task 461 (расстояние ~2100 символов)
-        const above = SW_SRC.slice(Math.max(0, i - 2500), i);
+        // комментарий Task 461 (расстояние ~2100 символов).
+        // Task 470: окно 2500 → 3050 — комментарий Task 470 (4 строки
+        // о таблице «Плановых мероприятий») снова отодвинул
+        // комментарий Task 461 (расстояние ~2600 символов)
+        const above = SW_SRC.slice(Math.max(0, i - 3050), i);
         assertTrue(above.indexOf('Task 461') !== -1, 'упоминание Task 461');
         assertTrue(above.indexOf('wsPpeNameList') !== -1 ||
                    above.indexOf('_fillPpeNameOptions') !== -1,
