@@ -21,7 +21,7 @@
 //      «Работы на месяц» (внизу таблицы);
 //   4) JS/CSS/раскладка НЕ тронуты — ячейки новых строк такие же
 //      пустые td.pe-m, отметки работают по наименованию из DOM.
-//   SW: kipia-test-v694.
+//   SW: kipia-test-v695.
 //
 // Запуск: через tests/run-all.js (require './test-task470.js').
 
@@ -253,8 +253,11 @@ describe('Task 470 — SRC: JS отметок Task 463/464 не тронут', (
     });
 
     test('делегированный клик по td.pe-m — новые строки кликабельны', () => {
-        assertTrue(INDEX_SRC.indexOf("e.target.closest('td.pe-m')") !== -1,
-            'делегированный обработчик Task 463 цел');
+        // Task 471: обработчик расширен (клики по наименованиям/
+        // «Мероприятия»/месяцам шапки) — td.pe-m остался первой
+        // веткой, целевая проверка — та же (closest('td.pe-m'))
+        assertTrue(INDEX_SRC.indexOf("t.closest('td.pe-m')") !== -1,
+            'делегированный обработчик td.pe-m жив (Task 463 → 471)');
         // ячейки новых строк — те же td.pe-m: клики работают без правок JS
         const page = peSection();
         const i = page.indexOf('<td class="pe-name">Работы на месяц</td>');
@@ -273,8 +276,8 @@ describe('Task 470 — SRC: JS отметок Task 463/464 не тронут', (
 // ============================================================
 describe('Task 470 — SW: версия кэша', () => {
 
-    test('CACHE_VERSION = kipia-test-v694', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v694';") !== -1,
+    test('CACHE_VERSION = kipia-test-v695', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v695';") !== -1,
             'инкремент Task 470: v693 → v694');
     });
 

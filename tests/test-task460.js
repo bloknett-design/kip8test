@@ -23,7 +23,7 @@
 //     (группа _PLAN_EVENTS_PAGES, уровни с PLAN_EVENTS, в
 //     _applyServerAccess — perm('plan.events') + переходный
 //     фоллбек пока колонки в матрице нет; см. test-task462.js);
-//   • sw.js → kipia-test-v694.
+//   • sw.js → kipia-test-v695.
 // ============================================================
 
 const fs = require('fs');
@@ -121,11 +121,15 @@ describe('Task 460 — SRC: таблица по образцу «Меропри�
             '12 колонок месяцев одним col');
     });
 
-    test('шапка образца: «Мероприятия» rowspan 2 + «2026 год» colspan 12', () => {
+    test('шапка образца: «Мероприятия» rowspan 2 + «2026 год» colspan 12 (Task 471: кнопка года)', () => {
         assertTrue(page.indexOf('<th class="pe-th-name" rowspan="2">Мероприятия</th>') !== -1,
             '«Мероприятия» на 2 строки (A1:A2 образца)');
-        assertTrue(page.indexOf('<th class="pe-th-year" colspan="12">2026 год</th>') !== -1,
-            '«2026 год» на 12 колонок (B1:M1 образца)');
+        // Task 471: слева от года — кнопка предыдущего года (pePrevYearBtn),
+        // текст года — в #peYearLabel (JS переключает по годам архива)
+        assertTrue(page.indexOf('<th class="pe-th-year" colspan="12"><button type="button" id="pePrevYearBtn"') !== -1,
+            '«2026 год» на 12 колонок + кнопка слева (B1:M1 образца + Task 471)');
+        assertTrue(page.indexOf('<span id="peYearLabel">2026 год</span>') !== -1,
+            'подпись «2026 год» — #peYearLabel (Task 471)');
     });
 
     test('12 месяцев образца; «Фев.» — опечатка образца «Феф.» ИСПРАВЛЕНА; «Ноя.» с точкой (Task 470)', () => {
@@ -346,8 +350,8 @@ describe('Task 460 — SRC: права доступа (обновлено Task 4
 // ============================================================
 describe('Task 460 — SW', () => {
 
-    test('kipia-test-v694 + комментарий Task 460', () => {
-        assertTrue(SW_SRC.indexOf("kipia-test-v694") !== -1, 'версия поднята до v684');
+    test('kipia-test-v695 + комментарий Task 460', () => {
+        assertTrue(SW_SRC.indexOf("kipia-test-v695") !== -1, 'версия поднята до v684');
         assertTrue(SW_SRC.indexOf('kipia-test-v683') === -1, 'старой версии v683 нет');
         assertTrue(SW_SRC.indexOf('Task 460') !== -1, 'комментарий Task 460 в истории');
         assertTrue(SW_SRC.indexOf('Плановые мероприятия') !== -1,

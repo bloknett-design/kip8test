@@ -25,7 +25,7 @@
 //   архив — лист «Архив» файла Мероприятия_КИП_ИОС (создаётся
 //   одноразовым PlanEventsInit.gs: id, дата_выполнения, мероприятие,
 //   год, месяц, email, время_отметки);
-//   SW: kipia-test-v694.
+//   SW: kipia-test-v695.
 //
 // АДАПТАЦИЯ Task 464 (правка/снятие отметок + мобайл): подсказка
 //   peHint УДАЛЕНА (заявка); кнопка подтверждения «Подтвердить»
@@ -293,7 +293,7 @@ describe('Task 463 — SRC: модуль PlanEventsData', () => {
         const fn = stripComments(methodText(PE_MODULE_SRC, '_markCell'));
         assertTrue(fn.indexOf("api('planEvents.mark'") !== -1,
             'вызов planEvents.mark');
-        ['token', 'year: this.YEAR', 'month: info.month',
+        ['token', 'year: this._viewYear', 'month: info.month',
          'event: info.event', 'date: date'].forEach(function(frag) {
             assertTrue(fn.indexOf(frag) !== -1, 'в payload: ' + frag);
         });
@@ -311,7 +311,7 @@ describe('Task 463 — SRC: модуль PlanEventsData', () => {
         const fn = stripComments(methodText(PE_MODULE_SRC, 'loadMarks'));
         assertTrue(fn.indexOf("api('planEvents.list'") !== -1,
             'вызов planEvents.list');
-        assertTrue(fn.indexOf('year: this.YEAR') !== -1, 'год плана');
+        assertTrue(fn.indexOf('year: this._viewYear') !== -1, 'год плана');
         assertTrue(fn.indexOf('silent') !== -1, 'режим silent');
         assertTrue(fn.indexOf('console.warn') !== -1,
             'ошибка — в консоль (молча при автозагрузке)');
@@ -552,8 +552,8 @@ describe('Task 463 — SRC: Code.gs маршрутизация', () => {
 // ============================================================
 describe('Task 463 — SW: версия кэша', () => {
 
-    test('CACHE_VERSION = kipia-test-v694', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v694';") !== -1,
+    test('CACHE_VERSION = kipia-test-v695', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v695';") !== -1,
             'текущая версия v688 (бамп Task 464)');
     });
 

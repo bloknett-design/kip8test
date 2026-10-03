@@ -28,7 +28,7 @@
 //   всех строк ключа, not_found если записи нет;
 //   planEvents.unmark — deleteRow всех строк ключа (с конца),
 //   идемпотентно removed:false; SRV_VER '464';
-//   SW: kipia-test-v694.
+//   SW: kipia-test-v695.
 //
 // Запуск: через tests/run-all.js (require './test-task464.js').
 
@@ -269,7 +269,7 @@ describe('Task 464 — SRC: модуль PlanEventsData', () => {
         const fn = stripComments(methodText(PE_MODULE_SRC, '_saveDate'));
         assertTrue(fn.indexOf("api('planEvents.update'") !== -1,
             'вызов planEvents.update');
-        ['token', 'year: this.YEAR', 'month: info.month',
+        ['token', 'year: this._viewYear', 'month: info.month',
          'event: info.event', 'date: date'].forEach(function(frag) {
             assertTrue(fn.indexOf(frag) !== -1, 'в payload: ' + frag);
         });
@@ -286,7 +286,7 @@ describe('Task 464 — SRC: модуль PlanEventsData', () => {
         const fn = stripComments(methodText(PE_MODULE_SRC, '_unmarkCell'));
         assertTrue(fn.indexOf("api('planEvents.unmark'") !== -1,
             'вызов planEvents.unmark');
-        ['token', 'year: this.YEAR', 'month: info.month',
+        ['token', 'year: this._viewYear', 'month: info.month',
          'event: info.event'].forEach(function(frag) {
             assertTrue(fn.indexOf(frag) !== -1, 'в payload: ' + frag);
         });
@@ -315,9 +315,11 @@ describe('Task 464 — SRC: модуль PlanEventsData', () => {
 // ============================================================
 describe('Task 464 — SRC: сервер PlanEvents.gs', () => {
 
-    test('SRV_VER поднят до 464', () => {
-        assertTrue(GS_SRC.indexOf("SRV_VER: '464'") !== -1,
-            'SRV_VER: 464');
+    test('SRV_VER поднят (Task 471: 471)', () => {
+        // Task 471: сервер расширен (planEvents.years + planWorks.*),
+        // версия поднята 464 → 471
+        assertTrue(GS_SRC.indexOf("SRV_VER: '471'") !== -1,
+            'SRV_VER: 471');
     });
 
     test('update: валидация полей как у mark', () => {
@@ -415,8 +417,8 @@ describe('Task 464 — SRC: Code.gs маршрутизация', () => {
 // ============================================================
 describe('Task 464 — SW: версия кэша', () => {
 
-    test('CACHE_VERSION = kipia-test-v694', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v694';") !== -1,
+    test('CACHE_VERSION = kipia-test-v695', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v695';") !== -1,
             'текущая версия v688');
     });
 

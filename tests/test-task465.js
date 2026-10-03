@@ -30,7 +30,7 @@
 //   _buildEventsWorkbook/_eventsSheetXml/_eventsStylesXml (xlsx
 //   «Мероприятия»); диалоги печати взаимоисключающие (график ↔
 //   талоны ↔ список мероприятий);
-//   SW: kipia-test-v694.
+//   SW: kipia-test-v695.
 //
 // Запуск: через tests/run-all.js (require './test-task465.js').
 
@@ -679,8 +679,8 @@ describe('Task 465 — VM: _buildEventsWorkbook', () => {
 // ============================================================
 describe('Task 465 — SW: версия кэша', () => {
 
-    test('CACHE_VERSION = kipia-test-v694', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v694';") !== -1,
+    test('CACHE_VERSION = kipia-test-v695', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v695';") !== -1,
             'текущая версия v690');
     });
 

@@ -362,6 +362,27 @@ function doPost(e) {
       case 'planEvents.unmark':
         return _json(PlanEvents.unmark(payload));
 
+      // === Task 471: годы архива + работы месяца ===
+      // planEvents.years — годы листа «Архив» (кнопка переключения
+      // годов в шапке таблицы «Плановых мероприятий»); planWorks.* —
+      // работы листа «Работы на месяц» файла Мероприятия_КИП_ИОС
+      // (создаётся PlanWorksInit.gs). Доступ — то же право
+      // plan.events (Task 462)
+      case 'planEvents.years':
+        return _json(PlanEvents.years(payload));
+
+      case 'planWorks.list':
+        return _json(PlanEvents.listWorks(payload));
+
+      case 'planWorks.add':
+        return _json(PlanEvents.addWork(payload));
+
+      case 'planWorks.remove':
+        return _json(PlanEvents.removeWork(payload));
+
+      case 'planWorks.setStatus':
+        return _json(PlanEvents.setWorkStatus(payload));
+
       default:
         return _json({ ok: false, error: 'Unknown action: ' + action });
     }
