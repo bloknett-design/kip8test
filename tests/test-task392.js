@@ -322,10 +322,10 @@ describe('Task 392 — SRC: загрузка, кэш, сервер, PPEInit.gs',
             'таб_№ — текстовый формат (Task 304)');
     });
 
-    test('SW: kipia-test-v689', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v689'") !== -1,
+    test('SW: kipia-test-v690', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v690'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v690') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v691') === -1,
             'двойного бампа не было');
     });
 });
