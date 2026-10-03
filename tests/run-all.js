@@ -592,6 +592,7 @@ require('./test-task468.js');
 require('./test-task469.js');
 require('./test-task470.js');
 require('./test-task471.js');
+require('./test-task472.js');
 require('./test-deploy-url.js');
 
 // Запускаем

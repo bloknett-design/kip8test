@@ -38,7 +38,7 @@
 //      → лист «Работы на месяц»), «Мероприятия» (шапка) — описание;
 //   4) сервер: planEvents.years + planWorks.list/add/remove/
 //      setStatus (лист «Работы на месяц», создаёт PlanWorksInit.gs).
-//   SW: kipia-test-v695.
+//   SW: kipia-test-v696.
 //
 // Запуск: через tests/run-all.js (require './test-task471.js').
 
@@ -577,9 +577,9 @@ describe('Task 471 — SRC: сервер (Apps Script)', () => {
 // ============================================================
 describe('Task 471 — SW: версия кэша', () => {
 
-    test("CACHE_VERSION = kipia-test-v695", () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v695';") !== -1,
-            'SW поднят до kipia-test-v695 (Task 471)');
+    test("CACHE_VERSION = kipia-test-v696", () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v696';") !== -1,
+            'SW поднят до kipia-test-v696 (Task 471)');
     });
 
     test('версия до партии (v694) отсутствует', () => {
@@ -588,7 +588,7 @@ describe('Task 471 — SW: версия кэша', () => {
     });
 
     test('комментарий Task 471 в шапке версий sw.js', () => {
-        const i = SW_SRC.indexOf('kipia-test-v695');
+        const i = SW_SRC.indexOf('kipia-test-v696');
         const ctx = SW_SRC.slice(Math.max(0, i - 900), i);
         assertTrue(ctx.indexOf('Task 471') !== -1, 'упоминание Task 471');
         assertTrue(ctx.indexOf('Работы на месяц') !== -1,

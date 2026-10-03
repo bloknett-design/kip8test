@@ -34,7 +34,7 @@
 //     (3 ветки — как в Task 314).
 //   VM: _updateCacheStamp (формат/подсказка), _showRefreshTip/
 //     _hideRefreshTip на моках (скрытие, позиция сверху/снизу).
-//   SW: kipia-test-v695.
+//   SW: kipia-test-v696.
 //
 // Запуск: через tests/run-all.js (require './test-task317.js').
 
@@ -327,10 +327,10 @@ describe('Task 317 — JS: тултип «данные от …»', () => {
 // Service Worker
 // ------------------------------------------------------------
 describe('Task 317 — Service Worker', () => {
-    test('SW: версия кэша kipia-test-v695', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v695') !== -1,
-            'CACHE_VERSION = kipia-test-v695 (Task 317)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v696') !== -1,
+    test('SW: версия кэша kipia-test-v696', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v696') !== -1,
+            'CACHE_VERSION = kipia-test-v696 (Task 317)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v697') !== -1,
             'лишний инкремент не делался');
     });
 });
