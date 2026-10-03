@@ -40,7 +40,7 @@
 //     > * + * 3px; .ws-ep-item + .ws-ep-item margin-top: 0; строка
 //     3px 10px / 0 -10px; тинты 0.45/0.12/0.12/0.55 на месте; окно
 //     «Нормы» БЕЗ gap: 0 (не тронуто).
-//   SW: kipia-test-v688 (guard v611).
+//   SW: kipia-test-v689 (guard v611).
 //
 // Запуск: через tests/run-all.js (require './test-task381.js').
 
@@ -152,17 +152,21 @@ describe('Task 381 — SRC: прикол значка _barExpSync', () => {
             'флаг-гейт: слушатель вешается один раз');
         assertTrue(m.indexOf("el.addEventListener('scroll'") !== -1,
             "слушатель scroll на элементе окна");
-        assertTrue(m.indexOf("btn.style.transform = 'translateY(' + el.scrollTop + 'px)';") !== -1,
-            'transform ставится при каждом sync ((пере)создание значка)');
+        // Task 465: transform теперь в переменной tNow (прикол ставится
+        // ОБОИМ значкам окна мероприятий — раскрытие и печать)
+        assertTrue(m.indexOf("var tNow = 'translateY(' + el.scrollTop + 'px)';") !== -1,
+            'transform ставится при каждом sync ((пере)создание значков)');
         assertTrue(m.indexOf("'translateY(' + el.scrollTop + 'px)'") !== -1,
             'компенсация прокрутки — translateY(scrollTop)');
+        assertTrue(m.indexOf("el.querySelector('.ws-bar-print')") !== -1,
+            'Task 465: прикол и значка печати');
     });
 
-    test('значок остаётся absolute в правом ВЕРХНЕМ углу (Task 388)', () => {
+    test('значок остаётся absolute в правом ВЕРХНЕМ углу (Task 388; Task 465: 3px от края)', () => {
         const b = ruleBlock('.ws-bar-exp {');
         assertTrue(b !== null && /position:\s*absolute/.test(b) &&
-                   /right:\s*5px/.test(b) && /top:\s*5px/.test(b),
-            'правый ВЕРХНИЙ угол, absolute (Task 388: верх при раскрытии не двигается)');
+                   /right:\s*2px/.test(b) && /top:\s*2px/.test(b),
+            'правый ВЕРХНИЙ угол, absolute (Task 388: верх при раскрытии не двигается; Task 465: 2px + 1px рамка = 3px от края окна)');
     });
 });
 
@@ -358,10 +362,10 @@ describe('Task 381 — CSS: общий фон окна мероприятий', 
 // ============================================================
 describe('Task 381 — SW', () => {
 
-    test('SW: kipia-test-v688', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v688'") !== -1,
-            'версия кэша kipia-test-v688');
-        assertFalse(SW_SRC.indexOf('kipia-test-v689') !== -1,
+    test('SW: kipia-test-v689', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v689'") !== -1,
+            'версия кэша kipia-test-v689');
+        assertFalse(SW_SRC.indexOf('kipia-test-v690') !== -1,
             'двойного бампа нет');
     });
 });

@@ -260,10 +260,10 @@ describe('Task 388 — SRC: итоги учёта доступны в любом
             'тосты сменного/дневного вида обещают итоги');
     });
 
-    test('SW: кэш поднят до kipia-test-v688', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v688'") !== -1,
-            'CACHE_VERSION = kipia-test-v688 (Task 388 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v689') !== -1,
+    test('SW: кэш поднят до kipia-test-v689', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v689'") !== -1,
+            'CACHE_VERSION = kipia-test-v689 (Task 388 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v690') !== -1,
             'v617 ещё не существует (guard)');
     });
 });
@@ -273,16 +273,18 @@ describe('Task 388 — SRC: итоги учёта доступны в любом
 // ============================================================
 describe('Task 388 — SRC: значок раскрытия окон — правый ВЕРХНИЙ угол', () => {
 
-    test('CSS .ws-bar-exp: top:5px (не bottom)', () => {
+    test('CSS .ws-bar-exp: верхний край (Task 465: упор 2px = 3px от края окна)', () => {
         const i = INDEX_SRC.indexOf('.ws-bar-exp {');
         const rule = INDEX_SRC.slice(i, INDEX_SRC.indexOf('}', i) + 1);
-        assertTrue(/top:\s*5px/.test(rule), 'верхний край');
+        assertTrue(/top:\s*2px/.test(rule), 'верхний край (Task 465: 3px от края с рамкой окна)');
         assertFalse(/bottom:\s*5px/.test(rule), 'нижнего упора больше нет');
     });
 
-    test('заголовки окон не прячутся под значком (правый паддинг)', () => {
-        assertTrue(INDEX_SRC.indexOf('.ws-events-panel .ws-ep-cap,\n    .ws-cal-panel .ws-cp-cap { padding-right: 26px; }') !== -1,
-            'плашки-заголовки окон получили правый добор паддинга');
+    test('заголовки окон не прячутся под значками (правый паддинг; Task 465: пара значков)', () => {
+        assertTrue(INDEX_SRC.indexOf('.ws-events-panel .ws-ep-cap { padding-right: 52px; }') !== -1,
+            'окно мероприятий — два значка у угла (паддинг 52px, Task 465)');
+        assertTrue(INDEX_SRC.indexOf('.ws-cal-panel .ws-cp-cap { padding-right: 26px; }') !== -1,
+            'окно норм — один значок (26px, как прежде)');
     });
 
     test('компенсация прокрутки жива (значок приколот к видимой грани)', () => {
