@@ -22,7 +22,7 @@
 //      463/464); @media < 1200px раскладка складывается в колонку
 //      (описание ПОД таблицей), мобильный вид Task 464 (@1023px)
 //      не тронут.
-//   SW: kipia-test-v692.
+//   SW: kipia-test-v693.
 //
 // Запуск: через tests/run-all.js (require './test-task468.js').
 
@@ -174,7 +174,7 @@ describe('Task 468 — SRC: HTML — структура раскладки', () 
         assertTrue(i !== -1, 'семантичный aside с доступным именем');
     });
 
-    test('содержание окна: заголовок, вводный абзац, «Функционал», 5 пунктов', () => {
+    test('содержание окна: заголовок, вводный абзац, «Функционал», пункты списка', () => {
         const i = INDEX_SRC.indexOf('<aside class="pe-desc-card"');
         const j = INDEX_SRC.indexOf('</aside>', i);
         const html = INDEX_SRC.slice(i, j);
@@ -183,8 +183,10 @@ describe('Task 468 — SRC: HTML — структура раскладки', () 
         assertTrue(html.indexOf('pe-desc-lead') !== -1, 'вводный абзац');
         assertTrue(html.indexOf('pe-desc-sub') !== -1 &&
             html.indexOf('Функционал') !== -1, 'подзаголовок «Функционал»');
-        assertTrue((html.match(/<li>/g) || []).length === 5,
-            'пять пунктов функционала');
+        // Task 469: описание переписано по заявке — пункт
+        // «Мобильная версия» убран, стало 4 пункта
+        assertTrue((html.match(/<li>/g) || []).length === 4,
+            'четыре пункта функционала (Task 469: 5 → 4)');
     });
 
     test('описание отражает фактический функционал (Task 463/464)', () => {
@@ -192,8 +194,9 @@ describe('Task 468 — SRC: HTML — структура раскладки', () 
         const html = INDEX_SRC.slice(i, INDEX_SRC.indexOf('</aside>', i));
         assertTrue(html.indexOf('Отметка выполнения') !== -1, 'отметки 463');
         assertTrue(html.indexOf('Изменение отметки') !== -1, 'правка отметки 464');
-        assertTrue(html.indexOf('Мобильная версия') !== -1, 'мобильный вид 464');
-        assertTrue(html.indexOf('Пример таблицы мероприятий') !== -1, 'образец 460');
+        // Task 469: упоминания образца-файла и мобильного вида
+        // из описания убраны (заявка на сокращённый текст) —
+        // текст переписан, ассерты под новое содержание сняты
     });
 });
 
@@ -244,8 +247,8 @@ describe('Task 468 — SRC: мобильный вид Task 464 не тронут
 // ============================================================
 describe('Task 468 — SW: версия кэша', () => {
 
-    test('CACHE_VERSION = kipia-test-v692', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v692';") !== -1,
+    test('CACHE_VERSION = kipia-test-v693', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v693';") !== -1,
             'инкремент Task 468: v691 → v692');
     });
 
