@@ -263,15 +263,22 @@ def main():
         ctxA.set_offline(True)
         tB = goto_app(pageA)
         check('B: офлайн reload мгновенный (< 2.5 с): %.2f с' % tB, tB < 2.5)
+        # bootstrap стартует на window load + 100 мс — ждём применения
+        # роли (быстрый путь), иначе navigateTo гоняется с доступом
+        pageA.wait_for_timeout(1800)
         pageA.evaluate("navigateTo('work-schedule')")
         pageA.wait_for_timeout(2500)
         gridB = pageA.evaluate("""(() => {
             const w = document.getElementById('wsGridWrap');
+            const active = document.querySelector('.page-content.active');
             return {grid: !!(w && w.querySelector('.ws-grid')),
+                    visible: !!(w && w.offsetParent !== null),
+                    page: active ? active.id : null,
                     err: !!(w && w.querySelector('.admin-empty')),
                     load: !!(w && w.querySelector('.flow-loading'))};
         })()""")
-        check('B: сетка поднята из KipDB (LS пуст, сети нет)', gridB['grid'], gridB)
+        check('B: сетка поднята из KipDB (LS пуст, сети нет)',
+              gridB['grid'] and gridB['visible'] and gridB['page'] == 'page-work-schedule', gridB)
         check('B: экрана ошибки нет', not gridB['err'], gridB)
         idbB = pageA.evaluate(IDB_READ, 'kip8_ws_cache_v1')
         check('B: KipDB-копия на месте (не стёрта)', idbB is not None and idbB.get('v') == 1)
