@@ -53,8 +53,8 @@ function pngSize(file) {
 // ==========================================================================
 // 1. SW: версия и шапка
 describe('Task 475 — SW: версия и шапка', () => {
-    test('CACHE_VERSION = kipia-test-v700', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v700';") !== -1,
+    test('CACHE_VERSION = kipia-test-v701', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v701';") !== -1,
             'SW поднят до v699');
     });
     test('прежняя версия v698 отсутствует', () => {
@@ -62,8 +62,8 @@ describe('Task 475 — SW: версия и шапка', () => {
             'в sw.js не осталось kipia-test-v698');
     });
     test('несуществующая v700 отсутствует (guard)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v701') === -1,
-            'kipia-test-v701 не должен существовать');
+        assertTrue(SW_SRC.indexOf('kipia-test-v702') === -1,
+            'kipia-test-v702 не должен существовать');
     });
     test('комментарий Task 475 в шапке версий', () => {
         assertTrue(SW_SRC.indexOf('Task 475') !== -1, 'маркер задачи');
@@ -235,8 +235,10 @@ describe('Task 475 — вход: офлайн-ветка bootstrap', () => {
             'пользователь понимает, что произошло');
     });
     test('автоповтор: интервал 60с + событие online + первая попытка 5с', () => {
+        // Task 477: окно 2400 → 2800 — в attempt-успех добавлен вызов
+        // _schedulePreload (+~220 симв.) до setInterval в конце метода.
         const i = INDEX_SRC.indexOf('_startOfflineTokenRetry: function()');
-        const seg = INDEX_SRC.slice(i, i + 2400);
+        const seg = INDEX_SRC.slice(i, i + 2800);
         assertTrue(seg.indexOf('setInterval(attempt, 60 * 1000)') !== -1,
             'интервал 60 секунд');
         assertTrue(seg.indexOf("window.addEventListener('online'") !== -1,

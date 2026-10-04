@@ -97,8 +97,8 @@ function mkKipDbMock() {
 // 1. SW: версия и шапка
 // ==========================================================================
 describe('Task 476 — SW: версия и шапка', () => {
-    test('CACHE_VERSION = kipia-test-v700', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v700';") !== -1,
+    test('CACHE_VERSION = kipia-test-v701', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v701';") !== -1,
             'SW поднят до v700');
     });
     test('прежняя версия v699 отсутствует', () => {
@@ -106,8 +106,8 @@ describe('Task 476 — SW: версия и шапка', () => {
             'в sw.js не осталось kipia-test-v699');
     });
     test('несуществующая v701 отсутствует (guard)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v701') === -1,
-            'kipia-test-v701 не должен существовать');
+        assertTrue(SW_SRC.indexOf('kipia-test-v702') === -1,
+            'kipia-test-v702 не должен существовать');
     });
     test('комментарий Task 476 в шапке версий', () => {
         assertTrue(SW_SRC.indexOf('Task 476') !== -1, 'маркер задачи');
@@ -591,7 +591,7 @@ describe('Task 476 — границы и инварианты', () => {
 // 10. Окна истории sw.js (дистанции после комментария Task 476)
 // ==========================================================================
 describe('Task 476 — окна истории версий sw.js', () => {
-    const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v700';");
+    const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v701';");
 
     test('Task 474 в пределах окна 1700', () => {
         const i474 = SW_SRC.lastIndexOf('Task 474', i);
