@@ -599,6 +599,7 @@ require('./test-task472.js');
 // ВСПОМОГАТЕЛЬНАЯ ПРАВАЯ ОСЬ для малых серий К/П при ТО 320–500.
 require('./test-task473.js');
 require('./test-task474.js');
+require('./test-task475.js');
 require('./test-deploy-url.js');
 
 // Запускаем

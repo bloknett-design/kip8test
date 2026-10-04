@@ -225,8 +225,8 @@ describe('Task 474 — SRC: структура карточки', () => {
 // ==========================================================================
 // 4. SW — версия кэша и комментарий задачи
 describe('Task 474 — SW: версия кэша', () => {
-    test("CACHE_VERSION = kipia-test-v698", () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v698';") !== -1,
+    test("CACHE_VERSION = kipia-test-v699", () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v699';") !== -1,
             'текущая версия v698');
     });
 
@@ -236,7 +236,7 @@ describe('Task 474 — SW: версия кэша', () => {
     });
 
     test('v699 в sw.js отсутствует (лишний инкремент не сделан)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v699') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v700') === -1,
             'версия после Task 474 не существует');
     });
 
@@ -249,22 +249,25 @@ describe('Task 474 — SW: версия кэша', () => {
     });
 
     test('комментарий Task 474 рядом с версией (окно 600)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v698';");
-        const ctx = SW_SRC.slice(Math.max(0, i - 600), i);
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v699';");
+        const ctx = SW_SRC.slice(Math.max(0, i - 1100), i);
         assertTrue(ctx.indexOf('Task 474') !== -1,
             'комментарий задачи в шапке версий');
     });
 
-    test('окна истории версий: Task 471 (1300) и Task 461 (3800) — якоря', () => {
+    test('окна истории версий: Task 471 (2100) и Task 461 (4600) — якоря', () => {
         // Значения окон живут в test-task471/472/461; здесь контроль
         // дистанций в самом sw.js (после вставки комментария Task 474).
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v698';");
+        // Task 475: окна 1300 → 2100 и 3800 → 4600 — комментарий этапа 1
+        // оптимизации (~9 строк) отодвинул якоря (Task 471 ~1738,
+        // Task 461 ~4300).
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v699';");
         const i471 = SW_SRC.lastIndexOf('Task 471', i);
         const i461 = SW_SRC.lastIndexOf('Task 461', i);
-        assertTrue(i471 !== -1 && (i - i471) < 1300,
-            'Task 471 в пределах окна 1300');
-        assertTrue(i461 !== -1 && (i - i461) < 3800,
-            'Task 461 в пределах окна 3800');
+        assertTrue(i471 !== -1 && (i - i471) < 2100,
+            'Task 471 в пределах окна 2100');
+        assertTrue(i461 !== -1 && (i - i461) < 4600,
+            'Task 461 в пределах окна 4600');
     });
 });
 

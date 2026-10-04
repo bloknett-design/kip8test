@@ -39,7 +39,7 @@
 //      ✕ (внутри .ws-act-row), ряд — внутри колонки, галочка —
 //      выше ряда; зритель — колонка с одной галочкой состояния;
 //      запись без id — без колонки; попап — без галочки/колонки.
-//   SW: kipia-test-v698 (главный), v659 — прежней нет.
+//   SW: kipia-test-v699 (главный), v659 — прежней нет.
 // ============================================================
 
 const fs = require('fs');
@@ -413,9 +413,9 @@ describe('Task 432/433 — VM: строка инструктажа (Task 433: �
 // ============================================================
 describe('Task 432 — SW версия', () => {
     test('v658 (главный), v659 — прежней нет', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v698') !== -1,
-            'SW кэш kipia-test-v698');
-        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v699'") !== -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v699') !== -1,
+            'SW кэш kipia-test-v699');
+        assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v700'") !== -1,
             'v659 ещё не существует (guard следующего бампа)');
     });
 });

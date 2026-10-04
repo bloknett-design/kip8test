@@ -242,7 +242,16 @@
 // в полтора раза крупнее (12→18px); «№ прибора»/«Место установки»
 // ниже от верха карточки.
 // ВСЕГДА на одном уровне (обе колонки: скролл-зона + 5px + 12px).
-const CACHE_VERSION = 'kipia-test-v698';
+// Task 475 (этап 1 оптимизации): STALE-WHILE-REVALIDATE — моментальное
+// открытие при любой связи: навигация (App Shell) и ВСЕ локальные ассеты
+// отдаются из кэша СРАЗУ, сеть догружает фоном; data/*.json — в
+// персистентном DATA_CACHE_NAME (переживает инкременты CACHE_VERSION,
+// как кэш картинок), при ИЗМЕНЕНИИ содержимого — уведомление вкладкам
+// (DATA_REFRESHED → страница сбрасывает in-memory кэши разделов);
+// logo/logo_black сжаты 2048→256px и добавлены в ASSETS; офлайн-ветка
+// входа (в index.html): токен без кэша роли + нет сети → гостевой
+// режим + автоповтор входа.
+const CACHE_VERSION = 'kipia-test-v699';
 const CACHE_NAME = CACHE_VERSION;
 
 // Отдельный кэш для картинок Google Drive (превью + полные).
@@ -253,6 +262,15 @@ const CACHE_NAME = CACHE_VERSION;
 // кэш картинок (например, если в Google Drive заменили файлы с тем же ID).
 const IMAGE_CACHE_VERSION = 'kipia-images-test-v3';
 const IMAGE_CACHE_NAME = IMAGE_CACHE_VERSION;
+
+// Task 475: отдельный ПЕРСИСТЕНТНЫЙ кэш для данных справочников
+// (data/*.json). Как и кэш картинок, НЕ зависит от CACHE_VERSION:
+// однажды загруженные данные остаются на устройстве при обновлениях
+// приложения и открываются мгновенно при любой (или отсутствующей)
+// связи. Инкрементируйте DATA_CACHE_VERSION только при смене СТРУКТУРЫ
+// данных (чтобы старые снапшоты не читались новым кодом).
+const DATA_CACHE_VERSION = 'kipia-data-test-v1';
+const DATA_CACHE_NAME = DATA_CACHE_VERSION;
 
 // Файлы для пред-кэширования при установке SW.
 // Эти ресурсы будут доступны в офлайне сразу после первой загрузки.
@@ -267,6 +285,8 @@ const ASSETS = [
   './images/icon-192-maskable.png',
   './images/icon-512-maskable.png',
   './images/icon.png',
+  './images/logo.png',        // Task 475: сжат 2048→256px (шапка 36px), в ASSETS для офлайна
+  './images/logo_black.png',  // Task 475: сжат 2048→256px (шапка 36px), в ASSETS для офлайна
   './images/Launch.png',
   './images/1000\u0412.png',
   './images/4\u0440.png',
@@ -318,6 +338,22 @@ function makeCacheKey(request) {
 }
 
 // ============================================================
+// Task 475: уведомить открытые вкладки об изменении данных.
+// Страница (слушатель navigator.serviceWorker 'message') сбрасывает
+// in-memory кэш раздела — свежая версия поднимется при следующем
+// открытии раздела (незаметно для пользователя). Вызывается ТОЛЬКО
+// при фактическом изменении содержимого (сравнение текстов в SWR-ветке
+// data/*.json) — иначе получились бы бесконечные уведомления.
+// ============================================================
+function notifyDataChanged(path) {
+  self.clients.matchAll({ includeUncontrolled: true }).then(clients => {
+    clients.forEach(client => {
+      client.postMessage({ type: 'DATA_REFRESHED', path: path, source: 'swr' });
+    });
+  }).catch(() => {});
+}
+
+// ============================================================
 // Install — пред-кэширование основных файлов
 // ============================================================
 self.addEventListener('install', event => {
@@ -339,9 +375,21 @@ self.addEventListener('activate', event => {
         //    Кэш картинок переживает обновления CACHE_VERSION — иначе пользователю
         //    пришлось бы заново скачивать все 26 картинок после каждого релиза.
         const deleteOldCaches = Promise.all(
-          keys.filter(k => k !== CACHE_NAME && k !== IMAGE_CACHE_NAME).map(k => caches.delete(k))
+          keys.filter(k => k !== CACHE_NAME && k !== IMAGE_CACHE_NAME && k !== DATA_CACHE_NAME).map(k => caches.delete(k))
         );
         return deleteOldCaches.then(() => {
+          // Task 475: гигиена ПЕРСИСТЕНТНОГО DATA-кэша — держим только
+          // записи /data/*.json (страховка от осиротевших путей).
+          return caches.open(DATA_CACHE_NAME).then(dataCache => {
+            return dataCache.keys().then(requests => {
+              return Promise.all(requests.map(req => {
+                const u = new URL(req.url);
+                const isDataPath = u.pathname.indexOf('/data/') !== -1 && u.pathname.slice(-5) === '.json';
+                if (!isDataPath) return dataCache.delete(req);
+                return Promise.resolve();
+              }));
+            });
+          }).then(() => {
           // 2. В текущем кэше удалить записи, которых больше нет в ASSETS
           //    (например, устаревшие ?v=t1234567890 от предыдущей версии SW)
           return caches.open(CACHE_NAME).then(cache => {
@@ -361,6 +409,7 @@ self.addEventListener('activate', event => {
               }));
             });
           });
+          });
         });
       })
       .then(() => self.clients.claim())  // Захватить контроль над всеми вкладками
@@ -368,21 +417,25 @@ self.addEventListener('activate', event => {
 });
 
 // ============================================================
-// Fetch — стратегия NETWORK-FIRST + App Shell для навигации
+// Fetch — Task 475: STALE-WHILE-REVALIDATE + App Shell для навигации
 // ============================================================
-// Логика:
+// Логика (этап 1 оптимизации — моментальное открытие при любой связи):
 //   1. Навигационные запросы (mode === 'navigate') — это запросы HTML-страниц.
-//      Для SPA возвращаем index.html (App Shell), который сам разберётся с
-//      маршрутизацией. Сначала пытаемся обновить кэш из сети, при ошибке —
-//      отдаём закэшированный index.html. Это гарантирует, что любой URL
-//      внутри приложения (например, /kip8/#tickets-1000v) откроется в офлайне.
+//      Для SPA возвращаем index.html (App Shell) ИЗ КЭША СРАЗУ (мс, сеть
+//      не ждём); свежий index.html догружается фоном в кэш. Обновление
+//      версий не страдает: браузер видит новый sw.js → install →
+//      skipWaiting → activate (clients.claim) → страница по
+//      'controllerchange' перезагружается → новый SW отдаёт свой precache.
+//      Любой URL внутри приложения (например, /kip8/#tickets-1000v)
+//      открывается в офлайне.
 //
-//   2. Локальные файлы (CSS, JS, JSON, images):
-//      - Идём в сеть с оригинальным запросом (включая cache-busting query).
-//      - При успехе — обновляем кэш по нормализованному ключу (без query).
-//      - При ошибке сети — отдаём из кэша по нормализованному ключу.
+//   2. Локальные data/*.json — SWR + ПЕРСИСТЕНТНЫЙ DATA_CACHE_NAME
+//      (см. ветку ниже): данные переживают обновления приложения.
 //
-//   3. Внешние ресурсы (шрифты Google, CDN):
+//   3. Прочие локальные файлы (CSS, JS, PNG, manifest) — SWR: из кэша
+//      сразу, сеть фоном.
+//
+//   4. Внешние ресурсы (шрифты Google, CDN):
 //      - Идём в сеть с оригинальным запросом.
 //      - При успехе — кэшируем по полному URL (query сохраняется).
 //      - При ошибке — отдаём из кэша по полному URL.
@@ -406,23 +459,30 @@ self.addEventListener('fetch', event => {
   const url = new URL(request.url);
   const isLocal = url.origin === self.location.origin;
 
-  // ===== 1. Навигационные запросы (App Shell pattern) =====
+  // ===== 1. Навигационные запросы (App Shell, STALE-WHILE-REVALIDATE) =====
   // Это запросы HTML-страниц (location reload, переход по ссылке и т.д.)
+  // Task 475: отвечаем ЗАКЭШИРОВАННЫМ App Shell МГНОВЕННО при любой
+  // связи; свежая версия догружается фоном (следующее открытие — свежая).
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
-        .then(response => {
-          if (response.ok) {
-            // Обновляем кэш свежим index.html
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(APP_SHELL_URL, clone));
+      caches.open(CACHE_NAME).then(cache => {
+        return cache.match(APP_SHELL_URL).then(cached => {
+          // Фоновая ревалидация App Shell — НЕ блокирует ответ.
+          // Ошибку сети тихо глотаем (офлайн — нормальная ситуация).
+          const revalidate = fetch(request).then(response => {
+            if (response.ok) {
+              const clone = response.clone();
+              cache.put(APP_SHELL_URL, clone).catch(() => {});
+            }
+            return response;
+          }).catch(() => null);
+          if (cached) {
+            // Кэш есть — мгновенный ответ из устройства, сеть догрузит фоном.
+            return cached;
           }
-          return response;
-        })
-        .catch(() => {
-          // Нет сети — отдаём закэшированный App Shell
-          return caches.match(APP_SHELL_URL).then(cached => {
-            return cached || new Response(
+          // Кэша нет (первый запуск / чистый кэш) — отвечаем сетью.
+          return revalidate.then(response => {
+            return response || new Response(
               '<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8">' +
               '<title>КИПиА — офлайн</title></head><body style="font-family:sans-serif;' +
               'background:#1a2233;color:#e0e0e0;padding:40px;text-align:center;">' +
@@ -437,7 +497,8 @@ self.addEventListener('fetch', event => {
               }
             );
           });
-        })
+        });
+      })
     );
     return;
   }
@@ -499,60 +560,102 @@ self.addEventListener('fetch', event => {
   }
 
   // ===== 3. Локальные файлы (CSS-in-HTML, JS-in-HTML, JSON, images) =====
-  // Для data/*.json (phonebook.json, devices.json, exam-tickets.json) —
-  // ВСЕГДА идём в сеть (cache-busting ?v=timestamp уже добавлен клиентом).
-  // Это гарантирует, что при обновлении данных через GitHub Actions
-  // пользователь сразу увидит свежие данные (а не старый кэш SW).
-  // Для остальных локальных файлов — обычный network-first с кэшированием.
+  // Для data/*.json — Task 475: SWR + ПЕРСИСТЕНТНЫЙ DATA-кэш (ниже).
+  // Прочие локальные файлы — SWR: из кэша мгновенно, сеть фоном.
   const cacheKey = makeCacheKey(request);
   const isDataJson = isLocal && url.pathname.startsWith('/data/') && url.pathname.endsWith('.json');
 
   if (isDataJson) {
-    // Стратегия: NETWORK-FIRST с принудительным обновлением кэша
-    // При любом запросе к data/*.json — всегда идём в сеть, обновляем кэш.
-    // Если сети нет — отдаём последний закэшированный вариант.
+    // Task 475: STALE-WHILE-REVALIDATE + персистентный DATA-кэш.
+    // Данные справочников живут в DATA_CACHE_NAME (переживает инкременты
+    // CACHE_VERSION — как кэш картинок): однажды загруженные данные
+    // остаются на устройстве и открываются МГНОВЕННО при любой связи.
+    // Ответ — сразу из DATA-кэша (fallback — precache-копия из CACHE_NAME
+    // после чистой установки), свежая версия догружается ФОНОМ; при
+    // ИЗМЕНЕНИИ содержимого — обновляем кэш и уведомляем открытые вкладки
+    // (DATA_REFRESHED → страница сбрасывает in-memory кэш раздела,
+    // свежие данные поднимутся при следующем открытии — незаметно).
     event.respondWith(
-      fetch(request)
-        .then(response => {
-          if (response.ok) {
-            // Обновляем кэш по нормализованному ключу (без ?v=...)
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(cacheKey, clone));
+      caches.open(DATA_CACHE_NAME).then(dataCache => {
+        return dataCache.match(cacheKey).then(cached => {
+          // Клон для сравнения делаем СРАЗУ — до того, как страница
+          // начнёт читать тело отданного ответа (иначе clone() бросит
+          // TypeError «body locked»).
+          const cachedForCompare = cached ? cached.clone() : null;
+          const revalidate = fetch(request).then(response => {
+            if (response.ok) {
+              if (cachedForCompare) {
+                // Обновляем кэш ТОЛЬКО при фактическом изменении
+                // содержимого — иначе уведомления зациклились бы
+                // (перерисовка → новый запрос → новое уведомление…).
+                const freshForPut = response.clone();
+                const freshForText = response.clone();
+                Promise.all([freshForText.text(), cachedForCompare.text()])
+                  .then(texts => {
+                    if (texts[0] !== texts[1]) {
+                      return dataCache.put(cacheKey, freshForPut).then(() => {
+                        notifyDataChanged(url.pathname);
+                      });
+                    }
+                  })
+                  .catch(() => {}); // сбой сравнения — тихо, кэш останется прежним
+              } else {
+                // DATA-кэша не было — просто сохраняем (без уведомления:
+                // страницу в этот момент обслужила сеть/precache).
+                dataCache.put(cacheKey, response.clone()).catch(() => {});
+              }
+            }
+            return response;
+          }).catch(() => null);
+          if (cached) {
+            // Мгновенный ответ из DATA-кэша; свежая версия догрузится фоном.
+            return cached;
           }
-          return response;
-        })
-        .catch(() => {
-          // Нет сети — отдаём из кэша
-          return caches.match(cacheKey).then(cached => {
-            return cached || new Response('{"error":"offline"}', {
-              status: 503,
-              statusText: 'Service Unavailable',
-              headers: { 'Content-Type': 'application/json; charset=utf-8' }
+          // DATA-кэша нет — возможно, есть precache-копия из install.
+          return caches.match(cacheKey).then(precached => {
+            if (precached) {
+              // Отдаём precache; фоновая ревалидация (revalidate) уже
+              // наполняет DATA-кэш свежей копией для следующих открытий.
+              return precached;
+            }
+            return revalidate.then(response => {
+              return response || new Response('{"error":"offline"}', {
+                status: 503,
+                statusText: 'Service Unavailable',
+                headers: { 'Content-Type': 'application/json; charset=utf-8' }
+              });
             });
           });
-        })
+        });
+      })
     );
     return;
   }
 
-  // Остальные локальные файлы — обычный network-first
+  // ===== Остальные локальные файлы — STALE-WHILE-REVALIDATE =====
+  // Task 475: статические ассеты (картинки, manifest, десктоп-модули)
+  // отдаются из кэша мгновенно, сеть догружает фоном. Свежесть версий
+  // гарантирует precache нового SW (бамп CACHE_VERSION) + авто-перезагрузка
+  // страницы по 'controllerchange'.
   event.respondWith(
-    fetch(request)
-      .then(response => {
-        if (response.ok) {
-          // Обновляем кэш по нормализованному ключу (без ?v=...)
-          // Важно: response.clone() нужен, т.к. сам response пойдёт в браузер.
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(cacheKey, clone));
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.match(cacheKey).then(cached => {
+        const revalidate = fetch(request).then(response => {
+          if (response.ok) {
+            // Обновляем кэш по нормализованному ключу (без ?v=...)
+            const clone = response.clone();
+            cache.put(cacheKey, clone).catch(() => {});
+          }
+          return response;
+        }).catch(() => null);
+        if (cached) {
+          // Кэш есть — мгновенный ответ, сеть догрузит свежее фоном.
+          return cached;
         }
-        return response;
-      })
-      .catch(() => {
-        // Нет сети — отдаём из кэша по нормализованному ключу
-        return caches.match(cacheKey).then(cached => {
-          if (cached) return cached;
-          // Если кэша нет — пытаемся найти по полному URL (на случай,
-          // если какая-то старая запись осталась без нормализации)
+        return revalidate.then(response => {
+          if (response) return response;
+          // Сети нет и кэша нет — последняя попытка по полному URL
+          // (на случай старой записи без нормализации).
           return caches.match(request).then(fallback => {
             return fallback || new Response('Offline', {
               status: 503,
@@ -561,7 +664,8 @@ self.addEventListener('fetch', event => {
             });
           });
         });
-      })
+      });
+    })
   );
 });
 
@@ -605,7 +709,9 @@ async function sendPendingAnalytics() {
 // Используется тот же cache-busting подход, что и в index.html.
 async function refreshTicketsData() {
   try {
-    const cache = await caches.open(CACHE_NAME);
+    // Task 475: данные живут в персистентном DATA-кэше (не стирается
+    // при инкрементах CACHE_VERSION).
+    const cache = await caches.open(DATA_CACHE_NAME);
     // Используем cache-busting query, как и в основном коде
     const url = './data/exam-tickets.json?v=sync' + Date.now();
     const response = await fetch(url);
