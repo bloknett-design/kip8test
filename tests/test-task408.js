@@ -107,7 +107,9 @@ describe('Task 408 — SRC: клиент', () => {
         const w = stripComments(methodText(INDEX_SRC, '_cacheWrite'));
         assertTrue(w.indexOf('c.eventsAll = this._EVENTS_ALL;') !== -1,
             'запись в кэш');
-        const r = stripComments(methodText(INDEX_SRC, '_restoreCachedView'));
+        // Task 476: разбор объекта кэша вынесен в _restoreFromObj
+        // (общий для localStorage- и KipDB-слоёв).
+        const r = stripComments(methodText(INDEX_SRC, '_restoreFromObj'));
         assertTrue(r.indexOf('Array.isArray(c.eventsAll) ? c.eventsAll : []') !== -1,
             'восстановление с guard');
     });
@@ -525,6 +527,7 @@ describe('Task 408 — VM: кэш (localStorage)', () => {
         const host = new Function('document', 'localStorage', 'return ({' +
             methodText(INDEX_SRC, '_cacheRead') + ',\n' +
             methodText(INDEX_SRC, '_restoreCachedView') + ',\n' +
+            methodText(INDEX_SRC, '_restoreFromObj') + ',\n' +
             methodText(INDEX_SRC, '_ymKey') + ',\n' +
             '_normalizeStatusCodes: function(c) { return c; },' +
             '_normalizeInstrList: function(l) { return l; },' +
@@ -554,6 +557,7 @@ describe('Task 408 — VM: кэш (localStorage)', () => {
         const host = new Function('document', 'localStorage', 'return ({' +
             methodText(INDEX_SRC, '_cacheRead') + ',\n' +
             methodText(INDEX_SRC, '_restoreCachedView') + ',\n' +
+            methodText(INDEX_SRC, '_restoreFromObj') + ',\n' +
             methodText(INDEX_SRC, '_ymKey') + ',\n' +
             '_normalizeStatusCodes: function(c) { return c; },' +
             '_normalizeInstrList: function(l) { return l; },' +
@@ -692,9 +696,9 @@ describe('Task 408 — GAS-VM: сервер (моки листов)', () => {
 // 7. SW — версия кэша
 // ============================================================
 describe('Task 408 — SW', () => {
-    test('SW: версия кэша kipia-test-v699', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v699'") !== -1,
-            'CACHE_VERSION = kipia-test-v699');
+    test('SW: версия кэша kipia-test-v700', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v700'") !== -1,
+            'CACHE_VERSION = kipia-test-v700');
         assertTrue(SW_SRC.indexOf('kipia-test-v634') === -1,
             'старой версии нет');
     });

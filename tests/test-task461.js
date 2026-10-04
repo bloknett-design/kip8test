@@ -23,7 +23,7 @@
 //     набор из 8 позиций образца (Task 392); свободный текст
 //     не запрещён;
 //   • сервер НЕ меняется (listPpe уже отдаёт все записи листа);
-//   • sw.js → kipia-test-v699.
+//   • sw.js → kipia-test-v700.
 // ============================================================
 
 const fs = require('fs');
@@ -443,9 +443,9 @@ describe('Task 461 — VM: openPpeForm заполняет datalist', () => {
 // ============================================================
 describe('Task 461 — SW: версия', () => {
 
-    test("CACHE_VERSION = 'kipia-test-v699'", () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v699'") !== -1,
-            'SW поднят до kipia-test-v699 (Task 461)');
+    test("CACHE_VERSION = 'kipia-test-v700'", () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v700'") !== -1,
+            'SW поднят до kipia-test-v700 (Task 461)');
     });
 
     test('старая версия kipia-test-v684 отсутствует', () => {
@@ -454,7 +454,7 @@ describe('Task 461 — SW: версия', () => {
     });
 
     test('комментарий Task 461 в шапке версий sw.js', () => {
-        const i = SW_SRC.indexOf('kipia-test-v699');
+        const i = SW_SRC.indexOf('kipia-test-v700');
         // Task 463: окно 700 → 2000 — комментарий Task 463 в шапке sw.js
         // отодвинул комментарий Task 461 за границу прежнего окна.
         // Task 468: окно 2000 → 2500 — комментарий Task 468 (5 строк
@@ -468,10 +468,12 @@ describe('Task 461 — SW: версия', () => {
         // Task 461 (расстояние ~3200 символов)
         // Task 474: окно 3600 → 3800 — комментарий Task 474 (3 строки
         // Task 475: окно 3800 → 4600 — комментарий Task 475 (~9 строк
+        // Task 476: окно 4600 → 5300 — комментарий этапа 2
+        // (KipDB, ~490 симв.) отодвинул Task 461 до ~4732.
         // этапа 1 оптимизации: SWR + персистентный DATA-кэш) отодвинул
         // Task 461 до ~4300 символов.
         // о карточке прибора) снова отодвинул Task 461 (~3719 симв.)
-        const above = SW_SRC.slice(Math.max(0, i - 4600), i);
+        const above = SW_SRC.slice(Math.max(0, i - 5300), i);
         assertTrue(above.indexOf('Task 461') !== -1, 'упоминание Task 461');
         assertTrue(above.indexOf('wsPpeNameList') !== -1 ||
                    above.indexOf('_fillPpeNameOptions') !== -1,

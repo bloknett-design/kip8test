@@ -600,6 +600,11 @@ require('./test-task472.js');
 require('./test-task473.js');
 require('./test-task474.js');
 require('./test-task475.js');
+// Task 476 — ЭТАП 2 ОПТИМИЗАЦИИ: KipDB (IndexedDB) — кэш серверных
+// данных (табель/каб. журнал/расходомеры/отметки мероприятий) рядом
+// с localStorage (квота ~5 МБ не режет копии) + storage.persist() +
+// чистка копий при logout.
+require('./test-task476.js');
 require('./test-deploy-url.js');
 
 // Запускаем

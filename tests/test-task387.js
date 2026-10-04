@@ -131,7 +131,9 @@ describe('Task 387 — SRC: канон _STATUS_CODES_CANON', () => {
             'сервер-ответ нормализуется');
         assertTrue(lsc.indexOf('self._normalizeStatusCodes(self._STATUS_CODES_CANON)') !== -1,
             'фолбэк — канон');
-        const rcv = methodText(INDEX_SRC, '_restoreCachedView');
+        // Task 476: разбор объекта кэша вынесен в _restoreFromObj
+        // (общий для localStorage- и KipDB-слоёв).
+        const rcv = methodText(INDEX_SRC, '_restoreFromObj');
         assertTrue(rcv.indexOf('this._normalizeStatusCodes(c.codes)') !== -1,
             'кэш localStorage нормализуется (кэш прошлых версий)');
     });
@@ -565,10 +567,10 @@ describe('Task 387 — VM: легенда/попап/select/ширина', () =>
 
 describe('Task 387 — SW', () => {
 
-    test('SW: кэш поднят до kipia-test-v699', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v699'") !== -1,
-            'CACHE_VERSION = kipia-test-v699 (Task 387 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v700') !== -1,
+    test('SW: кэш поднят до kipia-test-v700', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v700'") !== -1,
+            'CACHE_VERSION = kipia-test-v700 (Task 387 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v701') !== -1,
             'v616 ещё не существует (guard)');
     });
 });

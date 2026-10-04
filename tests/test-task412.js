@@ -149,7 +149,9 @@ describe('Task 412 — SRC: встроенный эталон', () => {
     });
 
     test('_restoreCachedView применяет нормализацию', () => {
-        const r = stripComments(methodText(INDEX_SRC, '_restoreCachedView'));
+        // Task 476: разбор объекта кэша вынесен в _restoreFromObj
+        // (общий для localStorage- и KipDB-слоёв) — ассерт на нём.
+        const r = stripComments(methodText(INDEX_SRC, '_restoreFromObj'));
         assertTrue(r.indexOf('this._INSTR_LIST = this._normalizeInstrList(') !== -1,
             'пустой кэш прежней версии — встроенный эталон');
         assertTrue(r.indexOf('Array.isArray(c.instrList) ? c.instrList : []') !== -1,
@@ -273,6 +275,7 @@ describe('Task 412 — VM: _restoreCachedView (кэш без instrList)', () => 
         return new Function('document', 'localStorage', 'console', 'return ({' +
             methodText(INDEX_SRC, '_cacheRead') + ',' +
             methodText(INDEX_SRC, '_restoreCachedView') + ',' +
+            methodText(INDEX_SRC, '_restoreFromObj') + ',' +
             methodText(INDEX_SRC, '_ymKey') + ',' +
             propArrayText(INDEX_SRC, '_INSTR_CANON') + ',' +
             methodText(INDEX_SRC, '_normalizeInstrList') + ',' +
@@ -417,7 +420,7 @@ describe('Task 412 — VM: форма «+ Инструктаж…» (канон)
 describe('Task 412 — SW', () => {
 
     test('версия кэша поднята (v639)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v699') !== -1,
-            'CACHE_VERSION = kipia-test-v699');
+        assertTrue(SW_SRC.indexOf('kipia-test-v700') !== -1,
+            'CACHE_VERSION = kipia-test-v700');
     });
 });

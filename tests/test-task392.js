@@ -233,14 +233,16 @@ describe('Task 392 — SRC: загрузка, кэш, сервер, PPEInit.gs',
     });
 
     test('loadGrid грузит СИЗ вместе со справочниками', () => {
+        // Task 476: сетевой путь loadGrid вложен в .then(idbTry) — self.
         const fn = stripComments(methodText(INDEX_SRC, 'loadGrid'));
-        assertTrue(fn.indexOf('this._loadPpe()') !== -1, '_loadPpe() в Promise.all');
+        assertTrue(fn.indexOf('self._loadPpe()') !== -1, '_loadPpe() в Promise.all');
     });
 
     test('кэш Task 314: c.ppe пишется и восстанавливается', () => {
         const w = stripComments(methodText(INDEX_SRC, '_cacheWrite'));
         assertTrue(w.indexOf('c.ppe = this._PPE;') !== -1, 'запись c.ppe');
-        const r = stripComments(methodText(INDEX_SRC, '_restoreCachedView'));
+        // Task 476: разбор объекта кэша вынесен в _restoreFromObj.
+        const r = stripComments(methodText(INDEX_SRC, '_restoreFromObj'));
         assertTrue(r.indexOf('Array.isArray(c.ppe) ? c.ppe : []') !== -1,
             'восстановление: старый кэш без ppe → пустой список');
     });
@@ -322,10 +324,10 @@ describe('Task 392 — SRC: загрузка, кэш, сервер, PPEInit.gs',
             'таб_№ — текстовый формат (Task 304)');
     });
 
-    test('SW: kipia-test-v699', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v699'") !== -1,
+    test('SW: kipia-test-v700', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v700'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v700') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v701') === -1,
             'двойного бампа не было');
     });
 });

@@ -398,10 +398,12 @@ describe('Task 305 — клиент: рендер бейджа плановой 
 
     test('JS: loadGrid подгружает шаблоны ротации (свежий цикл)', () => {
         // Task 314: окно расширено — у loadGrid(force) появились
-        // кэш-ветки до Promise.all
+        // кэш-ветки до Promise.all; Task 476: сетевой путь вложен в
+        // .then(idbTry) — this. → self. внутри замыкания, окно
+        // 2600 → 3600 (KipDB-ветка ~600 симв.).
         const lg = INDEX_SRC.slice(INDEX_SRC.indexOf('loadGrid: function'),
-                                    INDEX_SRC.indexOf('loadGrid: function') + 2600);
-        assertTrue(lg.indexOf('this._loadPatterns(),') !== -1,
+                                    INDEX_SRC.indexOf('loadGrid: function') + 3600);
+        assertTrue(lg.indexOf('self._loadPatterns(),') !== -1,
             '_loadPatterns в Promise.all сетки');
         assertTrue(lg.indexOf('_loadVacations()') !== -1,
             'план отпусков остался в наборе загрузки');
@@ -427,8 +429,8 @@ describe('Task 305 — сервер: приоритет отпуска не тр
             'замена в toInsert (строка шага 3)');
     });
 
-    test('SW: версия кэша kipia-test-v699 (Task 305 — клиент менялся)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v699'") !== -1,
-            'CACHE_VERSION = kipia-test-v699');
+    test('SW: версия кэша kipia-test-v700 (Task 305 — клиент менялся)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v700'") !== -1,
+            'CACHE_VERSION = kipia-test-v700');
     });
 });

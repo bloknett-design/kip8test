@@ -170,7 +170,9 @@ describe('Task 407 — SRC: клиент', () => {
         assertTrue(w.indexOf('c.instrList = this._INSTR_LIST;') !== -1 &&
                    w.indexOf('c.instrAll = this._INSTR_ALL;') !== -1,
             'запись в кэш (не по годам)');
-        const r = stripComments(methodText(INDEX_SRC, '_restoreCachedView'));
+        // Task 476: разбор объекта кэша вынесен в _restoreFromObj
+        // (общий для localStorage- и KipDB-слоёв).
+        const r = stripComments(methodText(INDEX_SRC, '_restoreFromObj'));
         assertTrue(r.indexOf('Array.isArray(c.instrList) ? c.instrList : []') !== -1 &&
                    r.indexOf('Array.isArray(c.instrAll) ? c.instrAll : []') !== -1,
             'восстановление с guard (кэш прежней версии — пустые)');
@@ -261,9 +263,9 @@ describe('Task 407 — SRC: клиент', () => {
             'размеры окна карточки (.ws-wcard)');
     });
 
-    test('SW поднят (SW_VERSION = kipia-test-v699)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v699') !== -1,
-            'CACHE_VERSION в sw.js — kipia-test-v699');
+    test('SW поднят (SW_VERSION = kipia-test-v700)', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v700') !== -1,
+            'CACHE_VERSION в sw.js — kipia-test-v700');
     });
 });
 
@@ -717,6 +719,7 @@ describe('Task 407 — VM: кэш (localStorage)', () => {
         const host = new Function('document', 'localStorage', 'return ({' +
             methodText(INDEX_SRC, '_cacheRead') + ',\n' +
             methodText(INDEX_SRC, '_restoreCachedView') + ',\n' +
+            methodText(INDEX_SRC, '_restoreFromObj') + ',\n' +
             methodText(INDEX_SRC, '_ymKey') + ',\n' +
             '_normalizeStatusCodes: function(c) { return c; },' +
             '_normalizeInstrList: function(l) { return l; },' +
@@ -748,6 +751,7 @@ describe('Task 407 — VM: кэш (localStorage)', () => {
         const host = new Function('document', 'localStorage', 'return ({' +
             methodText(INDEX_SRC, '_cacheRead') + ',\n' +
             methodText(INDEX_SRC, '_restoreCachedView') + ',\n' +
+            methodText(INDEX_SRC, '_restoreFromObj') + ',\n' +
             methodText(INDEX_SRC, '_ymKey') + ',\n' +
             '_normalizeStatusCodes: function(c) { return c; },' +
             '_normalizeInstrList: function(l) { return l; },' +

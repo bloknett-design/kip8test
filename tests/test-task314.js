@@ -45,7 +45,7 @@
 //       записи, лимит 12 видов, формат даты тултипа, битый JSON;
 //     — VM-СИМУЛЯЦИЯ _renderCell: «.»/статус-мероприятие/отсутствие/
 //       пустая+событие/смена+событие/план+событие.
-//   SW: kipia-test-v699.
+//   SW: kipia-test-v700.
 //
 // Запуск: через tests/run-all.js (require './test-task314.js').
 
@@ -245,8 +245,10 @@ describe('Task 314 — JS: локальная копия (скелет)', () => 
             'сбой сети при обновлении — живой справочник остаётся');
     });
 
-    test('JS: методы кэша существуют (_ymKey/_cacheRead/_restoreCachedView/_cacheWrite/_updateCacheStamp)', () => {
-        ['_ymKey', '_cacheRead', '_restoreCachedView', '_cacheWrite',
+    test('JS: методы кэша существуют (_ymKey/_cacheRead/_restoreCachedView/_restoreFromObj/_cacheWrite/_updateCacheStamp)', () => {
+        // Task 476: +_restoreFromObj — общий разбор объекта кэша v1
+        // для localStorage- и KipDB-копий (_restoreCachedView вызывает его).
+        ['_ymKey', '_cacheRead', '_restoreCachedView', '_restoreFromObj', '_cacheWrite',
          '_updateCacheStamp'].forEach(m => {
             assertTrue(INDEX_SRC.indexOf(m + ': function') !== -1, 'метод ' + m);
         });
@@ -311,7 +313,9 @@ describe('Task 314 — VM: локальная копия (поведение)', 
             _fillStatusSelectCount: 0,
             _fillStatusSelect: function () { this._fillStatusSelectCount++; }
         };
-        ['_ymKey', '_cacheRead', '_restoreCachedView', '_cacheWrite', '_updateCacheStamp',
+        // Task 476: +_restoreFromObj — разбор объекта кэша вынесен из
+        // _restoreCachedView (общий для localStorage- и KipDB-слоёв).
+        ['_ymKey', '_cacheRead', '_restoreCachedView', '_restoreFromObj', '_cacheWrite', '_updateCacheStamp',
          '_normalizeStatusCodes', '_normalizeInstrList']
             .forEach(m => { ctx[m] = loadMethod(m, store, doc); });
         return ctx;
@@ -613,9 +617,9 @@ describe('Task 314 — VM: _renderCell (бейджи мероприятий; Tas
 // ------------------------------------------------------------
 describe('Task 314 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v699', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v699'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v699');
+    test('SW: версия кэша kipia-test-v700', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v700'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v700');
         assertFalse(SW_SRC.indexOf('kipia-test-v552') !== -1,
             'старой версии v552 нет');
     });
