@@ -27,7 +27,7 @@
 //       ст. 112 вычитаются, как раньше.
 //   VM-СЕРВЕР: _getProdCal (legalic / фолбэк) — 30.08 обычное
 //     воскресенье; TRANSFERRED_WORKING на 30.08 остаётся РАБОЧИМ.
-//   SW: kipia-test-v697.
+//   SW: kipia-test-v698.
 //
 // Запуск: через tests/run-all.js (require './test-task426.js').
 
@@ -307,10 +307,10 @@ describe('Task 426 — сервер VM: производственный кал�
 // 5. SW — версия кэша
 // ============================================================
 describe('Task 426 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v697', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v697'") !== -1,
+    test('CACHE_VERSION = kipia-test-v698', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v698'") !== -1,
             'SW v653 (Task 426)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v698') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v699') === -1,
             'двойной бамп отсутствует');
     });
 });

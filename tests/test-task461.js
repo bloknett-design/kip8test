@@ -23,7 +23,7 @@
 //     набор из 8 позиций образца (Task 392); свободный текст
 //     не запрещён;
 //   • сервер НЕ меняется (listPpe уже отдаёт все записи листа);
-//   • sw.js → kipia-test-v697.
+//   • sw.js → kipia-test-v698.
 // ============================================================
 
 const fs = require('fs');
@@ -443,9 +443,9 @@ describe('Task 461 — VM: openPpeForm заполняет datalist', () => {
 // ============================================================
 describe('Task 461 — SW: версия', () => {
 
-    test("CACHE_VERSION = 'kipia-test-v697'", () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v697'") !== -1,
-            'SW поднят до kipia-test-v697 (Task 461)');
+    test("CACHE_VERSION = 'kipia-test-v698'", () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v698'") !== -1,
+            'SW поднят до kipia-test-v698 (Task 461)');
     });
 
     test('старая версия kipia-test-v684 отсутствует', () => {
@@ -454,7 +454,7 @@ describe('Task 461 — SW: версия', () => {
     });
 
     test('комментарий Task 461 в шапке версий sw.js', () => {
-        const i = SW_SRC.indexOf('kipia-test-v697');
+        const i = SW_SRC.indexOf('kipia-test-v698');
         // Task 463: окно 700 → 2000 — комментарий Task 463 в шапке sw.js
         // отодвинул комментарий Task 461 за границу прежнего окна.
         // Task 468: окно 2000 → 2500 — комментарий Task 468 (5 строк
@@ -466,7 +466,9 @@ describe('Task 461 — SW: версия', () => {
         // Task 471: окно 3050 → 3600 — комментарий Task 471 (9 строк о
         // кнопке годов и работах месяца) снова отодвинул комментарий
         // Task 461 (расстояние ~3200 символов)
-        const above = SW_SRC.slice(Math.max(0, i - 3600), i);
+        // Task 474: окно 3600 → 3800 — комментарий Task 474 (3 строки
+        // о карточке прибора) снова отодвинул Task 461 (~3719 симв.)
+        const above = SW_SRC.slice(Math.max(0, i - 3800), i);
         assertTrue(above.indexOf('Task 461') !== -1, 'упоминание Task 461');
         assertTrue(above.indexOf('wsPpeNameList') !== -1 ||
                    above.indexOf('_fillPpeNameOptions') !== -1,

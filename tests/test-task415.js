@@ -152,11 +152,11 @@ describe('Task 415 — SRC: прочие строки карты', () => {
 // ============================================================
 describe('Task 415 — SW версия', () => {
     test('v642', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v697'") !== -1,
-            'SW кэш — kipia-test-v697');
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v698'") !== -1,
+            'SW кэш — kipia-test-v698');
         assertTrue(SW_SRC.indexOf('kipia-test-v641') === -1,
             'v641 не осталась в sw.js');
-        assertTrue(SW_SRC.indexOf('kipia-test-v698') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v699') === -1,
             'двойной бамп отсутствует (guard: v643)');
     });
 });

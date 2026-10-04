@@ -38,7 +38,7 @@
 //      → лист «Работы на месяц»), «Мероприятия» (шапка) — описание;
 //   4) сервер: planEvents.years + planWorks.list/add/remove/
 //      setStatus (лист «Работы на месяц», создаёт PlanWorksInit.gs).
-//   SW: kipia-test-v697.
+//   SW: kipia-test-v698.
 //
 // Запуск: через tests/run-all.js (require './test-task471.js').
 
@@ -577,9 +577,9 @@ describe('Task 471 — SRC: сервер (Apps Script)', () => {
 // ============================================================
 describe('Task 471 — SW: версия кэша', () => {
 
-    test("CACHE_VERSION = kipia-test-v697", () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v697';") !== -1,
-            'SW поднят до kipia-test-v697 (Task 471)');
+    test("CACHE_VERSION = kipia-test-v698", () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v698';") !== -1,
+            'SW поднят до kipia-test-v698 (Task 471)');
     });
 
     test('версия до партии (v694) отсутствует', () => {
@@ -588,11 +588,11 @@ describe('Task 471 — SW: версия кэша', () => {
     });
 
     test('комментарий Task 471 в шапке версий sw.js', () => {
-        const i = SW_SRC.indexOf('kipia-test-v697');
-        // Task 473: окно 900 → 1020 — комментарий Task 473 (2 строки о
-        // графике ППР «Приборы») отодвинул начало комментария Task 471
-        // (расстояние ~986 символов).
-        const ctx = SW_SRC.slice(Math.max(0, i - 1020), i);
+        const i = SW_SRC.indexOf('kipia-test-v698');
+        // Task 473: окно 900 → 1020; Task 474: 1020 → 1300 —
+        // комментарий Task 474 (3 строки о карточке прибора) отодвинул
+        // начало комментария Task 471 (~1157 символов).
+        const ctx = SW_SRC.slice(Math.max(0, i - 1300), i);
         assertTrue(ctx.indexOf('Task 471') !== -1, 'упоминание Task 471');
         assertTrue(ctx.indexOf('Работы на месяц') !== -1,
             'описание: лист «Работы на месяц»');
