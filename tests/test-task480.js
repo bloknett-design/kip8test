@@ -290,16 +290,25 @@ describe('Task 480 — документация: таблицы источник
         assertTrue(README_SRC.indexOf(OLD_ID) === -1, 'старая ссылка убрана');
     });
 
-    test('Промт: 4 вхождения нового ID (один файл — 4 листа)', () => {
-        assertEqual(countOf(PROMPT_SRC, NEW_ID), 4,
-            'таблица «Источники данных»: 4 строки с одним ID');
+    test('Промт: таблица «Источники данных» — 4 строки с новым ID', () => {
+        // строка-версия (заявка) цитирует ОБА ID — это история;
+        // конфиг = таблица источников: ID в `backticks`
+        assertEqual(countOf(PROMPT_SRC, '`' + NEW_ID + '`'), 4,
+            '4 записи таблицы: devices/lockouts/valves/regulators');
         ['Приборы_app', 'Блокировки_app', 'Клапана_app', 'Регуляторы_app']
             .forEach((s) => assertTrue(PROMPT_SRC.indexOf(s) !== -1,
                 'лист ' + s + ' в таблице'));
     });
 
-    test('Промт: старый ID отсутствует', () => {
-        assertTrue(PROMPT_SRC.indexOf(OLD_ID) === -1, 'старая ссылка убрана');
+    test('Промт: в таблице источников старый ID отсутствует', () => {
+        // проверяем СЕКЦИЮ «Источники данных» (без строки-версии —
+        // она цитирует заявку с обоими ID как историю)
+        const i = PROMPT_SRC.indexOf('### Источники данных');
+        assertTrue(i !== -1, 'секция источников найдена');
+        const j = PROMPT_SRC.indexOf('###', i + 10);
+        const section = PROMPT_SRC.slice(i, j === -1 ? undefined : j);
+        assertTrue(section.indexOf(OLD_ID) === -1,
+            'старая ссылка убрана из таблицы источников');
     });
 });
 
@@ -308,13 +317,18 @@ describe('Task 480 — документация: таблицы источник
 // ==========================================================================
 describe('Task 480 — репозиторий: следов старой ссылки нет', () => {
 
-    test('старый ID отсутствует во всех рабочих файлах (кроме worklog — история)', () => {
+    test('старый ID отсутствует во всех рабочих файлах (кроме истории)', () => {
         // worklog.md НЕ проверяем: старый ID в исторических записях задач
         // (регламент — историю не переписываем). tests/ тоже исключены:
         // негативные ассерты сами содержат старый ID как вход.
+        // Промт: строки-версии «> **Версия документа**» исключаются —
+        // они цитируют заявку с обоими ID (история); тело/конфиг — чистые.
+        const promptBody = PROMPT_SRC.split('\n')
+            .filter((l) => !l.startsWith('> **Версия документа'))
+            .join('\n');
         const targets = [
             'index.html', 'sw.js', 'charts-desktop.js', 'devices-table-desktop.js',
-            'README.md', 'Системный_промт_для_приложения_КИПиА.md', 'manifest.json',
+            'README.md', 'manifest.json',
             'data/devices.json', 'data/lockouts.json', 'data/valves.json',
             'data/regulators.json', 'data/projects.json', 'data/cables.json',
             'data/flowmeters.json', 'data/phonebook.json',
@@ -331,6 +345,8 @@ describe('Task 480 — репозиторий: следов старой ссы�
             if (!fs.existsSync(p)) return;  // manifest.json может отсутствовать
             if (read(rel).indexOf(OLD_ID) !== -1) dirty.push(rel);
         });
+        // промт — СПЕЦ-ПРОВЕРКА: тело без строк-версии (заявка цитирует оба ID)
+        if (promptBody.indexOf(OLD_ID) !== -1) dirty.push('Системный_промт (тело)');
         assertEqual(dirty.length, 0, 'чисто: ' + (dirty.join(', ') || 'следов нет'));
     });
 
