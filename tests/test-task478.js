@@ -33,6 +33,14 @@
 //   обычный; monotonicity (при росте «сегодня» статус только
 //   ok→bad); обе ветки представлены.
 //
+//   ⚠ Task 479 (следующая заявка той же сессии) РАСШИРИЛ логику до
+//   ТРЁХ цветов: просрочка, у которой месяц срока = ТЕКУЩИЙ
+//   календарный месяц, — 'dev-ppr-warn' (оранжево-золотистый), а
+//   НЕ 'dev-ppr-bad'; предупрёждённые тесты ниже адаптированы:
+//   «срок вчера» (тот же месяц) — теперь warn, НЕ bad; валидный
+//   набор статусов и monotonicity — с warn. Полное покрытие — в
+//   tests/test-task479.js (третий цвет + столбец «Дата» таблицы).
+//
 // Запуск: через tests/run-all.js (require './test-task478.js').
 
 const fs = require('fs');
@@ -122,8 +130,10 @@ describe('Task 478 — CSS: классы dev-ppr-ok / dev-ppr-bad', () => {
     });
 
     test('комментарий Task 478 у блока CSS поясняет условия', () => {
+        // Task 479: окно 700 → 1100 — абзац третьего цвета (оранжево-
+        // золотистый) удлинил комментарий блока; ЗЕЛЁНЫЙ/КРАСНЫЙ дальше
         const i = INDEX_SRC.indexOf('.dev-card-value.dev-ppr-ok');
-        const zone = INDEX_SRC.slice(Math.max(0, i - 700), i);
+        const zone = INDEX_SRC.slice(Math.max(0, i - 1100), i);
         assertTrue(zone.indexOf('Task 478') !== -1, 'маркер задачи');
         assertTrue(zone.indexOf('ЗЕЛЁНЫЙ') !== -1 && zone.indexOf('КРАСНЫЙ') !== -1,
             'описание обоих цветов');
@@ -254,9 +264,10 @@ describe('Task 478 — devPprStatusClass: граница «сегодня»', ()
         assertEqual(devPprStatusClass(mk('Есть', 'К', '2023-10-06', '(3 года)'), TODAY), 'dev-ppr-ok');
     });
 
-    test('срок вчера — просрочен (красный)', () => {
-        // 2026-07-03 + 3 мес = 2026-10-03 < 2026-10-06
-        assertEqual(devPprStatusClass(mk('Есть', 'К', '2026-07-03', '(3 мес)'), TODAY), 'dev-ppr-bad');
+    test('срок вчера — просрочен в ТЕКУЩЕМ месяце → Task 479: золотистый', () => {
+        // 2026-07-03 + 3 мес = 2026-10-03 < 2026-10-06 — месяц тот же:
+        // до Task 479 был red, теперь warn (ремонт «горит» этим месяцем)
+        assertEqual(devPprStatusClass(mk('Есть', 'К', '2026-07-03', '(3 мес)'), TODAY), 'dev-ppr-warn');
     });
 
     test('срок завтра — действует (зелёный)', () => {
@@ -362,8 +373,8 @@ describe('Task 478 — данные devices.json: инварианты', () => {
                parseInt((per.match(/(\d+)/) || [0, '0'])[1], 10) > 0;
     }
 
-    test('каждому прибору назначен ровно один из трёх статусов', () => {
-        const valid = { '': true, 'dev-ppr-ok': true, 'dev-ppr-bad': true };
+    test('каждому прибору назначен ровно один из статусов (с warn — Task 479)', () => {
+        const valid = { '': true, 'dev-ppr-ok': true, 'dev-ppr-warn': true, 'dev-ppr-bad': true };
         for (const dev of devs) {
             const s = devPprStatusClass(dev, TODAY);
             assertTrue(valid[s] === true, 'ID ' + dev['ID'] + ': неожиданный статус ' + s);
@@ -382,14 +393,14 @@ describe('Task 478 — данные devices.json: инварианты', () => {
         assertTrue(checked > 300, 'вне ППР заметное число приборов (' + checked + ')');
     });
 
-    test('прибор без предусловий — обычный; с предусловиями — ok|bad', () => {
+    test('прибор без предусловий — обычный; с предусловиями — ok|warn|bad', () => {
         let elig = 0, norm = 0;
         for (const dev of devs) {
             const s = devPprStatusClass(dev, TODAY);
             if (eligible(dev)) {
                 elig++;
-                assertTrue(s === 'dev-ppr-ok' || s === 'dev-ppr-bad',
-                    'ID ' + dev['ID'] + ': подходящий прибор должен быть ok|bad, а не обычный');
+                assertTrue(s === 'dev-ppr-ok' || s === 'dev-ppr-warn' || s === 'dev-ppr-bad',
+                    'ID ' + dev['ID'] + ': подходящий прибор должен быть ok|warn|bad, а не обычный');
             } else {
                 norm++;
                 assertEqual(s, '', 'ID ' + dev['ID'] + ': неподходящий — обычный цвет');
@@ -399,8 +410,9 @@ describe('Task 478 — данные devices.json: инварианты', () => {
         assertTrue(norm > 0, 'неподходящие тоже есть (' + norm + ')');
     });
 
-    test('monotonicity: «сегодня» позже — статус только ok→bad (никогда обратно)', () => {
-        const rank = { '': 0, 'dev-ppr-bad': 1, 'dev-ppr-ok': 2 };
+    test('monotonicity: «сегодня» позже — статус только ok→warn→bad (никогда обратно)', () => {
+        // Task 479: warn (текущий месяц) строго между ok и bad
+        const rank = { '': 0, 'dev-ppr-bad': 1, 'dev-ppr-warn': 2, 'dev-ppr-ok': 3 };
         for (const dev of devs) {
             const a = rank[devPprStatusClass(dev, TODAY_2)];
             const b = rank[devPprStatusClass(dev, TODAY)];
@@ -411,14 +423,16 @@ describe('Task 478 — данные devices.json: инварианты', () => {
     });
 
     test('обе ветки представлены в реальных данных (и зелёный, и красный)', () => {
-        let ok = 0, bad = 0;
+        let ok = 0, bad = 0, warn = 0;
         for (const dev of devs) {
             const s = devPprStatusClass(dev, TODAY);
             if (s === 'dev-ppr-ok') ok++;
             if (s === 'dev-ppr-bad') bad++;
+            if (s === 'dev-ppr-warn') warn++;
         }
         assertTrue(ok > 500, 'зелёных заметно (' + ok + ')');
-        assertTrue(bad > 100, 'красных заметно (' + bad + ')');
+        assertTrue(bad > 100, 'красных заметно (' + bad + '; золотистых ' + warn +
+            ' — их покрывает test-task479)');
     });
 });
 
@@ -427,8 +441,8 @@ describe('Task 478 — данные devices.json: инварианты', () => {
 // ==========================================================================
 describe('Task 478 — SW: версия и шапка', () => {
 
-    test('CACHE_VERSION = kipia-test-v702', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v702';") !== -1,
+    test('CACHE_VERSION = kipia-test-v703', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v703';") !== -1,
             'SW поднят до v702 (Task 478)');
     });
 
@@ -438,12 +452,12 @@ describe('Task 478 — SW: версия и шапка', () => {
     });
 
     test('несуществующая v703 отсутствует (guard)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v703') === -1,
-            'kipia-test-v703 не должен существовать');
+        assertTrue(SW_SRC.indexOf('kipia-test-v704') === -1,
+            'kipia-test-v704 не должен существовать');
     });
 
     test('комментарий Task 478 в шапке версий', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v702';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v703';");
         const ctx = SW_SRC.slice(Math.max(0, i - 700), i);
         assertTrue(ctx.indexOf('Task 478') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('Период ремонта') !== -1, 'упоминание строки');
@@ -454,7 +468,9 @@ describe('Task 478 — SW: версия и шапка', () => {
     test('окна истории: якоря предыдущих задач в пределах окон', () => {
         // Task 478 (~340 симв. комментария) отодвинул якоря:
         // 474 ~1878 < 2500; 472 ~2251 < 2900; 471 ~2800 < 3400; 461 ~5362 < 6000
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v702';");
+        // Task 479 (~285 симв., компактный) якоря НЕ выдавил за окна:
+        // 474 ~2133; 472 ~2506; 471 ~3055; 461 ~5617 — расширения не нужны
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v703';");
         const i474 = SW_SRC.lastIndexOf('Task 474', i);
         const i472 = SW_SRC.lastIndexOf('Task 472', i);
         const i471 = SW_SRC.lastIndexOf('Task 471', i);

@@ -830,10 +830,10 @@ describe('Task 419 — VM: «след. срок» 9-ОГЭ от последне
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 419 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v702', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v702'") !== -1,
+    test('CACHE_VERSION = kipia-test-v703', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v703'") !== -1,
             'SW v646 (Task 419)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v703') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v704') === -1,
             'двойной бамп отсутствует');
     });
 });

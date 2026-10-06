@@ -615,6 +615,11 @@ require('./test-task477.js');
 // не просрочен) / красный (просрочен) / обычный (остальные);
 // devPprStatusClass + CSS dev-ppr-ok/dev-ppr-bad.
 require('./test-task478.js');
+// Task 479 — ППР-индикация: третий цвет (срок просрочен, но месяц
+// срока — ТЕКУЩИЙ календарный месяц → оранжево-золотистый
+// dev-ppr-warn); те же цвета — в столбце «Дата» табличного вида
+// приборов (десктоп-модуль devices-table-desktop.js).
+require('./test-task479.js');
 require('./test-deploy-url.js');
 
 // Запускаем

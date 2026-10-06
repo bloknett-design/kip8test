@@ -29,7 +29,7 @@
 //   (д) CSS: .ppr-chart-body padding-top 4→16px (запас под подписи),
 //       .ppr-bar-cell position:relative (якорь «0»), .ppr-y-axis-right,
 //       .ppr-legend-axis;
-//   SW: kipia-test-v702.
+//   SW: kipia-test-v703.
 //   АДАПТАЦИЯ (прецедент Task 463/468/470/471): test-task471.js и
 //   test-task472.js — окно шапки версий sw.js 900 → 1020 (комментарий
 //   Task 473 отодвинул начало комментария Task 471 до ~986 символов).
@@ -354,8 +354,8 @@ describe('Task 473: шапка charts-desktop.js и SW', () => {
             ' назначение модуля не изменилось');
     });
 
-    test('CACHE_VERSION = kipia-test-v702', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v702';") !== -1,
+    test('CACHE_VERSION = kipia-test-v703', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v703';") !== -1,
             'текущая версия v689');
     });
 
@@ -365,7 +365,7 @@ describe('Task 473: шапка charts-desktop.js и SW', () => {
     });
 
     test('v690 в sw.js отсутствует (лишний инкремент не сделан)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v703') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v704') === -1,
             'версия после Task 473 не существует');
     });
 
