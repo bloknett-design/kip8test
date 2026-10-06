@@ -365,10 +365,10 @@ data/devices.json (поле «Изображение» содержит Google D
 
 | Скрипт | Источник (Google Sheets) | Лист | Выходной JSON | Записей |
 |--------|--------------------------|------|---------------|---------|
-| `scripts/sync-devices.py` | `1eUUwwulUvKUGWTgQ__XP-y7z1aEkt5Wy` | `Приборы_app` | `data/devices.json` | 1312 |
-| `scripts/sync-lockouts.py` | `1eUUwwulUvKUGWTgQ__XP-y7z1aEkt5Wy` | `Блокировки_app` | `data/lockouts.json` | 526 |
-| `scripts/sync-valves.py` | `1eUUwwulUvKUGWTgQ__XP-y7z1aEkt5Wy` | `Клапана_app` | `data/valves.json` | 320 |
-| `scripts/sync-regulators.py` | `1eUUwwulUvKUGWTgQ__XP-y7z1aEkt5Wy` | `Регуляторы_app` | `data/regulators.json` | 268 |
+| `scripts/sync-devices.py` | `1ZKOPBsD9x4wdlC5rDjz09UypD86G0Cee` | `Приборы_app` | `data/devices.json` | 1312 |
+| `scripts/sync-lockouts.py` | `1ZKOPBsD9x4wdlC5rDjz09UypD86G0Cee` | `Блокировки_app` | `data/lockouts.json` | 526 |
+| `scripts/sync-valves.py` | `1ZKOPBsD9x4wdlC5rDjz09UypD86G0Cee` | `Клапана_app` | `data/valves.json` | 320 |
+| `scripts/sync-regulators.py` | `1ZKOPBsD9x4wdlC5rDjz09UypD86G0Cee` | `Регуляторы_app` | `data/regulators.json` | 268 |
 | `scripts/convert-exam-tickets.py` | `1D8ElnUF3_ucNCpl0kF3PcVGltF08uoJK` | `4 разряд`, `5 разряд`, `6 разряд`, `До 1000 В` | `data/exam-tickets.json` | — |
 | `scripts/sync-projects.py` | `1IQq8S4-Qao1eJKli3zgMvTpA2exkGYg0` | `Проекты` | `data/projects.json` | — |
 | `scripts/sync-cables.py` | `1XsmoyE4CpIcrNqmeFXIuNzi7vuOzxwZix109YlXkv8Y` | `Кабельный журнал` | `data/cables.json` | — |

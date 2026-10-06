@@ -620,6 +620,11 @@ require('./test-task478.js');
 // dev-ppr-warn); те же цвета — в столбце «Дата» табличного вида
 // приборов (десктоп-модуль devices-table-desktop.js).
 require('./test-task479.js');
+// Task 480 — новый ID Google-таблицы «Перечень КИП ИОС рабочий.xlsx»
+// (1ZKOPBsD9x4wdlC5rDjz09UypD86G0Cee): sync-скрипты + workflows +
+// data/*.json (source) + index.html-комментарии + README + промт;
+// данные и структура листов те же (1291/531/320/268).
+require('./test-task480.js');
 require('./test-deploy-url.js');
 
 // Запускаем

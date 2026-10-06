@@ -441,8 +441,8 @@ describe('Task 478 — данные devices.json: инварианты', () => {
 // ==========================================================================
 describe('Task 478 — SW: версия и шапка', () => {
 
-    test('CACHE_VERSION = kipia-test-v703', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v703';") !== -1,
+    test('CACHE_VERSION = kipia-test-v704', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v704';") !== -1,
             'SW поднят до v702 (Task 478)');
     });
 
@@ -452,13 +452,16 @@ describe('Task 478 — SW: версия и шапка', () => {
     });
 
     test('несуществующая v703 отсутствует (guard)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v704') === -1,
-            'kipia-test-v704 не должен существовать');
+        assertTrue(SW_SRC.indexOf('kipia-test-v705') === -1,
+            'kipia-test-v705 не должен существовать');
     });
 
     test('комментарий Task 478 в шапке версий', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v703';");
-        const ctx = SW_SRC.slice(Math.max(0, i - 700), i);
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v704';");
+        // Task 480: окно 700 → 1100 — комментарий Task 480 (новый ID
+        // Google-таблицы «Перечень КИП ИОС рабочий.xlsx», ~250 симв.)
+        // отодвинул комментарий Task 478 до ~835 символов.
+        const ctx = SW_SRC.slice(Math.max(0, i - 1100), i);
         assertTrue(ctx.indexOf('Task 478') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('Период ремонта') !== -1, 'упоминание строки');
         assertTrue(ctx.indexOf('ЗЕЛЁНЫЙ') !== -1 && ctx.indexOf('КРАСНЫЙ') !== -1,
@@ -470,7 +473,9 @@ describe('Task 478 — SW: версия и шапка', () => {
         // 474 ~1878 < 2500; 472 ~2251 < 2900; 471 ~2800 < 3400; 461 ~5362 < 6000
         // Task 479 (~285 симв., компактный) якоря НЕ выдавил за окна:
         // 474 ~2133; 472 ~2506; 471 ~3055; 461 ~5617 — расширения не нужны
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v703';");
+        // Task 480 (~250 симв., новый ID таблицы) тоже вписался:
+        // 474 ~2377; 472 ~2750; 471 ~3299; 461 ~5861 — расширения не нужны
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v704';");
         const i474 = SW_SRC.lastIndexOf('Task 474', i);
         const i472 = SW_SRC.lastIndexOf('Task 472', i);
         const i471 = SW_SRC.lastIndexOf('Task 471', i);

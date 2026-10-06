@@ -273,7 +273,11 @@
 // приходится на ТЕКУЩИЙ календарный месяц — оранжево-золотистый
 // (dev-ppr-warn); месяц срока раньше — красный. Те же цвета — в
 // столбце «Дата» табличного вида приборов (десктоп, Task 479).
-const CACHE_VERSION = 'kipia-test-v703';
+// Task 480: новый ID Google-таблицы «Перечень КИП ИОС рабочий.xlsx»
+// (1ZKOPBsD9x4wdlC5rDjz09UypD86G0Cee) в sync-скриптах, workflows,
+// data/*.json, README и промте; данные и структура листов те же
+// (1291/531/320/268). Логики SW не менял.
+const CACHE_VERSION = 'kipia-test-v704';
 const CACHE_NAME = CACHE_VERSION;
 
 // Отдельный кэш для картинок Google Drive (превью + полные).

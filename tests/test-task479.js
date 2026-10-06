@@ -456,8 +456,8 @@ describe('Task 479 — карточка: интеграция не сломан�
 // ==========================================================================
 describe('Task 479 — SW: версия и шапка', () => {
 
-    test('CACHE_VERSION = kipia-test-v703', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v703';") !== -1,
+    test('CACHE_VERSION = kipia-test-v704', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v704';") !== -1,
             'SW поднят до v703 (Task 479)');
     });
 
@@ -467,18 +467,20 @@ describe('Task 479 — SW: версия и шапка', () => {
     });
 
     test('несуществующая v704 отсутствует (guard)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v704') === -1,
-            'kipia-test-v704 не должен существовать');
+        assertTrue(SW_SRC.indexOf('kipia-test-v705') === -1,
+            'kipia-test-v705 не должен существовать');
     });
 
     test('комментарий Task 479 в шапке версий', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v703';");
-        const ctx = SW_SRC.slice(Math.max(0, i - 700), i);
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v704';");
+        // Task 480: окно 700 → 1100 — комментарий Task 480 (~250 симв.)
+        // отодвинул комментарий Task 478 до ~835 (за прежним окном 700).
+        const ctx = SW_SRC.slice(Math.max(0, i - 1100), i);
         assertTrue(ctx.indexOf('Task 479') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('оранжево-золотистый') !== -1, 'третий цвет');
         assertTrue(ctx.indexOf('dev-ppr-warn') !== -1, 'имя класса');
         assertTrue(ctx.indexOf('столбце «Дата»') !== -1, 'упоминание таблицы');
-        // комментарий Task 478 не вытеснен за окно 700
+        // комментарий Task 478 не вытеснен (окно 1100 после Task 480)
         assertTrue(ctx.indexOf('Task 478') !== -1, 'комментарий 478 в том же окне');
         assertTrue(ctx.indexOf('ЗЕЛЁНЫЙ') !== -1 && ctx.indexOf('КРАСНЫЙ') !== -1,
             'описание цветов 478 сохранено');
@@ -488,7 +490,9 @@ describe('Task 479 — SW: версия и шапка', () => {
         // комментарий Task 479 компактен (~285 симв.) — окна Task 478
         // НЕ расширялись: 474 ~2133 < 2500; 472 ~2506 < 2900;
         // 471 ~3055 < 3400; 461 ~5617 < 6000 (запасы 345+)
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v703';");
+        // Task 480 (~250 симв.) тоже вписался: 474 ~2377; 472 ~2750;
+        // 471 ~3299; 461 ~5861 — расширения не нужны (запасы 101+)
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v704';");
         const i474 = SW_SRC.lastIndexOf('Task 474', i);
         const i472 = SW_SRC.lastIndexOf('Task 472', i);
         const i471 = SW_SRC.lastIndexOf('Task 471', i);

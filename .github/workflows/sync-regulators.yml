@@ -5,7 +5,7 @@ name: Update Regulators (TEST)
 #
 # КАК НАСТРОИТЬ:
 # По умолчанию используется Google Sheets:
-#   https://docs.google.com/spreadsheets/d/1eUUwwulUvKUGWTgQ__XP-y7z1aEkt5Wy/edit
+#   https://docs.google.com/spreadsheets/d/1ZKOPBsD9x4wdlC5rDjz09UypD86G0Cee/edit
 #   лист: Регуляторы_app
 #   (файл «Перечень КИП ИОС рабочий.xlsx» — тот же, что и для приборов/блокировок/клапанов)
 # Можно переопределить через переменные окружения в шаге "Sync":
