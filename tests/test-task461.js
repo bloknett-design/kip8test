@@ -23,7 +23,7 @@
 //     набор из 8 позиций образца (Task 392); свободный текст
 //     не запрещён;
 //   • сервер НЕ меняется (listPpe уже отдаёт все записи листа);
-//   • sw.js → kipia-test-v701.
+//   • sw.js → kipia-test-v702.
 // ============================================================
 
 const fs = require('fs');
@@ -443,9 +443,9 @@ describe('Task 461 — VM: openPpeForm заполняет datalist', () => {
 // ============================================================
 describe('Task 461 — SW: версия', () => {
 
-    test("CACHE_VERSION = 'kipia-test-v701'", () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v701'") !== -1,
-            'SW поднят до kipia-test-v701 (Task 461)');
+    test("CACHE_VERSION = 'kipia-test-v702'", () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v702'") !== -1,
+            'SW поднят до kipia-test-v702 (Task 461)');
     });
 
     test('старая версия kipia-test-v684 отсутствует', () => {
@@ -454,7 +454,7 @@ describe('Task 461 — SW: версия', () => {
     });
 
     test('комментарий Task 461 в шапке версий sw.js', () => {
-        const i = SW_SRC.indexOf('kipia-test-v701');
+        const i = SW_SRC.indexOf('kipia-test-v702');
         // Task 463: окно 700 → 2000 — комментарий Task 463 в шапке sw.js
         // отодвинул комментарий Task 461 за границу прежнего окна.
         // Task 468: окно 2000 → 2500 — комментарий Task 468 (5 строк
@@ -473,7 +473,9 @@ describe('Task 461 — SW: версия', () => {
         // этапа 1 оптимизации: SWR + персистентный DATA-кэш) отодвинул
         // Task 461 до ~4300 символов.
         // о карточке прибора) снова отодвинул Task 461 (~3719 симв.)
-        const above = SW_SRC.slice(Math.max(0, i - 5300), i);
+        const above = SW_SRC.slice(Math.max(0, i - 6000), i);
+        // Task 478: окно 5300 → 6000 — комментарий ППР-индикации
+        // (~340 симв.) отодвинул Task 461 до ~5362.
         assertTrue(above.indexOf('Task 461') !== -1, 'упоминание Task 461');
         assertTrue(above.indexOf('wsPpeNameList') !== -1 ||
                    above.indexOf('_fillPpeNameOptions') !== -1,

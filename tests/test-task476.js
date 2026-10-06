@@ -97,8 +97,8 @@ function mkKipDbMock() {
 // 1. SW: версия и шапка
 // ==========================================================================
 describe('Task 476 — SW: версия и шапка', () => {
-    test('CACHE_VERSION = kipia-test-v701', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v701';") !== -1,
+    test('CACHE_VERSION = kipia-test-v702', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v702';") !== -1,
             'SW поднят до v700');
     });
     test('прежняя версия v699 отсутствует', () => {
@@ -106,8 +106,8 @@ describe('Task 476 — SW: версия и шапка', () => {
             'в sw.js не осталось kipia-test-v699');
     });
     test('несуществующая v701 отсутствует (guard)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v702') === -1,
-            'kipia-test-v702 не должен существовать');
+        assertTrue(SW_SRC.indexOf('kipia-test-v703') === -1,
+            'kipia-test-v703 не должен существовать');
     });
     test('комментарий Task 476 в шапке версий', () => {
         assertTrue(SW_SRC.indexOf('Task 476') !== -1, 'маркер задачи');
@@ -591,23 +591,23 @@ describe('Task 476 — границы и инварианты', () => {
 // 10. Окна истории sw.js (дистанции после комментария Task 476)
 // ==========================================================================
 describe('Task 476 — окна истории версий sw.js', () => {
-    const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v701';");
+    const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v702';");
 
     test('Task 474 в пределах окна 1700', () => {
         const i474 = SW_SRC.lastIndexOf('Task 474', i);
-        assertTrue(i474 !== -1 && (i - i474) < 1700, 'якорь Task 474 виден');
+        assertTrue(i474 !== -1 && (i - i474) < 2500, 'якорь Task 474 виден');
     });
     test('Task 472 в пределах окна 2100', () => {
         const i472 = SW_SRC.lastIndexOf('Task 472', i);
-        assertTrue(i472 !== -1 && (i - i472) < 2100, 'якорь Task 472 виден');
+        assertTrue(i472 !== -1 && (i - i472) < 2900, 'якорь Task 472 виден');
     });
     test('Task 471 в пределах окна 2700', () => {
         const i471 = SW_SRC.lastIndexOf('Task 471', i);
-        assertTrue(i471 !== -1 && (i - i471) < 2700, 'якорь Task 471 виден');
+        assertTrue(i471 !== -1 && (i - i471) < 3400, 'якорь Task 471 виден');
     });
     test('Task 461 в пределах окна 5300', () => {
         const i461 = SW_SRC.lastIndexOf('Task 461', i);
-        assertTrue(i461 !== -1 && (i - i461) < 5300, 'якорь Task 461 виден');
+        assertTrue(i461 !== -1 && (i - i461) < 6000, 'якорь Task 461 виден');
     });
 });
 

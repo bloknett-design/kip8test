@@ -610,6 +610,11 @@ require('./test-task476.js');
 // паузы ≥1.5 с; статика через SWR + серверные копии в KipDB;
 // saveData/2g — пропуск; logout — стоп).
 require('./test-task477.js');
+// Task 478 — карточка прибора (КИП ИОС): строка «Период ремонта»
+// цветная по состоянию ППР — зелёный (в гр. ППР, вид ТО/К/П, срок
+// не просрочен) / красный (просрочен) / обычный (остальные);
+// devPprStatusClass + CSS dev-ppr-ok/dev-ppr-bad.
+require('./test-task478.js');
 require('./test-deploy-url.js');
 
 // Запускаем
