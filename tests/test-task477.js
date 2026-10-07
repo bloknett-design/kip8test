@@ -42,8 +42,8 @@ const SW_SRC = fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8');
 // 1. SW: версия и шапка
 // ==========================================================================
 describe('Task 477 — SW: версия и шапка', () => {
-    test('CACHE_VERSION = kipia-test-v706', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v706';") !== -1,
+    test('CACHE_VERSION = kipia-test-v707', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v707';") !== -1,
             'SW поднят до v701');
     });
     test('прежняя версия v700 отсутствует', () => {
@@ -51,8 +51,8 @@ describe('Task 477 — SW: версия и шапка', () => {
             'в sw.js не осталось kipia-test-v700');
     });
     test('несуществующая v702 отсутствует (guard)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v707') === -1,
-            'kipia-test-v707 не должен существовать');
+        assertTrue(SW_SRC.indexOf('kipia-test-v708') === -1,
+            'kipia-test-v708 не должен существовать');
     });
     test('комментарий Task 477 в шапке версий', () => {
         assertTrue(SW_SRC.indexOf('Task 477 (этап 3 оптимизации): KipPreload') !== -1,
@@ -344,19 +344,21 @@ describe('Task 477 — границы и окна', () => {
         assertEqual(deployDir.length, 1, 'DEPLOY-Task477-*.md существует один');
     });
 
-    test('окна истории sw.js — компактный комментарий 477 НЕ расширял их',
+    test('окна истории sw.js — компактный комментарий 477 НЕ расширял их (расширены Task 478/481/483)',
         () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v706';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v707';");
         const i474 = SW_SRC.lastIndexOf('Task 474', i);
         const i472 = SW_SRC.lastIndexOf('Task 472', i);
         const i471 = SW_SRC.lastIndexOf('Task 471', i);
         const i461 = SW_SRC.lastIndexOf('Task 461', i);
-        assertTrue(i474 !== -1 && (i - i474) < 3100, 'Task 474 (~2638) в окне 3100');
+        assertTrue(i474 !== -1 && (i - i474) < 3500, 'Task 474 (~3341) в окне 3500');
         // Task 478: окна расширены (комментарий ~340 симв.):
         // 474 1700→2500, 472 2100→2900, 471 2700→3400, 461 5300→6000.
-        assertTrue(i472 !== -1 && (i - i472) < 3600, 'Task 472 (~3011) в окне 3600');
-        assertTrue(i471 !== -1 && (i - i471) < 4200, 'Task 471 (~3560) в окне 4200');
-        assertTrue(i461 !== -1 && (i - i461) < 6800, 'Task 461 (~6122) в окне 6800');
+        // Task 483: комментарий ~378 симв. — 3100→3500/3600→4000/
+        // 4200→4600/6800→7200 (scripts/task483-windows.py).
+        assertTrue(i472 !== -1 && (i - i472) < 4000, 'Task 472 (~3714) в окне 4000');
+        assertTrue(i471 !== -1 && (i - i471) < 4600, 'Task 471 (~4263) в окне 4600');
+        assertTrue(i461 !== -1 && (i - i461) < 7200, 'Task 461 (~6825) в окне 7200');
     });
 });
 

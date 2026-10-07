@@ -29,10 +29,18 @@
 //   (д) CSS: .ppr-chart-body padding-top 4→16px (запас под подписи),
 //       .ppr-bar-cell position:relative (якорь «0»), .ppr-y-axis-right,
 //       .ppr-legend-axis;
-//   SW: kipia-test-v706.
+//   SW: kipia-test-v707.
 //   АДАПТАЦИЯ (прецедент Task 463/468/470/471): test-task471.js и
 //   test-task472.js — окно шапки версий sw.js 900 → 1020 (комментарий
 //   Task 473 отодвинул начало комментария Task 471 до ~986 символов).
+//   Task 483 АДАПТАЦИЯ: _PPR_DEVICES УДАЛЁН из charts-desktop.js (данные
+//   вкладки «Приборы» теперь считает sync-devices.py → ppr_chart в
+//   data/devices.json — логика и данные тестируются в test-task483.js;
+//   вкладка рендерится НОВЫМ _renderDevicesPPR «таблица+диаграмма»).
+//   _renderPPRChart — живой код вкладки «Блокировки»: механику
+//   (высоты, правая ось, подписи, нули) тестировано на ЛОКАЛЬНОМ моке
+//   MOCK_PPR_DEVICES (снимок БЫВШИХ заШитых значений на Task 473).
+//   Окна истории sw.js — расширены scripts/task483-windows.py.
 //
 // Запуск: через tests/run-all.js (require './test-task473.js').
 
@@ -68,24 +76,18 @@ function reviveMethod(src, name) {
     return eval('({' + m + '})')[name];
 }
 
-// Данные ППР «Приборы» — извлечь из исходника, чтобы тест следовал файлу
-function extractPprDevices() {
-    const a = CHARTS_SRC.indexOf('_PPR_DEVICES: {');
-    const b = CHARTS_SRC.indexOf('_PPR_LOCKOUTS', a);
-    assertTrue(a !== -1 && b !== -1, '_PPR_DEVICES найден в charts-desktop.js');
-    const block = CHARTS_SRC.slice(a, b);
-    const title = block.match(/title:\s*'([^']+)'/);
-    const items = [...block.matchAll(/\{ name: '([^']+)', code: '([^']+)', color: '([^']+)', values: \[([^\]]*)\] \}/g)];
-    assertTrue(!!title, 'title ППР найден');
-    assertEqual(items.length, 3, 'три серии ППР (К/П/ТО)');
-    return {
-        title: title[1],
-        series: items.map(m => ({
-            name: m[1], code: m[2], color: m[3],
-            values: m[4].split(',').map(v => parseInt(v, 10))
-        }))
-    };
-}
+// Мок данных ППР «Приборы» (Task 483: _PPR_DEVICES удалён из
+// charts-desktop.js — этот мок = снимок БЫВШИХ заШитых значений;
+// нужен только для тестирования механики _renderPPRChart,
+// который остаётся живым рендером вкладки «Блокировки»)
+const MOCK_PPR_DEVICES = {
+    title: 'Количество приборов по графику ППР по месяцам на 2026 год',
+    series: [
+        { name: 'Калибровка', code: 'К', color: '#4a90d9', values: [13, 33, 30, 45, 24, 28, 33, 34, 48, 16, 34, 35] },
+        { name: 'Поверка', code: 'П', color: '#e07040', values: [12, 12, 4, 15, 0, 4, 6, 10, 4, 6, 1, 12] },
+        { name: 'Тех. обслуж.', code: 'ТО', color: '#5ab870', values: [353, 354, 500, 320, 374, 496, 333, 353, 481, 358, 362, 485] }
+    ]
+};
 
 // Хост с живыми методами отрисовки (та же арифметика, что в браузере)
 function makeHost() {
@@ -131,17 +133,17 @@ describe('Task 473: _niceMax — масштабы осей', () => {
 // ==========================================================================
 // 2. Функциональный рендер: подписи на каждом месяце + правая ось
 // ==========================================================================
-describe('Task 473: ППР «Приборы» — рендер HTML', () => {
+describe('Task 473: _renderPPRChart — механика (мок, бывш. «Приборы»)', () => {
     const host = makeHost();
-    const data = extractPprDevices();
+    const data = MOCK_PPR_DEVICES;
     const html = host._renderPPRChart(data);
     const K = data.series[0], P = data.series[1], TO = data.series[2];
 
-    test('данные ППР не изменились: заголовок', () => {
+    test('мок-данные теста (бывшие _PPR_DEVICES, удалены Task 483): заголовок', () => {
         assertEqual(data.title, 'Количество приборов по графику ППР по месяцам на 2026 год');
     });
 
-    test('данные ППР не изменились: серии К/П/ТО и значения', () => {
+    test('мок-данные теста: серии К/П/ТО и значения', () => {
         assertEqual(K.name, 'Калибровка'); assertEqual(K.code, 'К');
         assertEqual(P.name, 'Поверка'); assertEqual(P.code, 'П');
         assertEqual(TO.name, 'Тех. обслуж.'); assertEqual(TO.code, 'ТО');
@@ -354,8 +356,8 @@ describe('Task 473: шапка charts-desktop.js и SW', () => {
             ' назначение модуля не изменилось');
     });
 
-    test('CACHE_VERSION = kipia-test-v706', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v706';") !== -1,
+    test('CACHE_VERSION = kipia-test-v707', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v707';") !== -1,
             'текущая версия v689');
     });
 
@@ -365,7 +367,7 @@ describe('Task 473: шапка charts-desktop.js и SW', () => {
     });
 
     test('v690 в sw.js отсутствует (лишний инкремент не сделан)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v707') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v708') === -1,
             'версия после Task 473 не существует');
     });
 
