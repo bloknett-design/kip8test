@@ -34,7 +34,7 @@
 //     повторный — обе сброшены; НОВЫЙ текст в раскрытом — 310px +
 //     -215px; исчезновение переполнения — авто-сворачивание, маржа
 //     сброшена; значок .on при раскрытии.
-//   SW: kipia-test-v705 (guard v609).
+//   SW: kipia-test-v706 (guard v609).
 //   Регресс: итоги Task 378 (#FFFFFF светлой) живы; тёмные тоталы
 //     #eef0f2 живы; зебра ФИО сетки жива.
 //
@@ -206,22 +206,39 @@ describe('Task 379 — окна бара: оверлей, бар не растё
 // ============================================================
 describe('Task 379 — SRC: _barExp* компенсируют габарит бара', () => {
 
-    test('_barExpSync: формула (95 - scrollHeight) и сброс', () => {
+    test('_barExpSync: формула (95 - hOpen) и сброс', () => {
+        // Task 482: раскрытие КАПАЕТСЯ по низу экрана (_barExpMaxH)
+        // — высота в формуле теперь переменная hOpen (капнутая);
+        // без метода (старые VM-харнессы) hOpen = scrollHeight —
+        // прежняя семантика, габарит бара 95px сохранён
         const m = methodText(WS_SRC, '_barExpSync');
         assertTrue(m.length > 0, 'метод _barExpSync найден');
-        const f = (m.match(/\(95 - el\.scrollHeight\) \+ 'px'/g) || []).length;
+        const f = (m.match(/\(95 - hOpen\) \+ 'px'/g) || []).length;
         assertEqual(f, 1, 'формула маржи — ровно 1 раз');
         const r = (m.match(/el\.style\.marginBottom = '';/g) || []).length;
         assertEqual(r, 1, 'сброс маржи при сворачивании — ровно 1 раз');
     });
 
-    test('_barExpToggle: формула (95 - scrollHeight) и сброс', () => {
+    test('_barExpToggle: формула (95 - hOpen) и сброс', () => {
         const m = methodText(WS_SRC, '_barExpToggle');
         assertTrue(m.length > 0, 'метод _barExpToggle найден');
-        const f = (m.match(/\(95 - el\.scrollHeight\) \+ 'px'/g) || []).length;
+        const f = (m.match(/\(95 - hOpen\) \+ 'px'/g) || []).length;
         assertEqual(f, 1, 'формула маржи — ровно 1 раз');
         const r = (m.match(/el\.style\.marginBottom = '';/g) || []).length;
         assertEqual(r, 1, 'сброс маржи при закрытии — ровно 1 раз');
+    });
+
+    test('Task 482: оба метода подключают КАП высоты (гвард typeof)', () => {
+        const s = methodText(WS_SRC, '_barExpSync');
+        const t = methodText(WS_SRC, '_barExpToggle');
+        [s, t].forEach(function(m, idx) {
+            assertTrue(m.indexOf(
+                "typeof this._barExpMaxH === 'function'") !== -1,
+                'метод ' + (idx ? '_barExpToggle' : '_barExpSync') +
+                ' зовёт _barExpMaxH с гвардом');
+        });
+        // габарит бара: высота + |маржа| = 95px и с капом —
+        // проверено в VM-секции test-task482.js (§5)
     });
 });
 
@@ -284,10 +301,10 @@ describe('Task 379 — VM: габарит бара всегда 95px', () => {
 // ============================================================
 describe('Task 379 — SW и регресс', () => {
 
-    test('SW: kipia-test-v705', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v705'") !== -1,
-            'версия кэша kipia-test-v705');
-        assertFalse(SW_SRC.indexOf('kipia-test-v706') !== -1,
+    test('SW: kipia-test-v706', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v706'") !== -1,
+            'версия кэша kipia-test-v706');
+        assertFalse(SW_SRC.indexOf('kipia-test-v707') !== -1,
             'двойного бампа нет');
     });
 

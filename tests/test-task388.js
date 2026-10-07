@@ -117,8 +117,11 @@ describe('Task 388 — SRC: миниатюры всегда сплошные с 
         const fn = stripComments(methodText(INDEX_SRC, '_renderCell'));
         assertTrue(fn.indexOf("evMeta.color ? ' style=\"background:' + evMeta.color") !== -1,
             'inline-фон из справочника — БЕЗ условия solidBadges');
-        assertTrue(fn.indexOf("'<span class=\"ws-ev-badge\"'") !== -1,
-            'бейдж рендерится одним видом (без пунктирного класса)');
+        // Task 482: литерал бейджа собирается с классом состояния
+        // (рамка И/ПЗ по выполнению) — ПУСТОЙ evStateCls даёт тот же
+        // вывод class="ws-ev-badge", один вид бейджа сохранён
+        assertTrue(fn.indexOf("'<span class=\"ws-ev-badge' + evStateCls + '\"'") !== -1,
+            'бейдж рендерится одним видом (Task 482: + класс состояния рамки)');
     });
 
     test('печать: _printCell — бейджей НЕТ (Task 442)', () => {
@@ -260,10 +263,10 @@ describe('Task 388 — SRC: итоги учёта доступны в любом
             'тосты сменного/дневного вида обещают итоги');
     });
 
-    test('SW: кэш поднят до kipia-test-v705', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v705'") !== -1,
-            'CACHE_VERSION = kipia-test-v705 (Task 388 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v706') !== -1,
+    test('SW: кэш поднят до kipia-test-v706', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v706'") !== -1,
+            'CACHE_VERSION = kipia-test-v706 (Task 388 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v707') !== -1,
             'v617 ещё не существует (guard)');
     });
 });
