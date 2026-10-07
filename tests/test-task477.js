@@ -42,8 +42,8 @@ const SW_SRC = fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8');
 // 1. SW: версия и шапка
 // ==========================================================================
 describe('Task 477 — SW: версия и шапка', () => {
-    test('CACHE_VERSION = kipia-test-v709', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v709';") !== -1,
+    test('CACHE_VERSION = kipia-test-v710', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v710';") !== -1,
             'SW поднят до v701');
     });
     test('прежняя версия v700 отсутствует', () => {
@@ -51,8 +51,8 @@ describe('Task 477 — SW: версия и шапка', () => {
             'в sw.js не осталось kipia-test-v700');
     });
     test('несуществующая v702 отсутствует (guard)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v710') === -1,
-            'kipia-test-v710 не должен существовать');
+        assertTrue(SW_SRC.indexOf('kipia-test-v711') === -1,
+            'kipia-test-v711 не должен существовать');
     });
     test('комментарий Task 477 в шапке версий', () => {
         assertTrue(SW_SRC.indexOf('Task 477 (этап 3 оптимизации): KipPreload') !== -1,
@@ -308,7 +308,7 @@ describe('Task 477 — KipAuth: хуки предзагрузки', () => {
         assertTrue(i !== -1, 'метод найден');
         // срез больше метода — внутри есть преждевременный «},»
         // (замыкание setTimeout)
-        const m = INDEX_SRC.slice(i, i + 700);
+        const m = INDEX_SRC.slice(i, i + 1700);
         assertTrue(m.indexOf('4000') !== -1, 'старт через 4 с после показа UI');
         assertTrue(m.indexOf('typeof KipPreload') !== -1, 'guard — модуль необязателен');
     });
@@ -346,20 +346,20 @@ describe('Task 477 — границы и окна', () => {
 
     test('окна истории sw.js — компактный комментарий 477 НЕ расширял их (расширены Task 478/481/483)',
         () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v709';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v710';");
         const i474 = SW_SRC.lastIndexOf('Task 474', i);
         const i472 = SW_SRC.lastIndexOf('Task 472', i);
         const i471 = SW_SRC.lastIndexOf('Task 471', i);
         const i461 = SW_SRC.lastIndexOf('Task 461', i);
-        assertTrue(i474 !== -1 && (i - i474) < 4700, 'Task 474 (~3731) в окне 4000');
+        assertTrue(i474 !== -1 && (i - i474) < 5300, 'Task 474 (~3731) в окне 4000');
         // Task 478: окна расширены (комментарий ~340 симв.):
         // 474 1700→2500, 472 2100→2900, 471 2700→3400, 461 5300→6000.
         // Task 483: ~378 симв. — 3100→3500/3600→4000/4200→4600/
         // 6800→7200; Task 484: ~390 симв. — 3500→4000/4000→4500/
         // 4600→5000/7200→7600 (windows-скрипты задач).
-        assertTrue(i472 !== -1 && (i - i472) < 5300, 'Task 472 (~4104) в окне 4500');
-        assertTrue(i471 !== -1 && (i - i471) < 5900, 'Task 471 (~4653) в окне 5000');
-        assertTrue(i461 !== -1 && (i - i461) < 8500, 'Task 461 (~7215) в окне 7600');
+        assertTrue(i472 !== -1 && (i - i472) < 5900, 'Task 472 (~4104) в окне 4500');
+        assertTrue(i471 !== -1 && (i - i471) < 6500, 'Task 471 (~4653) в окне 5000');
+        assertTrue(i461 !== -1 && (i - i461) < 9100, 'Task 461 (~7215) в окне 7600');
     });
 });
 

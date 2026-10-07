@@ -26,7 +26,7 @@
 //   4) cycleView: программный guard — зритель не переключает вид.
 //   Сервер шлюзит каждый запрос rmRequirePerm('workschedule.edit')
 //   — как и прежде; клиентский фикс синхронизирует UX с матрицей.
-//   SW: kipia-test-v709.
+//   SW: kipia-test-v710.
 //
 // Запуск: через tests/run-all.js (require './test-task337.js').
 
@@ -42,7 +42,9 @@ const SW_SRC = fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8');
 // НЕ уникально в файле (у каб. журнала свой editRoles-вариант) — методы
 // извлекаем только из области модуля «График работы»
 const WS_START = INDEX_SRC.indexOf('var WorkSchedule = {');
-const WS_CLIENT = INDEX_SRC.slice(WS_START, WS_START + 500000);
+const WS_CLIENT = INDEX_SRC.slice(WS_START, WS_START + 600000);
+// Task 486: срез 500000→600000 — модуль вырос (silentRefresh
+// ~8.7КБ), onCellClick уехал за прежнюю границу
 
 function methodText(src, name) {
     const sig = '\n        ' + name + ': function';
@@ -334,10 +336,10 @@ describe('Task 337 — регресс-гейты правки', () => {
 // ============================================================
 describe('Task 337 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v709', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v709'") !== -1,
-            'CACHE_VERSION = kipia-test-v709 (Task 337 — только фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v710') !== -1,
+    test('SW: кэш поднят до kipia-test-v710', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v710'") !== -1,
+            'CACHE_VERSION = kipia-test-v710 (Task 337 — только фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v711') !== -1,
             'лишний инкремент (v577) не сделан');
     });
 
