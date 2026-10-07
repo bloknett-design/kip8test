@@ -39,7 +39,7 @@
 //       живым для вкладки «Блокировки»;
 //   (в) sync-devices.py: устойчивость — лист «Приборы» недоступен
 //       (экспорт с gid= одного листа) → сохранён прежний ppr_chart.
-//   SW: kipia-test-v708 (логика SW не менялась; окна истории
+//   SW: kipia-test-v709 (логика SW не менялась; окна истории
 //       расширены scripts/task483-windows.py; бамп tests —
 //       scripts/task483-bump-sw.py). АДАПТАЦИЯ test-task473.js:
 //   _PPR_DEVICES → локальный мок (механика _renderPPRChart жива для
@@ -227,7 +227,7 @@ describe('Task 483: charts-desktop.js — структура', () => {
 
     test('_renderContent: ветка devices рендерит ppr_chart', () => {
         const seg = CHARTS_SRC.slice(CHARTS_SRC.indexOf('_renderContent: function'),
-                                     CHARTS_SRC.indexOf('var totalItems'));
+                                     CHARTS_SRC.indexOf('_renderValvesPies: function'));
         assertTrue(seg.indexOf('_renderDevicesPPR(ppr,') !== -1,
             'вызов нового рендерера (Task 484: с noun)');
         assertTrue(seg.indexOf('ppr-tc-empty-note') !== -1,
@@ -487,8 +487,8 @@ describe('Task 483: VM — _renderDevicesPPR (таблица + диаграмм�
 // 5. SW: версия v707 + комментарий Task 483
 // ==========================================================================
 describe('Task 483: SW — версия и кэши', () => {
-    test('CACHE_VERSION = kipia-test-v708', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v708';") !== -1,
+    test('CACHE_VERSION = kipia-test-v709', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v709';") !== -1,
             'версия поднята');
     });
 
@@ -497,12 +497,12 @@ describe('Task 483: SW — версия и кэши', () => {
     });
 
     test('v708 в sw.js отсутствует (лишний инкремент не сделан)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v709') === -1);
+        assertTrue(SW_SRC.indexOf('kipia-test-v710') === -1);
     });
 
     test('комментарий Task 483 в шапке версий (окно 700)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v708';");
-        const ctx = SW_SRC.slice(Math.max(0, i - 700), i);
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v709';");
+        const ctx = SW_SRC.slice(Math.max(0, i - 1500), i);
         assertTrue(ctx.indexOf('Task 483') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('Графики КИП ИОС') !== -1, 'раздел');
         assertTrue(ctx.indexOf('ppr_chart') !== -1, 'блок данных');

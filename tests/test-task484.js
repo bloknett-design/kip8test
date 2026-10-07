@@ -26,7 +26,7 @@
 //       ppr-y-*, ppr-totals-*) — минус ~12,4 КБ;
 //   (г) устойчивость: лист «Блокировки» недоступен (экспорт с
 //       gid= одного листа) → сохранён прежний ppr_chart.
-//   SW: kipia-test-v708 (логика SW не менялась; окна истории
+//   SW: kipia-test-v709 (логика SW не менялась; окна истории
 //       расширены scripts/task484-windows.py; бамп tests —
 //       scripts/task484-bump-sw.py; OWN-файл — этот тест).
 //   АДАПТАЦИИ: test-task473.js (механика мёртвого _renderPPRChart
@@ -94,7 +94,7 @@ function countOccurrences(haystack, needle) {
 const MOCK_PPR_LOCKOUTS = {
     year: 2026,
     series: [
-        { code: 'Кр', name: 'Кан. ремонт', values: [63, 38, 24, 28, 13, 38, 31, 32, 72, 23, 46, 95] },
+        { code: 'Кр', name: 'Кап. ремонт', values: [63, 38, 24, 28, 13, 38, 31, 32, 72, 23, 46, 95] },
         { code: 'ТО', name: 'Тех. обслуж.', values: [82, 91, 205, 117, 116, 191, 114, 97, 157, 122, 83, 134] }
     ]
 };
@@ -135,7 +135,7 @@ describe('Task 484: sync-lockouts.py — счётчики ППР по месяц
     test('виды обслуживания Кр/ТО (коды листа «Блокировки»)', () => {
         assertTrue(SYNC_SRC.indexOf("PPR_TYPES = ['Кр', 'ТО']") !== -1,
             'две серии — как на листе');
-        assertTrue(SYNC_SRC.indexOf("PPR_TYPE_NAMES = {'Кр': 'Кан. ремонт', 'ТО': 'Тех. обслуж.'}") !== -1,
+        assertTrue(SYNC_SRC.indexOf("PPR_TYPE_NAMES = {'Кр': 'Кап. ремонт', 'ТО': 'Тех. обслуж.'}") !== -1,
             'названия серий');
     });
 
@@ -224,7 +224,7 @@ describe('Task 484: charts-desktop.js — структура', () => {
 
     test('_renderContent: вкладки devices/lockouts — ОДНА ветка раннего возврата', () => {
         const seg = CHARTS_SRC.slice(CHARTS_SRC.indexOf('_renderContent: function'),
-                                     CHARTS_SRC.indexOf('var totalItems'));
+                                     CHARTS_SRC.indexOf('_renderValvesPies: function'));
         assertTrue(seg.indexOf("if (tab === 'devices' || tab === 'lockouts')") !== -1,
             'единая ветка обеих вкладок');
         assertTrue(seg.indexOf('this._pprChartLockouts') !== -1,
@@ -236,17 +236,22 @@ describe('Task 484: charts-desktop.js — структура', () => {
     });
 
     test('сводная статистика и Топ-10 НЕ рендерятся для lockouts', () => {
-        // ветка раннего возврата стоит ДО «var totalItems» — как у
-        // приборов (заявка: «убери всё лишнее»)
+        // Task 485: сводная статистика и Топ-10 бары удалены из
+        // charts-desktop.js ЦЕЛИКОМ (заявка 485 по «Клапанам»/
+        // «Регуляторам»: «убери текущие графики и подсчёты») — ни
+        // одна вкладка их больше не рендерит; для lockouts рендер
+        // идёт ТОЛЬКО веткой раннего возврата ppr_chart (484)
+        assertTrue(CHARTS_SRC.indexOf('var totalItems') === -1,
+            'код сводной статистики удалён (Task 485)');
+        assertTrue(CHARTS_SRC.indexOf('_renderBarChart: function') === -1,
+            'рендерер Топ-10 баров удалён (Task 485)');
         const iBranch = CHARTS_SRC.indexOf("if (tab === 'devices' || tab === 'lockouts')");
-        const iStats = CHARTS_SRC.indexOf('var totalItems');
-        assertTrue(iBranch !== -1 && iStats !== -1 && iBranch < iStats,
-            'ранний возврат до сводной статистики');
+        assertTrue(iBranch !== -1, 'ветка раннего возврата lockouts жива');
     });
 
     test('фолбэк: понятное сообщение для блокировок', () => {
         const seg = CHARTS_SRC.slice(CHARTS_SRC.indexOf('_renderContent: function'),
-                                     CHARTS_SRC.indexOf('var totalItems'));
+                                     CHARTS_SRC.indexOf('_renderValvesPies: function'));
         assertTrue(seg.indexOf("'блокировкам'") !== -1,
             'слово «блокировкам» в фолбэке');
         assertTrue(seg.indexOf('ppr-tc-empty-note') !== -1,
@@ -278,7 +283,7 @@ describe('Task 484: lockouts.json — блок ppr_chart', () => {
     test('две серии Кр/ТО в каноническом порядке', () => {
         assertEqual(ppr.series.length, 2, 'две серии');
         assertEqual(ppr.series[0].code, 'Кр');
-        assertEqual(ppr.series[0].name, 'Кан. ремонт');
+        assertEqual(ppr.series[0].name, 'Кап. ремонт');
         assertEqual(ppr.series[1].code, 'ТО');
         assertEqual(ppr.series[1].name, 'Тех. обслуж.');
     });
@@ -344,7 +349,7 @@ describe('Task 484: VM — _renderDevicesPPR (блокировки)', () => {
     });
 
     test('строки данных с названиями серий', () => {
-        assertTrue(html.indexOf('Кан. ремонт') !== -1, 'Кан. ремонт');
+        assertTrue(html.indexOf('Кап. ремонт') !== -1, 'Кап. ремонт');
         assertTrue(html.indexOf('Тех. обслуж.') !== -1, 'Тех. обслуж.');
     });
 
@@ -390,7 +395,7 @@ describe('Task 484: VM — _renderDevicesPPR (блокировки)', () => {
     });
 
     test('тултипы с расшифровкой', () => {
-        assertTrue(html.indexOf('Кан. ремонт (Кр), XII: 95') !== -1, 'Кр/XII');
+        assertTrue(html.indexOf('Кап. ремонт (Кр), XII: 95') !== -1, 'Кр/XII');
         assertTrue(html.indexOf('Тех. обслуж. (ТО), III: 205') !== -1, 'ТО/III');
     });
 
@@ -398,7 +403,7 @@ describe('Task 484: VM — _renderDevicesPPR (блокировки)', () => {
         const h2 = host._renderDevicesPPR({
             year: 2026,
             series: [
-                { code: 'Кр', name: 'Кан. ремонт', values: [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+                { code: 'Кр', name: 'Кап. ремонт', values: [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
                 { code: 'ТО', name: 'Тех. обслуж.', values: [3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] }
             ]
         }, 'БЛОКИРОВОК');
@@ -410,9 +415,9 @@ describe('Task 484: VM — _renderDevicesPPR (блокировки)', () => {
     test('HTML экранируется (название с <)', () => {
         const h2 = host._renderDevicesPPR({
             year: 2026,
-            series: [{ code: 'Кр', name: 'Кан.<ремонт', values: [1,0,0,0,0,0,0,0,0,0,0,0] }]
+            series: [{ code: 'Кр', name: 'Кап.<ремонт', values: [1,0,0,0,0,0,0,0,0,0,0,0] }]
         }, 'БЛОКИРОВОК');
-        assertTrue(h2.indexOf('Кан.&lt;ремонт') !== -1, 'угловые скобки экранированы');
+        assertTrue(h2.indexOf('Кап.&lt;ремонт') !== -1, 'угловые скобки экранированы');
     });
 
     test('устойчивость: мусорные значения → 0, серии без 12 значений пропущены', () => {
@@ -420,7 +425,7 @@ describe('Task 484: VM — _renderDevicesPPR (блокировки)', () => {
             year: 2027,
             series: [
                 { code: 'ТО', name: 'Тех. обслуж.', values: [null, 'x', undefined, 2, 0, 0, 0, 0, 0, 0, 0, 0] },
-                { code: 'Кр', name: 'Кан. ремонт', values: [1, 2] } // пропущена
+                { code: 'Кр', name: 'Кап. ремонт', values: [1, 2] } // пропущена
             ]
         }, 'БЛОКИРОВОК');
         assertTrue(h2.indexOf('на 2027 год') !== -1, 'год из данных');
@@ -433,8 +438,8 @@ describe('Task 484: VM — _renderDevicesPPR (блокировки)', () => {
 // 5. SW: версия v708 + комментарий Task 484
 // ==========================================================================
 describe('Task 484: SW — версия и кэши', () => {
-    test('CACHE_VERSION = kipia-test-v708', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v708';") !== -1,
+    test('CACHE_VERSION = kipia-test-v709', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v709';") !== -1,
             'версия поднята');
     });
 
@@ -443,12 +448,12 @@ describe('Task 484: SW — версия и кэши', () => {
     });
 
     test('v709 в sw.js отсутствует (лишний инкремент не сделан)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v709') === -1);
+        assertTrue(SW_SRC.indexOf('kipia-test-v710') === -1);
     });
 
     test('комментарий Task 484 в шапке версий (окно 700)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v708';");
-        const ctx = SW_SRC.slice(Math.max(0, i - 700), i);
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v709';");
+        const ctx = SW_SRC.slice(Math.max(0, i - 1500), i);
         assertTrue(ctx.indexOf('Task 484') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('Блокировки') !== -1, 'вкладка');
         assertTrue(ctx.indexOf('ppr_chart') !== -1, 'блок данных');
