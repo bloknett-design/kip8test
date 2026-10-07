@@ -27,6 +27,14 @@
 //   warn-ветка проверяется сканом 12 месяцев 2026 (не одной датой);
 //   monotonicity ok → warn → bad при росте «сегодня».
 //
+//   ⚠ Task 481 (следующая заявка) ИЗМЕНИЛ логику для вида «ТО»:
+//   ТОЛЬКО ГОД даты ремонта (текущий → ok, другой → bad; период
+//   не нужен, warn для ТО невозможен). Тесты ниже адаптированы:
+//   моки warn/bad для ТО сменены на К (§2 ×2, §3 ×1 — арифметика
+//   даты+периода осталась для К/П); eligible()/monotonicity §4 —
+//   с веткой ТО (скан warn-месяцев теперь видит ТОЛЬКО К/П).
+//   Полное покрытие правила года — в tests/test-task481.js.
+//
 // Запуск: через tests/run-all.js (require './test-task479.js').
 
 const fs = require('fs');
@@ -148,7 +156,8 @@ describe('Task 479 — devPprStatusClass: ветка warn', () => {
 
     test('срок 1-го числа текущего месяца — золотистый', () => {
         // 2026-07-01 + (3 мес) = 2026-10-01
-        assertEqual(devPprStatusClass(mk('Есть', 'ТО', '2026-07-01', '(3 мес)'), TODAY),
+        // Task 481: вид сменён с «ТО» на «К» — ТО теперь по ГОДУ (ok)
+        assertEqual(devPprStatusClass(mk('Есть', 'К', '2026-07-01', '(3 мес)'), TODAY),
             'dev-ppr-warn', 'самый ранний день месяца');
     });
 
@@ -172,7 +181,8 @@ describe('Task 479 — devPprStatusClass: ветка warn', () => {
 
     test('глубоко просрочен (месяц давно прошёл) — красный', () => {
         // 2026-01-15 + (3 мес) = 2026-04-15 — апрель
-        assertEqual(devPprStatusClass(mk('Есть', 'ТО', '2026-01-15', '(3 мес)'), TODAY),
+        // Task 481: вид сменён с «ТО» на «К» (ТО 2026 → ok по году)
+        assertEqual(devPprStatusClass(mk('Есть', 'К', '2026-01-15', '(3 мес)'), TODAY),
             'dev-ppr-bad');
     });
 
@@ -206,7 +216,8 @@ describe('Task 479 — devPprStatusClass: календарные границы'
         assertEqual(devPprStatusClass(mk('Есть', 'К', '2026-10-01', '(3 мес)'), JAN10),
             'dev-ppr-warn', 'новогодний warn');
         // 2026-09-28 + (3 мес) = 2026-12-28 < 2027-01-10, декабрь → bad
-        assertEqual(devPprStatusClass(mk('Есть', 'ТО', '2026-09-28', '(3 мес)'), JAN10),
+        // Task 481: вид сменён с «ТО» на «К» (ТО 2026 ≠ 2027 → bad по году)
+        assertEqual(devPprStatusClass(mk('Есть', 'К', '2026-09-28', '(3 мес)'), JAN10),
             'dev-ppr-bad', 'декабрь прошлого года — уже красный');
     });
 
@@ -249,13 +260,16 @@ describe('Task 479 — данные devices.json: инварианты трёх 
 
     const devs = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'devices.json'), 'utf8')).devices;
 
-    // Независимая (упрощённая) проверка предусловий подсветки
+    // Независимая (упрощённая) проверка предусловий подсветки.
+    // Task 481: для «ТО» период НЕ нужен (только год даты)
     function eligible(dev) {
         const ppr = String(dev['В гр. ППР'] || '').trim().toLowerCase();
         const vid = String(dev['Вид ремонта'] || '').trim().toUpperCase();
         const date = String(dev['Дата'] || '').trim();
         const per = String(dev['Период ремонта'] || '').trim();
-        return ppr === 'есть' && ['ТО', 'К', 'П'].indexOf(vid) !== -1 &&
+        if (ppr === 'есть' && vid === 'ТО')
+            return /^\d{4}-\d{2}-\d{2}$/.test(date);
+        return ppr === 'есть' && (vid === 'К' || vid === 'П') &&
                /^\d{4}-\d{2}-\d{2}$/.test(date) && /(\d+)/.test(per) &&
                parseInt((per.match(/(\d+)/) || [0, '0'])[1], 10) > 0;
     }
@@ -289,21 +303,37 @@ describe('Task 479 — данные devices.json: инварианты трёх 
         }
     });
 
-    test('monotonicity: «сегодня» позже — статус только ok→warn→bad', () => {
-        // warn строго между ok и bad: ровно один месяц жизни у просрочки
+    test('monotonicity: К/П ok→warn→bad при росте «сегодня»; ТО — год (Task 481)', () => {
+        // warn строго между ok и bad: ровно один месяц жизни у просрочки;
+        // Task 481: «ТО» — год даты ⇔ год «сегодня» (при переходе
+        // года статус может вернуться bad→ok — семантика ТО)
         const rank = { '': 0, 'dev-ppr-bad': 1, 'dev-ppr-warn': 2, 'dev-ppr-ok': 3 };
         for (const dev of devs) {
-            const a = rank[devPprStatusClass(dev, TODAY_2)];
-            const b = rank[devPprStatusClass(dev, TODAY)];
-            const c = rank[devPprStatusClass(dev, TODAY_3)];
-            assertTrue(a >= b && b >= c,
-                'ID ' + dev['ID'] + ': 2025→2026→2030 нарушает monotonicity');
+            const ppr = String(dev['В гр. ППР'] || '').trim().toLowerCase() === 'есть';
+            const vid = String(dev['Вид ремонта'] || '').trim().toUpperCase();
+            const dateOk = /^\d{4}-\d{2}-\d{2}$/.test(String(dev['Дата'] || '').trim());
+            if (ppr && vid === 'ТО' && dateOk) {
+                const y = parseInt(String(dev['Дата']).slice(0, 4), 10);
+                assertEqual(devPprStatusClass(dev, TODAY_2), y === 2025 ? 'dev-ppr-ok' : 'dev-ppr-bad',
+                    'ID ' + dev['ID'] + ': ТО@2025-06');
+                assertEqual(devPprStatusClass(dev, TODAY), y === 2026 ? 'dev-ppr-ok' : 'dev-ppr-bad',
+                    'ID ' + dev['ID'] + ': ТО@2026-10');
+                assertEqual(devPprStatusClass(dev, TODAY_3), y === 2030 ? 'dev-ppr-ok' : 'dev-ppr-bad',
+                    'ID ' + dev['ID'] + ': ТО@2030');
+            } else {
+                const a = rank[devPprStatusClass(dev, TODAY_2)];
+                const b = rank[devPprStatusClass(dev, TODAY)];
+                const c = rank[devPprStatusClass(dev, TODAY_3)];
+                assertTrue(a >= b && b >= c,
+                    'ID ' + dev['ID'] + ': 2025→2026→2030 нарушает monotonicity (К/П/прочие)');
+            }
         }
     });
 
     test('warn-ветка представлена в реальных данных (скан 12 месяцев 2026)', () => {
         // НЕ одна дата (данные синкаются кроном): warn живёт ровно один
-        // календарный месяц, поэтому ищем хоть один месяц года с warn
+        // календарный месяц, поэтому ищем хоть один месяц года с warn.
+        // Task 481: warn дают ТОЛЬКО К/П — у «ТО» месяца нет (год)
         let total = 0;
         const perMonth = [];
         for (let mo = 0; mo < 12; mo++) {
@@ -316,7 +346,7 @@ describe('Task 479 — данные devices.json: инварианты трёх 
             total += n;
         }
         assertTrue(total > 0,
-            'хотя бы один месяц 2026 с warn-приборами (по месяцам: ' + perMonth.join(',') + ')');
+            'хотя бы один месяц 2026 с warn-приборами К/П (по месяцам: ' + perMonth.join(',') + ')');
     });
 
     test('инвариант перераспределения: warn + bad = все просрочки', () => {
@@ -431,7 +461,9 @@ describe('Task 479 — карточка: интеграция не сломан�
 
     test('pprCls вычисляется в ветке isCombined, как в Task 478', () => {
         const i = INDEX_SRC.indexOf('if (f.isCombined) {');
-        const seg = INDEX_SRC.slice(i, i + 700);
+        // Task 481: окно 700 → 900 — комментарий у вызова дополнен
+        // правилом года (~90 симв.), дистанция до pprCls ~769
+        const seg = INDEX_SRC.slice(i, i + 900);
         assertTrue(seg.indexOf('pprCls = devPprStatusClass(dev);') !== -1,
             'класс цвета считается для комбинированной строки');
     });
@@ -456,8 +488,8 @@ describe('Task 479 — карточка: интеграция не сломан�
 // ==========================================================================
 describe('Task 479 — SW: версия и шапка', () => {
 
-    test('CACHE_VERSION = kipia-test-v704', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v704';") !== -1,
+    test('CACHE_VERSION = kipia-test-v705', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v705';") !== -1,
             'SW поднят до v703 (Task 479)');
     });
 
@@ -467,15 +499,17 @@ describe('Task 479 — SW: версия и шапка', () => {
     });
 
     test('несуществующая v704 отсутствует (guard)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v705') === -1,
-            'kipia-test-v705 не должен существовать');
+        assertTrue(SW_SRC.indexOf('kipia-test-v706') === -1,
+            'kipia-test-v706 не должен существовать');
     });
 
     test('комментарий Task 479 в шапке версий', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v704';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v705';");
         // Task 480: окно 700 → 1100 — комментарий Task 480 (~250 симв.)
         // отодвинул комментарий Task 478 до ~835 (за прежним окном 700).
-        const ctx = SW_SRC.slice(Math.max(0, i - 1100), i);
+        // Task 481: окно 1100 → 1400 — комментарий «ТО = только год»
+        // (~258 симв.) отодвинул Task 478 до ~1096.
+        const ctx = SW_SRC.slice(Math.max(0, i - 1400), i);
         assertTrue(ctx.indexOf('Task 479') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('оранжево-золотистый') !== -1, 'третий цвет');
         assertTrue(ctx.indexOf('dev-ppr-warn') !== -1, 'имя класса');
@@ -492,15 +526,15 @@ describe('Task 479 — SW: версия и шапка', () => {
         // 471 ~3055 < 3400; 461 ~5617 < 6000 (запасы 345+)
         // Task 480 (~250 симв.) тоже вписался: 474 ~2377; 472 ~2750;
         // 471 ~3299; 461 ~5861 — расширения не нужны (запасы 101+)
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v704';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v705';");
         const i474 = SW_SRC.lastIndexOf('Task 474', i);
         const i472 = SW_SRC.lastIndexOf('Task 472', i);
         const i471 = SW_SRC.lastIndexOf('Task 471', i);
         const i461 = SW_SRC.lastIndexOf('Task 461', i);
-        assertTrue(i474 !== -1 && (i - i474) < 2500, 'Task 474 в окне 2500');
-        assertTrue(i472 !== -1 && (i - i472) < 2900, 'Task 472 в окне 2900');
-        assertTrue(i471 !== -1 && (i - i471) < 3400, 'Task 471 в окне 3400');
-        assertTrue(i461 !== -1 && (i - i461) < 6000, 'Task 461 в окне 6000');
+        assertTrue(i474 !== -1 && (i - i474) < 3100, 'Task 474 в окне 3100');
+        assertTrue(i472 !== -1 && (i - i472) < 3600, 'Task 472 в окне 3600');
+        assertTrue(i471 !== -1 && (i - i471) < 4200, 'Task 471 в окне 4200');
+        assertTrue(i461 !== -1 && (i - i461) < 6800, 'Task 461 в окне 6800');
     });
 });
 

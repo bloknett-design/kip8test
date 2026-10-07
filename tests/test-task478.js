@@ -41,6 +41,14 @@
 //   набор статусов и monotonicity — с warn. Полное покрытие — в
 //   tests/test-task479.js (третий цвет + столбец «Дата» таблицы).
 //
+//   ⚠ Task 481 (следующая заявка) ИЗМЕНИЛ логику для вида «ТО»:
+//   сравнивается ТОЛЬКО ГОД даты ремонта (год = текущему → ok,
+//   любой другой → bad; период/месяц НЕ учитываются, warn для ТО
+//   невозможен; период для ТО больше НЕ обязателен). Тесты ниже
+//   адаптированы: артефакты периодов для ТО сменены на К/П
+//   (§3 ×2), eligible()/monotonicity в §6 — с веткой ТО. Полное
+//   покрытие правила года — в tests/test-task481.js.
+//
 // Запуск: через tests/run-all.js (require './test-task478.js').
 
 const fs = require('fs');
@@ -207,7 +215,9 @@ describe('Task 478 — devPprStatusClass: периоды (мес/год)', () =>
     });
 
     test('«(3 мес)»: 2026-01-15 → срок 2026-04-15 (bad при 2026-10-06)', () => {
-        assertEqual(devPprStatusClass(mk('Есть', 'ТО', '2026-01-15', '(3 мес)'), TODAY), 'dev-ppr-bad');
+        // Task 481: вид сменён с «ТО» на «К» — ТО теперь по ГОДУ даты
+        // (2026 → ok!), арифметика периодов проверяется на К/П
+        assertEqual(devPprStatusClass(mk('Есть', 'К', '2026-01-15', '(3 мес)'), TODAY), 'dev-ppr-bad');
     });
 
     test('«(1 год)»: 2024-04-01 → срок 2030 не нужен: 2025-04-01 (ok)', () => {
@@ -232,7 +242,8 @@ describe('Task 478 — devPprStatusClass: периоды (мес/год)', () =>
     });
 
     test('месяцы переходят через границу года: 2025-11-20 + (3 мес) = 2026-02-20 (bad)', () => {
-        assertEqual(devPprStatusClass(mk('Есть', 'ТО', '2025-11-20', '(3 мес)'), TODAY), 'dev-ppr-bad');
+        // Task 481: вид сменён с «ТО» на «К» (ТО — только год: 2025≠2026)
+        assertEqual(devPprStatusClass(mk('Есть', 'К', '2025-11-20', '(3 мес)'), TODAY), 'dev-ppr-bad');
     });
 
     test('годы через високосность: 2024-02-29 + (2 года) = 2026-03-01 (bad)', () => {
@@ -308,7 +319,9 @@ describe('Task 478 — devRenderDetail: интеграция окраски', ()
     test('pprCls вычисляется в ветке isCombined (строка «Период ремонта»)', () => {
         const i = INDEX_SRC.indexOf('if (f.isCombined) {');
         assertTrue(i !== -1, 'ветка isCombined найдена');
-        const seg = INDEX_SRC.slice(i, i + 700);
+        // Task 481: окно 700 → 900 — комментарий у вызова дополнен
+        // правилом года (~90 симв.), дистанция до pprCls ~769
+        const seg = INDEX_SRC.slice(i, i + 900);
         assertTrue(seg.indexOf('pprCls = devPprStatusClass(dev);') !== -1,
             'класс цвета считается для комбинированной строки');
     });
@@ -333,7 +346,9 @@ describe('Task 478 — devRenderDetail: интеграция окраски', ()
 
     test('комментарий Task 478 в devRenderDetail', () => {
         const i = INDEX_SRC.indexOf('pprCls = devPprStatusClass(dev);');
-        const zone = INDEX_SRC.slice(Math.max(0, i - 300), i);
+        // Task 481: окно 300 → 500 — комментарий Task 481 у вызова
+        // (~90 симв.) отодвинул маркер Task 478 до ~368
+        const zone = INDEX_SRC.slice(Math.max(0, i - 500), i);
         assertTrue(zone.indexOf('Task 478') !== -1, 'маркер задачи у вызова');
     });
 
@@ -362,13 +377,17 @@ describe('Task 478 — данные devices.json: инварианты', () => {
 
     const devs = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'devices.json'), 'utf8')).devices;
 
-    // Независимая (упрощённая) проверка предусловий подсветки
+    // Независимая (упрощённая) проверка предусловий подсветки.
+    // Task 481: для «ТО» период НЕ нужен (только год даты); для
+    // К/П — прежний набор (дата + период)
     function eligible(dev) {
         const ppr = String(dev['В гр. ППР'] || '').trim().toLowerCase();
         const vid = String(dev['Вид ремонта'] || '').trim().toUpperCase();
         const date = String(dev['Дата'] || '').trim();
         const per = String(dev['Период ремонта'] || '').trim();
-        return ppr === 'есть' && ['ТО', 'К', 'П'].indexOf(vid) !== -1 &&
+        if (ppr === 'есть' && vid === 'ТО')
+            return /^\d{4}-\d{2}-\d{2}$/.test(date);
+        return ppr === 'есть' && (vid === 'К' || vid === 'П') &&
                /^\d{4}-\d{2}-\d{2}$/.test(date) && /(\d+)/.test(per) &&
                parseInt((per.match(/(\d+)/) || [0, '0'])[1], 10) > 0;
     }
@@ -410,19 +429,40 @@ describe('Task 478 — данные devices.json: инварианты', () => {
         assertTrue(norm > 0, 'неподходящие тоже есть (' + norm + ')');
     });
 
-    test('monotonicity: «сегодня» позже — статус только ok→warn→bad (никогда обратно)', () => {
-        // Task 479: warn (текущий месяц) строго между ok и bad
+    test('monotonicity: К/П ok→warn→bad при росте «сегодня»; ТО — правило года (Task 481)', () => {
+        // Task 479: warn (текущий месяц) строго между ok и bad;
+        // Task 481: «ТО» — год даты ⇔ год «сегодня» (при переходе
+        // календарного года статус ТО может вернуться bad→ok — это
+        // НЕ нарушение, а семантика ежегодного ТО)
         const rank = { '': 0, 'dev-ppr-bad': 1, 'dev-ppr-warn': 2, 'dev-ppr-ok': 3 };
         for (const dev of devs) {
-            const a = rank[devPprStatusClass(dev, TODAY_2)];
-            const b = rank[devPprStatusClass(dev, TODAY)];
-            const c = rank[devPprStatusClass(dev, TODAY_3)];
-            assertTrue(a >= b && b >= c,
-                'ID ' + dev['ID'] + ': 2025→2026→2030 нарушает monotonicity');
+            const ppr = String(dev['В гр. ППР'] || '').trim().toLowerCase() === 'есть';
+            const vid = String(dev['Вид ремонта'] || '').trim().toUpperCase();
+            const dateOk = /^\d{4}-\d{2}-\d{2}$/.test(String(dev['Дата'] || '').trim());
+            if (ppr && vid === 'ТО' && dateOk) {
+                const y = parseInt(String(dev['Дата']).slice(0, 4), 10);
+                assertEqual(devPprStatusClass(dev, TODAY_2), y === 2025 ? 'dev-ppr-ok' : 'dev-ppr-bad',
+                    'ID ' + dev['ID'] + ': ТО@2025-06');
+                assertEqual(devPprStatusClass(dev, TODAY), y === 2026 ? 'dev-ppr-ok' : 'dev-ppr-bad',
+                    'ID ' + dev['ID'] + ': ТО@2026-10');
+                assertEqual(devPprStatusClass(dev, TODAY_3), y === 2030 ? 'dev-ppr-ok' : 'dev-ppr-bad',
+                    'ID ' + dev['ID'] + ': ТО@2030');
+            } else {
+                const a = rank[devPprStatusClass(dev, TODAY_2)];
+                const b = rank[devPprStatusClass(dev, TODAY)];
+                const c = rank[devPprStatusClass(dev, TODAY_3)];
+                assertTrue(a >= b && b >= c,
+                    'ID ' + dev['ID'] + ': 2025→2026→2030 нарушает monotonicity (К/П/прочие)');
+            }
         }
     });
 
-    test('обе ветки представлены в реальных данных (и зелёный, и красный)', () => {
+    test('обе ветки представлены в реальных данных (и зелёный, и просрочки)', () => {
+        // Task 481 + правки пользователя: авто-синк 22e25742 (крон новой
+        // таблицы Task 480) привёз массовый перенос 143 дат ТО 2025→2026
+        // — на 2026-10-07 ok 838 / warn 14 / bad 1; порог bad>100 снят
+        // (данные легитимно стали «зелёными»), инвариант: зелёные есть
+        // + просрочки (warn|bad) есть — обе ветки индикации видны
         let ok = 0, bad = 0, warn = 0;
         for (const dev of devs) {
             const s = devPprStatusClass(dev, TODAY);
@@ -431,8 +471,8 @@ describe('Task 478 — данные devices.json: инварианты', () => {
             if (s === 'dev-ppr-warn') warn++;
         }
         assertTrue(ok > 500, 'зелёных заметно (' + ok + ')');
-        assertTrue(bad > 100, 'красных заметно (' + bad + '; золотистых ' + warn +
-            ' — их покрывает test-task479)');
+        assertTrue(warn + bad > 0, 'просроченные есть (warn ' + warn +
+            ' + bad ' + bad + ' — красные покрывает test-task479/481)');
     });
 });
 
@@ -441,8 +481,8 @@ describe('Task 478 — данные devices.json: инварианты', () => {
 // ==========================================================================
 describe('Task 478 — SW: версия и шапка', () => {
 
-    test('CACHE_VERSION = kipia-test-v704', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v704';") !== -1,
+    test('CACHE_VERSION = kipia-test-v705', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v705';") !== -1,
             'SW поднят до v702 (Task 478)');
     });
 
@@ -452,16 +492,18 @@ describe('Task 478 — SW: версия и шапка', () => {
     });
 
     test('несуществующая v703 отсутствует (guard)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v705') === -1,
-            'kipia-test-v705 не должен существовать');
+        assertTrue(SW_SRC.indexOf('kipia-test-v706') === -1,
+            'kipia-test-v706 не должен существовать');
     });
 
     test('комментарий Task 478 в шапке версий', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v704';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v705';");
         // Task 480: окно 700 → 1100 — комментарий Task 480 (новый ID
         // Google-таблицы «Перечень КИП ИОС рабочий.xlsx», ~250 симв.)
         // отодвинул комментарий Task 478 до ~835 символов.
-        const ctx = SW_SRC.slice(Math.max(0, i - 1100), i);
+        // Task 481: окно 1100 → 1400 — комментарий «ТО = только год»
+        // (~258 симв.) отодвинул комментарий Task 478 до ~1096.
+        const ctx = SW_SRC.slice(Math.max(0, i - 1400), i);
         assertTrue(ctx.indexOf('Task 478') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('Период ремонта') !== -1, 'упоминание строки');
         assertTrue(ctx.indexOf('ЗЕЛЁНЫЙ') !== -1 && ctx.indexOf('КРАСНЫЙ') !== -1,
@@ -475,15 +517,15 @@ describe('Task 478 — SW: версия и шапка', () => {
         // 474 ~2133; 472 ~2506; 471 ~3055; 461 ~5617 — расширения не нужны
         // Task 480 (~250 симв., новый ID таблицы) тоже вписался:
         // 474 ~2377; 472 ~2750; 471 ~3299; 461 ~5861 — расширения не нужны
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v704';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v705';");
         const i474 = SW_SRC.lastIndexOf('Task 474', i);
         const i472 = SW_SRC.lastIndexOf('Task 472', i);
         const i471 = SW_SRC.lastIndexOf('Task 471', i);
         const i461 = SW_SRC.lastIndexOf('Task 461', i);
-        assertTrue(i474 !== -1 && (i - i474) < 2500, 'Task 478 в окне 2500');
-        assertTrue(i472 !== -1 && (i - i472) < 2900, 'Task 472 в окне 2900');
-        assertTrue(i471 !== -1 && (i - i471) < 3400, 'Task 471 в окне 3400');
-        assertTrue(i461 !== -1 && (i - i461) < 6000, 'Task 461 в окне 6000');
+        assertTrue(i474 !== -1 && (i - i474) < 3100, 'Task 478 в окне 3100');
+        assertTrue(i472 !== -1 && (i - i472) < 3600, 'Task 472 в окне 3600');
+        assertTrue(i471 !== -1 && (i - i471) < 4200, 'Task 471 в окне 4200');
+        assertTrue(i461 !== -1 && (i - i461) < 6800, 'Task 461 в окне 6800');
     });
 });
 

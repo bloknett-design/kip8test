@@ -74,9 +74,9 @@ function countOf(haystack, needle) {
 // ==========================================================================
 describe('Task 480 — SW: версия кэша', () => {
 
-    test("CACHE_VERSION = 'kipia-test-v704'", () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v704';") !== -1,
-            'SW поднят до kipia-test-v704 (Task 480)');
+    test("CACHE_VERSION = 'kipia-test-v705'", () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v705';") !== -1,
+            'SW поднят до kipia-test-v705 (Task 480)');
     });
 
     test('прежняя версия v703 отсутствует', () => {
@@ -85,8 +85,8 @@ describe('Task 480 — SW: версия кэша', () => {
     });
 
     test('несуществующая v705 отсутствует (guard)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v705') === -1,
-            'kipia-test-v705 не должен существовать');
+        assertTrue(SW_SRC.indexOf('kipia-test-v706') === -1,
+            'kipia-test-v706 не должен существовать');
     });
 
     test('персистентные кэши картинок/данных НЕ инкрементировались', () => {
@@ -98,7 +98,7 @@ describe('Task 480 — SW: версия кэша', () => {
     });
 
     test('комментарий Task 480 в шапке версий (окно 700)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v704';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v705';");
         const ctx = SW_SRC.slice(Math.max(0, i - 700), i);
         assertTrue(ctx.indexOf('Task 480') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('«Перечень КИП ИОС рабочий.xlsx»') !== -1,

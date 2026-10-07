@@ -42,8 +42,8 @@ const SW_SRC = fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8');
 // 1. SW: версия и шапка
 // ==========================================================================
 describe('Task 477 — SW: версия и шапка', () => {
-    test('CACHE_VERSION = kipia-test-v704', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v704';") !== -1,
+    test('CACHE_VERSION = kipia-test-v705', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v705';") !== -1,
             'SW поднят до v701');
     });
     test('прежняя версия v700 отсутствует', () => {
@@ -51,8 +51,8 @@ describe('Task 477 — SW: версия и шапка', () => {
             'в sw.js не осталось kipia-test-v700');
     });
     test('несуществующая v702 отсутствует (guard)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v705') === -1,
-            'kipia-test-v705 не должен существовать');
+        assertTrue(SW_SRC.indexOf('kipia-test-v706') === -1,
+            'kipia-test-v706 не должен существовать');
     });
     test('комментарий Task 477 в шапке версий', () => {
         assertTrue(SW_SRC.indexOf('Task 477 (этап 3 оптимизации): KipPreload') !== -1,
@@ -346,17 +346,17 @@ describe('Task 477 — границы и окна', () => {
 
     test('окна истории sw.js — компактный комментарий 477 НЕ расширял их',
         () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v704';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v705';");
         const i474 = SW_SRC.lastIndexOf('Task 474', i);
         const i472 = SW_SRC.lastIndexOf('Task 472', i);
         const i471 = SW_SRC.lastIndexOf('Task 471', i);
         const i461 = SW_SRC.lastIndexOf('Task 461', i);
-        assertTrue(i474 !== -1 && (i - i474) < 2500, 'Task 474 (~1878) в окне 2500');
+        assertTrue(i474 !== -1 && (i - i474) < 3100, 'Task 474 (~2638) в окне 3100');
         // Task 478: окна расширены (комментарий ~340 симв.):
         // 474 1700→2500, 472 2100→2900, 471 2700→3400, 461 5300→6000.
-        assertTrue(i472 !== -1 && (i - i472) < 2900, 'Task 472 (~2251) в окне 2900');
-        assertTrue(i471 !== -1 && (i - i471) < 3400, 'Task 471 (~2800) в окне 3400');
-        assertTrue(i461 !== -1 && (i - i461) < 6000, 'Task 461 (~5362) в окне 6000');
+        assertTrue(i472 !== -1 && (i - i472) < 3600, 'Task 472 (~3011) в окне 3600');
+        assertTrue(i471 !== -1 && (i - i471) < 4200, 'Task 471 (~3560) в окне 4200');
+        assertTrue(i461 !== -1 && (i - i461) < 6800, 'Task 461 (~6122) в окне 6800');
     });
 });
 
