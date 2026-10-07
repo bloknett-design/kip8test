@@ -39,11 +39,16 @@
 //       живым для вкладки «Блокировки»;
 //   (в) sync-devices.py: устойчивость — лист «Приборы» недоступен
 //       (экспорт с gid= одного листа) → сохранён прежний ppr_chart.
-//   SW: kipia-test-v707 (логика SW не менялась; окна истории
+//   SW: kipia-test-v708 (логика SW не менялась; окна истории
 //       расширены scripts/task483-windows.py; бамп tests —
 //       scripts/task483-bump-sw.py). АДАПТАЦИЯ test-task473.js:
 //   _PPR_DEVICES → локальный мок (механика _renderPPRChart жива для
 //   «Блокировок»).
+//   Task 484 АДАПТАЦИЯ: вкладка «Блокировки» переведена на тот же
+//   _renderDevicesPPR — _renderPPRChart и _PPR_LOCKOUTS УДАЛЕНЫ
+//   (инверсия проверок ниже); _renderDevicesPPR получил параметр
+//   noun («ПРИБОРОВ»/«БЛОКИРОВОК»); логика и рендер «Блокировок»
+//   тестируются в test-task484.js.
 //
 // Запуск: через tests/run-all.js (require './test-task483.js').
 
@@ -185,13 +190,16 @@ describe('Task 483: charts-desktop.js — структура', () => {
             'блок заШитых счётчиков удалён');
         assertTrue(CHARTS_SRC.indexOf('this._PPR_DEVICES') === -1,
             'использование удалено');
-        assertTrue(CHARTS_SRC.indexOf('_PPR_LOCKOUTS') !== -1,
-            'данные «Блокировок» не тронуты');
+        // Task 484: счётчики «Блокировок» тоже больше не заШиты
+        assertTrue(CHARTS_SRC.indexOf('_PPR_LOCKOUTS: {') === -1,
+            'блок заШитых счётчиков «Блокировок» удалён (Task 484)');
+        assertTrue(CHARTS_SRC.indexOf('this._PPR_LOCKOUTS') === -1,
+            'использование _PPR_LOCKOUTS удалено (Task 484)');
     });
 
-    test('новый рендерер _renderDevicesPPR объявлен', () => {
-        assertTrue(CHARTS_SRC.indexOf('_renderDevicesPPR: function(ppr)') !== -1,
-            'метод существует');
+    test('рендерер _renderDevicesPPR объявлен (Task 484: с параметром noun)', () => {
+        assertTrue(CHARTS_SRC.indexOf('_renderDevicesPPR: function(ppr, noun)') !== -1,
+            'метод существует; noun — существительное титула');
     });
 
     test('поле _pprChart (блок из devices.json)', () => {
@@ -220,8 +228,8 @@ describe('Task 483: charts-desktop.js — структура', () => {
     test('_renderContent: ветка devices рендерит ppr_chart', () => {
         const seg = CHARTS_SRC.slice(CHARTS_SRC.indexOf('_renderContent: function'),
                                      CHARTS_SRC.indexOf('var totalItems'));
-        assertTrue(seg.indexOf('_renderDevicesPPR(ppr)') !== -1,
-            'вызов нового рендерера');
+        assertTrue(seg.indexOf('_renderDevicesPPR(ppr,') !== -1,
+            'вызов нового рендерера (Task 484: с noun)');
         assertTrue(seg.indexOf('ppr-tc-empty-note') !== -1,
             'фолбэк при отсутствии блока');
     });
@@ -253,9 +261,11 @@ describe('Task 483: charts-desktop.js — структура', () => {
             'ровно 3 золотых месяца');
     });
 
-    test('титул «Количество ПРИБОРОВ … на <год> год» — динамический', () => {
-        assertTrue(CHARTS_SRC.indexOf("'Количество ПРИБОРОВ по графику ППР по месяцам на ' + year + ' год'") !== -1,
-            'титул собирается из данных');
+    test('титул «Количество <noun> … на <год> год» — динамический', () => {
+        // Task 484: noun — «ПРИБОРОВ»/«БЛОКИРОВОК»; по умолчанию
+        // «ПРИБОРОВ» (обратная совместимость)
+        assertTrue(CHARTS_SRC.indexOf("'Количество ' + (noun || 'ПРИБОРОВ') + ' по графику ППР по месяцам на ' + year + ' год'") !== -1,
+            'титул собирается из данных и noun');
     });
 
     test('штриховка ТО — горизонтальные полосы', () => {
@@ -273,11 +283,16 @@ describe('Task 483: charts-desktop.js — структура', () => {
             'запас под подписи значений');
     });
 
-    test('_renderPPRChart (правая ось) жив для «Блокировок»', () => {
-        assertTrue(CHARTS_SRC.indexOf('_renderPPRChart: function(pprData)') !== -1,
-            'рендерер не удалён');
-        assertTrue(CHARTS_SRC.indexOf("this._renderPPRChart(this._PPR_LOCKOUTS)") !== -1,
-            '«Блокировки» рендерятся им');
+    test('_renderPPRChart (правая ось) УДАЛЁН — «Блокировки» рендерит _renderDevicesPPR', () => {
+        // Task 484: заявка «убери всё лишнее» — старый рендерер и
+        // заШитые счётчики удалены; упоминание в некрологе шапки
+        // допускается, определение/вызов — нет
+        assertTrue(CHARTS_SRC.indexOf('_renderPPRChart: function') === -1,
+            'рендерер удалён');
+        assertTrue(CHARTS_SRC.indexOf('this._renderPPRChart') === -1,
+            'вызов удалён');
+        assertTrue(CHARTS_SRC.indexOf("this._renderDevicesPPR(ppr,") !== -1,
+            'обе вкладки рендерятся _renderDevicesPPR');
     });
 });
 
@@ -472,8 +487,8 @@ describe('Task 483: VM — _renderDevicesPPR (таблица + диаграмм�
 // 5. SW: версия v707 + комментарий Task 483
 // ==========================================================================
 describe('Task 483: SW — версия и кэши', () => {
-    test('CACHE_VERSION = kipia-test-v707', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v707';") !== -1,
+    test('CACHE_VERSION = kipia-test-v708', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v708';") !== -1,
             'версия поднята');
     });
 
@@ -482,11 +497,11 @@ describe('Task 483: SW — версия и кэши', () => {
     });
 
     test('v708 в sw.js отсутствует (лишний инкремент не сделан)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v708') === -1);
+        assertTrue(SW_SRC.indexOf('kipia-test-v709') === -1);
     });
 
     test('комментарий Task 483 в шапке версий (окно 700)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v707';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v708';");
         const ctx = SW_SRC.slice(Math.max(0, i - 700), i);
         assertTrue(ctx.indexOf('Task 483') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('Графики КИП ИОС') !== -1, 'раздел');

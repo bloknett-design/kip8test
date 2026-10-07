@@ -225,8 +225,8 @@ describe('Task 474 — SRC: структура карточки', () => {
 // ==========================================================================
 // 4. SW — версия кэша и комментарий задачи
 describe('Task 474 — SW: версия кэша', () => {
-    test("CACHE_VERSION = kipia-test-v707", () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v707';") !== -1,
+    test("CACHE_VERSION = kipia-test-v708", () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v708';") !== -1,
             'текущая версия v698');
     });
 
@@ -236,7 +236,7 @@ describe('Task 474 — SW: версия кэша', () => {
     });
 
     test('v699 в sw.js отсутствует (лишний инкремент не сделан)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v708') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v709') === -1,
             'версия после Task 474 не существует');
     });
 
@@ -249,8 +249,8 @@ describe('Task 474 — SW: версия кэша', () => {
     });
 
     test('комментарий Task 474 рядом с версией (окно 600)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v707';");
-        const ctx = SW_SRC.slice(Math.max(0, i - 3500), i);
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v708';");
+        const ctx = SW_SRC.slice(Math.max(0, i - 4000), i);
         // Task 478: окна 1700 → 2500 (Task 474 ~1878), 2700 → 3400
         // (Task 471 ~2800), 5300 → 6000 (Task 461 ~5362) — комментарий
         // ППР-индикации карточки прибора (~340 симв.).
@@ -269,15 +269,17 @@ describe('Task 474 — SW: версия кэша', () => {
         // Task 476: окна расширены (+~490 симв. этапа 2):
         // Task 471 2100 → 2700 (~2170), Task 461 4600 → 5300 (~4732).
         // Task 461 ~4300).
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v707';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v708';");
         const i471 = SW_SRC.lastIndexOf('Task 471', i);
         const i461 = SW_SRC.lastIndexOf('Task 461', i);
-        assertTrue(i471 !== -1 && (i - i471) < 4600,
+        assertTrue(i471 !== -1 && (i - i471) < 5000,
             'Task 471 в пределах окна 2100');
-        assertTrue(i461 !== -1 && (i - i461) < 7200,
+        assertTrue(i461 !== -1 && (i - i461) < 7600,
             'Task 461 в пределах окна 4600');
         // Task 483: комментарий ~378 симв. отодвинул якоря — окна
         // расширены scripts/task483-windows.py (4200→4600/6800→7200).
+        // Task 484: комментарий ~390 симв. — 4600→5000/7200→7600
+        // (scripts/task484-windows.py).
     });
 });
 

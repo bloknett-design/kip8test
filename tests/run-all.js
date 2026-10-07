@@ -643,6 +643,12 @@ require('./test-task482.js');
 // листу «Приборы» с фильтром «Наличие в ППР» = «Есть»; заШитые
 // счётчики _PPR_DEVICES удалены.
 require('./test-task483.js');
+// Task 484 — Графики КИП ИОС → «Блокировки»: тот же вид «как в Excel»,
+// что «Приборы» (таблица + диаграмма из ppr_chart в data/lockouts.json,
+// sync-lockouts.py по листу «Блокировки» с фильтром «Наличие в перечне
+// и в ППР» = «Есть», серии Кр/ТО); старый _renderPPRChart и заШитые
+// _PPR_LOCKOUTS удалены.
+require('./test-task484.js');
 require('./test-deploy-url.js');
 
 // Запускаем

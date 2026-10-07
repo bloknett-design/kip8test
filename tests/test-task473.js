@@ -8,39 +8,35 @@
 //
 // РЕШЕНИЕ (charts-desktop.js — модуль графиков, только десктоп
 // Electron; данные ППР не менялись — только отрисовка):
-//   (а) КОРЕНЬ «не отображает зрительно»: у .ppr-bars-row было
+//   (а) КОРЕНЬ «не отображает зрительно»: у ряда столбцов было
 //       align-items:flex-end — ячейки НЕ растягивались на высоту
 //       ряда, height:% столбца разрешался против auto-высоты ячейки
 //       и схлопывался в min-height:2px — ВСЕ столбцы всех серий
 //       были зрительно невидимы (2px), подтверждено замером в
 //       Chromium (браузер-чек: было 2px из 165px). Теперь
 //       align-items:stretch — высота ячейки определена, столбцы
-//       рисуются по значению; низ столбца прижат align-items:
-//       flex-end самой ячейки .ppr-bar-cell;
-//   (б) значение над КАЖДЫМ столбцом (порог heightPct > 8 убран —
-//       из-за него были видны числа только 14 месяцев из 36) —
-//       количество приборов на каждый месяц видно на диаграмме;
-//   (в) нулевые месяцы — подпись «0» у основания (.ppr-bar-val-zero);
-//   (г) ВСПОМОГАТЕЛЬНАЯ ПРАВАЯ ОСЬ: серии с максимумом <= 25% от
-//       общего (К 48, П 15 при ТО 500) масштабируются по правой оси
-//       (niceMax(48) = 50) — столбцы зрительно различимы по месяцам;
-//       правая ось с метками 50…0; легенда малых серий помечена
-//       «(правая ось)»; столбец помечен data-scale primary/secondary;
-//   (д) CSS: .ppr-chart-body padding-top 4→16px (запас под подписи),
-//       .ppr-bar-cell position:relative (якорь «0»), .ppr-y-axis-right,
-//       .ppr-legend-axis;
-//   SW: kipia-test-v707.
-//   АДАПТАЦИЯ (прецедент Task 463/468/470/471): test-task471.js и
-//   test-task472.js — окно шапки версий sw.js 900 → 1020 (комментарий
-//   Task 473 отодвинул начало комментария Task 471 до ~986 символов).
-//   Task 483 АДАПТАЦИЯ: _PPR_DEVICES УДАЛЁН из charts-desktop.js (данные
-//   вкладки «Приборы» теперь считает sync-devices.py → ppr_chart в
-//   data/devices.json — логика и данные тестируются в test-task483.js;
-//   вкладка рендерится НОВЫМ _renderDevicesPPR «таблица+диаграмма»).
-//   _renderPPRChart — живой код вкладки «Блокировки»: механику
-//   (высоты, правая ось, подписи, нули) тестировано на ЛОКАЛЬНОМ моке
-//   MOCK_PPR_DEVICES (снимок БЫВШИХ заШитых значений на Task 473).
-//   Окна истории sw.js — расширены scripts/task483-windows.py.
+//       рисуются по значению; низ столбца прижат flex-end
+//       самой ячейки;
+//   (б) значение над КАЖДЫМ столбцом — количество на каждый месяц
+//       видно прямо на диаграмме;
+//   (в) нулевые месяцы — подпись «0» у основания;
+//   (г) ВСПОМОГАТЕЛЬНАЯ ПРАВАЯ ОСЬ для малых серий (легаси
+//       гистограммы Task 473);
+//   SW: kipia-test-v708.
+//
+// ИСТОРИЯ АДАПТАЦИЙ:
+//   Task 483: _PPR_DEVICES УДАЛЁН (данные вкладки «Приборы» теперь
+//   считает sync-devices.py → ppr_chart в data/devices.json; вкладка
+//   рендерится НОВЫМ _renderDevicesPPR «таблица+диаграмма»).
+//   Task 484: _renderPPRChart (+правая ось, _niceMax, заШитые
+//   _PPR_LOCKOUTS, CSS .ppr-chart-*/.ppr-bar-*/.ppr-y-axis) УДАЛЁН —
+//   вкладка «Блокировки» рендерится тем же _renderDevicesPPR. Тесты
+//   механики мёртвого рендерера (§1–§3: _niceMax, правая ось,
+//   легенда, итоги, метки осей) — УДАЛЕНЫ; семантика Task 473
+//   (подписи над КАЖДЫМ столбцом, «0» у основания, КОРЕНЬ stretch)
+//   жива в _renderDevicesPPR/.ppr-tc-* и покрыта ниже §1–§2
+//   (плюс test-task483 §VM и test-task484).
+//   Окна истории sw.js — расширены scripts/task484-windows.py.
 //
 // Запуск: через tests/run-all.js (require './test-task473.js').
 
@@ -77,25 +73,30 @@ function reviveMethod(src, name) {
 }
 
 // Мок данных ППР «Приборы» (Task 483: _PPR_DEVICES удалён из
-// charts-desktop.js — этот мок = снимок БЫВШИХ заШитых значений;
-// нужен только для тестирования механики _renderPPRChart,
-// который остаётся живым рендером вкладки «Блокировки»)
+// charts-desktop.js; Task 484: рендерер _renderPPRChart тоже удалён —
+// мок нужен для проверки СЕМАНТИКИ Task 473 на живом
+// _renderDevicesPPR: подписи над каждым столбцом + «0» у основания)
 const MOCK_PPR_DEVICES = {
-    title: 'Количество приборов по графику ППР по месяцам на 2026 год',
+    year: 2026,
     series: [
-        { name: 'Калибровка', code: 'К', color: '#4a90d9', values: [13, 33, 30, 45, 24, 28, 33, 34, 48, 16, 34, 35] },
-        { name: 'Поверка', code: 'П', color: '#e07040', values: [12, 12, 4, 15, 0, 4, 6, 10, 4, 6, 1, 12] },
-        { name: 'Тех. обслуж.', code: 'ТО', color: '#5ab870', values: [353, 354, 500, 320, 374, 496, 333, 353, 481, 358, 362, 485] }
+        { name: 'Калибровка', code: 'К', values: [13, 33, 30, 45, 24, 28, 33, 34, 48, 16, 34, 35] },
+        { name: 'Поверка', code: 'П', values: [12, 12, 4, 15, 0, 4, 6, 10, 4, 6, 1, 12] },
+        { name: 'Тех. обслуж.', code: 'ТО', values: [353, 354, 500, 320, 374, 496, 333, 353, 481, 358, 362, 485] }
     ]
 };
 
 // Хост с живыми методами отрисовки (та же арифметика, что в браузере)
 function makeHost() {
     return {
-        _renderPPRChart: reviveMethod(CHARTS_SRC, '_renderPPRChart'),
-        _niceMax: reviveMethod(CHARTS_SRC, '_niceMax'),
+        _renderDevicesPPR: reviveMethod(CHARTS_SRC, '_renderDevicesPPR'),
         _escHtml: reviveMethod(CHARTS_SRC, '_escHtml'),
-        _MONTHS_ROMAN: ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII']
+        _MONTHS_ROMAN: ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'],
+        _PPR_TC_STYLES: {
+            'К':  { suffix: 'k',  bar: '#4F81BD', badge: '#8DB4E2', row: '#DBEEF4' },
+            'П':  { suffix: 'p',  bar: '#C0504D', badge: '#D99694', row: '#FDEADA' },
+            'ТО': { suffix: 'to', bar: '#9BBB59', badge: '#C3D69B', row: '#EBF1DE' }
+        },
+        _PPR_TC_MONTH_CLS: ['pink','','','','pink','gold','gold','gold','pink','','','pink']
     };
 }
 
@@ -104,54 +105,21 @@ function countOccurrences(haystack, needle) {
 }
 
 // ==========================================================================
-// 1. _niceMax — красивые максимумы осей (первичная и вспомогательная)
+// 1. SEMANTIC Task 473 на живом рендерере: подписи над КАЖДЫМ
+//    столбцом + «0» у основания + КОРЕНЬ stretch (высоты определены)
 // ==========================================================================
-describe('Task 473: _niceMax — масштабы осей', () => {
+describe('Task 473: семантика на _renderDevicesPPR (мок, бывш. «Приборы»)', () => {
     const host = makeHost();
-
-    test('niceMax(500) = 500 — ось ТО (первичная)', () => {
-        assertEqual(host._niceMax(500), 500);
-    });
-
-    test('niceMax(48) = 50 — вспомогательная ось К/П', () => {
-        assertEqual(host._niceMax(48), 50);
-    });
-
-    test('niceMax(15) = 20', () => {
-        assertEqual(host._niceMax(15), 20);
-    });
-
-    test('niceMax(210) = 500 — ось блокировок (первичная)', () => {
-        assertEqual(host._niceMax(210), 500);
-    });
-
-    test('niceMax(0) = 10 — защита от нуля', () => {
-        assertEqual(host._niceMax(0), 10);
-    });
-});
-
-// ==========================================================================
-// 2. Функциональный рендер: подписи на каждом месяце + правая ось
-// ==========================================================================
-describe('Task 473: _renderPPRChart — механика (мок, бывш. «Приборы»)', () => {
-    const host = makeHost();
+    const html = host._renderDevicesPPR(MOCK_PPR_DEVICES);
     const data = MOCK_PPR_DEVICES;
-    const html = host._renderPPRChart(data);
     const K = data.series[0], P = data.series[1], TO = data.series[2];
 
-    test('мок-данные теста (бывшие _PPR_DEVICES, удалены Task 483): заголовок', () => {
-        assertEqual(data.title, 'Количество приборов по графику ППР по месяцам на 2026 год');
-    });
-
-    test('мок-данные теста: серии К/П/ТО и значения', () => {
+    test('мок-данные теста (бывшие _PPR_DEVICES, удалены Task 483): серии', () => {
         assertEqual(K.name, 'Калибровка'); assertEqual(K.code, 'К');
         assertEqual(P.name, 'Поверка'); assertEqual(P.code, 'П');
         assertEqual(TO.name, 'Тех. обслуж.'); assertEqual(TO.code, 'ТО');
         assertEqual(K.values.length, 12); assertEqual(P.values.length, 12);
         assertEqual(TO.values.length, 12);
-        assertEqual(Math.max.apply(null, K.values), 48);
-        assertEqual(Math.max.apply(null, P.values), 15);
-        assertEqual(Math.max.apply(null, TO.values), 500);
         // единственный нулевой месяц — Май у Поверки
         const zeros = [];
         for (let m = 0; m < 12; m++)
@@ -162,218 +130,135 @@ describe('Task 473: _renderPPRChart — механика (мок, бывш. «П
     });
 
     test('значение над КАЖДЫМ ненулевым столбцом: 35 подписей (12 К + 11 П + 12 ТО)', () => {
-        assertEqual(countOccurrences(html, 'class="ppr-bar-val"'), 35);
+        // п. (б) заявки: количество видно на каждый месяц
+        assertEqual(countOccurrences(html, 'class="ppr-tc-val"'), 35);
     });
 
-    test('старый порог «показывать если heightPct > 8» удалён', () => {
-        const fn = extractMethod(CHARTS_SRC, '_renderPPRChart');
-        assertTrue(fn.indexOf('heightPct > 8') === -1,
-            'условие heightPct > 8 не должно остаться');
-    });
-
-    test('нулевой месяц — подпись «0» у основания (.ppr-bar-val-zero)', () => {
-        assertEqual(countOccurrences(html, 'class="ppr-bar-val-zero"'), 1);
+    test('нулевой месяц — подпись «0» у основания (.ppr-tc-val-zero)', () => {
+        // п. (в) решения: нули не теряются
+        assertEqual(countOccurrences(html, 'class="ppr-tc-val-zero"'), 1);
         assertTrue(html.indexOf('>0</span>') !== -1, 'текст «0» присутствует');
     });
 
-    test('12 групп месяцев с римскими метками I–XII', () => {
-        assertEqual(countOccurrences(html, 'class="ppr-month-label"'), 12);
+    test('12 групп месяцев, столбцы выровнены по колонкам таблицы', () => {
+        assertEqual(countOccurrences(html, 'class="ppr-tc-g"'), 12);
         const romans = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
         for (const r of romans) {
             assertTrue(html.indexOf('>' + r + '</div>') !== -1, 'месяц ' + r);
         }
     });
 
-    test('правая вспомогательная ось отрисована (.ppr-y-axis-right)', () => {
-        assertEqual(countOccurrences(html, 'ppr-y-axis-right'), 1);
+    test('единая шкала: высоты пропорциональны значениям (ТО 500 → 100%)', () => {
+        const max = 500;
+        assertTrue(html.indexOf('height:100%') !== -1, 'максимальный столбец');
+        assertTrue(html.indexOf('height:' + (13 / max) * 100 + '%') !== -1,
+            'пропорция К 13/500');
+        assertTrue(html.indexOf('height:' + (12 / max) * 100 + '%') !== -1,
+            'пропорция П 12/500');
     });
 
-    test('правая ось: метки 50/40/30/20/10 — по одной', () => {
-        // левая ось 500…0 сотнями, правая 50…0 десятками
-        for (const v of ['50','40','30','20','10']) {
-            assertEqual(countOccurrences(html, '>' + v + '</div>'), 1, 'метка ' + v);
-        }
-    });
-
-    test('левая ось: метки 500/400/300/200/100 — по одной', () => {
-        for (const v of ['500','400','300','200','100']) {
-            assertEqual(countOccurrences(html, '>' + v + '</div>'), 1, 'метка ' + v);
-        }
-    });
-
-    test('столбцы малых серий помечены data-scale="secondary" (23 шт: 12 К + 11 П)', () => {
-        assertEqual(countOccurrences(html, 'data-scale="secondary"'), 23);
-    });
-
-    test('столбцы большой серии помечены data-scale="primary" (12 шт: ТО)', () => {
-        assertEqual(countOccurrences(html, 'data-scale="primary"'), 12);
-    });
-
-    test('масштаб малых серий по правой оси: К 48 → 96% высоты', () => {
-        assertTrue(html.indexOf('height:' + (48 / 50) * 100 + '%') !== -1,
-            'height:96% (48 из 50) присутствует');
-    });
-
-    test('масштаб малых серий: П 15 → 30% высоты (раньше было 3% — не видно)', () => {
-        assertTrue(html.indexOf('height:' + (15 / 50) * 100 + '%') !== -1,
-            'height:30% (15 из 50) присутствует');
-    });
-
-    test('масштаб большой серии: ТО 500 → 100% высоты (левая ось)', () => {
-        assertTrue(html.indexOf('height:' + (500 / 500) * 100 + '%') !== -1,
-            'height:100% (500 из 500) присутствует');
-    });
-
-    test('масштаб малых серий: К 13 → 26% (раньше 2.6% — не видно)', () => {
-        assertTrue(html.indexOf('height:' + (13 / 50) * 100 + '%') !== -1,
-            'height:26% (13 из 50) присутствует');
-    });
-
-    test('легенда: малые серии помечены «(правая ось)» — 2 подсказки', () => {
-        assertEqual(countOccurrences(html, 'class="ppr-legend-axis"'), 2);
-        assertTrue(html.indexOf('(правая ось)') !== -1, 'текст подсказки есть');
-    });
-
-    test('легенда: полные подписи К Калибровка / П Поверка / ТО Тех. обслуж.', () => {
-        assertTrue(html.indexOf('>К</span>') !== -1 && html.indexOf('Калибровка') !== -1);
-        assertTrue(html.indexOf('>П</span>') !== -1 && html.indexOf('Поверка') !== -1);
-        assertTrue(html.indexOf('>ТО</span>') !== -1 && html.indexOf('Тех. обслуж.') !== -1);
-    });
-
-    test('тултип малой серии подсказывает ось: «Калибровка (правая ось): 33»', () => {
-        assertTrue(html.indexOf('Калибровка (правая ось): 33') !== -1);
-    });
-
-    test('строка итогов «Итого:» по сериям сохранена', () => {
-        assertTrue(html.indexOf('Итого:') !== -1);
-        const sum = arr => arr.reduce((a, b) => a + b, 0);
-        assertTrue(html.indexOf('>' + sum(K.values) + '<') !== -1, 'итог К = ' + sum(K.values));
-        assertTrue(html.indexOf('>' + sum(P.values) + '<') !== -1, 'итог П = ' + sum(P.values));
-        assertTrue(html.indexOf('>' + sum(TO.values) + '<') !== -1, 'итог ТО = ' + sum(TO.values));
+    test('тултипы с расшифровкой серий', () => {
+        assertTrue(html.indexOf('Калибровка (К), IX: 48') !== -1, 'К/IX');
+        assertTrue(html.indexOf('Тех. обслуж. (ТО), III: 500') !== -1, 'ТО/III');
     });
 });
 
 // ==========================================================================
-// 3. Регресс: ППР «Блокировки» — обе серии крупные, правой оси быть НЕ должно
+// 2. CSS: КОРЕНЬ «не отображает зрительно» + якорь «0» (ppr-tc-*)
 // ==========================================================================
-describe('Task 473: ППР «Блокировки» — без вспомогательной оси', () => {
-    const host = makeHost();
-    const html = host._renderPPRChart({
-        title: 'График ППР — Схемы на 2026 год',
-        series: [
-            { name: 'Кан. ремонт', code: 'Кр', color: '#4a90d9', values: [58, 49, 26, 31, 13, 38, 33, 34, 74, 23, 49, 98] },
-            { name: 'Тех. обслуж.', code: 'ТО', color: '#5ab870', values: [87, 96, 210, 114, 132, 198, 112, 111, 162, 122, 96, 138] }
-        ]
-    });
+describe('Task 473: CSS графиков (ppr-tc-*, живой рендерер)', () => {
 
-    test('правой оси нет (Кр 98 > 25% от ТО 210)', () => {
-        assertEqual(countOccurrences(html, 'ppr-y-axis-right'), 0);
-    });
-
-    test('подсказок «(правая ось)» в легенде нет', () => {
-        assertEqual(countOccurrences(html, 'class="ppr-legend-axis"'), 0);
-    });
-
-    test('единая шкала 0–500: Кр 98 → 19.6%, ТО 210 → 42%', () => {
-        assertTrue(html.indexOf('height:' + (98 / 500) * 100 + '%') !== -1, 'Кр 98 из 500');
-        assertTrue(html.indexOf('height:' + (210 / 500) * 100 + '%') !== -1, 'ТО 210 из 500');
-    });
-
-    test('значения над всеми 24 столбцами (12 Кр + 12 ТО)', () => {
-        assertEqual(countOccurrences(html, 'class="ppr-bar-val"'), 24);
-    });
-});
-
-// ==========================================================================
-// 4. CSS модуля: запас под подписи, якорь «0», стили правой оси
-// ==========================================================================
-describe('Task 473: CSS графиков', () => {
-
-    test('КОРЕНЬ «не отображает зрительно»: .ppr-bars-row align-items:stretch', () => {
-        // Было align-items:flex-end — ячейки не растягивались на высоту
-        // ряда, height:% столбца разрешался против auto-высоты ячейки и
-        // схлопывался в min-height:2px: ВСЕ столбцы всех серий были
-        // зрительно невидимы (замер Chromium: 2px из 165px) — это и
-        // значила фраза заявки «сама диаграмма не отображает зрительно
-        // количество приборов по месяцам».
-        const m = CHARTS_SRC.match(/\.ppr-bars-row \{[^}]*\}/);
+    test('КОРЕНЬ «не отображает зрительно»: .ppr-tc-bars align-items:stretch', () => {
+        // Было flex-end у старой гистограммы — ячейки не растягивались
+        // на высоту ряда, height:% столбца разрешался против
+        // auto-высоты ячейки и схлопывался в min-height:2px: ВСЕ
+        // столбцы были зрительно невидимы (замер Chromium: 2px из
+        // 165px) — это и значила фраза заявки «сама диаграмма не
+        // отображает зрительно количество приборов по месяцам».
+        const m = CHARTS_SRC.match(/\.ppr-tc-bars \{[^}]*\}/);
         assertTrue(!!m && /align-items:\s*stretch/.test(m[0]),
             'ячейки растянуты на всю высоту ряда — высота столбца определена');
         assertTrue(!!m && !/align-items:\s*flex-end/.test(m[0]),
-            'align-items:flex-end убран из .ppr-bars-row');
+            'flex-end убран из ряда столбцов');
     });
 
-    test('низ столбца прижат ячейкой (.ppr-bar-cell align-items:flex-end)', () => {
-        const m = CHARTS_SRC.match(/\.ppr-bar-cell \{[^}]*\}/);
+    test('низ столбца прижат ячейкой (.ppr-tc-bcell align-items:flex-end)', () => {
+        const m = CHARTS_SRC.match(/\.ppr-tc-bcell \{[^}]*\}/);
         assertTrue(!!m && /align-items:\s*flex-end/.test(m[0]),
             'столбец прижат к основанию ячейки');
     });
-    test('запас под подписи: .ppr-chart-body padding-top 16px', () => {
-        assertTrue(CHARTS_SRC.indexOf('padding: 16px 14px 12px;') !== -1,
-            'было 4px — подписи над высокими столбцами упирались в шапку');
+
+    test('запас под подписи: .ppr-tc-bars padding-top 16px', () => {
+        const m = CHARTS_SRC.match(/\.ppr-tc-bars \{[^}]*\}/);
+        assertTrue(!!m && /padding:\s*16px 1px 0/.test(m[0]),
+            'было 4px — подписи упирались в шапку');
     });
 
-    test('.ppr-bar-cell position:relative — якорь подписи «0»', () => {
-        const m = CHARTS_SRC.match(/\.ppr-bar-cell \{[^}]*\}/);
-        assertTrue(!!m && /position:\s*relative/.test(m[0]), 'правило с position:relative');
+    test('.ppr-tc-bcell position:relative — якорь подписи «0»', () => {
+        const m = CHARTS_SRC.match(/\.ppr-tc-bcell \{[^}]*\}/);
+        assertTrue(!!m && /position:\s*relative/.test(m[0]), 'якорь для «0»');
     });
 
-    test('стиль подписи нуля .ppr-bar-val-zero у основания', () => {
-        const m = CHARTS_SRC.match(/\.ppr-bar-val-zero \{[^}]*\}/);
+    test('стиль подписи нуля .ppr-tc-val-zero у основания', () => {
+        const m = CHARTS_SRC.match(/\.ppr-tc-val-zero \{[^}]*\}/);
         assertTrue(!!m && /bottom:\s*1px/.test(m[0]), 'привязка к основанию');
     });
 
-    test('стиль правой оси .ppr-y-axis-right (отступ слева, метки слева)', () => {
-        const m = CHARTS_SRC.match(/\.ppr-y-axis-right \{[^}]*\}/);
-        assertTrue(!!m && /padding-left:\s*6px/.test(m[0]), 'правило есть');
-        assertTrue(CHARTS_SRC.indexOf('.ppr-y-axis-right .ppr-y-label') !== -1,
-            'выравнивание меток правой оси');
-    });
-
-    test('стиль подсказки легенды .ppr-legend-axis', () => {
-        const m = CHARTS_SRC.match(/\.ppr-legend-axis \{[^}]*\}/);
-        assertTrue(!!m, 'правило есть');
-    });
-
     test('минимальная высота столбца сохранена (min-height: 2px)', () => {
-        assertTrue(CHARTS_SRC.indexOf('min-height: 2px;') !== -1);
+        const m = CHARTS_SRC.match(/\.ppr-tc-bar \{[^}]*\}/);
+        assertTrue(!!m && /min-height:\s*2px/.test(m[0]), 'столбец не схлопнется');
+    });
+
+    test('Task 484: мёртвый CSS старой гистограммы УДАЛЁН', () => {
+        // правая ось/легенда/сетка старого _renderPPRChart (Task 473
+        // г/д) не должны вернуться — рендерер удалён Task 484.
+        // Проверяем ПРАВИЛА (имя + " {"): упоминания классов в
+        // исторических комментариях шапки допускаются (некролог)
+        for (const cls of ['.ppr-bars-row', '.ppr-y-axis-right', '.ppr-bar-val',
+                           '.ppr-totals-row', '.ppr-chart-card']) {
+            assertTrue(CHARTS_SRC.indexOf(cls + ' {') === -1,
+                'CSS-правило ' + cls + ' удалено');
+        }
     });
 });
 
 // ==========================================================================
-// 5. Заголовок модуля и Service Worker
+// 3. Заголовок модуля и Service Worker
 // ==========================================================================
 describe('Task 473: шапка charts-desktop.js и SW', () => {
 
     test('шапка charts-desktop.js описывает Task 473', () => {
         assertTrue(CHARTS_SRC.indexOf('Task 473') !== -1, 'маркер задачи');
         assertTrue(CHARTS_SRC.indexOf('ВСПОМОГА') !== -1 || CHARTS_SRC.indexOf('правая ось') !== -1,
-            'упоминание вспомогательной оси');
+            'упоминание вспомогательной оси (история Task 473)');
     });
 
     test('модуль по-прежнему только десктоп (заголовок Electron)', () => {
         assertTrue(CHARTS_SRC.indexOf('ТОЛЬКО десктопного приложения') !== -1,
-            ' назначение модуля не изменилось');
+            'назначение модуля не изменилось');
     });
 
-    test('CACHE_VERSION = kipia-test-v707', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v707';") !== -1,
-            'текущая версия v689');
+    test('CACHE_VERSION = kipia-test-v708', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v708';") !== -1,
+            'текущая версия v707');
     });
 
-    test('v688 в sw.js отсутствует', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v696') === -1,
-            'версии до Task 473 нет');
+    test('v706 в sw.js отсутствует', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v706') === -1,
+            'версии до текущей задачи нет');
     });
 
-    test('v690 в sw.js отсутствует (лишний инкремент не сделан)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v708') === -1,
-            'версия после Task 473 не существует');
+    test('v708 в sw.js отсутствует (лишний инкремент не сделан)', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v709') === -1,
+            'версия после текущей задачи не существует');
     });
 
-    test('комментарий Task 473 о составе правок в sw.js', () => {
-        assertTrue(SW_SRC.indexOf('Task 473') !== -1, 'маркер задачи');
-        assertTrue(SW_SRC.indexOf('правая ось') !== -1 || SW_SRC.indexOf('ППР') !== -1,
+    test('комментарий Task 473 о составе правок в sw.js (окно истории)', () => {
+        // Task 473 ~3843 (комментарии 474-484 отодвинули) — окно 4600
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v708';");
+        const ctx = SW_SRC.slice(Math.max(0, i - 4600), i);
+        assertTrue(ctx.indexOf('Task 473') !== -1, 'маркер задачи в окне истории');
+        assertTrue(ctx.indexOf('правая ось') !== -1 || ctx.indexOf('ППР') !== -1,
             'упоминание графика ППР');
     });
 

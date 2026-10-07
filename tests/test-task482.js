@@ -604,17 +604,17 @@ describe('Task 482 — кап раскрытия окон «Мероприяти
 // ==========================================================================
 // 6. SW: версия, комментарий, окна истории
 // ==========================================================================
-describe('Task 482 — SW: kipia-test-v707 + комментарий', () => {
+describe('Task 482 — SW: kipia-test-v708 + комментарий', () => {
 
-    test('CACHE_VERSION = kipia-test-v707', () => {
+    test('CACHE_VERSION = kipia-test-v708', () => {
         assertTrue(SW_SRC.indexOf(
-            "const CACHE_VERSION = 'kipia-test-v707';") !== -1,
+            "const CACHE_VERSION = 'kipia-test-v708';") !== -1,
             'версия кэша поднята v705 → v706');
     });
 
     test('несуществующая v707 отсутствует (guard)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v708') === -1,
-            'kipia-test-v708 не должен существовать');
+        assertTrue(SW_SRC.indexOf('kipia-test-v709') === -1,
+            'kipia-test-v709 не должен существовать');
     });
 
     test('старая v705 вычищена из sw.js', () => {
@@ -630,8 +630,8 @@ describe('Task 482 — SW: kipia-test-v707 + комментарий', () => {
     });
 
     test('комментарий Task 482 в шапке версий (окно 1100)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v707';");
-        const ctx = SW_SRC.slice(Math.max(0, i - 1500), i);
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v708';");
+        const ctx = SW_SRC.slice(Math.max(0, i - 2100), i);
         assertTrue(ctx.indexOf('Task 482') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('_barExpMaxH') !== -1,
             'кап раскрытия окон бара');
@@ -643,21 +643,21 @@ describe('Task 482 — SW: kipia-test-v707 + комментарий', () => {
     });
 
     test('комментарии Task 481/480 не вытеснены (окно 1100)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v707';");
-        const ctx = SW_SRC.slice(Math.max(0, i - 1500), i);
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v708';");
+        const ctx = SW_SRC.slice(Math.max(0, i - 2100), i);
         assertTrue(ctx.indexOf('Task 481') !== -1, 'Task 481 в окне');
         assertTrue(ctx.indexOf('Task 480') !== -1, 'Task 480 в окне');
         assertTrue(ctx.indexOf('Перечень КИП ИОС рабочий') !== -1,
             'Task 480: имя таблицы');
     });
 
-    test('комментарии Task 479/478 не вытеснены (окно 1700)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v707';");
-        const ctx = SW_SRC.slice(Math.max(0, i - 2100), i);
+    test('комментарии Task 479/478 не вытеснены (окно 2500)', () => {
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v708';");
+        const ctx = SW_SRC.slice(Math.max(0, i - 2500), i);
         assertTrue(ctx.indexOf('Task 479') !== -1 &&
                    ctx.indexOf('оранжево-золотистый') !== -1,
             'Task 479 в окне 1700');
-        assertTrue(ctx.indexOf('Task 478') !== -1, 'Task 478 в окне 1700');
+        assertTrue(ctx.indexOf('Task 478') !== -1, 'Task 478 в окне 2500');
         assertTrue(ctx.indexOf('Период ремонта') !== -1,
             'Task 478: упоминание строки');
     });
@@ -665,31 +665,31 @@ describe('Task 482 — SW: kipia-test-v707 + комментарий', () => {
     test('окна истории: якоря 474/472/471/461 в прежних окнах', () => {
         // Task 482 (~375 симв.): 474 ~3016 < 3100; 472 ~3389 < 3600;
         // 471 ~3938 < 4200; 461 ~6500 < 6800 — расширения не нужны
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v707';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v708';");
         const i474 = SW_SRC.lastIndexOf('Task 474', i);
         const i472 = SW_SRC.lastIndexOf('Task 472', i);
         const i471 = SW_SRC.lastIndexOf('Task 471', i);
         const i461 = SW_SRC.lastIndexOf('Task 461', i);
-        assertTrue(i474 !== -1 && (i - i474) < 3500, 'Task 474 в окне 3500');
-        assertTrue(i472 !== -1 && (i - i472) < 4000, 'Task 472 в окне 4000');
-        assertTrue(i471 !== -1 && (i - i471) < 4600, 'Task 471 в окне 4600');
-        assertTrue(i461 !== -1 && (i - i461) < 7200, 'Task 461 в окне 7200');
+        assertTrue(i474 !== -1 && (i - i474) < 4000, 'Task 474 в окне 4000');
+        assertTrue(i472 !== -1 && (i - i472) < 4500, 'Task 472 в окне 4500');
+        assertTrue(i471 !== -1 && (i - i471) < 5000, 'Task 471 в окне 5000');
+        assertTrue(i461 !== -1 && (i - i461) < 7600, 'Task 461 в окне 7600');
     });
 
     test('окна ЧУЖИХ тестов синхронизированы (478/479/480/481)', () => {
-        // scripts/task482-windows.py: 478/479 1400→1700; 480 700→1100;
-        // 481 w700→1100 + w1400→1700
+        // windows-скрипты 482/483/484: 478 2100→2500; 479 2100 (без изм.);
+        // 480 1500→2100; 481: 1500/2100/2500
         const s478 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task478.js'), 'utf8');
-        assertTrue(s478.indexOf('i - 2100') !== -1, 'test-task478: окно 2100');
+        assertTrue(s478.indexOf('i - 2500') !== -1, 'test-task478: окно 2500');
         const s479 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task479.js'), 'utf8');
-        assertTrue(s479.indexOf('i - 2100') !== -1, 'test-task479: окно 2100');
+        assertTrue(s479.indexOf('i - 2500') !== -1, 'test-task479: окно 2500');
         const s480 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task480.js'), 'utf8');
-        assertTrue(s480.indexOf('i - 1500') !== -1, 'test-task480: окно 1500');
+        assertTrue(s480.indexOf('i - 2100') !== -1, 'test-task480: окно 2100');
         const s481 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task481.js'), 'utf8');
-        assertTrue(s481.indexOf('i - 1100') !== -1 &&
-                   s481.indexOf('i - 1500') !== -1 &&
-                   s481.indexOf('i - 2100') !== -1,
-            'test-task481: окна 1100/1500/2100');
+        assertTrue(s481.indexOf('i - 1500') !== -1 &&
+                   s481.indexOf('i - 2100') !== -1 &&
+                   s481.indexOf('i - 2500') !== -1,
+            'test-task481: окна 1500/2100/2500');
     });
 });
 

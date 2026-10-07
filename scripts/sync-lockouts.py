@@ -53,6 +53,18 @@ DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 JSON_OUT = PROJECT_ROOT / 'data' / 'lockouts.json'
 
+# Task 484: счётчики ППР для графика «как в Excel» (по образцу
+# sync-devices.py Task 483). Считаются по ИСХОДНОМУ листу «Блокировки»
+# (не «Блокировки_app»: месячные колонки I..XII и колонка «Наличие
+# в перечне и в ППР» есть только на исходном листе).
+# Виды ремонта на листе: «Кр» (капитальный ремонт схем) и «ТО»
+# (тех. обслуживание) — метки месяцев, точное совпадение.
+PPR_MONTH_COLS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII']
+PPR_TYPES = ['Кр', 'ТО']
+PPR_TYPE_NAMES = {'Кр': 'Кан. ремонт', 'ТО': 'Тех. обслуж.'}
+PPR_FILTER_COL = 'Наличие в перечне и в ППР'
+PPR_CHART_SHEET = 'Блокировки'
+
 
 def log(msg):
     print(f'[lockouts] {msg}', flush=True)
@@ -127,6 +139,75 @@ def download_file(spreadsheet_id, gid=None):
     file_size = local_path.stat().st_size
     log(f'Файл скачан: {local_path} ({file_size} байт)')
     return local_path
+
+
+# ============================================================
+# Task 484: счётчики ППР по листу «Блокировки» → блок ppr_chart
+# (по образцу parse_ppr_chart из sync-devices.py Task 483)
+# ============================================================
+def parse_ppr_chart(xlsx_path, sheet_name=PPR_CHART_SHEET):
+    """Считает ppr_chart: по каждому месяцу I..XII — количество
+    обслуживаний каждого вида Кр/ТО ТОЛЬКО у строк со значением
+    «Наличие в перечне и в ППР» = «Есть» (регистронезависимо, с
+    trim; «Нет» и пусто — НЕ учитываются; заявка Task 484: тот же
+    подсчёт, что во вкладке «Приборы»). Возвращает dict или None,
+    если листа/колонок нет (например, экспорт с gid= только
+    «Блокировки_app») — тогда вызывающая сторона сохранит прежний
+    блок, если он был."""
+    wb = openpyxl.load_workbook(xlsx_path, data_only=True)
+    if sheet_name not in wb.sheetnames:
+        log(f'Лист "{sheet_name}" не найден — ppr_chart пропущен. '
+            f'Листы: {wb.sheetnames}')
+        return None
+    ws = wb[sheet_name]
+    headers = [str(c.value).strip() if c.value is not None else '' for c in ws[1]]
+    mcols = {}
+    for idx, h in enumerate(headers, 1):
+        if h in PPR_MONTH_COLS:
+            mcols[h] = idx
+    col_ppr = headers.index(PPR_FILTER_COL) + 1 if PPR_FILTER_COL in headers else None
+    if len(mcols) != 12 or col_ppr is None:
+        log(f'Лист "{sheet_name}": нет 12 месячных колонок или '
+            f'«{PPR_FILTER_COL}» (колонки: {len(mcols)}/12, ППР: {col_ppr}) '
+            f'— ppr_chart пропущен')
+        return None
+
+    counts = {t: [0] * 12 for t in PPR_TYPES}
+    # COUNTIF-семантика (как в Task 483): совпадение кода — точное,
+    # но регистронезависимое («Кр»/«КР»/«кр» — один вид; в 483 все
+    # коды «К»/«П»/«ТО» были однорегистровыми и хватало .upper(),
+    # для смешанного «Кр» нормализуем ОБЕ стороны сравнения)
+    type_norm = {t.upper(): t for t in PPR_TYPES}
+    rows_in_ppr = 0
+    for r in range(2, ws.max_row + 1):
+        ppr_val = str(ws.cell(row=r, column=col_ppr).value or '').strip().lower()
+        if ppr_val != 'есть':
+            continue  # «Нет»/пусто — НЕ учитываются (заявка Task 484)
+        rows_in_ppr += 1
+        for mi, m in enumerate(PPR_MONTH_COLS):
+            v = str(ws.cell(row=r, column=mcols[m]).value or '').strip().upper()
+            t = type_norm.get(v)
+            if t:  # точное совпадение Кр/ТО (регистронезависимо)
+                counts[t][mi] += 1
+
+    year = datetime.now().year
+    series = []
+    for t in PPR_TYPES:
+        series.append({
+            'code': t,
+            'name': PPR_TYPE_NAMES[t],
+            'values': counts[t],
+        })
+    total_marks = sum(sum(counts[t]) for t in PPR_TYPES)
+    log(f'ppr_chart: год {year}, строк с «{PPR_FILTER_COL}» = «Есть»: '
+        f'{rows_in_ppr}, пометок учтено: {total_marks} '
+        f'(Кр {sum(counts["Кр"])}, ТО {sum(counts["ТО"])})')
+    return {
+        'year': year,
+        'filter': f'{PPR_FILTER_COL} = Есть',
+        'source_sheet': sheet_name,
+        'series': series,
+    }
 
 
 # ============================================================
@@ -244,6 +325,24 @@ def main():
         # 2. Распарсить лист
         lockouts, headers = parse_lockouts(local_file, sheet_name)
 
+        # 2a. Task 484: посчитать ppr_chart по исходному листу
+        #     «Блокировки» (месячные пометки I..XII с фильтром
+        #     «Наличие в перечне и в ППР» = «Есть» — тот же подсчёт,
+        #     что во вкладке «Приборы», Task 483). Если лист
+        #     недоступен (экспорт по gid= одного листа) — сохранить
+        #     прежний блок, если он был.
+        ppr_chart = parse_ppr_chart(local_file, PPR_CHART_SHEET)
+        if ppr_chart is None and JSON_OUT.exists():
+            try:
+                with open(JSON_OUT, encoding='utf-8') as f:
+                    ppr_chart = json.load(f).get('ppr_chart')
+                if ppr_chart:
+                    log('ppr_chart: лист «Блокировки» недоступен — '
+                        'сохранён прежний блок')
+            except Exception as e:
+                log(f'ppr_chart: прежний блок не прочитан ({e})')
+                ppr_chart = None
+
         # 3. Сохранить JSON
         out = {
             'title': 'Блокировки по производствам',
@@ -251,8 +350,10 @@ def main():
             'sheet': sheet_name,
             'total_lockouts': len(lockouts),
             'headers': headers,
-            'lockouts': lockouts,
         }
+        if ppr_chart is not None:
+            out['ppr_chart'] = ppr_chart
+        out['lockouts'] = lockouts
         JSON_OUT.parent.mkdir(parents=True, exist_ok=True)
         with open(JSON_OUT, 'w', encoding='utf-8') as f:
             json.dump(out, f, ensure_ascii=False, indent=2)
