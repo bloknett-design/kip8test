@@ -133,8 +133,25 @@ describe('Task 311 — пояснительные окна при наведен
             'mouseenter попапа не слушается');
         assertFalse(INDEX_SRC.indexOf("popup.addEventListener('mouseleave'") !== -1,
             'mouseleave попапа не слушается');
-        assertFalse(INDEX_SRC.indexOf("(hover: hover)") !== -1,
-            'медиа-запрос hover больше не проверяется (клик один для всех)');
+        // Task 487 (заявка: «в десктопной версии сделай появление
+        // попапа при наведении»): медиа-запрос (hover: hover) снова
+        // есть в файле — НО только в блоке onCellHover (ховер ЯЧЕЕК
+        // табеля, окно мероприятий); карточка сотрудника по-прежнему
+        // БЕЗ ховера («клик один для всех»). Проверяем адресность:
+        // вхождения — между onCellClick и onCellLeave (док-комментарий
+        // Task 487 над onCellHover тоже входит в блок)
+        // граница снизу — сам метод; сверху — ПРЕДЫДУЩИЙ метод
+        // (onCellClick): док-комментарий Task 487 стоит НАД
+        // onCellHover и тоже содержит (hover: hover)
+        const iStart = INDEX_SRC.indexOf('onCellClick: function');
+        const iEnd = INDEX_SRC.indexOf('onCellLeave: function');
+        let hovPos = -1, hovCount = 0, hovInside = true;
+        while ((hovPos = INDEX_SRC.indexOf('(hover: hover)', hovPos + 1)) !== -1) {
+            hovCount++;
+            if (hovPos < iStart || hovPos >= iEnd) hovInside = false;
+        }
+        assertTrue(iStart !== -1 && iEnd !== -1 && hovCount > 0 && hovInside,
+            'все (hover: hover) — только в блоке onCellHover (Task 487: ячейки табеля)');
         // Task 417: попап карточки удалён — клика по ФИО больше нет
         assertFalse(INDEX_SRC.indexOf('onEmpCellClick: function') !== -1,
             'метод клика по ФИО удалён (Task 417)');
@@ -244,9 +261,9 @@ describe('Task 311 — кнопка «+ Сотрудник» → заголов�
 
 describe('Task 311 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v710', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v710'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v710');
+    test('SW: версия кэша kipia-test-v711', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v711'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v711');
         assertFalse(SW_SRC.indexOf('kipia-test-v549') !== -1,
             'старой версии v549 нет');
     });

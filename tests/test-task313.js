@@ -35,7 +35,7 @@
 //       позиционируется СТРОГО НАД ним (eTop = top - eh - 8, сдвиг
 //       окна кодов вниз при нехватке места, левые края выровнены);
 //     — closeCellPopup: закрывает ОБА окна.
-//   SW: kipia-test-v710.
+//   SW: kipia-test-v711.
 //
 // Запуск: через tests/run-all.js (require './test-task313.js').
 
@@ -174,14 +174,22 @@ describe('Task 313 — окно «Мероприятия в этот день» 
             'название — тема мероприятия (иначе название кода)');
     });
 
-    test('JS: _renderEventsPopup — кнопки ✎/✕ только редакторам', () => {
+    test('JS: _renderEventsPopup — окно справочное, БЕЗ кнопок (Task 487)', () => {
         const ep = fnBody(INDEX_SRC, '_renderEventsPopup: function');
-        assertTrue(ep.indexOf('if (this._canEdit && deId)') !== -1,
-            'кнопки — только ролям с правом записи (Task 309)');
-        assertTrue(ep.indexOf('event.stopPropagation(); WorkSchedule.editTraining(') !== -1,
-            '✎ с stopPropagation');
-        assertTrue(ep.indexOf('event.stopPropagation(); WorkSchedule.deleteTraining(') !== -1,
-            '✕ с stopPropagation');
+        // Task 487 (заявка: «убери все три кнопки, только просмотр,
+        // изменение — только из карт работников»): кнопок в окне нет
+        // НИ У КОГО (было Task 309/313 — «только редакторам»)
+        assertTrue(ep.indexOf('if (this._canEdit && deId)') === -1,
+            'кнопок ✎/✕ в окне больше НЕТ (Task 487)');
+        assertTrue(ep.indexOf('event.stopPropagation(); WorkSchedule.editTraining(') === -1,
+            '✎ из окна удалён');
+        assertTrue(ep.indexOf('event.stopPropagation(); WorkSchedule.deleteTraining(') === -1,
+            '✕ из окна удалён');
+        assertTrue(ep.indexOf('WorkSchedule.toggleTrainingDone(') === -1,
+            'клик-галочки тоже нет (отметка — из карточки)');
+        // состояние выполнения — некликабельный маркер для всех
+        assertTrue(ep.indexOf('ws-done-chk ws-done-on ws-done-ro') !== -1,
+            'read-only маркер «выполнено» остался');
     });
 
     test('JS: _renderEventsPopup — пустое состояние', () => {
@@ -246,9 +254,9 @@ describe('Task 313 — окно «Мероприятия в этот день» 
 
 describe('Task 313 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v710', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v710'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v710');
+    test('SW: версия кэша kipia-test-v711', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v711'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v711');
         assertFalse(SW_SRC.indexOf('kipia-test-v551') !== -1,
             'старой версии v551 нет');
     });

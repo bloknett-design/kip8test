@@ -23,8 +23,9 @@
 //       мероприятия месяца с кнопками ✎/✕ только редакторам;
 //     — Esc и взаимная блокировка с попапом ячейки.
 //   Правка/удаление мероприятий:
-//     — кнопки ✎/✕ в попапе ячейки («Мероприятия в этот день»)
-//       и в карточке; stopPropagation;
+//     — кнопки ✎/✕ в КАРТОЧКЕ (Task 385: страница «Работники»);
+//       в попапе ячейки («Мероприятия в этот день») кнопок НЕТ —
+//       Task 487 убрал их (окно справочное для всех ролей);
 //     — editTraining: поиск записи по id в _TRAININGS, закрытие
 //       попапов, openTrainingForm в режиме правки (заголовок
 //       «Правка мероприятия», кнопка «Сохранить»);
@@ -42,7 +43,7 @@
 //   "Ошибка: self.loadTrainings is not a function"»):
 //     — вызовы удалённых страниц loadTrainings()/loadVacations()
 //       больше не встречаются; вместо них loadGrid().
-//   SW: kipia-test-v710.
+//   SW: kipia-test-v711.
 //
 // Запуск: через tests/run-all.js (require './test-task309.js').
 
@@ -216,19 +217,31 @@ describe('Task 309 — карточка сотрудника у колонки �
 
 describe('Task 309 — правка и удаление мероприятий', () => {
 
-    test('JS: кнопки ✎/✕ в окне «Мероприятия в этот день» (Task 313)', () => {
+    test('JS: окно «Мероприятия в этот день» — БЕЗ кнопок (Task 487)', () => {
         // Task 313: секция переехала из попапа кодов в отдельное окно
         // #wsEventsPopup (рендер — _renderEventsPopup между
         // _renderCellPopup и _openCellPopup — срез ниже покрывает его)
+        // Task 487 (заявка: «убери все три кнопки, только просмотр,
+        // изменение — только из карт работников»): окно стало
+        // справочным для ВСЕХ ролей — ✎/✕ из него УДАЛЕНЫ (было:
+        // «кнопки — только редакторам», Task 309/313)
         const popupPart = INDEX_SRC.slice(
             INDEX_SRC.indexOf('_renderCellPopup: function'),
             INDEX_SRC.indexOf('_openCellPopup: function'));
-        assertTrue(popupPart.indexOf('if (this._canEdit && deId)') !== -1,
-            'кнопки — только редакторам');
-        assertTrue(popupPart.indexOf('event.stopPropagation(); WorkSchedule.editTraining(') !== -1,
-            '✎ с stopPropagation');
-        assertTrue(popupPart.indexOf('event.stopPropagation(); WorkSchedule.deleteTraining(') !== -1,
-            '✕ с stopPropagation');
+        assertTrue(popupPart.indexOf('if (this._canEdit && deId)') === -1,
+            'кнопок правки/удаления в окне больше НЕТ (Task 487)');
+        assertTrue(popupPart.indexOf('event.stopPropagation(); WorkSchedule.editTraining(') === -1,
+            '✎ из окна удалён');
+        assertTrue(popupPart.indexOf('event.stopPropagation(); WorkSchedule.deleteTraining(') === -1,
+            '✕ из окна удалён');
+        // правка/удаление остались в КАРТОЧКЕ (страница «Работники»)
+        const cardPart = INDEX_SRC.slice(
+            INDEX_SRC.indexOf('_renderWorkerCard: function'),
+            INDEX_SRC.indexOf('_renderWorkerCardPanels: function'));
+        assertTrue(cardPart.indexOf('WorkSchedule.editTraining(') !== -1,
+            '✎ в карточке работника — на месте (правка только оттуда)');
+        assertTrue(cardPart.indexOf('WorkSchedule.deleteTraining(') !== -1,
+            '✕ в карточке работника — на месте (удаление только оттуда)');
     });
 
     test('JS: editTraining находит запись по id и открывает форму в режиме правки', () => {
@@ -390,9 +403,9 @@ describe('Task 309 — регресс-фиксы Task 308 (loadTrainings/loadVac
 
 describe('Task 309 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v710', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v710'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v710');
+    test('SW: версия кэша kipia-test-v711', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v711'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v711');
         assertFalse(SW_SRC.indexOf('kipia-test-v547') !== -1,
             'старой версии v547 нет');
     });

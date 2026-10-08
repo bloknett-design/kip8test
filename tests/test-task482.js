@@ -28,6 +28,12 @@
 //      с id; зрители видят СОСТОЯНИЕ некликабельно; после отметки
 //      шахматка (_renderGridIfOpen) и окно (_refreshEventsPopup)
 //      перерисовываются сразу.
+//   АДАПТАЦИЯ Task 487 (заявка: «в попапе мероприятия убери все три
+//   кнопки — только просмотр, изменение только из карт работников»):
+//   часть 3 в попапе ОТМЕНЕНА — клик-галочка и ✎/✕ из окна удалены
+//   (VM-тесты §3 переписаны под справочное окно: read-only маркер
+//   для всех ролей). Методы toggleTrainingDone/_renderGridIfOpen/
+//   _refreshEventsPopup (§4) живы — их вызывает карточка (Task 418).
 //   sw.js kipia-test-v705 → v706 + комментарий Task 482 (~375
 //   симв.); ЛОГИКА SW НЕ МЕНЯЛАСЬ; персистентные кэши НЕ ТОНУТЫ.
 //
@@ -180,7 +186,7 @@ describe('Task 482 — SRC: класс состояния на бейджах я
 // ==========================================================================
 // 3. VM: попап «Мероприятия в этот день» — галочка отметки (часть 3)
 // ==========================================================================
-describe('Task 482 — VM: _renderEventsPopup — галочка в ряду ✎/✕', () => {
+describe('Task 482 — VM: _renderEventsPopup — маркер состояния (Task 487: окно справочное)', () => {
 
     const CODES = [
         { code: 'И', name: 'Инструктаж', color: '#B3E5FC' },
@@ -219,51 +225,45 @@ describe('Task 482 — VM: _renderEventsPopup — галочка в ряду ✎
         return host;
     }
 
-    test('редактор + И выполнено: зелёная галочка + клик + ✎/✕', () => {
+    test('редактор + И выполнено: read-only маркер, БЕЗ клика и кнопок (Task 487)', () => {
+        // Task 487 (заявка): окно справочное для ВСЕХ ролей —
+        // клик-галочка и ✎/✕ удалены; осталось СОСТОЯНИЕ
         const host = loadPopupHost(true);
         const html = host._renderEventsPopup('2026-09-10', 7);
-        assertTrue(html.indexOf('ws-done-chk ws-done-on') !== -1,
-            'галочка в состоянии «выполнено»');
-        assertTrue(html.indexOf(
-            'WorkSchedule.toggleTrainingDone(101)') !== -1,
-            'клик — тот же метод, что в карточке (Task 418)');
-        assertTrue(html.indexOf('Снять отметку о выполнении') !== -1,
-            'тултип снятия');
-        assertTrue(html.indexOf('Редактировать') !== -1 &&
-                   html.indexOf('Удалить') !== -1,
-            'галочка стоит РЯДОМ с ✎/✕ (ряд действий жив)');
-        assertTrue(html.indexOf('ws-done-chk') < html.indexOf('Редактировать'),
-            'галочка ПЕРЕД ✎ в разметке ряда');
+        assertTrue(html.indexOf('ws-done-chk ws-done-on ws-done-ro') !== -1,
+            'редактор видит ТОТ ЖЕ некликабельный маркер «выполнено»');
+        assertTrue(html.indexOf('toggleTrainingDone') === -1,
+            'клика-отметки больше нет (отметка — из карточки)');
+        assertTrue(html.indexOf('Редактировать') === -1 &&
+                   html.indexOf('Удалить') === -1,
+            '✎/✕ в окне больше нет (правка — из карточки)');
+        assertTrue(html.indexOf('Выполнено') !== -1,
+            'тултип состояния');
     });
 
-    test('редактор + ПЗ НЕ выполнено: пустая галочка с кликом', () => {
+    test('редактор + ПЗ НЕ выполнено: значка нет, окна — только текст', () => {
         const host = loadPopupHost(true);
         const html = host._renderEventsPopup('2026-09-20', 7);
-        assertTrue(html.indexOf('ws-done-chk') !== -1,
-            'галочка строки есть');
-        assertTrue(html.indexOf('ws-done-chk ws-done-on') === -1,
-            'состояние — не выполнено (пустой круг)');
-        assertTrue(html.indexOf(
-            'WorkSchedule.toggleTrainingDone(102)') !== -1,
-            'клик — отметить выполнение');
-        assertTrue(html.indexOf('Отметить выполнение') !== -1,
-            'тултип установки');
+        assertTrue(html.indexOf('ws-done-chk') === -1,
+            'не выполнено — маркера нет (состояние несёт рамка бейджа в сетке)');
+        assertTrue(html.indexOf('toggleTrainingDone') === -1,
+            'клика нет и у невыполненного (Task 487)');
     });
 
-    test('ОБ (не «Инструктажи») — галочки НЕТ, ✎/✕ на месте', () => {
+    test('ОБ (не «Инструктажи») — маркера нет, кнопок тоже нет (Task 487)', () => {
         const host = loadPopupHost(true);
         const html = host._renderEventsPopup('2026-09-25', 7);
         assertTrue(html.indexOf('ws-done-chk') === -1,
             'семейство «Мероприятия» (ОБ) — столбца выполнения нет');
-        assertTrue(html.indexOf('Редактировать') !== -1,
-            'правка записи доступна как прежде');
+        assertTrue(html.indexOf('Редактировать') === -1,
+            'и у ОБ правки из окна нет — только из карточки (Task 487)');
     });
 
     test('зритель + выполнено: состояние некликабельно, без ✎/✕', () => {
         const host = loadPopupHost(false);
         const html = host._renderEventsPopup('2026-09-10', 7);
         assertTrue(html.indexOf('ws-done-chk ws-done-on ws-done-ro') !== -1,
-            'read-only галочка (как в карточке Task 418)');
+            'read-only маркер (как в карточке Task 418)');
         assertTrue(html.indexOf('toggleTrainingDone') === -1,
             'зритель НЕ отмечает выполнение');
         assertTrue(html.indexOf('Редактировать') === -1 &&
@@ -278,14 +278,14 @@ describe('Task 482 — VM: _renderEventsPopup — галочка в ряду ✎
             'значка нет — состояние несёт рамка бейджа в сетке');
     });
 
-    test('запись без id — без галочки (нет адресата для отметки)', () => {
+    test('запись без id — без маркера (семейство/адресат сверки)', () => {
         const noId = [{ 'таб_номер': 7, тип: 'инструктаж',
                         дата_начала: '2026-09-10', дата_окончания: '2026-09-10',
-                        тема: 'Инструктаж без id', выполнение: 0 }];
+                        тема: 'Инструктаж без id', выполнение: 1 }];
         const host = loadPopupHost(true, noId);
         const html = host._renderEventsPopup('2026-09-10', 7);
         assertTrue(html.indexOf('ws-done-chk') === -1,
-            'id нет — ни галочки, ни ✎/✕ (прежнее правило)');
+            'id нет — маркера нет (правило сохранено)');
     });
 
     test('пустой день — прежняя строка «нет мероприятий»', () => {
@@ -604,17 +604,17 @@ describe('Task 482 — кап раскрытия окон «Мероприяти
 // ==========================================================================
 // 6. SW: версия, комментарий, окна истории
 // ==========================================================================
-describe('Task 482 — SW: kipia-test-v710 + комментарий', () => {
+describe('Task 482 — SW: kipia-test-v711 + комментарий', () => {
 
-    test('CACHE_VERSION = kipia-test-v710', () => {
+    test('CACHE_VERSION = kipia-test-v711', () => {
         assertTrue(SW_SRC.indexOf(
-            "const CACHE_VERSION = 'kipia-test-v710';") !== -1,
+            "const CACHE_VERSION = 'kipia-test-v711';") !== -1,
             'версия кэша поднята v705 → v706');
     });
 
     test('несуществующая v707 отсутствует (guard)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v711') === -1,
-            'kipia-test-v711 не должен существовать');
+        assertTrue(SW_SRC.indexOf('kipia-test-v712') === -1,
+            'kipia-test-v712 не должен существовать');
     });
 
     test('старая v705 вычищена из sw.js', () => {
@@ -630,8 +630,8 @@ describe('Task 482 — SW: kipia-test-v710 + комментарий', () => {
     });
 
     test('комментарий Task 482 в шапке версий (окно 1100)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v710';");
-        const ctx = SW_SRC.slice(Math.max(0, i - 3200), i);
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v711';");
+        const ctx = SW_SRC.slice(Math.max(0, i - 4000), i);
         assertTrue(ctx.indexOf('Task 482') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('_barExpMaxH') !== -1,
             'кап раскрытия окон бара');
@@ -643,8 +643,8 @@ describe('Task 482 — SW: kipia-test-v710 + комментарий', () => {
     });
 
     test('комментарии Task 481/480 не вытеснены (окно 1100)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v710';");
-        const ctx = SW_SRC.slice(Math.max(0, i - 3200), i);
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v711';");
+        const ctx = SW_SRC.slice(Math.max(0, i - 4000), i);
         assertTrue(ctx.indexOf('Task 481') !== -1, 'Task 481 в окне');
         assertTrue(ctx.indexOf('Task 480') !== -1, 'Task 480 в окне');
         assertTrue(ctx.indexOf('Перечень КИП ИОС рабочий') !== -1,
@@ -652,7 +652,7 @@ describe('Task 482 — SW: kipia-test-v710 + комментарий', () => {
     });
 
     test('комментарии Task 479/478 не вытеснены (окно 4100)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v710';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v711';");
         const ctx = SW_SRC.slice(Math.max(0, i - 4100), i);
         assertTrue(ctx.indexOf('Task 479') !== -1 &&
                    ctx.indexOf('оранжево-золотистый') !== -1,
@@ -665,15 +665,15 @@ describe('Task 482 — SW: kipia-test-v710 + комментарий', () => {
     test('окна истории: якоря 474/472/471/461 в прежних окнах', () => {
         // Task 482 (~375 симв.): 474 ~3016 < 3100; 472 ~3389 < 3600;
         // 471 ~3938 < 4200; 461 ~6500 < 6800 — расширения не нужны
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v710';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v711';");
         const i474 = SW_SRC.lastIndexOf('Task 474', i);
         const i472 = SW_SRC.lastIndexOf('Task 472', i);
         const i471 = SW_SRC.lastIndexOf('Task 471', i);
         const i461 = SW_SRC.lastIndexOf('Task 461', i);
-        assertTrue(i474 !== -1 && (i - i474) < 5300, 'Task 474 в окне 4000');
-        assertTrue(i472 !== -1 && (i - i472) < 5900, 'Task 472 в окне 4500');
-        assertTrue(i471 !== -1 && (i - i471) < 6500, 'Task 471 в окне 5000');
-        assertTrue(i461 !== -1 && (i - i461) < 9100, 'Task 461 в окне 7600');
+        assertTrue(i474 !== -1 && (i - i474) < 6000, 'Task 474 в окне 4000');
+        assertTrue(i472 !== -1 && (i - i472) < 6500, 'Task 472 в окне 4500');
+        assertTrue(i471 !== -1 && (i - i471) < 7000, 'Task 471 в окне 5000');
+        assertTrue(i461 !== -1 && (i - i461) < 9800, 'Task 461 в окне 7600');
     });
 
     test('окна ЧУЖИХ тестов синхронизированы (478/479/480/481)', () => {
@@ -684,9 +684,9 @@ describe('Task 482 — SW: kipia-test-v710 + комментарий', () => {
         const s479 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task479.js'), 'utf8');
         assertTrue(s479.indexOf('i - 4100') !== -1, 'test-task479: окно 4100');
         const s480 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task480.js'), 'utf8');
-        assertTrue(s480.indexOf('i - 3200') !== -1, 'test-task480: окно 3200');
+        assertTrue(s480.indexOf('i - 4000') !== -1, 'test-task480: окно 3200');
         const s481 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task481.js'), 'utf8');
-        assertTrue(s481.indexOf('i - 3200') !== -1 &&
+        assertTrue(s481.indexOf('i - 4000') !== -1 &&
                    s481.indexOf('i - 4100') !== -1,
             'test-task481: окна 3200/4100');
     });

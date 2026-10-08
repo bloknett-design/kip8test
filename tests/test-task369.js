@@ -516,12 +516,12 @@ describe('Task 369 — VM: хелперы статусов', () => {
 // E. SW
 // ============================================================
 describe('Task 369 — SW: версия кэша', () => {
-    test("CACHE_VERSION = 'kipia-test-v710'", () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v710'") !== -1,
+    test("CACHE_VERSION = 'kipia-test-v711'", () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v711'") !== -1,
             'SW-бамп v597 → v598 (деплой через Ctrl+Shift+R)');
     });
-    test("guard: kipia-test-v711 ещё не существует", () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v711') === -1,
+    test("guard: kipia-test-v712 ещё не существует", () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v712') === -1,
             'v599 не должен существовать (следующий номер)');
     });
 });
