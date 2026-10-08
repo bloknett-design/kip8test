@@ -522,6 +522,7 @@ describe('Task 445 — VM: saveWorkersArchive (ленивые годы)', () => 
             methodText(INDEX_SRC, '_wsXlsCrc32') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsColName') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsEsc') + ',\n' +
+            methodText(INDEX_SRC, '_wsXlsDocProps') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsSheetXml') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsStylesXml') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsZebraGroups') + ',\n' +
@@ -595,16 +596,16 @@ describe('Task 445 — VM: saveWorkersArchive (ленивые годы)', () => 
 // ============================================================
 describe('Task 445 — SW и регресс', () => {
 
-    test('SW: кэш поднят до kipia-test-v711 (Task 445)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v711'") !== -1,
-            'CACHE_VERSION = kipia-test-v711');
+    test('SW: кэш поднят до kipia-test-v712 (Task 445)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v712'") !== -1,
+            'CACHE_VERSION = kipia-test-v712');
         assertTrue(SW_SRC.indexOf('Task 445') !== -1,
             'комментарий Task 445 в истории версий');
     });
 
     test('guard: двойного бампа не было', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v712') === -1,
-            'kipia-test-v712 не существует');
+        assertTrue(SW_SRC.indexOf('kipia-test-v713') === -1,
+            'kipia-test-v713 не существует');
     });
 
     test('регресс: старый листовой Excel не вернулся', () => {

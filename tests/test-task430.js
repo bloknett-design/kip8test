@@ -25,7 +25,7 @@
 //   6) _wsXlsCrc32: эталон «123456789» → 0xCBF43926;
 //   7) _wsXlsSheetXml: шапка s="1", числа <v>, строки inlineStr,
 //      xml:space, dimension, pane ySplit, cols;
-//   8) _wsXlsZip: парсинг — 9 файлов PK, EOCD, имена, CRC
+//   8) _wsXlsZip: парсинг — 12 файлов PK (docProps×2, Task 488), EOCD, имена, CRC
 //      совпадает, метод stored (0);
 //   9) _workersArchiveData: сортировка ФИО, дедуп i+id/e+id
 //      (Task 427 — раздельные id), _TRAININGS-дубли сняты, ФИО
@@ -44,7 +44,7 @@
 //      оверлей удалён, Esc → закрыт;
 //  14) printGrid фолбэк: без _openPrintPreview — window.print
 //      (прежнее поведение Task 341).
-//   SW: kipia-test-v711.
+//   SW: kipia-test-v712.
 // ============================================================
 
 const fs = require('fs');
@@ -214,6 +214,7 @@ describe('Task 430 — VM: утилиты xlsx', () => {
         return new Function('return ({' +
             methodText(INDEX_SRC, '_wsXlsColName') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsEsc') + ',\n' +
+            methodText(INDEX_SRC, '_wsXlsDocProps') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsCrc32') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsBytes') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsSheetXml') + ',\n' +
@@ -448,6 +449,7 @@ describe('Task 430 — VM: _buildArchiveWorkbook', () => {
             methodText(INDEX_SRC, '_wsXlsCrc32') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsColName') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsEsc') + ',\n' +
+            methodText(INDEX_SRC, '_wsXlsDocProps') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsSheetXml') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsStylesXml') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsZebraGroups') + ',\n' +
@@ -493,17 +495,20 @@ describe('Task 430 — VM: _buildArchiveWorkbook', () => {
         };
     }
 
-    test('zip: 10 частей, stored, EOCD/каталог консистентны', () => {
+    test('zip: 12 частей, stored, EOCD/каталог консистентны', () => {
         const wb = wbHost()._buildArchiveWorkbook();
         const z = parseZip(wb.bytes);
-        assertEqual(z.files.length, 10,
-            'все части книги в контейнере (5 листов + 5 служебных; Task 445)');
+        assertEqual(z.files.length, 12,
+            'все части книги в контейнере (5 листов + 7 служебных: CT, .rels, docProps core/app, workbook, workbook-rels, styles; Task 488)');
+        assertEqual(z.files[0].name, '[Content_Types].xml',
+            'CT — ПЕРВАЯ часть zip (канонический порядок, Task 488)');
         assertEqual(z.eocd, 0x06054b50, 'EOCD-сигнатура в хвосте');
         assertEqual(z.cdOffset, z.files.reduce(
             (s, f) => s + 30 + f.name.length + f.usize, 0),
             'offset каталога = за последним файлом');
         const names = z.files.map(f => f.name);
         for (const need of ['[Content_Types].xml', '_rels/.rels',
+                            'docProps/core.xml', 'docProps/app.xml',
                             'xl/workbook.xml', 'xl/_rels/workbook.xml.rels',
                             'xl/styles.xml', 'xl/worksheets/sheet1.xml',
                             'xl/worksheets/sheet2.xml',
@@ -600,6 +605,7 @@ describe('Task 430 — VM: saveWorkersArchive', () => {
             methodText(INDEX_SRC, '_wsXlsCrc32') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsColName') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsEsc') + ',\n' +
+            methodText(INDEX_SRC, '_wsXlsDocProps') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsSheetXml') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsStylesXml') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsZebraGroups') + ',\n' +
@@ -936,10 +942,10 @@ describe('Task 430 — VM: printGrid без диалога — прежняя п
 // ============================================================
 describe('Task 430 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v711', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v711'") !== -1,
-            'CACHE_VERSION = kipia-test-v711 (Task 430 — предпросмотр печати + архив)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v712') !== -1,
+    test('SW: кэш поднят до kipia-test-v712', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v712'") !== -1,
+            'CACHE_VERSION = kipia-test-v712 (Task 430 — предпросмотр печати + архив)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v713') !== -1,
             'лишний инкремент не сделан');
     });
 

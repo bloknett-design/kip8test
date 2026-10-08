@@ -221,6 +221,7 @@ describe('Task 441/442 — VM: Excel (столбец кодов удалён)', 
             methodText(WS_CLIENT, '_wsXlsCrc32') + ',' +
             methodText(WS_CLIENT, '_wsXlsColName') + ',' +
             methodText(WS_CLIENT, '_wsXlsEsc') + ',' +
+            methodText(WS_CLIENT, '_wsXlsDocProps') + ',' +
             '_year: 2026, _month: 9, _view: "full",' +
             '_isoDate: function(dt) { return dt.getFullYear() + "-" + ' +
                 '(dt.getMonth() < 9 ? "0" : "") + (dt.getMonth() + 1) + "-" + ' +
@@ -297,10 +298,10 @@ describe('Task 441/442 — VM: Excel (столбец кодов удалён)', 
 // ============================================================
 // 5. SW — версия кэша
 // ============================================================
-describe('Task 441 — SW: версия kipia-test-v711', () => {
-    test('CACHE_VERSION = kipia-test-v711, прежней v665 нет', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v711'") !== -1,
-            'CACHE_VERSION = kipia-test-v711');
+describe('Task 441 — SW: версия kipia-test-v712', () => {
+    test('CACHE_VERSION = kipia-test-v712, прежней v665 нет', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v712'") !== -1,
+            'CACHE_VERSION = kipia-test-v712');
         assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v665'") !== -1,
             'v665 как активная версия больше не существует');
     });

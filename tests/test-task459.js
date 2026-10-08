@@ -17,7 +17,7 @@
 //     от строгой формы «Талонов» (_talonsPosition, Tasks 449/
 //     450) КИПиА НЕ канонизируется, пустая должность остаётся
 //     пустой, мусорная «5 разряда» не опустошает ячейку;
-//   • sw.js → kipia-test-v711.
+//   • sw.js → kipia-test-v712.
 // ============================================================
 
 const fs = require('fs');
@@ -343,6 +343,7 @@ describe('Task 459 — VM: _buildArchiveWorkbook (лист СИЗ)', () => {
             methodText(INDEX_SRC, '_wsXlsCrc32') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsColName') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsEsc') + ',\n' +
+            methodText(INDEX_SRC, '_wsXlsDocProps') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsSheetXml') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsStylesXml') + ',\n' +
             methodText(INDEX_SRC, '_wsXlsZebraGroups') + ',\n' +
@@ -412,16 +413,16 @@ describe('Task 459 — VM: _buildArchiveWorkbook (лист СИЗ)', () => {
 // ============================================================
 describe('Task 459 — SW и регресс', () => {
 
-    test('SW: кэш поднят до kipia-test-v711 (Task 459)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v711'") !== -1,
-            'CACHE_VERSION = kipia-test-v711');
+    test('SW: кэш поднят до kipia-test-v712 (Task 459)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v712'") !== -1,
+            'CACHE_VERSION = kipia-test-v712');
         assertTrue(SW_SRC.indexOf('Task 459') !== -1,
             'комментарий Task 459 в истории версий');
     });
 
     test('guard: двойного бампа не было', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v712') === -1,
-            'kipia-test-v712 не существует');
+        assertTrue(SW_SRC.indexOf('kipia-test-v713') === -1,
+            'kipia-test-v713 не существует');
     });
 
     test('регресс: лист «Работники» (справочник) — прежняя сортировка по ФИО', () => {

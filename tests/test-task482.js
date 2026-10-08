@@ -225,20 +225,21 @@ describe('Task 482 — VM: _renderEventsPopup — маркер состояни�
         return host;
     }
 
-    test('редактор + И выполнено: read-only маркер, БЕЗ клика и кнопок (Task 487)', () => {
+    test('редактор + И выполнено: БЕЗ маркера и кнопок (Task 488)', () => {
         // Task 487 (заявка): окно справочное для ВСЕХ ролей —
-        // клик-галочка и ✎/✕ удалены; осталось СОСТОЯНИЕ
+        // клик-галочка и ✎/✕ удалены. Task 488 (заявка: «кнопка
+        // отметки осталась»): убран и read-only МАРКЕР-квадрат —
+        // окно чисто текстовая справка (состояние — рамка бейджа
+        // сетки + галочка карточки работника)
         const host = loadPopupHost(true);
         const html = host._renderEventsPopup('2026-09-10', 7);
-        assertTrue(html.indexOf('ws-done-chk ws-done-on ws-done-ro') !== -1,
-            'редактор видит ТОТ ЖЕ некликабельный маркер «выполнено»');
+        assertTrue(html.indexOf('ws-done-chk') === -1,
+            'маркера-«кнопки» нет даже у выполненного (Task 488)');
         assertTrue(html.indexOf('toggleTrainingDone') === -1,
-            'клика-отметки больше нет (отметка — из карточки)');
+            'клика-отметки нет (отметка — из карточки)');
         assertTrue(html.indexOf('Редактировать') === -1 &&
                    html.indexOf('Удалить') === -1,
-            '✎/✕ в окне больше нет (правка — из карточки)');
-        assertTrue(html.indexOf('Выполнено') !== -1,
-            'тултип состояния');
+            '✎/✕ в окне нет (правка — из карточки)');
     });
 
     test('редактор + ПЗ НЕ выполнено: значка нет, окна — только текст', () => {
@@ -259,11 +260,11 @@ describe('Task 482 — VM: _renderEventsPopup — маркер состояни�
             'и у ОБ правки из окна нет — только из карточки (Task 487)');
     });
 
-    test('зритель + выполнено: состояние некликабельно, без ✎/✕', () => {
+    test('зритель + выполнено: без маркера и кнопок (Task 488)', () => {
         const host = loadPopupHost(false);
         const html = host._renderEventsPopup('2026-09-10', 7);
-        assertTrue(html.indexOf('ws-done-chk ws-done-on ws-done-ro') !== -1,
-            'read-only маркер (как в карточке Task 418)');
+        assertTrue(html.indexOf('ws-done-chk') === -1,
+            'маркера нет и у зрителя — окно одинаково текстовое (Task 488)');
         assertTrue(html.indexOf('toggleTrainingDone') === -1,
             'зритель НЕ отмечает выполнение');
         assertTrue(html.indexOf('Редактировать') === -1 &&
@@ -604,17 +605,17 @@ describe('Task 482 — кап раскрытия окон «Мероприяти
 // ==========================================================================
 // 6. SW: версия, комментарий, окна истории
 // ==========================================================================
-describe('Task 482 — SW: kipia-test-v711 + комментарий', () => {
+describe('Task 482 — SW: kipia-test-v712 + комментарий', () => {
 
-    test('CACHE_VERSION = kipia-test-v711', () => {
+    test('CACHE_VERSION = kipia-test-v712', () => {
         assertTrue(SW_SRC.indexOf(
-            "const CACHE_VERSION = 'kipia-test-v711';") !== -1,
+            "const CACHE_VERSION = 'kipia-test-v712';") !== -1,
             'версия кэша поднята v705 → v706');
     });
 
     test('несуществующая v707 отсутствует (guard)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v712') === -1,
-            'kipia-test-v712 не должен существовать');
+        assertTrue(SW_SRC.indexOf('kipia-test-v713') === -1,
+            'kipia-test-v713 не должен существовать');
     });
 
     test('старая v705 вычищена из sw.js', () => {
@@ -630,8 +631,8 @@ describe('Task 482 — SW: kipia-test-v711 + комментарий', () => {
     });
 
     test('комментарий Task 482 в шапке версий (окно 1100)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v711';");
-        const ctx = SW_SRC.slice(Math.max(0, i - 4000), i);
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v712';");
+        const ctx = SW_SRC.slice(Math.max(0, i - 5000), i);
         assertTrue(ctx.indexOf('Task 482') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('_barExpMaxH') !== -1,
             'кап раскрытия окон бара');
@@ -643,8 +644,8 @@ describe('Task 482 — SW: kipia-test-v711 + комментарий', () => {
     });
 
     test('комментарии Task 481/480 не вытеснены (окно 1100)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v711';");
-        const ctx = SW_SRC.slice(Math.max(0, i - 4000), i);
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v712';");
+        const ctx = SW_SRC.slice(Math.max(0, i - 5000), i);
         assertTrue(ctx.indexOf('Task 481') !== -1, 'Task 481 в окне');
         assertTrue(ctx.indexOf('Task 480') !== -1, 'Task 480 в окне');
         assertTrue(ctx.indexOf('Перечень КИП ИОС рабочий') !== -1,
@@ -652,8 +653,8 @@ describe('Task 482 — SW: kipia-test-v711 + комментарий', () => {
     });
 
     test('комментарии Task 479/478 не вытеснены (окно 4100)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v711';");
-        const ctx = SW_SRC.slice(Math.max(0, i - 4100), i);
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v712';");
+        const ctx = SW_SRC.slice(Math.max(0, i - 5600), i);
         assertTrue(ctx.indexOf('Task 479') !== -1 &&
                    ctx.indexOf('оранжево-золотистый') !== -1,
             'Task 479 в окне 1700');
@@ -665,29 +666,29 @@ describe('Task 482 — SW: kipia-test-v711 + комментарий', () => {
     test('окна истории: якоря 474/472/471/461 в прежних окнах', () => {
         // Task 482 (~375 симв.): 474 ~3016 < 3100; 472 ~3389 < 3600;
         // 471 ~3938 < 4200; 461 ~6500 < 6800 — расширения не нужны
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v711';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v712';");
         const i474 = SW_SRC.lastIndexOf('Task 474', i);
         const i472 = SW_SRC.lastIndexOf('Task 472', i);
         const i471 = SW_SRC.lastIndexOf('Task 471', i);
         const i461 = SW_SRC.lastIndexOf('Task 461', i);
-        assertTrue(i474 !== -1 && (i - i474) < 6000, 'Task 474 в окне 4000');
-        assertTrue(i472 !== -1 && (i - i472) < 6500, 'Task 472 в окне 4500');
-        assertTrue(i471 !== -1 && (i - i471) < 7000, 'Task 471 в окне 5000');
-        assertTrue(i461 !== -1 && (i - i461) < 9800, 'Task 461 в окне 7600');
+        assertTrue(i474 !== -1 && (i - i474) < 7000, 'Task 474 в окне 4000');
+        assertTrue(i472 !== -1 && (i - i472) < 7500, 'Task 472 в окне 4500');
+        assertTrue(i471 !== -1 && (i - i471) < 8000, 'Task 471 в окне 5000');
+        assertTrue(i461 !== -1 && (i - i461) < 10600, 'Task 461 в окне 7600');
     });
 
     test('окна ЧУЖИХ тестов синхронизированы (478/479/480/481)', () => {
         // windows-скрипты 482/483/484/486: 478 3200→4100; 479 3200→4100;
         // 480 2600→3200; 481: 3200/3200/4100
         const s478 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task478.js'), 'utf8');
-        assertTrue(s478.indexOf('i - 4100') !== -1, 'test-task478: окно 4100');
+        assertTrue(s478.indexOf('i - 5600') !== -1, 'test-task478: окно 4100');
         const s479 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task479.js'), 'utf8');
-        assertTrue(s479.indexOf('i - 4100') !== -1, 'test-task479: окно 4100');
+        assertTrue(s479.indexOf('i - 5600') !== -1, 'test-task479: окно 4100');
         const s480 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task480.js'), 'utf8');
-        assertTrue(s480.indexOf('i - 4000') !== -1, 'test-task480: окно 3200');
+        assertTrue(s480.indexOf('i - 5000') !== -1, 'test-task480: окно 3200');
         const s481 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task481.js'), 'utf8');
-        assertTrue(s481.indexOf('i - 4000') !== -1 &&
-                   s481.indexOf('i - 4100') !== -1,
+        assertTrue(s481.indexOf('i - 5000') !== -1 &&
+                   s481.indexOf('i - 5600') !== -1,
             'test-task481: окна 3200/4100');
     });
 });

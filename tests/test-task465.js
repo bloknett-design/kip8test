@@ -30,7 +30,7 @@
 //   _buildEventsWorkbook/_eventsSheetXml/_eventsStylesXml (xlsx
 //   «Мероприятия»); диалоги печати взаимоисключающие (график ↔
 //   талоны ↔ список мероприятий);
-//   SW: kipia-test-v711.
+//   SW: kipia-test-v712.
 //
 // Запуск: через tests/run-all.js (require './test-task465.js').
 
@@ -586,7 +586,8 @@ describe('Task 465 — VM: _buildEventsWorkbook', () => {
 
     const host = (function() {
         const names = ['_buildEventsWorkbook', '_eventsSheetXml', '_eventsStylesXml',
-                      '_wsXlsColName', '_wsXlsEsc', '_wsXlsBytes', '_wsXlsZip', '_wsXlsCrc32'];
+                      '_wsXlsColName', '_wsXlsEsc', '_wsXlsBytes', '_wsXlsZip', '_wsXlsCrc32',
+                      '_wsXlsDocProps'];
         const texts = names.map(function(n) { return methodText(INDEX_SRC, n); });
         assertTrue(texts.every(function(t) { return t.length > 0; }),
             'методы книги найдены в исходнике');
@@ -679,8 +680,8 @@ describe('Task 465 — VM: _buildEventsWorkbook', () => {
 // ============================================================
 describe('Task 465 — SW: версия кэша', () => {
 
-    test('CACHE_VERSION = kipia-test-v711', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v711';") !== -1,
+    test('CACHE_VERSION = kipia-test-v712', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v712';") !== -1,
             'текущая версия v690');
     });
 

@@ -81,16 +81,18 @@ describe('Task 487 — SRC: попап мероприятий без кнопо�
             'кликабельных элементов в строках окна нет');
     });
 
-    test('JS: read-only маркер состояния — для всех ролей', () => {
+    test('JS: маркер-«кнопка» состояния убран вовсе (Task 488)', () => {
         const ep = methodText(WS_SRC, '_renderEventsPopup');
-        // маркер: только И/ПЗ (семейство «Инструктажи»), с id и
-        // выполнение=1 — БЕЗ ветки _canEdit (единый вид для всех)
-        assertTrue(ep.indexOf('ws-done-chk ws-done-on ws-done-ro') !== -1,
-            'некликабельный ✓ остался (информация о выполнении)');
-        assertTrue(ep.indexOf('title="Выполнено"') !== -1,
-            'тултип состояния');
+        // Task 488 (заявка: «кнопка отметки осталась»): read-only
+        // квадрат ws-done-chk ВЫГЛЯДЕЛ кнопкой — удалён; состояние
+        // выполнения несут: рамка бейджа ячейки сетки (ws-ev-done)
+        // и галочка карточки работника
+        assertTrue(ep.indexOf('ws-done-chk') === -1,
+            'маркера-«кнопки» в окне больше НЕТ (Task 488)');
+        assertTrue(ep.indexOf('title="Выполнено"') === -1,
+            'тултипа состояния больше нет');
         assertFalse(ep.indexOf('if (this._canEdit)') !== -1,
-            'ветки редактора в маркере больше нет — вид един');
+            'ветки редактора в окне нет — вид един');
     });
 
     test('JS: правка/удаление/отметка — ТОЛЬКО из карточки работника', () => {
@@ -247,11 +249,11 @@ describe('Task 487 — VM: _renderEventsPopup справочное', () => {
         return host;
     }
 
-    test('редактор: выполнено — read-only ✓, больше НИЧЕГО кликабельного', () => {
+    test('редактор: выполнено — маркера нет, только текст (Task 488)', () => {
         const host = loadPopupHost(true);
         const html = host._renderEventsPopup('2026-10-05', 7);
-        assertTrue(html.indexOf('ws-done-chk ws-done-on ws-done-ro') !== -1,
-            'маркер «выполнено» есть');
+        assertTrue(html.indexOf('ws-done-chk') === -1,
+            'маркера «выполнено» НЕТ (Task 488 — чисто текстовое окно)');
         assertTrue(html.indexOf('onclick') === -1,
             'в окне НЕТ ни одного кликабельного элемента');
         assertTrue(html.indexOf('Редактировать') === -1 &&
@@ -488,8 +490,8 @@ describe('Task 487 — VM: onCellHover/onCellLeave/ховер-окно', () => {
 // ==========================================================================
 describe('Task 487 — SW: инкремент версии', () => {
 
-    test("sw.js: CACHE_VERSION = 'kipia-test-v711'", () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v711'") !== -1,
+    test("sw.js: CACHE_VERSION = 'kipia-test-v712'", () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v712'") !== -1,
             'версия кэша инкрементирована v710 → v711');
         assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v710'") === -1,
             'старой версии нет');

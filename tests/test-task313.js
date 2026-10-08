@@ -35,7 +35,7 @@
 //       позиционируется СТРОГО НАД ним (eTop = top - eh - 8, сдвиг
 //       окна кодов вниз при нехватке места, левые края выровнены);
 //     — closeCellPopup: закрывает ОБА окна.
-//   SW: kipia-test-v711.
+//   SW: kipia-test-v712.
 //
 // Запуск: через tests/run-all.js (require './test-task313.js').
 
@@ -187,9 +187,11 @@ describe('Task 313 — окно «Мероприятия в этот день» 
             '✕ из окна удалён');
         assertTrue(ep.indexOf('WorkSchedule.toggleTrainingDone(') === -1,
             'клик-галочки тоже нет (отметка — из карточки)');
-        // состояние выполнения — некликабельный маркер для всех
-        assertTrue(ep.indexOf('ws-done-chk ws-done-on ws-done-ro') !== -1,
-            'read-only маркер «выполнено» остался');
+        // Task 488 (заявка: «кнопка отметки осталась»): read-only
+        // маркер-квадрат ws-done-chk удалён ВООБЩЕ — окно чисто
+        // текстовая справка; состояние — рамка бейджа сетки
+        assertTrue(ep.indexOf('ws-done-chk') === -1,
+            'маркера-«кнопки» в окне нет (Task 488)');
     });
 
     test('JS: _renderEventsPopup — пустое состояние', () => {
@@ -254,9 +256,9 @@ describe('Task 313 — окно «Мероприятия в этот день» 
 
 describe('Task 313 — Service Worker', () => {
 
-    test('SW: версия кэша kipia-test-v711', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v711'") !== -1,
-            'CACHE_VERSION в sw.js = kipia-test-v711');
+    test('SW: версия кэша kipia-test-v712', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v712'") !== -1,
+            'CACHE_VERSION в sw.js = kipia-test-v712');
         assertFalse(SW_SRC.indexOf('kipia-test-v551') !== -1,
             'старой версии v551 нет');
     });

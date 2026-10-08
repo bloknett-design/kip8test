@@ -44,7 +44,7 @@
 //      инструктаж id 5);
 //  17) _doDeleteTraining: API payload несёт инстр;
 //  18) toggleTrainingDone: помечается ТОЛЬКО копия инструктажа.
-//   SW: kipia-test-v711.
+//   SW: kipia-test-v712.
 // ============================================================
 
 const fs = require('fs');
@@ -143,9 +143,17 @@ describe('Task 427 — SRC: сервер (раздельные последов�
 describe('Task 427 — SRC: клиент (адресация id по семейству)', () => {
 
     test('кнопки ✎/✕ передают семейство записи', () => {
-        assertTrue(INDEX_SRC.indexOf(
-            'var deFam = this._isInstrType(deT.тип) ? 1 : 0;') !== -1,
-            'попап дня: семейство записи');
+        // Task 488: попап дня («Мероприятия в этот день») стал
+        // чисто текстовым (заявка «кнопка отметки осталась») —
+        // семейство записи в нём НЕ адресуется; правка/отметка —
+        // только из карточек (остальные четыре адресата ниже)
+        const epDay = INDEX_SRC.slice(
+            INDEX_SRC.indexOf('_renderEventsPopup: function'),
+            INDEX_SRC.indexOf('_openCellPopup: function'));
+        assertTrue(epDay.indexOf('deFam') === -1,
+            'попап дня: семейство записи не адресуется (Task 488)');
+        assertTrue(epDay.indexOf('deId') === -1,
+            'попап дня: id записи не адресуется (Task 488)');
         assertTrue(INDEX_SRC.indexOf(
             'var trFam = this._isInstrType(t.тип) ? 1 : 0;') !== -1,
             'блок «Мероприятия» карточки: семейство записи');
@@ -621,10 +629,10 @@ describe('Task 427 — VM: клиент (семейство решает кол�
 // 5. SW — версия кэша
 // ============================================================
 describe('Task 427 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v711', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v711'") !== -1,
+    test('CACHE_VERSION = kipia-test-v712', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v712'") !== -1,
             'SW v654 (Task 427)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v712') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v713') === -1,
             'двойной бамп отсутствует');
     });
 });

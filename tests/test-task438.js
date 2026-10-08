@@ -55,7 +55,7 @@
 //      xSplit=1/ySplit=5;
 //  14) _savePrintPdf/_savePrintXlsx: скачивание (mime/имя) +
 //      тост; сбой генерации — тост об ошибке, без скачивания.
-//   SW: kipia-test-v711 (главный), v663 — следующий не занят.
+//   SW: kipia-test-v712 (главный), v663 — следующий не занят.
 // ============================================================
 
 const fs = require('fs');
@@ -694,6 +694,7 @@ describe('Task 438 — VM: книга Excel (_buildTabelWorkbook)', () => {
             methodText(WS_CLIENT, '_wsXlsCrc32') + ',' +
             methodText(WS_CLIENT, '_wsXlsColName') + ',' +
             methodText(WS_CLIENT, '_wsXlsEsc') + ',' +
+            methodText(WS_CLIENT, '_wsXlsDocProps') + ',' +
             '_year: 2026, _month: 9, _view: ' + JSON.stringify(opts.view || 'full') + ',' +
             '_isoDate: function(dt) { return dt.getFullYear() + "-" + ' +
                 '(dt.getMonth() < 9 ? "0" : "") + (dt.getMonth() + 1) + "-" + ' +
@@ -966,15 +967,15 @@ describe('Task 438 — VM: кнопки «Сохранить PDF» / «Сохр�
 // ============================================================
 describe('Task 438 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v711', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v711'") !== -1,
-            'CACHE_VERSION = kipia-test-v711 (Task 438 — печать/PDF/Excel)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v712') !== -1,
+    test('SW: кэш поднят до kipia-test-v712', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v712'") !== -1,
+            'CACHE_VERSION = kipia-test-v712 (Task 438 — печать/PDF/Excel)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v713') !== -1,
             'лишний инкремент (v663) не сделан');
     });
 
     test('SW: в index.html нет захардкоженной версии кэша', () => {
-        assertFalse(INDEX_SRC.indexOf('kipia-test-v711') !== -1,
+        assertFalse(INDEX_SRC.indexOf('kipia-test-v712') !== -1,
             'клиент не знает номер кэша (версией управляет sw.js)');
     });
 });
