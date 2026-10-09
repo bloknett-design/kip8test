@@ -324,10 +324,10 @@ describe('Task 392 — SRC: загрузка, кэш, сервер, PPEInit.gs',
             'таб_№ — текстовый формат (Task 304)');
     });
 
-    test('SW: kipia-test-v712', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v712'") !== -1,
+    test('SW: kipia-test-v713', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v713'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v713') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v714') === -1,
             'двойного бампа не было');
     });
 });
@@ -826,7 +826,9 @@ function makePpeServer() {
     const methods = ['_parseIsoDate', '_parseSheetDate', '_safeDate', '_toIsoDate',
                      '_appendRowKeepText', 'listPpe', 'addPpe', 'updatePpe',
                      'deletePpe', '_ppeLookupEmployee', '_ppeTermMonths',
-                     '_ppeExpiry', '_ppeHasManufactureCol'];
+                     '_ppeExpiry', '_ppeHasManufactureCol',
+                     // Task 489-adapt: _ppeLookupEmployee идёт через карту
+                     '_employeesColMap', '_wsShortFio', '_wsNameInitial', '_wsFullFio'];
     const src = methods.map(n => extractMethod(WS_GS_SRC, n)).filter(Boolean).join(',\n');
     vm.runInContext(`
         var WSS = {

@@ -353,17 +353,21 @@ describe('Task 402 — сервер: WorkSchedule.gs (SRC)', () => {
 
     test('listEmployees: поле группа_допуска + расширенное чтение', () => {
         const fn = stripComments(methodText(WS_GS_SRC, 'listEmployees'));
-        assertTrue(fn.indexOf('var groupCol = this._accessGroupColIndex(sheet);') !== -1,
-            'столбец ищется по заголовку');
-        // Task 403: должность/комментарий — тоже по заголовкам
-        assertTrue(fn.indexOf("this._headerColIndex(sheet, ['должность'])") !== -1 &&
-                   fn.indexOf("this._headerColIndex(sheet, ['комментарий'])") !== -1,
-            'должность/комментарий — по заголовкам строки 1 (баг комментария)');
-        assertTrue(fn.indexOf('var readWidth = 11;') !== -1 &&
-                   fn.indexOf('groupCol + 1 > readWidth') !== -1,
-            'чтение расширено до самого правого найденного столбца');
+        // Task 489-adapt: группа/должность/комментарий — в карте
+        // _employeesColMap (по заголовкам строки 1)
+        assertTrue(fn.indexOf('var cols = this._employeesColMap(sheet);') !== -1,
+            'столбцы ищутся по заголовкам (карта, Task 489)');
+        // Task 489-adapt: заголовки ищет карта (listEmployees её
+        // вызывает; прямых _headerColIndex-вызовов больше нет)
+        const map = stripComments(methodText(WS_GS_SRC, '_employeesColMap'));
+        assertTrue(map.indexOf("['должность']") !== -1 &&
+                   map.indexOf("['комментарий']") !== -1,
+            'должность/комментарий — по заголовкам строки 1 (в карте)');
+        assertTrue(fn.indexOf('cols.width') !== -1 &&
+                   fn.indexOf('r[cols[') !== -1,
+            'чтение до самого правого столбца карты');
         assertTrue(fn.indexOf('группа_допуска:') !== -1 &&
-                   fn.indexOf('(groupCol !== null)') !== -1,
+                   fn.indexOf("(cols['группа_допуска'] !== null)") !== -1,
             'поле в ответе; нет столбца — пустая строка');
     });
 
@@ -371,8 +375,8 @@ describe('Task 402 — сервер: WorkSchedule.gs (SRC)', () => {
         const fn = stripComments(methodText(WS_GS_SRC, 'updateEmployee'));
         assertTrue(fn.indexOf('payload.группа_допуска !== undefined') !== -1,
             'guard: старый фронтенд (кэш SW) без поля НЕ затирает значение листа');
-        assertTrue(fn.indexOf('sheet.getRange(row, groupCol + 1).setValue(accessGroup);') !== -1,
-            'запись в столбец по заголовку');
+        assertTrue(fn.indexOf("sheet.getRange(row, cols['группа_допуска'] + 1).setValue(accessGroup);") !== -1,
+            'запись в столбец по заголовку (карта, Task 489-adapt)');
         assertTrue(fn.indexOf('slice(0, 50)') !== -1, 'значение урезано до 50 симв.');
     });
 
@@ -382,11 +386,11 @@ describe('Task 402 — сервер: WorkSchedule.gs (SRC)', () => {
         // каждый в свой (прежде фикс J..K затирал комментарий группой)
         assertTrue(fn.indexOf('while (rowVals.length < rowWidth) rowVals.push(\'\');') !== -1,
             'строка дополнена пустыми до самого правого столбца');
-        assertTrue(fn.indexOf('rowVals[posCol] = position;') !== -1 &&
-                   fn.indexOf('rowVals[comCol] = comment;') !== -1,
-            'должность и комментарий — каждый в свой столбец');
-        assertTrue(fn.indexOf('rowVals[groupCol] = accessGroup;') !== -1,
-            'группа записана в найденный столбец');
+        assertTrue(fn.indexOf("rowVals[cols['должность']] = position;") !== -1 &&
+                   fn.indexOf("rowVals[cols['комментарий']] = comment;") !== -1,
+            'должность и комментарий — каждый в свой столбец (карта)');
+        assertTrue(fn.indexOf("rowVals[cols['группа_допуска']] = accessGroup;") !== -1,
+            'группа записана в найденный столбец (карта)');
     });
 
     test('node --check: .gs синтаксически валиден', () => {
@@ -402,12 +406,12 @@ describe('Task 402 — сервер: WorkSchedule.gs (SRC)', () => {
 // 7. SW — версия кэша
 // ============================================================
 describe('Task 402 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v712 (Task 402)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v712'") !== -1,
+    test('CACHE_VERSION = kipia-test-v713 (Task 402)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v713'") !== -1,
             'фронтенд менялся — кэш поднят до v629');
     });
     test('guard: v630 отсутствует (следующий бамп)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v713') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v714') === -1,
             'v630 ещё не существует (guard следующего бампа)');
     });
 });

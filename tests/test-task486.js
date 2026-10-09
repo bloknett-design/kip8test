@@ -28,7 +28,7 @@
 //       _silentBusy — пропускает свой ws-элемент (дубль сети не
 //       нужен; тихий сбой silentRefresh — метка не ставилась —
 //       _preloadWs остаётся ретраем-фолбэком, Task 477).
-//   SW: kipia-test-v712 (логика SW НЕ менялась; кэши не тронуты).
+//   SW: kipia-test-v713 (логика SW НЕ менялась; кэши не тронуты).
 //
 // АДАПТАЦИИ под Task 486 (модуль WorkSchedule вырос на ~8.7КБ):
 //   test-task337/338/341/342/343/360/361/362 — WS_CLIENT срез
@@ -70,8 +70,8 @@ function methodText(src, name) {
 // 1. SW: версия v710 + комментарий Task 486
 // ==========================================================================
 describe('Task 486: SW — версия и кэши', () => {
-    test('CACHE_VERSION = kipia-test-v712', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v712';") !== -1,
+    test('CACHE_VERSION = kipia-test-v713', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v713';") !== -1,
             'версия поднята');
     });
 
@@ -80,12 +80,12 @@ describe('Task 486: SW — версия и кэши', () => {
     });
 
     test('v711 в sw.js отсутствует (лишний инкремент не сделан)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v713') === -1);
+        assertTrue(SW_SRC.indexOf('kipia-test-v714') === -1);
     });
 
     test('комментарий Task 486 в шапке версий (окно 1500)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v712';");
-        const ctx = SW_SRC.slice(Math.max(0, i - 2400), i);
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v713';");
+        const ctx = SW_SRC.slice(Math.max(0, i - 3400), i);
         assertTrue(ctx.indexOf('Task 486') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('ТИХОЕ обновление') !== -1, 'сущность заявки');
         assertTrue(ctx.indexOf('silentRefresh') !== -1, 'имя метода');
@@ -581,11 +581,11 @@ describe('Task 486 — адаптации срезов/окон', () => {
 
     test('окна истории sw.js — новые литералы синхронизированы', () => {
         const s475 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task475.js'), 'utf8');
-        assertTrue(s475.indexOf("'i - 10600'") !== -1, 'каскад 475: 461 → 9100');
+        assertTrue(s475.indexOf("'i - 11600'") !== -1, 'каскад 475: 461 → 9100');
         const s481 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task481.js'), 'utf8');
-        assertTrue(s481.indexOf("'i - 8000'") !== -1, 'каскад 481: 471 → 6500');
+        assertTrue(s481.indexOf("'i - 9000'") !== -1, 'каскад 481: 471 → 6500');
         const s482 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task482.js'), 'utf8');
-        assertTrue(s482.indexOf("'i - 5600'") !== -1, 'каскад 482: 478/479 → 4100');
+        assertTrue(s482.indexOf("'i - 6500'") !== -1, 'каскад 482: 478/479 → 4100');
         const s484 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task484.js'), 'utf8');
         // Task 487: комментарий ~569 симв. отодвинул якорь Task 484
         // (2248) — окно расширено 2100 → 2500 (каскад task487-bump-sw)

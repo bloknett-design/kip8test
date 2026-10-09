@@ -507,6 +507,11 @@ describe('Task 403 — VM: сервер — listEmployees (баг коммент
             methodText(WS_GS_SRC, 'listEmployees') + ',' +
             methodText(WS_GS_SRC, '_accessGroupColIndex') + ',' +
             methodText(WS_GS_SRC, '_headerColIndex') + ',' +
+            // Task 489-adapt: карта столбцов + композиция ФИО
+            methodText(WS_GS_SRC, '_employeesColMap') + ',' +
+            methodText(WS_GS_SRC, '_wsShortFio') + ',' +
+            methodText(WS_GS_SRC, '_wsNameInitial') + ',' +
+            methodText(WS_GS_SRC, '_wsFullFio') + ',' +
             '_requireRead: function() { return { user: { email: "t" } }; },' +
             '_getSheet: function() { return sheet; },' +
             '_toIsoDate: function(d) { return d; }' +
@@ -584,6 +589,11 @@ describe('Task 403 — VM: сервер — updateEmployee (баг коммен�
             methodText(WS_GS_SRC, 'updateEmployee') + ',' +
             methodText(WS_GS_SRC, '_accessGroupColIndex') + ',' +
             methodText(WS_GS_SRC, '_headerColIndex') + ',' +
+            // Task 489-adapt: карта столбцов + композиция ФИО
+            methodText(WS_GS_SRC, '_employeesColMap') + ',' +
+            methodText(WS_GS_SRC, '_wsShortFio') + ',' +
+            methodText(WS_GS_SRC, '_wsNameInitial') + ',' +
+            methodText(WS_GS_SRC, '_wsFullFio') + ',' +
             '_requireWrite: function() { return { user: { email: "t" } }; },' +
             '_getSheet: function() { return sheet; },' +
             '_parseIsoDate: function(d) { return d; }' +
@@ -695,6 +705,11 @@ describe('Task 403 — VM: сервер — addEmployee (сборка строк
             methodText(WS_GS_SRC, 'addEmployee') + ',' +
             methodText(WS_GS_SRC, '_accessGroupColIndex') + ',' +
             methodText(WS_GS_SRC, '_headerColIndex') + ',' +
+            // Task 489-adapt: карта столбцов + композиция ФИО
+            methodText(WS_GS_SRC, '_employeesColMap') + ',' +
+            methodText(WS_GS_SRC, '_wsShortFio') + ',' +
+            methodText(WS_GS_SRC, '_wsNameInitial') + ',' +
+            methodText(WS_GS_SRC, '_wsFullFio') + ',' +
             '_requireWrite: function() { return { user: { email: "t" } }; },' +
             '_getSheet: function() { return sheet; },' +
             '_parseIsoDate: function(d) { return d; },' +
@@ -722,12 +737,12 @@ describe('Task 403 — VM: сервер — addEmployee (сборка строк
 // 6. SW — версия кэша
 // ============================================================
 describe('Task 403 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v712 (Task 403)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v712'") !== -1,
+    test('CACHE_VERSION = kipia-test-v713 (Task 403)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v713'") !== -1,
             'фронтенд менялся — кэш поднят до v630');
     });
     test('guard: v631 отсутствует (следующий бамп)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v713') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v714') === -1,
             'v631 ещё не существует (guard следующего бампа)');
     });
 });

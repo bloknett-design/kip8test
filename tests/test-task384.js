@@ -27,7 +27,7 @@
 //   диспетчеризация, node --check обоих .gs.
 //   VM-функционально (клиент и сервер): happy-path правок, валидации,
 //   самопересечение/дубль части, лимит 42, не найдено.
-//   SW: kipia-test-v712 (guard v613).
+//   SW: kipia-test-v713 (guard v613).
 //
 // Запуск: через tests/run-all.js (require './test-task384.js').
 
@@ -299,9 +299,10 @@ describe('Task 384 — сервер: WorkSchedule.gs (SRC)', () => {
             'B..G одним блоком (ФИО..дата_приёма)');
         // Task 403 (баг комментария): должность/комментарий — по
         // заголовкам, каждый в свой столбец (фолбэк J..K)
-        assertTrue(fn.indexOf('sheet.getRange(row, posCol + 1).setValue(position);') !== -1 &&
-                   fn.indexOf('sheet.getRange(row, comCol + 1).setValue(comment);') !== -1,
-            'должность/комментарий — отдельные setValue по заголовкам');
+        // Task 489-adapt: столбцы — из карты _employeesColMap
+        assertTrue(fn.indexOf("sheet.getRange(row, cols['должность'] + 1).setValue(position);") !== -1 &&
+                   fn.indexOf("sheet.getRange(row, cols['комментарий'] + 1).setValue(comment);") !== -1,
+            'должность/комментарий — отдельные setValue по заголовкам (карта)');
         // A (таб_№), H (увольнение), I (архив) — одиночных записей нет
         assertFalse(/getRange\(row, (1|8|9)[,)]/.test(fn),
             'A/H/I не перезаписываются (PK/увольнение/архив)');
@@ -415,6 +416,8 @@ function makeWSClient() {
         'onEmpAddVacation', 'onEmpAddTraining',
         // хелперы
         '_esc', '_escAttr', '_apiErrText', '_isoDate', '_fmtDateRu',
+        // Task 489-adapt: композиция краткого ФИО из частей
+        '_wsShortFio', '_wsNameInitial', '_wsFullFio',
         '_parseIsoLocal', '_vacIsHoliday', '_vacSplitDays',
         '_vacNetDaysInYear', '_vacDaysInYear', '_plural',
     ];
@@ -498,7 +501,12 @@ describe('Task 384 — VM клиент: шторка сотрудника', () =
         const els = api.els();
         assertEqual(els.wsEmpTabNo.value, '0871', 'таб. № в поле');
         assertEqual(els.wsEmpTabNo.readOnly, true, 'таб. № readonly (PK)');
-        assertEqual(els.wsEmpFio.value, 'Иванов И. И.', 'ФИО');
+        // Task 489-adapt: ТРИ поля имени (легаси-запись без частей —
+        // раскладка краткого ФИО по словам)
+        assertEqual(els.wsEmpFam.value, 'Иванов', 'фамилия');
+        assertEqual(els.wsEmpName.value, 'И.', 'имя (инициал)');
+        assertEqual(els.wsEmpPatr.value, 'И.', 'отчество (инициал)');
+        assertEqual(els.wsEmpBirth.value, '', 'дата рождения (нет в записи)');
         assertEqual(els.wsEmpType.value, 'сменный', 'тип');
         assertEqual(els.wsEmpShift.value, '2', 'смена');
         assertEqual(els.wsEmpStart.value, '2026-01-01', 'старт цикла');
@@ -534,7 +542,9 @@ describe('Task 384 — VM клиент: шторка сотрудника', () =
         const api = makeWSClient();
         const els = api.els();
         api.WSM.openEmpEditForm('0871');
-        els.wsEmpFio.value = 'Иванов И. И. (ст.)';
+        els.wsEmpFam.value = 'Иванов';
+        els.wsEmpName.value = 'Иван';
+        els.wsEmpPatr.value = 'Иванович';
         els.wsEmpPosition.value = 'Слесарь КИПиА';
         els.wsEmpStart.value = '2026-01-01';
         api.WSM.submitEmployeeForm();
@@ -542,7 +552,16 @@ describe('Task 384 — VM клиент: шторка сотрудника', () =
         const upd = api.calls().filter(c => c.action === 'workSchedule.updateEmployee');
         assertEqual(upd.length, 1, 'ровно один вызов updateEmployee');
         assertEqual(upd[0].payload['таб_номер'], '0871', 'таб. № из _empEditTab');
-        assertEqual(upd[0].payload['ФИО'], 'Иванов И. И. (ст.)', 'новое ФИО');
+        assertEqual(upd[0].payload['ФИО'], 'Иванов И. И.',
+            'ФИО (краткая композиция — легаси-поле, Task 489)');
+        assertEqual(upd[0].payload['фамилия'], 'Иванов',
+            'фамилия (Task 489)');
+        assertEqual(upd[0].payload['имя'], 'Иван',
+            'имя (Task 489)');
+        assertEqual(upd[0].payload['отчество'], 'Иванович',
+            'отчество (Task 489)');
+        assertEqual(upd[0].payload['дата_рождения'], null,
+            'дата рождения (пусто → null, Task 489)');
         assertEqual(upd[0].payload['тип'], 'сменный', 'тип');
         assertEqual(upd[0].payload['должность'], 'Слесарь КИПиА', 'должность');
         assertEqual(api.loadGrid().length, 1, 'loadGrid перезагрузил сетку');
@@ -749,6 +768,7 @@ function makeWSServer() {
     vm.createContext(ctx);
     const methods = ['_parseIsoDate', '_parseSheetDate', '_safeDate', '_toIsoDate',
                      '_accessGroupColIndex', '_headerColIndex',
+                     '_employeesColMap', '_wsShortFio', '_wsNameInitial', '_wsFullFio',
                      'updateEmployee', 'updateVacation'];
     const src = methods.map(n => extractMethod(WS_GS_SRC, n)).filter(Boolean).join(',\n');
     vm.runInContext(`
@@ -927,10 +947,10 @@ describe('Task 384 — VM сервер: updateVacation', () => {
 // 8. SW
 // ============================================================
 describe('Task 384 — Service Worker', () => {
-    test('SW: кэш поднят до kipia-test-v712', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v712'") !== -1,
-            'CACHE_VERSION = kipia-test-v712 (Task 384 — фронтенд менялся)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v713') !== -1,
+    test('SW: кэш поднят до kipia-test-v713', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v713'") !== -1,
+            'CACHE_VERSION = kipia-test-v713 (Task 384 — фронтенд менялся)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v714') !== -1,
             'лишний инкремент (v613) не сделан');
     });
 });

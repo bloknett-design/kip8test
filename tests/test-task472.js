@@ -25,7 +25,7 @@
 //   3) .pe-card/.pe-desc-card — сплошные фоны #17212e (тёмная),
 //      светлая: карточка #faf9f6, окно — БЕЖЕВОЕ #f0eee6 (цвет
 //      фона бара) с толстой 3px двухтонной рамкой-выступом.
-//   SW: kipia-test-v712.
+//   SW: kipia-test-v713.
 //
 // Запуск: через tests/run-all.js (require './test-task472.js').
 
@@ -287,9 +287,9 @@ describe('Task 472 — SRC: непрозрачные фоны и бежевое 
 // ============================================================
 describe('Task 472 — SW: версия кэша', () => {
 
-    test("CACHE_VERSION = kipia-test-v712", () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v712';") !== -1,
-            'SW поднят до kipia-test-v712 (Task 472)');
+    test("CACHE_VERSION = kipia-test-v713", () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v713';") !== -1,
+            'SW поднят до kipia-test-v713 (Task 472)');
     });
 
     test('версия до партии (v695) отсутствует', () => {
@@ -298,8 +298,8 @@ describe('Task 472 — SW: версия кэша', () => {
     });
 
     test('комментарий Task 472 в шапке версий sw.js', () => {
-        const i = SW_SRC.indexOf('kipia-test-v712');
-        const ctx = SW_SRC.slice(Math.max(0, i - 7500), i);
+        const i = SW_SRC.indexOf('kipia-test-v713');
+        const ctx = SW_SRC.slice(Math.max(0, i - 8500), i);
         // Task 478: окна 2100 → 2900 (Task 472 ~2251) и
         // 2700 → 3400 (Task 471 ~2800) — комментарий ППР-индикации.
         // Task 481: окна 2900 → 3600 (Task 472 ~3011) и
@@ -312,7 +312,7 @@ describe('Task 472 — SW: версия кэша', () => {
     });
 
     test('контекст Task 471 не вытеснен (окно 1300 символов)', () => {
-        const i = SW_SRC.indexOf('kipia-test-v712');
+        const i = SW_SRC.indexOf('kipia-test-v713');
         // Task 473: окно 900 → 1020; Task 474: 1020 → 1300 — комментарий
         // Task 475: окно 1300 → 2100 — комментарий этапа 1 оптимизации
         // Task 476: окна 1500 → 2100 (Task 472 ~1621) и
@@ -320,7 +320,7 @@ describe('Task 472 — SW: версия кэша', () => {
         // отодвинул Task 471 до ~1738; окно Task 472 900 → 1500 (~1189).
         // Task 474 в шапке sw.js отодвинул начало комментария Task 471
         // (~1157 символов).
-        const ctx = SW_SRC.slice(Math.max(0, i - 8000), i);
+        const ctx = SW_SRC.slice(Math.max(0, i - 9000), i);
         assertTrue(ctx.indexOf('Task 471') !== -1,
             'комментарий Task 471 остаётся в окне версий');
     });

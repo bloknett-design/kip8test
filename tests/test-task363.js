@@ -21,7 +21,7 @@
 //     праздники НЕ входят.
 // Хелперы: _calDayFeast (праздник), _calWend (обычный выходной).
 //
-// SW: kipia-test-v712.
+// SW: kipia-test-v713.
 //
 // Запуск: через tests/run-all.js (require './test-task363.js').
 
@@ -394,10 +394,10 @@ describe('Task 363 — VM: регресс соседних фич', () => {
 // ============================================================
 describe('Task 363 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v712', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v712'") !== -1,
-            'CACHE_VERSION = kipia-test-v712 (Task 363 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v713') !== -1,
+    test('SW: кэш поднят до kipia-test-v713', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v713'") !== -1,
+            'CACHE_VERSION = kipia-test-v713 (Task 363 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v714') !== -1,
             'v605 ещё не существует (лишний инкремент)');
     });
 

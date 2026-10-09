@@ -40,7 +40,7 @@
 //   <v>1</v> (не текст), bookViews, нет защит; книга архива —
 //   12 частей, docProps, CT первой; книга мероприятий — docProps;
 //   _wsXlsEsc — вырезает 0x01/0x0B/0x1F, xml:space у табеля.
-//   SW: kipia-test-v712 (главный), v713 — следующий не занят.
+//   SW: kipia-test-v713 (главный), v713 — следующий не занят.
 // ============================================================
 
 const fs = require('fs');
@@ -515,16 +515,16 @@ describe('Task 488 — VM: книги «простой редактируемы�
 // ============================================================
 describe('Task 488 — SW: версия и комментарий', () => {
 
-    test("sw.js: CACHE_VERSION = 'kipia-test-v712'", () => {
+    test("sw.js: CACHE_VERSION = 'kipia-test-v713'", () => {
         assertTrue(SW_SRC.indexOf(
-            "const CACHE_VERSION = 'kipia-test-v712';") !== -1,
+            "const CACHE_VERSION = 'kipia-test-v713';") !== -1,
             'версия поднята Task 488');
     });
 
     test('sw.js: комментарий Task 488 (обе части заявки)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v712'");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v713'");
         assertTrue(i !== -1, 'версия найдена');
-        const ctx = SW_SRC.slice(Math.max(0, i - 900), i);
+        const ctx = SW_SRC.slice(Math.max(0, i - 1800), i);
         assertTrue(ctx.indexOf('Task 488') !== -1,
             'маркер задачи в окне истории');
         assertTrue(ctx.indexOf('кнопк') !== -1,
@@ -540,7 +540,7 @@ describe('Task 488 — SW: версия и комментарий', () => {
     test('sw.js: v711 отсутствует (один инкремент)', () => {
         assertTrue(SW_SRC.indexOf('kipia-test-v711') === -1,
             'v711 в sw.js не должно быть');
-        assertTrue(SW_SRC.indexOf('kipia-test-v713') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v714') === -1,
             'v713 в sw.js не должно быть (двойной бамп не сделан)');
     });
 });

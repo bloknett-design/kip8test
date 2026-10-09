@@ -18,7 +18,7 @@
 //   workSchedule.addEmployee      — добавить нового сотрудника
 //   workSchedule.updateEmployee   — правка данных сотрудника (Task 384:
 //                                   B..G, J..K; таб_№ — PK, не меняется)
-//   workSchedule.dismissEmployee   — уволить: дата_увольнения (H) + в_архиве=1 (I)
+//   workSchedule.dismissEmployee   — уволить: дата_увольнения + в_архиве=1 (столбцы по карте, Task 489)
 //   workSchedule.addTraining      — добавить плановое мероприятие
 //                                   (Task 413: лист «Инструктажи»/
 //                                   «Мероприятия» удалён — создаётся
@@ -63,21 +63,50 @@
 //   «Сформировать» (раньше это была тихая ошибка). Починка уже
 //   испорченных ячеек — scripts/TabNumbersFix.gs (fixTabNumbers).
 //
-// Структура листа «Сотрудники» (заголовки в строке 1, данные со строки 2):
-//   A: таб_номер              — табельный номер (строка, PK)
-//   B: ФИО
-//   C: тип                — 'сменный' или 'дневной'
-//   D: смена              — 1..5 для сменного, пусто для дневного
-//   E: шаблон_ротации     — FK на Шаблоны_ротации.id_шаблона (int)
-//   F: старт_цикла        — Date
-//   G: дата_приёма        — Date
-//   H: дата_увольнения    — Date (может быть пусто)
-//   I: в_архиве           — 0/1
-//   J: должность
-//   K: комментарий
+// Структура листа «Сотрудники» (заголовки в строке 1, данные со
+// строки 2). ДВЕ РАСКЛАДКИ (Task 489; переход между ними —
+// employeesSplitInit, разовый запуск в редакторе Apps Script):
+//
+//   НОВАЯ (Task 489 — столбец «ФИО» РАЗДЕЛЁН на фамилию/имя/
+//   отчество + новый столбец «дата_рождения» ПЕРЕД «комментарием»):
+//     A: таб_№               — табельный номер (строка, PK)
+//     B: фамилия             — ПОЛНЫЕ данные работника (Task 489)
+//     C: имя                 — ПОЛНЫЕ данные работника (Task 489)
+//     D: отчество            — ПОЛНЫЕ данные работника (Task 489)
+//     E: тип                 — 'сменный' или 'дневной'
+//     F: смена               — 1..5 для сменного, пусто для дневного
+//     G: шаблон_ротации      — FK на Шаблоны_ротации.id_шаблона (int)
+//     H: старт_цикла         — Date
+//     I: дата_приёма         — Date
+//     J: дата_увольнения     — Date (может быть пусто)
+//     K: в_архиве            — 0/1
+//     L: должность
+//     M: дата_рождения       — Date (Task 489, ПЕРЕД «комментарием»)
+//     N: комментарий
+//     (группа_допуска Task 402 — ПОЗИЦИЯ ЛЮБАЯ; в файле
+//      пользователя — между «должностью» и «дата_рождения»)
+//
+//   ЛЕГАСИ (до Task 489):
+//     A: таб_номер, B: ФИО (краткое — «Иванов И. И.»), C: тип,
+//     D: смена, E: шаблон_ротации, F: старт_цикла, G: дата_приёма,
+//     H: дата_увольнения, I: в_архиве, J: должность, K: комментарий
+//     (+ группа_допуска где угодно)
+//
+//   Task 489: столбцы СМЕСТИЛИСЬ и сменили наименование по
+//   расположению — ВСЕ столбцы «Сотрудников» читаются/пишутся по
+//   ЗАГОЛОВКАМ строки 1 (_employeesColMap: нормализация — регистр/
+//   пробелы/подчёркивания), фолбэк — канон РАСКЛАДКИ (раскладка
+//   определяется по наличию заголовков «фамилия»+«имя»+
+//   «отчество»). Уроки Task 402/403: жёсткие индексы запрещены.
+//   КРАТКОЕ ФИО «Иванов И. И.» в новой раскладке — КОМПОЗИЦИЯ из
+//   частей (_wsShortFio): поле «ФИО» ответов — как прежде КРАТКОЕ
+//   (шахматка/попапы/сводка/СИЗ); ПОЛНОЕ «Иванов Иван Иванович» —
+//   НОВОЕ поле «ФИО_полное» (карта работника · блок профиля +
+//   лист «Работники» Excel-архива); сырые части — поля
+//   «фамилия»/«имя»/«отчество»; «дата_рождения» — ISO или null
+//   (карта работника · конец списка профиля).
 //   группа_допуска (Task 402) — ПОЗИЦИЯ ЛЮБАЯ: столбец добавлен
-//     пользователем в файл табель_КИП_ИОС (в файле пользователя —
-//     МЕЖДУ «должностью» и «комментарием»); находится по ЗАГОЛОВКУ
+//     пользователем в файл табель_КИП_ИОС; находится по ЗАГОЛОВКУ
 //     строки 1 («группа_допуска» / «группа допуска», без учёта
 //     регистра — _accessGroupColIndex). Нет столбца — listEmployees
 //     отдаёт пустое поле, запись в updateEmployee/addEmployee
@@ -982,6 +1011,118 @@ var WorkSchedule = {
     return null;
   },
 
+  // Task 489: карта столбцов листа «Сотрудники» — ВСЕ столбцы по
+  // ЗАГОЛОВКАМ строки 1 (нормализация как _headerColIndex: нижний
+  // регистр, [\s_]+ → один пробел), фолбэк — канон РАСКЛАДКИ.
+  // РАСКЛАДКА (столбцы сместились при разделении ФИО — заявка
+  // Task 489): НОВАЯ — заголовки «фамилия»+«имя»+«отчество»
+  // найдены (канон: B/C/D части, E тип, F смена, G шаблон_ротации,
+  // H старт_цикла, I дата_приёма, J дата_увольнения, K в_архиве,
+  // L должность, M дата_рождения, N комментарий); ЛЕГАСИ — B ФИО,
+  // C тип … J должность, K комментарий. Возвращает { newLayout,
+  // width, … } — индексы 0-based (столбца нет — null, поле
+  // пропускается); width — чтение до самого правого найденного
+  // (минимум 11 — легаси-канон). Уроки Task 402/403: позиции в
+  // файле пользователя меняются — жёсткие индексы запрещены
+  _employeesColMap: function(sheet) {
+    var map = {
+      newLayout: false, width: 11,
+      'таб': 0, 'фио': 1, 'фамилия': null, 'имя': null,
+      'отчество': null, 'тип': 2, 'смена': 3, 'шаблон_ротации': 4,
+      'старт_цикла': 5, 'дата_приёма': 6, 'дата_увольнения': 7,
+      'в_архиве': 8, 'должность': 9, 'группа_допуска': null,
+      'дата_рождения': null, 'комментарий': 10
+    };
+    try {
+      var lastCol = sheet.getLastColumn();
+      if (!lastCol) return map;
+      var heads = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+      var norm = [];
+      for (var c = 0; c < heads.length; c++) {
+        norm.push(String(heads[c] || '').trim().toLowerCase()
+                    .replace(/[\s_]+/g, ' '));
+      }
+      var find = function(variants) {
+        for (var v = 0; v < variants.length; v++) {
+          for (var c2 = 0; c2 < norm.length; c2++) {
+            if (norm[c2] === variants[v]) return c2;
+          }
+        }
+        return null;
+      };
+      var famH = find(['фамилия']);
+      var imH  = find(['имя']);
+      var otH  = find(['отчество']);
+      map.newLayout = (famH !== null && imH !== null && otH !== null);
+      if (map.newLayout) {
+        map['фамилия'] = famH; map['имя'] = imH; map['отчество'] = otH;
+        map['фио'] = null;
+        map['тип'] = 4; map['смена'] = 5; map['шаблон_ротации'] = 6;
+        map['старт_цикла'] = 7; map['дата_приёма'] = 8;
+        map['дата_увольнения'] = 9; map['в_архиве'] = 10;
+        map['должность'] = 11; map['дата_рождения'] = 12;
+        map['комментарий'] = 13;
+      }
+      // найденные ЗАГОЛОВКИ заменяют канон (позиция любая)
+      var h;
+      h = find(['тип']);             if (h !== null) map['тип'] = h;
+      h = find(['смена']);           if (h !== null) map['смена'] = h;
+      h = find(['шаблон ротации']);  if (h !== null) map['шаблон_ротации'] = h;
+      h = find(['старт цикла']);     if (h !== null) map['старт_цикла'] = h;
+      h = find(['дата приёма']);     if (h !== null) map['дата_приёма'] = h;
+      h = find(['дата увольнения']); if (h !== null) map['дата_увольнения'] = h;
+      h = find(['в архиве']);        if (h !== null) map['в_архиве'] = h;
+      h = find(['должность']);       if (h !== null) map['должность'] = h;
+      h = find(['дата рождения']);   if (h !== null) map['дата_рождения'] = h;
+      h = find(['комментарий']);     if (h !== null) map['комментарий'] = h;
+      map['группа_допуска'] = this._accessGroupColIndex(sheet);
+      var keys = ['фио', 'фамилия', 'имя', 'отчество', 'тип', 'смена',
+                  'шаблон_ротации', 'старт_цикла', 'дата_приёма',
+                  'дата_увольнения', 'в_архиве', 'должность',
+                  'группа_допуска', 'дата_рождения', 'комментарий'];
+      var max = 10;
+      for (var k = 0; k < keys.length; k++) {
+        var idx = map[keys[k]];
+        if (idx !== null && idx > max) max = idx;
+      }
+      map.width = max + 1;
+    } catch (e) { /* ignore — канон раскладки */ }
+    return map;
+  },
+
+  // Task 489: инициал части имени («Александр»/«А.»/«А» → «А.»)
+  _wsNameInitial: function(part) {
+    var s = String(part || '').trim();
+    if (!s) return '';
+    return s.charAt(0).toUpperCase() + '.';
+  },
+
+  // Task 489: КРАТКОЕ ФИО из частей («Хадасевич»+«Александр»+
+  // «Сергеевич» → «Хадасевич А. С.»; инициалы «А.»/«С.» дают то же
+  // самое; нет имени/отчества — одна фамилия) — «в других местах
+  // как прежде сокращённо» (заявка)
+  _wsShortFio: function(fam, im, ot) {
+    var out = String(fam || '').trim();
+    var ini = this._wsNameInitial(im);
+    if (ini) out += ' ' + ini;
+    var oin = this._wsNameInitial(ot);
+    if (oin) out += ' ' + oin;
+    return out.trim();
+  },
+
+  // Task 489: ПОЛНОЕ ФИО из частей («Хадасевич Александр Сергеевич»;
+  // пустые части пропускаются) — карта работника · блок профиля +
+  // лист «Работники» Excel-архива
+  _wsFullFio: function(fam, im, ot) {
+    var parts = [String(fam || '').trim(), String(im || '').trim(),
+                 String(ot || '').trim()];
+    var out = [];
+    for (var i = 0; i < parts.length; i++) {
+      if (parts[i]) out.push(parts[i]);
+    }
+    return out.join(' ');
+  },
+
   // workSchedule.listEmployees
   // payload: { token, includeArchived }
   // returns: { ok:true, data: { employees: [...] } }
@@ -995,47 +1136,68 @@ var WorkSchedule = {
     var lastRow = sheet.getLastRow();
     if (lastRow < 2) return { ok: true, data: { employees: [] } };
 
-    // Task 402: столбец «группа_допуска» — по заголовку строки 1
-    // (позиция любая). Task 403 (баг комментария): «должность» и
-    // «комментарий» — ТОЖЕ по заголовкам (пользовательский столбец
-    // группы сместил комментарий с K на L); чтение расширено до
-    // самого правого из найденных столбцов
-    var groupCol = this._accessGroupColIndex(sheet);
-    var posCol = this._headerColIndex(sheet, ['должность']);
-    var comCol = this._headerColIndex(sheet, ['комментарий']);
-    if (posCol === null) posCol = 9;   // легаси-канон J
-    if (comCol === null) comCol = 10;  // легаси-канон K
-    var readWidth = 11;
-    if (groupCol !== null && groupCol + 1 > readWidth) readWidth = groupCol + 1;
-    if (posCol + 1 > readWidth) readWidth = posCol + 1;
-    if (comCol + 1 > readWidth) readWidth = comCol + 1;
-    var values = sheet.getRange(2, 1, lastRow - 1, readWidth)
+    // Task 489: ВСЕ столбцы — по карте _employeesColMap (заголовки
+    // строки 1; фолбэк — канон РАСКЛАДКИ: столбцы сместились при
+    // разделении ФИО и смене позиций — «Не забудь учесть … столбцы
+    // сместятся и поменяют своё наименование по расположению»).
+    // Task 402/403 (группа допуска/должность/комментарий по
+    // заголовкам) — вошли в карту
+    var cols = this._employeesColMap(sheet);
+    var values = sheet.getRange(2, 1, lastRow - 1, cols.width)
         .getValues();
     var includeArchived = !!payload.includeArchived;
     var employees = [];
     for (var i = 0; i < values.length; i++) {
       var r = values[i];
       if (!r[0] && r[0] !== 0) continue;
-      var archived = parseInt(r[8], 10) === 1;
+      var archived = parseInt(r[cols['в_архиве']], 10) === 1;
       if (archived && !includeArchived) continue;
+      // Task 489: имя — ЧАСТЯМИ (новая раскладка) или кратким
+      // полем ФИО (легаси); ФИО ответа — КАК ПРЕЖДЕ КРАТКОЕ
+      // («Иванов И. И.» — шахматка/попапы/сводка/СИЗ), ПОЛНОЕ —
+      // отдельное поле ФИО_полное (карта работника + архив)
+      var fam = '', im = '', ot = '';
+      var fioShort = '', fioFull = '';
+      if (cols.newLayout) {
+        fam = String(r[cols['фамилия']] || '').trim();
+        im  = String(r[cols['имя']] || '').trim();
+        ot  = String(r[cols['отчество']] || '').trim();
+        fioShort = this._wsShortFio(fam, im, ot);
+        fioFull  = this._wsFullFio(fam, im, ot);
+      } else {
+        fioShort = String(r[cols['фио']] || '').trim();
+        fioFull  = fioShort;
+      }
       employees.push({
         таб_номер:            String(r[0]).trim(),
-        ФИО:             String(r[1] || '').trim(),
-        тип:             String(r[2] || '').trim(),
-        смена:           r[3] === '' || r[3] === null ? null : parseInt(r[3], 10),
-        шаблон_ротации:  r[4] === '' || r[4] === null ? null : parseInt(r[4], 10),
-        старт_цикла:     r[5] instanceof Date ? this._toIsoDate(r[5]) : null,
-        дата_приёма:     r[6] instanceof Date ? this._toIsoDate(r[6]) : null,
-        дата_увольнения: r[7] instanceof Date ? this._toIsoDate(r[7]) : null,
+        ФИО:             fioShort,
+        // Task 489: ПОЛНОЕ ФИО («Иванов Иван Иванович») — карта
+        // работника (блок профиля) + лист «Работники» Excel-архива
+        ФИО_полное:      fioFull,
+        // Task 489: сырые части (форма «Правка данных…»)
+        фамилия:         fam,
+        'имя':           im,
+        отчество:        ot,
+        тип:             String(r[cols['тип']] || '').trim(),
+        смена:           r[cols['смена']] === '' || r[cols['смена']] === null ? null : parseInt(r[cols['смена']], 10),
+        шаблон_ротации:  r[cols['шаблон_ротации']] === '' || r[cols['шаблон_ротации']] === null ? null : parseInt(r[cols['шаблон_ротации']], 10),
+        старт_цикла:     r[cols['старт_цикла']] instanceof Date ? this._toIsoDate(r[cols['старт_цикла']]) : null,
+        дата_приёма:     r[cols['дата_приёма']] instanceof Date ? this._toIsoDate(r[cols['дата_приёма']]) : null,
+        дата_увольнения: r[cols['дата_увольнения']] instanceof Date ? this._toIsoDate(r[cols['дата_увольнения']]) : null,
         в_архиве:        archived ? 1 : 0,
         // Task 403: должность/комментарий — из столбцов по
-        // заголовкам (фолбэк J/K)
-        должность:       String(r[posCol] || '').trim(),
+        // заголовкам (фолбэк J/K в карте)
+        должность:       String(r[cols['должность']] || '').trim(),
         // Task 402: группа допуска — из столбца по заголовку
         // «группа_допуска» (нет столбца — пусто)
-        группа_допуска:  (groupCol !== null)
-                           ? String(r[groupCol] || '').trim() : '',
-        комментарий:     String(r[comCol] || '').trim()
+        группа_допуска:  (cols['группа_допуска'] !== null)
+                           ? String(r[cols['группа_допуска']] || '').trim() : '',
+        // Task 489: дата рождения — карта работника (конец списка
+        // профиля); нет столбца/даты — null
+        дата_рождения:   (cols['дата_рождения'] !== null &&
+                          r[cols['дата_рождения']] instanceof Date)
+                           ? this._toIsoDate(r[cols['дата_рождения']]) : null,
+        комментарий:     String(r[cols['комментарий']] || '').trim()
       });
     }
     return { ok: true, data: { employees: employees } };
@@ -2212,9 +2374,11 @@ var WorkSchedule = {
   // ============================================================
 
   // workSchedule.addEmployee
-  // payload: { token, таб_номер, ФИО, тип, смена, шаблон_ротации,
-  //            старт_цикла(ISO), дата_приёма(ISO), должность,
-  //            группа_допуска, комментарий }
+  // payload: { token, таб_номер, фамилия, имя, отчество (Task 489;
+  //            легаси-фронтенд без частей — одно поле ФИО,
+  //            раскладывается по словам), тип, смена, шаблон_ротации,
+  //            старт_цикла(ISO), дата_приёма(ISO), дата_рождения(ISO,
+  //            Task 489), должность, группа_допуска, комментарий }
   addEmployee: function(payload) {
     var auth = this._requireWrite(payload.token);
     if (auth.error) return auth.error;
@@ -2222,8 +2386,27 @@ var WorkSchedule = {
 
     var tabNo = String(payload.таб_номер || '').trim();
     if (!tabNo) return { ok: false, error: 'invalid_таб_номер' };
-    var fio = String(payload.ФИО || '').trim();
-    if (!fio) return { ok: false, error: 'invalid_ФИО' };
+    // Task 489: имя — ТРИ части (фамилия/имя/отчество); поле не
+    // заполнено — легаси-поле ФИО раскладывается по словам
+    // (краткое «Иванов И. И.» → Иванов/И./И.)
+    var fam = String(payload.фамилия || '').trim();
+    var im  = String(payload.имя || '').trim();
+    var ot  = String(payload.отчество || '').trim();
+    // легаси-запись (лист БЕЗ частей): старый фронтенд присылал
+    // ЦЕЛИКОМ поле ФИО — пишем его как есть; новый фронтенд (с
+    // частями) — краткая композиция из частей
+    var partsInPayload = (payload.фамилия !== undefined ||
+                          payload.имя !== undefined);
+    if (!fam) {
+      var fioWords = String(payload.ФИО || '').trim().split(/\s+/);
+      fam = fioWords[0] || '';
+      im  = fioWords[1] || '';
+      ot  = fioWords.slice(2).join(' ');
+    }
+    if (!fam) return { ok: false, error: 'invalid_ФИО' };
+    var fioLegacy = partsInPayload
+      ? this._wsShortFio(fam, im, ot)
+      : String(payload.ФИО || '').trim();
     var tip = String(payload.тип || '').trim();
     if (tip !== 'сменный' && tip !== 'дневной') {
       return { ok: false, error: 'invalid_тип' };
@@ -2251,39 +2434,53 @@ var WorkSchedule = {
     var position  = String(payload.должность || '').trim();
     var comment   = String(payload.комментарий || '').slice(0, 500);
 
-    // Task 304: A (таб_номер) — текст: «0871» не должен стать числом 871
-    // Task 402: группа допуска — в столбец по заголовку строки 1
-    // («группа_допуска», позиция любая; нет столбца — пропуск).
-    // Task 403 (баг комментария): «должность»/«комментарий» — тоже
-    // по заголовкам; строка собирается до самого правого столбца,
-    // каждый реквизит — в СВОЙ столбец (прежде фикс J..K: столбец
-    // группы МЕЖДУ ними затирал комментарий)
-    var groupCol = this._accessGroupColIndex(sheet);
-    var posCol = this._headerColIndex(sheet, ['должность']);
-    var comCol = this._headerColIndex(sheet, ['комментарий']);
-    if (posCol === null) posCol = 9;   // легаси-канон J
-    if (comCol === null) comCol = 10;  // легаси-канон K
-    var rowWidth = Math.max(11, posCol + 1, comCol + 1,
-                            groupCol !== null ? groupCol + 1 : 0);
-    var rowVals = [
-      tabNo, fio, tip, smena || null, patId || null,
-      startCycle, hireDate, null,  // H=дата_увольнения — пусто
-      0   // в_архиве=0
-    ];
+    // Task 304: A (таб_номер) — текст: «0871» не должен стать числом 871.
+    // Task 489: столбцы — по карте _employeesColMap (заголовки
+    // строки 1; столбцы сместились): НОВАЯ раскладка — части
+    // отдельными столбцами (фамилия/имя/отчество) + дата_рождения;
+    // ЛЕГАСИ — составленное ФИО в B (как хранит легаси-лист —
+    // КРАТКОЕ, полным фамилиям в легаси-листе нет места). Task
+    // 402/403: группа/должность/комментарий — по заголовкам (вошли
+    // в карту); строка собирается до самого правого столбца, каждый
+    // реквизит — в СВОЙ столбец
+    var cols = this._employeesColMap(sheet);
+    var rowWidth = Math.max(11, cols.width);
+    var rowVals = [];
     while (rowVals.length < rowWidth) rowVals.push('');
-    rowVals[posCol] = position;
-    rowVals[comCol] = comment;
-    if (groupCol !== null) {
+    rowVals[0] = tabNo;
+    if (cols.newLayout) {
+      rowVals[cols['фамилия']] = fam;
+      rowVals[cols['имя']] = im;
+      rowVals[cols['отчество']] = ot;
+    } else {
+      rowVals[cols['фио']] = fioLegacy;
+    }
+    rowVals[cols['тип']] = tip;
+    rowVals[cols['смена']] = smena || null;
+    rowVals[cols['шаблон_ротации']] = patId || null;
+    rowVals[cols['старт_цикла']] = startCycle;
+    rowVals[cols['дата_приёма']] = hireDate;
+    rowVals[cols['дата_увольнения']] = null;   // дата_увольнения — пусто
+    rowVals[cols['в_архиве']] = 0;             // в_архиве=0
+    rowVals[cols['должность']] = position;
+    rowVals[cols['комментарий']] = comment;
+    if (cols['группа_допуска'] !== null) {
       var accessGroup = (payload.группа_допуска !== undefined
                          && payload.группа_допуска !== null)
         ? String(payload.группа_допуска).trim().slice(0, 50) : '';
-      rowVals[groupCol] = accessGroup;
+      rowVals[cols['группа_допуска']] = accessGroup;
+    }
+    // Task 489: дата рождения — столбец есть и поле пришло (guard:
+    // старый фронтенд без поля не мешает)
+    if (cols['дата_рождения'] !== null &&
+        payload.дата_рождения !== undefined && payload.дата_рождения !== null) {
+      rowVals[cols['дата_рождения']] = this._parseIsoDate(payload.дата_рождения);
     }
     this._appendRowKeepText(sheet, rowVals, [1]);
 
     try {
       Utils.audit(user.email, 'WORKSCHEDULE_ADD_EMPLOYEE', '', '',
-        'Добавлен сотрудник таб_номер=' + tabNo + ' ФИО=' + fio);
+        'Добавлен сотрудник таб_номер=' + tabNo + ' ФИО=' + fam);
     } catch (e) { /* ignore */ }
 
     return { ok: true, data: { таб_номер: tabNo } };
@@ -2292,7 +2489,9 @@ var WorkSchedule = {
   // workSchedule.dismissEmployee
   // payload: { token, таб_номер, дата_увольнения(ISO) }
   // Увольнение (Task 318): в строке сотрудника таблицы «Сотрудники»
-  //   записывается дата_увольнения (H) и в_архиве=1 (I). Строка НЕ
+  //   записывается дата_увольнения и в_архиве=1 (Task 489: столбцы
+  //   — по карте _employeesColMap: НОВАЯ раскладка J/K, ЛЕГАСИ
+  //   H/I). Строка НЕ
   //   удаляется — остаётся в листе как АРХИВ; listEmployees без
   //   includeArchived сотрудника больше не возвращает → строка уходит
   //   из шахматки/селектов форм. Перезапись существующей даты
@@ -2316,13 +2515,16 @@ var WorkSchedule = {
                message: 'Сотрудник с таб. № ' + tabNo + ' не найден' };
     }
 
-    // Поиск строки по таб_№ (A — текст, Task 304: ведущие нули)
+    // Поиск строки по таб_№ (A — текст, Task 304: ведущие нули).
+    // Task 489: столбцы увольнения/архива — по карте (столбцы
+    // сместились при разделении ФИО: новая раскладка J/K)
+    var cols = this._employeesColMap(sheet);
     var tabs = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
     for (var i = 0; i < tabs.length; i++) {
       if (String(tabs[i][0]).trim() !== tabNo) continue;
       var row = i + 2;
-      sheet.getRange(row, 8).setValue(dismissDate);  // H = дата_увольнения
-      sheet.getRange(row, 9).setValue(1);            // I = в_архиве
+      sheet.getRange(row, cols['дата_увольнения'] + 1).setValue(dismissDate);
+      sheet.getRange(row, cols['в_архиве'] + 1).setValue(1);
       try {
         Utils.audit(user.email, 'WORKSCHEDULE_DISMISS_EMPLOYEE', '', '',
           'Уволен сотрудник таб_номер=' + tabNo +
@@ -2335,16 +2537,22 @@ var WorkSchedule = {
   },
 
   // workSchedule.updateEmployee (Task 384)
-  // payload: { token, таб_номер, ФИО, тип, смена, шаблон_ротации,
-  //            старт_цикла(ISO), дата_приёма(ISO), должность,
-  //            группа_допуска, комментарий }
+  // payload: { token, таб_номер, фамилия, имя, отчество (Task 489;
+  //            легаси-фронтенд без частей — одно поле ФИО,
+  //            раскладывается по словам), тип, смена, шаблон_ротации,
+  //            старт_цикла(ISO), дата_приёма(ISO), дата_рождения(ISO
+  //            — Task 489, необязательно), должность, группа_допуска,
+  //            комментарий }
   // Правка данных сотрудника из карточки (шторка «Правка сотрудника»).
-  // Обновляет B..G (ФИО/тип/смена/шаблон/старт_цикла/дата_приёма) и
-  // должность/комментарий (Task 403: по ЗАГОЛОВКАМ строки 1, каждый
-  // в свой столбец; фолбэк J..K); A (таб_номер) — НЕИЗМЕНЕН: PK, на
-  // него ссылаются «Записи_графика»/«Инструктажи»/«Отпуска»; H/I
-  // (дата_увольнения/в_архиве) не трогаются — увольнение отдельным
-  // dismissEmployee.
+  // Task 489: столбцы — по карте _employeesColMap (столбцы сместились
+  // при разделении ФИО): НОВАЯ раскладка — части фамилия/имя/
+  // отчество + тип..дата_приёма отдельными setValue; ЛЕГАСИ — прежний
+  // блок B..G (ФИО/тип/смена/шаблон/старт_цикла/дата_приёма; ФИО —
+  // составленное КРАТКОЕ, как хранит легаси-лист); должность/
+  // комментарий/группа допуска/дата_рождения — по заголовкам (в
+  // карте). A (таб_номер) — НЕИЗМЕНЕН: PK, на него ссылаются
+  // «Записи_графика»/«Инструктажи»/«Отпуска»; дата_увольнения/
+  // в_архиве не трогаются — увольнение отдельным dismissEmployee.
   updateEmployee: function(payload) {
     var auth = this._requireWrite(payload.token);
     if (auth.error) return auth.error;
@@ -2352,8 +2560,27 @@ var WorkSchedule = {
 
     var tabNo = String(payload.таб_номер || '').trim();
     if (!tabNo) return { ok: false, error: 'invalid_таб_номер' };
-    var fio = String(payload.ФИО || '').trim();
-    if (!fio) return { ok: false, error: 'invalid_ФИО' };
+    // Task 489: имя — ТРИ части; поле не заполнено — легаси-поле
+    // ФИО раскладывается по словам (краткое «Иванов И. И.» →
+    // Иванов/И./И.)
+    var fam = String(payload.фамилия || '').trim();
+    var im  = String(payload.имя || '').trim();
+    var ot  = String(payload.отчество || '').trim();
+    // легаси-запись (лист БЕЗ частей): старый фронтенд присылал
+    // ЦЕЛИКОМ поле ФИО — пишем его как есть; новый фронтенд (с
+    // частями) — краткая композиция из частей
+    var partsInPayload = (payload.фамилия !== undefined ||
+                          payload.имя !== undefined);
+    if (!fam) {
+      var fioWords = String(payload.ФИО || '').trim().split(/\s+/);
+      fam = fioWords[0] || '';
+      im  = fioWords[1] || '';
+      ot  = fioWords.slice(2).join(' ');
+    }
+    if (!fam) return { ok: false, error: 'invalid_ФИО' };
+    var fioLegacy = partsInPayload
+      ? this._wsShortFio(fam, im, ot)
+      : String(payload.ФИО || '').trim();
     var tip = String(payload.тип || '').trim();
     if (tip !== 'сменный' && tip !== 'дневной') {
       return { ok: false, error: 'invalid_тип' };
@@ -2376,38 +2603,58 @@ var WorkSchedule = {
     var comment   = String(payload.комментарий || '').slice(0, 500);
 
     // Поиск строки по таб. № (A — текст, Task 304: ведущие нули)
+    var cols = this._employeesColMap(sheet);
     var tabs = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
     for (var i = 0; i < tabs.length; i++) {
       if (String(tabs[i][0]).trim() !== tabNo) continue;
       var row = i + 2;
-      // B..G: ФИО, тип, смена, шаблон_ротации, старт_цикла, дата_приёма
-      sheet.getRange(row, 2, 1, 6).setValues([[
-        fio, tip, smena || null, patId || null, startCycle, hireDate
-      ]]);
+      // Task 489: НОВАЯ раскладка — части и сдвинутые реквизиты
+      // отдельными setValue (столбцы по заголовкам); ЛЕГАСИ —
+      // прежний блок B..G (ФИО — как присылал старый фронтенд,
+      // частями — краткая композиция)
+      if (cols.newLayout) {
+        sheet.getRange(row, cols['фамилия'] + 1).setValue(fam);
+        sheet.getRange(row, cols['имя'] + 1).setValue(im);
+        sheet.getRange(row, cols['отчество'] + 1).setValue(ot);
+        sheet.getRange(row, cols['тип'] + 1).setValue(tip);
+        sheet.getRange(row, cols['смена'] + 1).setValue(smena || null);
+        sheet.getRange(row, cols['шаблон_ротации'] + 1).setValue(patId || null);
+        sheet.getRange(row, cols['старт_цикла'] + 1).setValue(startCycle);
+        sheet.getRange(row, cols['дата_приёма'] + 1).setValue(hireDate);
+      } else {
+        // B..G: ФИО, тип, смена, шаблон_ротации, старт_цикла, дата_приёма
+        sheet.getRange(row, 2, 1, 6).setValues([[
+          fioLegacy, tip, smena || null,
+          patId || null, startCycle, hireDate
+        ]]);
+      }
       // Task 403 (баг комментария): должность/комментарий — по
       // ЗАГОЛОВКАМ строки 1, каждый в СВОЙ столбец setValue'ом
-      // (прежде фикс J..K одной пачкой: пользовательский столбец
-      // группы между ними — комментарий попадал не туда и
-      // затирался). A/H/I не трогаются
-      var posCol = this._headerColIndex(sheet, ['должность']);
-      var comCol = this._headerColIndex(sheet, ['комментарий']);
-      if (posCol === null) posCol = 9;   // легаси-канон J
-      if (comCol === null) comCol = 10;  // легаси-канон K
-      sheet.getRange(row, posCol + 1).setValue(position);
-      sheet.getRange(row, comCol + 1).setValue(comment);
+      // (фолбэк J/K — в карте; Task 489: канон раскладки). A не
+      // трогается
+      sheet.getRange(row, cols['должность'] + 1).setValue(position);
+      sheet.getRange(row, cols['комментарий'] + 1).setValue(comment);
       // Task 402: группа допуска — в столбец по заголовку строки 1
       // («группа_допуска», позиция любая; нет столбца — пропуск).
       // Пишем ТОЛЬКО когда поле пришло в payload: старый фронтенд
       // (кэш SW) без поля НЕ затирает существующее значение листа
-      var groupCol = this._accessGroupColIndex(sheet);
-      if (groupCol !== null && payload.группа_допуска !== undefined
+      if (cols['группа_допуска'] !== null && payload.группа_допуска !== undefined
               && payload.группа_допуска !== null) {
         var accessGroup = String(payload.группа_допуска).trim().slice(0, 50);
-        sheet.getRange(row, groupCol + 1).setValue(accessGroup);
+        sheet.getRange(row, cols['группа_допуска'] + 1).setValue(accessGroup);
+      }
+      // Task 489: дата рождения — в столбец по заголовку (нет
+      // столбца — пропуск). Пишем ТОЛЬКО когда поле пришло в
+      // payload (guard — старый фронтенд не затирает лист; пустая
+      // строка очищает дату)
+      if (cols['дата_рождения'] !== null &&
+          payload.дата_рождения !== undefined && payload.дата_рождения !== null) {
+        sheet.getRange(row, cols['дата_рождения'] + 1)
+          .setValue(this._parseIsoDate(payload.дата_рождения) || null);
       }
       try {
         Utils.audit(user.email, 'WORKSCHEDULE_UPDATE_EMPLOYEE', '', '',
-          'Обновлены данные сотрудника таб_номер=' + tabNo + ' ФИО=' + fio);
+          'Обновлены данные сотрудника таб_номер=' + tabNo + ' ФИО=' + fam);
       } catch (e) { /* ignore */ }
       return { ok: true, data: { таб_номер: tabNo } };
     }
@@ -3330,13 +3577,28 @@ var WorkSchedule = {
   _ppeLookupEmployee: function(empSheet, tabNo) {
     var lastRow = empSheet.getLastRow();
     if (lastRow < 2) return null;
+    // Task 489: столбцы — по карте _employeesColMap (разделение
+    // ФИО сместило прежние индексы: B — фамилия, J — дата_увольне-
+    // ния); «работник» колонки C листа «СИЗ» — КАК ПРЕЖДЕ КРАТКОЕ
+    // ФИО (СИЗ — «в других местах сокращённо», заявка Task 489)
+    var cols = this._employeesColMap(empSheet);
     var tabs = empSheet.getRange(2, 1, lastRow - 1, 1).getValues();
     for (var i = 0; i < tabs.length; i++) {
       if (String(tabs[i][0]).trim() !== tabNo) continue;
-      var vals = empSheet.getRange(i + 2, 1, 1, 11).getValues();
+      var vals = empSheet.getRange(i + 2, 1, 1, cols.width).getValues();
+      var r = vals[0];
+      var fio;
+      if (cols.newLayout) {
+        fio = this._wsShortFio(
+          String(r[cols['фамилия']] || '').trim(),
+          String(r[cols['имя']] || '').trim(),
+          String(r[cols['отчество']] || '').trim());
+      } else {
+        fio = String(r[cols['фио']] || '').trim();
+      }
       return {
-        fio:      String(vals[0][1] || '').trim(),
-        position: String(vals[0][9] || '').trim()
+        fio:      fio,
+        position: String(r[cols['должность']] || '').trim()
       };
     }
     return null;
@@ -3676,6 +3938,73 @@ var WorkSchedule = {
         ' — лист «Инструктажи» не затрагивается');
     } catch (e) { /* ignore */ }
     return { ok: true, sheets: sheets };
+  },
+
+  // ============================================================
+  // Task 489: РАЗОВОЕ разделение столбца «ФИО» листа «Сотрудники»
+  // на «фамилия»/«имя»/«отчество» + вставка «дата_рождения»
+  // ПЕРЕД «комментарием» (запуск — function employeesSplitInit
+  // внизу файла, как trainingsSplitInit). Столбцы после B
+  // смещаются вправо на 2 — код читает/пишет их по ЗАГОЛОВКАМ
+  // строки 1 (_employeesColMap)
+  // ============================================================
+  employeesSplitInit: function() {
+    var ss = SpreadsheetApp.openById(this.SPREADSHEET_ID);
+    var sheet = ss.getSheetByName(this.EMPLOYEES_SHEET);
+    if (!sheet) {
+      return { ok: false, error: 'sheet_not_found: ' + this.EMPLOYEES_SHEET };
+    }
+
+    // Идемпотентность: раскладка уже новая — ничего не делать
+    var map = this._employeesColMap(sheet);
+    if (map.newLayout) {
+      return { ok: true, already: true,
+               message: 'Столбец «ФИО» уже разделён ' +
+                        '(фамилия/имя/отчество есть) — изменений нет' };
+    }
+
+    var lastRow = sheet.getLastRow();
+    var fioCol = (map['фио'] !== null) ? map['фио'] : 1;  // B
+
+    // 1) ДВА столбца ПОСЛЕ «ФИО» → B/C/D
+    sheet.insertColumnAfter(fioCol + 1);
+    sheet.insertColumnAfter(fioCol + 1);
+    // 2) заголовки частей
+    sheet.getRange(1, fioCol + 1).setValue('фамилия');
+    sheet.getRange(1, fioCol + 2).setValue('имя');
+    sheet.getRange(1, fioCol + 3).setValue('отчество');
+    // 3) значения ФИО раскладываются по словам (краткое
+    //    «Иванов И. И.» → Иванов / И. / И.; полные имена и даты
+    //    рождения пользователь вписывает в файл руками после
+    //    запуска — инициалы остаются, пока не заполнено)
+    if (lastRow >= 2) {
+      var fioVals = sheet.getRange(2, fioCol + 1, lastRow - 1, 1).getValues();
+      var out = [];
+      for (var i = 0; i < fioVals.length; i++) {
+        var w = String(fioVals[i][0] || '').trim().split(/\s+/);
+        out.push([w[0] || '', w[1] || '', w.slice(2).join(' ')]);
+      }
+      sheet.getRange(2, fioCol + 1, out.length, 3).setValues(out);
+    }
+
+    // 4) «дата_рождения» ПЕРЕД «комментарием» (столбец по
+    //    заголовку; заголовка нет — легаси-канон K)
+    var map2 = this._employeesColMap(sheet);
+    var comCol = (map2['комментарий'] !== null) ? map2['комментарий'] : 10;
+    sheet.insertColumnBefore(comCol + 1);
+    sheet.getRange(1, comCol + 1).setValue('дата_рождения');
+
+    // контрольная карта после всех вставок
+    var map3 = this._employeesColMap(sheet);
+    try {
+      Utils.audit('', 'WORKSCHEDULE_EMPLOYEES_SPLIT_INIT', '', '',
+        'Разделение ФИО (Task 489): employees=' +
+        Math.max(0, lastRow - 1) + ', newLayout=' + map3.newLayout);
+    } catch (e) { /* ignore */ }
+    return { ok: true, already: false,
+             employees: Math.max(0, lastRow - 1),
+             newLayout: map3.newLayout,
+             dateBirthCol: map3['дата_рождения'] };
   }
 
 };
@@ -3759,4 +4088,30 @@ function instrListInit() {
 function eventsInit() {
   var r = WorkSchedule.eventsInit();
   Logger.log('eventsInit: ' + JSON.stringify(r));
+}
+
+// ============================================================
+// Task 489: РАЗОВОЕ разделение столбца «ФИО» листа «Сотрудники»
+// ============================================================
+// ЗАПУСК (проект Apps Script табель_КИП_ИОС — тот же, где
+// WorkSchedule.gs): в выпадающем списке функций редактора выбрать
+// employeesSplitInit → ▶ Run (первый запуск может попросить
+// авторизацию — разрешить). Результат — в журнале (Ctrl+Enter).
+// Что делает:
+//   1) столбец «ФИО» делится на ТРИ: «фамилия»/«имя»/«отчество»;
+//      текущие значения раскладываются по словам (краткое
+//      «Иванов И. И.» → Иванов / И. / И.);
+//   2) новый столбец «дата_рождения» вставляется ПЕРЕД
+//      «комментарием» (пустой);
+//   3) прочие столбцы смещаются вправо — код читает/пишет их по
+//      ЗАГОЛОВКАМ строки 1 (_employeesColMap), позиции не важны.
+// ПОСЛЕ запуска: впишите в файл ПОЛНЫЕ данные работников (имена/
+// отчества полностью, даты рождения). Приложение покажет ПОЛНОЕ
+// ФИО в карте работника (блок профиля) и «Дата рождения» в конце
+// списка профиля; в остальных местах — как прежде кратко
+// («Иванов И. И.»); лист «Работники» Excel-архива — полное ФИО.
+// Повторный запуск безопасен (already: true — ничего не меняется).
+function employeesSplitInit() {
+  var r = WorkSchedule.employeesSplitInit();
+  Logger.log('employeesSplitInit: ' + JSON.stringify(r));
 }
