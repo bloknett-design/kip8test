@@ -605,17 +605,17 @@ describe('Task 482 — кап раскрытия окон «Мероприяти
 // ==========================================================================
 // 6. SW: версия, комментарий, окна истории
 // ==========================================================================
-describe('Task 482 — SW: kipia-test-v713 + комментарий', () => {
+describe('Task 482 — SW: kipia-test-v714 + комментарий', () => {
 
-    test('CACHE_VERSION = kipia-test-v713', () => {
+    test('CACHE_VERSION = kipia-test-v714', () => {
         assertTrue(SW_SRC.indexOf(
-            "const CACHE_VERSION = 'kipia-test-v713';") !== -1,
+            "const CACHE_VERSION = 'kipia-test-v714';") !== -1,
             'версия кэша поднята v705 → v706');
     });
 
     test('несуществующая v707 отсутствует (guard)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v714') === -1,
-            'kipia-test-v714 не должен существовать');
+        assertTrue(SW_SRC.indexOf('kipia-test-v715') === -1,
+            'kipia-test-v715 не должен существовать');
     });
 
     test('старая v705 вычищена из sw.js', () => {
@@ -631,7 +631,7 @@ describe('Task 482 — SW: kipia-test-v713 + комментарий', () => {
     });
 
     test('комментарий Task 482 в шапке версий (окно 1100)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v713';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v714';");
         const ctx = SW_SRC.slice(Math.max(0, i - 5000), i);
         assertTrue(ctx.indexOf('Task 482') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('_barExpMaxH') !== -1,
@@ -644,8 +644,10 @@ describe('Task 482 — SW: kipia-test-v713 + комментарий', () => {
     });
 
     test('комментарии Task 481/480 не вытеснены (окно 1100)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v713';");
-        const ctx = SW_SRC.slice(Math.max(0, i - 5000), i);
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v714';");
+        // Task 490: +480 симв. комментария — окно 5000 → 6000 (якоря
+        // 481@5196, 480@5440, таблица@5405)
+        const ctx = SW_SRC.slice(Math.max(0, i - 6000), i);
         assertTrue(ctx.indexOf('Task 481') !== -1, 'Task 481 в окне');
         assertTrue(ctx.indexOf('Task 480') !== -1, 'Task 480 в окне');
         assertTrue(ctx.indexOf('Перечень КИП ИОС рабочий') !== -1,
@@ -653,7 +655,7 @@ describe('Task 482 — SW: kipia-test-v713 + комментарий', () => {
     });
 
     test('комментарии Task 479/478 не вытеснены (окно 4100)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v713';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v714';");
         const ctx = SW_SRC.slice(Math.max(0, i - 6500), i);
         assertTrue(ctx.indexOf('Task 479') !== -1 &&
                    ctx.indexOf('оранжево-золотистый') !== -1,
@@ -666,7 +668,7 @@ describe('Task 482 — SW: kipia-test-v713 + комментарий', () => {
     test('окна истории: якоря 474/472/471/461 в прежних окнах', () => {
         // Task 482 (~375 симв.): 474 ~3016 < 3100; 472 ~3389 < 3600;
         // 471 ~3938 < 4200; 461 ~6500 < 6800 — расширения не нужны
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v713';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v714';");
         const i474 = SW_SRC.lastIndexOf('Task 474', i);
         const i472 = SW_SRC.lastIndexOf('Task 472', i);
         const i471 = SW_SRC.lastIndexOf('Task 471', i);
@@ -680,16 +682,18 @@ describe('Task 482 — SW: kipia-test-v713 + комментарий', () => {
     test('окна ЧУЖИХ тестов синхронизированы (478/479/480/481)', () => {
         // windows-скрипты 482/483/484/486: 478 3200→4100; 479 3200→4100;
         // 480 2600→3200; 481: 3200/3200/4100
+        // Task 490: 480 и 481 — 5000 → 6000 (+480 симв. комментария
+        // Task 490 в sw.js; каскад task490-bump-sw)
         const s478 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task478.js'), 'utf8');
         assertTrue(s478.indexOf('i - 6500') !== -1, 'test-task478: окно 4100');
         const s479 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task479.js'), 'utf8');
         assertTrue(s479.indexOf('i - 6500') !== -1, 'test-task479: окно 4100');
         const s480 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task480.js'), 'utf8');
-        assertTrue(s480.indexOf('i - 5000') !== -1, 'test-task480: окно 3200');
+        assertTrue(s480.indexOf('i - 6000') !== -1, 'test-task480: окно 6000 (Task 490)');
         const s481 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task481.js'), 'utf8');
-        assertTrue(s481.indexOf('i - 5000') !== -1 &&
+        assertTrue(s481.indexOf('i - 6000') !== -1 &&
                    s481.indexOf('i - 6500') !== -1,
-            'test-task481: окна 3200/4100');
+            'test-task481: окна 6000 (Task 490)/4100');
     });
 });
 

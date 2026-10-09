@@ -27,6 +27,11 @@
 //      счётчики; openTempSensor: подписи панели, чип без бейджа,
 //      звезда в шапке; живой расчёт L; результаты без панели.
 //   F. SW v602 (guard v603).
+//
+// Task 490 (адаптация): мобильная сетка — кнопки по ДВЕ в строке
+// (пары с одинаковой градуировкой рядом), на кнопках ТС только
+// градуировка+α (скрыты аналог/R₀/диапазон), порядок ТП:
+// K,L,J,T,E,N,R,S,B (ТХА (K)+ТХК (L) вместе).
 
 const fs = require('fs');
 const path = require('path');
@@ -95,9 +100,15 @@ function pageBlock(pageId) {
 // ============================================================
 describe('Task 373 — SRC: мобильные карточки и бейджи', () => {
 
-    test('Мобильная сетка: карточки столбиком по одной в строке', () => {
-        assertTrue(INDEX_SRC.indexOf('@media (max-width: 1023px) { .ts-cards-grid { grid-template-columns: 1fr; } }') !== -1,
-            'одна колонка ниже 1024px');
+    test('Мобильная сетка: кнопки по ДВЕ в строке (Task 490)', () => {
+        assertTrue(INDEX_SRC.indexOf('@media (max-width: 1023px) { .ts-cards-grid { grid-template-columns: 1fr; } }') === -1,
+            'одна колонка ниже 1024px удалена (Task 490: по две)');
+        assertTrue(INDEX_SRC.indexOf('.ts-cards-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }') !== -1,
+            'две колонки ниже 1024px');
+        assertTrue(INDEX_SRC.indexOf('.ts-card .ts-card-name-analog, .ts-card .ts-card-r0, .ts-card .ts-card-meta-sep, .ts-card .ts-card-range, .ts-card-tc .ts-card-meta { display: none; }') !== -1,
+            'на мобильном скрыты аналог, R₀, диапазон и материал ТП');
+        assertTrue(INDEX_SRC.indexOf('.ts-cards-grid > .ts-card:nth-child(odd):last-child { grid-column: 1 / -1; }') !== -1,
+            'последняя непарная кнопка — во всю строку');
         assertTrue(INDEX_SRC.indexOf('.ts-cards-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }') === -1,
             'старое правило мобильной сетки удалено');
         assertTrue(INDEX_SRC.indexOf('repeat(auto-fill, minmax(240px, 1fr))') !== -1,
@@ -200,7 +211,7 @@ describe('Task 373 — SRC: панель расчёта над формой + Т
         assertTrue(grabFn('getTcSensorMap').indexOf("L:'ТХК (L)'") !== -1, 'карта типов ТП');
         const cat = grabFn('getTempSensorCatalog');
         assertTrue(cat.indexOf("L:{mat:'хромель-копель',r:[-200,800]}") !== -1, 'каталог: электроды и диапазон');
-        assertTrue(cat.indexOf("['K','J','T','N','E','L','R','S','B']") !== -1, 'порядок: L после E');
+        assertTrue(cat.indexOf("['K','L','J','T','E','N','R','S','B']") !== -1, 'порядок: K+L вместе (Task 490)');
         const v = grabFn('calcTcVoltage');
         assertTrue(v.indexOf("type==='L'") !== -1, 'ветка L в calcTcVoltage');
         assertTrue(v.indexOf('6.3307953909e-2') !== -1, 'коэффициент c1 (диапазон ≥0)');
@@ -349,7 +360,7 @@ describe('Task 373 — VM: каталог с ТХК (L)', () => {
         assertEqual(cat.filter(s => s.kind === 'tc').length, 9, '9 ТП (добавлена L)');
     });
 
-    test('tc_L: имя, электроды, диапазон, позиция после ТХКн (E)', () => {
+    test('tc_L: имя, электроды, диапазон, позиция после ТХА (K) (Task 490)', () => {
         const vmw = makeVm373();
         const cat = vmw.api.getTempSensorCatalog();
         const byKey = {};
@@ -360,7 +371,7 @@ describe('Task 373 — VM: каталог с ТХК (L)', () => {
         assertEqual(L.meta, 'хромель-копель', 'электроды');
         assertEqual(JSON.stringify(L.range), '{"min":-200,"max":800}', 'диапазон НСХ');
         assertEqual(L.kind, 'tc', 'вид: термопара');
-        assertEqual(byKey['tc_E'].idx + 1, L.idx, 'L сразу после E');
+        assertEqual(byKey['tc_K'].idx + 1, L.idx, 'L сразу после K (Task 490)');
         assertEqual(cat[16].key, 'tc_B', 'последний — ТПР (B)');
     });
 
@@ -610,15 +621,15 @@ describe('Task 373 — VM: страница датчика — панель, з�
 // ============================================================
 // F. SW v602 (guard v603)
 // ============================================================
-describe('Task 373 — SW: версия кэша kipia-test-v713', () => {
+describe('Task 373 — SW: версия кэша kipia-test-v714', () => {
 
-    test('CACHE_VERSION = kipia-test-v713', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v713'") !== -1,
+    test('CACHE_VERSION = kipia-test-v714', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v714'") !== -1,
             'SW бампнут до v602');
     });
 
     test('Guard: v605 ещё не существует', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v714') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v715') === -1,
             'v603 не должен существовать (следующий бамп)');
     });
 });

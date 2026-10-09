@@ -31,6 +31,10 @@
 // renderTempSensorCards перерисовывается при каждом вызове (табы
 // «Все / Избранные» + звёзды TempFav); панель «Расчёт произвольных
 // значений» стала статичной над формой — из результатов удалена.
+// Task 490 (адаптация): мобильная сетка — кнопки по ДВЕ в строке
+// (пары с одинаковой градуировкой рядом), на кнопках ТС только
+// градуировка+α (скрыты аналог/R₀/диапазон), порядок ТП:
+// K,L,J,T,E,N,R,S,B (ТХА (K)+ТХК (L) вместе).
 
 const fs = require('fs');
 const path = require('path');
@@ -130,7 +134,7 @@ describe('Task 372 — SRC: страница карточек и страниц�
         assertTrue(fn !== null, 'функция объявлена');
         const orderChunk = "['cu50_1428','cu100_1428','cu50_1426','cu100_1426','pt50_1391','pt100_1391','pt100_1385','pt1000_1385']";
         assertTrue(fn.indexOf(orderChunk) !== -1, 'порядок ТС');
-        assertTrue(fn.indexOf("['K','J','T','N','E','L','R','S','B']") !== -1, 'порядок ТП (Task 373: L после E)');
+        assertTrue(fn.indexOf("['K','L','J','T','E','N','R','S','B']") !== -1, 'порядок ТП (Task 490: K+L вместе, парами)');
         assertTrue(fn.indexOf("key:'tc_'+k") !== -1, 'ключи ТП вида tc_K');
     });
 
@@ -273,7 +277,7 @@ describe('Task 372 — VM: каталог всех датчиков', () => {
         assertEqual(cat[0].key, 'cu50_1428', 'первый — 50М (Cu50), как в списке');
         assertEqual(cat[7].key, 'pt1000_1385', 'последний ТС — Pt1000 (IEC)');
         assertEqual(cat[8].key, 'tc_K', 'первый ТП — ТХА (K)');
-        assertEqual(cat[13].key, 'tc_L', 'Task 373: ТХК (L) после ТХКн (E)');
+        assertEqual(cat[9].key, 'tc_L', 'Task 490: ТХК (L) сразу после ТХА (K)');
         assertEqual(cat[16].key, 'tc_B', 'последний ТП — ТПР (B)');
     });
 
@@ -546,15 +550,15 @@ describe('Task 372 — VM: расчёт по выбранному датчику
 // ============================================================
 // E. SW v601 (guard v602)
 // ============================================================
-describe('Task 372 — SW: версия кэша kipia-test-v713', () => {
+describe('Task 372 — SW: версия кэша kipia-test-v714', () => {
 
-    test('CACHE_VERSION = kipia-test-v713', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v713'") !== -1,
+    test('CACHE_VERSION = kipia-test-v714', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v714'") !== -1,
             'SW бампнут до v601');
     });
 
     test('Guard: v605 ещё не существует', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v714') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v715') === -1,
             'v602 не должен существовать (следующий бамп)');
     });
 });
