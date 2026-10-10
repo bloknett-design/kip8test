@@ -76,8 +76,6 @@ describe('Task 371 — SRC: блок «Расчёт произвольных з�
         assertTrue(iPanel < iRange && iPanel < iStep, 'панель НАД формой (заявка Task 373)');
         const panelChunk = INDEX_SRC.slice(iPanel, iRange);
         for (const chunk2 of [
-            'Расчёт произвольных значений',
-            'Введите значение в любое поле — другое рассчитается автоматически',
             'id="tempQueryTemp"',
             'id="tempQueryVal"',
             'id="tempQueryValLabel"',
@@ -87,6 +85,11 @@ describe('Task 371 — SRC: блок «Расчёт произвольных з�
         ]) {
             assertTrue(panelChunk.indexOf(chunk2) !== -1, 'панель содержит: ' + chunk2);
         }
+        // Task 494 (адаптация): заголовок и подсказка панели УДАЛЕНЫ
+        assertTrue(panelChunk.indexOf('Расчёт произвольных значений') === -1,
+            'Task 494: заголовка панели в разметке НЕТ (удалён)');
+        assertTrue(panelChunk.indexOf('Введите значение в любое поле') === -1,
+            'Task 494: подсказки панели в разметке НЕТ (удалена)');
     });
 
     test('Task 373: calcTempSensor НЕ генерирует панель (генератор удалён)', () => {
@@ -479,15 +482,15 @@ describe('Task 371 — VM: calcTempSensor — таблица в результа
 // ============================================================
 // D. SW v600 (guard v601)
 // ============================================================
-describe('Task 371 — SW: версия кэша kipia-test-v717', () => {
+describe('Task 371 — SW: версия кэша kipia-test-v718', () => {
 
-    test('CACHE_VERSION = kipia-test-v717', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v717'") !== -1,
+    test('CACHE_VERSION = kipia-test-v718', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v718'") !== -1,
             'SW бампнут до v600');
     });
 
     test('Guard: v605 ещё не существует', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v718') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v719') === -1,
             'v601 не должен существовать (следующий бамп)');
     });
 });

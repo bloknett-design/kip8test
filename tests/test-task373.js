@@ -196,7 +196,9 @@ describe('Task 373 — SRC: панель расчёта над формой + Т
         assertTrue(b.indexOf('id="tempQueryValLabel"') !== -1, 'подпись второго поля (меняется под тип)');
         assertTrue(b.indexOf('oninput="tempQueryFromTemp()"') !== -1, 'живой расчёт t→значение');
         assertTrue(b.indexOf('oninput="tempQueryFromValue()"') !== -1, 'живой расчёт значение→t');
-        assertTrue(b.indexOf('Введите значение в любое поле') !== -1, 'подсказка панели');
+        // Task 494 (адаптация): подсказка панели УДАЛЕНА по заявке
+        assertTrue(b.indexOf('Введите значение в любое поле') === -1,
+            'Task 494: подсказки панели НЕТ (удалена)');
     });
 
     test('Старая панель под таблицей удалена', () => {
@@ -621,15 +623,15 @@ describe('Task 373 — VM: страница датчика — панель, з�
 // ============================================================
 // F. SW v602 (guard v603)
 // ============================================================
-describe('Task 373 — SW: версия кэша kipia-test-v717', () => {
+describe('Task 373 — SW: версия кэша kipia-test-v718', () => {
 
-    test('CACHE_VERSION = kipia-test-v717', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v717'") !== -1,
+    test('CACHE_VERSION = kipia-test-v718', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v718'") !== -1,
             'SW бампнут до v602');
     });
 
     test('Guard: v605 ещё не существует', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v718') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v719') === -1,
             'v603 не должен существовать (следующий бамп)');
     });
 });

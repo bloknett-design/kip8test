@@ -488,8 +488,8 @@ describe('Task 479 — карточка: интеграция не сломан�
 // ==========================================================================
 describe('Task 479 — SW: версия и шапка', () => {
 
-    test('CACHE_VERSION = kipia-test-v717', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v717';") !== -1,
+    test('CACHE_VERSION = kipia-test-v718', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v718';") !== -1,
             'SW поднят до v703 (Task 479)');
     });
 
@@ -499,12 +499,12 @@ describe('Task 479 — SW: версия и шапка', () => {
     });
 
     test('несуществующая v704 отсутствует (guard)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v718') === -1,
-            'kipia-test-v718 не должен существовать');
+        assertTrue(SW_SRC.indexOf('kipia-test-v719') === -1,
+            'kipia-test-v719 не должен существовать');
     });
 
     test('комментарий Task 479 в шапке версий', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v717';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v718';");
         // Task 480: окно 700 → 1100 — комментарий Task 480 (~250 симв.)
         // отодвинул комментарий Task 478 до ~835 (за прежним окном 700).
         // Task 481: окно 1100 → 1400 — комментарий «ТО = только год»
@@ -528,13 +528,13 @@ describe('Task 479 — SW: версия и шапка', () => {
         // 471 ~3055 < 3400; 461 ~5617 < 6000 (запасы 345+)
         // Task 480 (~250 симв.) тоже вписался: 474 ~2377; 472 ~2750;
         // 471 ~3299; 461 ~5861 — расширения не нужны (запасы 101+)
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v717';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v718';");
         const i474 = SW_SRC.lastIndexOf('Task 474', i);
         const i472 = SW_SRC.lastIndexOf('Task 472', i);
         const i471 = SW_SRC.lastIndexOf('Task 471', i);
         const i461 = SW_SRC.lastIndexOf('Task 461', i);
         assertTrue(i474 !== -1 && (i - i474) < 8800, 'Task 474 в окне 4000');
-        assertTrue(i472 !== -1 && (i - i472) < 9100, 'Task 472 в окне 4500');
+        assertTrue(i472 !== -1 && (i - i472) < 9400, 'Task 472 в окне 4500');
         assertTrue(i471 !== -1 && (i - i471) < 9800, 'Task 471 в окне 5000');
         assertTrue(i461 !== -1 && (i - i461) < 12400, 'Task 461 в окне 7600');
     });

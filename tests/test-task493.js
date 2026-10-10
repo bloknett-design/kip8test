@@ -161,16 +161,16 @@ describe('Task 493 — кнопка «Табель учёта» (переиме�
     });
 
     test('SW: версия кеша поднята до v717', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v717';") !== -1,
-            'CACHE_VERSION = kipia-test-v717');
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v718';") !== -1,
+            'CACHE_VERSION = kipia-test-v718');
         assertTrue(SW_SRC.indexOf('kipia-test-v716') === -1,
             'v716 в sw.js отсутствует (ровно один инкремент)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v718') !== -1,
+        assertFalse(SW_SRC.indexOf('kipia-test-v719') !== -1,
             'v718 не существует (guard)');
     });
 
     test('SW: комментарий Task 493 в шапке версий', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v717';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v718';");
         const ctx = SW_SRC.slice(Math.max(0, i - 900), i);
         assertTrue(ctx.indexOf('Task 493') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('Табель учёта') !== -1, 'описание переименования');
