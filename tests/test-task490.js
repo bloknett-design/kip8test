@@ -19,9 +19,9 @@
 //      textContent = «50М (Cu50)» / «R₀ = 50 Ом · α = 0,00428 °C⁻¹»);
 //      ТП-карточки без спанов (наименование с градуировкой); порядок
 //      onclick-ключей ТП; ТХА (K) и ТХК (L) — СОСЕДНИЕ карточки.
-//   D. VM — пары ТС с одинаковой градуировкой: строки сетки
-//      (50М+100М α 0,00428), (50М+100М α 0,00426), (50П+100П
-//      0,00391 ГОСТ), (Pt100+Pt1000 0,00385 IEC) — по α пары.
+//   D. VM — пары ТС по градуировке (Task 491: 50М+50М, 100М+
+//      100М — одинаковая градуировка, разные α; 50П+100П,
+//      Pt100+Pt1000 — пары Task 490 без изменений).
 //   E. SW v714 (guard v715).
 
 const fs = require('fs');
@@ -158,7 +158,8 @@ describe('Task 490 — SRC: мобильная сетка по две в стр�
     });
 
     test('Узкие экраны (≤400px): компактнее шрифты/отступы', () => {
-        assertTrue(INDEX_SRC.indexOf('@media (max-width: 400px) { .ts-card { padding: 9px 10px 10px; } .ts-card-name { font-size: 14px; } .ts-card-meta { font-size: 10.5px; } }') !== -1,
+        // Task 491: строка дополнена featured-правилом (17px)
+        assertTrue(INDEX_SRC.indexOf('@media (max-width: 400px) { .ts-card { padding: 9px 10px 10px; } .ts-card-name { font-size: 14px; } .ts-card-meta { font-size: 10.5px; } .ts-card-feat .ts-card-name { font-size: 17px; } }') !== -1,
             'компактная кнопка на узких экранах');
     });
 });
@@ -174,6 +175,14 @@ describe('Task 490 — SRC: порядок термопар парами', () =>
             'новый порядок ТП');
         assertTrue(fn.indexOf("['K','J','T','N','E','L','R','S','B']") === -1,
             'старый порядок удалён');
+    });
+
+    test('Каталог ТС (Task 491): 50М+50М, затем 100М+100М', () => {
+        const fn = grabFn('getTempSensorCatalog');
+        assertTrue(fn.indexOf("['cu50_1428','cu50_1426','cu100_1428','cu100_1426'") !== -1,
+            'новый порядок ТС (Task 491: одинаковые градуировки рядом)');
+        assertTrue(fn.indexOf("['cu50_1428','cu100_1428','cu50_1426','cu100_1426'") === -1,
+            'старый порядок ТС (Task 490: 50М+100М) удалён');
     });
 });
 
@@ -237,8 +246,8 @@ describe('Task 490 — VM: рендер компактных кнопок', () =
         vmw.api.renderTempSensorCards();
         const rtd = vmw.els['tsRtdCards'].innerHTML;
         const tc = vmw.els['tsTcCards'].innerHTML;
-        assertEqual((rtd.match(/class="ts-card"/g) || []).length, 8, '8 ТС');
-        assertEqual((tc.match(/class="ts-card ts-card-tc"/g) || []).length, 9, '9 ТП');
+        assertEqual((rtd.match(/class="ts-card[ "]/g) || []).length, 8, '8 ТС');
+        assertEqual((tc.match(/class="ts-card ts-card-tc[ "]/g) || []).length, 9, '9 ТП');
         assertEqual((rtd.match(/ts-card-fav-btn/g) || []).length, 8, 'звёзды ТС');
         assertEqual((tc.match(/ts-card-fav-btn/g) || []).length, 9, 'звёзды ТП');
     });
@@ -249,21 +258,28 @@ describe('Task 490 — VM: рендер компактных кнопок', () =
 // ============================================================
 describe('Task 490 — VM: пары ТС по градуировке', () => {
 
-    test('Строки сетки: 50М+100М одной α, 50П+100П, Pt100+Pt1000', () => {
+    test('Строки сетки: 50М+50М, 100М+100М (Task 491), 50П+100П, Pt100+Pt1000', () => {
         const vmw = makeVm490();
         const cat = vmw.api.getTempSensorCatalog();
         const rtd = cat.filter(s => s.kind === 'rtd');
         assertEqual(rtd.length, 8, '8 ТС');
-        // пары (0,1) (2,3) (4,5) (6,7): у каждой пары один α
+        // Task 491: пары (0,1)=(50М,50М), (2,3)=(100М,100М) —
+        // одинаковая градуировка, РАЗНЫЕ α; (4,5)=(50П,100П),
+        // (6,7)=(Pt100,Pt1000) — пары Task 490 (семья НСХ)
+        const mainOf = s => s.name.slice(0, s.name.indexOf(' ('));
+        assertEqual(mainOf(rtd[0]), '50М', 'кнопка 1: 50М');
+        assertEqual(mainOf(rtd[1]), '50М', 'кнопка 2: 50М рядом (Task 491)');
+        assertEqual(mainOf(rtd[2]), '100М', 'кнопка 3: 100М');
+        assertEqual(mainOf(rtd[3]), '100М', 'кнопка 4: 100М рядом (Task 491)');
+        assertEqual(mainOf(rtd[4]), '50П', 'пара 3: 50П');
+        assertEqual(mainOf(rtd[5]), '100П', 'пара 3: 100П');
+        assertEqual(mainOf(rtd[6]), 'Pt100', 'пара 4: Pt100');
+        assertEqual(mainOf(rtd[7]), 'Pt1000', 'пара 4: Pt1000');
         const alphaOf = s => s.meta.slice(s.meta.indexOf('α'));
-        for (let i = 0; i < 8; i += 2) {
-            assertEqual(alphaOf(rtd[i]), alphaOf(rtd[i + 1]),
-                'пара ' + (i / 2 + 1) + ': одинаковый температурный коэффициент (' + rtd[i].name + ' + ' + rtd[i + 1].name + ')');
-        }
-        assertEqual(alphaOf(rtd[0]), 'α = 0,00428 °C⁻¹', 'пара 1: М 0,00428');
-        assertEqual(alphaOf(rtd[2]), 'α = 0,00426 °C⁻¹', 'пара 2: М 0,00426');
-        assertEqual(alphaOf(rtd[4]), 'α = 0,00391 (ГОСТ)', 'пара 3: П ГОСТ');
-        assertEqual(alphaOf(rtd[6]), 'α = 0,00385 (IEC)', 'пара 4: Pt IEC');
+        assertEqual(alphaOf(rtd[0]), 'α = 0,00428 °C⁻¹', 'пара 50М №1: 0,00428');
+        assertEqual(alphaOf(rtd[1]), 'α = 0,00426 °C⁻¹', 'пара 50М №2: 0,00426');
+        assertEqual(alphaOf(rtd[2]), 'α = 0,00428 °C⁻¹', 'пара 100М №1: 0,00428');
+        assertEqual(alphaOf(rtd[3]), 'α = 0,00426 °C⁻¹', 'пара 100М №2: 0,00426');
     });
 });
 
@@ -272,9 +288,9 @@ describe('Task 490 — VM: пары ТС по градуировке', () => {
 // ============================================================
 describe('Task 490 — SW: версия кеша', () => {
 
-    test('SW: кэш поднят до kipia-test-v714', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v714'") !== -1,
-            'CACHE_VERSION = kipia-test-v714 (Task 490)');
+    test('SW: кэш поднят до kipia-test-v715', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v715'") !== -1,
+            'CACHE_VERSION = kipia-test-v715 (Task 490)');
         assertFalse(SW_SRC.indexOf('kipia-test-v713') !== -1,
             'старой версии v713 нет');
     });

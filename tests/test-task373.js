@@ -433,8 +433,8 @@ describe('Task 373 — VM: карточки — звёзды, таб «Избр�
         vmw.api.renderTempSensorCards();
         const rtd = vmw.els['tsRtdCards'].innerHTML;
         const tc = vmw.els['tsTcCards'].innerHTML;
-        assertEqual((rtd.match(/class="ts-card"/g) || []).length, 8, '8 ТС-карточек');
-        assertEqual((tc.match(/class="ts-card ts-card-tc"/g) || []).length, 9, '9 ТП-карточек');
+        assertEqual((rtd.match(/class="ts-card[ "]/g) || []).length, 8, '8 ТС-карточек');
+        assertEqual((tc.match(/class="ts-card ts-card-tc[ "]/g) || []).length, 9, '9 ТП-карточек');
         const all = rtd + tc;
         assertEqual((all.match(/ts-card-fav-btn/g) || []).length, 17, 'звёздочка на каждой карточке');
         assertTrue(all.indexOf('>ТС</span>') === -1, 'бейджа ТС нет');
@@ -468,8 +468,8 @@ describe('Task 373 — VM: карточки — звёзды, таб «Избр�
         vmw.api.renderTempSensorCards();
         const rtd = vmw.els['tsRtdCards'].innerHTML;
         const tc = vmw.els['tsTcCards'].innerHTML;
-        assertEqual((rtd.match(/class="ts-card"/g) || []).length, 1, '1 ТС (Pt100)');
-        assertEqual((tc.match(/class="ts-card ts-card-tc"/g) || []).length, 1, '1 ТП (ТХК L)');
+        assertEqual((rtd.match(/class="ts-card[ "]/g) || []).length, 1, '1 ТС (Pt100)');
+        assertEqual((tc.match(/class="ts-card ts-card-tc[ "]/g) || []).length, 1, '1 ТП (ТХК L)');
         assertTrue(rtd.indexOf('Pt100 (IEC)') !== -1, 'карточка Pt100');
         assertTrue(tc.indexOf('ТХК (L)') !== -1, 'карточка ТХК (L)');
         // обе группы непустые — заголовки видимы
@@ -478,7 +478,7 @@ describe('Task 373 — VM: карточки — звёзды, таб «Избр�
         // уберём ТС из избранного — заголовок ТС скроется
         vmw.api.TempFav.remove('pt100_1385');
         vmw.api.renderTempSensorCards();
-        assertEqual((vmw.els['tsRtdCards'].innerHTML.match(/class="ts-card"/g) || []).length, 0, 'ТС-карточек нет');
+        assertEqual((vmw.els['tsRtdCards'].innerHTML.match(/class="ts-card[ "]/g) || []).length, 0, 'ТС-карточек нет');
         assertEqual(vmw.els['tsRtdGroupTitle'].style.display, 'none', 'заголовок ТС скрыт');
         assertEqual(vmw.els['tsTcGroupTitle'].style.display, '', 'заголовок ТП виден');
     });
@@ -504,7 +504,7 @@ describe('Task 373 — VM: карточки — звёзды, таб «Избр�
             'перерисовка в режиме «Избранные»');
         vmw.api.setTempSensorsTab('all');
         assertEqual(vmw.api.getTab(), 'all', 'таб обратно');
-        assertEqual((vmw.els['tsRtdCards'].innerHTML.match(/class="ts-card"/g) || []).length, 8,
+        assertEqual((vmw.els['tsRtdCards'].innerHTML.match(/class="ts-card[ "]/g) || []).length, 8,
             'снова все 8 ТС');
     });
 
@@ -621,15 +621,15 @@ describe('Task 373 — VM: страница датчика — панель, з�
 // ============================================================
 // F. SW v602 (guard v603)
 // ============================================================
-describe('Task 373 — SW: версия кэша kipia-test-v714', () => {
+describe('Task 373 — SW: версия кэша kipia-test-v715', () => {
 
-    test('CACHE_VERSION = kipia-test-v714', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v714'") !== -1,
+    test('CACHE_VERSION = kipia-test-v715', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v715'") !== -1,
             'SW бампнут до v602');
     });
 
     test('Guard: v605 ещё не существует', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v715') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v716') === -1,
             'v603 не должен существовать (следующий бамп)');
     });
 });
