@@ -345,8 +345,10 @@ describe('Task 483: devices.json — блок ppr_chart', () => {
     });
 
     test('структура devices.json не задета (массив и заголовки прежние)', () => {
-        assertEqual(DEVICES_JSON.total_devices, 1291, 'total_devices прежний');
-        assertEqual(DEVICES_JSON.devices.length, 1291, 'массив прежний');
+        // Task 491 (rebase поверх авто-синка 5238816d): 1291 → 1288 —
+        // пользователь удалил 3 прибора в Google Sheets
+        assertEqual(DEVICES_JSON.total_devices, 1288, 'total_devices прежний');
+        assertEqual(DEVICES_JSON.devices.length, 1288, 'массив прежний');
         assertEqual(DEVICES_JSON.headers.length, 24, '24 колонки');
         assertEqual(DEVICES_JSON.headers[0], 'ID', 'ID первый');
     });

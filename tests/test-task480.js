@@ -235,8 +235,11 @@ describe('Task 480 — GitHub Actions workflows', () => {
 // ==========================================================================
 describe('Task 480 — data/*.json: метаданные источника', () => {
 
+    // Task 491 (rebase поверх авто-синка 5238816d): пользователь удалил
+    // 3 прибора в Google Sheets — devices 1291 → 1288 (данные живые,
+    // structure/лист/остальные файлы не тронуты)
     const TOTALS = {
-        'data/devices.json':    { total: 'total_devices',    value: 1291, sheet: 'Приборы_app' },
+        'data/devices.json':    { total: 'total_devices',    value: 1288, sheet: 'Приборы_app' },
         'data/lockouts.json':   { total: 'total_lockouts',   value: 531,  sheet: 'Блокировки_app' },
         'data/valves.json':     { total: 'total_valves',     value: 320,  sheet: 'Клапана_app' },
         'data/regulators.json': { total: 'total_regulators', value: 268,  sheet: 'Регуляторы_app' }
