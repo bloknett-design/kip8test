@@ -746,6 +746,7 @@ require('./test-task494.js');
 // + ts-calc-field), но с эффектом УГЛУБЛЕНИЯ (модификатор ts-calc-inset).
 // SW v719. Адаптации: 372/373 (чип), 494 (граница чанка панели).
 require('./test-task495.js');
+require('./test-task496.js');
 require('./test-deploy-url.js');
 
 // Запускаем
