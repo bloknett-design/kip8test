@@ -157,9 +157,12 @@ describe('Task 490 — SRC: мобильная сетка по две в стр�
             'новых десктоп-оверрайдов не добавлено');
     });
 
-    test('Узкие экраны (≤400px): компактнее шрифты/отступы', () => {
+    test('Узкие экраны (≤400px): компактнее отступы, крупный шрифт (Task 492)', () => {
         // Task 491: строка дополнена featured-правилом (17px)
-        assertTrue(INDEX_SRC.indexOf('@media (max-width: 400px) { .ts-card { padding: 9px 10px 10px; } .ts-card-name { font-size: 14px; } .ts-card-meta { font-size: 10.5px; } .ts-card-feat .ts-card-name { font-size: 17px; } }') !== -1,
+        // Task 492 (адаптация): meta 10.5px и feat-правило удалены —
+        // крупный шрифт (Task 491) стал базовым у ВСЕХ кнопок
+        // (имя 17px ≤400px, meta 12px наследуется из блока ≤1023px)
+        assertTrue(INDEX_SRC.indexOf('@media (max-width: 400px) { .ts-card { padding: 9px 10px 10px; } .ts-card-name { font-size: 17px; } }') !== -1,
             'компактная кнопка на узких экранах');
     });
 });
@@ -288,9 +291,9 @@ describe('Task 490 — VM: пары ТС по градуировке', () => {
 // ============================================================
 describe('Task 490 — SW: версия кеша', () => {
 
-    test('SW: кэш поднят до kipia-test-v715', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v715'") !== -1,
-            'CACHE_VERSION = kipia-test-v715 (Task 490)');
+    test('SW: кэш поднят до kipia-test-v716', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v716'") !== -1,
+            'CACHE_VERSION = kipia-test-v716 (Task 490)');
         assertFalse(SW_SRC.indexOf('kipia-test-v713') !== -1,
             'старой версии v713 нет');
     });

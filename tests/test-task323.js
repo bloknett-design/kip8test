@@ -36,7 +36,7 @@
 //   clientHeight (ползунок), syncTT в конце; рендеры: tfoot
 //   «Итого», БЕЗ .ws-tt-scroll, ws-tt-year (год), год: активные
 //   по порядку сетки + архив ниже; инфо в title.
-//   SW: kipia-test-v715.
+//   SW: kipia-test-v716.
 //
 // Запуск: через tests/run-all.js (require './test-task323.js').
 
@@ -146,8 +146,16 @@ describe('Task 323 — CSS: шторка, шапка, ползунок', () => {
     });
 
     test('CSS: шторка — ширина по столбцам, JS-маржа (Task 323→324→329)', () => {
-        const d = INDEX_SRC.match(/@media \(min-width: 1024px\)\s*\{[\s\S]*?\.ws-tt-drawer\s*\{[^}]*\}/);
-        assertTrue(!!d, 'десктопное правило шторки');
+        // Task 492 (адаптация): в шапке CSS появилось новое @media
+        // (min-width: 1024px) (ts-bottom-bar — датчики температуры),
+        // и прежний regex «от ПЕРВОГО @media в файле до .ws-tt-drawer»
+        // стал захватывать лишний CSS (width: 50% из чужих правил).
+        // Теперь блок ищется от самого .ws-tt-drawer НАЗАД до ближайшего
+        // @media (min-width: 1024px) — это тот же блок, что и прежде.
+        const iTt = INDEX_SRC.indexOf('.ws-tt-drawer {');
+        const iMedia = INDEX_SRC.lastIndexOf('@media (min-width: 1024px)', iTt);
+        assertTrue(iTt !== -1 && iMedia !== -1, 'десктопное правило шторки');
+        const d = [INDEX_SRC.slice(iMedia, INDEX_SRC.indexOf('}', iTt) + 1)];
         // Task 329 (заявка): ширина — РОВНО ПО СТОЛБЦАМ таблицы (JS
         // _fitTtDrawer в px), не половина области; кап 60%
         assertTrue(d[0].indexOf('max-width: 60%') !== -1,
@@ -798,10 +806,10 @@ describe('Task 323 — интеграция', () => {
 // 10. SW: версия кэша
 // ============================================================
 describe('Task 323 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v715 (Task 323)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v715'") !== -1,
-            'CACHE_VERSION = kipia-test-v715');
-        assertFalse(SW_SRC.indexOf('kipia-test-v716') !== -1,
+    test('SW: кэш поднят до kipia-test-v716 (Task 323)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v716'") !== -1,
+            'CACHE_VERSION = kipia-test-v716');
+        assertFalse(SW_SRC.indexOf('kipia-test-v717') !== -1,
             'v566 не существует (один инкремент на Task 326)');
     });
 });

@@ -24,6 +24,17 @@
 //      (ТХА (K), ТХК (L)); порядок ключей ТС в HTML; в режиме
 //      «Избранные» featured-класс сохраняется, у не-популярных его нет.
 //   F. SW v715 (guard v716).
+//
+// ADAPTATION Task 492 (заявка: «Оформление кнопок верни как прежде,
+//   но шрифт текста оставь как есть и сделай такой же на остальных
+//   кнопках, и оформление кнопок добавленных в избранное сделай как
+//   сейчас выделенным»): featured-ОФОРМЛЕНИЕ (ts-card-feat: рамка 2px,
+//   градиент, эффект выступа) теперь вешается по isFav (избранное),
+//   НЕ по популярным градуировкам; КРУПНЫЙ ШРИФТ (19/12, ≤400px 17)
+//   перенесён в базовые правила .ts-card-name/.ts-card-meta мобильного
+//   блока — правила «.ts-card-feat имя/meta» УДАЛЕНЫ; каталог (пары
+//   50М+50М/100М+100М) и автооткрытие «Избранного» НЕ тронуты. В этом
+//   файле тесты B/C/E переписаны под новую семантику; SW — v716.
 
 const fs = require('fs');
 const path = require('path');
@@ -171,14 +182,22 @@ describe('Task 491 — SRC: CSS .ts-card-feat — выступ и размеры
             'тень внутрь при :active');
     });
 
-    test('Шрифт крупнее: имя 19px, meta 12px (≤400px — 17px)', () => {
+    test('Шрифт крупный: база 19px/12px у ВСЕХ кнопок (Task 492)', () => {
+        // Task 492 (адаптация): правила «.ts-card-feat имя/meta» удалены —
+        // крупный шрифт из Task 491 перенесён в базовые правила мобильного
+        // блока (.ts-card-name 19px / .ts-card-meta 12px), т.е. у ВСЕХ
+        // кнопок; ≤400px: имя 17px (базовое, бывшее featured)
         const mob = mobileBlock();
-        assertTrue(mob.indexOf('.ts-card-feat .ts-card-name { font-size: 19px; }') !== -1,
-            'имя 19px (база 15px)');
-        assertTrue(mob.indexOf('.ts-card-feat .ts-card-meta { font-size: 12px; }') !== -1,
-            'meta 12px (база 11px)');
-        assertTrue(INDEX_SRC.indexOf('.ts-card-feat .ts-card-name { font-size: 17px; } }') !== -1,
-            '≤400px: имя 17px (база 14px)');
+        assertTrue(mob.indexOf('.ts-card-name { font-size: 19px; }') !== -1,
+            'имя 19px — база (Task 492)');
+        assertTrue(mob.indexOf('.ts-card-meta { font-size: 12px; }') !== -1,
+            'meta 12px — база (Task 492)');
+        assertTrue(mob.indexOf('.ts-card-feat .ts-card-name { font-size: 19px; }') === -1,
+            'feat-правила шрифта удалены (шрифт общий)');
+        assertTrue(mob.indexOf('.ts-card-feat .ts-card-meta { font-size: 12px; }') === -1,
+            'feat-правила meta удалены');
+        assertTrue(INDEX_SRC.indexOf('@media (max-width: 400px) { .ts-card { padding: 9px 10px 10px; } .ts-card-name { font-size: 17px; } }') !== -1,
+            '≤400px: имя 17px — базовое (бывш. featured)');
     });
 
     test('Светлая тема: мягкие тени и свой бордер', () => {
@@ -197,9 +216,10 @@ describe('Task 491 — SRC: CSS .ts-card-feat — выступ и размеры
             outside.indexOf('.ts-card-feat .ts-card-name { font-size: 19px; }') === -1;
         assertTrue(cssOutside, 'за пределами мобильного блока — только 400px/комментарии');
         assertTrue(mob.indexOf('.ts-card-feat') !== -1, 'внутри мобильного блока есть');
-        // ≤400px — отдельный однострочный блок с featured-шрифтом
-        assertTrue(INDEX_SRC.indexOf('@media (max-width: 400px) { .ts-card { padding: 9px 10px 10px; } .ts-card-name { font-size: 14px; } .ts-card-meta { font-size: 10.5px; } .ts-card-feat .ts-card-name { font-size: 17px; } }') !== -1,
-            'узкий блок ≤400px дополнен featured-правилом');
+        // ≤400px — базовый крупный шрифт (Task 492: meta 10.5px и
+        // feat-правило удалены — шрифт един для всех кнопок)
+        assertTrue(INDEX_SRC.indexOf('@media (max-width: 400px) { .ts-card { padding: 9px 10px 10px; } .ts-card-name { font-size: 17px; } }') !== -1,
+            'узкий блок ≤400px — базовое имя 17px, без feat-правил');
     });
 });
 
@@ -208,15 +228,24 @@ describe('Task 491 — SRC: CSS .ts-card-feat — выступ и размеры
 // ============================================================
 describe('Task 491 — SRC: рендер и автооткрытие «Избранных»', () => {
 
-    test('renderTempSensorCards: условие featured (cu50_/cu100_, tc K/L)', () => {
+    test('renderTempSensorCards: условие featured = isFav (Task 492)', () => {
         const fn = grabFn('renderTempSensorCards');
         assertTrue(fn !== null, 'функция объявлена');
-        assertTrue(fn.indexOf("String(s.key).indexOf('cu50_')===0||String(s.key).indexOf('cu100_')===0") !== -1,
-            'ТС: обе 50М и обе 100М');
-        assertTrue(fn.indexOf("s.tc==='K'||s.tc==='L'") !== -1,
-            'ТП: ТХА (K) и ТХК (L)');
+        // Task 492: feat = isFav (избранное); условия популярных
+        // градуировок из Task 491 удалены
+        assertTrue(fn.indexOf('let feat=isFav;') !== -1,
+            'feat = isFav (кнопки в избранном)');
+        assertTrue(fn.indexOf("String(s.key).indexOf('cu50_')===0") === -1,
+            'условие популярных ТС (50М) удалено');
+        assertTrue(fn.indexOf("s.tc==='K'||s.tc==='L'") === -1,
+            'условие популярных ТП (K/L) удалено');
         assertTrue(fn.indexOf("+(feat?' ts-card-feat':'')+") !== -1,
             'класс добавляется в разметку карточки');
+        // Task 492: счётчики в двух экземплярах (верх + нижний бар)
+        assertTrue(fn.indexOf("getElementById('tsAllCountMob')") !== -1,
+            'счётчик tsAllCountMob (нижний бар)');
+        assertTrue(fn.indexOf("getElementById('tsFavCountMob')") !== -1,
+            'счётчик tsFavCountMob (нижний бар)');
     });
 
     test('navigateTo(temp-sensors): есть избранное → вкладка «Избранные»', () => {
@@ -245,23 +274,26 @@ describe('Task 491 — SRC: рендер и автооткрытие «Избр�
 // ============================================================
 // D/E. VM — рендер карточек с featured-классом
 // ============================================================
-describe('Task 491 — VM: featured-класс на популярных кнопках', () => {
+describe('Task 491 — VM: featured-класс (Task 492: на избранном)', () => {
 
-    test('4 ТС с ts-card-feat (обе 50М, обе 100М), 4 ТС без', () => {
+    test('Без избранного: 0 featured ТС, все 8 обычные (Task 492)', () => {
         const vmw = makeVm491();
         vmw.api.renderTempSensorCards();
         const rtd = vmw.els['tsRtdCards'].innerHTML;
-        assertEqual((rtd.match(/class="ts-card ts-card-feat"/g) || []).length, 4, '4 featured ТС');
-        assertEqual((rtd.match(/class="ts-card"/g) || []).length, 4, '4 обычных ТС (Pt)');
-        assertEqual((rtd.match(/class="ts-card[ "]/g) || []).length, 8, 'всего 8 ТС');
+        assertEqual((rtd.match(/class="ts-card ts-card-feat"/g) || []).length, 0, '0 featured ТС (feat=избранное)');
+        assertEqual((rtd.match(/class="ts-card"/g) || []).length, 8, 'все 8 ТС обычные');
+        assertFalse(rtd.indexOf('ts-card-feat') !== -1,
+            'популярные 50М/100М больше НЕ featured (Task 492)');
     });
 
-    test('2 ТП с ts-card-feat (ТХА (K), ТХК (L)), 7 ТП без', () => {
+    test('Без избранного: 0 featured ТП, все 9 обычные (Task 492)', () => {
         const vmw = makeVm491();
         vmw.api.renderTempSensorCards();
         const tc = vmw.els['tsTcCards'].innerHTML;
-        assertEqual((tc.match(/class="ts-card ts-card-tc ts-card-feat"/g) || []).length, 2, '2 featured ТП');
-        assertEqual((tc.match(/class="ts-card ts-card-tc"/g) || []).length, 7, '7 обычных ТП');
+        assertEqual((tc.match(/class="ts-card ts-card-tc ts-card-feat"/g) || []).length, 0, '0 featured ТП');
+        assertEqual((tc.match(/class="ts-card ts-card-tc"/g) || []).length, 9, 'все 9 ТП обычные');
+        assertFalse(tc.indexOf('ts-card-feat') !== -1,
+            'ТХА (K)/ТХК (L) больше НЕ featured (Task 492)');
     });
 
     test('Порядок ТС в HTML: 50М, 50М, 100М, 100М, 50П, 100П, Pt100, Pt1000', () => {
@@ -277,7 +309,7 @@ describe('Task 491 — VM: featured-класс на популярных кно�
             'пары 50М+50М и 100М+100М (Task 491)');
     });
 
-    test('Избранные: featured-класс сохраняется у 50М, у обычных его нет', () => {
+    test('Избранные: featured-класс у избранного (Task 492)', () => {
         const vmw = makeVm491();
         vmw.api.TempFav.add('cu50_1426');
         vmw.api.TempFav.add('tc_J');
@@ -285,10 +317,24 @@ describe('Task 491 — VM: featured-класс на популярных кно�
         vmw.api.renderTempSensorCards();
         const rtd = vmw.els['tsRtdCards'].innerHTML;
         const tc = vmw.els['tsTcCards'].innerHTML;
-        assertEqual((rtd.match(/class="ts-card ts-card-feat"/g) || []).length, 1, '1 ТС — featured 50М');
+        assertEqual((rtd.match(/class="ts-card ts-card-feat"/g) || []).length, 1, '1 ТС — featured 50М (в избранном)');
         assertTrue(rtd.indexOf("openTempSensor('cu50_1426')") !== -1, 'карточка 50М (0,00426)');
-        assertEqual((tc.match(/class="ts-card ts-card-tc"/g) || []).length, 1, '1 ТП (ТЖК J)');
-        assertFalse(tc.indexOf('ts-card-feat') !== -1, 'у ТЖК (J) featured нет');
+        // Task 492: ТЖК (J) — В избранном → featured (не как в Task 491)
+        assertEqual((tc.match(/class="ts-card ts-card-tc ts-card-feat"/g) || []).length, 1, '1 ТП — featured ТЖК (J)');
+        assertTrue(tc.indexOf("openTempSensor('tc_J')") !== -1, 'карточка ТЖК (J) в «Избранных»');
+        vmw.api.setTempSensorsTab('all');
+    });
+
+    test('Вкладка «Все» с избранным: featured только у избранного', () => {
+        const vmw = makeVm491();
+        vmw.api.TempFav.add('pt1000_1385');
+        vmw.api.setTempSensorsTab('all');
+        vmw.api.renderTempSensorCards();
+        const rtd = vmw.els['tsRtdCards'].innerHTML;
+        assertEqual((rtd.match(/class="ts-card ts-card-feat"/g) || []).length, 1, 'только Pt1000 — featured');
+        assertTrue(rtd.indexOf("openTempSensor('pt1000_1385')") !== -1, 'карточка Pt1000');
+        const tc = vmw.els['tsTcCards'].innerHTML;
+        assertFalse(tc.indexOf('ts-card-feat') !== -1, 'в ТП избранного нет');
         vmw.api.setTempSensorsTab('all');
     });
 });
@@ -298,9 +344,9 @@ describe('Task 491 — VM: featured-класс на популярных кно�
 // ============================================================
 describe('Task 491 — SW: версия кеша', () => {
 
-    test('SW: кэш поднят до kipia-test-v715', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v715'") !== -1,
-            'CACHE_VERSION = kipia-test-v715 (Task 491)');
+    test('SW: кэш поднят до kipia-test-v716', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v716'") !== -1,
+            'CACHE_VERSION = kipia-test-v716 (Task 491)');
         assertFalse(SW_SRC.indexOf('kipia-test-v714') !== -1,
             'старой версии v714 нет');
     });

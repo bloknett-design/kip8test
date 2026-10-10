@@ -18,7 +18,7 @@
 //     печататься (баг из заявки); сноска листа ссылается на
 //     перечень выше.
 //
-// SW: kipia-test-v715.
+// SW: kipia-test-v716.
 //
 // Запуск: через tests/run-all.js (require './test-task362.js').
 
@@ -381,10 +381,10 @@ describe('Task 362 — VM: регресс прежних фич печати', (
 // ============================================================
 describe('Task 362 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v715', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v715'") !== -1,
-            'CACHE_VERSION = kipia-test-v715 (Task 362 — фронтенд)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v716') !== -1,
+    test('SW: кэш поднят до kipia-test-v716', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v716'") !== -1,
+            'CACHE_VERSION = kipia-test-v716 (Task 362 — фронтенд)');
+        assertFalse(SW_SRC.indexOf('kipia-test-v717') !== -1,
             'v605 ещё не существует (лишний инкремент)');
     });
 
