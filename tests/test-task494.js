@@ -35,10 +35,13 @@ const { test, describe, assertTrue, assertFalse } = require('./test-helpers.js')
 const INDEX_SRC = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 const SW_SRC = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
 
-// Чанк статичной панели: от id="tempCustomCalcPanel" до формы выбора
+// Чанк статичной панели: от id="tempCustomCalcPanel" до панели
+// таблицы Task 495 (id="tempTableFormPanel") — поля таблицы
+// (min/max/шаг) получили класс ts-calc-field в Task 495, поэтому
+// конец чанка перенесён с формы выбора на новую панель.
 function panelChunk() {
     const iPanel = INDEX_SRC.indexOf('id="tempCustomCalcPanel"');
-    const iRange = INDEX_SRC.indexOf('id="temp_sensor_min"');
+    const iRange = INDEX_SRC.indexOf('id="tempTableFormPanel"');
     if (iPanel === -1 || iRange === -1) return null;
     return INDEX_SRC.slice(iPanel, iRange);
 }
@@ -205,17 +208,17 @@ describe('Task 494 — SRC: панель без заголовка/подска�
 
 describe('Task 494 — SW: версия кеша v718', () => {
 
-    test('SW: CACHE_VERSION = kipia-test-v718, один инкремент', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v718';") !== -1,
-            'CACHE_VERSION = kipia-test-v718');
+    test('SW: CACHE_VERSION = kipia-test-v719, один инкремент', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v719';") !== -1,
+            'CACHE_VERSION = kipia-test-v719');
         assertFalse(SW_SRC.indexOf('kipia-test-v717') !== -1,
             'v717 в sw.js отсутствует (ровно один инкремент)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v719') !== -1,
+        assertFalse(SW_SRC.indexOf('kipia-test-v720') !== -1,
             'v719 не существует (guard)');
     });
 
     test('SW: комментарий Task 494 в шапке версий', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v718';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v719';");
         const ctx = SW_SRC.slice(Math.max(0, i - 900), i);
         assertTrue(ctx.indexOf('Task 494') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('tempCustomCalcPanel') !== -1,

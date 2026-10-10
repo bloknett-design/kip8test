@@ -105,7 +105,10 @@ describe('Task 372 — SRC: страница карточек и страниц�
         assertTrue(b !== null, 'страница есть');
         assertTrue(b.indexOf('class="page-content conv-3col-page">') !== -1, 'conv-3col-page');
         assertTrue(b.indexOf('id="tempSensorViewTitle"') !== -1, 'динамический заголовок');
-        assertTrue(b.indexOf('id="tempSensorViewChip"') !== -1, 'чип выбранного датчика');
+        assertFalse(b.indexOf('id="tempSensorViewChip"') !== -1,
+            'Task 495: чип типа датчика удалён из блока ввода');
+        assertTrue(b.indexOf('ts-calc-inset') !== -1,
+            'Task 495: блок таблицы — панель с углублением');
         assertTrue(b.indexOf('id="temp_sensor_min"') !== -1, 'поле min');
         assertTrue(b.indexOf('id="temp_sensor_max"') !== -1, 'поле max');
         assertTrue(b.indexOf('id="temp_sensor_step"') !== -1, 'поле шага');
@@ -181,9 +184,13 @@ describe('Task 372 — SRC: страница карточек и страниц�
 
     test('CSS карточек и чипа на месте', () => {
         for (const cls of ['.ts-cards-grid', '.ts-card {', '.ts-card-name', '.ts-card-fav-btn',
-                           '.ts-tabs', '#tempSensorFavBtn', '.ts-view-chip', '.ts-calc-panel']) {
+                           '.ts-tabs', '#tempSensorFavBtn', '.ts-calc-panel',
+                           '.ts-calc-panel.ts-calc-inset']) {
             assertTrue(INDEX_SRC.indexOf(cls) !== -1, 'есть правило ' + cls);
         }
+        // Task 495: правила чипа сняты как неиспользуемые
+        assertTrue(INDEX_SRC.indexOf('.ts-view-chip') === -1,
+            'Task 495: CSS-правила чипа удалены');
         // Task 373: бейджи карточек удалены
         assertTrue(INDEX_SRC.indexOf('.ts-card-badge') === -1, 'CSS бейджей карточек нет');
     });
@@ -366,9 +373,8 @@ describe('Task 372 — VM: openTempSensor — переход на страниц
         assertEqual(vmw.nav[0], 'temp-sensor-view', 'navigateTo на страницу датчика');
         assertEqual(vmw.els['tempSensorViewTitle'].textContent, '50М (Cu50) — термометр сопротивления',
             'заголовок страницы');
-        assertTrue(vmw.els['tempSensorViewChip'].innerHTML.indexOf('50М (Cu50)') !== -1, 'чип: имя');
-        assertTrue(vmw.els['tempSensorViewChip'].innerHTML.indexOf('R₀ = 50 Ом') !== -1, 'чип: meta');
-        assertTrue(vmw.els['tempSensorViewChip'].innerHTML.indexOf('ts-card-badge') === -1, 'Task 373: чип без бейджа');
+        assertFalse('tempSensorViewChip' in vmw.els,
+            'Task 495: чип удалён — openTempSensor его не трогает');
         assertEqual(vmw.els['tempQueryValLabel'].textContent, 'Сопротивление R(t), Ом', 'Task 373: подпись панели для ТС');
         assertEqual(vmw.els['temp_sensor_min'].value, '0', 'min = 0');
         assertEqual(vmw.els['temp_sensor_max'].value, '100', 'max = 100');
@@ -551,15 +557,15 @@ describe('Task 372 — VM: расчёт по выбранному датчику
 // ============================================================
 // E. SW v601 (guard v602)
 // ============================================================
-describe('Task 372 — SW: версия кэша kipia-test-v718', () => {
+describe('Task 372 — SW: версия кэша kipia-test-v719', () => {
 
-    test('CACHE_VERSION = kipia-test-v718', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v718'") !== -1,
+    test('CACHE_VERSION = kipia-test-v719', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v719'") !== -1,
             'SW бампнут до v601');
     });
 
     test('Guard: v605 ещё не существует', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v719') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v720') === -1,
             'v602 не должен существовать (следующий бамп)');
     });
 });

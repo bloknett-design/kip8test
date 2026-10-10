@@ -116,9 +116,9 @@ describe('Task 457/458 — SRC: отчёты без виртуального с�
 // ============================================================
 // 2. SRC — SW
 // ============================================================
-describe('Task 457 — SRC: SW kipia-test-v718', () => {
-    test('CACHE_VERSION = kipia-test-v718, прежней v680 нет', () => {
-        assertTrue(SW_SRC.indexOf("'kipia-test-v718'") !== -1,
+describe('Task 457 — SRC: SW kipia-test-v719', () => {
+    test('CACHE_VERSION = kipia-test-v719, прежней v680 нет', () => {
+        assertTrue(SW_SRC.indexOf("'kipia-test-v719'") !== -1,
             'новая версия SW v682');
         assertEqual(SW_SRC.indexOf("'kipia-test-v680'"), -1,
             'старой версии v680 не осталось');

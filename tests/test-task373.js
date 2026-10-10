@@ -127,10 +127,11 @@ describe('Task 373 — SRC: мобильные карточки и бейджи'
         // в заголовках групп бейджи остались (не карточки)
         assertTrue(INDEX_SRC.indexOf('.ts-group-badge-rtd') !== -1, 'групповой бейдж ТС на месте');
         assertTrue(INDEX_SRC.indexOf('.ts-group-badge-tc') !== -1, 'групповой бейдж ТП на месте');
-        // чип страницы датчика — без бейджа
+        // Task 495: чип удалён — openTempSensor его не заполняет
         const fn = grabFn('openTempSensor');
-        assertTrue(fn.indexOf('ts-view-chip-name') !== -1, 'чип: имя');
-        assertTrue(fn.indexOf('ts-card-badge') === -1, 'чип: бейджа нет');
+        assertTrue(fn.indexOf('ts-view-chip-name') === -1,
+            'Task 495: заполнение чипа удалено из openTempSensor');
+        assertTrue(fn.indexOf('ts-card-badge') === -1, 'бейджей нет');
     });
 });
 
@@ -539,11 +540,9 @@ describe('Task 373 — VM: страница датчика — панель, з�
         assertEqual(vmw.els['tempQueryVal'].placeholder, 'Например: 2,2', 'пример ТП');
         assertEqual(vmw.els['tempQueryTemp'].value, '', 'поле t очищено');
         assertEqual(vmw.els['tempQueryVal'].value, '', 'поле E очищено');
-        // чип: имя и электроды, без бейджа
-        const chip = vmw.els['tempSensorViewChip'].innerHTML;
-        assertTrue(chip.indexOf('ТХК (L)') !== -1, 'чип: имя');
-        assertTrue(chip.indexOf('хромель-копель') !== -1, 'чип: электроды');
-        assertTrue(chip.indexOf('ts-card-badge') === -1, 'чип: без бейджа');
+        // Task 495: чип удалён — ключа в els нет
+        assertFalse('tempSensorViewChip' in vmw.els,
+            'Task 495: чип удалён из блока ввода');
     });
 
     test('openTempSensor(ТС): подпись «Сопротивление»', () => {
@@ -623,15 +622,15 @@ describe('Task 373 — VM: страница датчика — панель, з�
 // ============================================================
 // F. SW v602 (guard v603)
 // ============================================================
-describe('Task 373 — SW: версия кэша kipia-test-v718', () => {
+describe('Task 373 — SW: версия кэша kipia-test-v719', () => {
 
-    test('CACHE_VERSION = kipia-test-v718', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v718'") !== -1,
+    test('CACHE_VERSION = kipia-test-v719', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v719'") !== -1,
             'SW бампнут до v602');
     });
 
     test('Guard: v605 ещё не существует', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v719') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v720') === -1,
             'v603 не должен существовать (следующий бамп)');
     });
 });
