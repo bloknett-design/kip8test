@@ -41,7 +41,7 @@
 //       .chart-stats-*/.chart-stat-*), Топ-10 бары (_renderBarChart,
 //       .chart-bar-*/.chart-card*) и _groupLabel/_avgPerProd —
 //       заявка «убери текущие графики и подсчёты»;
-//   SW: kipia-test-v716 (логика SW не менялась; окна истории
+//   SW: kipia-test-v717 (логика SW не менялась; окна истории
 //       расширены scripts/task485-windows.py; бамп tests —
 //       scripts/task485-bump-sw.py; OWN-файл — этот тест).
 //   АДАПТАЦИИ: test-task484.js («Кап. ремонт» x8, тест «стат-код
@@ -548,8 +548,8 @@ describe('Task 485: VM — вкладка «Регуляторы» (data/regulat
 // 6. SW: версия v709 + комментарий Task 485
 // ==========================================================================
 describe('Task 485: SW — версия и кэши', () => {
-    test('CACHE_VERSION = kipia-test-v716', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v716';") !== -1,
+    test('CACHE_VERSION = kipia-test-v717', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v717';") !== -1,
             'версия поднята');
     });
 
@@ -558,11 +558,11 @@ describe('Task 485: SW — версия и кэши', () => {
     });
 
     test('v710 в sw.js отсутствует (лишний инкремент не сделан)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v717') === -1);
+        assertTrue(SW_SRC.indexOf('kipia-test-v718') === -1);
     });
 
     test('комментарий Task 485 в шапке версий (окно 1500)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v716';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v717';");
         const ctx = SW_SRC.slice(Math.max(0, i - 5100), i);
         assertTrue(ctx.indexOf('Task 485') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('Клапана') !== -1, 'вкладка Клапана');

@@ -25,7 +25,7 @@
 //   КЛИЕНТ index.html:
 //   6) toggleTrainingDone: пустой created — тост «Отмечено
 //      выполнение» (без «новые сроки»), пулы не растут;
-//   7) SW kipia-test-v716.
+//   7) SW kipia-test-v717.
 // ============================================================
 
 const fs = require('fs');
@@ -483,10 +483,10 @@ describe('Task 421 — VM: toggleTrainingDone — 9-ОГЭ без автосоз
 // 4. SW — версия кэша
 // ============================================================
 describe('Task 421 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v716', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v716'") !== -1,
+    test('CACHE_VERSION = kipia-test-v717', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v717'") !== -1,
             'SW v648 (Task 421)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v717') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v718') === -1,
             'двойной бамп отсутствует');
     });
 });

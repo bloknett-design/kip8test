@@ -146,8 +146,9 @@ describe('Task 321 — раздел переименован в «Табель �
         const i = INDEX_SRC.indexOf('id="workScheduleMenuBtn"');
         assertTrue(i !== -1, 'кнопка workScheduleMenuBtn есть');
         const chunk = INDEX_SRC.slice(i, i + 700);
-        assertTrue(chunk.indexOf('Табель учёта рабочего времени') !== -1,
-            'menu-btn-label — новое имя');
+        // Task 493: кнопка переименована короче — «Табель учёта»
+        assertTrue(chunk.indexOf('<div class="menu-btn-label">Табель учёта</div>') !== -1,
+            'menu-btn-label — «Табель учёта» (Task 493, короче)');
         assertTrue(chunk.indexOf('Шахматка сменного и дневного персонала') !== -1,
             'субметка не изменилась');
     });
@@ -155,8 +156,8 @@ describe('Task 321 — раздел переименован в «Табель �
     test('JS: PAGE_LABELS и SUBSECTIONS — новые метки', () => {
         assertTrue(/'work-schedule':\s+'Табель учёта рабочего времени'/.test(INDEX_SRC),
             'PAGE_LABELS: новая метка');
-        assertTrue(/'work-schedule':\s*\{ label: 'Табель учёта рабочего времени'/.test(INDEX_SRC),
-            'SUBSECTIONS: новая метка (закрепление на главной)');
+        assertTrue(/'work-schedule':\s*\{ label: 'Табель учёта'/.test(INDEX_SRC),
+            'SUBSECTIONS: метка «Табель учёта» (Task 493 — закрепление на главной)');
     });
 
     test('HTML: сайдбар — новая надпись у sidebarWorkScheduleBtn', () => {
@@ -1095,10 +1096,10 @@ describe('Task 321 — год: _loadYearData / _renderTotalsYear / таблиц�
 // 11. SW: версия кэша
 // ============================================================
 describe('Task 321 — SW: версия кэша', () => {
-    test('SW: кэш поднят до kipia-test-v716 (Task 323)', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v716'") !== -1,
-            'CACHE_VERSION = kipia-test-v716');
-        assertFalse(SW_SRC.indexOf('kipia-test-v717') !== -1,
+    test('SW: кэш поднят до kipia-test-v717 (Task 323)', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v717'") !== -1,
+            'CACHE_VERSION = kipia-test-v717');
+        assertFalse(SW_SRC.indexOf('kipia-test-v718') !== -1,
             'v561 не существует (один инкремент на Task 321)');
     });
 });

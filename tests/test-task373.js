@@ -621,15 +621,15 @@ describe('Task 373 — VM: страница датчика — панель, з�
 // ============================================================
 // F. SW v602 (guard v603)
 // ============================================================
-describe('Task 373 — SW: версия кэша kipia-test-v716', () => {
+describe('Task 373 — SW: версия кэша kipia-test-v717', () => {
 
-    test('CACHE_VERSION = kipia-test-v716', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v716'") !== -1,
+    test('CACHE_VERSION = kipia-test-v717', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v717'") !== -1,
             'SW бампнут до v602');
     });
 
     test('Guard: v605 ещё не существует', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v717') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v718') === -1,
             'v603 не должен существовать (следующий бамп)');
     });
 });
