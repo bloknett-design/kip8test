@@ -53,8 +53,8 @@ function pngSize(file) {
 // ==========================================================================
 // 1. SW: версия и шапка
 describe('Task 475 — SW: версия и шапка', () => {
-    test('CACHE_VERSION = kipia-test-v723', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v723';") !== -1,
+    test('CACHE_VERSION = kipia-test-v724', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v724';") !== -1,
             'SW поднят до v699');
     });
     test('прежняя версия v698 отсутствует', () => {
@@ -62,8 +62,8 @@ describe('Task 475 — SW: версия и шапка', () => {
             'в sw.js не осталось kipia-test-v698');
     });
     test('несуществующая v700 отсутствует (guard)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v724') === -1,
-            'kipia-test-v724 не должен существовать');
+        assertTrue(SW_SRC.indexOf('kipia-test-v725') === -1,
+            'kipia-test-v725 не должен существовать');
     });
     test('комментарий Task 475 в шапке версий', () => {
         assertTrue(SW_SRC.indexOf('Task 475') !== -1, 'маркер задачи');
@@ -372,7 +372,7 @@ describe('Task 475 — изображения: сжатие без потери 
 describe('Task 475 — окна истории версий sw.js (адаптация)', () => {
     test('test-task461 окно 5300 (Task 476 отодвинул Task 461 до ~4732)', () => {
         const s = fs.readFileSync(path.join(ROOT, 'tests', 'test-task461.js'), 'utf8');
-        assertTrue(s.indexOf('i - 14000') !== -1, 'окно 14000 (Task 498)');
+        assertTrue(s.indexOf('i - 15000') !== -1, 'окно 14000 (Task 498)');
     });
     test('test-task471/472 (контекст Task 471) окно 2700 (~2170)', () => {
         const s1 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task471.js'), 'utf8');

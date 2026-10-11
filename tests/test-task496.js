@@ -284,20 +284,20 @@ describe('Task 496 — VM: tempQueryEnterBlur (Enter гасит клавиату
 
 describe('Task 496 — SW: версия кеша v720', () => {
 
-    test('SW: CACHE_VERSION = kipia-test-v723, один инкремент', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v723';") !== -1,
-            'CACHE_VERSION = kipia-test-v723');
+    test('SW: CACHE_VERSION = kipia-test-v724, один инкремент', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v724';") !== -1,
+            'CACHE_VERSION = kipia-test-v724');
         assertFalse(SW_SRC.indexOf('kipia-test-v719') !== -1,
             'v719 в sw.js отсутствует (ровно один инкремент)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v724') !== -1,
+        assertFalse(SW_SRC.indexOf('kipia-test-v725') !== -1,
             'v721 не существует (guard)');
     });
 
     test('SW: комментарий Task 496 в шапке версий', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v723';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v724';");
         // Task 499: комментарий плейсхолдеров диапазонов (~430 симв.)
         // отодвинул Task 496 до ~1292 — окно 900 → 1600.
-        const ctx = SW_SRC.slice(Math.max(0, i - 1600), i);
+        const ctx = SW_SRC.slice(Math.max(0, i - 2400), i);
         assertTrue(ctx.indexOf('Task 496') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('произвольного расчёта') !== -1,
             'упоминание ППР');

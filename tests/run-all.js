@@ -756,6 +756,9 @@ require('./test-task496.js');
 require('./test-task497.js');
 require('./test-task498.js');
 require('./test-task499.js');
+// Task 500: единый стиль панелей ввода «КИП и А» + объединение блоков
+// в шкала-сигнал/буйковый уровнемер/сужающее устройство. SW v724.
+require('./test-task500.js');
 require('./test-deploy-url.js');
 
 // Запускаем
