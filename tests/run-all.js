@@ -754,6 +754,7 @@ require('./test-task496.js');
 // loading/error при наличии избранного (только когда его действительно
 // нет). SW v721.
 require('./test-task497.js');
+require('./test-task498.js');
 require('./test-deploy-url.js');
 
 // Запускаем

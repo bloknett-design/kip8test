@@ -53,8 +53,8 @@ function pngSize(file) {
 // ==========================================================================
 // 1. SW: версия и шапка
 describe('Task 475 — SW: версия и шапка', () => {
-    test('CACHE_VERSION = kipia-test-v721', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v721';") !== -1,
+    test('CACHE_VERSION = kipia-test-v722', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v722';") !== -1,
             'SW поднят до v699');
     });
     test('прежняя версия v698 отсутствует', () => {
@@ -62,8 +62,8 @@ describe('Task 475 — SW: версия и шапка', () => {
             'в sw.js не осталось kipia-test-v698');
     });
     test('несуществующая v700 отсутствует (guard)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v722') === -1,
-            'kipia-test-v722 не должен существовать');
+        assertTrue(SW_SRC.indexOf('kipia-test-v723') === -1,
+            'kipia-test-v723 не должен существовать');
     });
     test('комментарий Task 475 в шапке версий', () => {
         assertTrue(SW_SRC.indexOf('Task 475') !== -1, 'маркер задачи');
@@ -372,13 +372,13 @@ describe('Task 475 — изображения: сжатие без потери 
 describe('Task 475 — окна истории версий sw.js (адаптация)', () => {
     test('test-task461 окно 5300 (Task 476 отодвинул Task 461 до ~4732)', () => {
         const s = fs.readFileSync(path.join(ROOT, 'tests', 'test-task461.js'), 'utf8');
-        assertTrue(s.indexOf('i - 13200') !== -1, 'окно 13200 (Task 495)');
+        assertTrue(s.indexOf('i - 14000') !== -1, 'окно 14000 (Task 498)');
     });
     test('test-task471/472 (контекст Task 471) окно 2700 (~2170)', () => {
         const s1 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task471.js'), 'utf8');
         const s2 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task472.js'), 'utf8');
-        assertTrue(s1.indexOf('i - 10600') !== -1, 'test-task471: 10600 (Task 495)');
-        assertTrue(s2.indexOf('i - 10600') !== -1, 'test-task472: 10600 (Task 495)');
+        assertTrue(s1.indexOf('i - 11200') !== -1, 'test-task471: 11200 (Task 498)');
+        assertTrue(s2.indexOf('i - 11200') !== -1, 'test-task472: 11200 (Task 498)');
     });
     test('test-task472 (Task 472) окно 2100 (~1621)', () => {
         const s = fs.readFileSync(path.join(ROOT, 'tests', 'test-task472.js'), 'utf8');
@@ -386,7 +386,7 @@ describe('Task 475 — окна истории версий sw.js (адапта�
     });
     test('test-task474 окно 1700 (~1248)', () => {
         const s = fs.readFileSync(path.join(ROOT, 'tests', 'test-task474.js'), 'utf8');
-        assertTrue(s.indexOf('i - 9700') !== -1, 'окно Task 474: 5300 (Task 496)');
+        assertTrue(s.indexOf('i - 11200') !== -1, 'окно Task 474: 11200 (Task 498)');
     });
 });
 

@@ -535,7 +535,7 @@ describe('Task 373 — VM: страница датчика — панель, з�
         vmw.els['tempQueryVal'].value = '61,77';
         vmw.api.openTempSensor('tc_L');
         assertEqual(vmw.nav[vmw.nav.length - 1], 'temp-sensor-view', 'переход на страницу датчика');
-        assertEqual(vmw.els['tempSensorViewTitle'].textContent, 'ТХК (L) — термопара', 'заголовок');
+        assertEqual(vmw.els['tempSensorViewTitle'].textContent, 'ТХК (L)', 'заголовок');
         assertEqual(vmw.els['tempQueryValLabel'].textContent, 'Термо-ЭДС E(t), мВ', 'подпись ТП');
         assertEqual(vmw.els['tempQueryVal'].placeholder, 'Например: 2,2', 'пример ТП');
         assertEqual(vmw.els['tempQueryTemp'].value, '', 'поле t очищено');
@@ -622,15 +622,15 @@ describe('Task 373 — VM: страница датчика — панель, з�
 // ============================================================
 // F. SW v602 (guard v603)
 // ============================================================
-describe('Task 373 — SW: версия кэша kipia-test-v721', () => {
+describe('Task 373 — SW: версия кэша kipia-test-v722', () => {
 
-    test('CACHE_VERSION = kipia-test-v721', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v721'") !== -1,
+    test('CACHE_VERSION = kipia-test-v722', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v722'") !== -1,
             'SW бампнут до v602');
     });
 
     test('Guard: v605 ещё не существует', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v722') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v723') === -1,
             'v603 не должен существовать (следующий бамп)');
     });
 });
