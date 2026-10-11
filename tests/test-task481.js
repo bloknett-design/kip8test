@@ -470,8 +470,8 @@ describe('Task 481 — данные devices.json: инварианты «ТО = 
 // ==========================================================================
 describe('Task 481 — SW: версия и шапка', () => {
 
-    test('CACHE_VERSION = kipia-test-v724', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v724';") !== -1,
+    test('CACHE_VERSION = kipia-test-v725', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';") !== -1,
             'SW поднят до v705 (Task 481)');
     });
 
@@ -481,12 +481,12 @@ describe('Task 481 — SW: версия и шапка', () => {
     });
 
     test('несуществующая v706 отсутствует (guard)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v725') === -1,
-            'kipia-test-v725 не должен существовать');
+        assertTrue(SW_SRC.indexOf('kipia-test-v726') === -1,
+            'kipia-test-v726 не должен существовать');
     });
 
     test('комментарий Task 481 в шапке версий (окно 700)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v724';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';");
         // Task 490: +480 симв. комментария — окно 5000 → 6000 (якорь 5196)
         // Task 493: комментарий переименования кнопки Табель (~173 симв.)
         // — якорь 481@6153 — окно 6000 → 6800 (запас 647)
@@ -501,7 +501,7 @@ describe('Task 481 — SW: версия и шапка', () => {
     });
 
     test('комментарии Task 480/479/478 не вытеснены (окна 700/1400/1400)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v724';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';");
         // Task 490: окно w700 5000 → 6000 (якорь 480@5440); w1400 6500
         // хватает (478@6034, Период ремонта@5987)
         // Task 492: комментарий (~290 симв.) — якорь 480@6221;
@@ -520,7 +520,7 @@ describe('Task 481 — SW: версия и шапка', () => {
         // Task 481 (~258 симв.) отодвинул якоря: 474 ~2638 → окно 3100;
         // 472 ~3011 → 3600; 471 ~3560 → 4200; 461 ~6122 → 6800
         // (scripts/task481-windows.py; прецедент Task 478/475/476)
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v724';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';");
         const i474 = SW_SRC.lastIndexOf('Task 474', i);
         const i472 = SW_SRC.lastIndexOf('Task 472', i);
         const i471 = SW_SRC.lastIndexOf('Task 471', i);
@@ -543,9 +543,9 @@ describe('Task 481 — SW: версия и шапка', () => {
         const s461 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task461.js'), 'utf8');
         assertTrue(s461.indexOf('i - 15000') !== -1, 'test-task461: окно 13200 (Task 495)');
         const s471 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task471.js'), 'utf8');
-        assertTrue(s471.indexOf('i - 12000') !== -1, 'test-task471: окно 12000 (Task 499)');
+        assertTrue(s471.indexOf('i - 13000') !== -1, 'test-task471: окно 13000 (Task 501)');
         const s472 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task472.js'), 'utf8');
-        assertTrue(s472.indexOf('i - 11200') !== -1, 'test-task472: окно 11200 (Task 499)');
+        assertTrue(s472.indexOf('i - 12400') !== -1, 'test-task472: окно 12400 (Task 501)');
         const s474 = fs.readFileSync(path.join(ROOT, 'tests', 'test-task474.js'), 'utf8');
         assertTrue(s474.indexOf('i - 11200') !== -1, 'test-task474: окно 11200 (Task 498)');
     });

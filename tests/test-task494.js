@@ -132,9 +132,9 @@ describe('Task 494 — SRC: панель без заголовка/подска�
         const iL = INDEX_SRC.indexOf('[data-theme="light"] .ts-calc-panel {');
         assertTrue(iL !== -1, 'правило светлой темы панели есть');
         const rl = INDEX_SRC.slice(iL, INDEX_SRC.indexOf('}', iL) + 1);
-        assertTrue(rl.indexOf('border-color: rgba(43, 111, 163, 0.8);') !== -1,
+        assertTrue(rl.indexOf('border-color: rgba(198, 97, 63, 0.55);') !== -1,
             'рамка светлой темы (featured-образец)');
-        assertTrue(rl.indexOf('0 4px 12px rgba(21, 54, 83, 0.22)') !== -1,
+        assertTrue(rl.indexOf('0 4px 12px rgba(158, 78, 48, 0.22)') !== -1,
             'мягкая тень светлой темы');
         const iF = INDEX_SRC.indexOf('[data-theme="light"] .ts-calc-field {');
         assertTrue(iF !== -1, 'правило светлой темы полей есть');
@@ -211,17 +211,17 @@ describe('Task 494 — SRC: панель без заголовка/подска�
 
 describe('Task 494 — SW: версия кеша v718', () => {
 
-    test('SW: CACHE_VERSION = kipia-test-v724, один инкремент', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v724';") !== -1,
-            'CACHE_VERSION = kipia-test-v724');
+    test('SW: CACHE_VERSION = kipia-test-v725, один инкремент', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';") !== -1,
+            'CACHE_VERSION = kipia-test-v725');
         assertFalse(SW_SRC.indexOf('kipia-test-v717') !== -1,
             'v717 в sw.js отсутствует (ровно один инкремент)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v725') !== -1,
+        assertFalse(SW_SRC.indexOf('kipia-test-v726') !== -1,
             'v719 не существует (guard)');
     });
 
     test('SW: комментарий Task 494 в шапке версий', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v724';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';");
         // Task 497: комментарий избранного расходомеров (~200 симв.)
         // — якорь 494@1030 — окно 900 → 1200 (запас 170).
         const ctx = SW_SRC.slice(Math.max(0, i - 2600), i);

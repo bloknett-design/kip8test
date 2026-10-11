@@ -166,9 +166,15 @@ describe('Task 500 B: панели произвольных значений —
             'панель с эффектом выступа (как ППР датчиков температуры)');
         assertTrue(b.indexOf('ts-calc-panel ts-calc-inset" id="scaleQueryPanel"') === -1,
             'НЕ колодец — выступ');
-        // внутри родителя scaleCustomCalcPanel, поля живы
-        const i = b.indexOf('id="scaleCustomCalcPanel"');
-        const seg = b.slice(i, i + 2200);
+        // Task 501 (заявка): панель перенесена из результатов в колонку
+        // ввода — НАД панелью расчёта шкалы (родителя-обёртки больше нет);
+        // поля живы.
+        const col1 = colInput('scale-signal');
+        const iQ = col1.indexOf('id="scaleQueryPanel"');
+        const iF = col1.indexOf('id="scaleFormPanel"');
+        assertTrue(iQ !== -1 && iF !== -1 && iQ < iF,
+            'панель произвольных значений — НАД панелью шкалы (Task 501)');
+        const seg = col1.slice(iQ, iQ + 2400);
         assertTrue(seg.indexOf('id="queryScaleVal"') !== -1, 'поле шкалы живо');
         assertTrue(seg.indexOf('id="querySigVal"') !== -1, 'поле сигнала живо');
         assertTrue(b.indexOf('queryFromScaleLive()') !== -1, 'живой расчёт жив');
@@ -404,18 +410,20 @@ describe('Task 500 E: целостность страниц и JS', () => {
 // F. SW: версия и комментарий
 // ==========================================================================
 describe('Task 500 F: SW', () => {
-    test("sw.js: CACHE_VERSION = 'kipia-test-v724'", () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v724';") !== -1,
+    test("sw.js: CACHE_VERSION = 'kipia-test-v725'", () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';") !== -1,
             'версия поднята');
     });
 
     test('v725 в sw.js отсутствует (лишний инкремент не сделан)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v725') === -1);
+        assertTrue(SW_SRC.indexOf('kipia-test-v726') === -1);
     });
 
-    test('комментарий Task 500 в шапке версий (окно 500)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v724';");
-        const ctx = SW_SRC.slice(Math.max(0, i - 500), i);
+    test('комментарий Task 500 в шапке версий (окно 1600)', () => {
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';");
+        // Task 501: комментарий электротехники/геометрии (~380 симв.)
+        // отодвинул Task 500 до ~821 — окно 500 → 1600.
+        const ctx = SW_SRC.slice(Math.max(0, i - 1600), i);
         assertTrue(ctx.indexOf('Task 500') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('ОДНУ панель') !== -1, 'суть объединения');
         assertTrue(ctx.indexOf('ts-calc-sep') !== -1, 'разделители');

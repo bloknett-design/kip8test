@@ -939,9 +939,9 @@ describe('Task 489 — VM: сервер — карта + чтение', () => {
 // ============================================================
 describe('Task 489 — Service Worker', () => {
 
-    test('SW: кэш поднят до kipia-test-v724', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v724'") !== -1,
-            'CACHE_VERSION = kipia-test-v724 (Task 489)');
+    test('SW: кэш поднят до kipia-test-v725', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v725'") !== -1,
+            'CACHE_VERSION = kipia-test-v725 (Task 489)');
         assertFalse(SW_SRC.indexOf('kipia-test-v712') !== -1,
             'прошлая версия не осталась');
     });

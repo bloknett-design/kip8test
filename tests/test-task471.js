@@ -38,7 +38,7 @@
 //      → лист «Работы на месяц»), «Мероприятия» (шапка) — описание;
 //   4) сервер: planEvents.years + planWorks.list/add/remove/
 //      setStatus (лист «Работы на месяц», создаёт PlanWorksInit.gs).
-//   SW: kipia-test-v724.
+//   SW: kipia-test-v725.
 //
 // Запуск: через tests/run-all.js (require './test-task471.js').
 
@@ -577,9 +577,9 @@ describe('Task 471 — SRC: сервер (Apps Script)', () => {
 // ============================================================
 describe('Task 471 — SW: версия кэша', () => {
 
-    test("CACHE_VERSION = kipia-test-v724", () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v724';") !== -1,
-            'SW поднят до kipia-test-v724 (Task 471)');
+    test("CACHE_VERSION = kipia-test-v725", () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';") !== -1,
+            'SW поднят до kipia-test-v725 (Task 471)');
     });
 
     test('версия до партии (v694) отсутствует', () => {
@@ -588,13 +588,15 @@ describe('Task 471 — SW: версия кэша', () => {
     });
 
     test('комментарий Task 471 в шапке версий sw.js', () => {
-        const i = SW_SRC.indexOf('kipia-test-v724');
+        const i = SW_SRC.indexOf('kipia-test-v725');
         // Task 473: окно 900 → 1020; Task 474: 1020 → 1300 —
         // комментарий Task 474 (3 строки о карточке прибора) отодвинул
         // начало комментария Task 471 (~1157 символов).
         // Task 499: окно 11200 → 12000 — комментарий плейсхолдеров
         // диапазонов (~430 симв.) отодвинул Task 471 до ~11207.
-        const ctx = SW_SRC.slice(Math.max(0, i - 12000), i);
+        // Task 501: окно 12000 → 13000 — комментарий электротехники/
+        // геометрии (~380 симв.) отодвинул Task 471 до ~12008.
+        const ctx = SW_SRC.slice(Math.max(0, i - 13000), i);
         // Task 478: окно 2700 → 3400 — комментарий ППР-индикации
         // (~340 симв.) отодвинул Task 471 до ~2800.
         // Task 481: окно 3400 → 4200 — комментарий «ТО = только год»

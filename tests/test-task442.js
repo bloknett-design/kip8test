@@ -29,7 +29,7 @@
 //      полосы выходных — MEDIUM-внешний контур (13 границ, шапка
 //      T/TL/TR/TLR, дни недели L/R/LR, тело L/R/LR/B/BL/BR/BLR,
 //      обычные + цветные), карта стилей _wsTabelStyleMap;
-//   SW: kipia-test-v724.
+//   SW: kipia-test-v725.
 // ============================================================
 
 const fs = require('fs');
@@ -575,10 +575,10 @@ describe('Task 442 — VM: Excel (контур выходных + regDate)', () 
 // ============================================================
 // 8. SW — версия кэша
 // ============================================================
-describe('Task 442 — SW: версия kipia-test-v724', () => {
-    test('CACHE_VERSION = kipia-test-v724, прежней v665 нет', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v724'") !== -1,
-            'CACHE_VERSION = kipia-test-v724');
+describe('Task 442 — SW: версия kipia-test-v725', () => {
+    test('CACHE_VERSION = kipia-test-v725, прежней v665 нет', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v725'") !== -1,
+            'CACHE_VERSION = kipia-test-v725');
         assertFalse(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v665'") !== -1,
             'v665 как активная версия больше не существует');
     });

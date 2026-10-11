@@ -42,7 +42,7 @@
 //   7) «след. срок» 9-ОГЭ = общий + 3 мес (не +6);
 //   8) тост: сервер '422' → предупреждение «старой версии»
 //      (srvVer < 423); '423' → без предупреждения;
-//   9) SW kipia-test-v724.
+//   9) SW kipia-test-v725.
 // ============================================================
 
 const fs = require('fs');
@@ -638,10 +638,10 @@ describe('Task 423 — VM: toggleTrainingDone — srvVer < 427', () => {
 // 7. SW — версия кэша
 // ============================================================
 describe('Task 423 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v724', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v724'") !== -1,
+    test('CACHE_VERSION = kipia-test-v725', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v725'") !== -1,
             'SW v650 (Task 423)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v725') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v726') === -1,
             'двойной бамп отсутствует');
     });
 });

@@ -202,9 +202,9 @@ describe('Task 491 — SRC: CSS .ts-card-feat — выступ и размеры
 
     test('Светлая тема: мягкие тени и свой бордер', () => {
         const mob = mobileBlock();
-        assertTrue(mob.indexOf('[data-theme="light"] .ts-card-feat { border-color: rgba(43, 111, 163, 0.8);') !== -1,
+        assertTrue(mob.indexOf('[data-theme="light"] .ts-card-feat { border-color: rgba(198, 97, 63, 0.55);') !== -1,
             'light: бордер');
-        assertTrue(mob.indexOf('box-shadow: 0 4px 12px rgba(21, 54, 83, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -3px 0 rgba(21, 54, 83, 0.12);') !== -1,
+        assertTrue(mob.indexOf('box-shadow: 0 4px 12px rgba(158, 78, 48, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -3px 0 rgba(158, 78, 48, 0.12);') !== -1,
             'light: мягкий выступ');
     });
 
@@ -344,9 +344,9 @@ describe('Task 491 — VM: featured-класс (Task 492: на избранно�
 // ============================================================
 describe('Task 491 — SW: версия кеша', () => {
 
-    test('SW: кэш поднят до kipia-test-v724', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v724'") !== -1,
-            'CACHE_VERSION = kipia-test-v724 (Task 491)');
+    test('SW: кэш поднят до kipia-test-v725', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v725'") !== -1,
+            'CACHE_VERSION = kipia-test-v725 (Task 491)');
         assertFalse(SW_SRC.indexOf('kipia-test-v714') !== -1,
             'старой версии v714 нет');
     });

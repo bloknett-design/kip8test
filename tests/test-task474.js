@@ -225,8 +225,8 @@ describe('Task 474 — SRC: структура карточки', () => {
 // ==========================================================================
 // 4. SW — версия кэша и комментарий задачи
 describe('Task 474 — SW: версия кэша', () => {
-    test("CACHE_VERSION = kipia-test-v724", () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v724';") !== -1,
+    test("CACHE_VERSION = kipia-test-v725", () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';") !== -1,
             'текущая версия v698');
     });
 
@@ -236,7 +236,7 @@ describe('Task 474 — SW: версия кэша', () => {
     });
 
     test('v699 в sw.js отсутствует (лишний инкремент не сделан)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v725') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v726') === -1,
             'версия после Task 474 не существует');
     });
 
@@ -249,7 +249,7 @@ describe('Task 474 — SW: версия кэша', () => {
     });
 
     test('комментарий Task 474 рядом с версией (окно 600)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v724';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';");
         // Task 496: комментарий ППР-клавиатуры (~254 симв.) — якорь
         // 474@9239 — окно 9000 → 9700 (запас 461).
         const ctx = SW_SRC.slice(Math.max(0, i - 11200), i);
@@ -271,7 +271,7 @@ describe('Task 474 — SW: версия кэша', () => {
         // Task 476: окна расширены (+~490 симв. этапа 2):
         // Task 471 2100 → 2700 (~2170), Task 461 4600 → 5300 (~4732).
         // Task 461 ~4300).
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v724';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';");
         const i471 = SW_SRC.lastIndexOf('Task 471', i);
         const i461 = SW_SRC.lastIndexOf('Task 461', i);
         // Task 492: якорь 471@9279 — окно 9000 → 9800.
