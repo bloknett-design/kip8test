@@ -80,8 +80,8 @@ describe('Task 494 — SRC: панель без заголовка/подска�
             'oninput="tempQueryFromValue()"',
             'Температура (°C)',
             'Сопротивление R(t), Ом',
-            'placeholder="Например: 55"',
-            'placeholder="Например: 61,8"'
+            'Task 499 (заявка: «подсказки диапазонов',
+            'бледным текстом'
         ]) {
             assertTrue(p.indexOf(chunk) !== -1, 'панель содержит: ' + chunk);
         }
@@ -194,31 +194,34 @@ describe('Task 494 — SRC: панель без заголовка/подска�
     test('VM: openTempSensor — подписи под тип датчика живы (логика не менялась)', () => {
         const i = INDEX_SRC.indexOf('function openTempSensor(');
         assertTrue(i !== -1, 'функция openTempSensor есть');
-        const fn = INDEX_SRC.slice(i, i + 3000);
+        // Task 499: блок плейсхолдеров диапазонов (~3300-3600 от начала
+        // функции) — срез расширен 3000 → 4500
+        const fn = INDEX_SRC.slice(i, i + 4500);
         assertTrue(fn.indexOf("vLab.textContent='Сопротивление R(t), Ом'") !== -1,
             'подпись ТС подставляется');
         assertTrue(fn.indexOf("vLab.textContent='Термо-ЭДС E(t), мВ'") !== -1,
             'подпись ТП подставляется');
-        assertTrue(fn.indexOf("vInp.placeholder='Например: 61,8'") !== -1,
-            'пример ТС подставляется');
-        assertTrue(fn.indexOf("vInp.placeholder='Например: 2,2'") !== -1,
-            'пример ТП подставляется');
+        // Task 499: подсказки диапазонов — прямо в поля (плейсхолдеры)
+        assertTrue(fn.indexOf('tInp.placeholder=fmtI499(rng499.min)') !== -1,
+            'плейсхолдер температуры (Task 499)');
+        assertTrue(fn.indexOf('vInp.placeholder=fmtM499(vmin499)') !== -1,
+            'плейсхолдер значения (Task 499)');
     });
 });
 
 describe('Task 494 — SW: версия кеша v718', () => {
 
-    test('SW: CACHE_VERSION = kipia-test-v722, один инкремент', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v722';") !== -1,
-            'CACHE_VERSION = kipia-test-v722');
+    test('SW: CACHE_VERSION = kipia-test-v723, один инкремент', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v723';") !== -1,
+            'CACHE_VERSION = kipia-test-v723');
         assertFalse(SW_SRC.indexOf('kipia-test-v717') !== -1,
             'v717 в sw.js отсутствует (ровно один инкремент)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v723') !== -1,
+        assertFalse(SW_SRC.indexOf('kipia-test-v724') !== -1,
             'v719 не существует (guard)');
     });
 
     test('SW: комментарий Task 494 в шапке версий', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v722';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v723';");
         // Task 497: комментарий избранного расходомеров (~200 симв.)
         // — якорь 494@1030 — окно 900 → 1200 (запас 170).
         const ctx = SW_SRC.slice(Math.max(0, i - 1800), i);

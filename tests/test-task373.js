@@ -229,8 +229,11 @@ describe('Task 373 — SRC: панель расчёта над формой + Т
         const fn = grabFn('openTempSensor');
         assertTrue(fn.indexOf('Сопротивление R(t), Ом') !== -1, 'подпись ТС');
         assertTrue(fn.indexOf('Термо-ЭДС E(t), мВ') !== -1, 'подпись ТП');
-        assertTrue(fn.indexOf('Например: 61,8') !== -1, 'пример ТС');
-        assertTrue(fn.indexOf('Например: 2,2') !== -1, 'пример ТП');
+        // Task 499: подсказки диапазонов — плейсхолдеры полей
+        assertTrue(fn.indexOf('tInp.placeholder=fmtI499(rng499.min)') !== -1,
+            'плейсхолдер температуры (Task 499)');
+        assertTrue(fn.indexOf('vInp.placeholder=fmtM499(vmin499)') !== -1,
+            'плейсхолдер значения (Task 499)');
         assertTrue(fn.indexOf('updateTempSensorFavBtn()') !== -1, 'звезда шапки обновляется');
     });
 
@@ -537,7 +540,8 @@ describe('Task 373 — VM: страница датчика — панель, з�
         assertEqual(vmw.nav[vmw.nav.length - 1], 'temp-sensor-view', 'переход на страницу датчика');
         assertEqual(vmw.els['tempSensorViewTitle'].textContent, 'ТХК (L)', 'заголовок');
         assertEqual(vmw.els['tempQueryValLabel'].textContent, 'Термо-ЭДС E(t), мВ', 'подпись ТП');
-        assertEqual(vmw.els['tempQueryVal'].placeholder, 'Например: 2,2', 'пример ТП');
+        assertEqual(vmw.els['tempQueryVal'].placeholder, '−9,4881…66,4659 мВ',
+            'Task 499: диапазон НСХ L в поле (бледный плейсхолдер)');
         assertEqual(vmw.els['tempQueryTemp'].value, '', 'поле t очищено');
         assertEqual(vmw.els['tempQueryVal'].value, '', 'поле E очищено');
         // Task 495: чип удалён — ключа в els нет
@@ -549,7 +553,8 @@ describe('Task 373 — VM: страница датчика — панель, з�
         const vmw = makeVm373();
         vmw.api.openTempSensor('cu50_1428');
         assertEqual(vmw.els['tempQueryValLabel'].textContent, 'Сопротивление R(t), Ом', 'подпись ТС');
-        assertEqual(vmw.els['tempQueryVal'].placeholder, 'Например: 61,8', 'пример ТС');
+        assertEqual(vmw.els['tempQueryVal'].placeholder, '10,2642…92,8 Ом',
+            'Task 499: диапазон НСХ Cu50 в поле (−180…+200, ГОСТ 5.2.3)');
     });
 
     test('Звезда в шапке: синхронизация с TempFav', () => {
@@ -622,15 +627,15 @@ describe('Task 373 — VM: страница датчика — панель, з�
 // ============================================================
 // F. SW v602 (guard v603)
 // ============================================================
-describe('Task 373 — SW: версия кэша kipia-test-v722', () => {
+describe('Task 373 — SW: версия кэша kipia-test-v723', () => {
 
-    test('CACHE_VERSION = kipia-test-v722', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v722'") !== -1,
+    test('CACHE_VERSION = kipia-test-v723', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v723'") !== -1,
             'SW бампнут до v602');
     });
 
     test('Guard: v605 ещё не существует', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v723') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v724') === -1,
             'v603 не должен существовать (следующий бамп)');
     });
 });

@@ -1027,10 +1027,10 @@ describe('Task 443 — VM: ppeMigrateManufacture (миграция листа)',
 // ============================================================
 describe('Task 443 — SW: версия кэша', () => {
 
-    test('SW: kipia-test-v722', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v722'") !== -1,
+    test('SW: kipia-test-v723', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v723'") !== -1,
             'SWVersion bumped');
-        assertTrue(SW_SRC.indexOf('kipia-test-v723') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v724') === -1,
             'двойного бампа не было');
     });
 

@@ -605,17 +605,17 @@ describe('Task 482 — кап раскрытия окон «Мероприяти
 // ==========================================================================
 // 6. SW: версия, комментарий, окна истории
 // ==========================================================================
-describe('Task 482 — SW: kipia-test-v722 + комментарий', () => {
+describe('Task 482 — SW: kipia-test-v723 + комментарий', () => {
 
-    test('CACHE_VERSION = kipia-test-v722', () => {
+    test('CACHE_VERSION = kipia-test-v723', () => {
         assertTrue(SW_SRC.indexOf(
-            "const CACHE_VERSION = 'kipia-test-v722';") !== -1,
+            "const CACHE_VERSION = 'kipia-test-v723';") !== -1,
             'версия кэша поднята v705 → v706');
     });
 
     test('несуществующая v707 отсутствует (guard)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v723') === -1,
-            'kipia-test-v723 не должен существовать');
+        assertTrue(SW_SRC.indexOf('kipia-test-v724') === -1,
+            'kipia-test-v724 не должен существовать');
     });
 
     test('старая v705 вычищена из sw.js', () => {
@@ -631,7 +631,7 @@ describe('Task 482 — SW: kipia-test-v722 + комментарий', () => {
     });
 
     test('комментарий Task 482 в шапке версий (окно 1100)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v722';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v723';");
         const ctx = SW_SRC.slice(Math.max(0, i - 7800), i);
         assertTrue(ctx.indexOf('Task 482') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('_barExpMaxH') !== -1,
@@ -644,7 +644,7 @@ describe('Task 482 — SW: kipia-test-v722 + комментарий', () => {
     });
 
     test('комментарии Task 481/480 не вытеснены (окно 1100)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v722';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v723';");
         // Task 490: +480 симв. комментария — окно 5000 → 6000 (якоря
         // 481@5196, 480@5440, таблица@5405)
         // Task 492: комментарий (~290 симв.) отодвинул якорь 480
@@ -657,7 +657,7 @@ describe('Task 482 — SW: kipia-test-v722 + комментарий', () => {
     });
 
     test('комментарии Task 479/478 не вытеснены (окно 4100)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v722';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v723';");
         const ctx = SW_SRC.slice(Math.max(0, i - 8900), i);
         assertTrue(ctx.indexOf('Task 479') !== -1 &&
                    ctx.indexOf('оранжево-золотистый') !== -1,
@@ -670,7 +670,7 @@ describe('Task 482 — SW: kipia-test-v722 + комментарий', () => {
     test('окна истории: якоря 474/472/471/461 в прежних окнах', () => {
         // Task 482 (~375 симв.): 474 ~3016 < 3100; 472 ~3389 < 3600;
         // 471 ~3938 < 4200; 461 ~6500 < 6800 — расширения не нужны
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v722';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v723';");
         const i474 = SW_SRC.lastIndexOf('Task 474', i);
         const i472 = SW_SRC.lastIndexOf('Task 472', i);
         const i471 = SW_SRC.lastIndexOf('Task 471', i);

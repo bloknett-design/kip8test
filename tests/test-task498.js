@@ -24,7 +24,7 @@
 //      подсказки пределов: «−50…200 °C» + «39,3…92,8 Ом» (Cu),
 //      «−200…850 °C» + «17,2444…395,16 Ом» (100П), мВ у ТП;
 //      живой пересчёт с новой формулой (59,64 → ≈−100).
-//   D. SW kipia-test-v722 (guard v723).
+//   D. SW kipia-test-v723 (guard v723).
 
 const fs = require('fs');
 const path = require('path');
@@ -109,18 +109,24 @@ describe('Task 498 — SRC: формула pt1391 по таблице А.2 ГО�
         assertFalse(fn.indexOf('B=−5,84·10⁻⁷') !== -1, 'старое округление в строке убрано');
     });
 
-    test('Каталог: пределы НСХ НЕ менялись (сверка подтвердила)', () => {
+    test('Каталог: пределы НСХ (Task 499: Cu 0,00428 — −180…+200)', () => {
         const fn = grabFn('getTempSensorCatalog');
         assertTrue(fn !== null, 'функция есть');
-        assertTrue(fn.indexOf('range:isCu?{min:-50,max:200}:{min:-200,max:850}') !== -1,
-            'Cu −50…+200 (ГОСТ 6651-2009, приложение Б), Pt −200…+850 (А.1/А.2)');
+        // Task 499: Cu α = 0,00428 расширен до −180…+200 (таблица А.3 /
+        // формула 5.2.3 ГОСТ 6651-2009); 0,00426 — прежние −50…+200;
+        // Pt/ТП — без изменений
+        assertTrue(fn.indexOf('rng499=isCu?((Math.abs(sd.alpha-0.00428)<1e-9)?{min:-180,max:200}:{min:-50,max:200}):{min:-200,max:850}') !== -1,
+            'Cu 0,00428: −180…+200; Cu 0,00426: −50…+200; Pt: −200…+850');
         assertTrue(fn.indexOf('K:{mat:\'хромель-алюмель\',r:[-270,1372]}') !== -1, 'K: −270…1372');
         assertTrue(fn.indexOf('L:{mat:\'хромель-копель\',r:[-200,800]}') !== -1, 'L: −200…800');
         assertTrue(fn.indexOf('B:{mat:\'платинородий-платинородий\',r:[0,1820]}') !== -1, 'B: 0…1820');
-        // комментарий сверки — НАД функцией (в INDEX_SRC, вне grabFn)
+        // комментарии сверки 498 + 499 — НАД функцией (окно расширено:
+        // перед каталогом теперь 3 комментария — 491/498/499)
         const iCat = INDEX_SRC.indexOf('function getTempSensorCatalog(');
-        assertTrue(INDEX_SRC.slice(Math.max(0, iCat - 1200), iCat).indexOf('пределы НСХ каталога СВЕРЕНЫ') !== -1,
+        assertTrue(INDEX_SRC.slice(Math.max(0, iCat - 2600), iCat).indexOf('пределы НСХ каталога СВЕРЕНЫ') !== -1,
             'комментарий сверки Task 498 перед каталогом');
+        assertTrue(INDEX_SRC.slice(Math.max(0, iCat - 2600), iCat).indexOf('Task 499 (заявка: «проверь у 50М') !== -1,
+            'комментарий Task 499 перед каталогом');
     });
 });
 
@@ -139,30 +145,39 @@ describe('Task 498 — SRC: заголовок и подсказки преде�
         assertTrue(fn.indexOf('α = ') !== -1, 'конструкция «α = …»');
     });
 
-    test('openTempSensor: заполняет подсказки пределов обоих полей', () => {
+    test('openTempSensor: подсказки пределов — ПЛЕЙСХОЛДЕРЫ полей (Task 499)', () => {
         const fn = grabFn('openTempSensor');
-        assertTrue(fn.indexOf("tempQueryTempRange") !== -1, 'элемент пределов °C');
-        assertTrue(fn.indexOf("tempQueryValRange") !== -1, 'элемент пределов Ом/мВ');
-        assertTrue(fn.indexOf('tempCalcForwardValue(rng498.min)') !== -1,
+        // Task 499: подсказки диапазонов вписаны непосредственно в поля
+        // ввода (бледный текст), div-подсказки 498 удалены
+        assertTrue(fn.indexOf('tempQueryTempRange') === -1, 'div-подсказка 498 удалена (°C)');
+        assertTrue(fn.indexOf('tempQueryValRange') === -1, 'div-подсказка 498 удалена (Ом/мВ)');
+        assertTrue(fn.indexOf('Например:') === -1, 'предложения «Например:» убраны');
+        assertTrue(fn.indexOf('tInp.placeholder=fmtI499(rng499.min)') !== -1,
+            'плейсхолдер температуры — из каталога');
+        assertTrue(fn.indexOf('tempCalcForwardValue(rng499.min)') !== -1,
             'значения на границах — через НСХ (единый источник)');
         assertTrue(fn.indexOf('getTempSensorRange()') !== -1, 'границы — из каталога');
         assertTrue(fn.indexOf("'Ом':'мВ'") !== -1, 'единица по типу датчика');
     });
 
-    test('HTML: подсказки под обоими полями ППР (порядок)', () => {
+    test('HTML: подсказки в полях, div-подсказок нет (Task 499)', () => {
         const p = panelChunk();
         assertTrue(p !== null, 'панель ППР найдена');
-        assertEqual(p.split('class="ts-calc-range"').length - 1, 2,
-            'ровно ДВА div-подсказки (без учёта комментария)');
+        // Task 499: подсказки — плейсхолдеры полей (заполняет
+        // openTempSensor), div-подсказки под полями удалены
+        assertEqual(p.split('ts-calc-range').length - 1, 0,
+            'div-подсказок ts-calc-range нет (комментарий — без класса)');
+        assertEqual(p.split('id="tempQueryTempRange"').length - 1, 0, 'id tempQueryTempRange удалён');
+        assertEqual(p.split('id="tempQueryValRange"').length - 1, 0, 'id tempQueryValRange удалён');
+        assertTrue(p.indexOf('placeholder="Например:') === -1,
+            'Task 499: статических «Например:» в полях нет');
+        assertTrue(p.indexOf('Task 499 (заявка: «подсказки диапазонов') !== -1,
+            'комментарий Task 499 в панели');
         const iT = p.indexOf('id="tempQueryTemp"');
-        const iTR = p.indexOf('id="tempQueryTempRange"');
         const iL = p.indexOf('id="tempQueryValLabel"');
         const iV = p.indexOf('id="tempQueryVal"');
-        const iVR = p.indexOf('id="tempQueryValRange"');
-        assertTrue(iT !== -1 && iTR !== -1 && iL !== -1 && iV !== -1 && iVR !== -1,
-            'все элементы панели на месте');
-        assertTrue(iT < iTR && iTR < iL, 'подсказка °C — ПОД полем температуры');
-        assertTrue(iV < iVR, 'подсказка Ом/мВ — ПОД полем значения');
+        assertTrue(iT !== -1 && iL !== -1 && iV !== -1, 'все элементы панели на месте');
+        assertTrue(iT < iL && iL < iV, 'порядок: температура → подпись → значение');
         // инварианты Task 494/496 не задеты
         assertEqual(p.split('class="scale-field ts-calc-field"').length - 1, 2,
             'оба поля остались ts-calc-field (Task 494)');
@@ -181,13 +196,17 @@ describe('Task 498 — SRC: заголовок и подсказки преде�
             'правило только для страницы датчика температуры');
     });
 
-    test('CSS: .ts-calc-range — стиль подсказок (тёмная + светлая)', () => {
-        assertTrue(INDEX_SRC.indexOf('.ts-calc-range { font-size: 11px;') !== -1,
-            'базовое правило .ts-calc-range');
-        assertTrue(INDEX_SRC.indexOf('.ts-calc-panel .ts-calc-range:last-child { margin-bottom: 0; }') !== -1,
-            'нижний отступ последней подсказки убран');
-        assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .ts-calc-range') !== -1,
-            'светлая тема');
+    test('CSS: .ts-calc-range удалён — подсказки в полях (Task 499)', () => {
+        // Task 499: правила .ts-calc-range убраны, бледный цвет
+        // подсказок — прежний ::placeholder полей (Task 494)
+        assertTrue(INDEX_SRC.indexOf('.ts-calc-range {') === -1,
+            'правило .ts-calc-range удалено');
+        assertTrue(INDEX_SRC.indexOf('ts-calc-range') === -1,
+            'упоминаний ts-calc-range в CSS нет (ts-card-range не задет)');
+        assertTrue(INDEX_SRC.indexOf('.ts-calc-field::placeholder { color: rgba(255, 255, 255, 0.4); font-weight: 500; }') !== -1,
+            'бледный плейсхолдер полей ППР (Task 494, жив)');
+        assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .ts-calc-field::placeholder { color: rgba(20, 20, 19, 0.45); }') !== -1,
+            'бледный плейсхолдер в светлой теме (жив)');
     });
 
     test('Десктоп: последний сегмент крошек — тип датчика с α (как в баре)', () => {
@@ -365,68 +384,70 @@ describe('Task 498 — VM: заголовок — только тип датчи
     });
 });
 
-describe('Task 498 — VM: пределы в полях ввода произвольного расчёта', () => {
+describe('Task 498/499 — VM: пределы в полях ППР (плейсхолдеры, Task 499)', () => {
 
-    test('Cu50 (0,00428): «−50…200 °C» + «39,3…92,8 Ом»', () => {
+    test('Cu50 (0,00428): плейсхолдеры «−180…200 °C» + «10,2642…92,8 Ом»', () => {
         const vmw = makeVm();
         vmw.api.openTempSensor('cu50_1428');
-        assertEqual(vmw.els['tempQueryTempRange'].textContent, '−50…200 °C',
-            'пределы температуры в °C (минус — типографский)');
-        assertEqual(vmw.els['tempQueryValRange'].textContent, '39,3…92,8 Ом',
-            'пределы сопротивления в Ом');
+        assertEqual(vmw.els['tempQueryTemp'].placeholder, '−180…200 °C',
+            'Task 499: пределы температуры в °C в поле (минус — типографский)');
+        assertEqual(vmw.els['tempQueryVal'].placeholder, '10,2642…92,8 Ом',
+            'Task 499: пределы сопротивления в Ом в поле (−180 по ГОСТ 5.2.3)');
     });
 
-    test('Cu50 (0,00426) и Cu100: значения от α и R₀', () => {
+    test('Cu50 (0,00426) и Cu100: значения от α и R₀ (плейсхолдеры)', () => {
         const vmw = makeVm();
         vmw.api.openTempSensor('cu50_1426');
-        assertEqual(vmw.els['tempQueryValRange'].textContent, '39,35…92,6 Ом',
-            'Cu50 α = 0,00426');
+        assertEqual(vmw.els['tempQueryTemp'].placeholder, '−50…200 °C',
+            'Cu50 α = 0,00426: диапазон прежний (плейсхолдер)');
+        assertEqual(vmw.els['tempQueryVal'].placeholder, '39,35…92,6 Ом',
+            'Cu50 α = 0,00426 (линейная НСХ)');
         vmw.api.openTempSensor('cu100_1428');
-        assertEqual(vmw.els['tempQueryValRange'].textContent, '78,6…185,6 Ом',
-            'Cu100 α = 0,00428 (R₀ = 100)');
+        assertEqual(vmw.els['tempQueryVal'].placeholder, '20,5284…185,6 Ом',
+            'Cu100 α = 0,00428 (R₀ = 100; −180 → 20,5284 по ГОСТ 5.2.3)');
     });
 
-    test('100П: «−200…850 °C» + «17,2444…395,16 Ом» (новая формула!)', () => {
+    test('100П: плейсхолдеры «−200…850 °C» + «17,2444…395,16 Ом»', () => {
         const vmw = makeVm();
         vmw.api.openTempSensor('pt100_1391');
-        assertEqual(vmw.els['tempQueryTempRange'].textContent, '−200…850 °C',
-            'пределы Pt');
+        assertEqual(vmw.els['tempQueryTemp'].placeholder, '−200…850 °C',
+            'пределы Pt (плейсхолдер)');
         // 17,2444 (а не 18,29 — старая формула без члена C) — А.2 ГОСТ
-        assertEqual(vmw.els['tempQueryValRange'].textContent, '17,2444…395,16 Ом',
-            'пределы 100П по НСХ с C-членом');
+        assertEqual(vmw.els['tempQueryVal'].placeholder, '17,2444…395,16 Ом',
+            'пределы 100П по НСХ с C-членом (плейсхолдер)');
     });
 
     test('Pt100 (IEC): «18,5201…390,48 Ом» (ветка не менялась)', () => {
         const vmw = makeVm();
         vmw.api.openTempSensor('pt100_1385');
-        assertEqual(vmw.els['tempQueryValRange'].textContent, '18,5201…390,48 Ом',
-            'пределы Pt100 (IEC)');
+        assertEqual(vmw.els['tempQueryVal'].placeholder, '18,5201…390,48 Ом',
+            'пределы Pt100 (IEC) — плейсхолдер');
     });
 
-    test('ТХА (K): °C + мВ; минус — типографский', () => {
+    test('ТХА (K): °C + мВ в полях; минус — типографский', () => {
         const vmw = makeVm();
         vmw.api.openTempSensor('tc_K');
-        assertEqual(vmw.els['tempQueryTempRange'].textContent, '−270…1372 °C',
-            'пределы K в °C');
-        assertEqual(vmw.els['tempQueryValRange'].textContent, '−6,4577…54,8864 мВ',
-            'пределы термо-ЭДС в мВ');
+        assertEqual(vmw.els['tempQueryTemp'].placeholder, '−270…1372 °C',
+            'пределы K в °C — плейсхолдер');
+        assertEqual(vmw.els['tempQueryVal'].placeholder, '−6,4577…54,8864 мВ',
+            'пределы термо-ЭДС в мВ — плейсхолдер');
     });
 
-    test('ТПР (B): нижний предел 0 → «0…13,8203 мВ»', () => {
+    test('ТПР (B): нижний предел 0 → «0…13,8203 мВ» в поле', () => {
         const vmw = makeVm();
         vmw.api.openTempSensor('tc_B');
-        assertEqual(vmw.els['tempQueryTempRange'].textContent, '0…1820 °C',
-            'пределы B в °C');
-        assertEqual(vmw.els['tempQueryValRange'].textContent, '0…13,8203 мВ',
-            'пределы B в мВ (E(0) = 0)');
+        assertEqual(vmw.els['tempQueryTemp'].placeholder, '0…1820 °C',
+            'пределы B в °C — плейсхолдер');
+        assertEqual(vmw.els['tempQueryVal'].placeholder, '0…13,8203 мВ',
+            'пределы B в мВ (E(0) = 0) — плейсхолдер');
     });
 
-    test('Смена датчика обновляет подсказки', () => {
+    test('Смена датчика обновляет подсказки-плейсхолдеры', () => {
         const vmw = makeVm();
         vmw.api.openTempSensor('cu50_1428');
-        assertEqual(vmw.els['tempQueryValRange'].textContent, '39,3…92,8 Ом', 'до смены');
+        assertEqual(vmw.els['tempQueryVal'].placeholder, '10,2642…92,8 Ом', 'до смены');
         vmw.api.openTempSensor('pt100_1391');
-        assertEqual(vmw.els['tempQueryValRange'].textContent, '17,2444…395,16 Ом', 'после смены');
+        assertEqual(vmw.els['tempQueryVal'].placeholder, '17,2444…395,16 Ом', 'после смены');
         assertEqual(vmw.els['tempQueryValLabel'].textContent, 'Сопротивление R(t), Ом',
             'подпись для ТС');
         vmw.api.openTempSensor('tc_L');
@@ -450,22 +471,22 @@ describe('Task 498 — VM: пределы в полях ввода произв�
 
 describe('Task 498 — SW', () => {
 
-    test('SW: CACHE_VERSION = kipia-test-v722, один инкремент', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v722';") !== -1,
-            'CACHE_VERSION = kipia-test-v722');
+    test('SW: CACHE_VERSION = kipia-test-v723, один инкремент', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v723';") !== -1,
+            'CACHE_VERSION = kipia-test-v723');
     });
 
-    test('SW: guard-версия kipia-test-v723 НЕ выпущена', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v722';");
+    test('SW: guard-версия kipia-test-v724 НЕ выпущена', () => {
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v723';");
         assertTrue(i !== -1, 'строка версии есть');
-        assertFalse(SW_SRC.indexOf('kipia-test-v723') !== -1,
+        assertFalse(SW_SRC.indexOf('kipia-test-v724') !== -1,
             'v723 в sw.js нет (guard для следующей задачи)');
     });
 
     test('SW: комментарий Task 498 в истории', () => {
         const i = SW_SRC.indexOf('Task 498: «Датчики температуры»');
         assertTrue(i !== -1, 'маркер Task 498 есть');
-        const ver = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v722';");
+        const ver = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v723';");
         assertTrue(i < ver, 'комментарий над версией (в блоке истории)');
     });
 });

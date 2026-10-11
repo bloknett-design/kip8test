@@ -161,16 +161,16 @@ describe('Task 493 — кнопка «Табель учёта» (переиме�
     });
 
     test('SW: версия кеша поднята до v717', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v722';") !== -1,
-            'CACHE_VERSION = kipia-test-v722');
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v723';") !== -1,
+            'CACHE_VERSION = kipia-test-v723');
         assertTrue(SW_SRC.indexOf('kipia-test-v716') === -1,
             'v716 в sw.js отсутствует (ровно один инкремент)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v723') !== -1,
+        assertFalse(SW_SRC.indexOf('kipia-test-v724') !== -1,
             'v718 не существует (guard)');
     });
 
     test('SW: комментарий Task 493 в шапке версий', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v722';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v723';");
         // Task 497: комментарий избранного расходомеров (~200 симв.)
         // — якорь 493@1206 — окно 900 → 1400 (запас 194).
         const ctx = SW_SRC.slice(Math.max(0, i - 2000), i);

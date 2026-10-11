@@ -295,7 +295,9 @@ describe('Task 372 — VM: каталог всех датчиков', () => {
         const cat = vmw.api.getTempSensorCatalog();
         const byKey = {};
         cat.forEach(s => { byKey[s.key] = s; });
-        assertEqual(JSON.stringify(byKey['cu50_1428'].range), '{"min":-50,"max":200}', 'Cu50');
+        // Task 499: Cu α = 0,00428 — −180…+200 (ГОСТ 6651-2009, А.3/5.2.3)
+        assertEqual(JSON.stringify(byKey['cu50_1428'].range), '{"min":-180,"max":200}', 'Cu50 0,00428');
+        assertEqual(JSON.stringify(byKey['cu50_1426'].range), '{"min":-50,"max":200}', 'Cu50 0,00426');
         assertEqual(JSON.stringify(byKey['pt100_1385'].range), '{"min":-200,"max":850}', 'Pt100');
         assertEqual(JSON.stringify(byKey['tc_K'].range), '{"min":-270,"max":1372}', 'K');
         assertEqual(JSON.stringify(byKey['tc_B'].range), '{"min":0,"max":1820}', 'B');
@@ -349,7 +351,9 @@ describe('Task 372 — VM: renderTempSensorCards', () => {
         assertTrue(rtd.indexOf('50М (Cu50)') !== -1, 'имя на карточке ТС');
         assertTrue(tc.indexOf('ТХА (K)') !== -1, 'имя на карточке ТП');
         assertTrue(tc.indexOf('ТХК (L)') !== -1, 'Task 373: карточка ТХК (L)');
-        assertTrue(rtd.indexOf('НСХ: −50…200 °C') !== -1, 'диапазон на карточке Cu (минус U+2212)');
+        assertTrue(rtd.indexOf('НСХ: −50…200 °C') !== -1, 'диапазон Cu α = 0,00426 (минус U+2212)');
+        assertTrue(rtd.indexOf('НСХ: −180…200 °C') !== -1,
+            'Task 499: Cu α = 0,00428 — −180…200 (ГОСТ 6651-2009, А.3)');
         assertTrue(tc.indexOf('НСХ: −270…1372 °C') !== -1, 'диапазон на карточке K');
         assertTrue(tc.indexOf('НСХ: −200…800 °C') !== -1, 'Task 373: диапазон L');
         assertEqual(vmw.els['tsAllCount'].textContent, '17', 'счётчик «Все»');
@@ -558,15 +562,15 @@ describe('Task 372 — VM: расчёт по выбранному датчику
 // ============================================================
 // E. SW v601 (guard v602)
 // ============================================================
-describe('Task 372 — SW: версия кэша kipia-test-v722', () => {
+describe('Task 372 — SW: версия кэша kipia-test-v723', () => {
 
-    test('CACHE_VERSION = kipia-test-v722', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v722'") !== -1,
+    test('CACHE_VERSION = kipia-test-v723', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v723'") !== -1,
             'SW бампнут до v601');
     });
 
     test('Guard: v605 ещё не существует', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v723') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v724') === -1,
             'v602 не должен существовать (следующий бамп)');
     });
 });

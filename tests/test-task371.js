@@ -104,10 +104,11 @@ describe('Task 371 — SRC: блок «Расчёт произвольных з�
             'openTempSensor: подпись ТС');
         assertTrue(op.indexOf("vLab.textContent='Термо-ЭДС E(t), мВ'") !== -1,
             'openTempSensor: подпись ТП');
-        assertTrue(op.indexOf("vInp.placeholder='Например: 61,8'") !== -1,
-            'openTempSensor: пример ТС');
-        assertTrue(op.indexOf("vInp.placeholder='Например: 2,2'") !== -1,
-            'openTempSensor: пример ТП');
+        // Task 499: подсказки диапазонов — плейсхолдеры полей
+        assertTrue(op.indexOf('tInp.placeholder=fmtI499(rng499.min)') !== -1,
+            'openTempSensor: плейсхолдер температуры (Task 499)');
+        assertTrue(op.indexOf('vInp.placeholder=fmtM499(vmin499)') !== -1,
+            'openTempSensor: плейсхолдер значения (Task 499)');
     });
 
     test('Рефакторинг: карта типов ТС ровно в одном месте', () => {
@@ -128,10 +129,12 @@ describe('Task 371 — SRC: блок «Расчёт произвольных з�
         }
     });
 
-    test('Диапазоны НСХ: Cu −50…200, Pt −200…850, ТП по типам', () => {
-        // Task 372: единый источник диапазонов — каталог карточек
+    test('Диапазоны НСХ: Cu 0,00428 −180…200 (Task 499), Pt −200…850, ТП по типам', () => {
+        // Task 372: единый источник диапазонов — каталог карточек;
+        // Task 499: Cu α = 0,00428 — −180…+200 (ГОСТ 6651-2009, А.3/5.2.3)
         const fn = grabFn('getTempSensorCatalog');
-        assertTrue(fn.indexOf('{min:-50,max:200}') !== -1, 'Cu: −50…200');
+        assertTrue(fn.indexOf('{min:-180,max:200}') !== -1, 'Cu 0,00428: −180…200 (Task 499)');
+        assertTrue(fn.indexOf('{min:-50,max:200}') !== -1, 'Cu 0,00426: −50…200');
         assertTrue(fn.indexOf('{min:-200,max:850}') !== -1, 'Pt: −200…850');
         assertTrue(fn.indexOf('[-270,1372]') !== -1, 'K: −270…1372');
         assertTrue(fn.indexOf('[0,1820]') !== -1, 'B: 0…1820');
@@ -233,12 +236,15 @@ describe('Task 371 — VM: живой расчёт ТС (температура 
         assertEqual(vmw.els['tempQueryTemp'].value, '55', 'обратная задача — точный 55');
     });
 
-    test('Cu50: границы НСХ −50…200 → 39,3 / 92,8 Ом', () => {
+    test('Cu50: границы НСХ −180…200 → 10,2642 / 92,8 Ом (ГОСТ 5.2.3, Task 499)', () => {
         const vmw = makeTempVm();
         setForm(vmw, 'rtd', 'cu50_1428', 'K');
         vmw.els['tempQueryTemp'].value = '-50';
         vmw.api.tempQueryFromTemp();
-        assertEqual(vmw.els['tempQueryVal'].value, '39,3', 'R(−50)');
+        assertEqual(vmw.els['tempQueryVal'].value, '39,2275', 'R(−50) по ГОСТ 5.2.3');
+        vmw.els['tempQueryTemp'].value = '-180';
+        vmw.api.tempQueryFromTemp();
+        assertEqual(vmw.els['tempQueryVal'].value, '10,2642', 'R(−180) — нижняя граница А.3');
         vmw.els['tempQueryTemp'].value = '200';
         vmw.api.tempQueryFromTemp();
         assertEqual(vmw.els['tempQueryVal'].value, '92,8', 'R(200)');
@@ -250,9 +256,10 @@ describe('Task 371 — VM: живой расчёт ТС (температура 
         vmw.els['tempQueryTemp'].value = '250';
         vmw.api.tempQueryFromTemp();
         assertEqual(vmw.els['tempQueryVal'].value, '', 'поле значения очищено');
+        // Task 499: диапазон Cu 0,00428 расширен — тост «-180 … 200»
         assertTrue(vmw.toasts.length === 1 &&
             vmw.toasts[0].indexOf('Температура вне диапазона НСХ') !== -1 &&
-            vmw.toasts[0].indexOf('-50') !== -1 && vmw.toasts[0].indexOf('200') !== -1,
+            vmw.toasts[0].indexOf('-180') !== -1 && vmw.toasts[0].indexOf('200') !== -1,
             'тост с границами: ' + (vmw.toasts[0] || '—'));
     });
 
@@ -417,12 +424,16 @@ describe('Task 371 — VM: живой расчёт ТП (температура 
         const iPanel = INDEX_SRC.indexOf('id="tempCustomCalcPanel"');
         const iRange = INDEX_SRC.indexOf('id="temp_sensor_min"');
         const panel = INDEX_SRC.slice(iPanel, iRange);
-        assertTrue(panel.indexOf('placeholder="Например: 55"') !== -1, 'пример температуры общий');
-        assertTrue(panel.indexOf('placeholder="Например: 61,8"') !== -1, 'пример ТС (дефолт)');
+        // Task 499: «Например: …» в полях заменены диапазонами НСХ
+        // (плейсхолдеры, бледный текст)
+        assertTrue(panel.indexOf('Например:') === -1, 'Task 499: предложений «Например:» нет');
+        assertTrue(panel.indexOf('Task 499 (заявка: «подсказки диапазонов') !== -1,
+            'комментарий Task 499 в панели');
         assertTrue(panel.indexOf('Сопротивление R(t), Ом') !== -1, 'подпись ТС (дефолт)');
         const op = grabFn('openTempSensor');
         assertTrue(op.indexOf("Термо-ЭДС E(t), мВ") !== -1, 'подпись ТП подставляется');
-        assertTrue(op.indexOf("Например: 2,2") !== -1, 'пример ТП подставляется');
+        assertTrue(op.indexOf('vInp.placeholder=fmtM499(vmin499)') !== -1,
+            'Task 499: диапазон подставляется прямо в поле');
     });
 });
 
@@ -482,15 +493,15 @@ describe('Task 371 — VM: calcTempSensor — таблица в результа
 // ============================================================
 // D. SW v600 (guard v601)
 // ============================================================
-describe('Task 371 — SW: версия кэша kipia-test-v722', () => {
+describe('Task 371 — SW: версия кэша kipia-test-v723', () => {
 
-    test('CACHE_VERSION = kipia-test-v722', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v722'") !== -1,
+    test('CACHE_VERSION = kipia-test-v723', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v723'") !== -1,
             'SW бампнут до v600');
     });
 
     test('Guard: v605 ещё не существует', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v723') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v724') === -1,
             'v601 не должен существовать (следующий бамп)');
     });
 });
