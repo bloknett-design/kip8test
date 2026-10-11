@@ -284,17 +284,17 @@ describe('Task 496 — VM: tempQueryEnterBlur (Enter гасит клавиату
 
 describe('Task 496 — SW: версия кеша v720', () => {
 
-    test('SW: CACHE_VERSION = kipia-test-v720, один инкремент', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v720';") !== -1,
-            'CACHE_VERSION = kipia-test-v720');
+    test('SW: CACHE_VERSION = kipia-test-v721, один инкремент', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v721';") !== -1,
+            'CACHE_VERSION = kipia-test-v721');
         assertFalse(SW_SRC.indexOf('kipia-test-v719') !== -1,
             'v719 в sw.js отсутствует (ровно один инкремент)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v721') !== -1,
+        assertFalse(SW_SRC.indexOf('kipia-test-v722') !== -1,
             'v721 не существует (guard)');
     });
 
     test('SW: комментарий Task 496 в шапке версий', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v720';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v721';");
         const ctx = SW_SRC.slice(Math.max(0, i - 900), i);
         assertTrue(ctx.indexOf('Task 496') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('произвольного расчёта') !== -1,

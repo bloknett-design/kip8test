@@ -192,7 +192,9 @@ describe('Task 358 — SRC: outbox-методы и точки встраиван
     test('init: флаш + слушатели online/visibility', () => {
         const init = extractMethod(INDEX_SRC, 'init');
         const i = INDEX_SRC.indexOf('init: function', INDEX_SRC.indexOf('var FlowmeterData = {'));
-        const initSrc = INDEX_SRC.slice(i, i + 4000);
+        // Task 497: блок мгновенного рендера избранного (~800 симв.)
+        // в середине init — флаш/watchers у конца, окно 4000 → 5000.
+        const initSrc = INDEX_SRC.slice(i, i + 5000);
         assertTrue(initSrc.indexOf("this._ensureOutboxWatchers()") !== -1, 'watchers в init');
         assertTrue(initSrc.indexOf("this._flushOutbox('init')") !== -1, 'флаш в init');
     });
@@ -643,12 +645,12 @@ describe('Task 358 — VM: _flushOutbox (дедуп + доставка)', () => 
 // SW-версия
 // ============================================================
 describe('Task 358 — SW: бамп кэша', () => {
-    test('CACHE_VERSION = kipia-test-v720', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v720'") !== -1,
+    test('CACHE_VERSION = kipia-test-v721', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v721'") !== -1,
             'версия кэша поднята до v587');
     });
     test('нет v586 (старая) и нет v588 (двойной бамп)', () => {
         assertTrue(SW_SRC.indexOf('kipia-test-v586') === -1, 'старая версия не осталась');
-        assertTrue(SW_SRC.indexOf('kipia-test-v721') === -1, 'двойного бампа не было');
+        assertTrue(SW_SRC.indexOf('kipia-test-v722') === -1, 'двойного бампа не было');
     });
 });

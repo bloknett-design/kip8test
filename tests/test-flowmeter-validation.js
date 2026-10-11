@@ -1697,7 +1697,10 @@ describe('Task 238: состояние «Загрузка данных…» и �
     // === renderList() — 3 ветки ===
 
     test('renderList(): ветка loading показывает «Загрузка данных»', () => {
-        var marker = "this._loadState === 'loading'";
+        // Task 497 (адаптация): сравнение '_loadState === \'loading\''
+        // встречается и в условии favEmpty497 (раньше ветки) — ищем
+        // именно ВЕТКУ else-if загрузки.
+        var marker = "} else if (this._loadState === 'loading') {";
         var loadingIdx = src.indexOf(marker);
         assertTrue(loadingIdx !== -1,
             "renderList должен проверять _loadState === 'loading'");
@@ -1709,7 +1712,9 @@ describe('Task 238: состояние «Загрузка данных…» и �
     });
 
     test('renderList(): ветка error показывает «Нет связи с сервером»', () => {
-        var marker = "this._loadState === 'error'";
+        // Task 497 (адаптация): как и с loading — ищем ВЕТКУ else-if
+        // ошибки, не условие favEmpty497.
+        var marker = "} else if (this._loadState === 'error') {";
         var errorIdx = src.indexOf(marker);
         assertTrue(errorIdx !== -1,
             "renderList должен проверять _loadState === 'error'");

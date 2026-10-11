@@ -130,9 +130,9 @@ describe('Task 409 — SRC: клиент (формат периодичност�
             'подсказка — _fmtPeriodRu');
     });
 
-    test('SW поднят (SW_VERSION = kipia-test-v720)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v720') !== -1,
-            'CACHE_VERSION в sw.js — kipia-test-v720');
+    test('SW поднят (SW_VERSION = kipia-test-v721)', () => {
+        assertTrue(SW_SRC.indexOf('kipia-test-v721') !== -1,
+            'CACHE_VERSION в sw.js — kipia-test-v721');
     });
 });
 
@@ -235,8 +235,14 @@ describe('Task 409 — VM: блок по эталону 5 пунктов', () =>
         assertTrue(iHead !== -1, 'группа первого пункта');
         const end = html.indexOf('ws-il-head', iHead + 10);
         const seg = html.slice(iHead, end === -1 ? html.length : end);
-        assertTrue(seg.indexOf('след. срок: 10.10.2026') !== -1,
-            'запись 10.04.2026 + 6 мес');
+        // Адаптация даты (Task 497, 11.10.2026): срок 10.10.2026 ИСТЁК —
+        // рендер показывает «⚠ просрочено с 10.10.2026» (dueIso < today),
+        // до истечения показывал «след. срок: 10.10.2026 ✓». Обе формы —
+        // один и тот же вычисленный срок: запись 10.04.2026 + 6 мес.
+        assertTrue(seg.indexOf('10.10.2026') !== -1 &&
+                   (seg.indexOf('след. срок: 10.10.2026') !== -1 ||
+                    seg.indexOf('просрочено с 10.10.2026') !== -1),
+            'запись 10.04.2026 + 6 мес = 10.10.2026 (будущее «след. срок», прошедшее «просрочено»)');
     });
 });
 
