@@ -481,8 +481,8 @@ describe('Task 478 — данные devices.json: инварианты', () => {
 // ==========================================================================
 describe('Task 478 — SW: версия и шапка', () => {
 
-    test('CACHE_VERSION = kipia-test-v725', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';") !== -1,
+    test('CACHE_VERSION = kipia-test-v726', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v726';") !== -1,
             'SW поднят до v702 (Task 478)');
     });
 
@@ -492,18 +492,19 @@ describe('Task 478 — SW: версия и шапка', () => {
     });
 
     test('несуществующая v703 отсутствует (guard)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v726') === -1,
-            'kipia-test-v726 не должен существовать');
+        assertTrue(SW_SRC.indexOf('kipia-test-v727') === -1,
+            'kipia-test-v727 не должен существовать');
     });
 
     test('комментарий Task 478 в шапке версий', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v726';");
         // Task 480: окно 700 → 1100 — комментарий Task 480 (новый ID
         // Google-таблицы «Перечень КИП ИОС рабочий.xlsx», ~250 симв.)
         // отодвинул комментарий Task 478 до ~835 символов.
         // Task 481: окно 1100 → 1400 — комментарий «ТО = только год»
         // (~258 симв.) отодвинул комментарий Task 478 до ~1096.
-        const ctx = SW_SRC.slice(Math.max(0, i - 9600), i);
+        // Task 502: окно 9600 → 10300 (якорь 9951); якоря 474/472/471/461 — каскад.
+        const ctx = SW_SRC.slice(Math.max(0, i - 10300), i);
         assertTrue(ctx.indexOf('Task 478') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('Период ремонта') !== -1, 'упоминание строки');
         assertTrue(ctx.indexOf('ЗЕЛЁНЫЙ') !== -1 && ctx.indexOf('КРАСНЫЙ') !== -1,
@@ -517,15 +518,15 @@ describe('Task 478 — SW: версия и шапка', () => {
         // 474 ~2133; 472 ~2506; 471 ~3055; 461 ~5617 — расширения не нужны
         // Task 480 (~250 симв., новый ID таблицы) тоже вписался:
         // 474 ~2377; 472 ~2750; 471 ~3299; 461 ~5861 — расширения не нужны
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v726';");
         const i474 = SW_SRC.lastIndexOf('Task 474', i);
         const i472 = SW_SRC.lastIndexOf('Task 472', i);
         const i471 = SW_SRC.lastIndexOf('Task 471', i);
         const i461 = SW_SRC.lastIndexOf('Task 461', i);
-        assertTrue(i474 !== -1 && (i - i474) < 11200, 'Task 478 в окне 4000');
-        assertTrue(i472 !== -1 && (i - i472) < 12000, 'Task 472 в окне 4500');
-        assertTrue(i471 !== -1 && (i - i471) < 12400, 'Task 471 в окне 5000');
-        assertTrue(i461 !== -1 && (i - i461) < 15000, 'Task 461 в окне 7600');
+        assertTrue(i474 !== -1 && (i - i474) < 12000, 'Task 478 в окне 4000');
+        assertTrue(i472 !== -1 && (i - i472) < 12200, 'Task 472 в окне 4500');
+        assertTrue(i471 !== -1 && (i - i471) < 13000, 'Task 471 в окне 5000');
+        assertTrue(i461 !== -1 && (i - i461) < 15400, 'Task 461 в окне 7600');
     });
 });
 

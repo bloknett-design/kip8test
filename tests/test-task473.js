@@ -22,7 +22,7 @@
 //   (в) нулевые месяцы — подпись «0» у основания;
 //   (г) ВСПОМОГАТЕЛЬНАЯ ПРАВАЯ ОСЬ для малых серий (легаси
 //       гистограммы Task 473);
-//   SW: kipia-test-v725.
+//   SW: kipia-test-v726.
 //
 // ИСТОРИЯ АДАПТАЦИЙ:
 //   Task 483: _PPR_DEVICES УДАЛЁН (данные вкладки «Приборы» теперь
@@ -238,8 +238,8 @@ describe('Task 473: шапка charts-desktop.js и SW', () => {
             'назначение модуля не изменилось');
     });
 
-    test('CACHE_VERSION = kipia-test-v725', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';") !== -1,
+    test('CACHE_VERSION = kipia-test-v726', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v726';") !== -1,
             'текущая версия v707');
     });
 
@@ -249,16 +249,17 @@ describe('Task 473: шапка charts-desktop.js и SW', () => {
     });
 
     test('v708 в sw.js отсутствует (лишний инкремент не сделан)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v726') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v727') === -1,
             'версия после текущей задачи не существует');
     });
 
     test('комментарий Task 473 о составе правок в sw.js (окно истории)', () => {
         // Task 473 ~3843 (комментарии 474-484 отодвинули) — окно 4600
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v726';");
         // Task 492: комментарий (~290 симв.) отодвинул якорь Task 473
         // до ~8469 — окно 8200 → 9000.
-        const ctx = SW_SRC.slice(Math.max(0, i - 11500), i);
+        // Task 502: окно 11500 → 12000 (якорь 11605).
+        const ctx = SW_SRC.slice(Math.max(0, i - 12000), i);
         assertTrue(ctx.indexOf('Task 473') !== -1, 'маркер задачи в окне истории');
         assertTrue(ctx.indexOf('правая ось') !== -1 || ctx.indexOf('ППР') !== -1,
             'упоминание графика ППР');

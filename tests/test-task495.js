@@ -164,8 +164,8 @@ describe('Task 495 — SRC: CSS углубления (наоборот выст�
         const i = INDEX_SRC.indexOf('.ts-calc-panel.ts-calc-inset {');
         assertTrue(i !== -1, 'правило .ts-calc-panel.ts-calc-inset есть');
         const rule = INDEX_SRC.slice(i, INDEX_SRC.indexOf('}', i) + 1);
-        assertTrue(rule.indexOf('border: 1px solid rgba(74, 143, 199, 0.32)') !== -1,
-            'рамка 1px приглушённая (у выступа — яркая 2px)');
+        assertTrue(rule.indexOf('border: 1px solid rgba(255, 255, 255, 0.12)') !== -1,
+            'рамка 1px нейтральная приглушённая (Task 502; у выступа — 2px)');
         assertTrue(rule.indexOf('background-image: none') !== -1,
             'без синего градиента (у выступа — линейный градиент)');
         assertTrue(rule.indexOf('box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.5)') !== -1,
@@ -191,14 +191,14 @@ describe('Task 495 — SRC: CSS углубления (наоборот выст�
         const i = INDEX_SRC.indexOf('[data-theme="light"] .ts-calc-panel.ts-calc-inset {');
         assertTrue(i !== -1, 'светлое inset-правило есть');
         const rule = INDEX_SRC.slice(i, INDEX_SRC.indexOf('}', i) + 1);
-        assertTrue(rule.indexOf('background-color: rgba(198, 97, 63, 0.05)') !== -1,
-            'светлый фон «колодца»');
-        assertTrue(rule.indexOf('box-shadow: inset 0 2px 8px rgba(158, 78, 48, 0.14)') !== -1,
+        assertTrue(rule.indexOf('background-color: rgba(20, 20, 19, 0.03)') !== -1,
+            'светлый фон «колодца» нейтральный (Task 502)');
+        assertTrue(rule.indexOf('box-shadow: inset 0 2px 8px rgba(20, 20, 19, 0.08)') !== -1,
             'мягкая внутренняя тень сверху');
         assertTrue(rule.indexOf('inset 0 -1px 0 rgba(255, 255, 255, 0.7)') !== -1,
             'светлая кромка снизу');
-        assertTrue(rule.indexOf('border-color: rgba(198, 97, 63, 0.22)') !== -1,
-            'приглушённая рамка светлой темы');
+        assertTrue(rule.indexOf('border-color: rgba(20, 20, 19, 0.16)') !== -1,
+            'приглушённая рамка светлой темы нейтральная (Task 502)');
         assertFalse(rule.indexOf('0 4px 12px') !== -1,
             'внешней тени НЕТ (у светлого выступа — 0 4px 12px)');
     });
@@ -313,18 +313,19 @@ describe('Task 495 — VM: логика без чипа', () => {
 
 describe('Task 495 — SW: версия кеша v719', () => {
 
-    test('SW: CACHE_VERSION = kipia-test-v725, один инкремент', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';") !== -1,
-            'CACHE_VERSION = kipia-test-v725');
+    test('SW: CACHE_VERSION = kipia-test-v726, один инкремент', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v726';") !== -1,
+            'CACHE_VERSION = kipia-test-v726');
         assertFalse(SW_SRC.indexOf('kipia-test-v718') !== -1,
             'v718 в sw.js отсутствует (ровно один инкремент)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v726') !== -1,
+        assertFalse(SW_SRC.indexOf('kipia-test-v727') !== -1,
             'v720 не существует (guard)');
     });
 
     test('SW: комментарий Task 495 в шапке версий', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';");
-        const ctx = SW_SRC.slice(Math.max(0, i - 2400), i);
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v726';");
+        // Task 502: окно 2400 → 2900 (якорь 2758).
+        const ctx = SW_SRC.slice(Math.max(0, i - 2900), i);
         assertTrue(ctx.indexOf('Task 495') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('УГЛУБЛЕНИЯ') !== -1,
             'упоминание эффекта углубления');

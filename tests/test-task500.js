@@ -166,14 +166,14 @@ describe('Task 500 B: панели произвольных значений —
             'панель с эффектом выступа (как ППР датчиков температуры)');
         assertTrue(b.indexOf('ts-calc-panel ts-calc-inset" id="scaleQueryPanel"') === -1,
             'НЕ колодец — выступ');
-        // Task 501 (заявка): панель перенесена из результатов в колонку
-        // ввода — НАД панелью расчёта шкалы (родителя-обёртки больше нет);
-        // поля живы.
+        // Task 501: панель перенесена из результатов в колонку ввода;
+        // Task 502 (заявка): блоки произвольных значений и типа шкалы
+        // ПОМЕНЯНЫ МЕСТАМИ — панель шкалы теперь ВВЕРХУ, ППР под ней.
         const col1 = colInput('scale-signal');
         const iQ = col1.indexOf('id="scaleQueryPanel"');
         const iF = col1.indexOf('id="scaleFormPanel"');
-        assertTrue(iQ !== -1 && iF !== -1 && iQ < iF,
-            'панель произвольных значений — НАД панелью шкалы (Task 501)');
+        assertTrue(iQ !== -1 && iF !== -1 && iF < iQ,
+            'панель шкалы — НАД панелью произвольных значений (Task 502)');
         const seg = col1.slice(iQ, iQ + 2400);
         assertTrue(seg.indexOf('id="queryScaleVal"') !== -1, 'поле шкалы живо');
         assertTrue(seg.indexOf('id="querySigVal"') !== -1, 'поле сигнала живо');
@@ -410,17 +410,17 @@ describe('Task 500 E: целостность страниц и JS', () => {
 // F. SW: версия и комментарий
 // ==========================================================================
 describe('Task 500 F: SW', () => {
-    test("sw.js: CACHE_VERSION = 'kipia-test-v725'", () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';") !== -1,
+    test("sw.js: CACHE_VERSION = 'kipia-test-v726'", () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v726';") !== -1,
             'версия поднята');
     });
 
     test('v725 в sw.js отсутствует (лишний инкремент не сделан)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v726') === -1);
+        assertTrue(SW_SRC.indexOf('kipia-test-v727') === -1);
     });
 
     test('комментарий Task 500 в шапке версий (окно 1600)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v726';");
         // Task 501: комментарий электротехники/геометрии (~380 симв.)
         // отодвинул Task 500 до ~821 — окно 500 → 1600.
         const ctx = SW_SRC.slice(Math.max(0, i - 1600), i);

@@ -203,12 +203,12 @@ describe('Task 492 — SRC: CSS нижнего бара (по образцу р�
             'десктоп — прежние табы .ts-tabs сверху');
     });
 
-    test('Разделитель ::before между кнопками (синий + светлая тема)', () => {
+    test('Разделитель ::before между кнопками (нейтральный + светлая тема)', () => {
         assertTrue(INDEX_SRC.indexOf('.ts-bottom-bar::before { content: \'\';') !== -1,
             'псевдоэлемент-разделитель');
-        assertTrue(INDEX_SRC.indexOf('background: rgba(74, 143, 199, 0.25); transform: translateX(-50%);') !== -1,
+        assertTrue(INDEX_SRC.indexOf('background: rgba(255, 255, 255, 0.12); transform: translateX(-50%);') !== -1,
             'вертикальная линия по центру');
-        assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .ts-bottom-bar::before { background: rgba(198, 97, 63, 0.2); }') !== -1,
+        assertTrue(INDEX_SRC.indexOf('[data-theme="light"] .ts-bottom-bar::before { background: rgba(20, 20, 19, 0.12); }') !== -1,
             'светлая тема разделителя');
     });
 
@@ -217,9 +217,9 @@ describe('Task 492 — SRC: CSS нижнего бара (по образцу р�
             'геометрия как flow-tab (56px)');
         assertTrue(INDEX_SRC.indexOf('font-family: \'Inter\', sans-serif; font-size: 17px; font-weight: 600;') !== -1,
             'шрифт 17px/600 (как flow-tab)');
-        assertTrue(INDEX_SRC.indexOf('#tsBottomBar .ts-tab.active { background: transparent; color: #4a8fc7; }') !== -1,
-            'active — без фона, синий текст');
-        assertTrue(INDEX_SRC.indexOf('#tsBottomBar .ts-tab:active { background: rgba(74, 143, 199, 0.08); opacity: 0.75; }') !== -1,
+        assertTrue(INDEX_SRC.indexOf('#tsBottomBar .ts-tab.active { background: transparent; color: #ffffff; }') !== -1,
+            'active — без фона, нейтральный светлый текст (Task 502)');
+        assertTrue(INDEX_SRC.indexOf('#tsBottomBar .ts-tab:active { background: rgba(255, 255, 255, 0.08); opacity: 0.75; }') !== -1,
             ':active — лёгкая подсветка');
     });
 
@@ -269,15 +269,15 @@ describe('Task 492 — SRC: шрифт у всех кнопок + featured-оф�
 
     test('Featured-оформление сохранено «как выделенным» (рамка/градиент/тени)', () => {
         const mob = mobileBlock();
-        assertTrue(mob.indexOf('.ts-card-feat { padding: 12px 14px 13px; border: 2px solid rgba(74, 143, 199, 0.85);') !== -1,
-            'рамка 2px + крупнее паддинг (как в Task 491)');
-        assertTrue(mob.indexOf('background: linear-gradient(180deg, rgba(74, 143, 199, 0.2), rgba(74, 143, 199, 0.05));') !== -1,
-            'приподнятый градиент фона');
+        assertTrue(mob.indexOf('.ts-card-feat { padding: 12px 14px 13px; border: 2px solid rgba(255, 255, 255, 0.2);') !== -1,
+            'рамка 2px нейтральная (Task 502) + крупнее паддинг');
+        assertTrue(mob.indexOf('background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.01));') !== -1,
+            'приподнятый градиент фона (нейтральный, Task 502)');
         assertTrue(mob.indexOf('box-shadow: 0 5px 14px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 -3px 0 rgba(0, 0, 0, 0.3);') !== -1,
             'эффект выступа (тень + inset-подсветка/затемнение)');
         assertTrue(mob.indexOf('.ts-card-feat:active { transform: translateY(2px) scale(0.98);') !== -1,
             ':active «утапливается»');
-        assertTrue(mob.indexOf('[data-theme="light"] .ts-card-feat { border-color: rgba(198, 97, 63, 0.55);') !== -1,
+        assertTrue(mob.indexOf('[data-theme="light"] .ts-card-feat { border-color: rgba(20, 20, 19, 0.35);') !== -1,
             'светлая тема featured');
     });
 
@@ -407,9 +407,9 @@ describe('Task 492 — VM: featured у кнопок в избранном', () =
 // ============================================================
 describe('Task 492 — SW: версия кеша', () => {
 
-    test('SW: кэш поднят до kipia-test-v725', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v725'") !== -1,
-            'CACHE_VERSION = kipia-test-v725 (Task 492)');
+    test('SW: кэш поднят до kipia-test-v726', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v726'") !== -1,
+            'CACHE_VERSION = kipia-test-v726 (Task 492)');
         assertFalse(SW_SRC.indexOf('kipia-test-v715') !== -1,
             'старой версии v715 нет');
     });

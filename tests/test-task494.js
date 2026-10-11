@@ -99,9 +99,9 @@ describe('Task 494 — SRC: панель без заголовка/подска�
         const i = INDEX_SRC.indexOf('.ts-calc-panel {');
         assertTrue(i !== -1, 'правило .ts-calc-panel есть');
         const rule = INDEX_SRC.slice(i, INDEX_SRC.indexOf('}', i) + 1);
-        assertTrue(rule.indexOf('border: 2px solid rgba(74, 143, 199, 0.85);') !== -1,
-            'рамка 2px (как featured Task 492)');
-        assertTrue(rule.indexOf('linear-gradient(180deg, rgba(74, 143, 199, 0.2), rgba(74, 143, 199, 0.05))') !== -1,
+        assertTrue(rule.indexOf('border: 2px solid rgba(255, 255, 255, 0.16);') !== -1,
+            'рамка 2px нейтральная (Task 502: палитра снята)');
+        assertTrue(rule.indexOf('linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01))') !== -1,
             'градиент фона (приподнятость)');
         assertTrue(rule.indexOf('box-shadow: 0 5px 14px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 -3px 0 rgba(0, 0, 0, 0.3);') !== -1,
             'тень выступа: внешняя снизу + inset-подсветка сверху + затемнение снизу');
@@ -117,8 +117,8 @@ describe('Task 494 — SRC: панель без заголовка/подска�
         assertTrue(rule.indexOf('font-size: 19px;') !== -1, 'шрифт 19px (было 15px)');
         assertTrue(rule.indexOf('font-weight: 700;') !== -1, 'жирный шрифт');
         assertTrue(rule.indexOf('color: #ffffff;') !== -1, 'белый текст (ярче)');
-        assertTrue(rule.indexOf('border-color: rgba(74, 143, 199, 0.45);') !== -1,
-            'ярче рамка поля');
+        assertTrue(rule.indexOf('border-color: rgba(255, 255, 255, 0.22);') !== -1,
+            'рамка поля нейтральная (Task 502)');
         const ip = INDEX_SRC.indexOf('.ts-calc-field::placeholder');
         assertTrue(ip !== -1, 'правило ::placeholder есть');
         const ph = INDEX_SRC.slice(ip, INDEX_SRC.indexOf('}', ip) + 1);
@@ -132,10 +132,10 @@ describe('Task 494 — SRC: панель без заголовка/подска�
         const iL = INDEX_SRC.indexOf('[data-theme="light"] .ts-calc-panel {');
         assertTrue(iL !== -1, 'правило светлой темы панели есть');
         const rl = INDEX_SRC.slice(iL, INDEX_SRC.indexOf('}', iL) + 1);
-        assertTrue(rl.indexOf('border-color: rgba(198, 97, 63, 0.55);') !== -1,
-            'рамка светлой темы (featured-образец)');
-        assertTrue(rl.indexOf('0 4px 12px rgba(158, 78, 48, 0.22)') !== -1,
-            'мягкая тень светлой темы');
+        assertTrue(rl.indexOf('border-color: rgba(20, 20, 19, 0.32);') !== -1,
+            'рамка светлой темы нейтральная (Task 502)');
+        assertTrue(rl.indexOf('0 4px 12px rgba(20, 20, 19, 0.1)') !== -1,
+            'мягкая тень светлой темы (нейтральная, Task 502)');
         const iF = INDEX_SRC.indexOf('[data-theme="light"] .ts-calc-field {');
         assertTrue(iF !== -1, 'правило светлой темы полей есть');
         const rf = INDEX_SRC.slice(iF, INDEX_SRC.indexOf('}', iF) + 1);
@@ -211,20 +211,21 @@ describe('Task 494 — SRC: панель без заголовка/подска�
 
 describe('Task 494 — SW: версия кеша v718', () => {
 
-    test('SW: CACHE_VERSION = kipia-test-v725, один инкремент', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';") !== -1,
-            'CACHE_VERSION = kipia-test-v725');
+    test('SW: CACHE_VERSION = kipia-test-v726, один инкремент', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v726';") !== -1,
+            'CACHE_VERSION = kipia-test-v726');
         assertFalse(SW_SRC.indexOf('kipia-test-v717') !== -1,
             'v717 в sw.js отсутствует (ровно один инкремент)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v726') !== -1,
+        assertFalse(SW_SRC.indexOf('kipia-test-v727') !== -1,
             'v719 не существует (guard)');
     });
 
     test('SW: комментарий Task 494 в шапке версий', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v726';");
         // Task 497: комментарий избранного расходомеров (~200 симв.)
         // — якорь 494@1030 — окно 900 → 1200 (запас 170).
-        const ctx = SW_SRC.slice(Math.max(0, i - 2600), i);
+        // Task 502: окно 2600 → 3100 (якорь 2957).
+        const ctx = SW_SRC.slice(Math.max(0, i - 3100), i);
         assertTrue(ctx.indexOf('Task 494') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('tempCustomCalcPanel') !== -1,
             'упоминание панели в комментарии');

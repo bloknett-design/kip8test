@@ -97,8 +97,8 @@ function mkKipDbMock() {
 // 1. SW: версия и шапка
 // ==========================================================================
 describe('Task 476 — SW: версия и шапка', () => {
-    test('CACHE_VERSION = kipia-test-v725', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';") !== -1,
+    test('CACHE_VERSION = kipia-test-v726', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v726';") !== -1,
             'SW поднят до v700');
     });
     test('прежняя версия v699 отсутствует', () => {
@@ -106,8 +106,8 @@ describe('Task 476 — SW: версия и шапка', () => {
             'в sw.js не осталось kipia-test-v699');
     });
     test('несуществующая v701 отсутствует (guard)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v726') === -1,
-            'kipia-test-v726 не должен существовать');
+        assertTrue(SW_SRC.indexOf('kipia-test-v727') === -1,
+            'kipia-test-v727 не должен существовать');
     });
     test('комментарий Task 476 в шапке версий', () => {
         assertTrue(SW_SRC.indexOf('Task 476') !== -1, 'маркер задачи');
@@ -591,23 +591,26 @@ describe('Task 476 — границы и инварианты', () => {
 // 10. Окна истории sw.js (дистанции после комментария Task 476)
 // ==========================================================================
 describe('Task 476 — окна истории версий sw.js', () => {
-    const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';");
+    // Task 502: комментарий палитры (~385 симв.) отодвинул якоря:
+    // 474 → 12000 (11493), 472 → 12200 (11866), 471 → 13000 (12415),
+    // 461 → 15400 (14977).
+    const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v726';");
 
     test('Task 474 в пределах окна 1700', () => {
         const i474 = SW_SRC.lastIndexOf('Task 474', i);
-        assertTrue(i474 !== -1 && (i - i474) < 11200, 'якорь Task 474 виден');
+        assertTrue(i474 !== -1 && (i - i474) < 12000, 'якорь Task 474 виден');
     });
     test('Task 472 в пределах окна 2100', () => {
         const i472 = SW_SRC.lastIndexOf('Task 472', i);
-        assertTrue(i472 !== -1 && (i - i472) < 12000, 'якорь Task 472 виден');
+        assertTrue(i472 !== -1 && (i - i472) < 12200, 'якорь Task 472 виден');
     });
     test('Task 471 в пределах окна 2700', () => {
         const i471 = SW_SRC.lastIndexOf('Task 471', i);
-        assertTrue(i471 !== -1 && (i - i471) < 12400, 'якорь Task 471 виден');
+        assertTrue(i471 !== -1 && (i - i471) < 13000, 'якорь Task 471 виден');
     });
     test('Task 461 в пределах окна 5300', () => {
         const i461 = SW_SRC.lastIndexOf('Task 461', i);
-        assertTrue(i461 !== -1 && (i - i461) < 15000, 'якорь Task 461 виден');
+        assertTrue(i461 !== -1 && (i - i461) < 15400, 'якорь Task 461 виден');
     });
     // Task 483: якоря отодвинуты комментарием ~378 симв. — окна
     // расширены scripts/task483-windows.py (3100→3500/3600→4000/

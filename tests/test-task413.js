@@ -445,10 +445,10 @@ describe('Task 413 — GAS-VM: сервер (моки листов)', () => {
 // 5. SW — версия кэша
 // ============================================================
 describe('Task 413 — SW: версия кэша', () => {
-    test('CACHE_VERSION = kipia-test-v725', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v725'") !== -1,
+    test('CACHE_VERSION = kipia-test-v726', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v726'") !== -1,
             'SW v640 (Task 413)');
-        assertTrue(SW_SRC.indexOf('kipia-test-v726') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v727') === -1,
             'двойной бамп отсутствует');
     });
 });

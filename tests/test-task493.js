@@ -161,19 +161,20 @@ describe('Task 493 — кнопка «Табель учёта» (переиме�
     });
 
     test('SW: версия кеша поднята до v717', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';") !== -1,
-            'CACHE_VERSION = kipia-test-v725');
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v726';") !== -1,
+            'CACHE_VERSION = kipia-test-v726');
         assertTrue(SW_SRC.indexOf('kipia-test-v716') === -1,
             'v716 в sw.js отсутствует (ровно один инкремент)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v726') !== -1,
+        assertFalse(SW_SRC.indexOf('kipia-test-v727') !== -1,
             'v718 не существует (guard)');
     });
 
     test('SW: комментарий Task 493 в шапке версий', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v726';");
         // Task 497: комментарий избранного расходомеров (~200 симв.)
         // — якорь 493@1206 — окно 900 → 1400 (запас 194).
-        const ctx = SW_SRC.slice(Math.max(0, i - 2800), i);
+        // Task 502: окно 2800 → 3300 (якорь 3133).
+        const ctx = SW_SRC.slice(Math.max(0, i - 3300), i);
         assertTrue(ctx.indexOf('Task 493') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('Табель учёта') !== -1, 'описание переименования');
     });

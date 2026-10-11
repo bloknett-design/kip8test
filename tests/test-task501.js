@@ -27,7 +27,7 @@
 //      light-правилах ts-элементов нет; тёмная тема не тронута.
 //   E. VM — updateScaleQueryUnits: единицы из полей/селектов;
 //      calcScaleSignal не обращается к удалённой обёртке.
-//   F. SW kipia-test-v725 + комментарий Task 501 (guard v726).
+//   F. SW kipia-test-v726 + комментарий Task 501 (guard v726).
 
 const fs = require('fs');
 const path = require('path');
@@ -202,17 +202,17 @@ describe('Task 501 C: шкала-сигнал', () => {
             'опция «Корнеизвлекающая» в селекте жива');
     });
 
-    test('панель произвольных значений — НАД панелью расчёта шкалы', () => {
+    test('панель расчёта шкалы — НАД панелью произвольных значений (Task 502)', () => {
         const col1 = colInput('scale-signal');
         const iQ = col1.indexOf('id="scaleQueryPanel"');
         const iF = col1.indexOf('id="scaleFormPanel"');
-        assertTrue(iQ !== -1 && iF !== -1 && iQ < iF,
-            'ППР выше панели шкалы');
+        assertTrue(iQ !== -1 && iF !== -1 && iF < iQ,
+            'панель шкалы выше ППР (Task 502: блоки поменяны местами)');
         assertTrue(col1.indexOf('class="ts-calc-panel" id="scaleQueryPanel"') !== -1,
             'ППР — ts-calc-panel БЕЗ inset (эффект выступа)');
         assertTrue(col1.indexOf('ts-calc-inset" id="scaleQueryPanel"') === -1,
             'НЕ колодец');
-        // поля и подсказка панели живы
+        // поля панели живы (Task 502: текст-подсказка удалена)
         const seg = col1.slice(iQ, iQ + 2400);
         ['queryScaleVal', 'querySigVal', 'scaleQueryUnit',
          'scaleQuerySigUnit'].forEach((id) => {
@@ -221,7 +221,7 @@ describe('Task 501 C: шкала-сигнал', () => {
         assertTrue(seg.indexOf('queryFromScaleLive()') !== -1, 'живой расчёт жив');
         // кнопка «Рассчитать» — после ОБОИХ панелей
         const iBtn = col1.indexOf('class="scale-calc-btn"');
-        assertTrue(iBtn > iF, 'кнопка после панелей');
+        assertTrue(iBtn > iQ, 'кнопка после панелей');
     });
 
     test('scaleCustomCalcPanel удалён (HTML и JS)', () => {
@@ -264,68 +264,76 @@ describe('Task 501 C: шкала-сигнал', () => {
 // ==========================================================================
 // D. СВЕТЛАЯ ТЕМА — тёплая политура ts-элементов
 // ==========================================================================
-describe('Task 501 D: светлая тема — тёплая палитра политры', () => {
-    test('панель-выступ: рамка/градиент/тени — терракотовые', () => {
+describe('Task 501 D: светлая тема — политура (Task 502: НЕЙТРАЛЬНАЯ)', () => {
+    // Task 502 (заявка: «убери палитру кнопок и блоков — она зрительно
+    // перегружает приложение»): тёплая терракотовая политура Task 501
+    // СНЯТА — ts-элементы нейтральны в ОБЕИХ темах. Ассерты D-секции
+    // адаптированы под нейтральные литералы.
+    test('панель-выступ: рамка/градиент/тени — нейтральные', () => {
         const rule = INDEX_SRC.indexOf('[data-theme="light"] .ts-calc-panel {');
         const seg = INDEX_SRC.slice(rule, INDEX_SRC.indexOf('}', rule) + 1);
-        assertTrue(seg.indexOf('rgba(198, 97, 63, 0.55)') !== -1,
-            'рамка терракотовая');
-        assertTrue(seg.indexOf('rgba(198, 97, 63, 0.13)') !== -1,
-            'градиент тёплый');
-        assertTrue(seg.indexOf('rgba(158, 78, 48, 0.22)') !== -1,
-            'тень тёплая');
+        assertTrue(seg.indexOf('rgba(20, 20, 19, 0.32)') !== -1,
+            'рамка нейтральная (Task 502)');
+        assertTrue(seg.indexOf('rgba(20, 20, 19, 0.03)') !== -1,
+            'градиент нейтральный');
+        assertTrue(seg.indexOf('0 4px 12px rgba(20, 20, 19, 0.1)') !== -1,
+            'тень нейтральная');
         assertFalse(seg.indexOf('43, 111, 163') !== -1, 'синей рамки нет');
         assertFalse(seg.indexOf('21, 54, 83') !== -1, 'синих теней нет');
+        assertFalse(seg.indexOf('198, 97, 63') !== -1, 'терракоты нет (Task 502)');
     });
 
-    test('колодец: фон/рамка — тёплые', () => {
+    test('колодец: фон/рамка — нейтральные', () => {
         const rule = INDEX_SRC.indexOf(
             '[data-theme="light"] .ts-calc-panel.ts-calc-inset {');
         const seg = INDEX_SRC.slice(rule, INDEX_SRC.indexOf('}', rule) + 1);
-        assertTrue(seg.indexOf('rgba(198, 97, 63, 0.05)') !== -1, 'фон тёплый');
-        assertTrue(seg.indexOf('rgba(198, 97, 63, 0.22)') !== -1, 'рамка тёплая');
+        assertTrue(seg.indexOf('rgba(20, 20, 19, 0.03)') !== -1,
+            'фон нейтральный (Task 502)');
+        assertTrue(seg.indexOf('rgba(20, 20, 19, 0.16)') !== -1,
+            'рамка нейтральная');
         assertFalse(seg.indexOf('21, 54, 83') !== -1, 'синего фона нет');
+        assertFalse(seg.indexOf('198, 97, 63') !== -1, 'терракоты нет (Task 502)');
     });
 
-    test('фокус полей/селектов в панелях — терракотовое кольцо', () => {
+    test('фокус полей/селектов в панелях — нейтральное кольцо', () => {
         const i = INDEX_SRC.indexOf(
             '[data-theme="light"] .ts-calc-field:focus {');
         const seg = INDEX_SRC.slice(i, INDEX_SRC.indexOf('}', i) + 1);
-        assertTrue(seg.indexOf('rgba(198, 97, 63, 0.65)') !== -1,
-            'фокус ts-calc-field терракотовый');
+        assertTrue(seg.indexOf('rgba(20, 20, 19, 0.55)') !== -1,
+            'фокус ts-calc-field нейтральный (Task 502)');
         const i2 = INDEX_SRC.indexOf(
             '[data-theme="light"] .ts-calc-panel input.scale-field:focus');
         const seg2 = INDEX_SRC.slice(i2, INDEX_SRC.indexOf('background: rgba(255, 255, 255, 0.92);', i2));
-        assertTrue(seg2.indexOf('rgba(198, 97, 63, 0.65)') !== -1,
-            'фокус полей в панелях терракотовый');
+        assertTrue(seg2.indexOf('rgba(20, 20, 19, 0.55)') !== -1,
+            'фокус полей в панелях нейтральный');
         const i3 = INDEX_SRC.indexOf(
             '[data-theme="light"] .ts-calc-panel .cs-trigger:focus');
         const seg3 = INDEX_SRC.slice(i3, INDEX_SRC.indexOf('}', i3) + 200);
-        assertTrue(seg3.indexOf('rgba(198, 97, 63, 0.65)') !== -1,
-            'фокус cs-trigger терракотовый');
+        assertTrue(seg3.indexOf('rgba(20, 20, 19, 0.55)') !== -1,
+            'фокус cs-trigger нейтральный');
     });
 
-    test('каталог: табы/звёзды/featured/бар — терракотовые', () => {
+    test('каталог: табы/звёзды/featured/бар — нейтральные', () => {
         assertTrue(INDEX_SRC.indexOf(
-            '[data-theme="light"] .ts-card-fav-btn.active { color: #C6613F;') !== -1,
-            'звёздочка активная #C6613F');
+            '[data-theme="light"] .ts-card-fav-btn.active { color: #141413;') !== -1,
+            'звёздочка активная нейтральная (Task 502)');
         assertTrue(INDEX_SRC.indexOf(
             '[data-theme="light"] .ts-tab.active {') !== -1 &&
-            INDEX_SRC.indexOf('background: rgba(198, 97, 63, 0.12); color: #C6613F; }') !== -1,
-            'активный таб терракотовый');
+            INDEX_SRC.indexOf('background: rgba(20, 20, 19, 0.08); color: #141413; }') !== -1,
+            'активный таб нейтральный');
         assertTrue(INDEX_SRC.indexOf(
-            '[data-theme="light"] .ts-tab.active .ts-tab-count { background: #C6613F;') !== -1,
-            'счётчик активного таба терракотовый');
+            '[data-theme="light"] .ts-tab.active .ts-tab-count { background: #141413;') !== -1,
+            'счётчик активного таба нейтральный');
         assertTrue(INDEX_SRC.indexOf(
-            '[data-theme="light"] #tempSensorFavBtn.active { color: #C6613F; }') !== -1,
-            'звёздочка шапки терракотовая');
+            '[data-theme="light"] #tempSensorFavBtn.active { color: #141413; }') !== -1,
+            'звёздочка шапки нейтральная');
         assertTrue(INDEX_SRC.indexOf(
-            '[data-theme="light"] #tsBottomBar .ts-tab.active { color: #C6613F; }') !== -1,
-            'таб нижнего бара терракотовый');
+            '[data-theme="light"] #tsBottomBar .ts-tab.active { color: #141413; }') !== -1,
+            'таб нижнего бара нейтральный');
         const i = INDEX_SRC.indexOf('[data-theme="light"] .ts-card-feat {');
         const seg = INDEX_SRC.slice(i, INDEX_SRC.indexOf('}', i) + 1);
-        assertTrue(seg.indexOf('rgba(198, 97, 63, 0.55)') !== -1,
-            'featured-карточка тёплая');
+        assertTrue(seg.indexOf('rgba(20, 20, 19, 0.35)') !== -1,
+            'featured-карточка нейтральная (Task 502)');
     });
 
     test('новые light-правила: контур табов, hover карточек, заглушка', () => {
@@ -333,14 +341,14 @@ describe('Task 501 D: светлая тема — тёплая палитра п
             '[data-theme="light"] .ts-tabs { border-color: rgba(20, 20, 19, 0.15); }') !== -1,
             'контур табов нейтральный');
         assertTrue(INDEX_SRC.indexOf(
-            '[data-theme="light"] .ts-empty-fav-hint .star { color: #C6613F; }') !== -1,
-            'звёздочка заглушки терракотовая');
+            '[data-theme="light"] .ts-empty-fav-hint .star { color: #141413; }') !== -1,
+            'звёздочка заглушки нейтральная (Task 502)');
         assertTrue(INDEX_SRC.indexOf(
-            '[data-theme="light"] .ts-empty-fav-icon { color: rgba(198, 97, 63, 0.4); }') !== -1,
-            'иконка заглушки терракотовая');
+            '[data-theme="light"] .ts-empty-fav-icon { color: rgba(20, 20, 19, 0.35); }') !== -1,
+            'иконка заглушки нейтральная (Task 502)');
     });
 
-    test('синих литералов в light-правилах ts-элементов НЕТ', () => {
+    test('цветных литералов в light-правилах ts-элементов НЕТ', () => {
         const lines = INDEX_SRC.split('\n');
         const bad = lines.filter((line) =>
             line.indexOf('[data-theme="light"]') !== -1 &&
@@ -348,29 +356,32 @@ describe('Task 501 D: светлая тема — тёплая палитра п
              line.indexOf('tempSensorFav') !== -1) &&
             (line.indexOf('43, 111, 163') !== -1 || line.indexOf('2b6fa3') !== -1 ||
              line.indexOf('rgba(74, 143, 199') !== -1 ||
-             line.indexOf('21, 54, 83') !== -1));
+             line.indexOf('21, 54, 83') !== -1 ||
+             line.indexOf('198, 97, 63') !== -1 ||
+             line.indexOf('158, 78, 48') !== -1 ||
+             line.indexOf('C6613F') !== -1));
         assertEqual(bad.length, 0,
-            'синие light-литералы: ' + (bad.length ? bad[0].trim().slice(0, 80) : 'нет'));
+            'цветные light-литералы: ' + (bad.length ? bad[0].trim().slice(0, 80) : 'нет'));
     });
 
-    test('тёмная тема НЕ тронута (синий — акцент тёмной)', () => {
+    test('тёмная тема — тоже НЕЙТРАЛЬНАЯ (Task 502: палитра снята)', () => {
         assertTrue(INDEX_SRC.indexOf(
             '.ts-calc-panel { padding: 16px;') !== -1, 'базовая панель жива');
         assertTrue(INDEX_SRC.indexOf(
+            'rgba(255, 255, 255, 0.16); border-radius: 14px; margin: 8px 0 12px;') !== -1,
+            'нейтральная рамка 2px тёмной темы (Task 502)');
+        assertTrue(INDEX_SRC.indexOf(
+            '.ts-tab.active { background: rgba(255, 255, 255, 0.1); color: #ffffff; }') !== -1,
+            'тёмные табы нейтральные (Task 502)');
+        assertTrue(INDEX_SRC.indexOf(
+            '.ts-card-fav-btn.active { color: #e0e0e0;') !== -1,
+            'тёмная звёздочка нейтральная (Task 502)');
+        assertFalse(INDEX_SRC.indexOf(
             'rgba(74, 143, 199, 0.85); border-radius: 14px; margin: 8px 0 12px;') !== -1,
-            'синяя рамка 2px тёмной темы жива');
-        assertTrue(INDEX_SRC.indexOf(
-            '.ts-tab.active { background: rgba(74, 143, 199, 0.15); color: #4a8fc7; }') !== -1,
-            'тёмные табы живы');
-        assertTrue(INDEX_SRC.indexOf(
-            '.ts-card-fav-btn.active { color: #4a8fc7;') !== -1,
-            'тёмная звёздочка жива');
+            'синей рамки 2px больше нет');
     });
 });
 
-// ==========================================================================
-// E. VM — updateScaleQueryUnits
-// ==========================================================================
 describe('Task 501 E: VM — живые единицы панели ППР шкала-сигнал', () => {
     function makeCtx() {
         const els = {};
@@ -449,11 +460,11 @@ describe('Task 501 E: VM — живые единицы панели ППР шк�
 // F. SW — версия и комментарий
 // ==========================================================================
 describe('Task 501 F: Service Worker', () => {
-    test("sw.js: CACHE_VERSION = 'kipia-test-v725'", () => {
+    test("sw.js: CACHE_VERSION = 'kipia-test-v726'", () => {
         assertTrue(
-            SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v725';") !== -1,
+            SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v726';") !== -1,
             'версия v725');
-        assertFalse(SW_SRC.indexOf('kipia-test-v726') !== -1,
+        assertFalse(SW_SRC.indexOf('kipia-test-v727') !== -1,
             'v726 ещё не выпущена');
     });
 
