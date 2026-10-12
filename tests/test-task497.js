@@ -490,21 +490,21 @@ describe('Task 497 — VM: renderList() заглушки по состояния
 // ================================================================
 describe('Task 497 — SW: версия кеша v721', () => {
 
-    test('SW: CACHE_VERSION = kipia-test-v727, один инкремент', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v727';") !== -1,
-            'CACHE_VERSION = kipia-test-v727');
+    test('SW: CACHE_VERSION = kipia-test-v728, один инкремент', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v728';") !== -1,
+            'CACHE_VERSION = kipia-test-v728');
         assertFalse(SW_SRC.indexOf('kipia-test-v720') !== -1,
             'v720 в sw.js отсутствует (ровно один инкремент)');
-        assertFalse(SW_SRC.indexOf('kipia-test-v728') !== -1,
+        assertFalse(SW_SRC.indexOf('kipia-test-v729') !== -1,
             'v722 не существует (guard)');
     });
 
     test('SW: комментарий Task 497 в шапке версий', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v727';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v728';");
         // Task 499: комментарий плейсхолдеров диапазонов (~430 симв.)
         // отодвинул Task 497 до ~1043 — окно 900 → 1300.
         // Task 502: окно 2100 → 2400 (якорь 2251).
-        const ctx = SW_SRC.slice(Math.max(0, i - 2400), i);
+        const ctx = SW_SRC.slice(Math.max(0, i - 3100), i);
         assertTrue(ctx.indexOf('Task 497') !== -1, 'маркер задачи');
         assertTrue(ctx.indexOf('Расходомеры хозрасчётные') !== -1,
             'упоминание раздела');
