@@ -17,24 +17,24 @@
 //     учитывает .cj-print-btn-inline (поле поиска не наезжает).
 //   SRC/JS: полный набор методов печати (модель/HTML/диалог/PDF/
 //     Excel/инжект-стиль), _CJ_PRINT_CSS скоуп #wsPrintSheet.cj-sheet.
-//   VM (модель из 3 строк двух отделений — данные как в cables.json):
-//     группировка по «Отделение, производство» (алфавит, сквозная
-//     нумерация «№ п/п», 43,5 → «43,5»), подзаголовок «записей: N
-//     [из K]» (фильтр), печатный HTML (двухуровневая шапка rowspan 2 /
-//     colspan 3 «По проекту»/«Проложен», строки отделений colspan 12,
-//     зебра cjpr-odd/even, экранирование), standalone-документ
-//     (A4 landscape, 281мм), раскладка PDF (842×595, 786pt колонок,
-//     пагинация: шапка таблицы на каждой странице, подзаголовок
-//     отделения не последний на странице), книга Excel (заголовок,
-//     шапка с «(по проекту)»/«(проложен)», числа длин — ЧИСЛАМИ, zip
-//     PK-магия, имя файла с датой).
+//   VM (модель из 3 строк двух отделений — данные как в cables.json).
+//     Task 506: модель ПЛОСКАЯ — порядок исходного файла (сортировка
+//     по № п/п, строки без № — в конце), 43,5 → «43,5», подзаголовок
+//     диалога «записей: N [из K]»; печатный HTML — ТОЛЬКО таблица
+//     шаблона (10 колонок, шапка rowspan 2 / colspan 3, серые «По
+//     проекту», БЕЗ зебры/отделений, экранирование); standalone-
+//     документ с РАЗБИЕНИЕМ НА СТРАНИЦЫ A4 (297×210мм, мерная
+//     таблица + скрипт пагинации); раскладка PDF (842×595, 10
+//     колонок 786pt, шапка на каждой странице); книга Excel по
+//     шаблону (объединения шапки, Print_Titles, Arial Narrow,
+//     числа — ЧИСЛАМИ, zip PK-магия, имя файла с датой).
 //   VM (мок-DOM): printJournal — пустой журнал → тост без листа;
 //     с данными → лист #wsPrintSheet.cj-sheet + диалог wspprev-*
 //     (iframe srcdoc standalone, кнопки Печать/PDF/Excel/Отмена +
 //     «A4 · альбомная»), Esc закрывает (с инжект-стилем), диалоги
 //     взаимоисключающие (закрывает предпросмотры табеля), фолбэк —
 //     печать сразу при закрытии диалога.
-//   SW: kipia-test-v728 (двойного бампа нет — v729).
+//   SW: kipia-test-v729 (двойного бампа нет — v729).
 //
 // Запуск: через tests/run-all.js (require './test-task505.js').
 
@@ -174,9 +174,18 @@ describe('Task 505 — CSS: компактная cj-print-btn-inline', () => {
         const css = INDEX_SRC.slice(i, INDEX_SRC.indexOf('_cjInjectPrintStyle', i));
         assertTrue(css.indexOf('#wsPrintSheet.cj-sheet') !== -1,
             'правила скоуплены под cj-sheet (не задевают печать табеля)');
-        assertTrue(css.indexOf('.cjpr-table') !== -1 &&
-                   css.indexOf('.cjpr-grp') !== -1,
+        assertTrue(css.indexOf('.cjpr-table') !== -1,
             'табличная вёрстка журнала');
+        assertTrue(css.indexOf('Arial Narrow') !== -1 &&
+                   css.indexOf('12pt') !== -1,
+            'Task 506: шрифт шаблона Arial Narrow 12pt');
+        assertTrue(css.indexOf('#f2f2f2') !== -1,
+            'Task 506: серые ячейки «По проекту»');
+        assertTrue(css.indexOf('table-header-group') !== -1,
+            'Task 506: шапка повторяется на каждой странице');
+        assertTrue(css.indexOf('.cjpr-grp') === -1 &&
+                   css.indexOf('cjpr-odd') === -1,
+            'Task 506: строк отделений и зебры НЕТ (шаблон)');
     });
 });
 
@@ -221,8 +230,9 @@ describe('Task 505 — SRC: полный набор методов', () => {
         const m = methodText(CJ_SRC, '_printModel');
         assertTrue(m.indexOf('var srcRows = (this._rows || []).slice();') !== -1,
             'источник — текущие строки (как в списке на экране)');
-        assertTrue(m.indexOf("'(без отделения)'") !== -1,
-            'пустое отделение → «(без отделения)» (как _render)');
+        assertTrue(m.indexOf('row.num') !== -1 &&
+                   m.indexOf('sort') !== -1,
+            'Task 506: сортировка по № п/п — порядок исходного файла');
         assertTrue(m.indexOf('filtered') !== -1 &&
                    m.indexOf('totalAll') !== -1,
             'признак фильтра и полный счётчик для подзаголовка');
@@ -241,17 +251,24 @@ describe('Task 505 — SRC: полный набор методов', () => {
         assertTrue(m.indexOf('A4 · альбомная') !== -1,
             'подсказка «A4 · альбомная»');
         assertTrue(m.indexOf("frame.className = 'wspprev-frame'") !== -1,
-            'альбомная ширина iframe 1063px (базовая .wspprev-frame, без книжного override)');
+            'вёрстка Task 430 (базовый класс iframe)');
+        assertTrue(m.indexOf("frame.style.width = '1123px'") !== -1,
+            'Task 506: полная страница 297мм = 1123px (с полями)');
     });
 
-    test('Excel: делегирует помощникам табеля (Task 430/465)', () => {
+    test('Excel: свой лист по шаблону + базовые помощники табеля', () => {
         const m = methodText(CJ_SRC, '_buildCjWorkbook');
-        assertTrue(m.indexOf('WorkSchedule._eventsSheetXml') !== -1 &&
-                   m.indexOf('WorkSchedule._wsXlsZip') !== -1 &&
-                   m.indexOf('WorkSchedule._wsXlsDocProps') !== -1,
-            'писатель xlsx переиспользуется (без дублирования кода)');
-        assertTrue(m.indexOf('sheet name="Кабельный журнал" sheetId') !== -1,
-            'лист называется «Кабельный журнал»');
+        assertTrue(m.indexOf('WorkSchedule._wsXlsZip') !== -1 &&
+                   m.indexOf('WorkSchedule._wsXlsDocProps') !== -1 &&
+                   m.indexOf('WorkSchedule._wsXlsEsc') !== -1,
+            'архив/пропсы/экранирование — помощники Task 430/465');
+        assertTrue(m.indexOf('mergeCell ref="A1:A2"') !== -1,
+            'Task 506: объединения шапки как в шаблоне');
+        assertTrue(m.indexOf('_xlnm.Print_Titles') !== -1,
+            'Task 506: повтор шапки при печати Excel (строки 1:2)');
+        assertTrue(m.indexOf('Arial Narrow') !== -1 &&
+                   m.indexOf('sheet name="Кабельный журнал" sheetId') !== -1,
+            'лист «Кабельный журнал» шрифтом шаблона');
     });
 });
 
@@ -261,19 +278,19 @@ describe('Task 505 — SRC: полный набор методов', () => {
 describe('Task 505 — VM: модель и печатная форма', () => {
 
     const ROWS = [
-        { _row: 2, designation: '1/7', start: 'ЩК-4, ШУ-1', end: 'ЭЩ №4',
+        { _row: 2, num: 1, designation: '1/7', start: 'ЩК-4, ШУ-1', end: 'ЭЩ №4',
           section: 'по коробу', mark_project: 'КВБбШЭнг-LS',
           cores_project: '14х1', length_project: 60,
           mark_actual: 'КВБбШЭнг-LS', cores_actual: '19х1',
           length_actual: 90, department: 'Водоподготовка',
           purpose: 'Контрольный' },
-        { _row: 3, designation: '2/1', start: 'ЩК-4, ШУ-1',
+        { _row: 3, num: 2, designation: '2/1', start: 'ЩК-4, ШУ-1',
           end: 'КС-1, отм. 0,0 м., оси 1-2/А-Б', section: 'по коробу',
           mark_project: 'КВБбШЭнг-LS', cores_project: '27х1',
           length_project: 43, mark_actual: 'КВБбШЭнг-LS',
           cores_actual: '27х1', length_actual: 43.5,
           department: 'Водоподготовка', purpose: 'Контрольный' },
-        { _row: 5, designation: '5/2 & КГ', start: 'ЩСУ-2', end: 'Н-1',
+        { _row: 5, num: 3, designation: '5/2 & КГ', start: 'ЩСУ-2', end: 'Н-1',
           section: 'по лотку', mark_project: 'КГ', cores_project: '3х2,5',
           length_project: 12, mark_actual: 'КГ', cores_actual: '3х2,5',
           length_actual: 12, department: 'Отделение №2',
@@ -297,33 +314,63 @@ describe('Task 505 — VM: модель и печатная форма', () => {
             '\n});')(undefined, undefined, undefined, undefined);
     }
 
-    test('модель: группировка по алфавиту, сквозная нумерация, 43,5', () => {
+    test('модель: ПЛОСКАЯ, порядок исходного файла (№ п/п), 43,5', () => {
         const h = cjHost(ROWS);
         const m = h._printModel();
-        assertEqual(m.groups.length, 2, 'два отделения');
-        assertEqual(m.groups[0].name, 'Водоподготовка',
-            'группы по алфавиту (В < О)');
-        assertEqual(m.groups[1].name, 'Отделение №2', 'вторая группа');
+        assertEqual(m.groups, undefined,
+            'Task 506: группировки НЕТ (плоская модель)');
+        assertEqual(m.rows.length, 3, 'все строки');
         assertEqual(m.total, 3, 'всего записей');
         assertEqual(m.filtered, false, 'без фильтра — filtered false');
-        // ячейки
-        assertEqual(m.groups[0].rows[0].cells.num, '1', '№ п/п 1');
-        assertEqual(m.groups[0].rows[1].cells.num, '2', '№ п/п 2');
-        assertEqual(m.groups[1].rows[0].cells.num, '3', 'нумерация сквозная');
-        assertEqual(m.groups[0].rows[1].cells.length_actual, '43,5',
+        // порядок — № п/п (num), не отделение и не порядок массива
+        assertEqual(m.rows[0].cells.designation, '1/7', 'первая — №1');
+        assertEqual(m.rows[1].cells.designation, '2/1', 'вторая — №2');
+        assertEqual(m.rows[2].cells.designation, '5/2 & КГ', 'третья — №3');
+        assertEqual(m.rows[1].cells.length_actual, '43,5',
             'число → строка с запятой');
-        assertEqual(m.groups[0].rows[0].cells.length_project, '60',
+        assertEqual(m.rows[0].cells.length_project, '60',
             'целое без хвоста .0');
-        assertEqual(m.groups[1].rows[0].cells.designation, '5/2 & КГ',
-            'строки проходят как есть (экранирование — в HTML)');
     });
 
-    test('модель: пустое отделение → «(без отделения)»', () => {
+    test('модель: сортировка по num, строки без № — в конце', () => {
+        // сервер отдал не по порядку + строка без № — печать обязана
+        // восстановить порядок ИСХОДНОГО ФАЙЛА (№ п/п)
+        const shuffled = [
+            Object.assign({}, ROWS[2]),
+            { _row: 9, designation: 'X', start: 's', end: 'e',
+              section: 'по коробу', mark_project: 'КГ',
+              cores_project: '2х1', length_project: 5,
+              mark_actual: 'КГ', cores_actual: '2х1',
+              length_actual: 5, department: 'D' },
+            Object.assign({}, ROWS[0]),
+            Object.assign({}, ROWS[1])
+        ];
+        const h = cjHost(shuffled);
+        const m = h._printModel();
+        assertEqual(m.rows.map(function(r) {
+            return r.cells.designation;
+        }).join(','), '1/7,2/1,5/2 & КГ,X',
+            '№ по возрастанию, строка без № — последняя');
+    });
+
+    test('модель: числоподобные жилы «1.0» → «1» (как в исходном файле)', () => {
+        const rows = [Object.assign({}, ROWS[0],
+            { cores_project: '1.0', cores_actual: '2.5' })];
+        const h = cjHost(rows);
+        const m = h._printModel();
+        assertEqual(m.rows[0].cells.cores_project, '1',
+            'строка-число печатается числом');
+        assertEqual(m.rows[0].cells.cores_actual, '2,5',
+            'дробная строка-число — с запятой');
+    });
+
+    test('модель: пустое отделение — просто строка (заглушек нет)', () => {
         const rows = [Object.assign({}, ROWS[0], { department: '   ' })];
         const h = cjHost(rows);
         const m = h._printModel();
-        assertEqual(m.groups[0].name, '(без отделения)',
-            'пробельное отделение — заглушка, как в списке');
+        assertEqual(m.rows.length, 1,
+            'строка без отделения печатается как есть');
+        assertEqual(m.rows[0].cells.designation, '1/7', 'данные живы');
     });
 
     test('модель: фильтр — «записей: 2 из 3» в подзаголовке', () => {
@@ -331,36 +378,53 @@ describe('Task 505 — VM: модель и печатная форма', () => {
         const m = h._printModel();
         assertEqual(m.filtered, true, 'filtered true');
         assertEqual(m.total, 2, 'печатается отфильтрованное');
-        assertEqual(h._cjSub(m), 'отделений: 1 · записей: 2 из 3',
-            'подзаголовок с «из K»');
+        assertEqual(h._cjSub(m), 'записей: 2 из 3',
+            'Task 506: подзаголовок без «отделений», с «из K»');
+        assertEqual(h._cjSub(h._printModel.call({ _rows: ROWS,
+            _allRows: ROWS, _cjPrintCols: h._cjPrintCols,
+            _cjCellVal: h._cjCellVal, _cjFmtNum: h._cjFmtNum })),
+            'записей: 3', 'подзаголовок без фильтра');
     });
 
-    test('HTML: двухуровневая шапка + строки отделений + зебра + esc', () => {
+    test('HTML: таблица шаблона — 10 колонок, шапка, серые «По проекту»', () => {
         const h = cjHost(ROWS);
         const html = h._buildCjPrintHtml(h._printModel());
-        assertTrue(html.indexOf('cjpr-title') !== -1 &&
-                   html.indexOf('Кабельный журнал') !== -1, 'шапка листа');
-        assertEqual((html.match(/rowspan="2"/g) || []).length, 6,
-            '6 одиночных колонок rowspan 2');
+        // Task 506: заголовка-шапки НЕТ — «просто таблицу»
+        assertTrue(html.indexOf('cjpr-title') === -1 &&
+                   html.indexOf('cjpr-head') === -1 &&
+                   html.indexOf('Кабельный журнал') === -1,
+            'шапка-заголовок с листа СНЯТА');
+        assertEqual((html.match(/rowspan="2"/g) || []).length, 4,
+            'Task 506: 4 одиночные колонки шаблона (A–D) rowspan 2');
         assertEqual((html.match(/colspan="3"/g) || []).length, 2,
             'пары «По проекту»/«Проложен» colspan 3');
         assertTrue(html.indexOf('По проекту') !== -1 &&
                    html.indexOf('Проложен') !== -1, 'подписи пар');
-        assertEqual((html.match(/class="cjpr-grp"/g) || []).length, 2,
-            'две строки-подзаголовка отделений');
-        assertEqual((html.match(/colspan="12"/g) || []).length, 2,
-            'строки отделений во всю ширину (12 колонок)');
-        assertEqual((html.match(/class="cjpr-odd"/g) || []).length, 2,
-            'зебра: нечётные строки (1 и 3)');
-        assertEqual((html.match(/class="cjpr-even"/g) || []).length, 1,
-            'зебра: чётная строка (2)');
+        assertTrue(html.indexOf('Обозначение кабеля, провода') !== -1 &&
+                   html.indexOf('Участок трассы кабеля, провода') !== -1,
+            'подписи одиночных колонок — дословно из шаблона');
+        assertTrue(html.indexOf('Число и сечение жил') !== -1,
+            'подписи подколонок — дословно из шаблона');
+        assertEqual((html.match(/cjpr-c-proj/g) || []).length, 9,
+            'серые «По проекту»: 3 ячейки × 3 строки');
+        assertEqual((html.match(/class="cjpr-grp"/g) || []).length, 0,
+            'Task 506: строк отделений НЕТ');
+        assertEqual((html.match(/cjpr-odd|cjpr-even/g) || []).length, 0,
+            'Task 506: зебры НЕТ');
+        const tbody = html.split('<tbody>')[1] || '';
+        assertEqual((tbody.match(/<tr>/g) || []).length, 3,
+            'три строки данных (без подзаголовков)');
         assertTrue(html.indexOf('5/2 &amp; КГ') !== -1,
             'значения экранированы (&)');
-        assertTrue(html.indexOf('Силовой &lt;АВР&gt;') !== -1,
-            'экранирование < >');
         assertTrue(html.indexOf('43,5') !== -1, 'число с запятой');
-        assertEqual((html.match(/<col style=/g) || []).length, 12,
-            'colgroup: 12 колонок фиксированной ширины');
+        assertEqual((html.match(/<col style=/g) || []).length, 10,
+            'colgroup: 10 колонок фиксированной ширины');
+        // порядок строк — исходный файл (№ п/п)
+        const i1 = html.indexOf('>1/7<');
+        const i2 = html.indexOf('>2/1<');
+        const i3 = html.indexOf('>5/2 &amp; КГ<');
+        assertTrue(i1 !== -1 && i2 !== -1 && i3 !== -1 && i1 < i2 && i2 < i3,
+            'строки в порядке № п/п (1/7 → 2/1 → 5/2)');
     });
 
     test('HTML: пустой журнал — строка-заглушка', () => {
@@ -368,19 +432,36 @@ describe('Task 505 — VM: модель и печатная форма', () => {
         const html = h._buildCjPrintHtml(h._printModel());
         assertTrue(html.indexOf('нет записей в журнале') !== -1,
             'заглушка как у печати табеля');
+        assertTrue(html.indexOf('colspan="10"') !== -1,
+            'заглушка на 10 колонок');
     });
 
-    test('standalone-документ: A4 альбомная, 281мм, cj-sheet', () => {
+    test('standalone-документ: СТРАНИЦЫ A4 297×210мм + пагинация', () => {
         const h = cjHost(ROWS);
-        const doc = h._buildCjFileHtml('X');
+        const doc = h._buildCjFileHtml('<table class="cjpr-table">X</table>');
         assertTrue(doc.indexOf('<!DOCTYPE html>') === 0,
             'полноценный документ (для iframe)');
         assertTrue(doc.indexOf('@page { size: A4 landscape; margin: 8mm; }') !== -1,
             'альбомная ориентация');
-        assertTrue(doc.indexOf('width: 281mm') !== -1,
-            'лист 281мм (297 − 2×8)');
+        assertTrue(doc.indexOf('width: 297mm') !== -1 &&
+                   doc.indexOf('height: 210mm') !== -1,
+            'Task 506: страница ПОЛНАЯ 297×210мм');
+        assertTrue(doc.indexOf('.cjpr-page') !== -1,
+            'Task 506: страницы-листы');
+        assertTrue(doc.indexOf('id="cjPages"') !== -1,
+            'контейнер страниц');
+        assertTrue(doc.indexOf('id="cjMeasure"') !== -1,
+            'скрытая мерная таблица (весь журнал)');
+        assertTrue(doc.indexOf('getBoundingClientRect') !== -1,
+            'пагинация по реальным высотам строк');
+        assertTrue(doc.indexOf('thead.cloneNode(true)') !== -1,
+            'шапка клонируется НА КАЖДУЮ страницу');
+        assertTrue(doc.indexOf('catch(e)') !== -1,
+            'фолбэк при ошибке скрипта');
+        assertTrue(doc.indexOf('</script>') !== -1,
+            'скрипт пагинации закрыт (внешний script не рвётся)');
         assertTrue(doc.indexOf('id="wsPrintSheet" class="cj-sheet"') !== -1,
-            'лист с классом cj-sheet');
+            'обёртка страниц несёт общий класс cj-sheet');
         assertTrue(doc.indexOf('#wsPrintSheet.cj-sheet') !== -1,
             'CSS печатного листа внутри документа');
     });
@@ -392,7 +473,7 @@ describe('Task 505 — VM: модель и печатная форма', () => {
 describe('Task 505 — VM: раскладка PDF (A4 альбомная)', () => {
 
     function row(i, dep) {
-        return { _row: i + 2, designation: 'К' + i, start: 'ЩК-4', end: 'ЭЩ №' + i,
+        return { _row: i + 2, num: i + 1, designation: 'К' + i, start: 'ЩК-4', end: 'ЭЩ №' + i,
                  section: 'по коробу', mark_project: 'КВБбШЭнг-LS',
                  cores_project: '14х1', length_project: 60,
                  mark_actual: 'КВБбШЭнг-LS', cores_actual: '19х1',
@@ -411,33 +492,36 @@ describe('Task 505 — VM: раскладка PDF (A4 альбомная)', () =
             '\n});')(undefined, undefined, undefined, undefined);
     }
 
-    test('геометрия: 842×595, поля 28, колонки 12 суммой 786', () => {
+    test('геометрия: 842×595, поля 28, колонки 10 суммой 786', () => {
         const rows = [row(0, 'А'), row(1, 'А')];
         const lay = layoutHost(rows)._cjPdfLayout(layoutHost(rows)._printModel());
         assertEqual(lay.W, 842, 'A4 альбомная ширина');
         assertEqual(lay.H, 595, 'высота');
         assertEqual(lay.M, 28, 'поля');
-        assertEqual(lay.cols.length, 12, '12 колонок');
+        assertEqual(lay.cols.length, 10,
+            'Task 506: 10 колонок шаблона (без «№» и «Назначения»)');
         let sum = 0;
         lay.cols.forEach(function(c) { sum += c.w; });
         assertEqual(sum, 842 - 2 * 28, 'ширины колонок точно раскладывают контент');
         assertEqual(lay.cols[0].x, 28, 'первая колонка от поля');
-        assertEqual(lay.cols[11].x + lay.cols[11].w, 842 - 28,
+        assertEqual(lay.cols[9].x + lay.cols[9].w, 842 - 28,
             'последняя колонка доходит до правого поля');
+        assertEqual(lay.headH, undefined,
+            'Task 506: шапки-заголовка НЕТ (заявка «просто таблицу»)');
+        assertEqual(lay.pages[0].first, undefined,
+            'Task 506: флага «первой страницы» больше нет');
     });
 
-    test('малый список — одна страница, шапка на ней', () => {
+    test('малый список — одна страница, только строки данных', () => {
         const rows = [row(0, 'А'), row(1, 'А'), row(2, 'Б')];
         const h = layoutHost(rows);
         const lay = h._cjPdfLayout(h._printModel());
         assertEqual(lay.pages.length, 1, 'одна страница');
-        assertTrue(lay.pages[0].first, 'первая страница помечена');
-        // элементы: 2 grp + 3 row
         const grps = lay.pages[0].items.filter(function(it) { return it.type === 'grp'; });
         const dataRows = lay.pages[0].items.filter(function(it) { return it.type === 'row'; });
-        assertEqual(grps.length, 2, 'два подзаголовка отделений');
+        assertEqual(grps.length, 0,
+            'Task 506: подзаголовков отделений НЕТ');
         assertEqual(dataRows.length, 3, 'три строки данных');
-        assertEqual(dataRows[2].idx, 3, 'сквозной индекс зебры');
     });
 
     test('пагинация: длинный журнал ≥ 2 страниц, шапка на каждой', () => {
@@ -453,6 +537,8 @@ describe('Task 505 — VM: раскладка PDF (A4 альбомная)', () =
             return acc + p.items.filter(function(it) { return it.type === 'row'; }).length;
         }, 0);
         assertEqual(expect, 80, 'все 80 строк распределены');
+        assertEqual(total, 80,
+            'Task 506: в потоке ТОЛЬКО строки данных (без отделений)');
         // подзаголовок отделения НЕ последний на странице (не висит)
         lay.pages.forEach(function(p, pi) {
             const last = p.items[p.items.length - 1];
@@ -460,11 +546,11 @@ describe('Task 505 — VM: раскладка PDF (A4 альбомная)', () =
                 'страница ' + (pi + 1) + ': подзаголовок не висит без строк');
         });
         // высота страниц в бюджете (539pt) — проверка инварианта
+        // (Task 506: шапки-заголовка нет — с первой страницы таблица)
         lay.pages.forEach(function(p, pi) {
-            let y = p.first ? lay.headH : 0;
-            y += lay.thH;
+            let y = lay.thH;
             p.items.forEach(function(it) {
-                y += (it.type === 'grp') ? lay.grpH
+                y += (it.type === 'none') ? (lay.lineH + lay.rowPad)
                      : (it.lines * lay.lineH + lay.rowPad);
             });
             assertTrue(y <= lay.H - 2 * lay.M + 0.001,
@@ -488,13 +574,13 @@ describe('Task 505 — VM: раскладка PDF (A4 альбомная)', () =
 describe('Task 505 — VM: книга Excel (кабельный журнал)', () => {
 
     const ROWS = [
-        { _row: 2, designation: '1/7', start: 'ЩК-4, ШУ-1', end: 'ЭЩ №4',
+        { _row: 2, num: 1, designation: '1/7', start: 'ЩК-4, ШУ-1', end: 'ЭЩ №4',
           section: 'по коробу', mark_project: 'КВБбШЭнг-LS',
           cores_project: '14х1', length_project: 60,
           mark_actual: 'КВБбШЭнг-LS', cores_actual: '19х1',
           length_actual: 90, department: 'Водоподготовка',
           purpose: 'Контрольный' },
-        { _row: 5, designation: '5/2', start: 'ЩСУ-2', end: 'Н-1',
+        { _row: 5, num: 3, designation: '5/2', start: 'ЩСУ-2', end: 'Н-1',
           section: 'по лотку', mark_project: 'КГ', cores_project: '3х2,5',
           length_project: 12, mark_actual: 'КГ', cores_actual: '3х2,5',
           length_actual: 12, department: 'Отделение №2', purpose: 'Силовой' }
@@ -533,13 +619,13 @@ describe('Task 505 — VM: книга Excel (кабельный журнал)', 
             '\n});')(ws, undefined, undefined, undefined);
     }
 
-    test('структура строк: заголовок, шапка с «(по проекту)», числа', () => {
+    test('структура листа: шаблон — 2 строки шапки, объединения, числа', () => {
         const ws = wsHost();
         const h = cjBookHost(ROWS, ws);
         const wb = h._buildCjWorkbook(h._printModel());
         assertTrue(!!wb && !!wb.bytes, 'книга собрана');
         assertEqual(wb.counts.total, 2, 'счётчик записей');
-        assertEqual(wb.counts.groups, 2, 'счётчик отделений');
+        assertEqual(wb.counts.cols, 10, 'Task 506: 10 колонок шаблона');
         assertTrue(/^Кабельный_журнал_\d{4}-\d{2}-\d{2}\.xlsx$/.test(wb.name),
             'имя файла с датой: ' + wb.name);
         assertTrue(wb.bytes instanceof Uint8Array && wb.bytes.length > 500,
@@ -550,18 +636,49 @@ describe('Task 505 — VM: книга Excel (кабельный журнал)', 
         const txt = Buffer.from(wb.bytes).toString('utf8');
         assertTrue(txt.indexOf('sheet name="Кабельный журнал"') !== -1,
             'лист называется «Кабельный журнал»');
-        assertTrue(txt.indexOf('Кабельный журнал') !== -1 &&
-                   txt.indexOf('Водоподготовка') !== -1 &&
-                   txt.indexOf('КВБбШЭнг-LS') !== -1,
+        // Task 506: шапка ДВЕ строки с объединениями шаблона
+        assertTrue(txt.indexOf('<mergeCells count="6">') !== -1,
+            'шесть объединений шапки');
+        ['A1:A2', 'B1:B2', 'C1:C2', 'D1:D2', 'E1:G1', 'H1:J1']
+            .forEach(function(ref) {
+                assertTrue(txt.indexOf('<mergeCell ref="' + ref + '"/>') !== -1,
+                    'объединение ' + ref);
+            });
+        assertTrue(txt.indexOf('_xlnm.Print_Titles') !== -1 &&
+                   txt.indexOf('1:$2') !== -1,
+            'повтор шапки при печати (Print_Titles 1:2)');
+        assertTrue(txt.indexOf('<pane ySplit="2" topLeftCell="A3"') !== -1,
+            'закрепление шапки (заморозка A3)');
+        assertTrue(txt.indexOf('paperSize="9" orientation="landscape"') !== -1,
+            'печать A4 альбомная');
+        // данные — с 3-й строки, БЕЗ заголовка/отделений
+        assertTrue(txt.indexOf('<row r="1"') !== -1 &&
+                   txt.indexOf('<row r="2"') !== -1 &&
+                   txt.indexOf('<row r="3"') !== -1,
+            'три первых строки: шапка ×2 + данные с 3-й');
+        assertTrue(txt.indexOf('КВБбШЭнг-LS') !== -1,
             'данные журнала внутри книги');
+        // Task 506: «просто таблица» — заголовок-строки НЕТ
+        const titleRow = /<row r="1"[^>]*>[^<]*<c [^>]*t="inlineStr"[^>]*>[^<]*<is><t[^>]*>Кабельный/;
+        assertFalse(titleRow.test(txt), 'строки-заголовка «Кабельный журнал» НЕТ');
         // числа — ЧИСЛАМИ: <v>60</v>, а не inlineStr
         assertTrue(txt.indexOf('<v>60</v>') !== -1 &&
                    txt.indexOf('<v>90</v>') !== -1 &&
                    txt.indexOf('<v>12</v>') !== -1,
             'длины записаны числами (редактируемые, Task 488)');
-        assertTrue(txt.indexOf('Марка (по проекту)') !== -1 &&
-                   txt.indexOf('Марка (проложен)') !== -1,
-            'шапка Excel с пояснениями в скобках');
+        // шапка — дословно из шаблона
+        assertTrue(txt.indexOf('Обозначение кабеля, провода') !== -1 &&
+                   txt.indexOf('Число и сечение жил') !== -1,
+            'подписи шапки дословно из шаблона');
+        // Arial Narrow 12 + серый «По проекту»
+        assertTrue(txt.indexOf('<name val="Arial Narrow"/>') !== -1 &&
+                   txt.indexOf('<sz val="12"/>') !== -1,
+            'шрифт шаблона Arial Narrow 12');
+        assertTrue(txt.indexOf('FFF2F2F2') !== -1,
+            'серые ячейки «По проекту»');
+        // порядок строк — исходный файл (№ п/п): r3 = 1/7 раньше 5/2
+        assertTrue(txt.indexOf('1/7') < txt.indexOf('5/2'),
+            'данные в порядке № п/п');
     });
 
     test('книга без записей — строка-заглушка', () => {
@@ -862,17 +979,17 @@ describe('Task 505 — VM (мок-DOM): диалог предпросмотра'
 // ============================================================
 // 8. SW: версия кэша
 // ============================================================
-describe('Task 505 — SW: kipia-test-v728', () => {
-    test('CACHE_VERSION = kipia-test-v728', () => {
-        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v728'") !== -1,
-            'версия кэша kipia-test-v728');
-        assertFalse(SW_SRC.indexOf('kipia-test-v729') !== -1,
+describe('Task 505 — SW: kipia-test-v729', () => {
+    test('CACHE_VERSION = kipia-test-v729', () => {
+        assertTrue(SW_SRC.indexOf("CACHE_VERSION = 'kipia-test-v729'") !== -1,
+            'версия кэша kipia-test-v729');
+        assertFalse(SW_SRC.indexOf('kipia-test-v730') !== -1,
             'двойного бампа нет (v729 отсутствует)');
     });
 
     test('комментарий Task 505 в истории версий sw.js', () => {
         const i = SW_SRC.indexOf('// Task 505:');
-        const v = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v728'");
+        const v = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v729'");
         assertTrue(i !== -1, 'запись истории на месте');
         assertTrue(i < v, 'история — выше константы версии');
         const cmt = SW_SRC.slice(i, v);

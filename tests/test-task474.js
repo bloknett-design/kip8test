@@ -225,8 +225,8 @@ describe('Task 474 — SRC: структура карточки', () => {
 // ==========================================================================
 // 4. SW — версия кэша и комментарий задачи
 describe('Task 474 — SW: версия кэша', () => {
-    test("CACHE_VERSION = kipia-test-v728", () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v728';") !== -1,
+    test("CACHE_VERSION = kipia-test-v729", () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v729';") !== -1,
             'текущая версия v698');
     });
 
@@ -236,7 +236,7 @@ describe('Task 474 — SW: версия кэша', () => {
     });
 
     test('v699 в sw.js отсутствует (лишний инкремент не сделан)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v729') === -1,
+        assertTrue(SW_SRC.indexOf('kipia-test-v730') === -1,
             'версия после Task 474 не существует');
     });
 
@@ -249,11 +249,11 @@ describe('Task 474 — SW: версия кэша', () => {
     });
 
     test('комментарий Task 474 рядом с версией (окно 600)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v728';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v729';");
         // Task 496: комментарий ППР-клавиатуры (~254 симв.) — якорь
         // 474@9239 — окно 9000 → 9700 (запас 461).
         // Task 502: окно 11200 → 12000 (якорь 11493); 471 12400 → 13000 (12415); 461 15000 → 15400 (14977).
-        const ctx = SW_SRC.slice(Math.max(0, i - 12700), i);
+        const ctx = SW_SRC.slice(Math.max(0, i - 13300), i);
         // Task 478: окна 1700 → 2500 (Task 474 ~1878), 2700 → 3400
         // (Task 471 ~2800), 5300 → 6000 (Task 461 ~5362) — комментарий
         // ППР-индикации карточки прибора (~340 симв.).
@@ -272,14 +272,14 @@ describe('Task 474 — SW: версия кэша', () => {
         // Task 476: окна расширены (+~490 симв. этапа 2):
         // Task 471 2100 → 2700 (~2170), Task 461 4600 → 5300 (~4732).
         // Task 461 ~4300).
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v728';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v729';");
         const i471 = SW_SRC.lastIndexOf('Task 471', i);
         const i461 = SW_SRC.lastIndexOf('Task 461', i);
         // Task 492: якорь 471@9279 — окно 9000 → 9800.
-        assertTrue(i471 !== -1 && (i - i471) < 13700,
+        assertTrue(i471 !== -1 && (i - i471) < 14300,
             'Task 471 в пределах окна 2100');
         // Task 492: якорь 461@11841 — окно 11600 → 12400.
-        assertTrue(i461 !== -1 && (i - i461) < 16100,
+        assertTrue(i461 !== -1 && (i - i461) < 16700,
             'Task 461 в пределах окна 4600');
         // Task 483: комментарий ~378 симв. отодвинул якоря — окна
         // расширены scripts/task483-windows.py (4200→4600/6800→7200).
