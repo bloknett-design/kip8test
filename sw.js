@@ -438,7 +438,9 @@
 // листы с полями, пагинация по реальным высотам строк); Excel —
 // двухуровневая шапка с объединениями A1:A2…D1:D2, E1:G1, H1:J1 и
 // закреплением A3. Клиент-only.
-const CACHE_VERSION = 'kipia-test-v729';
+// Task 508: Кабельный журнал — архив: удалённые записи (_archived) скрыты
+// из печати/PDF, видны в Excel (блок «Архив»); сервер — CableJournal.gs.
+const CACHE_VERSION = 'kipia-test-v730';
 const CACHE_NAME = CACHE_VERSION;
 
 // Отдельный кэш для картинок Google Drive (превью + полные).
