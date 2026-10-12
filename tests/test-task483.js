@@ -39,7 +39,7 @@
 //       живым для вкладки «Блокировки»;
 //   (в) sync-devices.py: устойчивость — лист «Приборы» недоступен
 //       (экспорт с gid= одного листа) → сохранён прежний ppr_chart.
-//   SW: kipia-test-v726 (логика SW не менялась; окна истории
+//   SW: kipia-test-v727 (логика SW не менялась; окна истории
 //       расширены scripts/task483-windows.py; бамп tests —
 //       scripts/task483-bump-sw.py). АДАПТАЦИЯ test-task473.js:
 //   _PPR_DEVICES → локальный мок (механика _renderPPRChart жива для
@@ -489,8 +489,8 @@ describe('Task 483: VM — _renderDevicesPPR (таблица + диаграмм�
 // 5. SW: версия v707 + комментарий Task 483
 // ==========================================================================
 describe('Task 483: SW — версия и кэши', () => {
-    test('CACHE_VERSION = kipia-test-v726', () => {
-        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v726';") !== -1,
+    test('CACHE_VERSION = kipia-test-v727', () => {
+        assertTrue(SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v727';") !== -1,
             'версия поднята');
     });
 
@@ -499,11 +499,11 @@ describe('Task 483: SW — версия и кэши', () => {
     });
 
     test('v708 в sw.js отсутствует (лишний инкремент не сделан)', () => {
-        assertTrue(SW_SRC.indexOf('kipia-test-v727') === -1);
+        assertTrue(SW_SRC.indexOf('kipia-test-v728') === -1);
     });
 
     test('комментарий Task 483 в шапке версий (окно 700)', () => {
-        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v726';");
+        const i = SW_SRC.indexOf("const CACHE_VERSION = 'kipia-test-v727';");
         // Task 490: +480 симв. комментария — окно 3900 → 4400 (якорь 4137)
         // Task 502: окно 8000 → 8600 (якорь 8474).
         const ctx = SW_SRC.slice(Math.max(0, i - 8600), i);
