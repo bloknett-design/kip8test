@@ -1213,3 +1213,64 @@ Work Log:
 Stage Summary:
 - «Регламент смены чата» внедрён зеркально в промты ОБОИХ репо. Приложение не менялось
   (kipia-test-v730, тесты 6472/0; kip8 — v527, 6476/0). СЛЕДУЮЩАЯ ЗАДАЧА: 512.
+
+---
+Task ID: 512
+Agent: main (Super Z)
+Task: Заявка: «Проверь код приложения на наличие ошибок и мёртвого кода» — полный аудит
+      кода приложения (только чтение, изменения НЕ вносились).
+
+Work Log:
+- Объём: 24 .gs ≈14 тыс. строк + index.html 66 065 строк (6 <script>-блоков, 5 <style>)
+  + sw.js; kip8test ↔ kip8 сверены — функциональные зеркала (единственные отличия Code.gs —
+  комментарии/порядок кейсов; index.html — префиксы localStorage kip8test + изолирующий
+  IIFE + якорная навигация #page-id).
+- Синтаксис: node --check по всем 24 .gs (копии .js) + sw.js + извлечённые <script>-блоки
+  index.html — всё валидно.
+- Тесты-базовая линия: 6472/0 (набор не менялся, docs-only).
+- Кросс-проверка маршрутов: фронтенд использует ДВА хелпера (_api + KipAuth.api) — 56
+  вызываемых действий, у ВСЕХ есть серверные case-роуты (58): 0 сломанных вызовов;
+  2 роута без вызовов текущим фронтендом — cableJournal.getFilters и
+  flowmeter.getValidationHelp (методы протестированы — задел, не ошибка).
+- Граф вызовов (снятие комментариев state-machine + ручная верификация каждого
+  кандидата): 0 неопределённых вызовов (все 17+33 кандидатов — строки/формулы/CSS-тексты),
+  0 мёртвых CSS-классов из 1320, «дубликаты» esc/norm/pad/done/f — локальные хелперы
+  разных замыканий (не баги).
+- ЕДИНСТВЕННЫЙ структурный риск — GAS-дубликат setupTriggers (Code.gs:458 vs
+  Utils.gs:1102): GAS сливает все файлы в одну глобальную область — одна функция молча
+  перекрывает другую; версии РАЗЛИЧАЮТСЯ: Utils.gs перед созданием hourly-триггера
+  удаляет ВСЕ триггеры проекта (опасно), Code.gs — только hourlyCleanup (канон, подробный
+  docblock). Практического сбоя сейчас нет (в проекте только hourly-триггеры), но запуск
+  «не той» версии или будущий триггер — риск; рекомендация: удалить копию в Utils.gs.
+- Мёртвый код ≈896 строк (~37 функций; полный список в отчёте сессии и
+  tmp/t512 у агента): frontend ~538 строк — 25 функций (семейства dev*/valve*/lock*/
+  regulator*/project(s)*: фильтр-по-типу/скролл-к-группе/принудительное-обновление/
+  дата-последнего-обновления — остатки удалённых фич; setupOtpInputs 67; refreshAppData
+  71; calcErrorGOST 64; getOimlMpe; ticketRenderDetailInPanel; isTablet;
+  toggleErrorClassFields; validateNonNegativeField; devPlural; devShowMoreSorted) +
+  12 методов (KipAuth.getCurrentUser — обёртка с 30-с кэшем, приложение зовёт
+  api('getCurrentUser') напрямую ×3 и само пишет кэш; handleBackButton; toggleSearch;
+  reloadTotals; _vacDays; _vacNetDays; _wsFullFio; _sourceLabel; _fmtDateTime; KipDB.del;
+  _state; _renderEmpPopup — последний задокументирован как тестовый); backend ~358 строк
+  — 8 функций (roleMatrixHasPermission + roleMatrixGetAccessForEmail — API superseded
+  RoleMatrixGate; flowmeterCleanupCommentMetadata — выполненная разовая миграция Task
+  212; flowmeterFixDates; sdpDebug; statusCodesDeployAll; statusCodesStatus; _colLetter)
+  + дубликат setupTriggers; +7 функций test-only (fixTabNumbers, planEventsStatus,
+  planWorksStatus, ppeStatus, tabNumbersStatus, task340/462AddPermission — статусные
+  утилиты тестов, НЕ трогать).
+- Ложные кандидаты исключены верификацией: isDayOff (внешний API в комментариях),
+  kipRenderSearchCounter (window-присваивание, 23 вызова), isolateLocalStorage (IIFE,
+  самовыполняется), chartsEntryBtn (id инъецируется charts-desktop.js:332),
+  openLibraryViewer (намеренный защитный стаб — комментарий), headerLogoDesktop/
+  buoyCalcTitle/selectedMethodText (guarded-остатки, крушений нет).
+- Уборка мёртвого кода НЕ проводилась (заявка — проверка): ждёт решения пользователя,
+  кандидат Task 513 (тогда: удаление дубликата setupTriggers из Utils.gs + мёртвых
+  функций, прогон тестов, при правке index.html — бамп SW по регламенту).
+- Версия документа: post-Task 512 (новая строка 3), post-Task 511 → «(предыдущая)» сжата
+  ≤ 420 симв. СЛЕДУЮЩАЯ ЗАДАЧА: 513.
+
+Stage Summary:
+- Аудит выполнен: РЕАЛЬНЫХ ошибок нет (0 сломанных вызовов/0 неопределённых/0 мёртвого
+  CSS), тесты 6472/0, приложение НЕ менялось (kipia-test-v730; kip8 — v527, 6476/0).
+- К уборке предложено (ждёт команды): дубликат setupTriggers (риск), ~37 мёртвых функций
+  ≈896 строк, 2 неиспользуемых роута, 3 guarded-остатка id. СЛЕДУЮЩАЯ ЗАДАЧА: 513.
