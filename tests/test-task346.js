@@ -356,9 +356,11 @@ describe('Task 346 — серверный справочник SessionsDevicePol
             'справочник в репо');
     });
 
-    test('ФАЙЛ: DEPLOY-инструкция существует', () => {
-        assertTrue(fs.existsSync(path.join(ROOT, 'scripts', 'DEPLOY-Task346-sessions-device-policy.md')),
-            'DEPLOY-Task346-sessions-device-policy.md');
+    test('ФАЙЛ: DEPLOY-инструкция в git-архиве (регламент Task 510)', () => {
+        // Task 510: DEPLOY-доки старше недели удалены из рабочей копии.
+        // История: git show pre-task510:scripts/DEPLOY-Task346-sessions-device-policy.md
+        assertTrue(!fs.existsSync(path.join(ROOT, 'scripts', 'DEPLOY-Task346-sessions-device-policy.md')),
+            'DEPLOY старше недели удалён из рабочей копии (архив Task 510)');
     });
 
     test('ФАЙЛ: патченный Auth.gs существует (справочник живого сервера)', () => {
@@ -394,12 +396,12 @@ describe('Task 346 — серверный справочник SessionsDevicePol
             'сброс только при отсутствии активных сессий');
     });
 
-    test('DEPLOY: правка роутера Code.gs (payload 3-м аргументом)', () => {
-        const md = fs.readFileSync(path.join(ROOT, 'scripts', 'DEPLOY-Task346-sessions-device-policy.md'), 'utf8');
-        assertTrue(md.indexOf('Auth.verifyOTP(payload.email, payload.code, payload)') !== -1,
-            'инструкция учитывает передачу payload в роутере');
-        assertTrue(md.indexOf('LOGIN_BLOCKED_DUPLICATE') !== -1,
-            'инструкция описывает удаление блокировки «уже вошел»');
+    test('DEPLOY: правка роутера зафиксирована в справочнике Code.gs (архив Task 510)', () => {
+        // Task 510: сама инструкция в git-архиве (pre-task510);
+        // регрессионная суть (payload в роутере) остаётся под контролем в Code.gs.
+        const code = fs.readFileSync(path.join(ROOT, 'scripts', 'Code.gs'), 'utf8');
+        assertTrue(code.indexOf('Auth.verifyOTP(payload.email, payload.code, payload)') !== -1,
+            'справочник Code.gs передаёт payload в Auth.verifyOTP');
     });
 
     test('CODE.GS: справочник роутера содержит правку Task 346 (payload)', () => {
@@ -534,14 +536,14 @@ describe('Task 346 — фикс logout в Sessions.gs (параллельные 
             'catch: ошибка чтения листа → true → статус не сбрасывается');
     });
 
-    test('DEPLOY: инструкция по фиксу logout существует', () => {
-        const md = fs.readFileSync(path.join(ROOT, 'scripts', 'DEPLOY-Task346-sessions-logout-fix.md'), 'utf8');
-        assertTrue(md.indexOf('Новая версия') !== -1,
-            'публикация через «Новая версия» (Task 284)');
-        assertTrue(md.indexOf('_userHasOtherSession') !== -1,
-            'описана точечная правка logout');
-        assertTrue(md.indexOf('user.ID') !== -1,
-            'описан бонус-фикс getCurrentUser');
+    test('DEPLOY: фикс logout в git-архиве, суть живёт в Sessions.gs (архив Task 510)', () => {
+        // Task 510: DEPLOY-Task346-sessions-logout-fix.md в git-архиве (pre-task510);
+        // суть фикса (_userHasOtherSession, user.ID) остаётся в scripts/Sessions.gs.
+        const gs = fs.readFileSync(path.join(ROOT, 'scripts', 'Sessions.gs'), 'utf8');
+        assertTrue(gs.indexOf('_userHasOtherSession') !== -1,
+            'точечная правка logout в справочнике Sessions.gs');
+        assertTrue(gs.indexOf('user.ID') !== -1,
+            'бонус-фикс getCurrentUser (user.ID) в справочнике');
     });
 
     test('VM: logout из моба при живом десктопе — login_status НЕ сбрасывается', () => {

@@ -339,9 +339,11 @@ describe('Task 477 — KipAuth: хуки предзагрузки', () => {
 // 6. Инварианты и окна истории
 // ==========================================================================
 describe('Task 477 — границы и окна', () => {
-    test('DEPLOY-док этапа 3 создан', () => {
+    test('DEPLOY-док этапа 3 — в git-архиве (регламент Task 510)', () => {
+        // Task 510: DEPLOY-Task477-optimization-stage3-preload-by-role.md
+        // старше недели → удалён из рабочей копии; история: git show pre-task510:<файл>
         const deployDir = fs.readdirSync(ROOT).filter(f => f.indexOf('DEPLOY-Task477') === 0);
-        assertEqual(deployDir.length, 1, 'DEPLOY-Task477-*.md существует один');
+        assertEqual(deployDir.length, 0, 'DEPLOY-Task477-* удалён из рабочей копии (архив Task 510)');
     });
 
     test('окна истории sw.js — компактный комментарий 477 НЕ расширял их (расширены Task 478/481/483)',

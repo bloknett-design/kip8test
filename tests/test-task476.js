@@ -581,9 +581,11 @@ describe('Task 476 — границы и инварианты', () => {
             'test-task314 подгружает общий метод разбора кэша');
     });
 
-    test('DEPLOY-док этапа 2 создан', () => {
+    test('DEPLOY-док этапа 2 — в git-архиве (регламент Task 510)', () => {
+        // Task 510: DEPLOY-Task476-optimization-stage2-idb-server-cache.md
+        // старше недели → удалён из рабочей копии; история: git show pre-task510:<файл>
         const deployDir = fs.readdirSync(ROOT).filter(f => f.indexOf('DEPLOY-Task476') === 0);
-        assertEqual(deployDir.length, 1, 'DEPLOY-Task476-*.md существует один');
+        assertEqual(deployDir.length, 0, 'DEPLOY-Task476-* удалён из рабочей копии (архив Task 510)');
     });
 });
 
