@@ -1431,3 +1431,48 @@ Stage Summary:
   6 замен / 0 удалений / 10 не трогать; вывод о триггерах ИСПРАВЛЕН на противоположный
   (мина АКТИВНА — Utils перекрывает Code; лечится заменой Utils.gs). Пользователю выдан
   итоговый список оставить/заменить/удалить. СЛЕДУЮЩАЯ ЗАДАЧА: 516.
+
+---
+Task ID: 516
+Agent: main (Super Z)
+Task: Пост-деплой верификация: пользователь заменил 6 файлов (Utils, Flowmeter,
+      RoleMatrixGate, RoleMatrix, RoleMatrixInit, SessionsDevicePolicy), создал НОВУЮ
+      ВЕРСИЮ РАЗВЁРТЫВАНИЯ и прислал контрольную docx-выгрузку всех .gs
+      («Сделал новую версию развёртывания, собрал docx-выгрузку всех .gs»).
+
+Work Log:
+- Выгрузка: 12 613 строк = 12 818 − 205. Арифметика сдвигов шапок сошлась ДО сверкой:
+  −205 = Utils −18, Flowmeter −77, RoleMatrixInit −11, RoleMatrix −63,
+  RoleMatrixGate +4, SessionsDevicePolicy −41 — замена выполнена точно.
+- ПАРСИНГ (3 новых урока сверх 514/515): 1) docx-строки начинаются с NBSP
+  («\xa0* Name.gs — ») — строгий regex «^[\xa0 ]\* (…) [—–-] » отсекает и NBSP, и
+  ложную цель «\xa0* \xa0 \xa0 \xa0Utils.gs — единственный вызов» (внутри шапки
+  Auth.gs); 2) 7 файлов (Flowmeter, FlowmeterArchive, ValidationRules, WorkSchedule,
+  VacationsInit, PPEInit, PlanEvents) используют шапки «// Name.gs —», а НЕ JSDoc —
+  нужен второй regex; 3) внутренняя шапка Admin.gs (Utils.gs:2043) отфильтрована по
+  отсутствию в репо (подход 515 подтверждён). Порядок 16 файлов = прежний (замена
+  содержимого, файлов не добавлялось/удалялось).
+- СВЕРКА: 14/16 файлов = HEAD БАЙТ-В-БАЙТ (включая все 6 заменённых); Utils.gs —
+  ОДНА пустая строка (~526, между комментарием Task 349 и секцией ROLES — docx-артефакт,
+  тот же класс расхождения, что был до замены); CableJournal.gs — 2 пустые строки
+  (известный дрейф 514/515, «по желанию» — НЕ критично). Сверка без пустых строк:
+  16/16 ИДЕНТИЧНЫ HEAD; инвентарь функций/методов 16/16 = HEAD.
+- МИНЫ ОБЕЗВРЕЖЕНЫ (чек-лист DEPLOY п.3): setupTriggers — ровно 1 определение
+  (Code.gs:458, канон); hourlyCleanup newTrigger — 1 (Code.gs:474); sdpDebug,
+  _colLetter, roleMatrixHasPermission, roleMatrixGetAccessForEmail,
+  flowmeterCleanupCommentMetadata, flowmeterFixDates, statusCodesDeployAll — все
+  ОТСУТСТВУЮТ. Admin-объект ЦЕЛ (Utils.gs): _requireAdmin, listUsers, updateRole,
+  resetLogin, deleteUser, createUser, listSessions, listLogs (removeUser в каноне
+  НЕТ — пункт чек-листа был избыточным, расхождения нет).
+- DEPLOY-Task513-dead-code-cleanup.md: добавлен блок «✅ СТАТУС: ТЕСТ ЗАДЕПЛОЕН И
+  ВЕРИФИЦИРОВАН (Task 516)» + остаточные runtime-проверки (триггер в меню Triggers,
+  дымовой тест приложения, журнал выполнения Ctrl+Enter) + прод-статус.
+- Скрипты: scripts/task516-verify.py (полная сверка), task516-final.py
+  (без-пустых-строк + инвентарь функций + Admin-методы); артефакты tmp/task516-verify/.
+
+Stage Summary:
+- Деплой Task 513 в ТЕСТЕ (kip8test) ЗАКРЫТ на уровне кода: 16/16 = HEAD, мина
+  setupTriggers обезврежена, Admin-объект цел. Остались ручные runtime-проверки
+  (триггер/дым/лог). ПРОД (kip8) НЕ задеплоен — ждём прод-выгрузку .gs для сверки
+  перед зеркальным деплоем. СЛЕДУЮЩАЯ ЗАДАЧА: 517 (прод-деплой Task 513 —
+  после выгрузки; либо задачи пользователя).

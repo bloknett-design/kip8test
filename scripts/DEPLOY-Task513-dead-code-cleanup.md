@@ -1,5 +1,34 @@
 # DEPLOY — Task 513 (УБОРКА МЁРТВОГО КОДА) + Task 514/515 (ПРОВЕРКА ФАКТИЧЕСКОГО Apps Script)
 
+> ## ✅ СТАТУС: ТЕСТ ЗАДЕПЛОЕН И ВЕРИФИЦИРОВАН (Task 516, 2026-10-13)
+>
+> Пользователь заменил все 6 файлов и создал НОВУЮ ВЕРСИЮ РАЗВЁРТЫВАНИЯ
+> (Deploy → New version). Контрольная docx-выгрузка (12 613 строк = 12 818 − 205)
+> сверена с HEAD kip8test построчно:
+> - **16/16 файлов функционально ИДЕНТИЧНЫ HEAD** (сверка без пустых строк);
+>   14/16 — байт-в-байт (включая все 6 заменённых);
+>   Utils.gs −1 пустая строка (~526, docx-артефакт), CableJournal −2 пустые
+>   (известный дрейф 514/515, косметика) — поведение не затрагивается.
+> - **Мины обезврежены:** `setupTriggers` — ровно ОДНО определение (Code.gs);
+>   `hourlyCleanup` newTrigger — один (Code.gs); `sdpDebug`, `_colLetter`,
+>   `roleMatrixHasPermission`, `roleMatrixGetAccessForEmail`,
+>   `flowmeterCleanupCommentMetadata`, `flowmeterFixDates`,
+>   `statusCodesDeployAll` — все ОТСУТСТВУЮТ.
+> - **Admin-объект цел** (Utils.gs): `_requireAdmin`, `listUsers`, `updateRole`,
+>   `resetLogin`, `deleteUser`, `createUser`, `listSessions`, `listLogs`.
+> - Инвентарь функций всех 16 файлов = HEAD; порядок файлов прежний; арифметика
+>   сдвигов сходится: −205 = Utils −18, Flowmeter −77, RoleMatrixInit −11,
+>   RoleMatrix −63, RoleMatrixGate +4, SessionsDevicePolicy −41.
+> - Скрипты сверки: `scripts/task516-verify.py`, `task516-final.py`
+>   (артефакты `tmp/task516-verify/`); уроки парсинга: docx-строки начинаются
+>   с NBSP (`\xa0* Name.gs —`), 7 файлов используют шапки `// Name.gs —`
+>   вместо JSDoc, внутренние шапки ≠ границы файлов.
+> - Осталось (runtime, вручную): проверить триггер hourlyCleanup в меню Triggers,
+>   дымовой тест приложения (вход/OTP, журнал кабелей, расходомеры, график,
+>   workschedule.view.min), журнал выполнения (Ctrl+Enter).
+> - **Прод (kip8) НЕ задеплоен** — перед зеркальным деплоем собрать выгрузку
+>   всех .gs из прод-проекта и сверить (см. «Для ПРОДА» ниже).
+
 > **Заявки:** аудит кода (Task 512), «Подтверждаю уборку» (Task 513), docx-выгрузка
 > всех .gs (Task 514), повторная выгрузка + «нет файла Admin.gs» (Task 515 — КОРРЕКЦИЯ).
 > **Task 515 (коррекция разбора 514):** «Admin.gs» из отчёта 514 — это ВНУТРЕННЯЯ
