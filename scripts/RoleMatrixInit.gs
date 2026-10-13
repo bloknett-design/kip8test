@@ -557,14 +557,3 @@ function _createRolesSheet(ss) {
 
   _softProtect(sheet.getRange(4, 1, 1, 5), 'roles: строка заголовков — не редактировать');
 }
-
-// Буква колонки по номеру (1 = A, 2 = B, …)
-function _colLetter(n) {
-  var s = '';
-  while (n > 0) {
-    var m = (n - 1) % 26;
-    s = String.fromCharCode(65 + m) + s;
-    n = Math.floor((n - 1) / 26);
-  }
-  return s;
-}

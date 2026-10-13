@@ -20,10 +20,6 @@
 //      (код приложения его НЕ использует — это разовый инструмент)
 //
 // ФУНКЦИИ (каждая запускается отдельно):
-//   statusCodesDeployAll()       — рекомендованный порядок: Шаг 1
-//                                  (замена листа) + Шаг 2 (миграция
-//                                  «О»→«ОТ»). Запустить ОДИН раз —
-//                                  и деплой листов Task 298 готов.
 //   statusCodesReplace([force])  — ШАГ 1: заменить лист
 //                                  «Коды_статусов» на эталонный
 //                                  состав 16 кодов. Старый лист НЕ
@@ -42,11 +38,6 @@
 //                                  шаблон 2 «Дневной 5/2» — дни 1–4
 //                                  «Д» → «Д8», день 5 «Д» → «Д7,2»
 //                                  (см. DEPLOY-Task298, рекомендация).
-//   statusCodesStatus()          — диагностика: что сейчас в листе,
-//                                  отличия от эталона, сколько «О»
-//                                  осталось в «Записи_графика»,
-//                                  состояние шаблона 2, список
-//                                  резервных листов. Ничего не меняет.
 //   statusCodesCleanupBackups()  — удалить все резервные листы
 //                                  («…_резерв_*» трёх семейств),
 //                                  когда деплой проверен и откаты
@@ -59,9 +50,7 @@
 //   - Миграция/Дни_цикла перед правками копируют лист целиком
 //     (copyTo) в «…_резерв_<дата_время>».
 //   - Все операции затрагивают ТОЛЬКО перечисленные листы;
-//     остальные листы таблицы не читаются и не пишутся
-//     (statusCodesStatus читает ещё «Записи_графика»/«Дни_цикла»
-//     для диагностики — только чтение).
+//     остальные листы таблицы не читаются и не пишутся.
 //   - Идемпотентность: повторный запуск безопасен — уже
 //     актуальные части пропускаются, лишние резервы не плодятся.
 //   - Прочие листы (Сотрудники, Отпуска, Инструктажи и т.д.) не
@@ -142,35 +131,6 @@ var SC_STATUS_CODES = [
   ['ПЗ',   'Проверка знаний, по охране труда и промышленной безопасности, до 1000В, на допуск к самостоятельной работе', '#FFCDD2'],
   ['*',    'Примечание, не плановые или не регламентированные случаи (аварийные работы, принят, уволен), с обязательным комментированием', '#FFAB91']
 ];
-
-// ============================================================
-// ГЛАВНОЕ: деплой листов Task 298 за один запуск (Шаги 1–2)
-// ============================================================
-function statusCodesDeployAll() {
-  var result = { steps: [] };
-
-  Logger.log('=== Task 298: деплой листов, шаг 1 — «Коды_статусов» ===');
-  var r1 = statusCodesReplace();
-  result.steps.push({ step: 1, name: 'Коды_статусов', ok: r1.ok, skipped: !!r1.skipped });
-
-  Logger.log('');
-  Logger.log('=== Task 298: шаг 2 — миграция «О» → «ОТ» в «Записи_графика» ===');
-  var r2 = migrateVacationStatus();
-  result.steps.push({ step: 2, name: 'миграция О→ОТ', ok: r2.ok, migrated: r2.migrated || 0 });
-
-  Logger.log('');
-  if (r1.ok && r2.ok) {
-    Logger.log('✓✓ ДЕПЛОЙ ЛИСТОВ ЗАВЕРШЁН. Дальше по DEPLOY-Task298:');
-    Logger.log('   • «Сформировать» на месяце с отпуском теперь безопасен');
-    Logger.log('   • опционально: updateCycleDaysTemplate2() — Дни_цикла, шаблон 2');
-    Logger.log('   • проверка в приложении: попап статусов = 16 кодов + «— выходной»');
-    Logger.log('   • когда всё проверено: statusCodesCleanupBackups()');
-  } else {
-    Logger.log('✕ ЕСТЬ ОШИБКИ — см. журнал выше; ничего не потеряно (резервы созданы).');
-  }
-  result.ok = r1.ok && r2.ok;
-  return result;
-}
 
 // ============================================================
 // ШАГ 1: замена листа «Коды_статусов»
@@ -369,119 +329,6 @@ function updateCycleDaysTemplate2() {
              ' — ' + changes.length + ' замен. Резерв: «' + backup.getName() + '».');
   Logger.log('  Существующие записи прошлых месяцев не менялись («Д» остаётся валидным кодом).');
   return { ok: true, changed: changes.length, backup: backup.getName() };
-}
-
-// ============================================================
-// Диагностика (только чтение)
-// ============================================================
-/**
- * Показывает текущее состояние всех трёх точек деплоя Task 298.
- * Ничего не меняет. @return {Object} { ok, current, missing,
- * extra, diffs, vacationLegacy, cycleTemplate2Legacy, backups }
- */
-function statusCodesStatus() {
-  var ss = _scOpen();
-  if (!ss) return { ok: false, error: 'spreadsheet_not_found' };
-
-  Logger.log('=== ДИАГНОСТИКА «Коды_статусов» (Task 298/299) ===');
-  Logger.log('Таблица: «' + ss.getName() + '» — ' + ss.getUrl());
-
-  // 1. Текущий лист
-  var sheet = ss.getSheetByName(SC_SHEET_NAME);
-  var current = sheet ? _scReadRows(sheet) : null;
-  if (!sheet) {
-    Logger.log('✕ Лист «' + SC_SHEET_NAME + '» НЕ НАЙДЕН — запустите statusCodesReplace().');
-  } else {
-    Logger.log('Лист «' + SC_SHEET_NAME + '»: ' + current.length + ' строк —');
-    for (var i = 0; i < current.length; i++) {
-      Logger.log('   ' + (i + 2) + '. [' + current[i][0] + '] ' + current[i][1] +
-                 ' — ' + current[i][2]);
-    }
-  }
-
-  // 2. Отличия от эталона
-  var missing = [], extra = [], diffs = [];
-  var want = {};
-  for (var w = 0; w < SC_STATUS_CODES.length; w++) want[SC_STATUS_CODES[w][0]] = SC_STATUS_CODES[w];
-  var got = {};
-  if (current) {
-    for (var g = 0; g < current.length; g++) {
-      var code = current[g][0];
-      got[code] = true;
-      if (want[code]) {
-        if (current[g][1] !== want[code][1] || current[g][2] !== want[code][2]) {
-          diffs.push(code);
-        }
-      } else {
-        extra.push(code);
-      }
-    }
-  }
-  for (var k in want) {
-    if (!got[k]) missing.push(k);
-  }
-  Logger.log('Эталон: ' + SC_STATUS_CODES.length + ' кодов. Отсутствуют: ' +
-             (missing.length ? missing.join(', ') : '—') +
-             '. Лишние: ' + (extra.length ? extra.join(', ') : '—') +
-             '. Расхождения названия/цвета: ' + (diffs.length ? diffs.join(', ') : '—'));
-  if (!current || missing.length || extra.length || diffs.length) {
-    Logger.log('→ Запустите statusCodesReplace(), чтобы привести лист к эталону.');
-  } else {
-    Logger.log('✓ Лист соответствует эталону.');
-  }
-
-  // 3. Миграция «О» → «ОТ»
-  var vacationLegacy = 0;
-  var entries = ss.getSheetByName(SC_ENTRIES_SHEET);
-  if (entries && entries.getLastRow() >= 2) {
-    var ev = entries.getRange(2, 3, entries.getLastRow() - 1, 1).getValues();
-    for (var e = 0; e < ev.length; e++) {
-      if (ev[e][0] !== null && ev[e][0] !== undefined && String(ev[e][0]).trim() === 'О') {
-        vacationLegacy++;
-      }
-    }
-  }
-  Logger.log('«Записи_графика»: записей со старым кодом «О» — ' + vacationLegacy +
-             (vacationLegacy ? ' → запустите migrateVacationStatus()' : ' ✓'));
-
-  // 4. Дни_цикла, шаблон 2
-  var cycleLegacy = 0;
-  var days = ss.getSheetByName(SC_CYCLE_SHEET);
-  if (days && days.getLastRow() >= 2) {
-    var dv = days.getRange(2, 1, days.getLastRow() - 1, 3).getValues();
-    for (var d = 0; d < dv.length; d++) {
-      if (parseInt(dv[d][0], 10) !== 2) continue;
-      var dst = dv[d][2];
-      if (dst !== null && dst !== undefined && String(dst).trim() === 'Д') cycleLegacy++;
-    }
-  }
-  Logger.log('«Дни_цикла», шаблон 2: дней с кодом «Д» — ' + cycleLegacy +
-             (cycleLegacy ? ' → (опция) updateCycleDaysTemplate2()' : ' ✓'));
-
-  // 5. Резервные листы
-  var backups = [];
-  var sheets = ss.getSheets();
-  for (var s = 0; s < sheets.length; s++) {
-    var nm = sheets[s].getName();
-    if (nm.indexOf(SC_BACKUP_PREFIX) === 0 || nm.indexOf(SC_ENTRIES_BACKUP) === 0 ||
-        nm.indexOf(SC_CYCLE_BACKUP) === 0) {
-      backups.push(nm);
-    }
-  }
-  Logger.log('Резервные листы (' + backups.length + '): ' +
-             (backups.length ? backups.join(' ; ') : 'нет') +
-             (backups.length ? ' → после проверки: statusCodesCleanupBackups()' : ''));
-
-  return {
-    ok: true,
-    current: current || [],
-    missing: missing,
-    extra: extra,
-    diffs: diffs,
-    vacationLegacy: vacationLegacy,
-    cycleTemplate2Legacy: cycleLegacy,
-    backups: backups
-  };
 }
 
 // ============================================================

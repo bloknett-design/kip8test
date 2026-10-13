@@ -39,7 +39,6 @@
  *   sdpInit()                              → добавить заголовок device (1 раз)
  *   sdpApplyDevicePolicy(email, device, newToken)
  *     → { applied, evicted, reason? }     → вызов из Auth.verifyOTP
- *   sdpDebug()                             → диагностика в редакторе
  *
  * УСТАНОВКА — см. DEPLOY-Task346-sessions-device-policy.md.
  * ============================================================
@@ -222,42 +221,3 @@ function sdpApplyDevicePolicy(email, device, newToken) {
   }
 }
 
-// ==========================================================================
-// ДИАГНОСТИКА
-// ==========================================================================
-
-/**
- * Запускать в Apps Script Editor: что «видит» политика.
- * @return {Object} состояние листа sessions + статистика по device.
- */
-function sdpDebug() {
-  var ss = SpreadsheetApp.openById(SDP_SPREADSHEET_ID);
-  var sheet = ss.getSheetByName(SDP_SHEET);
-  if (!sheet) return { error: 'Лист sessions не найден' };
-
-  var values = sheet.getDataRange().getValues();
-  var header = (values[SDP_HEADER_ROW - 1] || []).map(function (h) {
-    return String(h || '').trim();
-  });
-  var tokenIdx = header.indexOf('session_token');
-  var emailIdx = header.indexOf('email');
-  var deviceIdx = header.indexOf('device');
-
-  var stats = { total: 0, mobile: 0, desktop: 0, legacy: 0, byEmail: {} };
-  for (var r = SDP_DATA_ROW - 1; r < values.length; r++) {
-    var rowToken = String((values[r] || [])[tokenIdx] || '').trim();
-    if (!rowToken) continue;
-    stats.total++;
-    var mail = String((values[r] || [])[emailIdx] || '').trim().toLowerCase();
-    var dev = String((values[r] || [])[deviceIdx] || '').trim().toLowerCase();
-    if (dev === 'mobile') stats.mobile++;
-    else if (dev === 'desktop') stats.desktop++;
-    else stats.legacy++;
-    stats.byEmail[mail] = (stats.byEmail[mail] || 0) + 1;
-  }
-  return {
-    header: header,
-    deviceColumn: deviceIdx === -1 ? 'ОТСУТСТВУЕТ — запустите sdpInit()' : deviceIdx + 1,
-    sessions: stats
-  };
-}

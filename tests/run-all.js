@@ -792,6 +792,11 @@ require('./test-task506.js');
 // последний редактор), клиент: печать/PDF без архива,
 // Excel — с блоком «Архив». SW v730.
 require('./test-task508.js');
+// Task 513: уборка мёртвого кода (аудит Task 512):
+// удалены остатки удалённых фич, опасный GAS-дубликат
+// setupTriggers из Utils.gs и 8 мёртвых backend-функций.
+// SW v731.
+require('./test-task513.js');
 require('./test-deploy-url.js');
 
 // Запускаем

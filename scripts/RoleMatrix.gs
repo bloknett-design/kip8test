@@ -41,15 +41,11 @@
  *   roleMatrixGetAccess(roleName)
  *     → { role, roleId, found, isAdmin, permissions{permId:bool},
  *         granted[permId], warnings[] }
- *   roleMatrixHasPermission(roleName, permId) → true/false
- *   roleMatrixGetAccessForEmail(email)
- *     → как getAccess + email/userFound (роль из листа users)
  *   roleMatrixInvalidateCache([email]) — сброс кэша
  *   roleMatrixDebug() — что «видит» сервер (запускать в редакторе)
  *
  * ПРИМЕР ИСПОЛЬЗОВАНИЯ (в Code.gs / doGet / проверках):
- *   var acc = roleMatrixGetAccessForEmail(user.email);
- *   if (!roleMatrixHasPermission(acc.role, 'kipios.view')) { … }
+ *   var acc = roleMatrixGetAccess(userRole);
  *   // или напрямую по структуре:
  *   if (acc.permissions['charts.view']) { … }
  */
@@ -159,65 +155,6 @@ function roleMatrixGetAccess(roleName) {
     res.permissions[pid] = val;
     if (val) { res.granted.push(pid); }
   }
-  return res;
-}
-
-/**
- * Есть ли у роли конкретное право. НИКОГДА не бросает исключений.
- * Неизвестная роль/право → false (fail-closed).
- *
- * @param {string} roleName название роли («ИТР ИОС») или role_id.
- * @param {string} permId технический ID права («kipios.view»).
- * @return {boolean}
- */
-function roleMatrixHasPermission(roleName, permId) {
-  var pid = _rmTrim(permId);
-  if (!pid) { return false; }
-  var acc = roleMatrixGetAccess(roleName);
-  return acc.permissions[pid] === true;
-}
-
-/**
- * Права пользователя по email: роль берётся из листа users (колонка
- * «role», связка по названию), затем — права этой роли из matrix.
- * Незнакомый email/роль → доступ закрыт (fail-closed).
- *
- * @param {string} email email пользователя (как в users).
- * @return {Object} как roleMatrixGetAccess + email, userFound, role.
- */
-function roleMatrixGetAccessForEmail(email) {
-  var em = _rmTrim(String(email || '')).toLowerCase();
-  var res = {
-    email: _rmTrim(String(email || '')),
-    userFound: false,
-    role: '',
-    roleId: '',
-    found: false,
-    isAdmin: false,
-    permissions: {},
-    granted: [],
-    warnings: []
-  };
-  if (!em) {
-    res.warnings.push('Email не задан. Доступ закрыт.');
-    return res;
-  }
-
-  var roleName = _rmFindUserRole(em, res.warnings);
-  res.userFound = !!roleName;
-  if (!roleName) {
-    res.warnings.push('Пользователь «' + em + '» не найден в users. Доступ закрыт (fail-closed).');
-    return res;
-  }
-
-  var base = roleMatrixGetAccess(roleName);
-  res.role = base.role;
-  res.roleId = base.roleId;
-  res.found = base.found;
-  res.isAdmin = base.isAdmin;
-  res.permissions = base.permissions;
-  res.granted = base.granted;
-  res.warnings = res.warnings.concat(base.warnings);
   return res;
 }
 

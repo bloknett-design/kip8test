@@ -64,7 +64,8 @@
  * бессрочные), из-за них фикс Task 346 не сбрасывал login_status
  * последней сессии («another session stays active»). Справочник
  * соответствует живому Utils.gs (прислан 2026-09-08, включая
- * встроенные Admin.gs и setupTriggers) + новая функция.
+ * встроенные Admin.gs; ОПАСНАЯ копия функции настройки триггеров
+ * удалена в Task 513 — канон живёт в Code.gs) + новая функция.
  */
 
 const Utils = {
@@ -93,7 +94,7 @@ const Utils = {
   /**
    * Task 351: сброс кэша чтений — вызывать в начале КАЖДОГО выполнения
    * (Code.gs: doPost и hourlyCleanup; там же — единственные входы
-   * продакшена). Ручные запуски из редактора (sdpDebug, init-скрипты)
+   * продакшена). Ручные запуски из редактора (init-скрипты)
    * листы почти не читают через getRows; если добавить чтения —
    * вызывать beginExecution и там.
    */
@@ -1093,22 +1094,3 @@ const Admin = {
     }));
   }
 };
-
-/**
- * Настройка триггеров — ОДНОРАЗОВО вызвать вручную из редактора Apps Script.
- * Запустите функцию setupTriggers() один раз (Run → setupTriggers).
- * Она создаст hourly-триггер для cleanup.
- */
-function setupTriggers() {
-  // Удалить старые триггеры
-  const triggers = ScriptApp.getProjectTriggers();
-  for (let i = 0; i < triggers.length; i++) {
-    ScriptApp.deleteTrigger(triggers[i]);
-  }
-  // Создать hourly-триггер для cleanup
-  ScriptApp.newTrigger('hourlyCleanup')
-    .timeBased()
-    .everyHours(1)
-    .create();
-  console.log('Triggers set up: hourlyCleanup every 1 hour');
-}
