@@ -1,13 +1,23 @@
-name: Sync index.html to kip8test-desktop
+name: Sync content to kip8test-desktop
 
-# Автосинхронизация index.html из kip8test в kip8test-desktop.
-# При пуше в main, меняющем index.html, этот workflow:
-#   1. Скачивает свежий index.html из текущего репозитория
-#   2. Создаёт коммит в kip8test-desktop/index.html с тем же содержимым
-#   3. Пушит через PAT (секрет DESKTOP_SYNC_TOKEN)
-#
-# Это позволяет держать index.html синхронным между mobile (kip8test) и desktop (kip8test-desktop)
-# без ручного копирования. data/ и images/ синхронизируются вручную при релизе.
+# Автосинхронизация контента из kip8test в kip8test-desktop (тестовый десктоп).
+# Синхронизируется ПОЛНЫЙ набор (Task 517 — зеркально механизму kip8):
+#   - index.html + десктоп-модули (charts-desktop.js, devices-table-desktop.js)
+#     — офлайн-fallback app://
+#   - sw.js + scripts/*.gs + scripts/sync-*.py + tests/ (tests/*.js +
+#     README.md) — фикстуры полного тестового прогона (CI kip8test-desktop,
+#     node tests/run-all.js); в Electron-сборку НЕ попадают (files в
+#     package.json: index.html/images/data/electron)
+#   - data/*.json + images/*.png + Системный промт — данные/ассеты/документация
+# При пуше в main, меняющем index.html/десктоп-модули, workflow:
+#   1. Копирует набор в kip8test-desktop
+#   2. Чистит мусор зеркала: scripts/DEPLOY-*.md + артефакты Task 345
+#      (build.mjs, vite.config.mjs, bun.lock, tests/test-task345.js)
+#   3. Коммитит через PAT (секрет DESKTOP_SYNC_TOKEN)
+# paths-триггеры НЕ расширять (Task 517): ежедневные авто-коммиты Google
+# Sheets (data/*.json) и docs-пуши НЕ должны гонять десктоп-зеркало;
+# полный набор протягивается тем же диспатчем/пушем в index.html.
+# Аналог механизма kip8 -> kip8-desktop (sync-to-desktop.yml в kip8).
 
 on:
   push:
@@ -25,7 +35,7 @@ jobs:
   sync-to-desktop:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout kip8test (только index.html)
+      - name: Checkout kip8test
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
@@ -43,13 +53,32 @@ jobs:
         run: |
           git clone --depth 1 "https://x-access-token:${DESKTOP_SYNC_TOKEN}@github.com/bloknett-design/kip8test-desktop.git" /tmp/kip8test-desktop
 
-      - name: Скопировать index.html и charts-desktop.js
+      - name: Скопировать контент и фикстуры тестов
         run: |
           cp index.html /tmp/kip8test-desktop/index.html
           # Task 147: модуль графиков (только десктоп) — нужен для офлайн-fallback app://
           cp charts-desktop.js /tmp/kip8test-desktop/charts-desktop.js
           # Task 148: таблица приборов (только десктоп)
           cp devices-table-desktop.js /tmp/kip8test-desktop/devices-table-desktop.js
+          # Task 517: полный набор фикстур тестового прогона (CI kip8test-desktop)
+          cp sw.js /tmp/kip8test-desktop/sw.js
+          cp "Системный_промт_для_приложения_КИПиА.md" /tmp/kip8test-desktop/
+          mkdir -p /tmp/kip8test-desktop/scripts /tmp/kip8test-desktop/tests \
+                   /tmp/kip8test-desktop/data /tmp/kip8test-desktop/images
+          cp scripts/*.gs /tmp/kip8test-desktop/scripts/
+          cp scripts/sync-*.py /tmp/kip8test-desktop/scripts/
+          cp tests/*.js tests/README.md /tmp/kip8test-desktop/tests/
+          cp data/*.json /tmp/kip8test-desktop/data/
+          cp images/*.png /tmp/kip8test-desktop/images/
+          # Task 517: чистка зеркала (курс Task 510 на чистоту репо):
+          # - DEPLOY-инструкции в PWA старше недели удаляются — зеркало тоже чистим;
+          # - build.mjs / vite.config.mjs / bun.lock / tests/test-task345.js —
+          #   артефакты Task 345 (древний срез тестов), полному прогону не нужны.
+          rm -f /tmp/kip8test-desktop/scripts/DEPLOY-*.md
+          rm -f /tmp/kip8test-desktop/build.mjs \
+                /tmp/kip8test-desktop/vite.config.mjs \
+                /tmp/kip8test-desktop/bun.lock \
+                /tmp/kip8test-desktop/tests/test-task345.js
 
       - name: Проверить, есть ли изменения
         id: changes
@@ -73,16 +102,18 @@ jobs:
           cd /tmp/kip8test-desktop
           git config user.email "bot@kip8test.local"
           git config user.name "kip-bot"
-          git add index.html charts-desktop.js devices-table-desktop.js
+          git add index.html charts-desktop.js devices-table-desktop.js sw.js \
+                  scripts/ tests/ data/ images/ \
+                  "Системный_промт_для_приложения_КИПиА.md"
           # Коммит-сообщение: показываем, что это автосинхронизация и из какого SHA
-          git commit -m "auto: sync index.html from kip8test@${SOURCE_SHA}
+          git commit -m "auto: sync content from kip8test@${SOURCE_SHA}
 
           Source commit: ${SOURCE_SHA}
           Source message: ${SOURCE_MSG}
 
           Автоматически синхронизировано через GitHub Action sync-to-desktop.yml"
           git push origin main
-          echo "✓ index.html синхронизирован в kip8test-desktop"
+          echo "✓ контент синхронизирован в kip8test-desktop"
 
       - name: Summary
         if: always()
@@ -90,7 +121,7 @@ jobs:
           echo "## Sync summary"
           echo ""
           if [ "${{ steps.changes.outputs.changed }}" = "true" ]; then
-            echo "✅ index.html обновлён в kip8test-desktop (source: kip8test@${{ steps.commit_info.outputs.sha }})"
+            echo "✅ контент обновлён в kip8test-desktop (source: kip8test@${{ steps.commit_info.outputs.sha }})"
           else
-            echo "ℹ️ index.html уже был актуален в kip8test-desktop"
+            echo "ℹ️ контент уже был актуален в kip8test-desktop"
           fi

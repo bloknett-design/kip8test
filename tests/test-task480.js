@@ -30,6 +30,15 @@
 //   Окна истории: Task 478 700 → 1100 (комментарий 480 отодвинул до
 //   ~835); якоря 461/471/472/474 в прежних окнах (запасы 101+).
 //
+// Task 517 (чинка desktop-CI синка): два гварда окружения — этот же
+//     tests/-каталог теперь синхронизируется в kip8test-desktop
+//     (sync-to-desktop.yml, полный набор фикстур), где НЕТ
+//     .github/workflows/sync-*.yml (воркфлоу — принадлежность PWA-репо)
+//     и README — Electron-версия («kip8test-desktop — КИПиА (TEST)
+//     Desktop», без таблицы синков). Ассерты секций 4 (workflows, 12
+//     тестов) и README (2 теста секции 6) регистрируются только в
+//     PWA-окружении: kip8test 6489/0, десктоп-CI 6489 − 14 = 6475/0.
+//
 // Запуск: через tests/run-all.js (require './test-task480.js').
 
 const fs = require('fs');
@@ -61,6 +70,15 @@ const WORKFLOWS = {
     '.github/workflows/sync-valves.yml':     { script: 'scripts/sync-valves.py',     cron: '20 3 * * *' },
     '.github/workflows/sync-regulators.yml': { script: 'scripts/sync-regulators.py', cron: '30 3 * * *' }
 };
+
+// Task 517: гварды окружения (десктоп-CI kip8test-desktop гоняет этот же
+// tests/-каталог без воркфлоу-файлов PWA и с Electron-README).
+// WORKFLOWS_PRESENT — все 4 sync-*.yml в checkout (PWA-репо);
+// README_IS_PWA — маркер заголовка PWA-README (у десктоп-зеркала заголовок
+// «# kip8test-desktop — …», таблицы синков там нет).
+const WORKFLOWS_PRESENT = Object.keys(WORKFLOWS).every((rel) =>
+    fs.existsSync(path.join(ROOT, rel)));
+const README_IS_PWA = README_SRC.indexOf('# kip8test — тестовый репозиторий PWA') === 0;
 
 // Подсчёт непересекающихся вхождений подстроки
 function countOf(haystack, needle) {
@@ -204,8 +222,10 @@ describe('Task 480 — sync-скрипты: источник тянет из н�
 
 // ==========================================================================
 // 4. workflows: комментарии «КАК НАСТРОИТЬ» + расписание не тронуто
+//    (Task 517: только в PWA-окружении — в десктоп-зеркале .github/workflows
+//    синков нет, 12 ассертов не регистрируются)
 // ==========================================================================
-describe('Task 480 — GitHub Actions workflows', () => {
+if (WORKFLOWS_PRESENT) describe('Task 480 — GitHub Actions workflows', () => {
 
     Object.keys(WORKFLOWS).forEach((rel) => {
         const info = WORKFLOWS[rel];
@@ -285,17 +305,21 @@ describe('Task 480 — data/*.json: метаданные источника', ()
 // ==========================================================================
 describe('Task 480 — документация: таблицы источников', () => {
 
-    test('README: 4 строки таблицы синков с новым ID', () => {
-        assertEqual(countOf(README_SRC, NEW_ID), 4,
-            '4 записи: devices/lockouts/valves/regulators');
-        ['sync-devices.py', 'sync-lockouts.py', 'sync-valves.py', 'sync-regulators.py']
-            .forEach((s) => assertTrue(README_SRC.indexOf(s) !== -1,
-                'скрипт ' + s + ' в таблице'));
-    });
+    // Task 517: README-ассерты — только при PWA-README (в десктоп-зеркале
+    // README Electron-версии, таблицы синков с ID там нет)
+    if (README_IS_PWA) {
+        test('README: 4 строки таблицы синков с новым ID', () => {
+            assertEqual(countOf(README_SRC, NEW_ID), 4,
+                '4 записи: devices/lockouts/valves/regulators');
+            ['sync-devices.py', 'sync-lockouts.py', 'sync-valves.py', 'sync-regulators.py']
+                .forEach((s) => assertTrue(README_SRC.indexOf(s) !== -1,
+                    'скрипт ' + s + ' в таблице'));
+        });
 
-    test('README: старый ID отсутствует', () => {
-        assertTrue(README_SRC.indexOf(OLD_ID) === -1, 'старая ссылка убрана');
-    });
+        test('README: старый ID отсутствует', () => {
+            assertTrue(README_SRC.indexOf(OLD_ID) === -1, 'старая ссылка убрана');
+        });
+    }
 
     test('Промт: таблица «Источники данных» — 4 строки с новым ID', () => {
         // строка-версия (заявка) цитирует ОБА ID — это история;
