@@ -1,88 +1,97 @@
-# DEPLOY — Task 513 (УБОРКА МЁРТВОГО КОДА) + Task 514 (ПРОВЕРКА ФАКТИЧЕСКОГО Apps Script)
+# DEPLOY — Task 513 (УБОРКА МЁРТВОГО КОДА) + Task 514/515 (ПРОВЕРКА ФАКТИЧЕСКОГО Apps Script)
 
-> **Заявки:** «Проверь код приложения на наличие ошибок и мёртвого кода» (Task 512, аудит),
-> «Подтверждаю уборку» (Task 513), выгрузка всех .gs из Apps Script в docx (Task 514).
-> **Task 514:** пользователь передал ВСЕ файлы фактического Apps Script (17 .gs, 12 818 строк)
-> — сверены с git-эталонами. План замены УТОЧНЁН: 7 файлов → **6 замен + удаление Admin.gs**.
-> **Характер изменений:** удаления мёртвого кода (513) + подтягивание пропущенных обновлений
-> (Task 376, Task 340, Admin-блок). Деплой стал чуть больше, чем предполагал Task 513, — но
-> всё равно безопасен: каждый файл сверен с фактическим состоянием.
+> **Заявки:** аудит кода (Task 512), «Подтверждаю уборку» (Task 513), docx-выгрузка
+> всех .gs (Task 514), повторная выгрузка + «нет файла Admin.gs» (Task 515 — КОРРЕКЦИЯ).
+> **Task 515 (коррекция разбора 514):** «Admin.gs» из отчёта 514 — это ВНУТРЕННЯЯ
+> шапка-комментарий блока Admin, встроенного в КОНЕЦ Utils.gs (так задумано с Task 347:
+> «Встроен в Utils.gs для удобства»), а НЕ отдельный файл. Отдельного файла Admin.gs
+> в Apps Script НЕТ — удалять нечего. Итоговый план: **6 замен, удалений НЕТ.**
+> Вывод 514 «runtime безопасен» ОТМЕНЁН — см. секцию «Триггеры» (мина АКТИВНА).
 
-## Фактическое состояние Apps Script (тест kip8test) — итог сверки Task 514
+## Фактическое состояние Apps Script (тест kip8test) — итог сверки Task 514/515
 
-**Совпадают с эталоном байт-в-байт (11) — НЕ трогать:** Code.gs, Auth.gs, Sessions.gs,
-FlowmeterArchive.gs, ValidationRules.gs, WorkSchedule.gs, VacationsInit.gs, RoleMatrix.gs,
-SessionsDevicePolicy.gs, PPEInit.gs, PlanEvents.gs.
+**16 файлов (все — из репо; лишних НЕТ, «в Apps есть, в репо нет» = пусто).**
+Совпадают с эталоном — НЕ трогать (10): Code.gs, Auth.gs, Sessions.gs,
+FlowmeterArchive.gs, ValidationRules.gs, WorkSchedule.gs, VacationsInit.gs, PPEInit.gs,
+PlanEvents.gs + CableJournal.gs (единственное расхождение — 2 пустые строки, косметика,
+можно не трогать).
 
 **Отсутствуют в Apps Script (8, одноразовые init/diagnose — норма, НЕ разворачивать):**
 FlowmeterInit.gs, StatusCodesInit.gs, PlanEventsInit.gs, PlanWorksInit.gs, TabNumbersFix.gs,
 VacationsDiagnose.gs, RoleMatrixTask340Init.gs, RoleMatrixTask462Init.gs.
 
-**Дрейф (нужна замена):**
+**Заменить (6):**
 
-| Файл в Apps Script | Фактическое состояние | Чего не хватает |
+| Файл | Фактическое состояние (apps) | Замена на HEAD изменит |
 |---|---|---|
-| `Utils.gs` | 775 строк = pre-513, НО без Admin-блока в конце | встроенного Admin (в репо с Task 347 живёт в Utils.gs) |
-| `Admin.gs` — ЛИШНИЙ файл | 337 строк = Admin-блок Utils pre-513 | в репо файла НЕТ: контент встроен в Utils.gs |
-| `Flowmeter.gs` | точно коммит Task 359 (2026-09-10) | Task 376: честный `archive_write_failed` (показания не теряются) |
-| `RoleMatrixGate.gs` | точно коммит Task 319 (2026-09-05) | Task 340: право `workschedule.view.min` — ФУНКЦИОНАЛЬНЫЙ дрейф |
-| `RoleMatrixInit.gs` | pre-513 + пользовательские правки опечаток | опечатки (создаёт/хелпер) приняты в репо в Task 514 |
-| `CableJournal.gs` | = Task 508, минус 2 пустые строки | только косметика — можно не трогать |
+| `Utils.gs` | 1113 строк ≈ pre-513 (−1 пустая строка); Admin-блок ВСТРОЕН в конец файла (строки ~778–1112, шапка «Admin.gs — …Встроен в Utils.gs…») | −ОПАСНЫЙ дубликат `setupTriggers` (удалял ВСЕ триггеры) и мёртвый `_colLetter`; **Admin-объект ОСТАЁТСЯ** (живой — роутится из Code.gs); −21/+4 строк |
+| `Flowmeter.gs` | точно Task 359 (10.09) | Task 376: честный `archive_write_failed` (показания НЕ теряются при сбое записи архива) + уборка 513; −99/+22 строк |
+| `RoleMatrixGate.gs` | точно Task 319 (05.09) | Task 340: право `workschedule.view.min` (ограниченный просмотр графика) — ФУНКЦИОНАЛЬНЫЙ дрейф; −3/+7 строк |
+| `RoleMatrix.gs` | = pre-513 байт-в-байт | уборка 513: −`roleMatrixHasPermission`, −`roleMatrixGetAccessForEmail` (superseded RoleMatrixGate); −64/+1 строк |
+| `RoleMatrixInit.gs` | = pre-513 + правки опечаток пользователя | опечатки (создаёт/хелпер) в версии УЧТЕНЫ (Task 514); уборка 513; −11 строк |
+| `SessionsDevicePolicy.gs` | = pre-513 байт-в-байт | уборка 513: −`sdpDebug`; −41 строка |
 
-## ⚠️ Триггеры: фактическая безопасность (уточнение Task 514)
+## ⚠️ Триггеры: КОРРЕКЦИЯ вывода Task 514
 
-Опасная копия `setupTriggers` (удаляет ВСЕ триггеры) в фактическом проекте живёт в
-**Admin.gs**, а НЕ в Utils.gs (Utils.gs пользователя её не содержит — репо-эталон
-расходился с реальностью). Алфавитный порядок загрузки GAS: **Admin.gs < Code.gs** —
-позже загружаемый **Code.gs перекрывает** опасную копию: запуск `setupTriggers()` из
-редактора сейчас идёт по КАНОНИЧЕСКОЙ ветке (фильтр только hourlyCleanup).
-**Runtime сейчас безопасен, но мина остаётся в Admin.gs.**
-Замена Utils.gs (Admin-блок встроен, без setupTriggers) + удаление Admin.gs убирает
-мину полностью: единственный `setupTriggers` — канон в Code.gs.
+Опасная копия `setupTriggers` (сначала удаляет ВСЕ триггеры без разбора, потом создаёт
+hourlyCleanup) живёт в конце Utils.gs (внутри встроенного Admin-блока). Порядок загрузки
+файлов GAS — алфавитный: **Code.gs < Utils.gs → копия из Utils.gs ПЕРЕКРЫВАЕТ канон
+Code.gs: запуск `setupTriggers()` из редактора сейчас выполняет ОПАСНУЮ ветку.**
+Сегодня фактического ущерба нет: триггер в проекте один (hourlyCleanup; других
+`newTrigger` во всём коде нет), а опасная версия его же и пересоздаёт. Но мина
+ВЗВЕДЕНА: любой будущий триггер будет молча удалён запуском `setupTriggers()`.
+**Замена Utils.gs (позиция 1) обезвреживает:** единственный `setupTriggers` останется
+в Code.gs — канон, удаляющий только дубликаты hourlyCleanup.
 
-## Уточнённый план замены
+## План замены
 
 Заменить содержимое файлов в редакторе Apps Script на версии из репозитория `kip8test`
-(`scripts/*.gs`, HEAD = Task 513 + опечатки Task 514):
+(`scripts/*.gs`, HEAD = Task 513 + правки опечаток Task 514):
 
-| # | Файл | Действие | Что изменится |
-|---|------|----------|---------------|
-| 1 | `Utils.gs` | ЗАМЕНИТЬ | к существующему коду НЕ меняется; в конце файла добавится Admin-блок (339 строк; опасного setupTriggers в версии НЕТ) |
-| 2 | `Admin.gs` | **УДАЛИТЬ ФАЙЛ** (правый клик → Delete) | контент теперь в Utils.gs; его `setupTriggers` — опасный дубликат |
-| 3 | `Flowmeter.gs` | ЗАМЕНИТЬ | Task 376: при неудаче записи архива — честный `archive_write_failed`, строка ОСТАЁТСЯ в outbox клиента; плюс уборка 513 (−96 строк мёртвого кода) |
-| 4 | `RoleMatrixGate.gs` | ЗАМЕНИТЬ | Task 340: право `workschedule.view.min` (ограниченный просмотр графика) — сейчас шлюз это право не распознаёт |
-| 5 | `RoleMatrix.gs` | ЗАМЕНИТЬ | уборка 513: −`roleMatrixHasPermission`, −`roleMatrixGetAccessForEmail` (superseded RoleMatrixGate) |
-| 6 | `RoleMatrixInit.gs` | ЗАМЕНИТЬ | уборка 513: −`_colLetter`; правки опечаток пользователя (создаёт/хелпер) в версии УЧТЕНЫ |
-| 7 | `SessionsDevicePolicy.gs` | ЗАМЕНИТЬ | уборка 513: −`sdpDebug` |
-| — | `CableJournal.gs` | по желанию | идентичен репо, кроме 2 пустых строк |
-| — | `FlowmeterInit.gs`, `StatusCodesInit.gs` | ПРОПУСТИТЬ | в Apps Script отсутствуют (одноразовые) |
+| # | Файл | Действие |
+|---|------|----------|
+| 1 | `Utils.gs` | ЗАМЕНИТЬ (выделить всё → вставить версию HEAD → Ctrl+S) |
+| 2 | `Flowmeter.gs` | ЗАМЕНИТЬ |
+| 3 | `RoleMatrixGate.gs` | ЗАМЕНИТЬ |
+| 4 | `RoleMatrix.gs` | ЗАМЕНИТЬ |
+| 5 | `RoleMatrixInit.gs` | ЗАМЕНИТЬ |
+| 6 | `SessionsDevicePolicy.gs` | ЗАМЕНИТЬ |
+| — | `CableJournal.gs` | по желанию (только 2 пустые строки) |
+| — | `FlowmeterInit.gs`, `StatusCodesInit.gs` и др. | ПРОПУСТИТЬ (в Apps Script отсутствуют — одноразовые) |
 
-`Code.gs` НЕ трогать — канон `setupTriggers` жив там.
+`Code.gs` НЕ трогать — канон `setupTriggers` жив там. **Файлы НЕ удалять: лишних нет.**
 
 ## Шаги
 
 1. Открыть проект Apps Script (тестовый — kip8test).
-2. Файлы 1, 3–7: открыть → выделить всё → вставить версию из репозитория → Ctrl+S.
-3. Файл 2: удалить `Admin.gs` целиком (правый клик по файлу → Delete).
-4. Сверка: `setupTriggers` в списке функций ОДИН раз (Code.gs); исчезли `sdpDebug`,
-   `roleMatrixHasPermission`, `roleMatrixGetAccessForEmail`, `flowmeterCleanupCommentMetadata`,
-   `flowmeterFixDates`, `_colLetter`, `statusCodesDeployAll`; `listUsers`/`updateRole`/…
-   (Admin-объект) видны как методы из Utils.gs.
-5. Проверить приложение: вход/OTP, журнал кабелей, расходомеры (ввод показаний),
+2. Файлы 1–6: открыть → выделить всё → вставить версию из репозитория → Ctrl+S.
+3. Сверка: `setupTriggers` в списке функций ОДИН раз (Code.gs); исчезли `sdpDebug`,
+   `roleMatrixHasPermission`, `roleMatrixGetAccessForEmail`,
+   `flowmeterCleanupCommentMetadata`, `flowmeterFixDates`, `_colLetter`,
+   `statusCodesDeployAll`; `listUsers`/`updateRole`/… (Admin-объект) видны как методы
+   Utils.gs — КАК И РАНЬШЕ (блок был и остаётся встроенным).
+4. Проверить приложение: вход/OTP, журнал кабелей, расходомеры (ввод показаний),
    расписание, ограниченный просмотр графика (роль с workschedule.view.min).
-6. Триггеры: меню Triggers — `hourlyCleanup` (Every 1 hour) на месте; НЕ запускать
-   `setupTriggers` без необходимости (запуск безопасен — канон теперь один).
-7. Журнал выполнения (Ctrl+Enter) — без новых ошибок.
+5. Триггеры: меню Triggers — `hourlyCleanup` (Every 1 hour) на месте; НЕ запускать
+   `setupTriggers()` без необходимости (после замены Utils.gs запуск безопасен —
+   канон один, но и нужды нет: триггер уже стоит).
+6. Журнал выполнения (Ctrl+Enter) — без новых ошибок.
 
 ## Для ПРОДА (kip8)
 
-Состояние прод-проекта Apps Script в Task 514 НЕ проверялось (вероятно, в прод Utils.gs
-уже содержит Admin-блок — репо-версия Utils синхронизирована с прод при Task 347).
-Перед зеркальным деплоем собрать такую же выгрузку всех .gs из прод-проекта и сверить.
+Состояние прод-проекта Apps Script в Task 514/515 НЕ проверялось. УРОК Task 515:
+внутренние шапки-комментарии «X.gs —» внутри .gs НЕ являются границами файлов — при
+сверке прода Utils.gs сверять ЦЕЛИКОМ. Возможны два варианта, оба лечатся одинаково:
+(а) Admin-блок встроен в Utils.gs (как в тесте) → тогда опасная копия `setupTriggers`
+ПЕРЕКРЫВАЕТ канон (Utils > Code) — замена Utils.gs обязательна;
+(б) отдельный файл Admin.gs существует → Admin < Code, канон побеждает, но файл всё
+равно удалить (контент встроен в Utils.gs HEAD). Перед зеркальным деплоем собрать
+выгрузку всех .gs из прод-проекта и сверить (~15 минут).
 
 ## Откаты
 
-- До уборки 513: `git show pre-task513:scripts/<файл>.gs`
-- Текущие версии Apps Script: `git show 2097d1e7:scripts/Flowmeter.gs`,
-  `git show 51bdde92:scripts/RoleMatrixGate.gs`
-- Admin.gs целиком: последний блок `git show pre-task513:scripts/Utils.gs`
+- До уборки 513: `git show pre-task513:scripts/<файл>.gs` (тег в обоих репо)
+- Текущие версии теста (докаталог): `git show 2097d1e7:scripts/Flowmeter.gs`,
+  `git show 51bdde92:scripts/RoleMatrixGate.gs`; Utils/RoleMatrix/RoleMatrixInit/
+  SessionsDevicePolicy текущего теста ≈ `pre-task513` (−1..2 пустые строки, опечатки
+  RoleMatrixInit уже в HEAD)
