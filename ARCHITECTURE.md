@@ -10,8 +10,15 @@
 
 - **4 репозитория GitHub** (владелец `bloknett-design`): `kip8test` (тестовое PWA) и `kip8`
   (боевое PWA) — код приложений; `kip8test-desktop` / `kip8-desktop` — Electron-обёртки,
-  тянут `index.html`/`sw.js`/десктоп-модули из PWA-репо (GitHub Action `sync-to-desktop.yml`,
-  kip8: срабатывает на push в index.html/sw.js/scripts/*.gs/tests/десктоп-модули).
+  тянут из PWA-репо полный набор (Task 517): `index.html`, десктоп-модули, `sw.js`,
+  `scripts/*.gs` + `scripts/sync-*.py`, `tests/*.js` + `tests/README.md`, `data/*.json`,
+  `images/*.png`, системный промт — зеркало держит фикстуры CI (`node tests/run-all.js`)
+  актуальными; гварды окружения в `tests/test-task480.js` пропускают workflow/README-ассерты,
+  которых в зеркале нет (6475/6509 тестов). Синк чистит `scripts/DEPLOY-*.md` (и артефакты
+  Task 345: build.mjs/vite.config.mjs/bun.lock — kip8test-desktop). Триггеры
+  `sync-to-desktop.yml` (Task 517: НЕ менять): kip8 — push в index.html/sw.js/
+  scripts/*.gs/tests/десктоп-модули (авто); kip8test — push в index.html/десктоп-модули
+  (полный набор протягивается этим же пушем) + workflow_dispatch.
 - Разработка ведётся в kip8test; перенос в kip8 — копией `index.html` + env-патч
   (снятие `isolateLocalStorage()`, префиксы кэшей/путей) одним инкрементом `CACHE_VERSION`
   (детали регламента переноса — в системном промте, «Перенос в kip8»).
@@ -33,7 +40,7 @@
 | Офлайн-режим | Service Worker (`sw.js`) — NetworkFirst для `data/*.json` + App Shell + cache-busting |
 | Auth | Apps Script Web App (Email+OTP, session token, heartbeat 5 мин) |
 | Хранение | `localStorage` — сессионные ключи `kip8_*` без префикса (общие между kip8/kip8test); настройки с префиксом `kip8test:` (только в kip8test) |
-| Тесты | Node.js + кастомный фреймворк (`tests/`, 6363 тестов, 205 тест-файлов, `node tests/run-all.js`) |
+| Тесты | Node.js + кастомный фреймворк (`tests/`, 6489 тестов, 215 тест-файлов, `node tests/run-all.js`; зеркало CI: kip8test-desktop 6475 — гварды окружения Task 517) |
 | Сборка APK | Bubblewrap CLI + Android SDK + JDK 17 (только в `kip8`) |
 | CI | GitHub Actions (1 CI + 7 sync workflows, cron ежедневно) |
 | Деплой | GitHub Pages (автоматически при `git push` в `main`); для десктопа — через тег `v*` |

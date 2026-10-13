@@ -1543,3 +1543,53 @@ Stage Summary:
   Triggers, дым приложения, лог Ctrl+Enter). СЛЕДУЮЩАЯ ЗАДАЧА: задачи пользователя
   (517 свободен; известный кандидат — чинка desktop-CI синка: kip8-desktop ENOENT
   scripts/*.gs, kip8test-desktop устаревшие тесты — падало и ДО Task 513).
+
+---
+Task ID: 517
+Agent: main (Super Z)
+Task: Чинка desktop-CI синка (кандидат из Task 516): оба десктоп-зеркала красные —
+      (A) kip8test-desktop: синк тянул только index.html, tests/ — древний срез
+      Task 345 (218 тестов, Cu50 падал: формула Task 499 = 39.2275), лишние
+      build.mjs/vite.config.mjs/bun.lock; (B) kip8-desktop: синк тянул 205 тестов
+      без фикстур (8 .gs из 24 → ENOENT StatusCodesInit.gs, Utils pre-513,
+      data/images/промт устарели, 6 лишних scripts/DEPLOY-*.md).
+
+Work Log:
+- Гварды окружения в tests/test-task480.js: kip8test — WORKFLOWS_PRESENT
+  (existsSync 4 sync-*.yml → 12 workflow-ассертов только в PWA-репо) +
+  README_IS_PWA (заголовок README «# kip8test — …»; у десктопа другой → 2
+  ассерта); kip8 — зеркальный WORKFLOWS_PRESENT (README-гвард не нужен —
+  README-ассертов в kip8-версии нет). Прогоны: kip8test 6489/0, kip8 6493/0
+  (гварды в PWA-репо не активны).
+- sync-to-desktop.yml ОБЕИХ репо: полный набор (sw.js, scripts/*.gs,
+  scripts/sync-*.py, tests/*.js + README.md, data/*.json, images/*.png, промт)
+  + чистка зеркала (scripts/DEPLOY-*.md; kip8test: + артефакты Task 345 —
+  build.mjs/vite.config.mjs/bun.lock/tests/test-task345.js); paths-триггеры
+  НЕ менялись. Локальная симуляция (scripts/task517-simulate-sync.sh):
+  kip8test-desktop 6475/0, kip8-desktop 6509/0 (6493−12+28: легаси-Win7 блок
+  test-task354.js активен только в kip8-desktop — electron/main.js +
+  electron-builder-legacy.yml + build-legacy-win7.yml; оценка диагноза ~6481
+  уточнена до 6509).
+- ПУШ (PAT от 24.08.2026, /home/z/.kip_pat 600, remote URL чистые): kip8test
+  d8ffa9d1 → 19853d9c (триггер index.html-комментарий: workflow_dispatch
+  недоступен — PAT без actions:write, 403) → 4c51882f (v2-фикс: корневые
+  удаления зеркала стейджатся git rm --ignore-unmatch — rm -f не стейджился
+  git add-путями, build.mjs/vite.config.mjs/bun.lock оставались после v1;
+  + git diff --cached в проверке изменений); kip8 bc107a2 (автотриггер
+  tests/**; сетевой ретрай send-pack).
+- ВЕРИФИЦИРОВАНО CI (счётчики из логов, scripts/task517-push-verify.py):
+  kip8test 6489/0 → синк v1 (bot 02028000) → kip8test-desktop 6475/0 (ровно
+  6489−14) → синк v2 (bot 02014006, чистка −1056 строк артефактов) → 6475/0;
+  Build Desktop App success. kip8 6493/0 → синк (bot 40cccbe5) → kip8-desktop
+  6509/0 (6493−12+28). Деревья зеркал = источники (24 .gs, фикстуры/промт/data
+  байт-в-байт, DEPLOY-мусор и артефакты Task 345 удалены).
+- Docs (этот коммит): версионная строка промта post-Task 517, ARCHITECTURE.md
+  §1 (полный набор синка, триггеры НЕ менять) + §2 (счётчик тестов 6489/215),
+  эта запись worklog. Desktop-репо от docs-пуша НЕ синкались — НОРМА (paths
+  не задеты; промт зеркала протянется ближайшим index.html-пушем).
+
+Stage Summary:
+- Task 517 ЗАКРЫТ: механизм синка починен и доказан продом — оба десктоп-CI
+  ЗЕЛЁНЫЕ с точными счётчиками (kip8test-desktop 6475/0, kip8-desktop 6509/0),
+  зеркала чистые и идентичны источникам, гварды окружения сняли зависимость
+  тестов от файлов вне синка. СЛЕДУЮЩАЯ ЗАДАЧА: задачи пользователя.
