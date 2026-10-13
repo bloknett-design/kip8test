@@ -75,16 +75,20 @@ jobs:
           # - build.mjs / vite.config.mjs / bun.lock / tests/test-task345.js —
           #   артефакты Task 345 (древний срез тестов), полному прогону не нужны.
           rm -f /tmp/kip8test-desktop/scripts/DEPLOY-*.md
-          rm -f /tmp/kip8test-desktop/build.mjs \
-                /tmp/kip8test-desktop/vite.config.mjs \
-                /tmp/kip8test-desktop/bun.lock \
-                /tmp/kip8test-desktop/tests/test-task345.js
+          rm -f /tmp/kip8test-desktop/tests/test-task345.js
+          # Task 517 v2 (фикс стейджинга удалений): корневые артефакты Task 345
+          # убираются git rm --ignore-unmatch — git add в шаге коммита
+          # перечисляет пути (scripts/, tests/, data/…) и НЕ стейджит
+          # удаления в корне репо, из-за чего build.mjs / vite.config.mjs /
+          # bun.lock оставались в зеркале после v1-синка (02028000).
+          git -C /tmp/kip8test-desktop rm -q -f --ignore-unmatch \
+                build.mjs vite.config.mjs bun.lock
 
       - name: Проверить, есть ли изменения
         id: changes
         run: |
           cd /tmp/kip8test-desktop
-          if git diff --quiet; then
+          if git diff --quiet && git diff --cached --quiet; then
             echo "changed=false" >> $GITHUB_OUTPUT
             echo "Нет изменений — пропускаем коммит"
           else
