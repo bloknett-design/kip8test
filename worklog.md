@@ -1274,3 +1274,68 @@ Stage Summary:
   CSS), тесты 6472/0, приложение НЕ менялось (kipia-test-v730; kip8 — v527, 6476/0).
 - К уборке предложено (ждёт команды): дубликат setupTriggers (риск), ~37 мёртвых функций
   ≈896 строк, 2 неиспользуемых роута, 3 guarded-остатка id. СЛЕДУЮЩАЯ ЗАДАЧА: 513.
+
+---
+Task ID: 513
+Agent: main (Super Z)
+Task: Заявка: «Подтверждаю уборку» — уборка мёртвого кода по аудиту Task 512
+      (передан PAT неограниченного срока на 4 репо: kip8/kip8test/kip8-desktop/
+      kip8test-desktop).
+
+Work Log:
+- Старт: kip8test @c3b185c8 (v730, 6472/0), kip8 @dc30cfb (v527, 6476/0). Теги
+  pre-task513 + v730-post512 / v527-post512 — запушены в оба репо (откат:
+  git show pre-task513:<путь>). PAT обновлён (/home/z/.kip_pat).
+- ВЕРИФИКАЦИЯ АУДИТА до удаления (desktop-репо склонированы: kip8test-desktop/
+  kip8-desktop — index.html автосинхронизируется GitHub Action sync-to-desktop.yml,
+  тесты там расходятся с основными): 25 функций — 0 ссылок где-либо (чисто);
+  из 12 «мёртвых» методов 8 СОХРАНЕНЫ — тесты их вызывают/ассертят строковыми
+  литералами, которых граф вызовов аудита не видел: _renderEmpPopup (assert
+  «жив (обёртка для тестов)»), _sourceLabel (PC._sourceLabel), _state, _vacDays,
+  _vacNetDays, _wsFullFio, KipDB.del (kdb.del), reloadTotals (host.reloadTotals).
+  КАМЕНЬ: аудит метод-ссылок .имя не сканировал строковые литералы тестов.
+- УДАЛЕНО kip8test index.html 66066→65625 (−441): 25 функций + 4 метода
+  (_fmtDateTime, KipAuth.getCurrentUser-обёртка, handleBackButton, toggleSearch);
+  7 .gs −443 строки: _colLetter, flowmeterCleanupCommentMetadata, flowmeterFixDates,
+  roleMatrixHasPermission, roleMatrixGetAccessForEmail, sdpDebug, statusCodesDeployAll,
+  statusCodesStatus + ОПАСНЫЙ setupTriggers из Utils.gs (канон Code.gs); правки
+  устаревших комментариев (шапки RoleMatrix/StatusCodesInit/SessionsDevicePolicy/
+  Utils ×2; осиротевший заголовок «ДИАГНОСТИКА» в хвосте SessionsDevicePolicy.gs).
+- КАМЕНЬ-ОТКАТ: setupOtpInputs (IIFE) удалён как «мёртвый», но IIFE ИСПОЛНЯЕТСЯ
+  сам (input/keydown/paste на otp1–otp6, Enter на authEmail/createUserEmail) —
+  автопереход OTP сломался бы. ВОССТАНОВЛЕН из git-тега; browser-check B
+  (цифра в otp1 → фокус otp2; Backspace; paste «123456» → 6 полей; Enter в email →
+  sendOTP) — пруф. Урок: «мёртвость» IIFE определяется потребителями его
+  side-эффектов, не вызовами.
+- КАМЕНЬ (восстановление): end-скан `rstrip() == '})();'` не учитывает ПРОБЕЛЫ
+  СЛЕВА — первая вставка взяла 397 строк вместо 70 и поглотила следующий раздел
+  (двойной якорь «Запуск авторизации»); вылечено вырезанием по второму вхождению
+  якоря + brace-matching-границы. КАМЕНЬ (диагностика): bash-вывод «съедает»
+  последовательность [m (SGR-подобная) — строка stats.byEmail[mail] ВЫГЛЯДЕЛА
+  сломанной («byEmailail]»), файл был корректен; проверка символов — python
+  repr/od. КАМЕНЬ (аудит): «дубликат p» StatusCodesInit.gs:670/677 — ЛОЖНЫЙ
+  (вложенные локальные хелперы _scTimestamp/_scIsoDate, не глобальный override).
+- SW v730→v731; бамп: гарды v731→v732 ×162 строк / ассерты v730→v731 (828 замен,
+  191 файл); test-task513.js (+17 тестов: отсутствие удалённых имён через
+  \b-регэксп — getOimlMpe ≠ живой getOimlMpeR60!; живость тест-используемых
+  методов; IIFE-гвард; канон setupTriggers ×1 в Code.gs; SW-ассерты) → 6489/0.
+- SMOKE scripts/task513-browser-check.py 21/21 (порт 8995: boot без pageerror;
+  страницы devices/valves-prod/regulators-prod/lockouts-prod/projects-prod/
+  calculators активны; журнал кабелей — 4 активные карточки мока (архив не в
+  списке); OTP-регрессия; мобильная светлая). Скриншоты download/kip8test-task513/.
+- ЗЕРКАЛО kip8: тот же task513-cleanup.py (имя-ориентированный, без привязки к
+  строкам) — index.html 66054→65611 (−443), те же 7 .gs; SW v527→v528; бамп
+  v528→v529/v527→v528 (830 замен, 193 файла); test-task513.js (зеркало, kipia-v52x)
+  → 6493/0; SMOKE task513-browser-check-k8.py 21/21 (порт 8997, ключи LS без
+  префикса kip8test:). Папка DEPLOY: kip8 — та же 7 файлов, см. свой экземпляр.
+- DEPLOY-Task513-dead-code-cleanup.md: замена 7 .gs в Apps Script (обе копии
+  проекта — тест и прод; чистые удаления, поведение не меняется; после замены
+  setupTriggers из редактора выполняется ТОЛЬКО канон Code.gs).
+
+Stage Summary:
+- Уборка выполнена зеркально: index.html −441/−443 строк, 7 .gs −443 строки в
+  каждом репо; опасный GAS-дубликат setupTriggers устранён (Utils.gs), канон —
+  Code.gs; ошибки аудита исправлены ДО продакшена (8 методов живы — тесты;
+  IIFE setupOtpInputs восстановлен); SW kipia-test-v731 / kipia-v528; тесты
+  6489/0 + 6493/0; SMOKE 21/21 оба. DEPLOY-Task513 — замена 7 .gs (не срочно,
+  рекомендовано). СЛЕДУЮЩАЯ ЗАДАЧА: 514.
