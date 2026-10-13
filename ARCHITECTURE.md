@@ -14,7 +14,7 @@
   `scripts/*.gs` + `scripts/sync-*.py`, `tests/*.js` + `tests/README.md`, `data/*.json`,
   `images/*.png`, системный промт — зеркало держит фикстуры CI (`node tests/run-all.js`)
   актуальными; гварды окружения в `tests/test-task480.js` пропускают workflow/README-ассерты,
-  которых в зеркале нет (6475/6509 тестов). Синк чистит `scripts/DEPLOY-*.md` (и артефакты
+  которых в зеркале нет, в `tests/test-task518.js` — ассерт аудит-скрипта (6491/6525 тестов). Синк чистит `scripts/DEPLOY-*.md` (и артефакты
   Task 345: build.mjs/vite.config.mjs/bun.lock — kip8test-desktop). Триггеры
   `sync-to-desktop.yml` (Task 517: НЕ менять): kip8 — push в index.html/sw.js/
   scripts/*.gs/tests/десктоп-модули (авто); kip8test — push в index.html/десктоп-модули
@@ -40,7 +40,7 @@
 | Офлайн-режим | Service Worker (`sw.js`) — NetworkFirst для `data/*.json` + App Shell + cache-busting |
 | Auth | Apps Script Web App (Email+OTP, session token, heartbeat 5 мин) |
 | Хранение | `localStorage` — сессионные ключи `kip8_*` без префикса (общие между kip8/kip8test); настройки с префиксом `kip8test:` (только в kip8test) |
-| Тесты | Node.js + кастомный фреймворк (`tests/`, 6489 тестов, 215 тест-файлов, `node tests/run-all.js`; зеркало CI: kip8test-desktop 6475 — гварды окружения Task 517) |
+| Тесты | Node.js + кастомный фреймворк (`tests/`, 6506 тестов, 216 тест-файлов, `node tests/run-all.js`; зеркало CI: kip8test-desktop 6491 — гварды окружения Tasks 517+518) |
 | Сборка APK | Bubblewrap CLI + Android SDK + JDK 17 (только в `kip8`) |
 | CI | GitHub Actions (1 CI + 7 sync workflows, cron ежедневно) |
 | Деплой | GitHub Pages (автоматически при `git push` в `main`); для десктопа — через тег `v*` |
