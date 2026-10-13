@@ -1339,3 +1339,50 @@ Stage Summary:
   IIFE setupOtpInputs восстановлен); SW kipia-test-v731 / kipia-v528; тесты
   6489/0 + 6493/0; SMOKE 21/21 оба. DEPLOY-Task513 — замена 7 .gs (не срочно,
   рекомендовано). СЛЕДУЮЩАЯ ЗАДАЧА: 514.
+
+---
+Task ID: 514
+Agent: main (Super Z)
+Task: Заявка: «Перед заменой 7 .gs-файлов в Apps Script — проверь все текущие файлы» —
+      пользователь передал docx-выгрузку «файлы в Apps Script.docx» (17 .gs, 12 818 строк,
+      тестовый проект kip8test).
+
+Work Log:
+- Извлечение python-docx (1 абзац = 1 строка), разбиение по шапкам «* X.gs —» / «// X.gs —»,
+  границы проверены контекстно; покрытие 12 818/12 818 строк (скрытых файлов нет).
+- Сверка с git-эталоном pre-task513. Нормализация ТОЛЬКО Word-артефактов (NBSP-отступы,
+  1 умная кавычка в WorkSchedule-комментарии). КАМЕНЬ: конвертация стрелок → в -> (и тире)
+  портила сверку — ложные diff'ы по всем файлам; стрелки/тире репо и docx совпадают сами.
+- СОВПАДАЮТ байт-в-байт (11): Code, Auth, Sessions, FlowmeterArchive, ValidationRules,
+  WorkSchedule, VacationsInit, RoleMatrix, SessionsDevicePolicy, PPEInit, PlanEvents.
+- ДРЕЙФ (4 файла): Utils.gs = pre-513 БЕЗ Admin-блока — пользователь держит ОТДЕЛЬНЫЙ
+  Admin.gs (337 строк = Admin-блок Utils pre-513, минус пустая строка; в репо файла нет
+  с Task 347 «встроен в Utils.gs»); Flowmeter.gs = точно 2097d1e7 (Task 359, 10.09) — не
+  хватает Task 376 (archive_write_failed: при неудаче записи архива клиент получал ok:true
+  и удалял запись из outbox — показания терялись); RoleMatrixGate.gs = точно 51bdde92
+  (Task 319, 05.09) — не хватает Task 340 (workschedule.view.min — ограниченный просмотр
+  графика); RoleMatrixInit.gs — пользователь исправил 2 опечатки (создаёт/хелпер).
+  CableJournal.gs — минус 2 пустые строки (косметика).
+- ТРИГГЕРЫ (уточнение вывода 513): опасная копия setupTriggers (удаляет ВСЕ триггеры)
+  в фактическом проекте живёт в Admin.gs, НЕ в Utils.gs (Utils пользователя её не
+  содержит). Алфавитный порядок загрузки GAS: Admin < Code → канон Code.gs ПЕРЕКРЫВАЕТ
+  опасную копию: запуск setupTriggers() из редактора сейчас идёт по каноничной ветке.
+  Runtime безопасен, мина остаётся. КАМЕНЬ: репо-эталон ≠ фактический Apps Script —
+  план «чистых удалений» обязан опираться на свереный бейзлайн.
+- 8 одноразовых init/diagnose-файлов репо в Apps отсутствуют (норма): FlowmeterInit,
+  StatusCodesInit, PlanEventsInit, PlanWorksInit, TabNumbersFix, VacationsDiagnose,
+  RoleMatrixTask340Init, RoleMatrixTask462Init → в деплое ПРОПУСТИТЬ.
+- РЕПО-СИНХРОНИЗАЦИЯ (оба репо): RoleMatrixInit.gs — 2 опечатки пользователя приняты
+  (создают→создаёт, хеллер→хелпер); DEPLOY-Task513-dead-code-cleanup.md ПЕРЕПИСАН по
+  факту: 6 замен + УДАЛЕНИЕ Admin.gs; FlowmeterInit/StatusCodesInit пропустить (в Apps
+  их нет); для прода — сначала аналогичная выгрузка-сверка (Task 514 проверял только
+  тест); откаты дополнены (2097d1e7/51bdde92/pre-task513).
+- Тесты: node tests/run-all.js → 6489/0 (kip8test) / 6493/0 (kip8) — изменения только
+  комментарии/документация, код не менялся.
+
+Stage Summary:
+- Проверка фактического Apps Script (тест) выполнена полностью: 17/24 файлов репо
+  развёрнуты, 11 актуальны, 4 с дрейфом + 1 лишний Admin.gs (мина setupTriggers; runtime
+  безопасен благодаря порядку загрузки Admin < Code). DEPLOY-Task513 уточнён: 6 замен +
+  удаление Admin.gs; пользователю выдан план и список контроля. Для прода — сначала
+  выгрузка-сверка. СЛЕДУЮЩАЯ ЗАДАЧА: 515.
