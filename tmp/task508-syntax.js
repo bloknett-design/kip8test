@@ -2258,50 +2258,6 @@
         if (typeof KipFav !== 'undefined') KipFav.updateHeaderIcon();
     }
 
-
-    // === Фильтр по типу ===
-    function devUpdateFilterButton() {
-        const btn = document.getElementById('devFilterType');
-        const label = document.getElementById('devFilterTypeLabel');
-        if (!btn || !label) return;
-        if (devFilterType) {
-            btn.classList.add('active');
-            const shortType = devFilterType.length > 20 ? devFilterType.substring(0, 18) + '…' : devFilterType;
-            label.textContent = 'Тип: ' + shortType;
-        } else {
-            btn.classList.remove('active');
-            label.textContent = 'Все типы';
-        }
-    }
-
-    function devToggleTypeFilter() {
-        // Показать список всех уникальных типов — через prompt
-        if (!devLoaded || !devData) return;
-        const types = [...new Set(devData.devices.map(d => d['Тип'] || '').filter(t => t))];
-        types.sort();
-        let msg = 'Доступно типов: ' + types.length + '\n\nВведите тип или часть названия.\nДля сброса — оставьте пустым:\n\n';
-        // Покажем первые 15 типов для ориентира
-        for (let i = 0; i < Math.min(15, types.length); i++) {
-            msg += '  ' + types[i] + '\n';
-        }
-        if (types.length > 15) msg += '  ... и ещё ' + (types.length - 15) + '\n';
-        kipPrompt(msg, devFilterType || '').then(function(input) {
-            if (input === null) return;
-            const trimmed = input.trim();
-            if (!trimmed) {
-                devFilterType = null;
-            } else {
-                // Точное совпадение или частичное
-                const exact = types.find(t => t.toLowerCase() === trimmed.toLowerCase());
-                devFilterType = exact || trimmed;
-            }
-            // Сброс пагинации
-            devVisibleCount = DEV_DEFAULT_LIMIT;
-            if (navigator.vibrate) navigator.vibrate(25);
-            devRender();
-        });
-    }
-
     // Конвертация Excel serial date (число дней с 1899-12-30) в формат DD.MM.YYYY
     function devExcelDateToString(serial) {
         if (!serial) return '';
@@ -2403,14 +2359,6 @@
             }
         }
         span.textContent = dateStr || '—';
-    }
-
-    function devPlural(n, forms) {
-        const n10 = n % 10;
-        const n100 = n % 100;
-        if (n10 === 1 && n100 !== 11) return forms[0];
-        if (n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20)) return forms[1];
-        return forms[2];
     }
 
     function devInit() {
@@ -3105,22 +3053,6 @@
         kipBindSarFilterBadge(list, 'devices', function() { devRenderGroup(); });
     }
 
-    function devScrollToGroup(el) {
-        if (!el) return;
-        const mode = el.getAttribute('data-mode') || 'type';
-        const ph = document.querySelector('#page-devices-' + mode + ' .page-inline-header');
-        const stickyHeight = ph ? ph.offsetHeight : 56;
-        const rect = el.getBoundingClientRect();
-        const targetY = window.scrollY + rect.top - stickyHeight - 8;
-        window.scrollTo({ top: Math.max(0, targetY), behavior: 'auto' });
-    }
-
-        function devShowMoreSorted(mode) {
-        if (!devSortedVisibleCount[mode]) devSortedVisibleCount[mode] = 50;
-        devSortedVisibleCount[mode] += 50;
-        devRenderSorted(mode);
-    }
-
     // ===== БЛОКИРОВКИ =====
     // Поля соответствуют листу "Блокировки_app" таблицы Google Sheets
     // https://docs.google.com/spreadsheets/d/1ZKOPBsD9x4wdlC5rDjz09UypD86G0Cee/edit (тот же файл, что и для приборов)
@@ -3187,15 +3119,6 @@
         if (/^\d{2}\.\d{2}\.\d{4}$/.test(str)) return str;
         return str;
     }
-    function lockGetLastUpdateDate() {
-        try {
-            const raw = localStorage.getItem('lockoutsLastUpdate');
-            if (!raw) return '';
-            const d = new Date(raw);
-            if (isNaN(d.getTime())) return '';
-            return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
-        } catch (e) { return ''; }
-    }
 
     async function lockInitSorted(mode) {
         if (!lockLoaded || !lockData) {
@@ -3215,13 +3138,6 @@
             }
         }
         lockRenderSorted(mode);
-    }
-
-    function lockForceRefresh(mode) {
-        lockData = null;
-        lockLoaded = false;
-        lockInitSorted(mode);
-        if (navigator.vibrate) navigator.vibrate(40);
     }
 
     function lockRenderSorted(mode) {
@@ -3508,16 +3424,6 @@
         if (typeof KipFav !== 'undefined') KipFav.wrapKipCardsForFavSwipe('.lock-card', 'lock', 'data-lock-id');
     }
 
-    function lockScrollToGroup(el) {
-        if (!el) return;
-        const mode = el.getAttribute('data-mode') || 'type';
-        const ph = document.querySelector('#page-lockouts-' + mode + ' .page-inline-header');
-        const stickyHeight = ph ? ph.offsetHeight : 56;
-        const rect = el.getBoundingClientRect();
-        const targetY = window.scrollY + rect.top - stickyHeight - 8;
-        window.scrollTo({ top: Math.max(0, targetY), behavior: 'auto' });
-    }
-
     // ===== Открытие карточки блокировки (отдельная страница, как у приборов) =====
     function lockOpenDetail(lockId) {
         if (!lockId) return;
@@ -3681,15 +3587,6 @@
         if (/^\d{2}\.\d{2}\.\d{4}$/.test(str)) return str;
         return str;
     }
-    function valveGetLastUpdateDate() {
-        try {
-            const raw = localStorage.getItem('valvesLastUpdate');
-            if (!raw) return '';
-            const d = new Date(raw);
-            if (isNaN(d.getTime())) return '';
-            return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
-        } catch (e) { return ''; }
-    }
 
     async function valveInitSorted(mode) {
         if (!valveLoaded || !valveData) {
@@ -3709,13 +3606,6 @@
             }
         }
         valveRenderSorted(mode);
-    }
-
-    function valveForceRefresh(mode) {
-        valveData = null;
-        valveLoaded = false;
-        valveInitSorted(mode);
-        if (navigator.vibrate) navigator.vibrate(40);
     }
 
     function valveRenderSorted(mode) {
@@ -4203,16 +4093,6 @@
         if (typeof KipFav !== 'undefined') KipFav.wrapKipCardsForFavSwipe('.valve-card', 'valve', 'data-valve-id');
     }
 
-    function valveScrollToGroup(el) {
-        if (!el) return;
-        const mode = el.getAttribute('data-mode') || 'type';
-        const ph = document.querySelector('#page-valves-' + mode + ' .page-inline-header');
-        const stickyHeight = ph ? ph.offsetHeight : 56;
-        const rect = el.getBoundingClientRect();
-        const targetY = window.scrollY + rect.top - stickyHeight - 8;
-        window.scrollTo({ top: Math.max(0, targetY), behavior: 'auto' });
-    }
-
     // ===== Открытие карточки клапана (отдельная страница, как у приборов/блокировок) =====
     function valveOpenDetail(valveId) {
         if (!valveId) return;
@@ -4533,15 +4413,6 @@
         if (/^\d{2}\.\d{2}\.\d{4}$/.test(str)) return str;
         return str;
     }
-    function regulatorGetLastUpdateDate() {
-        try {
-            const raw = localStorage.getItem('regulatorsLastUpdate');
-            if (!raw) return '';
-            const d = new Date(raw);
-            if (isNaN(d.getTime())) return '';
-            return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
-        } catch (e) { return ''; }
-    }
 
     async function regulatorInitSorted(mode) {
         if (!regulatorLoaded || !regulatorData) {
@@ -4561,13 +4432,6 @@
             }
         }
         regulatorRenderSorted(mode);
-    }
-
-    function regulatorForceRefresh(mode) {
-        regulatorData = null;
-        regulatorLoaded = false;
-        regulatorInitSorted(mode);
-        if (navigator.vibrate) navigator.vibrate(40);
     }
 
     function regulatorRenderSorted(mode) {
@@ -4876,16 +4740,6 @@
         if (typeof KipFav !== 'undefined') KipFav.wrapKipCardsForFavSwipe('.regulator-card', 'reg', 'data-regulator-id');
     }
 
-    function regulatorScrollToGroup(el) {
-        if (!el) return;
-        const mode = el.getAttribute('data-mode') || 'type';
-        const ph = document.querySelector('#page-regulators-' + mode + ' .page-inline-header');
-        const stickyHeight = ph ? ph.offsetHeight : 56;
-        const rect = el.getBoundingClientRect();
-        const targetY = window.scrollY + rect.top - stickyHeight - 8;
-        window.scrollTo({ top: Math.max(0, targetY), behavior: 'auto' });
-    }
-
     // ===== Открытие карточки регулятора (отдельная страница, как у приборов/блокировок/клапанов) =====
     function regulatorOpenDetail(regulatorId) {
         if (!regulatorId) return;
@@ -5099,15 +4953,6 @@
         if (/^\d{2}\.\d{2}\.\d{4}$/.test(str)) return str;
         return str;
     }
-    function projectGetLastUpdateDate() {
-        try {
-            const raw = localStorage.getItem('projectsLastUpdate');
-            if (!raw) return '';
-            const d = new Date(raw);
-            if (isNaN(d.getTime())) return '';
-            return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
-        } catch (e) { return ''; }
-    }
     function projectStatusClass(status) {
         const s = String(status || '').toLowerCase().trim();
         if (s === 'выполнен')   return 'project-card-status-done';
@@ -5205,13 +5050,6 @@
             }
         }
         projectsRenderSorted(mode);
-    }
-
-    function projectsForceRefresh(mode) {
-        projectData = null;
-        projectLoaded = false;
-        projectInitSorted(mode);
-        if (navigator.vibrate) navigator.vibrate(40);
     }
 
     function projectsRenderSorted(mode) {
@@ -5508,16 +5346,6 @@
         kipRenderSearchCounter(list, items.length, __searchTotal, rawQuery);
         // Добавить кликабельность значка избранного на карточках проектов
         if (typeof KipFav !== 'undefined') KipFav.wrapKipCardsForFavSwipe('.project-card', 'proj', 'data-project-id');
-    }
-
-    function projectsScrollToGroup(el) {
-        if (!el) return;
-        const mode = el.getAttribute('data-mode') || 'prod';
-        const ph = document.querySelector('#page-projects-' + mode + ' .page-inline-header');
-        const stickyHeight = ph ? ph.offsetHeight : 56;
-        const rect = el.getBoundingClientRect();
-        const targetY = window.scrollY + rect.top - stickyHeight - 8;
-        window.scrollTo({ top: Math.max(0, targetY), behavior: 'auto' });
     }
 
     // ===== Открытие карточки проекта (отдельная страница) =====
@@ -7450,14 +7278,6 @@
         bodyEl.scrollTop = 0;
     }
 
-    // Рендер билета в detail-panel при навигации (для десктопа)
-    function ticketRenderDetailInPanel() {
-        const catId = window._ticketDetailCatId;
-        const ti = window._ticketDetailIndex || 0;
-        if (!catId) return;
-        ticketSelectItem(catId, ti);
-    }
-
     // Картика загрузилась успешно — убрать таймаут, оставить <img> видимым
     function ticketImgOk(imgId) {
         const img = document.getElementById(imgId);
@@ -7809,11 +7629,6 @@
     /** Определяет, работает ли приложение в десктопном режиме */
     function isDesktop() {
         return window.matchMedia('(min-width: 1024px)').matches;
-    }
-
-    /** Определяет, работает ли приложение в планшетном режиме */
-    function isTablet() {
-        return window.matchMedia('(min-width: 768px) and (max-width: 1023px)').matches;
     }
 
     /** Страницы, которые на десктопе открывают detail-panel вместо перехода */
@@ -11416,9 +11231,6 @@ function kipPrompt(msg, defaultVal) {
     function validatePositiveField(input) {
         return validateField(input, (val) => !isNaN(val) && val > 0, 'Должно быть положительным числом');
     }
-    function validateNonNegativeField(input) {
-        return validateField(input, (val) => !isNaN(val) && val >= 0, 'Должно быть неотрицательным числом');
-    }
     function validateRangeField(input, min, max) {
         return validateField(input, (val) => !isNaN(val) && val >= min && val <= max,
             'Должно быть в диапазоне ' + min + '–' + max);
@@ -11580,31 +11392,6 @@ function setSignalDefaults() { let type=document.getElementById('sigType').value
     function updateScaleQueryUnits(){ let unit=document.getElementById('scaleUnitName').value||'ед.'; document.getElementById('scaleQueryUnit').textContent=unit; let sigRange=getSignalRangeAndUnit(document.getElementById('sigType').value); document.getElementById('scaleQuerySigUnit').textContent=sigRange.unit; }
     updateScaleQueryUnits();
 
-    // Расчёт погрешности для всех типов
-    function toggleErrorClassFields(prefix) {
-        let form = document.getElementById(prefix + 'class_form').value;
-        let groups = ['group_simple', 'group_underline', 'group_circle', 'group_fraction'];
-        groups.forEach(g => {
-            let el = document.getElementById(prefix + g);
-            if (el) el.style.display = 'none';
-        });
-        let showMap = {
-            'number': 'group_simple',
-            'underline': 'group_underline',
-            'circle': 'group_circle',
-            'fraction': 'group_fraction'
-        };
-        let showEl = document.getElementById(prefix + showMap[form]);
-        if (showEl) showEl.style.display = 'block';
-        let infoEl = document.getElementById(prefix + 'class_info');
-        if (infoEl) {
-            if (form === 'number') infoEl.innerHTML = 'Xн = ВПИ − НПИ (диапазон измерения)';
-            else if (form === 'underline') infoEl.innerHTML = 'Xн = длина шкалы (в единицах измерения)';
-            else if (form === 'circle') infoEl.innerHTML = 'Относительная погрешность постоянна во всём диапазоне';
-            else if (form === 'fraction') infoEl.innerHTML = 'c/d — аддитивная/мультипликативная составляющие относительной погрешности';
-        }
-    }
-
     // Переключение видимости поля "Своё значение" для датчиков давления
     function toggleEpCustomClass() {
         let sel = document.getElementById('ep_class_val');
@@ -11708,71 +11495,6 @@ function setSignalDefaults() { let type=document.getElementById('sigType').value
         html += '<div class="converter-result-item"><span class="converter-result-label">Класс точности</span><span class="converter-result-value"><span class="greek-delta">δ</span> = ' + formatNumber(cls) + '% (относительная)</span></div>';
         html += '<div class="converter-result-item"><span class="converter-result-label">Текущее значение (X)</span><span class="converter-result-value">' + formatNumber(xCurrent) + '</span></div>';
         html += '<div class="converter-result-item"><span class="converter-result-label">Абсолютная погрешность (±Δ)</span><span class="converter-result-value" style="color:#4ac771;">± ' + formatNumber(absErr) + ' ед.изм.</span></div>';
-        html += '<div class="converter-result-item" style="flex-direction:column;align-items:flex-start;gap:4px;"><span class="converter-result-label">Формула расчёта</span><span style="font-size:13px;color:rgba(140,180,210,0.9);line-height:1.5;">' + formulaHTML + ' ед.изм.</span></div>';
-        document.getElementById(prefix + 'results').innerHTML = html;
-        document.getElementById(prefix + 'results').style.display = 'block';
-        setTimeout(() => document.getElementById(prefix + 'results').scrollIntoView({behavior:'smooth',block:'start'}), 100);
-    }
-
-    function calcErrorGOST(prefix) {
-        let form = document.getElementById(prefix + 'class_form').value;
-        let absErr, relErr, formulaHTML, xNorm, xNormDesc, xCurrent;
-        if (form === 'number') {
-            let cls = parseLocaleNumber(document.getElementById(prefix + 'class_val').value);
-            let xmin = parseLocaleNumber(document.getElementById(prefix + 'xmin').value);
-            let xmax = parseLocaleNumber(document.getElementById(prefix + 'xmax').value);
-            xCurrent = parseLocaleNumber(document.getElementById(prefix + 'x_current').value);
-            if (isNaN(cls) || cls <= 0) { showToast('Введите класс точности'); return; }
-            if (isNaN(xmin) || isNaN(xmax)) { showToast('Введите диапазон измерения'); return; }
-            if (xmin >= xmax) { showToast('НПИ должен быть меньше ВПИ'); return; }
-            xNorm = xmax - xmin;
-            xNormDesc = 'Xн = ВПИ − НПИ = ' + formatNumber(xmax) + ' − ' + (xmin < 0 ? '(' + formatNumber(xmin) + ')' : formatNumber(xmin)) + ' = ' + formatNumber(xNorm);
-            absErr = (cls / 100) * xNorm;
-            formulaHTML = 'Δ = ±(<span class="greek-gamma">γ</span>/100)·Xн = ±(' + formatNumber(cls) + '/100)·' + formatNumber(xNorm) + ' = ±' + formatNumber(absErr);
-            if (!isNaN(xCurrent) && xCurrent !== 0) {
-                relErr = (absErr / Math.abs(xCurrent)) * 100;
-                formulaHTML += '<br><span class="greek-delta">δ</span> = ±(Δ/|X|)·100 = ±(' + formatNumber(absErr) + '/' + formatNumber(Math.abs(xCurrent)) + ')·100 = ±' + formatNumber(relErr) + '%';
-            }
-        } else if (form === 'underline') {
-            let cls = parseLocaleNumber(document.getElementById(prefix + 'class_val_u').value);
-            xNorm = parseLocaleNumber(document.getElementById(prefix + 'xn_scale').value);
-            xCurrent = parseLocaleNumber(document.getElementById(prefix + 'x_current_u').value);
-            if (isNaN(cls) || cls <= 0) { showToast('Введите класс точности'); return; }
-            if (isNaN(xNorm) || xNorm <= 0) { showToast('Введите нормирующее значение'); return; }
-            absErr = (cls / 100) * xNorm;
-            formulaHTML = 'Δ = ±(<span class="greek-gamma">γ</span>/100)·Xн = ±(' + formatNumber(cls) + '/100)·' + formatNumber(xNorm) + ' = ±' + formatNumber(absErr);
-            if (!isNaN(xCurrent) && xCurrent !== 0) {
-                relErr = (absErr / Math.abs(xCurrent)) * 100;
-                formulaHTML += '<br><span class="greek-delta">δ</span> = ±(Δ/|X|)·100 = ±' + formatNumber(relErr) + '%';
-            }
-        } else if (form === 'circle') {
-            let cls = parseLocaleNumber(document.getElementById(prefix + 'class_val_c').value);
-            xCurrent = parseLocaleNumber(document.getElementById(prefix + 'x_current_c').value);
-            if (isNaN(cls) || cls <= 0) { showToast('Введите класс точности'); return; }
-            if (isNaN(xCurrent) || xCurrent === 0) { showToast('Введите текущее значение (X≠0)'); return; }
-            relErr = cls;
-            absErr = (cls / 100) * Math.abs(xCurrent);
-            formulaHTML = 'Δ = ±(<span class="greek-delta">δ</span>/100)·|X| = ±(' + formatNumber(cls) + '/100)·' + formatNumber(Math.abs(xCurrent)) + ' = ±' + formatNumber(absErr);
-            formulaHTML += '<br><span class="greek-delta">δ</span> = ±' + formatNumber(cls) + '% (постоянная)';
-        } else if (form === 'fraction') {
-            let c = parseLocaleNumber(document.getElementById(prefix + 'c_val').value);
-            let d = parseLocaleNumber(document.getElementById(prefix + 'd_val').value);
-            let xmax = parseLocaleNumber(document.getElementById(prefix + 'xmax_f').value);
-            xCurrent = parseLocaleNumber(document.getElementById(prefix + 'x_current_f').value);
-            if (isNaN(c) || isNaN(d) || c <= 0 || d <= 0) { showToast('Введите c и d'); return; }
-            if (isNaN(xmax) || xmax <= 0) { showToast('Введите ВПИ'); return; }
-            if (isNaN(xCurrent) || xCurrent === 0) { showToast('Введите текущее значение (X≠0)'); return; }
-            relErr = c + d * (Math.abs(xmax / xCurrent) - 1);
-            absErr = (relErr / 100) * Math.abs(xCurrent);
-            formulaHTML = '<span class="greek-delta">δ</span> = ±[c + d·(|Xmax/X| − 1)] = ±[' + formatNumber(c) + ' + ' + formatNumber(d) + '·(|' + formatNumber(xmax) + '/' + formatNumber(Math.abs(xCurrent)) + '| − 1)] = ±' + formatNumber(relErr) + '%';
-            formulaHTML += '<br>Δ = ±(<span class="greek-delta">δ</span>/100)·|X| = ±' + formatNumber(absErr);
-        }
-        let formNames = {'number': 'число (приведённая)', 'underline': 'число с подчёркиванием (приведённая)', 'circle': 'число в кружке (относительная)', 'fraction': 'дробь c/d (относительная)'};
-        let html = '<div class="converter-result-label-title">Результаты расчёта (ГОСТ 8.401-80)</div>';
-        html += '<div class="converter-result-item"><span class="converter-result-label">Форма класса точности</span><span class="converter-result-value">' + formNames[form] + '</span></div>';
-        if (xNorm !== undefined) html += '<div class="converter-result-item"><span class="converter-result-label">Нормирующее значение (Xн)</span><span class="converter-result-value">' + formatNumber(xNorm) + ' <span style="font-size:11px;color:rgba(140,180,210,0.7);">(' + xNormDesc + ')</span></span></div>';
-        html += '<div class="converter-result-item"><span class="converter-result-label">Абсолютная погрешность (±Δ)</span><span class="converter-result-value" style="color:#4ac771;">± ' + formatNumber(absErr) + ' ед.изм.</span></div>';
-        if (relErr !== undefined) html += '<div class="converter-result-item"><span class="converter-result-label">Относительная погрешность (±<span class="greek-delta">δ</span>)</span><span class="converter-result-value" style="color:#4ac771;">± ' + formatNumber(relErr) + ' %</span></div>';
         html += '<div class="converter-result-item" style="flex-direction:column;align-items:flex-start;gap:4px;"><span class="converter-result-label">Формула расчёта</span><span style="font-size:13px;color:rgba(140,180,210,0.9);line-height:1.5;">' + formulaHTML + ' ед.изм.</span></div>';
         document.getElementById(prefix + 'results').innerHTML = html;
         document.getElementById(prefix + 'results').style.display = 'block';
@@ -11986,31 +11708,6 @@ function setSignalDefaults() { let type=document.getElementById('sigType').value
             calcElcScaleError();
         } else {
             calcElsScaleError();
-        }
-    }
-
-    // Пределы погрешности по ГОСТ OIML R 76-1-2011 (таблица 3)
-    // mpe = ±e при 0 < m ≤ 500e; ±2e при 500e < m ≤ 2000e; ±3e при 2000e < m ≤ Max
-    // Для класса I: mpe = ±e при 0 < m ≤ 50000e; ±2e при 50000e < m ≤ 200000e; ±3e при 200000e < m
-    function getOimlMpe(oimlClass, loadInE) {
-        // loadInE = нагрузка, выраженная в числе поверочных делений e
-        if (loadInE <= 0) return 0;
-        if (oimlClass === 'I') {
-            if (loadInE <= 50000) return 1;
-            if (loadInE <= 200000) return 2;
-            return 3;
-        } else if (oimlClass === 'II') {
-            if (loadInE <= 5000) return 1;
-            if (loadInE <= 20000) return 2;
-            return 3;
-        } else if (oimlClass === 'III') {
-            if (loadInE <= 500) return 1;
-            if (loadInE <= 2000) return 2;
-            return 3;
-        } else { // IIII
-            if (loadInE <= 50) return 1;
-            if (loadInE <= 200) return 2;
-            return 3;
         }
     }
 
@@ -13144,6 +12841,16 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         return r0*(1+alpha*t);
     }
     function calcTcVoltage(t,type){
+        // Task 518 (аудит заявки по Cu50 — «проверь все разделы
+        // Инженерных калькуляторов на похожие проблемы»): E(0) = 0 точно —
+        // термо-ЭДС контура со спаями равной температуры нулевая (закон
+        // напряжений по контуру; так и во всех стандартах НСХ). Полином
+        // НИСТ для K в double даёт 1,97e-9 мВ (невязка компенсации c0 и
+        // экспоненциального члена), аппроксимация ТХК (L) — свободный
+        // член 4,05e-6 мВ: якорим нулевую точку явно, кривая при t≠0
+        // не трогается (у L c0 оставлен — сдвиг кривой на 4…19 мкВ
+        // ухудшил бы аппроксимацию середины диапазона).
+        if(t===0){return 0;}
         // Все коэффициенты — NIST ITS-90 (SRD 60), в мВ.
         // Полином: E(t) = c0 + c1·t + c2·t² + ... + cn·t^n
         // Коэффициенты записаны от низших степеней к высшим (c0, c1, c2, ...).
@@ -13295,17 +13002,33 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
     // Task 371: температура по значению R/E — обращение монотонной
     // характеристики НСХ бисекцией (аналитически не обращается:
     // у Pt ниже 0°C член C, у ТП — полиномы высоких степеней)
+    // Task 518 (заявка: 50М (Cu50) α = 0,00428 — ввод 50 Ом давал
+    // t = −1,2970e−14 °C вместо 0): у корня вычисленная f(t) квантована
+    // шагом округления double (~1e-16 отн.) — в полосе |t| ~ 1e-14 °C
+    // она округляется ровно к введённому значению, и бисекция сходится
+    // к краю полосы, а не к точному номиналу. Две защиты: (а) номинальная
+    // точка t=0 — введённое значение ровно равно опорному f(0) (R₀ у ТС,
+    // 0 мВ у ТП) — точный ноль без бисекции (у ТП B НСХ к тому же имеет
+    // лёгкий отрицательный прогиб у нуля: E(20 °C) ≈ −2,6 мкВ, второй
+    // корень E = 0 при t ≈ 42 °C — без гварда бисекция уходила в него);
+    // (б) остаток бисекции |t| < 1e-9 °C — шум округления f, температуры
+    // такого порядка физически не различимы — сглаживается в 0 (снимает
+    // и −0). formatNumber при |n| < 1e-5 уходит в научную запись, из-за
+    // чего остаток и был виден пользователю.
     function tempCalcInvertValue(v){
         let rng=getTempSensorRange();
         let f=function(t){return tempCalcForwardValue(t);};
         let vmin=f(rng.min),vmax=f(rng.max);
         if(v===null||isNaN(v)||v<vmin-1e-9||v>vmax+1e-9){return null;}
+        if(v===f(0)){return 0;}
         let lo=rng.min,hi=rng.max;
         for(let i=0;i<80;i++){
             let mid=(lo+hi)/2;
             if(f(mid)<v){lo=mid;}else{hi=mid;}
         }
-        return (lo+hi)/2;
+        let t=(lo+hi)/2;
+        if(Math.abs(t)<1e-9){return 0;}
+        return t;
     }
     // Task 496 (заявка): в блоке произвольного расчёта кнопка подтверждения
     // («Готово»/Enter) мобильной клавиатуры ЗАКРЫВАЕТ клавиатуру, а не
@@ -15197,22 +14920,6 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         },
 
         // ============================================================
-        // Системная кнопка "← Назад" в верхнем углу экрана входа.
-        // Контекстно-зависимое поведение:
-        //   - Шаг 2 (OTP активен) → вернуться на Шаг 1 (backToStep1).
-        //   - Шаг 1 (email) → cancelLogin (закрыть экран, гостевой режим).
-        // ============================================================
-        handleBackButton: function() {
-            const step2 = document.getElementById('authStep2');
-            const onStep2 = step2 && step2.classList.contains('active');
-            if (onStep2) {
-                this.backToStep1();
-            } else {
-                this.cancelLogin();
-            }
-        },
-
-        // ============================================================
         // Отмена входа: закрыть экран входа и вернуться в гостевой
         // режим ("Общий доступ"). Токен при этом не трогается (его
         // нет у гостя), heartbeat не запускается. Пользователь
@@ -15272,31 +14979,6 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         // ============================================================
         _showError: function(msg) {
             document.getElementById('authError').textContent = msg || '';
-        },
-
-        // ============================================================
-        // Получить текущего пользователя (с кэшированием 30 сек).
-        // ============================================================
-        getCurrentUser: function() {
-            const token = this.getToken();
-            if (!token) return Promise.reject(new Error('no_session'));
-
-            if (this._cachedRole && (Date.now() - this._lastRoleFetch) < this.ROLE_CACHE_TTL) {
-                return Promise.resolve({
-                    userId: this._cachedUserId,
-                    email: this._cachedEmail,
-                    role: this._cachedRole
-                });
-            }
-
-            const self = this;
-            return this.api('getCurrentUser', { token: token }).then(function(data) {
-                self._cachedRole = data.role;
-                self._cachedEmail = data.email;
-                self._cachedUserId = data.userId;
-                self._lastRoleFetch = Date.now();
-                return data;
-            });
         },
 
         // ============================================================
@@ -18337,20 +18019,6 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                 }
             }
             return { active: active, archived: archived };
-        },
-
-        // ============================================================
-        // Toggle компактного поиска в шапке.
-        // Кнопка-иконка переключает видимость поля ввода.
-        // При раскрытии — фокус на поле; при скрытии — очистка + reload.
-        // ============================================================
-        // Task 152: переключение поиска теперь общим делегированным
-        // обработчиком (.dev-search-toggle-btn, data-search-input) —
-        // как на всех страницах. Функция оставлена для совместимости
-        // (вдруг где-то вызывается напрямую) и пробрасывает клик.
-        toggleSearch: function() {
-            const btn = document.getElementById('cjSearchToggleBtn');
-            if (btn) btn.click();
         },
 
         // ============================================================
@@ -32729,8 +32397,13 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             // не показываются); в режиме дня — истекающие ровно в
             // выбранный день. ПУСТАЯ секция скрыта (окно не шумит
             // зря); заголовок — та же плашка со счётчиком, строки —
-            // формат «точка · даты · текст»; ПРОШЕДШИЕ (дата раньше
-            // «сегодня») — прозрачный фон .ws-ep-past (Tasks 380/389)
+            // формат «точка · текст»; ПРОШЕДШИЕ (дата раньше
+            // «сегодня») — прозрачный фон .ws-ep-past (Tasks 380/389).
+            // Task 520 (заявка): формат строки месяца УПРОЩЁН — БЕЗ
+            // жирной даты «до дд.мм» и БЕЗ префикса «СИЗ · » (было
+            // «до 01.10 / СИЗ · Обувь … · Чикризов Ю.», стало
+            // «Обувь … · Чикризов Ю.»): месяц и так в заголовке
+            // плашки, дублирование в каждой строке убрано
             var ppeList = [];
             var ppeAll = this._PPE || [];
             for (var pzI = 0; pzI < ppeAll.length; pzI++) {
@@ -32757,13 +32430,68 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                     var pFio = fioIdx[ppz['таб_номер']] || ('таб. №' + ppz['таб_номер']);
                     var pPast = (String(ppz['дата_окончания'] || '') < todayIso)
                         ? ' ws-ep-past' : '';
+                    // Task 520: БЕЗ <b class="ws-ep-date">до дд.мм</b> и
+                    // БЕЗ префикса «СИЗ · » — только наименование и ФИО
                     html += '<span class="ws-ep-item' + pPast + '">' +
                             '<i class="ws-ep-dot ws-ep-dot-ppe"></i>' +
-                            '<b class="ws-ep-date">до ' +
-                            this._esc(fmtDay(ppz['дата_окончания'])) + '</b>' +
                             '<span class="ws-ep-text">' +
-                            this._esc('СИЗ · ' + String(ppz['наименование'] || '') +
+                            this._esc(String(ppz['наименование'] || '') +
                                       ' · ' + pFio) + '</span></span>';
+                }
+            }
+
+            // Task 520 (заявка): НОВАЯ группа — ПРОСРОЧЕННАЯ выдача
+            // СИЗ ЗА ВСЁ ВРЕМЯ (не только открытый месяц): записи,
+            // чья дата_окончания УЖЕ раньше «сегодня» (граница — ISO
+            // «сегодня», как у .ws-ep-past выше и красной даты СИЗ в
+            // карточке Task 444); «До износа»/без даты — не
+            // показываются. Отличия от секции месяца: (а) НЕ зависит
+            // от открытого месяца и выбранного дня — «за всё время»;
+            // (б) МЕСЯЦ И ГОД окончания — КРАСНЫЙ .ws-ep-date-bad
+            // (приём Task 504): сразу видно, насколько просрочена
+            // выдача; (в) сортировка ПО ФАМИЛИЯМ работников (заявка),
+            // затем дата и наименование; (г) БЕЗ .ws-ep-past — группа
+            // вся про просроченное, красные даты не «выцветают».
+            // Запись, истекающая в текущем месяце и уже просроченная
+            // (например «до 01.10» при «сегодня» 13.10), ОСТАЁТСЯ и в
+            // секции месяца (сводка «истекает в этом месяце»), и
+            // здесь — два отчёта с разными смыслами, дубли — не баг
+            var ppeOver = [];
+            for (var poI = 0; poI < ppeAll.length; poI++) {
+                var oRec = ppeAll[poI];
+                // Task 399: min — СИЗ мастеров не показываются
+                if (hideMasters && masterTabs[oRec['таб_номер']]) continue;
+                var oExpIso = String(oRec['дата_окончания'] || '').trim();
+                if (!oExpIso || oExpIso === 'До износа') continue;
+                if (oExpIso >= todayIso) continue;
+                ppeOver.push(oRec);
+            }
+            ppeOver.sort(function(a, b) {
+                return String(fioIdx[a['таб_номер']] || a['таб_номер'])
+                           .localeCompare(
+                    String(fioIdx[b['таб_номер']] || b['таб_номер'])) ||
+                       String(a['дата_окончания'])
+                           .localeCompare(String(b['дата_окончания'])) ||
+                       String(a['наименование'] || '')
+                           .localeCompare(String(b['наименование'] || ''));
+            });
+            if (ppeOver.length) {
+                html += '<span class="ws-cp-cap ws-ep-cap ws-ep-cap-ppe">' +
+                        'Просроченная выдача СИЗ · ' + ppeOver.length + '</span>';
+                for (var po2 = 0; po2 < ppeOver.length; po2++) {
+                    var oR = ppeOver[po2];
+                    var oFio = fioIdx[oR['таб_номер']] ||
+                               ('таб. №' + oR['таб_номер']);
+                    // месяц и год окончания: «мм.гггг» из ISO-даты
+                    var oMy = String(oR['дата_окончания']).slice(5, 7) + '.' +
+                              String(oR['дата_окончания']).slice(0, 4);
+                    html += '<span class="ws-ep-item">' +
+                            '<i class="ws-ep-dot ws-ep-dot-ppe"></i>' +
+                            '<b class="ws-ep-date ws-ep-date-bad">' +
+                            this._esc(oMy) + '</b>' +
+                            '<span class="ws-ep-text">' +
+                            this._esc(String(oR['наименование'] || '') +
+                                      ' · ' + oFio) + '</span></span>';
                 }
             }
             el.innerHTML = html;
@@ -35933,15 +35661,16 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
         // Выбор статуса в попапе: применяется ЛОКАЛЬНО (в _PENDING),
         // мгновенной отправки на сервер нет. Ячейка сразу перекрашивается.
         // Task 322: коды «д»/«н» (работа в вых./праздник) у ДНЕВНОГО
-        // персонала (и без типа) — сначала МАЛАЯ ФОРМА ЧАСОВ в том же
-        // попапе: переработка дневного считается по часам, которые
-        // указали при добавлении кода (сменному — 12 ч, без вопроса).
+        // персонала (и без типа) — сначала МАЛАЯ ФОРМА в том же попапе:
+        // Task 521 (заявка) — часы переработки дневного РАССЧИТЫВАЮТСЯ
+        // АВТОМАТИЧЕСКИ из введённых времени начала и времени окончания
+        // работ в этот день (сменному — 12 ч, без вопроса).
         onPopupStatus: function(code) {
             if (!this._popupCell) return;
             var date = this._popupCell.date;
             var tabNo = this._popupCell['таб_номер'];
-            // Task 322: д/н НЕ сменному → форма часов (ввод обязателен
-            // для учёта переработки по фактическим часам)
+            // Task 322: д/н НЕ сменному → форма времени работ (часы
+            // переработки считаются из введённого времени, Task 521)
             if (code === 'д' || code === 'н') {
                 var emp = null;
                 for (var j = 0; j < this._EMPLOYEES.length; j++) {
@@ -35959,28 +35688,44 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             this._updateSaveBtn();
         },
 
-        // Task 322: МАЛАЯ ФОРМА ЧАСОВ в попапе ячейки — вместо списка
-        // кодов показывается ввод «Сколько часов?» для выбранного кода
-        // «д»/«н» (дневной персонал: переработка по указанным часам).
-        // Префилл: часы уже стоящие в записи/правке ячейки, иначе 8
-        // (обычный рабочий день дневного). Enter — применить,
-        // «Назад» — к списку кодов. Попап НЕ переизмеряется по месту
-        // (габариты близки к списку кодов) — перерисовка на месте.
+        // Task 322 → 521: МАЛАЯ ФОРМА ВРЕМЕНИ РАБОТ в попапе ячейки —
+        // вместо списка кодов показывается пара полей «Время начала
+        // работ» (#wsDnStart) и «Время окончания работ» (#wsDnEnd) для
+        // выбранного кода «д»/«н» (дневной персонал). Task 521 (заявка:
+        // «часы переработки в этот день должны рассчитываться
+        // автоматически в зависимости от введённых данных время начала
+        // и время окончания работ в этот день»): часы НЕ вводятся
+        // вручную — считаются автоматически как «окончание − начало»
+        // (окончание раньше начала — работа через полночь, +24 ч);
+        // живая строка #wsDnCalc («Переработка: N ч») обновляется на
+        // каждый ввод (dnHoursRecalc, oninput обоих полей). Префилл:
+        // «д» — с 7:30 (начало дневной смены), «н» — с 19:30;
+        // длительность — часы той же записи/правки, иначе 8 ч (обычный
+        // рабочий день дневного — дефолт Task 322 сохранён). Enter —
+        // применить, «Назад» — к списку кодов. Попап НЕ
+        // переизмеряется по месту (габариты близки к списку кодов) —
+        // перерисовка на месте.
         _renderDnHoursForm: function(code, date, tabNo) {
             var popup = document.getElementById('wsCellPopup');
             if (!popup) return;
             var meta = this._statusMeta(code) || {};
             var eff = this._effectiveEntry(date, tabNo) || {};
+            // Task 521: длительность префилла — часы той же записи
+            // (правки), иначе 8; переводится в пару «начало–окончание»
             var cur = (eff['статус'] === code) ? eff['часы'] : null;
-            var prefill = (typeof cur === 'number' && isFinite(cur) && cur > 0)
-                ? String(cur).replace('.', ',')
-                : '8';
+            var durH = (typeof cur === 'number' && isFinite(cur) && cur > 0)
+                ? (Math.round(cur * 10) / 10) : 8;
+            var startMin = (code === 'н') ? 19 * 60 + 30 : 7 * 60 + 30;
+            var endMin = (startMin + Math.round(durH * 60)) % (24 * 60);
+            var startVal = this._dnMinutesToHHMM(startMin);
+            var endVal = this._dnMinutesToHHMM(endMin);
             var title = this._esc(date) + ' · таб. №' + this._esc(tabNo);
             var emp = null;
             for (var j = 0; j < this._EMPLOYEES.length; j++) {
                 if (this._EMPLOYEES[j]['таб_номер'] === tabNo) { emp = this._EMPLOYEES[j]; break; }
             }
             if (emp) title = this._esc(date) + ' · ' + this._esc(emp['ФИО']);
+            var keyAttr = this._esc(code);
             popup.innerHTML =
                 '<div class="ws-popup-title">' + title + '</div>' +
                 '<div class="ws-dn-form">' +
@@ -35990,23 +35735,62 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
                         '<span class="ws-popup-code">' + this._esc(code) + '</span>' +
                         '<span class="ws-popup-name">' + this._esc(meta.name || '') + '</span>' +
                     '</div>' +
-                    '<label class="ws-dn-label" for="wsDnHours">Часы переработки в этот день</label>' +
-                    '<input type="text" inputmode="decimal" id="wsDnHours" class="ws-dn-input"' +
-                        ' value="' + this._escAttr(prefill) + '" autocomplete="off"' +
-                        ' enterkeyhint="done"' +
-                        ' onkeydown="if(event.key===\'Enter\'){event.preventDefault();WorkSchedule.applyDnHours(\'' +
-                            this._esc(code) + '\')}">' +
+                    '<div class="ws-dn-times">' +
+                        '<div class="ws-dn-time">' +
+                            '<label class="ws-dn-label" for="wsDnStart">Время начала работ</label>' +
+                            '<input type="time" id="wsDnStart" class="ws-dn-input"' +
+                                ' value="' + startVal + '" autocomplete="off"' +
+                                ' oninput="WorkSchedule.dnHoursRecalc()"' +
+                                ' onkeydown="if(event.key===\'Enter\'){event.preventDefault();WorkSchedule.applyDnHours(\'' +
+                                    keyAttr + '\')}">' +
+                        '</div>' +
+                        '<div class="ws-dn-time">' +
+                            '<label class="ws-dn-label" for="wsDnEnd">Время окончания работ</label>' +
+                            '<input type="time" id="wsDnEnd" class="ws-dn-input"' +
+                                ' value="' + endVal + '" autocomplete="off"' +
+                                ' oninput="WorkSchedule.dnHoursRecalc()"' +
+                                ' onkeydown="if(event.key===\'Enter\'){event.preventDefault();WorkSchedule.applyDnHours(\'' +
+                                    keyAttr + '\')}">' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="ws-dn-calc" id="wsDnCalc">Переработка: ' +
+                        this._fmtTotalsNum(durH) + ' ч</div>' +
                     '<div class="ws-dn-buttons">' +
                         '<button type="button" class="ws-dn-ok" onclick="WorkSchedule.applyDnHours(\'' +
-                            this._esc(code) + '\')">Готово</button>' +
+                            keyAttr + '\')">Готово</button>' +
                         '<button type="button" class="ws-dn-back" onclick="WorkSchedule.dnHoursBack(\'' +
                             this._esc(date) + '\',\'' + this._esc(tabNo) + '\')">Назад к кодам</button>' +
                     '</div>' +
-                    '<div class="ws-dn-hint">Дневному персоналу переработка считается по этим часам</div>' +
+                    '<div class="ws-dn-hint">Часы переработки рассчитываются автоматически: время окончания минус время начала (работа через полночь учитывается)</div>' +
                 '</div>';
-            var input = popup.querySelector('#wsDnHours');
+            var input = document.getElementById('wsDnStart');
             if (input && input.focus) {
                 try { input.focus(); if (input.select) input.select(); } catch (e) {}
+            }
+        },
+
+        // Task 521: живой пересчёт строки «Переработка: N ч» при вводе
+        // времени (oninput обоих полей малой формы). Незаполненное или
+        // негодное время — прочерк; окончание раньше начала — работа
+        // через полночь (+24 ч, пометка в скобках); округление к 0,1 ч —
+        // как в итогах (_fmtTotalsNum)
+        dnHoursRecalc: function() {
+            var calcEl = document.getElementById('wsDnCalc');
+            if (!calcEl) return;
+            var startEl = document.getElementById('wsDnStart');
+            var endEl = document.getElementById('wsDnEnd');
+            var s = this._dnParseTime(startEl ? startEl.value : '');
+            var e = this._dnParseTime(endEl ? endEl.value : '');
+            if (s === null || e === null) {
+                calcEl.textContent = 'Переработка: —';
+                return;
+            }
+            var diff = e - s;
+            if (diff < 0) {
+                calcEl.textContent = 'Переработка: ' +
+                    this._fmtTotalsNum((diff + 24 * 60) / 60) + ' ч (через полночь)';
+            } else {
+                calcEl.textContent = 'Переработка: ' + this._fmtTotalsNum(diff / 60) + ' ч';
             }
         },
 
@@ -36020,20 +35804,45 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             popup.innerHTML = this._renderCellPopup(date, tabNo);
         },
 
-        // Task 322: применить «д»/«н» с часами из мини-формы (клетка
-        // попапа та же): валидация 0,5..24 (запятая/точка), ошибка —
-        // тост и форма остаётся; успех — правка в _PENDING (поле
-        // «часы»), попап закрывается как при обычном выборе кода
+        // Task 322 → 521: применить «д»/«н» с часами, РАССЧИТАННЫМИ
+        // из времени начала/окончания работ (клетка попапа та же):
+        // часы = «окончание − начало» (_dnParseTime обоих полей);
+        // окончание раньше начала — работа через полночь (+24 ч).
+        // Ошибки (тост, форма остаётся): незаполненное/негодное время;
+        // одинаковое начало и окончание; меньше 0,5 ч (серверный
+        // диапазон 0,5..24 — больше 24 ч из двух моментов суток
+        // получить нельзя). Округление к 0,1 ч — как в итогах/сервере.
+        // Успех — правка в _PENDING (поле «часы»), попап закрывается
+        // как при обычном выборе кода
         applyDnHours: function(code) {
             if (!this._popupCell) return;
-            var input = document.getElementById('wsDnHours');
-            var raw = input ? String(input.value || '') : '';
-            var val = parseFloat(raw.replace(',', '.').replace(' ', ''));
-            if (!isFinite(val) || val < 0.5 || val > 24) {
+            var startEl = document.getElementById('wsDnStart');
+            var endEl = document.getElementById('wsDnEnd');
+            var s = this._dnParseTime(startEl ? startEl.value : '');
+            var e = this._dnParseTime(endEl ? endEl.value : '');
+            if (s === null || e === null) {
                 if (typeof KipToast !== 'undefined' && KipToast.show) {
-                    KipToast.show('Укажите часы от 0,5 до 24 (например, 8 или 7,2)');
+                    KipToast.show('Укажите время начала и окончания работ (например, 7:30 и 15:30)');
                 }
-                if (input && input.focus) { try { input.focus(); } catch (e) {} }
+                var badEl = (s === null) ? startEl : endEl;
+                if (badEl && badEl.focus) { try { badEl.focus(); } catch (e2) {} }
+                return;
+            }
+            var diff = e - s;
+            if (diff < 0) diff += 24 * 60;
+            var val = diff / 60;
+            if (val === 0) {
+                if (typeof KipToast !== 'undefined' && KipToast.show) {
+                    KipToast.show('Время окончания совпадает с временем начала — проверьте');
+                }
+                if (endEl && endEl.focus) { try { endEl.focus(); } catch (e2) {} }
+                return;
+            }
+            if (val < 0.5) {
+                if (typeof KipToast !== 'undefined' && KipToast.show) {
+                    KipToast.show('Получается меньше 0,5 ч переработки — проверьте время');
+                }
+                if (endEl && endEl.focus) { try { endEl.focus(); } catch (e2) {} }
                 return;
             }
             val = Math.round(val * 10) / 10;
@@ -36043,6 +35852,28 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             this.closeCellPopup();
             this._renderGrid();
             this._updateSaveBtn();
+        },
+
+        // Task 521: парсинг «чч:мм» (нативный input type=time или
+        // ручной ввод «7:30») → минуты от полуночи; пустое/негодное
+        // (часы > 23, минуты > 59, чужой формат) — null
+        _dnParseTime: function(v) {
+            var m = String(v || '').trim().match(/^(\d{1,2}):(\d{2})$/);
+            if (!m) return null;
+            var h = parseInt(m[1], 10);
+            var mi = parseInt(m[2], 10);
+            if (h > 23 || mi > 59) return null;
+            return h * 60 + mi;
+        },
+
+        // Task 521: минуты от полуночи → «чч:мм» для value полей
+        // type=time (префилл пары «начало–окончание» в малой форме;
+        // отрицательные/суточные значения заворачиваются по модулю 24 ч)
+        _dnMinutesToHHMM: function(min) {
+            var m = ((Math.round(min) % (24 * 60)) + (24 * 60)) % (24 * 60);
+            var h = Math.floor(m / 60);
+            var mi = m % 60;
+            return (h < 10 ? '0' : '') + h + ':' + (mi < 10 ? '0' : '') + mi;
         },
 
         // «Дополнительно…» — открыть прежний bottom-sheet с расширенными
@@ -42867,13 +42698,6 @@ function calculateBuoySignalValue(pct,st){ let r=getBuoySignalRangeAndUnit(st); 
             return (r % 1 === 0) ? String(r) : String(r).replace('.', ',');
         },
 
-        _fmtDateTime: function(ms) {
-            var d = new Date(ms);
-            var p2 = function(v) { return (v < 10 ? '0' : '') + v; };
-            return p2(d.getDate()) + '.' + p2(d.getMonth() + 1) + '.' + d.getFullYear() +
-                   ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes());
-        },
-
         _esc: function(s) {
             if (s === null || s === undefined) return '';
             return String(s)
@@ -44308,82 +44132,6 @@ function updateConnectionIndicator() {
         el.classList.remove('cloud-visible');  // в офлайне зелёное не нужно
         el.title = 'Офлайн — обновление недоступно';
         el.setAttribute('aria-label', 'Офлайн — обновление недоступно');
-    }
-}
-
-// Главная функция обновления данных приложения.
-// В десктопной версии (Electron) выполняет принудительное обновление:
-// очищает кэш Service Worker, unregister SW и перезагружает страницу.
-// В мобильной версии — мягкое обновление данных (как раньше).
-async function refreshAppData() {
-    const el = document.getElementById('connectionIndicator');
-    if (!el) return;
-
-    // Десктоп (Electron): принудительное обновление — очистка кэша + жёсткая перезагрузка
-    if (typeof process !== 'undefined' && process.type === 'renderer') {
-        // Electron renderer
-        forceDesktopRefresh();
-        return;
-    }
-
-    // Также определяем десктоп через matchMedia (надёжнее для PWA в Electron)
-    if (window.matchMedia('(min-width: 1024px)').matches && window.__isElectron) {
-        forceDesktopRefresh();
-        return;
-    }
-
-    if (!navigator.onLine) {
-        showToast('Нет подключения к интернету');
-        return;
-    }
-
-    if (el.classList.contains('refreshing')) {
-        return;
-    }
-
-    el.classList.add('refreshing');
-    el.classList.remove('cloud-visible');  // скрываем облако на время обновления
-    el.title = 'Обновление…';
-    const startTime = Date.now();
-    const MIN_ANIMATION_MS = 800;
-
-    try {
-        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-            navigator.serviceWorker.ready.then(reg => reg.update()).catch(() => {});
-        }
-
-        if (typeof _ticketsData !== 'undefined') {
-            _ticketsData = null;
-        }
-        if (typeof loadTicketsData === 'function') {
-            await loadTicketsData(true);
-        }
-
-        if (typeof renderTickets === 'function') {
-            const activePage = document.querySelector('.page-content.active');
-            if (activePage) {
-                const pageId = activePage.id.replace('page-', '');
-                if (pageId && pageId.indexOf('tickets-') === 0) {
-                    renderTickets(pageId, '');
-                }
-            }
-        }
-
-        // Обновить кнопку «Избранное» на дашборде (после обновления данных)
-        if (typeof KipFav !== 'undefined') KipFav.updateDashboardButton();
-
-        showToast('Данные обновлены');
-    } catch (e) {
-        showToast('Ошибка обновления: ' + (e.message || e));
-    } finally {
-        const elapsed = Date.now() - startTime;
-        const remaining = Math.max(0, MIN_ANIMATION_MS - elapsed);
-        setTimeout(() => {
-            el.classList.remove('refreshing');
-            updateConnectionIndicator();
-            // Показываем зелёное облако на 5 секунд после обновления
-            showCloudBriefly();
-        }, remaining);
     }
 }
 
