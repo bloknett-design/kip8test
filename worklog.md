@@ -2127,3 +2127,15 @@ Work Log:
 
 Stage Summary:
 - Task 527 ПОЛНОСТЬЮ ЗАКРЫТ: kip8test 6728/0 → kip8test-desktop 6713/0 (+33; Build success), kip8 6729/0 → kip8-desktop 6744/0. Правка ТОЛЬКО КЛИЕНТ — Apps Script, листы Google Sheets и деплой НЕ менялись: клиенты получат исправленные схемы по обычному циклу SW (kipia-test-v740). Открытых хвостов НЕТ.
+
+---
+Task ID: 528 (финализация)
+Agent: main (Super Z)
+Task: Пуш/CI/синк/docs Task 528.
+
+Work Log:
+- Пуш ee2564fe → CI Tests 6761/0 + Pages + синк (bot d5737937) → kip8test-desktop 6746/0 + Build success.
+- Docs: версионная строка промта post-Task 528 (демоция post-Task 527), ARCHITECTURE.md §2, эта запись.
+
+Stage Summary:
+- Task 528 ПОЛНОСТЬЮ ЗАКРЫТ: kip8test 6761/0 → kip8test-desktop 6746/0 (+33); обе сборки success. Правка ТОЛЬКО КЛИЕНТ — Apps Script, листы Google Sheets и деплой НЕ менялись: клиенты получат исправленные чертежи по обычному циклу SW (kipia-test-v741 / kipia-v538). Открытых хвостов НЕТ. СЛЕДУЮЩАЯ ЗАДАЧА: задачи пользователя.
