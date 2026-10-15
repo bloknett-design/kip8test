@@ -2229,3 +2229,15 @@ Work Log:
 
 Stage Summary:
 - Task 529 ПОЛНОСТЬЮ ЗАКРЫТ: kip8test 6800/0 → kip8test-desktop 6785/0 (+39); обе сборки success. Правка ТОЛЬКО КЛИЕНТ — Apps Script, листы Google Sheets и деплой НЕ менялись: клиенты получат LCD-окно часов/календаря по обычному циклу SW (kipia-test-v742 / kipia-v539). Открытых хвостов НЕТ. СЛЕДУЮЩАЯ ЗАДАЧА: задачи пользователя.
+---
+Task ID: 530 (финализация)
+Agent: main (Super Z)
+Task: Пуш/CI/синк/перенос в kip8/docs Task 530.
+
+Work Log:
+- Пуш d625fcb0 → CI Tests 6843/0 (+44) + Pages + синк (bot 0756f96) → kip8test-desktop 6828/0 + Build success.
+- Перенос в kip8: prepare-kip8-transfer.py (дифф 610 строк = контент Task 530; СЕРВЕР WorkSchedule.gs + роутинг Code.gs) + task530-transfer-tests.py (test-task530.js ×44 + адаптация test-task529.js + бамп SW v539→v540, гварды v541 первыми) → пуш d9c2592 → CI 6843/0 + Pages + Build + синк (bot 767730d) → kip8-desktop 6858/0 + Build success.
+- Docs: версионная строка промта post-Task 530 (замена post-Task 529), ARCHITECTURE.md §2 (6843/227 + зеркало 6828), эта запись; в коммит добавлен scripts/task530-ci-wait.py (артефакт конвейера).
+
+Stage Summary:
+- Task 530 ПОЛНОСТЬЮ ЗАКРЫТ: все 4 репо ЗЕЛЁНЫЕ — kip8test 6843/0 → kip8test-desktop 6828/0 (+44), kip8 6843/0 → kip8-desktop 6858/0 (+44); обе desktop-сборки success. Правка КЛИЕНТ+СЕРВЕР: для погоды в Apps Script обновить WorkSchedule.gs + Code.gs (новый эндпоинт workSchedule.getWeather, листы Google Sheets НЕ меняются — DEPLOY-Task530-lcd-weather-even-grid.md); без этого погода — прочерк «--», остальное работает. Клиенты получат обновление по обычному циклу SW (kipia-test-v743 / kipia-v540). Из заявки выполнены ВСЕ пункты: рамка-выступ бордюрчик (светлая в св. теме), прямые углы, вплотную к краям бара, секунды справа от минут меньшим шрифтом, двоеточие не мигает, одна строка время→день→дата, призрачная сетка удалена, погода Кемерово meteoinfo.ru + иконка, фиксированная длина, реальные сообщения из данных Табеля, ровная сетка одинаковых пикселей (главное). Хвостов НЕТ. СЛЕДУЮЩАЯ ЗАДАЧА: задачи пользователя.
