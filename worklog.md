@@ -2115,3 +2115,15 @@ Stage Summary:
 - Task 527 готов в kip8test локально: 6728/0, браузер 208/208, VLM
   15/15. СЛЕДУЮЩАЯ ЗАДАЧА: перенос в kip8 + пуши + CI + синк
   зеркал + docs (выполняется сразу же этим же агентом).
+
+---
+Task ID: 527 (финализация)
+Agent: main (Super Z)
+Task: Пуш/CI/синк/docs Task 527.
+
+Work Log:
+- Пуш 178afab6 → CI Tests 6728/0 + Pages + синк (bot 91117c8f) → kip8test-desktop 6713/0 + Build success.
+- Docs: версионная строка промта post-Task 527 (демоция post-Task 526), ARCHITECTURE.md §2 (6728/224 + зеркало 6713), эта запись.
+
+Stage Summary:
+- Task 527 ПОЛНОСТЬЮ ЗАКРЫТ: kip8test 6728/0 → kip8test-desktop 6713/0 (+33; Build success), kip8 6729/0 → kip8-desktop 6744/0. Правка ТОЛЬКО КЛИЕНТ — Apps Script, листы Google Sheets и деплой НЕ менялись: клиенты получат исправленные схемы по обычному циклу SW (kipia-test-v740). Открытых хвостов НЕТ.
