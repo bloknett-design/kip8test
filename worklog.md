@@ -2217,3 +2217,15 @@ Stage Summary:
   VLM-скриншоты сняты. СЛЕДУЮЩАЯ ЗАДАЧА: перенос в kip8
   (prepare-kip8-transfer.py + task529-transfer-tests.py, SW
   v538→v539) + пуши + CI + синк зеркал + docs.
+
+---
+Task ID: 529 (финализация)
+Agent: main (Super Z)
+Task: Пуш/CI/синк/docs Task 529.
+
+Work Log:
+- Пуш e0395abc → CI Tests 6800/0 + Pages + синк (bot 173d977c) → kip8test-desktop 6785/0 + Build success.
+- Docs: версионная строка промта post-Task 529 (демоция post-Task 528), ARCHITECTURE.md §2, эта запись.
+
+Stage Summary:
+- Task 529 ПОЛНОСТЬЮ ЗАКРЫТ: kip8test 6800/0 → kip8test-desktop 6785/0 (+39); обе сборки success. Правка ТОЛЬКО КЛИЕНТ — Apps Script, листы Google Sheets и деплой НЕ менялись: клиенты получат LCD-окно часов/календаря по обычному циклу SW (kipia-test-v742 / kipia-v539). Открытых хвостов НЕТ. СЛЕДУЮЩАЯ ЗАДАЧА: задачи пользователя.
