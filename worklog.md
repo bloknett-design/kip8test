@@ -2333,3 +2333,20 @@ Work Log:
 
 Stage Summary:
 - Task 535 в kip8test ЗАКРЫТ: репо ЗЕЛЁНОЕ (7018/0), Pages обновлён, десктоп-зеркало синкнуто (867d2626, 7003/0 + Build). Из заявки выполнено ВСЁ: «Я» с левой ножкой; день недели + блок погоды правее (зазор дата→погода 2→7 колонок при короткой температуре, зима без регресса); кнопки года/месяца одной высоты (0.0px разброс); светлая тема — яркие стрелки/«Сегодня»; authorizeWeather печатает полный URL разрешения + лекарство (oauthScopes манифеста). Погода у пользователя работает через wttr.in напрямую — серверная часть НЕобязательна. SW: kipia-test-v748. Хвостов НЕТ. СЛЕДУЮЩАЯ ЗАДАЧА: перенос в kip8 (Task 535-mirror).
+
+---
+Task ID: 536 (финализация)
+Agent: main (Super Z)
+Task: Заявка Task 536: «Через сервер погода не загружается, работает только через wttr.in (напрямую из браузера), поэтому убери из кода WorkSchedule.gs не рабочие строки кода связанные с погодой».
+
+Work Log:
+- СЕРВЕР WorkSchedule.gs −290 строк (scripts/task536-remove-server-weather.py, якорный хирургический скрипт с контролем ГONE/KEPT): эндпоинт getWeather + _parseMeteoinfo + _parseOpenMeteo + authorizeWeather() с инструкцией; заметки «Task 536 — СЕРВЕРНАЯ ПОГОДА УДАЛЕНА» на обоих местах; _getProdCal/legalic НЕ тронут (заявка была про погоду; замер: ws_prodcal_ на месте).
+- Code.gs: роутинг case workSchedule.getWeather → заметка Task 536 (в обоих репо — точечно, репо дрейфанули).
+- КЛИЕНТ index.html: _loadWeather — OM → wttr, серверный резерв УДАЛЁН (canServer/KipAuth.api/why:no-endpoint/why:server); _weatherOk — без ветки via:server; _renderSettings — единая ветка сбоя для ЛЮБОГО не-ok diag («Прямые запросы open-meteo/wttr.in не прошли» + dnote + «Повтор — по расписанию или кнопкой ниже»); подсказки authorizeWeather/appsscript.json/oauthScopes удалены из панели; комментарии-заметки Task 536 (шапка LCD/OM_URL/секция погоды/start()).
+- Тесты: НОВЫЙ test-task536.js ×27 (SRC СЕРВЕР/КЛИЕНТ + VM цепочка/панель + SW) + адаптация 530/532/533/534/535.js: погодные VM-тесты переведены с kipAuth-моков на fetch-моки (routeFetch), серверные describe → ассерты удаления, фикстуры meteoinfo/wsSandbox/noCache убраны, статусы панели — без подсказок сервера; бамп SW v748→v749 (907 замен/209 файлов, гварды v750 первыми) — итог 7028/0 (+10).
+- Верификация: браузер task536-browser-check.py 25/25 (обе темы, DPR 2/1: OM 503 → wttr.in «-2°» иконка cloud, канал wttr «(напрямую из браузера)» набл. 08:51, блок 177..203 (геометрия 535 жива), сервер Apps Script НЕ звался; оба пали → «--» + why:network + http_503/http_502 в dnote; календарь 30px; 1024 светлая; 0 JS-ошибок). УРОК: ассерты «строки нет» писать в КОДОВОЙ форме — заметки Task 536 легитимно упоминают имена удалённых функций (wttr.in тоже: «entries.push» ⊃ «tries.push» — ложное срабатывание).
+- Пуши и зеркала: kip8test bc37e572 (feat) → CI Tests + Pages + синк → kip8test-desktop bot 828d5e29d3 → CI 7013/0 + Build success.
+- Docs: DEPLOY-Task536-server-weather-removed.md (КЛИЕНТ: Ctrl+Shift+R — само; СЕРВЕР опционален — чистка мёртвого кода: свежие WorkSchedule.gs + Code.gs + New version; authorizeWeather больше НЕ запускать), промт post-Task 536, ARCHITECTURE.md §2 (7028/233 + зеркало 7013), эта запись; локальный scripts/: task536-remove-server-weather.py, task536-bump-sw.py, task536-browser-check.py, task536-ci-wait.py.
+
+Stage Summary:
+- Task 536 в kip8test ЗАКРЫТ: репо ЗЕЛЁНОЕ (7028/0), Pages обновлён, десктоп-зеркало синкнуто (828d5e29d3, 7013/0 + Build). Из заявки выполнено ВСЁ: нерабочие строки погоды убраны из WorkSchedule.gs (−290 строк) и Code.gs (роутинг); клиент — только прямые каналы open-meteo → wttr.in (у пользователя работает wttr.in). SW: kipia-test-v749. Хвостов НЕТ. СЛЕДУЮЩАЯ ЗАДАЧА: перенос в kip8 (Task 536-mirror).
