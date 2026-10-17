@@ -2444,3 +2444,59 @@ Stage Summary:
   API готов к клиентской интеграции. СЛЕДУЮЩАЯ ЗАДАЧА: перенос в kip8
   (Task 537-mirror), затем — клиентская синхронизация избранного/
   примечаний localStorage ↔ архив (по готовности пользователя).
+
+---
+Task ID: 538
+Agent: main (Super Z)
+Task: Заявка: «готов, сделай клиентскую интеграцию — синхронизацию
+      избранного/примечаний из localStorage в архив (данные будут
+      переноситься между устройствами по email).»
+
+Work Log:
+- Сервер Task 537 (PhonebookArchive.gs: getMyData/setFavorite/
+  setNote, контракт {srvVer, favorites:{id:true}, notes:{id:текст}})
+  готов — клиентская интеграция сведена к слиянию карт.
+- НОВЫЙ модуль PbSync в телефонном блоке index.html (маркеры
+  «Phonebook Sync (Task 538)» для тестов): 3-way merge по base-снимку
+  (kip8test_phonebook_sync_base), очередь исходящих
+  (kip8test_phonebook_sync_queue) с коалесценцией по (kind+id),
+  дебаунс 1.5с, ретраи по online/правке/открытию раздела,
+  деградация на localStorage (нет входа/сети/старый сервер —
+  «Unknown action» → oldServer-стикер; no_session → off;
+  invalid_* → выброс операции с тостом).
+- Хуки: pbInit→pbSyncStart (pull→merge→save→flush),
+  pbToggleFavorite→pbSyncEnqueueFav, pbEditNote→pbSyncEnqueueNote,
+  pbCleanupStaleFavorites→pbSyncDropStale (устаревшие синхронные
+  записи удаляются и на сервере). Base обновляется ТОЛЬКО после
+  подтверждения push (защита от воскрешения при сбоях сети).
+- БЕЙДЖ pbSyncBadge в тулбаре (ok/pending/busy/off/error, тёмная
+  + светлая темы), тап → тост (email, время, очередь, конфликты).
+- ДЕФЕКТ, найденный браузерной проверкой и исправленный:
+  pbSyncStart не переводил режим из busy в ok при пустой очереди
+  (бейдж зависал в «Синхронизация…») — добавлен переход
+  pending/ok после pull.
+- SW: kipia-test-v749 → kipia-test-v750; бамп 211 тест-файлов
+  (гварды v751 первыми).
+- Тесты: test-task538.js ×45 (SRC×14 + VM×31) — УНИВЕРСАЛЕН для
+  4 репо (префикс/версия выводятся из файлов). 7079/0 → 7124/0.
+- Браузерная верификация 16/16 (мок Apps Script через page.route:
+  pull, звезда/примечание из архива, тумблер→setFavorite,
+  диалог→setNote, тост с email, светлая тема, 0 JS-ошибок) +
+  VLM-проверка скриншотов обеих тем. УРОКИ: хэш-навигация
+  опережает авторизацию (ждать роль); первая активация SW
+  (clients.claim) перезагружает страницу; карточки искать по
+  data-id (в данных 5 Тихомировых); let-переменные блока не видны
+  на глобале VM — посев через pbLoad*+localStorage.
+- Docs: DEPLOY-Task538-phonebook-sync-client.md, промт post-Task
+  538 (версия + строка в таблице источников), ARCHITECTURE.md §2
+  (7124/235), эта запись; scripts/task538-browser-check-kip8test.py
+  (порт 8996, localStorage-префикс kip8test:).
+
+Stage Summary:
+- Task 538 в kip8test ЗАКРЫТ: 7124/0 (+45). Избранное и примечания
+  справочника синхронизируются с архивом по email — переносятся
+  между устройствами; офлайн-правки копятся в очереди и уезжают
+  при появлении сети; без сервера/входа — прежний локальный режим.
+  СЛЕДУЮЩАЯ ЗАДАЧА: зеркало в kip8 (Task 538-mirror) → пуш → CI →
+  синк в kip8test-desktop НЕ нужен (триггер — index.html/sw.js:
+  СИНКНЕТСЯ, т.к. index.html менялся; проверить 7058).

@@ -896,6 +896,16 @@ require('./test-task536.js');
 // изоляция по email, гейт secret.view; Code.gs — роутинг
 // phonebook.getMyData / setFavorite / setNote.
 require('./test-task537.js');
+
+// Task 538 — клиентская синхронизация избранного/примечаний
+// справочника: localStorage ↔ архив (PhonebookArchive.gs,
+// заявка: «сделай клиентскую интеграцию — синхронизацию
+// избранного/примечаний из localStorage в архив (данные будут
+// переноситься между устройствами по email)»): модуль PbSync —
+// 3-way merge по base-снимку, очередь push с коалесценцией,
+// ретраи по 'online'/правке/открытию, бейдж статуса, деградация
+// на localStorage при отсутствии входа/сети/старом сервере.
+require('./test-task538.js');
 require('./test-deploy-url.js');
 
 // Запускаем
