@@ -2501,3 +2501,57 @@ Stage Summary:
   (= 7013 + 51 Task 537 + 45 Task 538 — тесты 537 доехали вместе с
   538, т.к. триггер синка — только index.html) + Build success.
   СЛЕДУЮЩАЯ ЗАДАЧА: зеркало в kip8 (Task 538-mirror) → пуш → CI.
+---
+Task ID: 539
+Agent: main (Super Z)
+Task: Заявка: «в мобильной версии сделай в нижней части кнопки
+      "Избранное" и "Все", как в разделах расходомерах или в
+      датчиках температуры, и в десктопной версии то же в стиле
+      десктопа на два экрана (разделы и содержание)». PAT от
+      24.08.2026 восстановлен в /home/z/.kip_pat.
+
+Work Log:
+- Изучены эталоны: #flowBottomBar/#flowDesktopTabs расходомеров
+  (Task 120/161) и #tsBottomBar датчиков температуры (Task 492);
+  телефонный блок (pb-toolbar с кнопкой «Только избранные»
+  pbFilterFav/pbToggleFavFilter/pbUpdateFilterButton; desktop =
+  одна страница-аккордеон → «два экрана» = свёрнутые «разделы» /
+  раскрытое «содержание», тулбар sticky).
+- Патч scripts/task539-apply.py (6 строковых анкеров — универсален
+  для kip8/kip8test): (1) HTML тулбар — #pbFilterFav заменён
+  #pbDesktopTabs (2 таба, счётчики Desk); (2) HTML — #pbBottomBar
+  сиблинг страницы (2 таба, счётчики Mob); (3) CSS — базовые
+  .pb-tab/.pb-tab-count, .pb-desktop-tabs (flex ≥1024, синий
+  акцент 74,143,199), .pb-bottom-bar (fixed, grid 1fr 1fr,
+  body:has(#page-phonebook.active), скрытие ≥1024 !important,
+  ::before разделитель, 56px/17px, safe-area, светлые, .pb-list
+  padding-bottom 96px ≤1023); (4) JS pbUpdateTabs+pbSetTab;
+  (5) вызов pbRender; (6) вызов pbToggleFavorite. role=tablist
+  добавлен после первого прогона тестов.
+- SW kipia-test-v750 → v751: 212 тест-файлов, гварды v752
+  первыми, 914 замен; sw.js CACHE_VERSION.
+- Тесты test-task539.js ×33 (SRC×21 + VM×12: фильтрация списка,
+  счётчики, active/aria на 4 табах, мусорный аргумент, пустое
+  избранное) + регистрация run-all.js — 7124/0 → 7157/0 (+33).
+- Браузерная верификация 32/32 (порт 8997): мобайл 390×844
+  (бар fixed/grid/прижат, 2 таба, старой кнопки нет, счётчики
+  236/1, фильтрация Тихомирова с сервера, светлая) + десктоп
+  1440×900 (бар скрыт, табы flex, «разделы» и «содержание»
+  табы sticky, фильтрация) + VLM 4 скриншотов (дефектов нет).
+  ДЕФЕКТЫ скрипта проверки: (а) после ctx.close() вызван
+  page.wait_for_timeout вместо page2 (TargetClosedError);
+  (б) ассерт role=tablist выявил отсутствие роли на баре —
+  добавлена в HTML.
+- Пуш 0b5490f9: CI+Pages+Sync+Build success; kip8test-desktop
+  синк 2ed98ad3: CI 7142/0 (= 7109 + 33) + Build success.
+- Docs: DEPLOY-Task539-phonebook-fav-tabs.md, ARCHITECTURE.md §2
+  (7157/236 + зеркало 7142), промт post-Task 539 (версия +
+  строка источников), эта запись; артефакты download/
+  kip8test-task539/ (скриншоты + скрипты).
+
+Stage Summary:
+- Task 539 ЗАКРЫТ: kip8test 7157/0 (CI success), kip8test-desktop
+  7142/0 (CI+Build success). Мобильный нижний бар «Все/Избранное»
+  + десктопные табы в sticky-тулбаре на обоих «экранах»; сервер
+  не менялся (DEPLOY: только Ctrl+Shift+R). СЛЕДУЮЩАЯ ЗАДАЧА:
+  задачи пользователя.
