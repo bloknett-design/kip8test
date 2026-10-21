@@ -262,10 +262,11 @@ describe('Task 480 — data/*.json: метаданные источника', ()
     // 3 прибора в Google Sheets — devices 1291 → 1288 (данные живые,
     // structure/лист/остальные файлы не тронуты)
     // Task 540 (поверх авто-синка f42423f5 от 20.10.2026): пользователь
-    // удалил 2 блокировки в Google Sheets — lockouts 531 → 529
+    // авто-синк c60c426b (21.10.2026) — ещё 1 блокировка удалена: 529 → 528
+    // (прецедент: Task 540 → 541 — пины двигаются как ассист)
     const TOTALS = {
         'data/devices.json':    { total: 'total_devices',    value: 1288, sheet: 'Приборы_app' },
-        'data/lockouts.json':   { total: 'total_lockouts',   value: 529,  sheet: 'Блокировки_app' },
+        'data/lockouts.json':   { total: 'total_lockouts',   value: 528,  sheet: 'Блокировки_app' },
         'data/valves.json':     { total: 'total_valves',     value: 320,  sheet: 'Клапана_app' },
         'data/regulators.json': { total: 'total_regulators', value: 268,  sheet: 'Регуляторы_app' }
     };
