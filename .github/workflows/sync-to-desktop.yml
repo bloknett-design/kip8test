@@ -20,6 +20,11 @@ name: Sync content to kip8test-desktop
 # Аналог механизма kip8 -> kip8-desktop (sync-to-desktop.yml в kip8).
 
 on:
+  # Task 542: ручной запуск — когда пины тестов правятся БЕЗ index.html
+  # (например, ассист после авто-синка данных), paths-фильтр не пускает
+  # синк в десктоп-зеркало, и оно остаётся красным до следующего
+  # фронтенд-коммита. Dispatch синхронизирует текущий main целиком.
+  workflow_dispatch:
   push:
     branches: [ main ]
     paths:
