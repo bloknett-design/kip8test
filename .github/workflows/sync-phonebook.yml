@@ -1,0 +1,78 @@
+name: Update Phonebook (TEST)
+
+# Автоматический cron: каждый день в 03:50 UTC (10:50 Нск).
+# Также доступен ручной запуск через workflow_dispatch.
+#
+# КАК НАСТРОИТЬ:
+# По умолчанию используется Google Sheets (таблица пользователя, Task 542):
+#   https://docs.google.com/spreadsheets/d/1phGnzRS1UPtl6G6jcfnt34jlqlKYhGn_/edit
+#   лист: Лист1
+#   (плоская таблица из 3 колонок: Должность | Ф.И.О. | № тел.)
+# Можно переопределить через переменные окружения в шаге "Sync":
+#   PHONEBOOK_SPREADSHEET_ID, PHONEBOOK_SHEET_NAME
+#
+# Секреты НЕ требуются — таблица доступна «у кого есть ссылка»,
+# Google отдаёт XLSX через export?format=xlsx без OAuth.
+#
+# ПРАВИЛА РАЗБОРА — см. docstring scripts/sync-phonebook.py:
+# строка только с колонкой A — заголовок («ООО…» → организация,
+# иначе подразделение); строка с Ф.И.О. и/или телефоном — контакт.
+# Приложение подхватывает обновление само: pbLoad — network-first
+# с cache-busting, SW (SWR + DATA-кэш) уведомляет открытые вкладки.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '50 3 * * *'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install openpyxl requests
+
+      - name: Sync from Google Sheets and convert to JSON
+        run: python scripts/sync-phonebook.py
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          git diff --exit-code data/phonebook.json || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Commit and push if changed
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/phonebook.json
+          git commit -m "auto: update phonebook data from Google Sheets (test repo)"
+          git push
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Phonebook Sync Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.check_changes.outputs.changed }}" == "true" ]; then
+            echo "✅ Данные обновлены и закоммичены" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ℹ️ Изменений нет" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -f data/phonebook.json ]; then
+            COUNT=$(python3 -c "import json; d=json.load(open('data/phonebook.json')); print(d.get('total_records', 'N/A'))")
+            echo "**Всего записей:** $COUNT" >> $GITHUB_STEP_SUMMARY
+            echo "**Источник:** Google Sheets" >> $GITHUB_STEP_SUMMARY
+            echo "**Лист:** Лист1" >> $GITHUB_STEP_SUMMARY
+          fi

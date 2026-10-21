@@ -40,7 +40,7 @@
 | Офлайн-режим | Service Worker (`sw.js`) — NetworkFirst для `data/*.json` + App Shell + cache-busting |
 | Auth | Apps Script Web App (Email+OTP, session token, heartbeat 5 мин) |
 | Хранение | `localStorage` — сессионные ключи `kip8_*` без префикса (общие между kip8/kip8test); настройки с префиксом `kip8test:` (только в kip8test) |
-| Тесты | Node.js + кастомный фреймворк (`tests/`, 7214 теста, 238 тест-файлов, `node tests/run-all.js`; зеркало CI: kip8test-desktop 7199 — синк при смене index.html/sw.js (Task 541: 7175 + 24; гварды окружения Tasks 517+518)) |
+| Тесты | Node.js + кастомный фреймворк (`tests/`, 7244 теста, 239 тест-файлов, `node tests/run-all.js` — раннер сам поднимает лимит кучи до 2560МБ (Task 542: суит ~2ГБ live); зеркало CI: kip8test-desktop 7229 — синк при смене index.html/sw.js (Task 542: 7199 + 30; гварды окружения Tasks 517+518)) |
 | Сборка APK | Bubblewrap CLI + Android SDK + JDK 17 (только в `kip8`) |
 | CI | GitHub Actions (1 CI + 7 sync workflows, cron ежедневно) |
 | Деплой | GitHub Pages (автоматически при `git push` в `main`); для десктопа — через тег `v*` |
@@ -145,6 +145,14 @@ data/*.json (в репозитории, кэшируются SW)
 PWA читает data/*.json при загрузке (NetworkFirst)
 ```
 
+Телефонный справочник (Task 542): источник — Google-таблица
+пользователя (плоские 3 колонки: Должность | Ф.И.О. | № тел.),
+`scripts/sync-phonebook.py` пересобирает `data/phonebook.json`;
+правила разбора — в docstring скрипта (A-only строка = заголовок:
+«ООО…» → организация, иначе подразделение; DEFAULT_HEADER =
+ООО ПО «ТОКЕМ» стабилизирует ID избранного; подгрупп = null).
+```
+
 ### Расписание cron (kip8 + kip8test)
 
 kip8 работает на 2 ч раньше kip8test, чтобы не дублировать запросы к Google Sheets:
@@ -156,6 +164,7 @@ kip8 работает на 2 ч раньше kip8test, чтобы не дубл�
 | sync-valves | 01:20 / 08:20 | 03:20 / 10:20 |
 | sync-regulators | 01:30 / 08:30 | 03:30 / 10:30 |
 | sync-projects | 01:40 / 08:40 | 03:40 / 10:40 |
+| sync-phonebook | 01:50 / 08:50 | 03:50 / 10:50 |
 | sync-devices | 04:00 / 11:00 | 06:00 / 13:00 |
 | update-exam-tickets | 04:10 / 11:10 | 06:10 / 13:10 |
 
