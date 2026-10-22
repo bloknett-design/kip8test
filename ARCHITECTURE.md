@@ -40,7 +40,7 @@
 | Офлайн-режим | Service Worker (`sw.js`) — NetworkFirst для `data/*.json` + App Shell + cache-busting |
 | Auth | Apps Script Web App (Email+OTP, session token, heartbeat 5 мин) |
 | Хранение | `localStorage` — сессионные ключи `kip8_*` без префикса (общие между kip8/kip8test); настройки с префиксом `kip8test:` (только в kip8test) |
-| Тесты | Node.js + кастомный фреймворк (`tests/`, 7244 теста, 239 тест-файлов, `node tests/run-all.js` — раннер сам поднимает лимит кучи до 2560МБ (Task 542: суит ~2ГБ live); зеркало CI: kip8test-desktop 7229 — синк при смене index.html/sw.js (Task 542: 7199 + 30; гварды окружения Tasks 517+518)) |
+| Тесты | Node.js + кастомный фреймворк (`tests/`, 7271 тест, 240 тест-файлов, `node tests/run-all.js` — раннер сам поднимает лимит кучи до 2560МБ (Task 542: суит ~2ГБ live); зеркало CI: kip8test-desktop 7256 (прогноз Task 543: 7229 + 27) — синк при смене index.html/sw.js (гварды окружения Tasks 517+518)) |
 | Сборка APK | Bubblewrap CLI + Android SDK + JDK 17 (только в `kip8`) |
 | CI | GitHub Actions (1 CI + 7 sync workflows, cron ежедневно) |
 | Деплой | GitHub Pages (автоматически при `git push` в `main`); для десктопа — через тег `v*` |
@@ -68,7 +68,7 @@
 | `flowmeter.list` / `.updateReading` / `.updatePeriodReading` / `.archive` / `.setComment` / `.getValidationRules` / `.getRecentAllMeters` | Просмотр / ввод показаний (за сутки и за период — Task 286) / архив / комментарии / правила валидации расходомеров. |
 | `workSchedule.*` | График работы/табель: шахматка / сотрудники / инструктажи / отпуска / СИЗ — `listEntries`/`listEmployees`/`listTrainings`/`listVacations`/`listPpe` (СИЗ, Task 392)/`generateMonth`/`getPatterns`/`getStatusCodes`/`addEmployee`/`updateEmployee` (Task 384)/`dismissEmployee`/`addTraining`/`deleteTraining`/`addVacation`/`updateVacation` (Task 384)/`deleteVacation`/`addPpe`/`updatePpe`/`deletePpe` (Task 392)/`setManualEntry`/`deleteEntry` — Tasks 201-399; гейт `workschedule.view`/`workschedule.view.min`/`workschedule.edit`. |
 | `planEvents.list` / `planEvents.mark` / `planEvents.update` / `planEvents.unmark` | «Плановые мероприятия»: отметки года / отметка выполнения (идемпотентно, Task 463) / правка даты / снятие отметки (Task 464; архив файла Мероприятия_КИП_ИОС, лист «Архив»). |
-| `phonebook.*` (Task 537) | Телефонный справочник — архив пользовательских данных: `getMyData` (свои избранные + примечания), `setFavorite` (добавить/убрать, идемпотентно), `setNote` (создать/обновить/удалить). Файл «Телефонный справочник — Архив пользователей» (листы «Избранное»/«Примечания»/«Служебное», создаётся `phonebookArchiveInit()` или лениво), каждая строка привязана к email — видно/меняется только своё; мягкое удаление (история сохраняется); гейт `secret.view`; расширение архива — новыми листами (версия структуры в «Служебном»). |
+| `phonebook.*` (Task 537) | Телефонный справочник — архив пользовательских данных: `getMyData` (свои избранные + примечания), `setFavorite` (добавить/убрать, идемпотентно), `setNote` (создать/обновить/удалить). Файл «Телефонный справочник — Архив пользователей» (листы «Избранное»/«Примечания»/«Служебное», создаётся `phonebookArchiveInit()` или лениво), каждая строка привязана к email — видно/меняется только своё; мягкое удаление (история сохраняется); гейт `secret.view` (сервер не менялся; Task 543: КЛИЕНТСКИЙ доступ к разделу — `library.view`, серверный гейт архива остался `secret.view` — у ролей с library.view без secret.view страница работает, архив-синк уходит в локальный режим); расширение архива — новыми листами (версия структуры в «Служебном»). |
 
 
 ## 4. Структура PWA-репозитория
@@ -151,6 +151,8 @@ PWA читает data/*.json при загрузке (NetworkFirst)
 правила разбора — в docstring скрипта (A-only строка = заголовок:
 «ООО…» → организация, иначе подразделение; DEFAULT_HEADER =
 ООО ПО «ТОКЕМ» стабилизирует ID избранного; подгрупп = null).
+Доступ (Task 543): раздел не секретный — право `library.view`
+(«Билеты» + «Библиотека КИП и А»), кнопка в «Документации».
 ```
 
 ### Расписание cron (kip8 + kip8test)
