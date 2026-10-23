@@ -958,6 +958,14 @@ require('./test-task544.js');
 // «Источники данных» описывают автосинк (было протухшее «ручное
 // обновление»); санитарный скан — старого ID в рабочих файлах нет.
 require('./test-task545.js');
+
+// Task 546 — Сапёр: анимация переворачивания клетки с бликом по
+// глянцу + вибрация; архив счёта пользователей по email — лист
+// «Сапёр» в KIP8_Access (MinesweeperArchive.gs: recordResult/
+// getMyArchive, гейт secret.view) + клиент (волна msFlipDelay,
+// отложенные финалы msDelayedOverlay, отправка msSrvSendResult,
+// блок «Архив партий», троттлинг 60 с + кэш).
+require('./test-task546.js');
 require('./test-deploy-url.js');
 
 // Запускаем
