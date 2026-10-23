@@ -110,6 +110,15 @@ PhonebookArchive): `scripts/MinesweeperArchive.gs` открывает KIP8_Acces
 позиционное, битые строки молча пропускаются), но не рекомендуемы: id и
 email — ключи целостности.
 
+## Факты CI (все 4 репо зелёные)
+
+- **kip8test @d45b6290** — CI Tests + Sync + Deploy Pages + pages: **7384/0**.
+- **kip8 @eab28459** — CI Tests + Build Desktop + Sync + pages: **7384/0** (ПАРИТЕТ).
+- **kip8test-desktop 7369/0 (прогноз 7350: +19 — test-task545.js доехал этим же синком: Task 545 index.html не менял, «долг синка»)** — CI Tests + Build: success.
+- Десктопы синкнулись автоматически теми же пушами (HEAD kip8test-desktop
+  82fcf7ce ← d45b6290; kip8-desktop c3e76ba6 ← eab28459).
+- Прогнозы: kip8test 7316+68=7384 ✓; kip8 7384 ✓; kip8-desktop 7399 ✓.
+
 ## Откат
 
 `git revert <commit Task 546>` — вернёт прежнюю анимацию/архив-блок/SW v756.
