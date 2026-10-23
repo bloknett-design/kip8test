@@ -146,7 +146,9 @@ PWA читает data/*.json при загрузке (NetworkFirst)
 ```
 
 Телефонный справочник (Task 542): источник — Google-таблица
-пользователя (плоские 3 колонки: Должность | Ф.И.О. | № тел.),
+пользователя (плоские 3 колонки: Должность | Ф.И.О. | № тел.) —
+https://docs.google.com/spreadsheets/d/1rFbDn-jNRSoELTnsiaKjNvatSqIhVvbS/edit
+(ссылка обновлена Task 545),
 `scripts/sync-phonebook.py` пересобирает `data/phonebook.json`;
 правила разбора — в docstring скрипта (A-only строка = заголовок:
 «ООО…» → организация, иначе подразделение; DEFAULT_HEADER =

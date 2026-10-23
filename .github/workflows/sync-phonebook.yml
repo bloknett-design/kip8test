@@ -4,8 +4,9 @@ name: Update Phonebook (TEST)
 # Также доступен ручной запуск через workflow_dispatch.
 #
 # КАК НАСТРОИТЬ:
-# По умолчанию используется Google Sheets (таблица пользователя, Task 542):
-#   https://docs.google.com/spreadsheets/d/1phGnzRS1UPtl6G6jcfnt34jlqlKYhGn_/edit
+# По умолчанию используется Google Sheets (таблица пользователя, Task 542;
+# ссылка обновлена Task 545):
+#   https://docs.google.com/spreadsheets/d/1rFbDn-jNRSoELTnsiaKjNvatSqIhVvbS/edit
 #   лист: Лист1
 #   (плоская таблица из 3 колонок: Должность | Ф.И.О. | № тел.)
 # Можно переопределить через переменные окружения в шаге "Sync":

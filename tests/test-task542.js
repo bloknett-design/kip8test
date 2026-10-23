@@ -70,7 +70,8 @@ const SW_PREV = { kip8test: 'kipia-test-v753', kip8: 'kipia-v550' }[PFX] || null
 const SW_NEXT = { kip8test: 'kipia-test-v757', kip8: 'kipia-v552' }[PFX] || null;
 
 const FAV_KEY = PFX + '_phonebook_favorites';
-const SHEET_ID = '1phGnzRS1UPtl6G6jcfnt34jlqlKYhGn_';
+// Task 545: ID таблицы обновлён (новая ссылка пользователя).
+const SHEET_ID = '1rFbDn-jNRSoELTnsiaKjNvatSqIhVvbS';
 
 // ============================================================
 // Извлечение телефонного блока
