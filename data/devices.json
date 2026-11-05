@@ -2,7 +2,7 @@
   "title": "Перечень приборов КИП ИОС",
   "source": "Google Sheets: https://docs.google.com/spreadsheets/d/1ZKOPBsD9x4wdlC5rDjz09UypD86G0Cee/edit",
   "sheet": "Приборы_app",
-  "total_devices": 1280,
+  "total_devices": 1279,
   "headers": [
     "ID",
     "Наименование",
@@ -95,7 +95,7 @@
       "ID": 0,
       "Наименование": "≡ Изменения в перечнях от",
       "Изображение": "",
-      "Тип": "46329.599720833336",
+      "Тип": "46331.677460416664",
       "Предел измерения": "",
       "№ прибора": "",
       "Место установки": "",
@@ -14379,7 +14379,7 @@
       "Погрешность": "к.т. 0,4",
       "Производство": "Пр-во ДВ и ГОВ",
       "Оборудование": "Сборник поз. 51б",
-      "Параметр": "Уровень демводы в сборнике",
+      "Параметр": "Уровень демводы",
       "Место расположения": "Отм. 0,0 м, оси 11Б-В",
       "Позиция": "Нет",
       "№ проекта": "Нет данных",
@@ -14509,7 +14509,7 @@
       "Погрешность": "к.т. 1,5",
       "Производство": "Пр-во ДВ и ГОВ",
       "Оборудование": "Сборник поз. 51б",
-      "Параметр": "Уровень демводы в сборнике",
+      "Параметр": "Уровень демводы",
       "Место расположения": "Отм. 6,0 м, ось 8В",
       "Позиция": "Нет",
       "№ проекта": "Нет данных",
@@ -20114,32 +20114,6 @@
     {
       "ID": 770,
       "Наименование": "Преобразователь пневмоэлектрический",
-      "Изображение": "https://drive.google.com/file/d/1jER7T-rd087kBQZ7cnzWMlvEoJfRTe6U/view?usp=sharing",
-      "Тип": "ПЭ-1Р.П.42",
-      "Предел измерения": "20...100 кПа",
-      "№ прибора": "",
-      "Место установки": "LY в поз. 51б",
-      "Дата": "2025-11-18",
-      "Вид ремонта": "ТО",
-      "Период ремонта": "(3 мес)",
-      "Погрешность": "γ ±0,5 %",
-      "Производство": "Пр-во ДВ и ГОВ",
-      "Оборудование": "Сборник поз. 51б",
-      "Параметр": "Уровень демводы в сборнике",
-      "Место расположения": "ЩК-4, приборная стойка",
-      "Позиция": "4б",
-      "№ проекта": "551-114-793-АТХ",
-      "№ СБС": "101",
-      "№ САР": "?",
-      "В перечне": "Есть",
-      "В гр. ППР": "Нет",
-      "Технические характеристики": "Нет данных",
-      "Примечания": "",
-      "Замечания": ""
-    },
-    {
-      "ID": 771,
-      "Наименование": "Преобразователь пневмоэлектрический",
       "Изображение": "https://drive.google.com/file/d/1BdQ30kjFMEJfh7sSjddf7iOKF-jJPK-v/view?usp=sharing",
       "Тип": "ПЭП-04",
       "Предел измерения": "20...100 кПа",
@@ -20164,7 +20138,7 @@
       "Замечания": "Нет технического паспорта."
     },
     {
-      "ID": 772,
+      "ID": 771,
       "Наименование": "Преобразователь пневмоэлектрический",
       "Изображение": "https://drive.google.com/file/d/1BdQ30kjFMEJfh7sSjddf7iOKF-jJPK-v/view?usp=sharing",
       "Тип": "ПЭП-04",
@@ -20190,7 +20164,7 @@
       "Замечания": "Нет технического паспорта."
     },
     {
-      "ID": 773,
+      "ID": 772,
       "Наименование": "Преобразователь пневмоэлектрический",
       "Изображение": "https://drive.google.com/file/d/1BdQ30kjFMEJfh7sSjddf7iOKF-jJPK-v/view?usp=sharing",
       "Тип": "ПЭП-04",
@@ -20216,7 +20190,7 @@
       "Замечания": "Нет технического паспорта."
     },
     {
-      "ID": 774,
+      "ID": 773,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД1000",
@@ -20242,7 +20216,7 @@
       "Замечания": ""
     },
     {
-      "ID": 775,
+      "ID": 774,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД1000",
@@ -20268,7 +20242,7 @@
       "Замечания": ""
     },
     {
-      "ID": 776,
+      "ID": 775,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД1000",
@@ -20294,7 +20268,7 @@
       "Замечания": ""
     },
     {
-      "ID": 777,
+      "ID": 776,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД1000",
@@ -20320,7 +20294,7 @@
       "Замечания": ""
     },
     {
-      "ID": 778,
+      "ID": 777,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД1000",
@@ -20346,7 +20320,7 @@
       "Замечания": ""
     },
     {
-      "ID": 779,
+      "ID": 778,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД1000",
@@ -20372,7 +20346,7 @@
       "Замечания": ""
     },
     {
-      "ID": 780,
+      "ID": 779,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД1000",
@@ -20398,7 +20372,7 @@
       "Замечания": ""
     },
     {
-      "ID": 781,
+      "ID": 780,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -20424,7 +20398,7 @@
       "Замечания": ""
     },
     {
-      "ID": 782,
+      "ID": 781,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -20450,7 +20424,7 @@
       "Замечания": ""
     },
     {
-      "ID": 783,
+      "ID": 782,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -20476,7 +20450,7 @@
       "Замечания": ""
     },
     {
-      "ID": 784,
+      "ID": 783,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -20502,7 +20476,7 @@
       "Замечания": ""
     },
     {
-      "ID": 785,
+      "ID": 784,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -20528,7 +20502,7 @@
       "Замечания": ""
     },
     {
-      "ID": 786,
+      "ID": 785,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -20554,7 +20528,7 @@
       "Замечания": ""
     },
     {
-      "ID": 787,
+      "ID": 786,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -20580,7 +20554,7 @@
       "Замечания": ""
     },
     {
-      "ID": 788,
+      "ID": 787,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -20606,7 +20580,7 @@
       "Замечания": ""
     },
     {
-      "ID": 789,
+      "ID": 788,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -20632,7 +20606,7 @@
       "Замечания": ""
     },
     {
-      "ID": 790,
+      "ID": 789,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -20658,7 +20632,7 @@
       "Замечания": ""
     },
     {
-      "ID": 791,
+      "ID": 790,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -20684,7 +20658,7 @@
       "Замечания": ""
     },
     {
-      "ID": 792,
+      "ID": 791,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -20710,7 +20684,7 @@
       "Замечания": ""
     },
     {
-      "ID": 793,
+      "ID": 792,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -20736,7 +20710,7 @@
       "Замечания": ""
     },
     {
-      "ID": 794,
+      "ID": 793,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -20762,7 +20736,7 @@
       "Замечания": ""
     },
     {
-      "ID": 795,
+      "ID": 794,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -20788,7 +20762,7 @@
       "Замечания": ""
     },
     {
-      "ID": 796,
+      "ID": 795,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -20814,7 +20788,7 @@
       "Замечания": ""
     },
     {
-      "ID": 797,
+      "ID": 796,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -20840,7 +20814,7 @@
       "Замечания": ""
     },
     {
-      "ID": 798,
+      "ID": 797,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -20866,7 +20840,7 @@
       "Замечания": ""
     },
     {
-      "ID": 799,
+      "ID": 798,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -20892,7 +20866,7 @@
       "Замечания": ""
     },
     {
-      "ID": 800,
+      "ID": 799,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -20918,7 +20892,7 @@
       "Замечания": ""
     },
     {
-      "ID": 801,
+      "ID": 800,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -20944,7 +20918,7 @@
       "Замечания": ""
     },
     {
-      "ID": 802,
+      "ID": 801,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -20970,7 +20944,7 @@
       "Замечания": ""
     },
     {
-      "ID": 803,
+      "ID": 802,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -20996,7 +20970,7 @@
       "Замечания": ""
     },
     {
-      "ID": 804,
+      "ID": 803,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21022,7 +20996,7 @@
       "Замечания": ""
     },
     {
-      "ID": 805,
+      "ID": 804,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21048,7 +21022,7 @@
       "Замечания": ""
     },
     {
-      "ID": 806,
+      "ID": 805,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21074,7 +21048,7 @@
       "Замечания": ""
     },
     {
-      "ID": 807,
+      "ID": 806,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21100,7 +21074,7 @@
       "Замечания": ""
     },
     {
-      "ID": 808,
+      "ID": 807,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21126,7 +21100,7 @@
       "Замечания": ""
     },
     {
-      "ID": 809,
+      "ID": 808,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21152,7 +21126,7 @@
       "Замечания": ""
     },
     {
-      "ID": 810,
+      "ID": 809,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21178,7 +21152,7 @@
       "Замечания": ""
     },
     {
-      "ID": 811,
+      "ID": 810,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21204,7 +21178,7 @@
       "Замечания": ""
     },
     {
-      "ID": 812,
+      "ID": 811,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21230,7 +21204,7 @@
       "Замечания": ""
     },
     {
-      "ID": 813,
+      "ID": 812,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21256,7 +21230,7 @@
       "Замечания": ""
     },
     {
-      "ID": 814,
+      "ID": 813,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21282,7 +21256,7 @@
       "Замечания": ""
     },
     {
-      "ID": 815,
+      "ID": 814,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21308,7 +21282,7 @@
       "Замечания": ""
     },
     {
-      "ID": 816,
+      "ID": 815,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21334,7 +21308,7 @@
       "Замечания": ""
     },
     {
-      "ID": 817,
+      "ID": 816,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21360,7 +21334,7 @@
       "Замечания": ""
     },
     {
-      "ID": 818,
+      "ID": 817,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21386,7 +21360,7 @@
       "Замечания": ""
     },
     {
-      "ID": 819,
+      "ID": 818,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21412,7 +21386,7 @@
       "Замечания": ""
     },
     {
-      "ID": 820,
+      "ID": 819,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21438,7 +21412,7 @@
       "Замечания": ""
     },
     {
-      "ID": 821,
+      "ID": 820,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21464,7 +21438,7 @@
       "Замечания": ""
     },
     {
-      "ID": 822,
+      "ID": 821,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21490,7 +21464,7 @@
       "Замечания": ""
     },
     {
-      "ID": 823,
+      "ID": 822,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21516,7 +21490,7 @@
       "Замечания": ""
     },
     {
-      "ID": 824,
+      "ID": 823,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21542,7 +21516,7 @@
       "Замечания": ""
     },
     {
-      "ID": 825,
+      "ID": 824,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21568,7 +21542,7 @@
       "Замечания": ""
     },
     {
-      "ID": 826,
+      "ID": 825,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21594,7 +21568,7 @@
       "Замечания": ""
     },
     {
-      "ID": 827,
+      "ID": 826,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21620,7 +21594,7 @@
       "Замечания": ""
     },
     {
-      "ID": 828,
+      "ID": 827,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21646,7 +21620,7 @@
       "Замечания": ""
     },
     {
-      "ID": 829,
+      "ID": 828,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21672,7 +21646,7 @@
       "Замечания": ""
     },
     {
-      "ID": 830,
+      "ID": 829,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21698,7 +21672,7 @@
       "Замечания": ""
     },
     {
-      "ID": 831,
+      "ID": 830,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21724,7 +21698,7 @@
       "Замечания": ""
     },
     {
-      "ID": 832,
+      "ID": 831,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21750,7 +21724,7 @@
       "Замечания": ""
     },
     {
-      "ID": 833,
+      "ID": 832,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21776,7 +21750,7 @@
       "Замечания": ""
     },
     {
-      "ID": 834,
+      "ID": 833,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21802,7 +21776,7 @@
       "Замечания": ""
     },
     {
-      "ID": 835,
+      "ID": 834,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21828,7 +21802,7 @@
       "Замечания": ""
     },
     {
-      "ID": 836,
+      "ID": 835,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21854,7 +21828,7 @@
       "Замечания": ""
     },
     {
-      "ID": 837,
+      "ID": 836,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21880,7 +21854,7 @@
       "Замечания": ""
     },
     {
-      "ID": 838,
+      "ID": 837,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21906,7 +21880,7 @@
       "Замечания": ""
     },
     {
-      "ID": 839,
+      "ID": 838,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21932,7 +21906,7 @@
       "Замечания": ""
     },
     {
-      "ID": 840,
+      "ID": 839,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21958,7 +21932,7 @@
       "Замечания": ""
     },
     {
-      "ID": 841,
+      "ID": 840,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -21984,7 +21958,7 @@
       "Замечания": ""
     },
     {
-      "ID": 842,
+      "ID": 841,
       "Наименование": "Реле давления",
       "Изображение": "https://drive.google.com/file/d/1pC-nDUFAu5yU2cz4sZThpUaRu1pahc-M/view?usp=sharing",
       "Тип": "РД30-ДД500",
@@ -22010,7 +21984,7 @@
       "Замечания": ""
     },
     {
-      "ID": 843,
+      "ID": 842,
       "Наименование": "Сигнализатор потока",
       "Изображение": "",
       "Тип": "Реле потока и РОС 301И",
@@ -22036,7 +22010,7 @@
       "Замечания": ""
     },
     {
-      "ID": 844,
+      "ID": 843,
       "Наименование": "Датчик-индикатор уровня",
       "Изображение": "https://drive.google.com/file/d/1KbQsEOQ0rESyizgfZtfCuYDGXePyvUTG/view?usp=sharing",
       "Тип": "РИС-101",
@@ -22062,7 +22036,7 @@
       "Замечания": ""
     },
     {
-      "ID": 845,
+      "ID": 844,
       "Наименование": "Датчик-индикатор уровня",
       "Изображение": "https://drive.google.com/file/d/1KbQsEOQ0rESyizgfZtfCuYDGXePyvUTG/view?usp=sharing",
       "Тип": "РИС-101",
@@ -22088,7 +22062,7 @@
       "Замечания": "Электрод и вторичный сняты в кладовую, нет места для опуска."
     },
     {
-      "ID": 846,
+      "ID": 845,
       "Наименование": "Датчик-индикатор уровня",
       "Изображение": "https://drive.google.com/file/d/1KbQsEOQ0rESyizgfZtfCuYDGXePyvUTG/view?usp=sharing",
       "Тип": "РИС-101",
@@ -22114,7 +22088,7 @@
       "Замечания": "Электрод на позиции, вторичный снят в кладовую, ждем опорный опуск."
     },
     {
-      "ID": 847,
+      "ID": 846,
       "Наименование": "Датчик-индикатор уровня",
       "Изображение": "https://drive.google.com/file/d/1KbQsEOQ0rESyizgfZtfCuYDGXePyvUTG/view?usp=sharing",
       "Тип": "РИС-101",
@@ -22140,7 +22114,7 @@
       "Замечания": ""
     },
     {
-      "ID": 848,
+      "ID": 847,
       "Наименование": "Датчик-индикатор уровня",
       "Изображение": "https://drive.google.com/file/d/1KbQsEOQ0rESyizgfZtfCuYDGXePyvUTG/view?usp=sharing",
       "Тип": "РИС-101",
@@ -22166,7 +22140,7 @@
       "Замечания": ""
     },
     {
-      "ID": 849,
+      "ID": 848,
       "Наименование": "Датчик-индикатор уровня",
       "Изображение": "https://drive.google.com/file/d/1KbQsEOQ0rESyizgfZtfCuYDGXePyvUTG/view?usp=sharing",
       "Тип": "РИС-101",
@@ -22192,7 +22166,7 @@
       "Замечания": ""
     },
     {
-      "ID": 850,
+      "ID": 849,
       "Наименование": "Датчик-индикатор уровня",
       "Изображение": "https://drive.google.com/file/d/1KbQsEOQ0rESyizgfZtfCuYDGXePyvUTG/view?usp=sharing",
       "Тип": "РИС-101",
@@ -22218,7 +22192,7 @@
       "Замечания": ""
     },
     {
-      "ID": 851,
+      "ID": 850,
       "Наименование": "Датчик-индикатор уровня",
       "Изображение": "https://drive.google.com/file/d/1KbQsEOQ0rESyizgfZtfCuYDGXePyvUTG/view?usp=sharing",
       "Тип": "РИС-101",
@@ -22244,7 +22218,7 @@
       "Замечания": ""
     },
     {
-      "ID": 852,
+      "ID": 851,
       "Наименование": "Ротаметр стеклянный",
       "Изображение": "",
       "Тип": "РМ-04-10ГУ3",
@@ -22270,7 +22244,7 @@
       "Замечания": ""
     },
     {
-      "ID": 853,
+      "ID": 852,
       "Наименование": "Ротаметр стеклянный",
       "Изображение": "",
       "Тип": "РМ-04-10ГУ3",
@@ -22296,7 +22270,7 @@
       "Замечания": ""
     },
     {
-      "ID": 854,
+      "ID": 853,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101",
@@ -22322,7 +22296,7 @@
       "Замечания": ""
     },
     {
-      "ID": 855,
+      "ID": 854,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101",
@@ -22348,7 +22322,7 @@
       "Замечания": ""
     },
     {
-      "ID": 856,
+      "ID": 855,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101",
@@ -22374,7 +22348,7 @@
       "Замечания": ""
     },
     {
-      "ID": 857,
+      "ID": 856,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101",
@@ -22400,7 +22374,7 @@
       "Замечания": ""
     },
     {
-      "ID": 858,
+      "ID": 857,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -22426,7 +22400,7 @@
       "Замечания": ""
     },
     {
-      "ID": 859,
+      "ID": 858,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -22452,7 +22426,7 @@
       "Замечания": ""
     },
     {
-      "ID": 860,
+      "ID": 859,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -22478,7 +22452,7 @@
       "Замечания": "Уточнить рабочее состояние РОСа (на позиции стоит только УБ-П № 7208, датчика РОСа нет)."
     },
     {
-      "ID": 861,
+      "ID": 860,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -22504,7 +22478,7 @@
       "Замечания": ""
     },
     {
-      "ID": 862,
+      "ID": 861,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -22530,7 +22504,7 @@
       "Замечания": ""
     },
     {
-      "ID": 863,
+      "ID": 862,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -22556,7 +22530,7 @@
       "Замечания": ""
     },
     {
-      "ID": 864,
+      "ID": 863,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -22582,7 +22556,7 @@
       "Замечания": "Хранилище не эксплуатируется. Полимер стирола около 10 т."
     },
     {
-      "ID": 865,
+      "ID": 864,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -22608,7 +22582,7 @@
       "Замечания": ""
     },
     {
-      "ID": 866,
+      "ID": 865,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -22634,7 +22608,7 @@
       "Замечания": ""
     },
     {
-      "ID": 867,
+      "ID": 866,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -22660,7 +22634,7 @@
       "Замечания": ""
     },
     {
-      "ID": 868,
+      "ID": 867,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -22686,7 +22660,7 @@
       "Замечания": "Под ДЭБ."
     },
     {
-      "ID": 869,
+      "ID": 868,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -22712,7 +22686,7 @@
       "Замечания": ""
     },
     {
-      "ID": 870,
+      "ID": 869,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -22738,7 +22712,7 @@
       "Замечания": ""
     },
     {
-      "ID": 871,
+      "ID": 870,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -22764,7 +22738,7 @@
       "Замечания": ""
     },
     {
-      "ID": 872,
+      "ID": 871,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -22790,7 +22764,7 @@
       "Замечания": ""
     },
     {
-      "ID": 873,
+      "ID": 872,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -22816,7 +22790,7 @@
       "Замечания": ""
     },
     {
-      "ID": 874,
+      "ID": 873,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -22842,7 +22816,7 @@
       "Замечания": "Хранилище не эксплуатируется, возможно не герметичное."
     },
     {
-      "ID": 875,
+      "ID": 874,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -22868,7 +22842,7 @@
       "Замечания": ""
     },
     {
-      "ID": 876,
+      "ID": 875,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -22894,7 +22868,7 @@
       "Замечания": "Хранилище не используется."
     },
     {
-      "ID": 877,
+      "ID": 876,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -22920,7 +22894,7 @@
       "Замечания": "Емкость на консервации."
     },
     {
-      "ID": 878,
+      "ID": 877,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -22946,7 +22920,7 @@
       "Замечания": "Емкость на консервации."
     },
     {
-      "ID": 879,
+      "ID": 878,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -22972,7 +22946,7 @@
       "Замечания": ""
     },
     {
-      "ID": 880,
+      "ID": 879,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -22998,7 +22972,7 @@
       "Замечания": ""
     },
     {
-      "ID": 881,
+      "ID": 880,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -23024,7 +22998,7 @@
       "Замечания": ""
     },
     {
-      "ID": 882,
+      "ID": 881,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -23050,7 +23024,7 @@
       "Замечания": ""
     },
     {
-      "ID": 883,
+      "ID": 882,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -23076,7 +23050,7 @@
       "Замечания": ""
     },
     {
-      "ID": 884,
+      "ID": 883,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -23102,7 +23076,7 @@
       "Замечания": "Под стиролом. Емкость не используется."
     },
     {
-      "ID": 885,
+      "ID": 884,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -23128,7 +23102,7 @@
       "Замечания": "Проверить наличие схемы ПАЗ"
     },
     {
-      "ID": 886,
+      "ID": 885,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -23154,7 +23128,7 @@
       "Замечания": ""
     },
     {
-      "ID": 887,
+      "ID": 886,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -23180,7 +23154,7 @@
       "Замечания": ""
     },
     {
-      "ID": 888,
+      "ID": 887,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -23206,7 +23180,7 @@
       "Замечания": "Сигнализация L≥ 80% и откл. насоса Н-8. Проверить наличие схемы ПАЗ и какое сырьё."
     },
     {
-      "ID": 889,
+      "ID": 888,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 101-И",
@@ -23232,7 +23206,7 @@
       "Замечания": ""
     },
     {
-      "ID": 890,
+      "ID": 889,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 102-1/1,6",
@@ -23258,7 +23232,7 @@
       "Замечания": ""
     },
     {
-      "ID": 891,
+      "ID": 890,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 102-1/1,6",
@@ -23284,7 +23258,7 @@
       "Замечания": ""
     },
     {
-      "ID": 892,
+      "ID": 891,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 102-1/1,6",
@@ -23310,7 +23284,7 @@
       "Замечания": ""
     },
     {
-      "ID": 893,
+      "ID": 892,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 102-1/1,6",
@@ -23336,7 +23310,7 @@
       "Замечания": ""
     },
     {
-      "ID": 894,
+      "ID": 893,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 102-1/1,6",
@@ -23362,7 +23336,7 @@
       "Замечания": ""
     },
     {
-      "ID": 895,
+      "ID": 894,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 102-И",
@@ -23388,7 +23362,7 @@
       "Замечания": ""
     },
     {
-      "ID": 896,
+      "ID": 895,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 102-И",
@@ -23414,7 +23388,7 @@
       "Замечания": ""
     },
     {
-      "ID": 897,
+      "ID": 896,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 102-И 0,6/0,6",
@@ -23440,7 +23414,7 @@
       "Замечания": ""
     },
     {
-      "ID": 898,
+      "ID": 897,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1djpFQINDcJLuN8cq2LqAJvuy3xSWBD4v/view?usp=sharing",
       "Тип": "РОС 301СКБ-И",
@@ -23466,7 +23440,7 @@
       "Замечания": ""
     },
     {
-      "ID": 899,
+      "ID": 898,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1djpFQINDcJLuN8cq2LqAJvuy3xSWBD4v/view?usp=sharing",
       "Тип": "РОС 301СКБ-И",
@@ -23492,7 +23466,7 @@
       "Замечания": ""
     },
     {
-      "ID": 900,
+      "ID": 899,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1djpFQINDcJLuN8cq2LqAJvuy3xSWBD4v/view?usp=sharing",
       "Тип": "РОС 301СКБ-И",
@@ -23518,7 +23492,7 @@
       "Замечания": "Нет технического паспорта."
     },
     {
-      "ID": 901,
+      "ID": 900,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1djpFQINDcJLuN8cq2LqAJvuy3xSWBD4v/view?usp=sharing",
       "Тип": "РОС 301СКБ-И",
@@ -23544,7 +23518,7 @@
       "Замечания": "Нет технического паспорта."
     },
     {
-      "ID": 902,
+      "ID": 901,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 102-121И-0,7/1,65",
@@ -23570,7 +23544,7 @@
       "Замечания": ""
     },
     {
-      "ID": 903,
+      "ID": 902,
       "Наименование": "Датчик-реле уровня",
       "Изображение": "https://drive.google.com/file/d/1GD6Wq6YsphiK0k2FxXMq0IC4p_LBHssy/view?usp=sharing",
       "Тип": "РОС 102-121И-0,7/1,9",
@@ -23596,7 +23570,7 @@
       "Замечания": ""
     },
     {
-      "ID": 904,
+      "ID": 903,
       "Наименование": "Ротаметр пневматический",
       "Изображение": "https://drive.google.com/file/d/18twEbQr_X7eOzo8yeYbM0fTsVSloNG_K/view?usp=sharing",
       "Тип": "РП-0,16",
@@ -23622,7 +23596,7 @@
       "Замечания": ""
     },
     {
-      "ID": 905,
+      "ID": 904,
       "Наименование": "Датчик-газоанализатор",
       "Изображение": "https://drive.google.com/file/d/1SxYCEbcN8EUOr0YKKphPstmmrovx-Uvd/view?usp=sharing",
       "Тип": "ДАХ-М-03-SO2-20",
@@ -23648,7 +23622,7 @@
       "Замечания": ""
     },
     {
-      "ID": 906,
+      "ID": 905,
       "Наименование": "Ротаметр пневматический",
       "Изображение": "https://drive.google.com/file/d/18twEbQr_X7eOzo8yeYbM0fTsVSloNG_K/view?usp=sharing",
       "Тип": "РП-0,4",
@@ -23674,7 +23648,7 @@
       "Замечания": ""
     },
     {
-      "ID": 907,
+      "ID": 906,
       "Наименование": "Ротаметр пневматический",
       "Изображение": "https://drive.google.com/file/d/18twEbQr_X7eOzo8yeYbM0fTsVSloNG_K/view?usp=sharing",
       "Тип": "РП-0,4",
@@ -23700,7 +23674,7 @@
       "Замечания": ""
     },
     {
-      "ID": 908,
+      "ID": 907,
       "Наименование": "Ротаметр пневматический",
       "Изображение": "https://drive.google.com/file/d/18twEbQr_X7eOzo8yeYbM0fTsVSloNG_K/view?usp=sharing",
       "Тип": "РП-0,4",
@@ -23726,7 +23700,7 @@
       "Замечания": ""
     },
     {
-      "ID": 909,
+      "ID": 908,
       "Наименование": "Ротаметр пневматический",
       "Изображение": "https://drive.google.com/file/d/18twEbQr_X7eOzo8yeYbM0fTsVSloNG_K/view?usp=sharing",
       "Тип": "РП-0,63",
@@ -23752,7 +23726,7 @@
       "Замечания": ""
     },
     {
-      "ID": 910,
+      "ID": 909,
       "Наименование": "Ротаметр пневматический",
       "Изображение": "https://drive.google.com/file/d/18twEbQr_X7eOzo8yeYbM0fTsVSloNG_K/view?usp=sharing",
       "Тип": "РП-1,6",
@@ -23778,7 +23752,7 @@
       "Замечания": ""
     },
     {
-      "ID": 911,
+      "ID": 910,
       "Наименование": "Весы",
       "Изображение": "",
       "Тип": "РП-150МГ",
@@ -23804,7 +23778,7 @@
       "Замечания": ""
     },
     {
-      "ID": 912,
+      "ID": 911,
       "Наименование": "Ротаметр пневматический",
       "Изображение": "https://drive.google.com/file/d/18twEbQr_X7eOzo8yeYbM0fTsVSloNG_K/view?usp=sharing",
       "Тип": "РП-4",
@@ -23830,7 +23804,7 @@
       "Замечания": ""
     },
     {
-      "ID": 913,
+      "ID": 912,
       "Наименование": "Прибор вторичный пн. регистрирующий",
       "Изображение": "https://drive.google.com/file/d/1ekx9COgK2NKIBGaVUU9EKWGXJs4amSCj/view?usp=sharing",
       "Тип": "ПВ10.1Э",
@@ -23856,7 +23830,7 @@
       "Замечания": ""
     },
     {
-      "ID": 914,
+      "ID": 913,
       "Наименование": "Прибор вторичный пн. регистрирующий",
       "Изображение": "https://drive.google.com/file/d/1ekx9COgK2NKIBGaVUU9EKWGXJs4amSCj/view?usp=sharing",
       "Тип": "ПВ10.1Э",
@@ -23882,7 +23856,7 @@
       "Замечания": ""
     },
     {
-      "ID": 915,
+      "ID": 914,
       "Наименование": "Прибор вторичный пн. регистрирующий",
       "Изображение": "",
       "Тип": "РПВ4.3Э",
@@ -23908,7 +23882,7 @@
       "Замечания": ""
     },
     {
-      "ID": 916,
+      "ID": 915,
       "Наименование": "Прибор вторичный пн. регистрирующий",
       "Изображение": "",
       "Тип": "РПВ4.3Э",
@@ -23934,7 +23908,7 @@
       "Замечания": ""
     },
     {
-      "ID": 917,
+      "ID": 916,
       "Наименование": "Ротаметр пневматический",
       "Изображение": "https://drive.google.com/file/d/18twEbQr_X7eOzo8yeYbM0fTsVSloNG_K/view?usp=sharing",
       "Тип": "РПО-0,63",
@@ -23960,7 +23934,7 @@
       "Замечания": ""
     },
     {
-      "ID": 918,
+      "ID": 917,
       "Наименование": "Ротаметр пневматический",
       "Изображение": "https://drive.google.com/file/d/18twEbQr_X7eOzo8yeYbM0fTsVSloNG_K/view?usp=sharing",
       "Тип": "РПО-1",
@@ -23986,7 +23960,7 @@
       "Замечания": ""
     },
     {
-      "ID": 919,
+      "ID": 918,
       "Наименование": "Ротаметр пневматический",
       "Изображение": "https://drive.google.com/file/d/18twEbQr_X7eOzo8yeYbM0fTsVSloNG_K/view?usp=sharing",
       "Тип": "РПФ-1,6",
@@ -24012,7 +23986,7 @@
       "Замечания": ""
     },
     {
-      "ID": 920,
+      "ID": 919,
       "Наименование": "Ротаметр пневматический",
       "Изображение": "https://drive.google.com/file/d/18twEbQr_X7eOzo8yeYbM0fTsVSloNG_K/view?usp=sharing",
       "Тип": "РПФ-10",
@@ -24038,7 +24012,7 @@
       "Замечания": ""
     },
     {
-      "ID": 921,
+      "ID": 920,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Y58X4gskubHhsSjDu8Bbbl-E4dI8n_js/view?usp=sharing",
       "Тип": "Сапфир-22МП-ДУ-Exia",
@@ -24064,7 +24038,7 @@
       "Замечания": ""
     },
     {
-      "ID": 922,
+      "ID": 921,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Y58X4gskubHhsSjDu8Bbbl-E4dI8n_js/view?usp=sharing",
       "Тип": "Сапфир-22МП-ДУ-Exia",
@@ -24090,7 +24064,7 @@
       "Замечания": ""
     },
     {
-      "ID": 923,
+      "ID": 922,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Y58X4gskubHhsSjDu8Bbbl-E4dI8n_js/view?usp=sharing",
       "Тип": "Сапфир-22МП-ДУ-Exia",
@@ -24116,7 +24090,7 @@
       "Замечания": ""
     },
     {
-      "ID": 924,
+      "ID": 923,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Y58X4gskubHhsSjDu8Bbbl-E4dI8n_js/view?usp=sharing",
       "Тип": "Сапфир-22МП-ДУ-Exia",
@@ -24142,7 +24116,7 @@
       "Замечания": ""
     },
     {
-      "ID": 925,
+      "ID": 924,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Y58X4gskubHhsSjDu8Bbbl-E4dI8n_js/view?usp=sharing",
       "Тип": "Сапфир-22МП-ДУ-Exia",
@@ -24168,7 +24142,7 @@
       "Замечания": ""
     },
     {
-      "ID": 926,
+      "ID": 925,
       "Наименование": "Сигнализатор уровня жидкости",
       "Изображение": "",
       "Тип": "САУ-М6",
@@ -24194,7 +24168,7 @@
       "Замечания": "Уточнить номер прибора."
     },
     {
-      "ID": 927,
+      "ID": 926,
       "Наименование": "Сигнализатор уровня жидкости",
       "Изображение": "",
       "Тип": "САУ-М6",
@@ -24220,7 +24194,7 @@
       "Замечания": ""
     },
     {
-      "ID": 928,
+      "ID": 927,
       "Наименование": "Сигнализатор уровня жидкости",
       "Изображение": "",
       "Тип": "САУ-М6",
@@ -24246,7 +24220,7 @@
       "Замечания": ""
     },
     {
-      "ID": 929,
+      "ID": 928,
       "Наименование": "Сигнализатор уровня жидкости",
       "Изображение": "",
       "Тип": "САУ-М6",
@@ -24272,7 +24246,7 @@
       "Замечания": ""
     },
     {
-      "ID": 930,
+      "ID": 929,
       "Наименование": "Сигнализатор уровня жидкости",
       "Изображение": "",
       "Тип": "САУ-М6",
@@ -24298,7 +24272,7 @@
       "Замечания": ""
     },
     {
-      "ID": 931,
+      "ID": 930,
       "Наименование": "Сигнализатор уровня жидкости",
       "Изображение": "",
       "Тип": "САУ-М7Е",
@@ -24324,7 +24298,7 @@
       "Замечания": ""
     },
     {
-      "ID": 932,
+      "ID": 931,
       "Наименование": "Сигнализатор уровня жидкости",
       "Изображение": "",
       "Тип": "САУ-М7Е",
@@ -24350,7 +24324,7 @@
       "Замечания": ""
     },
     {
-      "ID": 933,
+      "ID": 932,
       "Наименование": "Панель оператора графическая",
       "Изображение": "",
       "Тип": "СП310-Р",
@@ -24376,7 +24350,7 @@
       "Замечания": ""
     },
     {
-      "ID": 934,
+      "ID": 933,
       "Наименование": "Сенсорный панельный контроллер",
       "Изображение": "",
       "Тип": "СПК 105",
@@ -24402,7 +24376,7 @@
       "Замечания": ""
     },
     {
-      "ID": 935,
+      "ID": 934,
       "Наименование": "Сенсорный панельный контроллер",
       "Изображение": "",
       "Тип": "СПК 107",
@@ -24428,7 +24402,7 @@
       "Замечания": ""
     },
     {
-      "ID": 936,
+      "ID": 935,
       "Наименование": "Сенсорный панельный контроллер",
       "Изображение": "",
       "Тип": "СПК 107",
@@ -24454,7 +24428,7 @@
       "Замечания": ""
     },
     {
-      "ID": 937,
+      "ID": 936,
       "Наименование": "Сенсорный панельный контроллер",
       "Изображение": "",
       "Тип": "СПК 107",
@@ -24480,7 +24454,7 @@
       "Замечания": ""
     },
     {
-      "ID": 938,
+      "ID": 937,
       "Наименование": "Сенсорный панельный контроллер",
       "Изображение": "",
       "Тип": "СПК 107",
@@ -24506,7 +24480,7 @@
       "Замечания": ""
     },
     {
-      "ID": 939,
+      "ID": 938,
       "Наименование": "Сенсорный панельный контроллер",
       "Изображение": "",
       "Тип": "СПК 107",
@@ -24532,7 +24506,7 @@
       "Замечания": ""
     },
     {
-      "ID": 940,
+      "ID": 939,
       "Наименование": "Сенсорный панельный контроллер",
       "Изображение": "",
       "Тип": "СПК 110",
@@ -24558,7 +24532,7 @@
       "Замечания": ""
     },
     {
-      "ID": 941,
+      "ID": 940,
       "Наименование": "Сенсорный панельный контроллер",
       "Изображение": "",
       "Тип": "СПК 110",
@@ -24584,7 +24558,7 @@
       "Замечания": ""
     },
     {
-      "ID": 942,
+      "ID": 941,
       "Наименование": "Счетчик воды турбинный",
       "Изображение": "",
       "Тип": "СТВ-100Г",
@@ -24610,7 +24584,7 @@
       "Замечания": ""
     },
     {
-      "ID": 943,
+      "ID": 942,
       "Наименование": "Счетчик воды турбинный",
       "Изображение": "",
       "Тип": "СТВ-100Г",
@@ -24636,7 +24610,7 @@
       "Замечания": ""
     },
     {
-      "ID": 944,
+      "ID": 943,
       "Наименование": "Счетчик воды турбинный",
       "Изображение": "",
       "Тип": "СТВ-80Г",
@@ -24662,7 +24636,7 @@
       "Замечания": ""
     },
     {
-      "ID": 945,
+      "ID": 944,
       "Наименование": "Счетчик воды турбинный",
       "Изображение": "",
       "Тип": "СТВУ-80",
@@ -24688,7 +24662,7 @@
       "Замечания": ""
     },
     {
-      "ID": 946,
+      "ID": 945,
       "Наименование": "Счетчик воды турбинный",
       "Изображение": "",
       "Тип": "СТВУ-80",
@@ -24714,7 +24688,7 @@
       "Замечания": ""
     },
     {
-      "ID": 947,
+      "ID": 946,
       "Наименование": "Счетчик воды турбинный",
       "Изображение": "",
       "Тип": "СТВХ-100",
@@ -24740,7 +24714,7 @@
       "Замечания": ""
     },
     {
-      "ID": 948,
+      "ID": 947,
       "Наименование": "Сигнализатор горючих газов",
       "Изображение": "",
       "Тип": "СТМ-10-0002",
@@ -24766,7 +24740,7 @@
       "Замечания": "Датчики неисправны, схема на резисторах (лампочки накала)."
     },
     {
-      "ID": 949,
+      "ID": 948,
       "Наименование": "Мерник",
       "Изображение": "https://drive.google.com/file/d/1hGzFZXkoorBBu62ZoA3TL_mHvlYZaowo/view?usp=sharing",
       "Тип": "ТВЭУ",
@@ -24792,7 +24766,7 @@
       "Замечания": ""
     },
     {
-      "ID": 950,
+      "ID": 949,
       "Наименование": "Мерник",
       "Изображение": "https://drive.google.com/file/d/1hGzFZXkoorBBu62ZoA3TL_mHvlYZaowo/view?usp=sharing",
       "Тип": "ТВЭУ",
@@ -24818,7 +24792,7 @@
       "Замечания": ""
     },
     {
-      "ID": 951,
+      "ID": 950,
       "Наименование": "Мерник",
       "Изображение": "https://drive.google.com/file/d/1hGzFZXkoorBBu62ZoA3TL_mHvlYZaowo/view?usp=sharing",
       "Тип": "ТВЭУ",
@@ -24844,7 +24818,7 @@
       "Замечания": ""
     },
     {
-      "ID": 952,
+      "ID": 951,
       "Наименование": "Мерник",
       "Изображение": "https://drive.google.com/file/d/1hGzFZXkoorBBu62ZoA3TL_mHvlYZaowo/view?usp=sharing",
       "Тип": "ТВЭУ",
@@ -24870,7 +24844,7 @@
       "Замечания": ""
     },
     {
-      "ID": 953,
+      "ID": 952,
       "Наименование": "Мерник",
       "Изображение": "https://drive.google.com/file/d/1hGzFZXkoorBBu62ZoA3TL_mHvlYZaowo/view?usp=sharing",
       "Тип": "ТВЭУ",
@@ -24896,7 +24870,7 @@
       "Замечания": ""
     },
     {
-      "ID": 954,
+      "ID": 953,
       "Наименование": "Датчик-газоанализатор",
       "Изображение": "https://drive.google.com/file/d/1SxYCEbcN8EUOr0YKKphPstmmrovx-Uvd/view?usp=sharing",
       "Тип": "ДАХ-М-03-SO2-20",
@@ -24922,7 +24896,7 @@
       "Замечания": ""
     },
     {
-      "ID": 955,
+      "ID": 954,
       "Наименование": "Датчик-газоанализатор",
       "Изображение": "https://drive.google.com/file/d/1SxYCEbcN8EUOr0YKKphPstmmrovx-Uvd/view?usp=sharing",
       "Тип": "ДАХ-М-03-SO2-20",
@@ -24948,7 +24922,7 @@
       "Замечания": ""
     },
     {
-      "ID": 956,
+      "ID": 955,
       "Наименование": "Мерник (весы бункерные)",
       "Изображение": "https://drive.google.com/file/d/1hGzFZXkoorBBu62ZoA3TL_mHvlYZaowo/view?usp=sharing",
       "Тип": "ТВЭУ",
@@ -24974,7 +24948,7 @@
       "Замечания": ""
     },
     {
-      "ID": 957,
+      "ID": 956,
       "Наименование": "Мерник (весы бункерные)",
       "Изображение": "https://drive.google.com/file/d/1hGzFZXkoorBBu62ZoA3TL_mHvlYZaowo/view?usp=sharing",
       "Тип": "ТВЭУ",
@@ -25000,7 +24974,7 @@
       "Замечания": ""
     },
     {
-      "ID": 958,
+      "ID": 957,
       "Наименование": "Тягонапоромер",
       "Изображение": "",
       "Тип": "ТДМ",
@@ -25026,7 +25000,7 @@
       "Замечания": ""
     },
     {
-      "ID": 959,
+      "ID": 958,
       "Наименование": "Тягонапоромер",
       "Изображение": "",
       "Тип": "ТНМП-100",
@@ -25052,7 +25026,7 @@
       "Замечания": ""
     },
     {
-      "ID": 960,
+      "ID": 959,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "https://drive.google.com/file/d/1TT6lgGwaezh62Dekzw5CIhtBU74IMPPF/view?usp=sharing",
       "Тип": "ТРМ101ИИ",
@@ -25078,7 +25052,7 @@
       "Замечания": ""
     },
     {
-      "ID": 961,
+      "ID": 960,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "https://drive.google.com/file/d/1TT6lgGwaezh62Dekzw5CIhtBU74IMPPF/view?usp=sharing",
       "Тип": "ТРМ101ИИ",
@@ -25104,7 +25078,7 @@
       "Замечания": ""
     },
     {
-      "ID": 962,
+      "ID": 961,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "https://drive.google.com/file/d/1TT6lgGwaezh62Dekzw5CIhtBU74IMPPF/view?usp=sharing",
       "Тип": "ТРМ101ИИ",
@@ -25130,7 +25104,7 @@
       "Замечания": ""
     },
     {
-      "ID": 963,
+      "ID": 962,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "https://drive.google.com/file/d/1TT6lgGwaezh62Dekzw5CIhtBU74IMPPF/view?usp=sharing",
       "Тип": "ТРМ101ИИ",
@@ -25156,7 +25130,7 @@
       "Замечания": ""
     },
     {
-      "ID": 964,
+      "ID": 963,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "https://drive.google.com/file/d/1TT6lgGwaezh62Dekzw5CIhtBU74IMPPF/view?usp=sharing",
       "Тип": "ТРМ101ИИ",
@@ -25182,7 +25156,7 @@
       "Замечания": ""
     },
     {
-      "ID": 965,
+      "ID": 964,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "https://drive.google.com/file/d/1TT6lgGwaezh62Dekzw5CIhtBU74IMPPF/view?usp=sharing",
       "Тип": "ТРМ101ИИ",
@@ -25208,7 +25182,7 @@
       "Замечания": ""
     },
     {
-      "ID": 966,
+      "ID": 965,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "https://drive.google.com/file/d/1TT6lgGwaezh62Dekzw5CIhtBU74IMPPF/view?usp=sharing",
       "Тип": "ТРМ101ИИ",
@@ -25234,7 +25208,7 @@
       "Замечания": ""
     },
     {
-      "ID": 967,
+      "ID": 966,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "https://drive.google.com/file/d/1TT6lgGwaezh62Dekzw5CIhtBU74IMPPF/view?usp=sharing",
       "Тип": "ТРМ101ИИ",
@@ -25260,7 +25234,7 @@
       "Замечания": ""
     },
     {
-      "ID": 968,
+      "ID": 967,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "https://drive.google.com/file/d/1TT6lgGwaezh62Dekzw5CIhtBU74IMPPF/view?usp=sharing",
       "Тип": "ТРМ101ИИ",
@@ -25286,7 +25260,7 @@
       "Замечания": ""
     },
     {
-      "ID": 969,
+      "ID": 968,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "https://drive.google.com/file/d/1TT6lgGwaezh62Dekzw5CIhtBU74IMPPF/view?usp=sharing",
       "Тип": "ТРМ101ИИ",
@@ -25312,7 +25286,7 @@
       "Замечания": ""
     },
     {
-      "ID": 970,
+      "ID": 969,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "https://drive.google.com/file/d/1TT6lgGwaezh62Dekzw5CIhtBU74IMPPF/view?usp=sharing",
       "Тип": "ТРМ101ИИ",
@@ -25338,7 +25312,7 @@
       "Замечания": ""
     },
     {
-      "ID": 971,
+      "ID": 970,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "https://drive.google.com/file/d/1TT6lgGwaezh62Dekzw5CIhtBU74IMPPF/view?usp=sharing",
       "Тип": "ТРМ101ИИ",
@@ -25364,7 +25338,7 @@
       "Замечания": "Показания на ПК, убрать ТРМ из схемы?"
     },
     {
-      "ID": 972,
+      "ID": 971,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "https://drive.google.com/file/d/1TT6lgGwaezh62Dekzw5CIhtBU74IMPPF/view?usp=sharing",
       "Тип": "ТРМ101ИИ",
@@ -25390,7 +25364,7 @@
       "Замечания": "Показания на ПК, убрать ТРМ из схемы?"
     },
     {
-      "ID": 973,
+      "ID": 972,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "https://drive.google.com/file/d/1TT6lgGwaezh62Dekzw5CIhtBU74IMPPF/view?usp=sharing",
       "Тип": "ТРМ101ИР",
@@ -25416,7 +25390,7 @@
       "Замечания": ""
     },
     {
-      "ID": 974,
+      "ID": 973,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "https://drive.google.com/file/d/1TT6lgGwaezh62Dekzw5CIhtBU74IMPPF/view?usp=sharing",
       "Тип": "ТРМ101ИР",
@@ -25442,7 +25416,7 @@
       "Замечания": ""
     },
     {
-      "ID": 975,
+      "ID": 974,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "https://drive.google.com/file/d/1TT6lgGwaezh62Dekzw5CIhtBU74IMPPF/view?usp=sharing",
       "Тип": "ТРМ101ИР",
@@ -25468,7 +25442,7 @@
       "Замечания": ""
     },
     {
-      "ID": 976,
+      "ID": 975,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "https://drive.google.com/file/d/1TT6lgGwaezh62Dekzw5CIhtBU74IMPPF/view?usp=sharing",
       "Тип": "ТРМ101ИР",
@@ -25494,7 +25468,7 @@
       "Замечания": ""
     },
     {
-      "ID": 977,
+      "ID": 976,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "https://drive.google.com/file/d/1TT6lgGwaezh62Dekzw5CIhtBU74IMPPF/view?usp=sharing",
       "Тип": "ТРМ101ИР",
@@ -25520,7 +25494,7 @@
       "Замечания": ""
     },
     {
-      "ID": 978,
+      "ID": 977,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "https://drive.google.com/file/d/1TT6lgGwaezh62Dekzw5CIhtBU74IMPPF/view?usp=sharing",
       "Тип": "ТРМ101ИР",
@@ -25546,7 +25520,7 @@
       "Замечания": ""
     },
     {
-      "ID": 979,
+      "ID": 978,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "https://drive.google.com/file/d/1TT6lgGwaezh62Dekzw5CIhtBU74IMPPF/view?usp=sharing",
       "Тип": "ТРМ101ИР",
@@ -25572,7 +25546,7 @@
       "Замечания": ""
     },
     {
-      "ID": 980,
+      "ID": 979,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "https://drive.google.com/file/d/1TT6lgGwaezh62Dekzw5CIhtBU74IMPPF/view?usp=sharing",
       "Тип": "ТРМ101ИР",
@@ -25598,7 +25572,7 @@
       "Замечания": ""
     },
     {
-      "ID": 981,
+      "ID": 980,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "",
       "Тип": "ТРМ151ИР",
@@ -25624,7 +25598,7 @@
       "Замечания": ""
     },
     {
-      "ID": 982,
+      "ID": 981,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "",
       "Тип": "ТРМ212ИР",
@@ -25650,7 +25624,7 @@
       "Замечания": ""
     },
     {
-      "ID": 983,
+      "ID": 982,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "",
       "Тип": "ТРМ212ИР",
@@ -25676,7 +25650,7 @@
       "Замечания": ""
     },
     {
-      "ID": 984,
+      "ID": 983,
       "Наименование": "Регулятор микропроцессорный",
       "Изображение": "",
       "Тип": "ТРМ212РР",
@@ -25702,7 +25676,7 @@
       "Замечания": ""
     },
     {
-      "ID": 985,
+      "ID": 984,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ 50М",
@@ -25728,7 +25702,7 @@
       "Замечания": ""
     },
     {
-      "ID": 986,
+      "ID": 985,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ 50М",
@@ -25754,7 +25728,7 @@
       "Замечания": ""
     },
     {
-      "ID": 987,
+      "ID": 986,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ 50М",
@@ -25780,7 +25754,7 @@
       "Замечания": ""
     },
     {
-      "ID": 988,
+      "ID": 987,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ 50М",
@@ -25806,7 +25780,7 @@
       "Замечания": ""
     },
     {
-      "ID": 989,
+      "ID": 988,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ 50М",
@@ -25832,7 +25806,7 @@
       "Замечания": ""
     },
     {
-      "ID": 990,
+      "ID": 989,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "https://drive.google.com/file/d/1TIvDtBleTRrSCUBl-0jvSGVqkCwyTqq-/view?usp=sharing",
       "Тип": "ДТС035-50М.В3.120",
@@ -25858,7 +25832,7 @@
       "Замечания": "Уточнить наличие и размеры кармана."
     },
     {
-      "ID": 991,
+      "ID": 990,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ДТС045Л-50М",
@@ -25884,7 +25858,7 @@
       "Замечания": ""
     },
     {
-      "ID": 992,
+      "ID": 991,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ 50М",
@@ -25910,7 +25884,7 @@
       "Замечания": ""
     },
     {
-      "ID": 993,
+      "ID": 992,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ-0193-01/AL-Ex-2000-100М/В/3",
@@ -25936,7 +25910,7 @@
       "Замечания": ""
     },
     {
-      "ID": 994,
+      "ID": 993,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ-0193-01/AL-Ex-2000-100М/В/3",
@@ -25962,7 +25936,7 @@
       "Замечания": ""
     },
     {
-      "ID": 995,
+      "ID": 994,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ-0193-01/AL-Ex-2000-100М/В/3",
@@ -25988,7 +25962,7 @@
       "Замечания": ""
     },
     {
-      "ID": 996,
+      "ID": 995,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ-0193-01/AL-Ex-2000-100М/В/3",
@@ -26014,7 +25988,7 @@
       "Замечания": ""
     },
     {
-      "ID": 997,
+      "ID": 996,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ-0193-01/AL-Ex-2000-100М/В/3",
@@ -26040,7 +26014,7 @@
       "Замечания": ""
     },
     {
-      "ID": 998,
+      "ID": 997,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ-0193-01/AL-Ex-2000-100М/В/3",
@@ -26066,7 +26040,7 @@
       "Замечания": ""
     },
     {
-      "ID": 999,
+      "ID": 998,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ-0193-01-200-50М/В/3",
@@ -26092,7 +26066,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1000,
+      "ID": 999,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ-0193-01-200-50М/В/3",
@@ -26118,7 +26092,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1001,
+      "ID": 1000,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ-0193-01-200-50М/В/3",
@@ -26144,7 +26118,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1002,
+      "ID": 1001,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "https://drive.google.com/file/d/1TIvDtBleTRrSCUBl-0jvSGVqkCwyTqq-/view?usp=sharing",
       "Тип": "ДТС035-50М.В3.120",
@@ -26170,7 +26144,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1003,
+      "ID": 1002,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ-0193-01-80 (50М)",
@@ -26196,7 +26170,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1004,
+      "ID": 1003,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТС-1088 /50М/1600",
@@ -26222,7 +26196,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1005,
+      "ID": 1004,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТС-1088В /50М/80",
@@ -26248,7 +26222,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1006,
+      "ID": 1005,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТС-1088В /50М/80",
@@ -26274,7 +26248,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1007,
+      "ID": 1006,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ДТС024-50М.В3.30/15",
@@ -26300,7 +26274,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1008,
+      "ID": 1007,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ДТС024-50М.В3.30/15",
@@ -26326,7 +26300,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1009,
+      "ID": 1008,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ДТС024-50М.В3.30/15",
@@ -26352,7 +26326,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1010,
+      "ID": 1009,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ДТС024-50М.В3.30/5",
@@ -26378,7 +26352,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1011,
+      "ID": 1010,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ДТС024-50М.В3.30/5",
@@ -26404,7 +26378,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1012,
+      "ID": 1011,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ДТС024-50М.В3.30/5",
@@ -26430,7 +26404,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1013,
+      "ID": 1012,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "https://drive.google.com/file/d/1TIvDtBleTRrSCUBl-0jvSGVqkCwyTqq-/view?usp=sharing",
       "Тип": "ДТС035-50М.В3.160",
@@ -26456,7 +26430,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1014,
+      "ID": 1013,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "https://drive.google.com/file/d/1TIvDtBleTRrSCUBl-0jvSGVqkCwyTqq-/view?usp=sharing",
       "Тип": "ДТС035-50М.В3.1600",
@@ -26482,7 +26456,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1015,
+      "ID": 1014,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "https://drive.google.com/file/d/1TIvDtBleTRrSCUBl-0jvSGVqkCwyTqq-/view?usp=sharing",
       "Тип": "ДТС035-50М.В3.1600",
@@ -26508,7 +26482,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1016,
+      "ID": 1015,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "https://drive.google.com/file/d/1TIvDtBleTRrSCUBl-0jvSGVqkCwyTqq-/view?usp=sharing",
       "Тип": "ДТС035-50М.В3.1600",
@@ -26534,7 +26508,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1017,
+      "ID": 1016,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "https://drive.google.com/file/d/1TIvDtBleTRrSCUBl-0jvSGVqkCwyTqq-/view?usp=sharing",
       "Тип": "ДТС035-50М.В3.2000",
@@ -26560,7 +26534,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1018,
+      "ID": 1017,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "https://drive.google.com/file/d/1yJHEJm1c1kEwjDvgXv81xmQSmF5mVQZZ/view?usp=sharing",
       "Тип": "ДТС125Л-50М.В3.80",
@@ -26586,7 +26560,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1019,
+      "ID": 1018,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ",
@@ -26612,7 +26586,7 @@
       "Замечания": "Уточнить тип датчика."
     },
     {
-      "ID": 1020,
+      "ID": 1019,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ",
@@ -26638,7 +26612,7 @@
       "Замечания": "Уточнить тип датчика."
     },
     {
-      "ID": 1021,
+      "ID": 1020,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ-0193-AL-3000 (100М)",
@@ -26664,7 +26638,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1022,
+      "ID": 1021,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ 50 Ex",
@@ -26690,7 +26664,7 @@
       "Замечания": "Уточнить тип датчика."
     },
     {
-      "ID": 1023,
+      "ID": 1022,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСП 100",
@@ -26716,7 +26690,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1024,
+      "ID": 1023,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСП 100",
@@ -26742,7 +26716,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1025,
+      "ID": 1024,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "https://drive.google.com/file/d/1TIvDtBleTRrSCUBl-0jvSGVqkCwyTqq-/view?usp=sharing",
       "Тип": "ДТС035-50М.В3.1600",
@@ -26768,7 +26742,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1026,
+      "ID": 1025,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТС-1088В /50М/80",
@@ -26794,7 +26768,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1027,
+      "ID": 1026,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТС-1088В /50М/80",
@@ -26820,7 +26794,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1028,
+      "ID": 1027,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ-0193AL-Ex-200мм, 50М",
@@ -26846,7 +26820,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1029,
+      "ID": 1028,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ-0193AL-Ex-200мм, 50М",
@@ -26872,7 +26846,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1030,
+      "ID": 1029,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ-0193AL-Ex-200мм, 50М",
@@ -26898,7 +26872,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1031,
+      "ID": 1030,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "",
       "Тип": "ТСМ-0193-AL-Ex-3000 50В3",
@@ -26924,7 +26898,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1032,
+      "ID": 1031,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "https://drive.google.com/file/d/1TIvDtBleTRrSCUBl-0jvSGVqkCwyTqq-/view?usp=sharing",
       "Тип": "ДТС035-50М.В3.160",
@@ -26950,7 +26924,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1033,
+      "ID": 1032,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "https://drive.google.com/file/d/1TIvDtBleTRrSCUBl-0jvSGVqkCwyTqq-/view?usp=sharing",
       "Тип": "ДТС035-50М.В3.160",
@@ -26976,7 +26950,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1034,
+      "ID": 1033,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "https://drive.google.com/file/d/1TIvDtBleTRrSCUBl-0jvSGVqkCwyTqq-/view?usp=sharing",
       "Тип": "ДТС035-50М.В3.160",
@@ -27002,7 +26976,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1035,
+      "ID": 1034,
       "Наименование": "Термопреобразователь сопротивления",
       "Изображение": "https://drive.google.com/file/d/1TIvDtBleTRrSCUBl-0jvSGVqkCwyTqq-/view?usp=sharing",
       "Тип": "ДТС035-50М.В3.160",
@@ -27028,7 +27002,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1036,
+      "ID": 1035,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХА",
@@ -27054,7 +27028,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1037,
+      "ID": 1036,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХА",
@@ -27080,7 +27054,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1038,
+      "ID": 1037,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХА",
@@ -27106,7 +27080,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1039,
+      "ID": 1038,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХА",
@@ -27132,7 +27106,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1040,
+      "ID": 1039,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХА",
@@ -27158,7 +27132,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1041,
+      "ID": 1040,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХА",
@@ -27184,7 +27158,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1042,
+      "ID": 1041,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХА",
@@ -27210,7 +27184,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1043,
+      "ID": 1042,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХА",
@@ -27236,7 +27210,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1044,
+      "ID": 1043,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХА",
@@ -27262,7 +27236,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1045,
+      "ID": 1044,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХА",
@@ -27288,7 +27262,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1046,
+      "ID": 1045,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХА",
@@ -27314,7 +27288,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1047,
+      "ID": 1046,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХА",
@@ -27340,7 +27314,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1048,
+      "ID": 1047,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХА",
@@ -27366,7 +27340,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1049,
+      "ID": 1048,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХА",
@@ -27392,7 +27366,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1050,
+      "ID": 1049,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХА",
@@ -27418,7 +27392,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1051,
+      "ID": 1050,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХА",
@@ -27444,7 +27418,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1052,
+      "ID": 1051,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХА",
@@ -27470,7 +27444,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1053,
+      "ID": 1052,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХА",
@@ -27496,7 +27470,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1054,
+      "ID": 1053,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХА",
@@ -27522,7 +27496,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1055,
+      "ID": 1054,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХА",
@@ -27548,7 +27522,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1056,
+      "ID": 1055,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХА",
@@ -27574,7 +27548,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1057,
+      "ID": 1056,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -27600,7 +27574,7 @@
       "Замечания": "Уточнить требуемую длинну монтажной части."
     },
     {
-      "ID": 1058,
+      "ID": 1057,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -27626,7 +27600,7 @@
       "Замечания": "Уточнить требуемую длинну монтажной части."
     },
     {
-      "ID": 1059,
+      "ID": 1058,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -27652,7 +27626,7 @@
       "Замечания": "Уточнить требуемую длинну монтажной части."
     },
     {
-      "ID": 1060,
+      "ID": 1059,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -27678,7 +27652,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1061,
+      "ID": 1060,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -27704,7 +27678,7 @@
       "Замечания": "Уточнить требуемую длинну монтажной части."
     },
     {
-      "ID": 1062,
+      "ID": 1061,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -27730,7 +27704,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1063,
+      "ID": 1062,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -27756,7 +27730,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1064,
+      "ID": 1063,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -27782,7 +27756,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1065,
+      "ID": 1064,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -27808,7 +27782,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1066,
+      "ID": 1065,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -27834,7 +27808,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1067,
+      "ID": 1066,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -27860,7 +27834,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1068,
+      "ID": 1067,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -27886,7 +27860,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1069,
+      "ID": 1068,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -27912,7 +27886,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1070,
+      "ID": 1069,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -27938,7 +27912,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1071,
+      "ID": 1070,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -27964,7 +27938,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1072,
+      "ID": 1071,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -27990,7 +27964,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1073,
+      "ID": 1072,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -28016,7 +27990,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1074,
+      "ID": 1073,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -28042,7 +28016,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1075,
+      "ID": 1074,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -28068,7 +28042,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1076,
+      "ID": 1075,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -28094,7 +28068,7 @@
       "Замечания": "Уточнить наличие и размеры кармана."
     },
     {
-      "ID": 1077,
+      "ID": 1076,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -28120,7 +28094,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1078,
+      "ID": 1077,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -28146,7 +28120,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1079,
+      "ID": 1078,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -28172,7 +28146,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1080,
+      "ID": 1079,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -28198,7 +28172,7 @@
       "Замечания": "Уточнить место расположения ТХК."
     },
     {
-      "ID": 1081,
+      "ID": 1080,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -28224,7 +28198,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1082,
+      "ID": 1081,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -28250,7 +28224,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1083,
+      "ID": 1082,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -28276,7 +28250,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1084,
+      "ID": 1083,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -28302,7 +28276,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1085,
+      "ID": 1084,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -28328,7 +28302,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1086,
+      "ID": 1085,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -28354,7 +28328,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1087,
+      "ID": 1086,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -28380,7 +28354,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1088,
+      "ID": 1087,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -28406,7 +28380,7 @@
       "Замечания": "Не рабочая позиция, демонтировать термопару."
     },
     {
-      "ID": 1089,
+      "ID": 1088,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -28432,7 +28406,7 @@
       "Замечания": "Не рабочая позиция, демонтировать термопару."
     },
     {
-      "ID": 1090,
+      "ID": 1089,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -28458,7 +28432,7 @@
       "Замечания": "Не рабочая позиция, демонтировать термопару."
     },
     {
-      "ID": 1091,
+      "ID": 1090,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -28484,7 +28458,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1092,
+      "ID": 1091,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -28510,7 +28484,7 @@
       "Замечания": "Не рабочая позиция, демонтировать термопару."
     },
     {
-      "ID": 1093,
+      "ID": 1092,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -28536,7 +28510,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1094,
+      "ID": 1093,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК",
@@ -28562,7 +28536,7 @@
       "Замечания": "Не рабочая позиция, демонтировать термопару."
     },
     {
-      "ID": 1095,
+      "ID": 1094,
       "Наименование": "Преобразователь термоэлектрический",
       "Изображение": "",
       "Тип": "ТХК 2500мм",
@@ -28588,7 +28562,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1096,
+      "ID": 1095,
       "Наименование": "Тепло-энерго контроллер",
       "Изображение": "",
       "Тип": "ТЭКОН-19",
@@ -28614,7 +28588,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1097,
+      "ID": 1096,
       "Наименование": "Устройство сигнализации",
       "Изображение": "",
       "Тип": "УАС-16-220",
@@ -28640,7 +28614,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1098,
+      "ID": 1097,
       "Наименование": "Устройство сигнализации",
       "Изображение": "",
       "Тип": "УАС-20Б",
@@ -28666,7 +28640,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1099,
+      "ID": 1098,
       "Наименование": "Устройство сигнализации",
       "Изображение": "",
       "Тип": "УАС-20Б",
@@ -28692,7 +28666,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1100,
+      "ID": 1099,
       "Наименование": "Устройство сигнализации",
       "Изображение": "",
       "Тип": "УАС-24М",
@@ -28718,7 +28692,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1101,
+      "ID": 1100,
       "Наименование": "Устройство сигнализации",
       "Изображение": "",
       "Тип": "УАС-24М",
@@ -28744,7 +28718,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1102,
+      "ID": 1101,
       "Наименование": "Устройство сигнализации",
       "Изображение": "",
       "Тип": "УАС-24М",
@@ -28770,7 +28744,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1103,
+      "ID": 1102,
       "Наименование": "Устройство сигнализации",
       "Изображение": "",
       "Тип": "УАС-24М",
@@ -28796,7 +28770,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1104,
+      "ID": 1103,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -28822,7 +28796,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1105,
+      "ID": 1104,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -28848,7 +28822,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1106,
+      "ID": 1105,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -28874,7 +28848,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1107,
+      "ID": 1106,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -28900,7 +28874,7 @@
       "Замечания": "Смонтирован 26.11.2025 без проекта."
     },
     {
-      "ID": 1108,
+      "ID": 1107,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -28926,7 +28900,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1109,
+      "ID": 1108,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -28952,7 +28926,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1110,
+      "ID": 1109,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -28978,7 +28952,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1111,
+      "ID": 1110,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29004,7 +28978,7 @@
       "Замечания": "Сдвинута крышка."
     },
     {
-      "ID": 1112,
+      "ID": 1111,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29030,7 +29004,7 @@
       "Замечания": "Крышка емкости снята, прибор в кладовой."
     },
     {
-      "ID": 1113,
+      "ID": 1112,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29056,7 +29030,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1114,
+      "ID": 1113,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29082,7 +29056,7 @@
       "Замечания": "В проекте №051 нет манометра дублирующего уровень."
     },
     {
-      "ID": 1115,
+      "ID": 1114,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29108,7 +29082,7 @@
       "Замечания": "Нет фланца под прибор. УБ-П снят в кладовой."
     },
     {
-      "ID": 1116,
+      "ID": 1115,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29134,7 +29108,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1117,
+      "ID": 1116,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29160,7 +29134,7 @@
       "Замечания": "Нет связи с ПКП-1, проверить трассу."
     },
     {
-      "ID": 1118,
+      "ID": 1117,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29186,7 +29160,7 @@
       "Замечания": "В кладовой, установить на позицию."
     },
     {
-      "ID": 1119,
+      "ID": 1118,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29212,7 +29186,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1120,
+      "ID": 1119,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1DaWHlFCXJx7GbXV39i086IR5ZDfVZew8/view?usp=sharing",
       "Тип": "ПИУП",
@@ -29238,7 +29212,7 @@
       "Замечания": "Уровнемер в кладовой по причине отсутствия монтажного фланца на емкости."
     },
     {
-      "ID": 1121,
+      "ID": 1120,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29264,7 +29238,7 @@
       "Замечания": "Прибор в кладовой, сдвинута крышка люка."
     },
     {
-      "ID": 1122,
+      "ID": 1121,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29290,7 +29264,7 @@
       "Замечания": "Прибора нет, на хранилище сдвинута крышка."
     },
     {
-      "ID": 1123,
+      "ID": 1122,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29316,7 +29290,7 @@
       "Замечания": "Хранилище не эксплуатируется, грязь-кубовые 18 см. УБ-П нет."
     },
     {
-      "ID": 1124,
+      "ID": 1123,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29342,7 +29316,7 @@
       "Замечания": "Хранилище не эксплуатируется. Полимер стирола около 10т. Нет прибора и паспорта."
     },
     {
-      "ID": 1125,
+      "ID": 1124,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29368,7 +29342,7 @@
       "Замечания": "Под ДЭБ. Убран из перечня 24.07.25, неисправен, паспорт в архиве. Нужна замена."
     },
     {
-      "ID": 1126,
+      "ID": 1125,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29394,7 +29368,7 @@
       "Замечания": "Хранилище не эксплуатируется, возможно не герметичное. УБ-П нет."
     },
     {
-      "ID": 1127,
+      "ID": 1126,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29420,7 +29394,7 @@
       "Замечания": "Нет прибора, емкость на консервации."
     },
     {
-      "ID": 1128,
+      "ID": 1127,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29446,7 +29420,7 @@
       "Замечания": "Под ДЭБ. Нет прибора, емкость на консервации."
     },
     {
-      "ID": 1129,
+      "ID": 1128,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29472,7 +29446,7 @@
       "Замечания": "Нет прибора. Под стиролом. Емкость не используется."
     },
     {
-      "ID": 1130,
+      "ID": 1129,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29498,7 +29472,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1131,
+      "ID": 1130,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29524,7 +29498,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1132,
+      "ID": 1131,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29550,7 +29524,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1133,
+      "ID": 1132,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29576,7 +29550,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1134,
+      "ID": 1133,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29602,7 +29576,7 @@
       "Замечания": "Вторичного нет, поставить индикатор по месту."
     },
     {
-      "ID": 1135,
+      "ID": 1134,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29628,7 +29602,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1136,
+      "ID": 1135,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29654,7 +29628,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1137,
+      "ID": 1136,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29680,7 +29654,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1138,
+      "ID": 1137,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29706,7 +29680,7 @@
       "Замечания": "Прибор в кладовой, сборник в ремонте (04.2026)."
     },
     {
-      "ID": 1139,
+      "ID": 1138,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29732,7 +29706,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1140,
+      "ID": 1139,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29758,7 +29732,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1141,
+      "ID": 1140,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29784,7 +29758,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1142,
+      "ID": 1141,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29810,7 +29784,7 @@
       "Замечания": "Найти паспорт или завести новый. Вторичного нет, поставить индикатор по месту, уточнить расчетные данные."
     },
     {
-      "ID": 1143,
+      "ID": 1142,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29836,7 +29810,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1144,
+      "ID": 1143,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29862,7 +29836,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1145,
+      "ID": 1144,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29888,7 +29862,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1146,
+      "ID": 1145,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29914,7 +29888,7 @@
       "Замечания": "Внести расчетные данные в паспорт."
     },
     {
-      "ID": 1147,
+      "ID": 1146,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29940,7 +29914,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1148,
+      "ID": 1147,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29966,7 +29940,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1149,
+      "ID": 1148,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -29992,7 +29966,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1150,
+      "ID": 1149,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30018,7 +29992,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1151,
+      "ID": 1150,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30044,7 +30018,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1152,
+      "ID": 1151,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30070,7 +30044,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1153,
+      "ID": 1152,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30096,7 +30070,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1154,
+      "ID": 1153,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30122,7 +30096,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1155,
+      "ID": 1154,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30148,7 +30122,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1156,
+      "ID": 1155,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30174,7 +30148,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1157,
+      "ID": 1156,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30200,7 +30174,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1158,
+      "ID": 1157,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30226,7 +30200,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1159,
+      "ID": 1158,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30252,7 +30226,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1160,
+      "ID": 1159,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30278,7 +30252,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1161,
+      "ID": 1160,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30304,7 +30278,7 @@
       "Замечания": "Найти паспорт или завести новый."
     },
     {
-      "ID": 1162,
+      "ID": 1161,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30330,7 +30304,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1163,
+      "ID": 1162,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30356,7 +30330,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1164,
+      "ID": 1163,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30382,7 +30356,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1165,
+      "ID": 1164,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30408,7 +30382,7 @@
       "Замечания": "Уточнить наличие СБС."
     },
     {
-      "ID": 1166,
+      "ID": 1165,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30434,7 +30408,7 @@
       "Замечания": "Найти паспорт или завести новый."
     },
     {
-      "ID": 1167,
+      "ID": 1166,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30460,7 +30434,7 @@
       "Замечания": "Уточнить расчетные данные."
     },
     {
-      "ID": 1168,
+      "ID": 1167,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30486,7 +30460,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1169,
+      "ID": 1168,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30512,7 +30486,7 @@
       "Замечания": "Уточнить расчетные данные."
     },
     {
-      "ID": 1170,
+      "ID": 1169,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30538,7 +30512,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1171,
+      "ID": 1170,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30564,7 +30538,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1172,
+      "ID": 1171,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30590,7 +30564,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1173,
+      "ID": 1172,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30616,7 +30590,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1174,
+      "ID": 1173,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30642,7 +30616,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1175,
+      "ID": 1174,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30668,7 +30642,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1176,
+      "ID": 1175,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30694,7 +30668,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1177,
+      "ID": 1176,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30720,7 +30694,7 @@
       "Замечания": "Найти паспорт или завести новый."
     },
     {
-      "ID": 1178,
+      "ID": 1177,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30746,7 +30720,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1179,
+      "ID": 1178,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30772,7 +30746,7 @@
       "Замечания": "Найти паспорт или завести новый."
     },
     {
-      "ID": 1180,
+      "ID": 1179,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30798,7 +30772,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1181,
+      "ID": 1180,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30824,7 +30798,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1182,
+      "ID": 1181,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30837,7 +30811,7 @@
       "Погрешность": "к.т. 1,5",
       "Производство": "Пр-во ДВ и ГОВ",
       "Оборудование": "Сборник поз. 51б",
-      "Параметр": "Уровень демводы в сборнике",
+      "Параметр": "Уровень демводы",
       "Место расположения": "Отм. 0,0 м, оси 11-12В",
       "Позиция": "4а",
       "№ проекта": "551-114-793-АТХ",
@@ -30850,7 +30824,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1183,
+      "ID": 1182,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30876,7 +30850,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1184,
+      "ID": 1183,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30902,7 +30876,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1185,
+      "ID": 1184,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -30928,7 +30902,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1186,
+      "ID": 1185,
       "Наименование": "Уровнемер радиоволновый",
       "Изображение": "https://drive.google.com/file/d/1PPhpabc_rQLi92Yro2LhfJI37M3ssnX3/view?usp=sharing",
       "Тип": "УЛМ-11А1",
@@ -30954,7 +30928,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1187,
+      "ID": 1186,
       "Наименование": "Фотодатчик",
       "Изображение": "",
       "Тип": "ФДС-03-220",
@@ -30980,7 +30954,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1188,
+      "ID": 1187,
       "Наименование": "Фотодатчик",
       "Изображение": "",
       "Тип": "ФДС-03-220",
@@ -31006,7 +30980,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1189,
+      "ID": 1188,
       "Наименование": "Фотодатчик",
       "Изображение": "",
       "Тип": "ФДС-03-220",
@@ -31032,7 +31006,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1190,
+      "ID": 1189,
       "Наименование": "Фотодатчик",
       "Изображение": "",
       "Тип": "ФДС-03-220",
@@ -31058,7 +31032,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1191,
+      "ID": 1190,
       "Наименование": "Фотодатчик",
       "Изображение": "",
       "Тип": "ФДС-03-220",
@@ -31084,7 +31058,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1192,
+      "ID": 1191,
       "Наименование": "Фотодатчик",
       "Изображение": "",
       "Тип": "ФДС-03-220",
@@ -31110,7 +31084,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1193,
+      "ID": 1192,
       "Наименование": "Фотодатчик",
       "Изображение": "",
       "Тип": "ФДС-03-220",
@@ -31136,7 +31110,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1194,
+      "ID": 1193,
       "Наименование": "Фотодатчик",
       "Изображение": "",
       "Тип": "ФДС-03-220",
@@ -31162,7 +31136,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1195,
+      "ID": 1194,
       "Наименование": "Фотодатчик",
       "Изображение": "",
       "Тип": "ФДС-03-220",
@@ -31188,7 +31162,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1196,
+      "ID": 1195,
       "Наименование": "Фотодатчик",
       "Изображение": "",
       "Тип": "ФДС-03-220",
@@ -31214,7 +31188,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1197,
+      "ID": 1196,
       "Наименование": "Фотодатчик",
       "Изображение": "",
       "Тип": "ФДС-03-220",
@@ -31240,7 +31214,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1198,
+      "ID": 1197,
       "Наименование": "Фотодатчик",
       "Изображение": "",
       "Тип": "ФДС-03-220",
@@ -31266,7 +31240,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1199,
+      "ID": 1198,
       "Наименование": "Счетчик жидкости",
       "Изображение": "https://drive.google.com/file/d/1P7cNBDfNBL049W_JjCl313wKgT8LD6NJ/view?usp=sharing",
       "Тип": "ШЖУ-40",
@@ -31292,7 +31266,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1200,
+      "ID": 1199,
       "Наименование": "Счетчик жидкости",
       "Изображение": "https://drive.google.com/file/d/1P7cNBDfNBL049W_JjCl313wKgT8LD6NJ/view?usp=sharing",
       "Тип": "ШЖУА-40-0,6",
@@ -31318,7 +31292,7 @@
       "Замечания": "Снят 04.2025, занижает. Установлен обратно 09.2025."
     },
     {
-      "ID": 1201,
+      "ID": 1200,
       "Наименование": "Манометр пружинный",
       "Изображение": "https://drive.google.com/file/d/1GqxFlfT0NOeIAS3khPV7moyQoEp6Oqex/view?usp=sharing",
       "Тип": "ЭКМ-1У",
@@ -31344,7 +31318,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1202,
+      "ID": 1201,
       "Наименование": "Манометр электроконтактный",
       "Изображение": "https://drive.google.com/file/d/1GqxFlfT0NOeIAS3khPV7moyQoEp6Oqex/view?usp=sharing",
       "Тип": "ЭКМ-1У",
@@ -31370,7 +31344,7 @@
       "Замечания": "Выяснить фактическое назначение прибора."
     },
     {
-      "ID": 1203,
+      "ID": 1202,
       "Наименование": "Манометр электроконтактный",
       "Изображение": "https://drive.google.com/file/d/1GqxFlfT0NOeIAS3khPV7moyQoEp6Oqex/view?usp=sharing",
       "Тип": "ЭКМ-1У",
@@ -31396,7 +31370,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1204,
+      "ID": 1203,
       "Наименование": "Манометр электроконтактный",
       "Изображение": "https://drive.google.com/file/d/1GqxFlfT0NOeIAS3khPV7moyQoEp6Oqex/view?usp=sharing",
       "Тип": "ЭКМ-1У",
@@ -31422,7 +31396,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1205,
+      "ID": 1204,
       "Наименование": "Манометр электроконтактный",
       "Изображение": "https://drive.google.com/file/d/1GqxFlfT0NOeIAS3khPV7moyQoEp6Oqex/view?usp=sharing",
       "Тип": "ЭКМ-1У",
@@ -31448,7 +31422,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1206,
+      "ID": 1205,
       "Наименование": "Манометр электроконтактный",
       "Изображение": "https://drive.google.com/file/d/1GqxFlfT0NOeIAS3khPV7moyQoEp6Oqex/view?usp=sharing",
       "Тип": "ЭКМ-1У",
@@ -31474,7 +31448,7 @@
       "Замечания": "Проверить работу схемы (если старая схема - демонтировать прибор обесточить убрать в кладовую)."
     },
     {
-      "ID": 1207,
+      "ID": 1206,
       "Наименование": "Манометр электроконтактный",
       "Изображение": "https://drive.google.com/file/d/1GqxFlfT0NOeIAS3khPV7moyQoEp6Oqex/view?usp=sharing",
       "Тип": "ЭКМ-1У",
@@ -31500,7 +31474,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1208,
+      "ID": 1207,
       "Наименование": "Манометр электроконтактный",
       "Изображение": "https://drive.google.com/file/d/1GqxFlfT0NOeIAS3khPV7moyQoEp6Oqex/view?usp=sharing",
       "Тип": "ЭКМ-1У",
@@ -31526,7 +31500,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1209,
+      "ID": 1208,
       "Наименование": "Регистратор безбумажный",
       "Изображение": "https://drive.google.com/file/d/1UNfWhSrKNQ49pNRbqM9GqFIwm80ARsAM/view?usp=sharing",
       "Тип": "Экограф-Т",
@@ -31552,7 +31526,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1210,
+      "ID": 1209,
       "Наименование": "Манометр электроконтактный",
       "Изображение": "https://drive.google.com/file/d/1GqxFlfT0NOeIAS3khPV7moyQoEp6Oqex/view?usp=sharing",
       "Тип": "ЭКМ-1У",
@@ -31578,7 +31552,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1211,
+      "ID": 1210,
       "Наименование": "Манометр электроконтактный",
       "Изображение": "https://drive.google.com/file/d/1GqxFlfT0NOeIAS3khPV7moyQoEp6Oqex/view?usp=sharing",
       "Тип": "ЭКМ-1У",
@@ -31604,7 +31578,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1212,
+      "ID": 1211,
       "Наименование": "Регистратор безбумажный",
       "Изображение": "https://drive.google.com/file/d/1UNfWhSrKNQ49pNRbqM9GqFIwm80ARsAM/view?usp=sharing",
       "Тип": "Экограф-Т",
@@ -31630,7 +31604,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1213,
+      "ID": 1212,
       "Наименование": "Регистратор безбумажный",
       "Изображение": "https://drive.google.com/file/d/1UNfWhSrKNQ49pNRbqM9GqFIwm80ARsAM/view?usp=sharing",
       "Тип": "Экограф-Т",
@@ -31656,7 +31630,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1214,
+      "ID": 1213,
       "Наименование": "Расходомер-счётчик вихревой",
       "Изображение": "",
       "Тип": "Элемер-РВ",
@@ -31682,7 +31656,7 @@
       "Замечания": "Поверка 13.11.2025 превышение погрешности -6%."
     },
     {
-      "ID": 1215,
+      "ID": 1214,
       "Наименование": "Расходомер-счётчик вихревой",
       "Изображение": "",
       "Тип": "Элемер-РВ-Exd",
@@ -31708,7 +31682,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1216,
+      "ID": 1215,
       "Наименование": "Расходомер-счётчик вихревой",
       "Изображение": "",
       "Тип": "Элемер-РВ",
@@ -31734,7 +31708,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1217,
+      "ID": 1216,
       "Наименование": "Расходомер-счётчик вихревой",
       "Изображение": "",
       "Тип": "Элемер-РВ",
@@ -31760,7 +31734,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1218,
+      "ID": 1217,
       "Наименование": "Расходомер-счётчик вихревой",
       "Изображение": "",
       "Тип": "Элемер-РВ-Exd",
@@ -31786,7 +31760,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1219,
+      "ID": 1218,
       "Наименование": "Расходомер-счётчик вихревой",
       "Изображение": "",
       "Тип": "Элемер-РВ-Exd",
@@ -31812,7 +31786,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1220,
+      "ID": 1219,
       "Наименование": "Расходомер-счётчик вихревой",
       "Изображение": "",
       "Тип": "Элемер-РВ-Exd",
@@ -31838,7 +31812,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1221,
+      "ID": 1220,
       "Наименование": "Расходомер-счетчик электромагнитный",
       "Изображение": "",
       "Тип": "Элемер-РЭМ-Exd",
@@ -31864,7 +31838,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1222,
+      "ID": 1221,
       "Наименование": "Расходомер-счетчик электромагнитный",
       "Изображение": "",
       "Тип": "Элемер-РЭМ",
@@ -31890,7 +31864,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1223,
+      "ID": 1222,
       "Наименование": "Расходомер-счетчик электромагнитный",
       "Изображение": "",
       "Тип": "Элемер-РЭМ",
@@ -31916,7 +31890,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1224,
+      "ID": 1223,
       "Наименование": "Расходомер-счетчик электромагнитный",
       "Изображение": "",
       "Тип": "Элемер-РЭМ Exd",
@@ -31942,7 +31916,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1225,
+      "ID": 1224,
       "Наименование": "Расходомер-счетчик электромагнитный",
       "Изображение": "",
       "Тип": "Элемер-РЭМ-Exd",
@@ -31968,7 +31942,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1226,
+      "ID": 1225,
       "Наименование": "Расходомер-счетчик электромагнитный",
       "Изображение": "",
       "Тип": "Элемер-РЭМ-Exd",
@@ -31994,7 +31968,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1227,
+      "ID": 1226,
       "Наименование": "Расходомер-счетчик электромагнитный",
       "Изображение": "",
       "Тип": "Элемер-РЭМ-Exd",
@@ -32020,7 +31994,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1228,
+      "ID": 1227,
       "Наименование": "Расходомер-счетчик электромагнитный",
       "Изображение": "",
       "Тип": "Элемер-РЭМ-Exd",
@@ -32046,7 +32020,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1229,
+      "ID": 1228,
       "Наименование": "Расходомер-счетчик электромагнитный",
       "Изображение": "",
       "Тип": "Элемер-РЭМ-Exd",
@@ -32072,7 +32046,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1230,
+      "ID": 1229,
       "Наименование": "Расходомер-счетчик электромагнитный",
       "Изображение": "",
       "Тип": "Элемер-РЭМ-Exd",
@@ -32098,7 +32072,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1231,
+      "ID": 1230,
       "Наименование": "Расходомер-счетчик электромагнитный",
       "Изображение": "",
       "Тип": "Элемер-РЭМ-Exd",
@@ -32124,7 +32098,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1232,
+      "ID": 1231,
       "Наименование": "Расходомер-счетчик электромагнитный",
       "Изображение": "",
       "Тип": "Элемер-РЭМ-Exd",
@@ -32150,7 +32124,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1233,
+      "ID": 1232,
       "Наименование": "Уровнемер радарный",
       "Изображение": "",
       "Тип": "Элемер-УР-31",
@@ -32176,7 +32150,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1234,
+      "ID": 1233,
       "Наименование": "Расходомер-счетчик электромагнитный",
       "Изображение": "",
       "Тип": "Элемер-РЭМ-Exd",
@@ -32202,7 +32176,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1235,
+      "ID": 1234,
       "Наименование": "Сигнализатор потока",
       "Изображение": "",
       "Тип": "Элемер-СТД-31",
@@ -32228,7 +32202,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1236,
+      "ID": 1235,
       "Наименование": "Сигнализатор потока",
       "Изображение": "",
       "Тип": "Элемер-СТД-31",
@@ -32254,7 +32228,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1237,
+      "ID": 1236,
       "Наименование": "Сигнализатор потока",
       "Изображение": "",
       "Тип": "Элемер-СТД-31Exd",
@@ -32280,7 +32254,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1238,
+      "ID": 1237,
       "Наименование": "Уровнемер радарный",
       "Изображение": "",
       "Тип": "Элемер-УР-31",
@@ -32306,7 +32280,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1239,
+      "ID": 1238,
       "Наименование": "Уровнемер радарный",
       "Изображение": "",
       "Тип": "Элемер-УР-31",
@@ -32332,7 +32306,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1240,
+      "ID": 1239,
       "Наименование": "Уровнемер радарный",
       "Изображение": "",
       "Тип": "Элемер-УР-31",
@@ -32358,7 +32332,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1241,
+      "ID": 1240,
       "Наименование": "Уровнемер радарный",
       "Изображение": "",
       "Тип": "Элемер-УР-31",
@@ -32384,7 +32358,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1242,
+      "ID": 1241,
       "Наименование": "Уровнемер радарный",
       "Изображение": "",
       "Тип": "Элемер-УР-31",
@@ -32410,7 +32384,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1243,
+      "ID": 1242,
       "Наименование": "Уровнемер радарный",
       "Изображение": "",
       "Тип": "Элемер-УР-31",
@@ -32436,7 +32410,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1244,
+      "ID": 1243,
       "Наименование": "Уровнемер радарный",
       "Изображение": "",
       "Тип": "Элемер-УР-31",
@@ -32462,7 +32436,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1245,
+      "ID": 1244,
       "Наименование": "Уровнемер радарный",
       "Изображение": "",
       "Тип": "Элемер-УР-31",
@@ -32488,7 +32462,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1246,
+      "ID": 1245,
       "Наименование": "Расходомер-счётчик вихревой",
       "Изображение": "",
       "Тип": "ЭМИС-ВИХРЬ 200",
@@ -32514,7 +32488,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1247,
+      "ID": 1246,
       "Наименование": "Датчик давления",
       "Изображение": "",
       "Тип": "ЭМИС-БАР 103-Н7-Exd",
@@ -32540,7 +32514,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1248,
+      "ID": 1247,
       "Наименование": "Датчик давления",
       "Изображение": "",
       "Тип": "ЭМИС-БАР 103-Н7-Exd",
@@ -32566,7 +32540,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1249,
+      "ID": 1248,
       "Наименование": "Датчик давления",
       "Изображение": "",
       "Тип": "ЭМИС-БАР 103-Н7-Exd",
@@ -32592,7 +32566,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1250,
+      "ID": 1249,
       "Наименование": "Датчик давления",
       "Изображение": "",
       "Тип": "ЭМИС-БАР 103-Н7-Exd",
@@ -32618,7 +32592,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1251,
+      "ID": 1250,
       "Наименование": "Датчик давления",
       "Изображение": "",
       "Тип": "ЭМИС-БАР 143-Н7-Exd",
@@ -32644,7 +32618,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1252,
+      "ID": 1251,
       "Наименование": "Датчик давления",
       "Изображение": "",
       "Тип": "ЭМИС-БАР 143-Н7-Exd",
@@ -32670,7 +32644,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1253,
+      "ID": 1252,
       "Наименование": "Датчик давления",
       "Изображение": "",
       "Тип": "ЭМИС-БАР 143-Н7-Exd",
@@ -32696,7 +32670,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1254,
+      "ID": 1253,
       "Наименование": "Расходомер-счётчик вихревой",
       "Изображение": "",
       "Тип": "ЭМИС-ВИХРЬ 200",
@@ -32722,7 +32696,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1255,
+      "ID": 1254,
       "Наименование": "Расходомер-счётчик вихревой",
       "Изображение": "",
       "Тип": "ЭМИС-ВИХРЬ 200",
@@ -32748,7 +32722,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1256,
+      "ID": 1255,
       "Наименование": "Расходомер-счётчик вихревой",
       "Изображение": "",
       "Тип": "ЭМИС-ВИХРЬ 200",
@@ -32774,7 +32748,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1257,
+      "ID": 1256,
       "Наименование": "Расходомер-счётчик вихревой",
       "Изображение": "",
       "Тип": "ЭМИС-ВИХРЬ 200",
@@ -32800,7 +32774,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1258,
+      "ID": 1257,
       "Наименование": "Расходомер-счетчик электромагнитный",
       "Изображение": "",
       "Тип": "ЭМИС-МАГ 270",
@@ -32826,7 +32800,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1259,
+      "ID": 1258,
       "Наименование": "Расходомер-счетчик электромагнитный",
       "Изображение": "",
       "Тип": "ЭМИС-МАГ 270",
@@ -32852,7 +32826,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1260,
+      "ID": 1259,
       "Наименование": "Расходомер-счетчик электромагнитный",
       "Изображение": "",
       "Тип": "ЭМИС-МАГ 270",
@@ -32878,7 +32852,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1261,
+      "ID": 1260,
       "Наименование": "Расходомер-счетчик электромагнитный",
       "Изображение": "",
       "Тип": "ЭМИС-МАГ 270",
@@ -32904,7 +32878,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1262,
+      "ID": 1261,
       "Наименование": "Расходомер-счетчик электромагнитный",
       "Изображение": "",
       "Тип": "ЭМИС-МАГ 270",
@@ -32930,7 +32904,7 @@
       "Замечания": "Уточнить наличие схемы дозировки."
     },
     {
-      "ID": 1263,
+      "ID": 1262,
       "Наименование": "Расходомер-счетчик электромагнитный",
       "Изображение": "",
       "Тип": "ЭМИС-МАГ 270",
@@ -32956,7 +32930,7 @@
       "Замечания": "Уточнить наличие регулятора."
     },
     {
-      "ID": 1264,
+      "ID": 1263,
       "Наименование": "Расходомер-счетчик электромагнитный",
       "Изображение": "",
       "Тип": "ЭМИС-МАГ 270",
@@ -32982,7 +32956,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1265,
+      "ID": 1264,
       "Наименование": "Расходомер-счетчик массовый",
       "Изображение": "",
       "Тип": "ЭМИС-МАСС 260",
@@ -33008,7 +32982,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1266,
+      "ID": 1265,
       "Наименование": "Расходомер-счетчик массовый",
       "Изображение": "",
       "Тип": "ЭМИС-МАСС 260",
@@ -33034,7 +33008,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1267,
+      "ID": 1266,
       "Наименование": "Уровнемер буйковый",
       "Изображение": "https://drive.google.com/file/d/1Gn_bfxfAWHEPCmxQFP-C9RpPXnG3hZqR/view?usp=sharing",
       "Тип": "УБ-П",
@@ -33060,7 +33034,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1268,
+      "ID": 1267,
       "Наименование": "Ротаметр электрический",
       "Изображение": "https://drive.google.com/file/d/14JLfL7f_AauBD3We9LmLWCBKqDwvG4kW/view?usp=sharing",
       "Тип": "ЭМИС-МЕТА 215",
@@ -33086,7 +33060,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1269,
+      "ID": 1268,
       "Наименование": "Ротаметр электрический",
       "Изображение": "https://drive.google.com/file/d/14JLfL7f_AauBD3We9LmLWCBKqDwvG4kW/view?usp=sharing",
       "Тип": "ЭМИС-МЕТА 215",
@@ -33112,7 +33086,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1270,
+      "ID": 1269,
       "Наименование": "Ротаметр электрический",
       "Изображение": "https://drive.google.com/file/d/14JLfL7f_AauBD3We9LmLWCBKqDwvG4kW/view?usp=sharing",
       "Тип": "ЭМИС-МЕТА 215",
@@ -33138,7 +33112,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1271,
+      "ID": 1270,
       "Наименование": "Ротаметр электрический",
       "Изображение": "https://drive.google.com/file/d/14JLfL7f_AauBD3We9LmLWCBKqDwvG4kW/view?usp=sharing",
       "Тип": "ЭМИС-МЕТА 215",
@@ -33164,7 +33138,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1272,
+      "ID": 1271,
       "Наименование": "Ротаметр электрический",
       "Изображение": "https://drive.google.com/file/d/14JLfL7f_AauBD3We9LmLWCBKqDwvG4kW/view?usp=sharing",
       "Тип": "ЭМИС-МЕТА 215",
@@ -33190,7 +33164,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1273,
+      "ID": 1272,
       "Наименование": "Ротаметр электрический",
       "Изображение": "https://drive.google.com/file/d/14JLfL7f_AauBD3We9LmLWCBKqDwvG4kW/view?usp=sharing",
       "Тип": "ЭМИС-МЕТА 215",
@@ -33216,7 +33190,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1274,
+      "ID": 1273,
       "Наименование": "Ротаметр электрический",
       "Изображение": "https://drive.google.com/file/d/14JLfL7f_AauBD3We9LmLWCBKqDwvG4kW/view?usp=sharing",
       "Тип": "ЭМИС-МЕТА 215",
@@ -33242,7 +33216,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1275,
+      "ID": 1274,
       "Наименование": "Ротаметр электрический",
       "Изображение": "https://drive.google.com/file/d/14JLfL7f_AauBD3We9LmLWCBKqDwvG4kW/view?usp=sharing",
       "Тип": "ЭМИС-МЕТА 215",
@@ -33268,7 +33242,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1276,
+      "ID": 1275,
       "Наименование": "Реле потока",
       "Изображение": "",
       "Тип": "ЭМИС-ПОТОК 236",
@@ -33294,7 +33268,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1277,
+      "ID": 1276,
       "Наименование": "Реле потока",
       "Изображение": "",
       "Тип": "ЭМИС-ПОТОК 285",
@@ -33320,7 +33294,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1278,
+      "ID": 1277,
       "Наименование": "Уровнемер радарный",
       "Изображение": "",
       "Тип": "ЭМИС-ПУЛЬС 530",
@@ -33346,7 +33320,7 @@
       "Замечания": ""
     },
     {
-      "ID": 1279,
+      "ID": 1278,
       "Наименование": "Уровнемер радарный",
       "Изображение": "",
       "Тип": "ЭМИС-ПУЛЬС 530",
