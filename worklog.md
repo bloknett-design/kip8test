@@ -3381,3 +3381,11 @@ Stage Summary:
   КЛИЕНТ-ONLY: серверного деплоя НЕТ — SW kipia-test-v762 разойдётся
   сам (1–2 перезагрузки). Порт kip8 — ПО ЗАПРОСУ после тестовой
   проверки. СЛЕДУЮЩАЯ ЗАДАЧА: задачи пользователя.
+- Финал CI (пуши 734b62ae + e54d21ec + af216487): kip8test — CI
+  Tests SUCCESS, Deploy GitHub Pages SUCCESS, Sync content to
+  kip8test-desktop SUCCESS; зеркало kip8test-desktop e3f839dc — CI
+  Tests SUCCESS (Build Desktop in_progress на момент проверки);
+  live sw.js на Pages = kipia-test-v762 (проверено curl'ом).
+  Авто-синки 37dde331/2ce7934f (16.11.2026) протухлили пины данных
+  Task 480/483/484/485 — сдвинуты в e54d21ec (devices 1279,
+  lockouts 524, valves 325), урок Task 550 повторён.
