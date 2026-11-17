@@ -3470,3 +3470,34 @@ Stage Summary:
   СЛЕДУЮЩАЯ ЗАДАЧА: порт Task 553+554 в kip8 (заявка «И перенеси
   всё в kip8») — index.html + WorkSchedule.gs + тесты + SW
   kipia-v559 → v560 + пуш/CI.
+
+---
+Task ID: 554 (финализация — факты CI)
+Agent: main (Z.ai)
+
+Work Log:
+- Пуш e634a939 (Task 554) — CI Tests SUCCESS, Deploy GitHub Pages
+  SUCCESS, Sync content to kip8test-desktop SUCCESS; live sw.js на
+  Pages = kipia-test-v763 (проверено curl'ом).
+- Зеркало kip8test-desktop d5d5466 (синк из kip8test@e634a939) —
+  CI Tests SUCCESS 7559/0 — ПРОГНОЗ ТОЧНЫЙ (7539 + 20).
+- Порт kip8 Task 553+554 выполнен (заявка «И перенеси всё в kip8»):
+  kip8 8a4385ce (rebase поверх 13 авто-синков) + d8095fb6 (пины
+  devices 1280→1279, lockouts 525→524) + 08227106 (гвард DEPLOY-дока
+  в test-task551 — зеркало kip8-desktop не синкает DEPLOY-*.md;
+  падение CI зеркала существовало с 772523f/Task 551 — ENOENT при
+  чтении DEPLOY-Task551-...md, НЕ от 553/554; гвард fs.existsSync +
+  пропуск санитара — приём «репо-детект» Task 546). kip8: CI Tests/
+  Build Desktop/Sync/Pages SUCCESS, live sw.js = kipia-v560; зеркало
+  kip8-desktop d4db684 — CI Tests SUCCESS 7647/0 — ПРОГНОЗ ТОЧНЫЙ
+  (7603 + 44).
+
+Stage Summary:
+- Task 554 ПОЛНОСТЬЮ ЗАКРЫТ: перенос примечания при автосоздании
+  следующего срока/года (kip8test 7574/0 + kip8 7632/0, браузер
+  13/13 ×2, VLM 6/6 + 4/4, геометрия 4/4). ТРЕБУЕТСЯ СЕРВЕРНЫЙ
+  ДЕПЛОЙ ОБОИХ GAS-проектов (WorkSchedule.gs srvVer '554' — kip8test
+  и kip8: заменить файл → New version → Deploy, см.
+  DEPLOY-Task554-workers-instr-note-carry.md; без деплоя — тихая
+  деградация + тост-предупреждение при отметке). СЛЕДУЮЩАЯ ЗАДАЧА:
+  задачи пользователя.
