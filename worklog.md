@@ -3595,3 +3595,29 @@ Stage Summary:
   (как Task 553; по заявке — байт-в-байт: _instrAbbrOf/строки/CSS +
   снятие затухания + SW kipia-v560 → v561 + тесты). СЛЕДУЮЩАЯ ЗАДАЧА:
   пуш/CI + задачи пользователя.
+
+---
+Task ID: 555 (финализация — факты CI)
+Agent: main (Z.ai)
+
+Work Log:
+- Пуш 37e5b067 (Task 555) — CI Tests SUCCESS (7601/0), Deploy GitHub
+  Pages SUCCESS, Sync content to kip8test-desktop SUCCESS, pages build
+  and deployment SUCCESS; live sw.js на Pages = kipia-test-v764
+  (проверено curl'ом).
+- Зеркало kip8test-desktop 41f70f14 (синк из kip8test@37e5b067) — CI
+  Tests SUCCESS 7586/0 — ПРОГНОЗ ТОЧНЫЙ (7559 + 27); Build Desktop App
+  SUCCESS.
+- ПОРТ kip8 — НЕ выполнялся (как Task 553: сначала тестовая проверка
+  пользователя на Pages; серверный деплой НЕ нужен — WorkSchedule.gs
+  не менялся, пользовательский деплой srvVer 554 общий для
+  kip8test/kip8 работает).
+
+Stage Summary:
+- Task 555 ПОЛНОСТЬЮ ЗАКРЫТ в kip8test: краткие наименования пунктов
+  «Список_И_и_ПЗ» в начале строк инструктажей/ПЗ карточек работников
+  (7601/0, браузер 23/23; КЛИЕНТ-ONLY — серверного деплоя НЕТ, SW
+  kipia-test-v764 разошлась сама). СЛЕДУЮЩАЯ ЗАДАЧА: по заявке
+  пользователя — порт в kip8 (байт-в-байт: хелпер/строки/CSS + снятие
+  затухания + SW kipia-v560 → v561 + тесты) после его проверки на
+  тестовом Pages; Task 552 (Android) остаётся отложен пользователем.
