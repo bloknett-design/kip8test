@@ -3683,3 +3683,30 @@ Stage Summary:
   серверного деплой НЕТ; SW kipia-test-v765 разойдётся сам. ПОРТ
   kip8 ВЫПОЛНЕН по заявке. СЛЕДУЮЩАЯ ЗАДАЧА: пуш/CI + задачи
   пользователя; Task 552 (Android) остаётся отложен.
+
+---
+Task ID: 556 (финализация — факты CI)
+Agent: main (Z.ai)
+
+Work Log:
+- Пуш 060cc23f (Task 556) — CI Tests SUCCESS (7613/0), Deploy
+  GitHub Pages SUCCESS, Sync content to kip8test-desktop SUCCESS;
+  live sw.js на Pages = kipia-test-v765 (проверено curl'ом).
+- Зеркало kip8test-desktop 82572349 (синк из kip8test@060cc23f) —
+  CI Tests SUCCESS 7598/0 — ПРОГНОЗ ТОЧЕН (7586 + 12); Build
+  Desktop App SUCCESS (числа из логов зеркального прогона).
+- ПОРТ kip8 44ede068 (Task 556 — та же заявка «Перенеси в kip8»,
+  байт-в-байт) — CI Tests SUCCESS (7671/0), pages build and
+  deployment SUCCESS (имя Pages-прогона kip8 — «pages build and
+  deployment»), Sync content to kip8-desktop SUCCESS; live sw.js
+  kip8 Pages = kipia-v562; зеркало kip8-desktop 06e6fb46 — CI
+  Tests 7686/0 (ПРОГНОЗ 7674 + 12 ТОЧЕН) + Build Desktop App
+  SUCCESS; финализация kip8 — cd577099.
+
+Stage Summary:
+- Task 556 ПОЛНОСТЬЮ ЗАКРЫТ: kip8test 060cc23f (7613/0, браузер
+  29/29) + kip8 44ede068 (7671/0, браузер 29/29) — отступ (пробел)
+  после краткого наименования, дата ярче, поле текста шире,
+  значки/кнопки у краёв блока; всё CI зелёное, SW разошлись сами
+  (kipia-test-v765 / kipia-v562). СЛЕДУЮЩАЯ ЗАДАЧА: задачи
+  пользователя; Task 552 (Android) остаётся отложен.
