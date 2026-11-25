@@ -5,7 +5,7 @@ name: Update Valves (TEST)
 #
 # КАК НАСТРОИТЬ:
 # По умолчанию используется Google Sheets:
-#   https://docs.google.com/spreadsheets/d/1ZKOPBsD9x4wdlC5rDjz09UypD86G0Cee/edit
+#   https://docs.google.com/spreadsheets/d/14l0ac4zGwOblvuH8kRkwwdOymAVXD5op/edit
 #   лист: Клапана_app
 #   (файл «Перечень КИП ИОС рабочий.xlsx» — тот же, что и для приборов/блокировок)
 # Можно переопределить через переменные окружения в шаге "Sync":
