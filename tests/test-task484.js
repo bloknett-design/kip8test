@@ -320,8 +320,10 @@ describe('Task 484: lockouts.json — блок ppr_chart', () => {
         // авто-синк c60c426b (21.10.2026): 529 → 528 (данные живые)
         // Task 553 (rebase поверх авто-синка 37dde331 от 16.11.2026):
         // 530 → 524 (данные живые)
-        assertEqual(LOCKOUTS_JSON.total_lockouts, 524, 'total_lockouts прежний');
-        assertEqual(LOCKOUTS_JSON.lockouts.length, 524, 'массив прежний');
+        // Хвост-синк (авто-коммит 14c9a3c от 19.11.2026, после закрытия
+        // Task 558): 524 → 518 (данные живые)
+        assertEqual(LOCKOUTS_JSON.total_lockouts, 518, 'total_lockouts прежний');
+        assertEqual(LOCKOUTS_JSON.lockouts.length, 518, 'массив прежний');
         assertEqual(LOCKOUTS_JSON.headers.length, 13, '13 колонок');
         assertEqual(LOCKOUTS_JSON.sheet, 'Блокировки_app', 'лист _app прежний');
     });

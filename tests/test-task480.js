@@ -269,9 +269,11 @@ describe('Task 480 — data/*.json: метаданные источника', ()
     // Task 553 (rebase поверх авто-синков 37dde331/2ce7934f от
     // 16.11.2026): пользователь правит Google Sheets — devices
     // 1288 → 1279, lockouts 530 → 524, valves 320 → 325
+    // Хвост-синк (авто-коммит 14c9a3c от 19.11.2026, после закрытия
+    // Task 558): пользователь удалил 6 блокировок — 524 → 518
     const TOTALS = {
         'data/devices.json':    { total: 'total_devices',    value: 1279, sheet: 'Приборы_app' },
-        'data/lockouts.json':   { total: 'total_lockouts',   value: 524,  sheet: 'Блокировки_app' },
+        'data/lockouts.json':   { total: 'total_lockouts',   value: 518,  sheet: 'Блокировки_app' },
         'data/valves.json':     { total: 'total_valves',     value: 325,  sheet: 'Клапана_app' },
         'data/regulators.json': { total: 'total_regulators', value: 268,  sheet: 'Регуляторы_app' }
     };
