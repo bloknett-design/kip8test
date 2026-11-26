@@ -101,6 +101,12 @@ task561-check-sheet.py ДО правки синков (по образцу Task 
 
 - Изолированно: test-task480 + test-task560 + test-task561 → 192/0
   (kip8test) / 186/0 (kip8).
+- CI (финальные факты): kip8test 4962e01+1119cae — Tests/Pages/Sync
+  SUCCESS 7816/0; зеркало kip8test-desktop 462034a — 7773/0; парный
+  kip8 e9e90dcd+6899a4a6 — SUCCESS 7870/0, зеркало kip8-desktop
+  6534dc6 — 7861/0; live SW: kipia-test-v770 / kipia-v567 (curl).
+  Данные = точный выход sync-скриптов (локальный прогон); кроны со
+  следующего прогона — ожидается «Изменений нет».
 - `node tests/run-all.js` → 7816/0 / 7870/0 (поверх синка данных).
 - Браузерная проверка `scripts/task561-browser-check.py` ×2 (порты
   8998/8991, мок Apps Script): приложение открывается, SW v770/v567
