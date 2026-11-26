@@ -5,7 +5,7 @@ name: Update Lockouts (TEST)
 #
 # КАК НАСТРОИТЬ:
 # По умолчанию используется Google Sheets:
-#   https://docs.google.com/spreadsheets/d/14l0ac4zGwOblvuH8kRkwwdOymAVXD5op/edit
+#   https://docs.google.com/spreadsheets/d/1VMJHY1DmsRPoWOAYKGN7QU9cjHtWZJlx/edit
 #   лист: Блокировки_app
 #   (файл «Перечень КИП ИОС рабочий.xlsx» — тот же, что и для приборов)
 # Можно переопределить через переменные окружения в шаге "Sync":
