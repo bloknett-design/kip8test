@@ -127,6 +127,12 @@ ppr_chart идентичен. После этого ночные кроны (03:
 
 - Изолированно: test-task480 + test-task560 → 126/0.
 - `node tests/run-all.js` → 7750/0 (см. worklog).
+- CI (финальные факты): kip8test ee3de6f+0d7be0c — Tests/Pages/Sync
+  SUCCESS 7750/0; зеркало kip8test-desktop a6a9342 — 7721/0; парный
+  kip8 44026a18+04c37723 — SUCCESS 7806/0, зеркало kip8-desktop
+  4000cf2 — 7809/0; live SW: kipia-test-v769 / kipia-v566 (curl).
+  Контрольный прогон Update Devices (PROD) на kip8@04c37723 (run
+  45723498107, 25.11 23:43 UTC): SUCCESS, «Изменений нет».
 - Браузерная проверка `scripts/task560-browser-check.py` (порт 8995,
   мок Apps Script): приложение открывается, SW v769 контролирует
   страницу, DATA-кэш с новым ID в source, «КИП ИОС»/«Приборы»/карточка
